@@ -50,50 +50,6 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 	}
 }
 
-func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest {
-		return request.WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true)))
-	})
-}
-
-func createStage(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
-	t.Helper()
-	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
-}
-
-func createStageWithURL(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
-		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(url)))
-	require.NoError(t, err)
-
-	stage, err := client.Stages.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return stage, func() {
-		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
-		require.NoError(t, err)
-	}
-}
-
-func createStageWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, reqMapping func(*sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest) (*sdk.Stage, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Stages.CreateInternal(ctx, reqMapping(sdk.NewCreateInternalStageRequest(id)))
-	require.NoError(t, err)
-
-	stage, err := client.Stages.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return stage, func() {
-		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
-		require.NoError(t, err)
-	}
-}
-
 func createPipe(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string, copyStatement string) (*sdk.Pipe, func()) {
 	t.Helper()
 	require.NotNil(t, database, "database has to be created")

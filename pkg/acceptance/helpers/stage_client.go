@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -25,17 +26,13 @@ func (c *StageClient) client() sdk.Stages {
 	return c.context.client.Stages
 }
 
-func (c *StageClient) CreateStageWithDirectory(t *testing.T, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
+// TODO: use default schema
+func (c *StageClient) CreateStageWithDirectory(t *testing.T, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	id := sdk.NewSchemaObjectIdentifier(c.context.database, schema.Name, name)
 	return c.CreateStageWithOptions(t, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest {
 		return request.WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true)))
 	})
-}
-
-func (c *StageClient) CreateStage(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
-	t.Helper()
-	return c.CreateStageWithOptions(t, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
 }
 
 func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
@@ -49,6 +46,16 @@ func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdenti
 	require.NoError(t, err)
 
 	return stage, c.DropStageFunc(t, id)
+}
+
+func (c *StageClient) CreateStage(t *testing.T) (*sdk.Stage, func()) {
+	t.Helper()
+	return c.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+}
+
+func (c *StageClient) CreateStageInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Stage, func()) {
+	t.Helper()
+	return c.CreateStageWithOptions(t, sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), random.AlphaN(8)), func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
 }
 
 func (c *StageClient) CreateStageWithOptions(t *testing.T, id sdk.SchemaObjectIdentifier, reqMapping func(*sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest) (*sdk.Stage, func()) {

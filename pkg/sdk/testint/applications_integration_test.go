@@ -39,7 +39,7 @@ func TestInt_Applications(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T, applicationPackageName, version string, patch int, defaultReleaseDirective bool) *sdk.Stage {
 		t.Helper()
 
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(12)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		putOnStageWithContent(t, client, stage.ID(), "manifest.yml", "")
 		putOnStageWithContent(t, client, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")

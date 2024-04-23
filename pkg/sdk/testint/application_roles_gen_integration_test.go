@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -23,8 +22,7 @@ import (
 func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 
-	stageName := random.AlphaN(8)
-	stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName))
+	stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(cleanupStage)
 
 	putOnStage(t, client, stage, "manifest.yml")
@@ -121,8 +119,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show grants to application", func(t *testing.T) {
 		// Need second app to be able to grant application role to it. Cannot grant to parent application (098806 (0A000): Cannot grant an APPLICATION ROLE to the parent APPLICATION).
-		stageName2 := random.AlphaN(8)
-		stage2, cleanupStage2 := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName2))
+		stage2, cleanupStage2 := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage2)
 
 		putOnStage(t, client, stage2, "manifest2.yml")
