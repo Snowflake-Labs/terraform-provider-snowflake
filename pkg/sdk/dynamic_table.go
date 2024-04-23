@@ -55,6 +55,7 @@ type alterDynamicTableOptions struct {
 type dropDynamicTableOptions struct {
 	drop         bool                   `ddl:"static" sql:"DROP"`
 	dynamicTable bool                   `ddl:"static" sql:"DYNAMIC TABLE"`
+	IfExists     *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 

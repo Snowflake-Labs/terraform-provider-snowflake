@@ -8,6 +8,7 @@ type TestClient struct {
 	Context      *ContextClient
 	Database     *DatabaseClient
 	DatabaseRole *DatabaseRoleClient
+	DynamicTable *DynamicTableClient
 	Role         *RoleClient
 	Schema       *SchemaClient
 	Table        *TableClient
@@ -27,6 +28,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Context:      NewContextClient(context),
 		Database:     NewDatabaseClient(context),
 		DatabaseRole: NewDatabaseRoleClient(context),
+		DynamicTable: NewDynamicTableClient(context),
 		Role:         NewRoleClient(context),
 		Schema:       NewSchemaClient(context),
 		Table:        NewTableClient(context),
