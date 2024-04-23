@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -34,7 +35,7 @@ func (c *DynamicTableClient) CreateDynamicTableWithOptions(t *testing.T, schemaI
 	targetLag := sdk.TargetLag{
 		MaximumDuration: sdk.String("2 minutes"),
 	}
-	query := "select id from " + tableId.FullyQualifiedName()
+	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
 	comment := random.Comment()
 	ctx := context.Background()
 

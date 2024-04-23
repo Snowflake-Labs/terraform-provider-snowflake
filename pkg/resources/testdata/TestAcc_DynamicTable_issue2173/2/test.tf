@@ -10,7 +10,7 @@ resource "snowflake_table" "t" {
   name            = var.table_name
   change_tracking = true
   column {
-    name = "id"
+    name = "ID"
     type = "NUMBER(38,0)"
   }
 }
