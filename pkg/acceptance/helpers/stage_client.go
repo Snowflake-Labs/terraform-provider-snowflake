@@ -39,10 +39,9 @@ func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdenti
 	return stage, c.DropStageFunc(t, id)
 }
 
-// TODO: use default schema
-func (c *StageClient) CreateStageWithDirectory(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string) (*sdk.Stage, func()) {
+func (c *StageClient) CreateStageWithDirectory(t *testing.T) (*sdk.Stage, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, random.AlphaN(8))
 	return c.CreateStageWithRequest(t, sdk.NewCreateInternalStageRequest(id).WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true))))
 }
 

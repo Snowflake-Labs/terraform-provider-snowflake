@@ -17,9 +17,7 @@ func TestInt_Streams(t *testing.T) {
 	ctx := testContext(t)
 
 	db := testDb(t)
-
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema)
+	schema := testSchema(t)
 
 	assertStream := func(t *testing.T, s *sdk.Stream, id sdk.SchemaObjectIdentifier, sourceType string, mode string) {
 		t.Helper()
@@ -85,7 +83,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnDirectoryTable", func(t *testing.T) {
-		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t, schema.ID(), "test_stage")
+		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t)
 		stageId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
 		t.Cleanup(cleanupStage)
 
