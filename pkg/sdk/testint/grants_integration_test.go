@@ -774,8 +774,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		appPackageName := random.AlphaN(8)
-		cleanupAppPackage := createApplicationPackage(t, client, appPackageName)
+		applicationPackage, cleanupAppPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
 		t.Cleanup(cleanupAppPackage)
 		// TODO [SNOW-1284382]: alter the test when the syntax starts working
 		// 2024/03/29 17:04:20 [DEBUG] sql-conn-query: [query SHOW GRANTS TO SHARE "0a8DMkl3NOx7" IN APPLICATION PACKAGE "hziiAtqY" err 001003 (42000): SQL compilation error:
@@ -784,7 +783,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			To: &sdk.ShowGrantsTo{
 				Share: &sdk.ShowGrantsToShare{
 					Name:                 shareTest.ID(),
-					InApplicationPackage: sdk.Pointer(sdk.NewAccountObjectIdentifier(appPackageName)),
+					InApplicationPackage: sdk.Pointer(applicationPackage.ID()),
 				},
 			},
 		})

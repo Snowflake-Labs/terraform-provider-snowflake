@@ -143,3 +143,7 @@ type ApplicationPackage struct {
 	DroppedOn        string
 	ApplicationClass string
 }
+
+func (a *ApplicationPackage) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(a.Name)
+}

@@ -28,20 +28,18 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	testClientHelper().Stage.PutOnStage(t, stage.ID(), "manifest.yml")
 	testClientHelper().Stage.PutOnStage(t, stage.ID(), "setup.sql")
 
-	appPackageName := "snowflake_app_pkg"
-	versionName := "v1"
-	cleanupAppPackage := createApplicationPackage(t, client, appPackageName)
-	t.Cleanup(cleanupAppPackage)
-	addApplicationPackageVersion(t, client, stage, appPackageName, versionName)
+	applicationPackage, cleanupApplicationPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
+	t.Cleanup(cleanupApplicationPackage)
 
-	appName := "snowflake_app"
-	cleanupApp := createApplication(t, client, appName, appPackageName, versionName)
-	t.Cleanup(cleanupApp)
+	testClientHelper().ApplicationPackage.AddApplicationPackageVersion(t, applicationPackage.ID(), stage.ID(), "v1")
+
+	application, cleanupApplication := testClientHelper().Application.CreateApplication(t, applicationPackage.ID(), "v1")
+	t.Cleanup(cleanupApplication)
 
 	assertApplicationRole := func(t *testing.T, appRole *sdk.ApplicationRole, name string, comment string) {
 		t.Helper()
 		assert.Equal(t, name, appRole.Name)
-		assert.Equal(t, appName, appRole.Owner)
+		assert.Equal(t, application.Name, appRole.Owner)
 		assert.Equal(t, comment, appRole.Comment)
 		assert.Equal(t, "APPLICATION", appRole.OwnerRoleType)
 	}
@@ -57,10 +55,10 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
-		appRole, err := client.ApplicationRoles.ShowByID(ctx, sdk.NewShowByIDApplicationRoleRequest(id, sdk.NewAccountObjectIdentifier(appName)))
+		appRole, err := client.ApplicationRoles.ShowByID(ctx, sdk.NewShowByIDApplicationRoleRequest(id, sdk.NewAccountObjectIdentifier(application.Name)))
 		require.NoError(t, err)
 
 		assertApplicationRole(t, appRole, name, "some comment")
@@ -69,7 +67,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	t.Run("Show", func(t *testing.T) {
 		ctx := context.Background()
 		req := sdk.NewShowApplicationRoleRequest().
-			WithApplicationName(sdk.NewAccountObjectIdentifier(appName)).
+			WithApplicationName(sdk.NewAccountObjectIdentifier(application.Name)).
 			WithLimit(&sdk.LimitFrom{
 				Rows: sdk.Int(2),
 			})
@@ -82,7 +80,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show grants to application role", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
 		opts := new(sdk.ShowGrantOptions)
@@ -101,7 +99,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show grants of application role", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
 		opts := new(sdk.ShowGrantOptions)
@@ -114,7 +112,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		require.NotEmpty(t, grants)
 		require.NotEmpty(t, grants[0].CreatedOn)
 		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
-		require.Equal(t, sdk.NewAccountObjectIdentifier(appName), grants[0].GrantedBy)
+		require.Equal(t, sdk.NewAccountObjectIdentifier(application.Name), grants[0].GrantedBy)
 	})
 
 	t.Run("show grants to application", func(t *testing.T) {
@@ -125,24 +123,22 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "manifest2.yml")
 		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "setup.sql")
 
-		appName2 := "snowflake_app_2"
-		cleanupApp2 := createApplication(t, client, appName2, appPackageName, versionName)
-		t.Cleanup(cleanupApp2)
-
+		application2, cleanupApplication2 := testClientHelper().Application.CreateApplication(t, applicationPackage.ID(), "v1")
+		t.Cleanup(cleanupApplication2)
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(application2.Name).FullyQualifiedName()))
 		require.NoError(t, err)
 		defer func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(application2.Name).FullyQualifiedName()))
 			require.NoError(t, err)
 		}()
 
 		opts := new(sdk.ShowGrantOptions)
 		opts.To = &sdk.ShowGrantsTo{
-			Application: sdk.NewAccountObjectIdentifier(appName2),
+			Application: sdk.NewAccountObjectIdentifier(application2.Name),
 		}
 		grants, err := client.Grants.Show(ctx, opts)
 		require.NoError(t, err)
