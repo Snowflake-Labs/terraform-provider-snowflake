@@ -130,25 +130,6 @@ func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetwor
 	}
 }
 
-func createSessionPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.SessionPolicy, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.StringN(12))
-	return createSessionPolicyWithOptions(t, client, id, sdk.NewCreateSessionPolicyRequest(id))
-}
-
-func createSessionPolicyWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, request *sdk.CreateSessionPolicyRequest) (*sdk.SessionPolicy, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.SessionPolicies.Create(ctx, request)
-	require.NoError(t, err)
-	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return sessionPolicy, func() {
-		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
-		require.NoError(t, err)
-	}
-}
-
 func createResourceMonitor(t *testing.T, client *sdk.Client) (*sdk.ResourceMonitor, func()) {
 	t.Helper()
 	return createResourceMonitorWithOptions(t, client, &sdk.CreateResourceMonitorOptions{

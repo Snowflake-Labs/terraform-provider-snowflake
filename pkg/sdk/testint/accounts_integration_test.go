@@ -248,8 +248,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset session policy", func(t *testing.T) {
-		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, testDb(t), testSchema(t))
+		sessionPolicyTest, sessionPolicyCleanup := testClientHelper().SessionPolicy.CreateSessionPolicy(t)
 		t.Cleanup(sessionPolicyCleanup)
+
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
 				SessionPolicy: sessionPolicyTest.ID(),
