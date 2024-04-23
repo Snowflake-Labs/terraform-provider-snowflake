@@ -25,8 +25,8 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(cleanupStage)
 
-	putOnStage(t, client, stage, "manifest.yml")
-	putOnStage(t, client, stage, "setup.sql")
+	testClientHelper().Stage.PutOnStage(t, stage.ID(), "manifest.yml")
+	testClientHelper().Stage.PutOnStage(t, stage.ID(), "setup.sql")
 
 	appPackageName := "snowflake_app_pkg"
 	versionName := "v1"
@@ -122,8 +122,8 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		stage2, cleanupStage2 := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage2)
 
-		putOnStage(t, client, stage2, "manifest2.yml")
-		putOnStage(t, client, stage2, "setup.sql")
+		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "manifest2.yml")
+		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "setup.sql")
 
 		appName2 := "snowflake_app_2"
 		cleanupApp2 := createApplication(t, client, appName2, appPackageName, versionName)

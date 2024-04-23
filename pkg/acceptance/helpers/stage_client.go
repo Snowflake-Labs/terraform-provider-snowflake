@@ -80,7 +80,7 @@ func (c *StageClient) DropStageFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 	}
 }
 
-func (c *StageClient) PutOnStage(t *testing.T, stage *sdk.Stage, filename string) {
+func (c *StageClient) PutOnStage(t *testing.T, id sdk.SchemaObjectIdentifier, filename string) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -88,7 +88,7 @@ func (c *StageClient) PutOnStage(t *testing.T, stage *sdk.Stage, filename string
 	require.NoError(t, err)
 	absPath := "file://" + path
 
-	_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
+	_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, id.FullyQualifiedName()))
 	require.NoError(t, err)
 }
 

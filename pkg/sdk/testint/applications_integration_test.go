@@ -41,8 +41,9 @@ func TestInt_Applications(t *testing.T) {
 
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
-		putOnStageWithContent(t, client, stage.ID(), "manifest.yml", "")
-		putOnStageWithContent(t, client, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
+
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
 		cleanupApplicationPackage := createApplicationPackage(t, client, applicationPackageName)
 		t.Cleanup(cleanupApplicationPackage)
 		addApplicationPackageVersion(t, client, stage, applicationPackageName, version)
