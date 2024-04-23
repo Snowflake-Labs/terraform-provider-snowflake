@@ -689,6 +689,7 @@ type informationSchemaColumns struct {
 	IdentityMinimum        sql.NullString `db:"IDENTITY_MINIMUM"`
 	IdentityCycle          sql.NullString `db:"IDENTITY_CYCLE"`
 	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
+	SchemaEvolutionRecord  sql.NullString `db:"SCHEMA_EVOLUTION_RECORD"`
 	Comment                sql.NullString `db:"COMMENT"`
 }
 

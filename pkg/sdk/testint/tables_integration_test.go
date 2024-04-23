@@ -2,6 +2,7 @@ package testint
 
 import (
 	"bufio"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -500,6 +501,7 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, currentColumns)
 
 		assert.Equal(t, "", table.Comment)
+		assert.Equal(t, sql.NullString{}, currentColumns[2].SchemaEvolutionRecord)
 	})
 
 	t.Run("alter table: rename column", func(t *testing.T) {

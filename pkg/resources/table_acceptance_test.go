@@ -164,6 +164,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.comment", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.schema_evolution_record", ""),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
