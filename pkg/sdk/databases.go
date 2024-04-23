@@ -57,6 +57,7 @@ type Database struct {
 	DroppedOn     time.Time
 	Transient     bool
 	Kind          string
+	OwnerRoleType string
 }
 
 func (v *Database) ID() AccountObjectIdentifier {
@@ -80,6 +81,7 @@ type databaseRow struct {
 	ResourceGroup sql.NullString `db:"resource_group"`
 	DroppedOn     sql.NullTime   `db:"dropped_on"`
 	Kind          sql.NullString `db:"kind"`
+	OwnerRoleType sql.NullString `db:"owner_role_type"`
 }
 
 func (row databaseRow) convert() *Database {
@@ -128,6 +130,9 @@ func (row databaseRow) convert() *Database {
 	}
 	if row.Kind.Valid {
 		database.Kind = row.Kind.String
+	}
+	if row.OwnerRoleType.Valid {
+		database.OwnerRoleType = row.OwnerRoleType.String
 	}
 	return database
 }

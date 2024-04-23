@@ -124,6 +124,7 @@ type DynamicTable struct {
 	IsClone             bool
 	IsReplica           bool
 	DataTimestamp       time.Time
+	OwnerRoleType       string
 }
 
 func (dt *DynamicTable) ID() SchemaObjectIdentifier {
@@ -152,6 +153,7 @@ type dynamicTableRow struct {
 	IsClone             bool           `db:"is_clone"`
 	IsReplica           bool           `db:"is_replica"`
 	DataTimestamp       sql.NullTime   `db:"data_timestamp"`
+	OwnerRoleType       sql.NullString `db:"owner_role_type"`
 }
 
 func (dtr dynamicTableRow) convert() *DynamicTable {
@@ -184,6 +186,10 @@ func (dtr dynamicTableRow) convert() *DynamicTable {
 	if dtr.LastSuspendedOn.Valid {
 		dt.LastSuspendedOn = dtr.LastSuspendedOn.Time
 	}
+	if dtr.OwnerRoleType.Valid {
+		dt.OwnerRoleType = dtr.OwnerRoleType.String
+	}
+
 	return dt
 }
 
