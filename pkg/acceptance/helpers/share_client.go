@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -25,8 +26,12 @@ func (c *ShareClient) client() sdk.Shares {
 func (c *ShareClient) CreateShare(t *testing.T) (*sdk.Share, func()) {
 	t.Helper()
 	// TODO(SNOW-1058419): Try with identifier containing dot during identifiers rework
-	id := sdk.RandomAlphanumericAccountObjectIdentifier()
-	return c.CreateShareWithOptions(t, id, &sdk.CreateShareOptions{})
+	return c.CreateShareWithName(t, random.AlphanumericN(12))
+}
+
+func (c *ShareClient) CreateShareWithName(t *testing.T, name string) (*sdk.Share, func()) {
+	t.Helper()
+	return c.CreateShareWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateShareOptions{})
 }
 
 func (c *ShareClient) CreateShareWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
