@@ -107,12 +107,11 @@ func TestInt_Streams(t *testing.T) {
 		tableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
-		viewId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
-		cleanupView := createView(t, client, viewId, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
+		view, cleanupView := testClientHelper().View.CreateView(t, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
 		t.Cleanup(cleanupView)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
-		req := sdk.NewCreateStreamOnViewRequest(id, viewId).WithComment(sdk.String("some comment"))
+		req := sdk.NewCreateStreamOnViewRequest(id, view.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnView(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
