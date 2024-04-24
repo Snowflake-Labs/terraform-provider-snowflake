@@ -294,7 +294,7 @@ func TestInt_Table(t *testing.T) {
 			WithMoment(sdk.CloneMomentAt))
 
 		// ensure that time travel is allowed (and revert if needed after the test)
-		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
+		revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "1")
 		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
