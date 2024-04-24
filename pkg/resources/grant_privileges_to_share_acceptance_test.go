@@ -604,7 +604,7 @@ func createShareOutsideTerraform(t *testing.T, name string) func() {
 	}
 
 	return func() {
-		if err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(name)); err != nil {
+		if err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(name), &sdk.DropShareOptions{IfExists: sdk.Bool(true)}); err != nil {
 			if err != nil {
 				t.Fatal(err)
 			}

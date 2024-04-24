@@ -47,8 +47,7 @@ func (c *ShareClient) DropShareFunc(t *testing.T, id sdk.AccountObjectIdentifier
 	ctx := context.Background()
 
 	return func() {
-		// there is no if exists in the docs https://docs.snowflake.com/en/sql-reference/sql/drop-share
-		err := c.client().Drop(ctx, id)
+		err := c.client().Drop(ctx, id, &sdk.DropShareOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 	}
 }

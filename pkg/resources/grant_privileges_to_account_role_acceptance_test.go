@@ -1569,7 +1569,7 @@ func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, sha
 	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
 	return errors.Join(
-		secondaryClient.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
+		secondaryClient.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.DropShareOptions{IfExists: sdk.Bool(true)}),
 		secondaryClient.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
 	)
 }

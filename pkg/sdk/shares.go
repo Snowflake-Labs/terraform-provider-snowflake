@@ -11,7 +11,7 @@ import (
 var (
 	_ validatable = new(CreateShareOptions)
 	_ validatable = new(AlterShareOptions)
-	_ validatable = new(dropShareOptions)
+	_ validatable = new(DropShareOptions)
 	_ validatable = new(ShowShareOptions)
 	_ validatable = new(describeShareOptions)
 )
@@ -19,7 +19,7 @@ var (
 type Shares interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
-	Drop(ctx context.Context, id AccountObjectIdentifier) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error
 	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
@@ -137,14 +137,15 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	return err
 }
 
-// dropShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-share.
-type dropShareOptions struct {
-	drop  bool                    `ddl:"static" sql:"DROP"`
-	share bool                    `ddl:"static" sql:"SHARE"`
-	name  AccountObjectIdentifier `ddl:"identifier"`
+// DropShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-share.
+type DropShareOptions struct {
+	drop     bool                    `ddl:"static" sql:"DROP"`
+	share    bool                    `ddl:"static" sql:"SHARE"`
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *dropShareOptions) validate() error {
+func (opts *DropShareOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
@@ -154,10 +155,11 @@ func (opts *dropShareOptions) validate() error {
 	return nil
 }
 
-func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &dropShareOptions{
-		name: id,
+func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err
 	}

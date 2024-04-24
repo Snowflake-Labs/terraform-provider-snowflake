@@ -83,10 +83,7 @@ func TestInt_SharesCreate(t *testing.T) {
 		assert.Equal(t, id.Name(), shares[0].Name.Name())
 		assert.Equal(t, "test comment", shares[0].Comment)
 
-		t.Cleanup(func() {
-			err := client.Shares.Drop(ctx, id)
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Share.DropShareFunc(t, id))
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -100,10 +97,7 @@ func TestInt_SharesCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.GreaterOrEqual(t, len(shares), 1)
 
-		t.Cleanup(func() {
-			err := client.Shares.Drop(ctx, id)
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Share.DropShareFunc(t, id))
 	})
 }
 
@@ -114,12 +108,12 @@ func TestInt_SharesDrop(t *testing.T) {
 	t.Run("when share exists", func(t *testing.T) {
 		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
-		err := client.Shares.Drop(ctx, shareTest.ID())
+		err := client.Shares.Drop(ctx, shareTest.ID(), &sdk.DropShareOptions{})
 		require.NoError(t, err)
 	})
 
 	t.Run("when share does not exist", func(t *testing.T) {
-		err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier("does_not_exist"))
+		err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier("does_not_exist"), &sdk.DropShareOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
