@@ -33,23 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema) (sdk.SchemaObjectIdentifier, func()) {
-	t.Helper()
-	ctx := context.Background()
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
-
-	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeNumber)
-	body := "true"
-	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
-	err := client.RowAccessPolicies.Create(ctx, createRequest)
-	require.NoError(t, err)
-
-	return id, func() {
-		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
-		require.NoError(t, err)
-	}
-}
-
 func createApiIntegration(t *testing.T, client *sdk.Client) (sdk.AccountObjectIdentifier, func()) {
 	t.Helper()
 	ctx := context.Background()

@@ -22,7 +22,7 @@ func (c *RowAccessPolicyClient) client() sdk.RowAccessPolicies {
 	return c.context.client.RowAccessPolicies
 }
 
-func (c *RowAccessPolicyClient) createRowAccessPolicy(t *testing.T) (*sdk.RowAccessPolicy, func()) {
+func (c *RowAccessPolicyClient) CreateRowAccessPolicy(t *testing.T) (*sdk.RowAccessPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
 
