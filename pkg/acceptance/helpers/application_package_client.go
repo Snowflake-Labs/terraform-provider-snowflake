@@ -43,8 +43,7 @@ func (c *ApplicationPackageClient) DropApplicationPackageFunc(t *testing.T, id s
 	ctx := context.Background()
 
 	return func() {
-		// no if exists supported based on the docs https://docs.snowflake.com/en/sql-reference/sql/drop-application-package#syntax
-		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id))
+		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id).WithIfExists(sdk.Bool(true)))
 		assert.NoError(t, err)
 	}
 }
