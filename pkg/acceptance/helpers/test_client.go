@@ -6,6 +6,7 @@ type TestClient struct {
 	context *TestClientContext
 
 	Alert              *AlertClient
+	ApiIntegration     *ApiIntegrationClient
 	Application        *ApplicationClient
 	ApplicationPackage *ApplicationPackageClient
 	Context            *ContextClient
@@ -42,6 +43,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	return &TestClient{
 		context:            context,
 		Alert:              NewAlertClient(context),
+		ApiIntegration:     NewApiIntegrationClient(context),
 		Application:        NewApplicationClient(context),
 		ApplicationPackage: NewApplicationPackageClient(context),
 		Context:            NewContextClient(context),
