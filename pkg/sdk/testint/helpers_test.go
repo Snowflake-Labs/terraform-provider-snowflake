@@ -33,43 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createResourceMonitor(t *testing.T, client *sdk.Client) (*sdk.ResourceMonitor, func()) {
-	t.Helper()
-	return createResourceMonitorWithOptions(t, client, &sdk.CreateResourceMonitorOptions{
-		With: &sdk.ResourceMonitorWith{
-			CreditQuota: sdk.Pointer(100),
-			Triggers: []sdk.TriggerDefinition{
-				{
-					Threshold:     100,
-					TriggerAction: sdk.TriggerActionSuspend,
-				},
-				{
-					Threshold:     70,
-					TriggerAction: sdk.TriggerActionSuspendImmediate,
-				},
-				{
-					Threshold:     90,
-					TriggerAction: sdk.TriggerActionNotify,
-				},
-			},
-		},
-	})
-}
-
-func createResourceMonitorWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateResourceMonitorOptions) (*sdk.ResourceMonitor, func()) {
-	t.Helper()
-	id := sdk.RandomAccountObjectIdentifier()
-	ctx := context.Background()
-	err := client.ResourceMonitors.Create(ctx, id, opts)
-	require.NoError(t, err)
-	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return resourceMonitor, func() {
-		err := client.ResourceMonitors.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-}
-
 func createMaskingPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
 	signature := []sdk.TableColumnSignature{

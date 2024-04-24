@@ -14,7 +14,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
+	resourceMonitorTest, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 	t.Cleanup(resourceMonitorCleanup)
 
 	t.Run("with like", func(t *testing.T) {
@@ -151,7 +151,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when adding a new trigger", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 
 		var oldNotifyTriggers []sdk.TriggerDefinition
@@ -190,7 +190,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when setting credit quota", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		creditQuota := 100
 		alterOptions := &sdk.AlterResourceMonitorOptions{
@@ -212,7 +212,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		alterOptions := &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
@@ -236,7 +236,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when changing scheduling info", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		frequency, err := sdk.FrequencyFromString("NEVER")
 		require.NoError(t, err)
@@ -270,7 +270,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("all options together", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 
 		newTriggers := make([]sdk.TriggerDefinition, 0)
@@ -309,7 +309,8 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
-		resourceMonitor, _ := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
+		t.Cleanup(resourceMonitorCleanup)
 		id := resourceMonitor.ID()
 		err := client.ResourceMonitors.Drop(ctx, id)
 		require.NoError(t, err)

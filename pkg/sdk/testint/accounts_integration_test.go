@@ -215,7 +215,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set resource monitor", func(t *testing.T) {
-		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitorTest, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
