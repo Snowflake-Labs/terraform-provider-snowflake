@@ -12,6 +12,7 @@ type TestClient struct {
 	Database           *DatabaseClient
 	DatabaseRole       *DatabaseRoleClient
 	DynamicTable       *DynamicTableClient
+	FailoverGroup      *FailoverGroupClient
 	MaskingPolicy      *MaskingPolicyClient
 	NetworkPolicy      *NetworkPolicyClient
 	PasswordPolicy     *PasswordPolicyClient
@@ -43,6 +44,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Database:           NewDatabaseClient(context),
 		DatabaseRole:       NewDatabaseRoleClient(context),
 		DynamicTable:       NewDynamicTableClient(context),
+		FailoverGroup:      NewFailoverGroupClient(context),
 		MaskingPolicy:      NewMaskingPolicyClient(context),
 		NetworkPolicy:      NewNetworkPolicyClient(context),
 		PasswordPolicy:     NewPasswordPolicyClient(context),
