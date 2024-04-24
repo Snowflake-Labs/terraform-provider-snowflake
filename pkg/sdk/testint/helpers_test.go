@@ -32,36 +32,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-// TODO: extract getting row access policies as resource (like getting tag in system functions)
-// getRowAccessPolicyFor is based on https://docs.snowflake.com/en/user-guide/security-row-intro#obtain-database-objects-with-a-row-access-policy.
-func getRowAccessPolicyFor(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) (*policyReference, error) {
-	t.Helper()
-	ctx := context.Background()
-
-	s := &policyReference{}
-	policyReferencesId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), "INFORMATION_SCHEMA", "POLICY_REFERENCES")
-	err := client.QueryOneForTests(ctx, s, fmt.Sprintf(`SELECT * FROM TABLE(%s(REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => '%v'))`, policyReferencesId.FullyQualifiedName(), id.FullyQualifiedName(), objectType))
-
-	return s, err
-}
-
-type policyReference struct {
-	PolicyDb          string         `db:"POLICY_DB"`
-	PolicySchema      string         `db:"POLICY_SCHEMA"`
-	PolicyName        string         `db:"POLICY_NAME"`
-	PolicyKind        string         `db:"POLICY_KIND"`
-	RefDatabaseName   string         `db:"REF_DATABASE_NAME"`
-	RefSchemaName     string         `db:"REF_SCHEMA_NAME"`
-	RefEntityName     string         `db:"REF_ENTITY_NAME"`
-	RefEntityDomain   string         `db:"REF_ENTITY_DOMAIN"`
-	RefColumnName     sql.NullString `db:"REF_COLUMN_NAME"`
-	RefArgColumnNames string         `db:"REF_ARG_COLUMN_NAMES"`
-	TagDatabase       sql.NullString `db:"TAG_DATABASE"`
-	TagSchema         sql.NullString `db:"TAG_SCHEMA"`
-	TagName           sql.NullString `db:"TAG_NAME"`
-	PolicyStatus      string         `db:"POLICY_STATUS"`
-}
-
 // TODO: extract getting table columns as resource (like getting tag in system functions)
 // getTableColumnsFor is based on https://docs.snowflake.com/en/sql-reference/info-schema/columns.
 func getTableColumnsFor(t *testing.T, client *sdk.Client, tableId sdk.SchemaObjectIdentifier) []informationSchemaColumns {
