@@ -270,9 +270,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tagTest1, tagCleanup1 := createTag(t, client, testDb(t), testSchema(t))
+		tagTest1, tagCleanup1 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
+		tagTest2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{

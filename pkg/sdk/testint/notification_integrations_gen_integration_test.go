@@ -359,7 +359,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter notification integration: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		integration := createNotificationIntegrationEmail(t)

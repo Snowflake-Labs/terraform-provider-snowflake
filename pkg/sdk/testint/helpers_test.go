@@ -33,21 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Tag, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	ctx := context.Background()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
-	require.NoError(t, err)
-	tag, err := client.Tags.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return tag, func() {
-		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
-		require.NoError(t, err)
-	}
-}
-
 func createPasswordPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.PasswordPolicy, func()) {
 	t.Helper()
 	return createPasswordPolicyWithOptions(t, client, database, schema, nil)

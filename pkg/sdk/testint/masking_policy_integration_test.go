@@ -335,10 +335,10 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		id := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		tag2, tag2Cleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tag2Cleanup)
 
 		tagAssociations := []sdk.TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}

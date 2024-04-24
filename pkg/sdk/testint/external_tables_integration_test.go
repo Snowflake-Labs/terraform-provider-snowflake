@@ -21,7 +21,8 @@ func TestInt_ExternalTables(t *testing.T) {
 	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID, nycWeatherDataURL)
 	t.Cleanup(stageCleanup)
 
-	tag, _ := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
 
 	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
 		return []*sdk.ExternalTableColumnRequest{

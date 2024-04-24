@@ -348,7 +348,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter api integration: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		integration := createAwsApiIntegration(t)

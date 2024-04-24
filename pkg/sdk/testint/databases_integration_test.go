@@ -58,9 +58,9 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		t.Cleanup(databaseCleanup)
 		schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
 		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+		tagTest, tagCleanup := testClientHelper().Tag.CreateTagInSchema(t, schemaTest.ID())
 		t.Cleanup(tagCleanup)
-		tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
+		tag2Test, tag2Cleanup := testClientHelper().Tag.CreateTagInSchema(t, schemaTest.ID())
 		t.Cleanup(tag2Cleanup)
 
 		comment := random.Comment()

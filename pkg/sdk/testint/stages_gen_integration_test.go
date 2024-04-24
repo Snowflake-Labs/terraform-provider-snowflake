@@ -237,7 +237,7 @@ func TestInt_Stages(t *testing.T) {
 
 	t.Run("Alter - set unset tags", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
-		tag, cleanupTag := createTag(t, client, testDb(t), testSchema(t))
+		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))

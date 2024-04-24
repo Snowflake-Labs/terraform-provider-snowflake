@@ -346,7 +346,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	assertProcedure := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool) {

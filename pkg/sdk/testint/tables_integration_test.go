@@ -33,8 +33,10 @@ func TestInt_Table(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-	tag1, _ := createTag(t, client, database, schema)
-	tag2, _ := createTag(t, client, database, schema)
+	tag1, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup2)
 
 	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []informationSchemaColumns) {
 		t.Helper()

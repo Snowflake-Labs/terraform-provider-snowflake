@@ -295,9 +295,9 @@ func TestInt_SharesAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
-		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
+		tagTest2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup2)
 		tagAssociations := []sdk.TagAssociation{
 			{

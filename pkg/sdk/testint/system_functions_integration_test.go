@@ -15,7 +15,7 @@ func TestInt_GetTag(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	t.Run("masking policy tag", func(t *testing.T) {

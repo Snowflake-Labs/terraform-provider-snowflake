@@ -330,7 +330,7 @@ func TestInt_Tasks(t *testing.T) {
 	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		request := createTaskBasicRequest(t).
@@ -410,7 +410,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		task := createTask(t)

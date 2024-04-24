@@ -43,7 +43,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(maskingPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tag.ID()).WithSet(
