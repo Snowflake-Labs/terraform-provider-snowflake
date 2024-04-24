@@ -15,10 +15,10 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+	maskingPolicyTest, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicyCleanup)
 
-	maskingPolicy2Test, maskingPolicy2Cleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+	maskingPolicy2Test, maskingPolicy2Cleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -243,7 +243,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+	maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicyCleanup)
 
 	t.Run("when masking policy exists", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 		comment := random.Comment()
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
@@ -309,7 +309,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 		newName := random.String()
@@ -331,7 +331,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting tags", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		id := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 
@@ -370,7 +370,8 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when masking policy exists", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		t.Cleanup(maskingPolicyCleanup)
 		id := maskingPolicy.ID()
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)

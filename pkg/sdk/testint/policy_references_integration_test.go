@@ -40,7 +40,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 	})
 
 	t.Run("tag domain", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)

@@ -11,6 +11,7 @@ type TestClient struct {
 	Database           *DatabaseClient
 	DatabaseRole       *DatabaseRoleClient
 	DynamicTable       *DynamicTableClient
+	MaskingPolicy      *MaskingPolicyClient
 	NetworkPolicy      *NetworkPolicyClient
 	PasswordPolicy     *PasswordPolicyClient
 	Pipe               *PipeClient
@@ -40,6 +41,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Database:           NewDatabaseClient(context),
 		DatabaseRole:       NewDatabaseRoleClient(context),
 		DynamicTable:       NewDynamicTableClient(context),
+		MaskingPolicy:      NewMaskingPolicyClient(context),
 		NetworkPolicy:      NewNetworkPolicyClient(context),
 		PasswordPolicy:     NewPasswordPolicyClient(context),
 		Pipe:               NewPipeClient(context),
@@ -60,4 +62,8 @@ type TestClientContext struct {
 	database  string
 	schema    string
 	warehouse string
+}
+
+func (c *TestClientContext) SchemaId() sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.database, c.schema)
 }
