@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -138,29 +137,4 @@ func updateAccountParameterTemporarily(t *testing.T, client *sdk.Client, paramet
 		err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
 		require.NoError(t, err)
 	}
-}
-
-func createTaskWithRequest(t *testing.T, client *sdk.Client, request *sdk.CreateTaskRequest) (*sdk.Task, func()) {
-	t.Helper()
-	ctx := context.Background()
-
-	id := request.GetName()
-
-	err := client.Tasks.Create(ctx, request)
-	require.NoError(t, err)
-
-	task, err := client.Tasks.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return task, func() {
-		err = client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-		require.NoError(t, err)
-	}
-}
-
-func createTask(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Task, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphaN(20))
-	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
-	return createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithSchedule(sdk.String("60 minutes")).WithWarehouse(warehouseReq))
 }

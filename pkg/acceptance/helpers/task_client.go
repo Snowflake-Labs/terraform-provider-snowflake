@@ -23,11 +23,21 @@ func (c *TaskClient) client() sdk.Tasks {
 	return c.context.client.Tasks
 }
 
-func (c *TaskClient) CreateTask(t *testing.T) (*sdk.Task, func()) {
+func (c *TaskClient) defaultCreateTaskRequest(t *testing.T) *sdk.CreateTaskRequest {
 	t.Helper()
 	id := c.context.newSchemaObjectIdentifier(random.AlphanumericN(12))
 	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(c.context.warehouseId()))
-	return c.CreateTaskWithRequest(t, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithSchedule(sdk.String("60 minutes")).WithWarehouse(warehouseReq))
+	return sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithWarehouse(warehouseReq)
+}
+
+func (c *TaskClient) CreateTask(t *testing.T) (*sdk.Task, func()) {
+	t.Helper()
+	return c.CreateTaskWithRequest(t, c.defaultCreateTaskRequest(t).WithSchedule(sdk.String("60 minutes")))
+}
+
+func (c *TaskClient) CreateTaskWithAfter(t *testing.T, taskId sdk.SchemaObjectIdentifier) (*sdk.Task, func()) {
+	t.Helper()
+	return c.CreateTaskWithRequest(t, c.defaultCreateTaskRequest(t).WithAfter([]sdk.SchemaObjectIdentifier{taskId}))
 }
 
 func (c *TaskClient) CreateTaskWithRequest(t *testing.T, request *sdk.CreateTaskRequest) (*sdk.Task, func()) {
