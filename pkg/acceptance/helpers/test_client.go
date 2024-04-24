@@ -5,14 +5,19 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 type TestClient struct {
 	context *TestClientContext
 
-	Context      *ContextClient
-	Database     *DatabaseClient
-	DatabaseRole *DatabaseRoleClient
-	Role         *RoleClient
-	Schema       *SchemaClient
-	Table        *TableClient
-	User         *UserClient
-	Warehouse    *WarehouseClient
+	Application        *ApplicationClient
+	ApplicationPackage *ApplicationPackageClient
+	Context            *ContextClient
+	Database           *DatabaseClient
+	DatabaseRole       *DatabaseRoleClient
+	DynamicTable       *DynamicTableClient
+	Role               *RoleClient
+	Schema             *SchemaClient
+	SessionPolicy      *SessionPolicyClient
+	Stage              *StageClient
+	Table              *TableClient
+	User               *UserClient
+	Warehouse          *WarehouseClient
 }
 
 func NewTestClient(c *sdk.Client, database string, schema string, warehouse string) *TestClient {
@@ -23,15 +28,20 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		warehouse: warehouse,
 	}
 	return &TestClient{
-		context:      context,
-		Context:      NewContextClient(context),
-		Database:     NewDatabaseClient(context),
-		DatabaseRole: NewDatabaseRoleClient(context),
-		Role:         NewRoleClient(context),
-		Schema:       NewSchemaClient(context),
-		Table:        NewTableClient(context),
-		User:         NewUserClient(context),
-		Warehouse:    NewWarehouseClient(context),
+		context:            context,
+		Application:        NewApplicationClient(context),
+		ApplicationPackage: NewApplicationPackageClient(context),
+		Context:            NewContextClient(context),
+		Database:           NewDatabaseClient(context),
+		DatabaseRole:       NewDatabaseRoleClient(context),
+		DynamicTable:       NewDynamicTableClient(context),
+		Role:               NewRoleClient(context),
+		Schema:             NewSchemaClient(context),
+		SessionPolicy:      NewSessionPolicyClient(context),
+		Stage:              NewStageClient(context),
+		Table:              NewTableClient(context),
+		User:               NewUserClient(context),
+		Warehouse:          NewWarehouseClient(context),
 	}
 }
 

@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -160,8 +159,10 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
 	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := dynamicTableName + "_table"
-	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	tableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
 	otherSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":         config.StringVariable(dynamicTableName),
@@ -195,7 +196,9 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:       func() { createDynamicTableOutsideTerraform(t, otherSchema, dynamicTableName, query) },
+				PreConfig: func() {
+					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, otherSchemaId, dynamicTableName, sdk.NewAccountObjectIdentifier(acc.TestWarehouseName), tableId)
+				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -423,16 +426,4 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 			},
 		},
 	})
-}
-
-// TODO [SNOW-926148]: currently this dynamic table is not cleaned in the test; it is removed when the whole database is removed - this currently happens in a sweeper
-func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamicTableName string, query string) {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	dynamicTableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, schemaName, dynamicTableName)
-	if err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(dynamicTableId, sdk.NewAccountObjectIdentifier(acc.TestWarehouseName), sdk.TargetLag{MaximumDuration: sdk.String("2 minutes")}, query)); err != nil {
-		t.Fatal(fmt.Errorf("error creating dynamic table: %w", err))
-	}
 }

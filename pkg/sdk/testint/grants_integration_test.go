@@ -241,7 +241,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
@@ -301,7 +301,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
 		_, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
@@ -594,7 +594,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
@@ -654,7 +654,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
 		_, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
@@ -774,8 +774,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		appPackageName := random.AlphaN(8)
-		cleanupAppPackage := createApplicationPackage(t, client, appPackageName)
+		applicationPackage, cleanupAppPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
 		t.Cleanup(cleanupAppPackage)
 		// TODO [SNOW-1284382]: alter the test when the syntax starts working
 		// 2024/03/29 17:04:20 [DEBUG] sql-conn-query: [query SHOW GRANTS TO SHARE "0a8DMkl3NOx7" IN APPLICATION PACKAGE "hziiAtqY" err 001003 (42000): SQL compilation error:
@@ -784,7 +783,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			To: &sdk.ShowGrantsTo{
 				Share: &sdk.ShowGrantsToShare{
 					Name:                 shareTest.ID(),
-					InApplicationPackage: sdk.Pointer(sdk.NewAccountObjectIdentifier(appPackageName)),
+					InApplicationPackage: sdk.Pointer(applicationPackage.ID()),
 				},
 			},
 		})
@@ -827,7 +826,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphaN(20)))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)

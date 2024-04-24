@@ -71,8 +71,8 @@ func (s *DynamicTableSetRequest) WithTargetLag(targetLag TargetLag) *DynamicTabl
 	return s
 }
 
-func (s *DynamicTableSetRequest) WithWarehouse(warehourse AccountObjectIdentifier) *DynamicTableSetRequest {
-	s.warehourse = &warehourse
+func (s *DynamicTableSetRequest) WithWarehouse(warehouse AccountObjectIdentifier) *DynamicTableSetRequest {
+	s.warehouse = &warehouse
 	return s
 }
 
@@ -82,6 +82,11 @@ func NewDropDynamicTableRequest(
 	s := DropDynamicTableRequest{}
 	s.name = name
 	return &s
+}
+
+func (s *DropDynamicTableRequest) WithIfExists(ifExists bool) *DropDynamicTableRequest {
+	s.IfExists = &ifExists
+	return s
 }
 
 func NewDescribeDynamicTableRequest(

@@ -31,8 +31,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	t.Run("if we have special characters in db or schema name, create pipe succeeds", func(t *testing.T) {
@@ -73,8 +72,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(table2Cleanup)
 
-	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	pipe1Name := random.AlphanumericN(20)
@@ -154,8 +152,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
@@ -226,8 +223,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	t.Run("pipe exists", func(t *testing.T) {
@@ -254,8 +250,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	pipeCopyStatement := createPipeCopyStatement(t, table, stage)
@@ -360,7 +355,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	databaseTest, schemaTest := testDb(t), testSchema(t)
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
-	stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(6)))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	cleanupPipeHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {

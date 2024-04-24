@@ -215,7 +215,7 @@ func TestInt_Table(t *testing.T) {
 	t.Run("create table using template", func(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
 		t.Cleanup(fileFormatCleanup)
-		stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "new_stage"))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		f, err := os.CreateTemp("/tmp", "data.csv")

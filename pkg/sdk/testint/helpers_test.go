@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -35,58 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createDynamicTable(t *testing.T, client *sdk.Client) (*sdk.DynamicTable, func()) {
-	t.Helper()
-	return createDynamicTableWithOptions(t, client, nil, nil, nil, nil)
-}
-
-func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *sdk.Warehouse, database *sdk.Database, schema *sdk.Schema, table *sdk.Table) (*sdk.DynamicTable, func()) {
-	t.Helper()
-	var warehouseCleanup func()
-	if warehouse == nil {
-		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
-	}
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
-	}
-	var tableCleanup func()
-	if table == nil {
-		table, tableCleanup = testClientHelper().Table.CreateTableInSchema(t, schema.ID())
-	}
-	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
-	targetLag := sdk.TargetLag{
-		MaximumDuration: sdk.String("2 minutes"),
-	}
-	query := "select id from " + table.ID().FullyQualifiedName()
-	comment := random.Comment()
-	ctx := context.Background()
-	err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
-	require.NoError(t, err)
-	entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(name.Name())}).WithIn(&sdk.In{Schema: schema.ID()}))
-	require.NoError(t, err)
-	require.Equal(t, 1, len(entities))
-	return &entities[0], func() {
-		require.NoError(t, client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name)))
-		if tableCleanup != nil {
-			tableCleanup()
-		}
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-		if warehouseCleanup != nil {
-			warehouseCleanup()
-		}
-	}
-}
-
 func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Tag, func()) {
 	t.Helper()
 	name := random.StringRange(8, 28)
@@ -98,50 +44,6 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 	require.NoError(t, err)
 	return tag, func() {
 		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
-		require.NoError(t, err)
-	}
-}
-
-func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest {
-		return request.WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true)))
-	})
-}
-
-func createStage(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
-	t.Helper()
-	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
-}
-
-func createStageWithURL(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
-		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(url)))
-	require.NoError(t, err)
-
-	stage, err := client.Stages.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return stage, func() {
-		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
-		require.NoError(t, err)
-	}
-}
-
-func createStageWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, reqMapping func(*sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest) (*sdk.Stage, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Stages.CreateInternal(ctx, reqMapping(sdk.NewCreateInternalStageRequest(id)))
-	require.NoError(t, err)
-
-	stage, err := client.Stages.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return stage, func() {
-		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -224,25 +126,6 @@ func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetwor
 	err := client.NetworkPolicies.Create(ctx, req)
 	return err, func() {
 		err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(req.GetName()))
-		require.NoError(t, err)
-	}
-}
-
-func createSessionPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.SessionPolicy, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.StringN(12))
-	return createSessionPolicyWithOptions(t, client, id, sdk.NewCreateSessionPolicyRequest(id))
-}
-
-func createSessionPolicyWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, request *sdk.CreateSessionPolicyRequest) (*sdk.SessionPolicy, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.SessionPolicies.Create(ctx, request)
-	require.NoError(t, err)
-	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return sessionPolicy, func() {
-		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -482,69 +365,6 @@ func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentif
 
 	return func() {
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP VIEW %s`, viewId.FullyQualifiedName()))
-		require.NoError(t, err)
-	}
-}
-
-func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename string) {
-	t.Helper()
-	ctx := context.Background()
-
-	path, err := filepath.Abs("./testdata/" + filename)
-	require.NoError(t, err)
-	absPath := "file://" + path
-
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
-	require.NoError(t, err)
-}
-
-func putOnStageWithContent(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, filename string, content string) {
-	t.Helper()
-	ctx := context.Background()
-
-	tf := fmt.Sprintf("/tmp/%s", filename)
-	f, err := os.Create(tf)
-	require.NoError(t, err)
-	if content != "" {
-		_, err = f.Write([]byte(content))
-		require.NoError(t, err)
-	}
-	f.Close()
-	defer os.Remove(f.Name())
-
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))
-		require.NoError(t, err)
-	})
-}
-
-func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
-	t.Helper()
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION PACKAGE "%s"`, name))
-	require.NoError(t, err)
-	return func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION PACKAGE "%s"`, name))
-		require.NoError(t, err)
-	}
-}
-
-func addApplicationPackageVersion(t *testing.T, client *sdk.Client, stage *sdk.Stage, appPackageName string, versionName string) {
-	t.Helper()
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`ALTER APPLICATION PACKAGE "%s" ADD VERSION %v USING '@%s'`, appPackageName, versionName, stage.ID().FullyQualifiedName()))
-	require.NoError(t, err)
-}
-
-func createApplication(t *testing.T, client *sdk.Client, name string, packageName string, version string) func() {
-	t.Helper()
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION "%s" FROM APPLICATION PACKAGE "%s" USING VERSION %s`, name, packageName, version))
-	require.NoError(t, err)
-	return func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION "%s"`, name))
 		require.NoError(t, err)
 	}
 }

@@ -107,7 +107,10 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	t.Cleanup(tableCleanup)
+
+	dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 	t.Cleanup(dynamicTableCleanup)
 
 	t.Run("when dynamic table exists", func(t *testing.T) {
@@ -126,8 +129,11 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	t.Cleanup(tableCleanup)
+
 	t.Run("alter with suspend or resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
@@ -153,7 +159,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with refresh", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithRefresh(sdk.Bool(true)))
@@ -165,7 +171,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with suspend and resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
@@ -174,7 +180,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with set", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}

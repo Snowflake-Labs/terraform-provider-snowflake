@@ -56,7 +56,7 @@ func TestInt_PipeStatus(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+	stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
@@ -105,7 +105,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+	stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)

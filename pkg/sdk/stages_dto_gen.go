@@ -32,6 +32,10 @@ type CreateInternalStageRequest struct {
 	Tag                   []TagAssociation
 }
 
+func (s *CreateInternalStageRequest) ID() SchemaObjectIdentifier {
+	return s.name
+}
+
 type InternalStageEncryptionRequest struct {
 	Type *InternalStageEncryptionOption // required
 }
