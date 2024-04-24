@@ -11,6 +11,7 @@ type TestClient struct {
 	Database           *DatabaseClient
 	DatabaseRole       *DatabaseRoleClient
 	DynamicTable       *DynamicTableClient
+	NetworkPolicy      *NetworkPolicyClient
 	PasswordPolicy     *PasswordPolicyClient
 	Pipe               *PipeClient
 	Role               *RoleClient
@@ -38,6 +39,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Database:           NewDatabaseClient(context),
 		DatabaseRole:       NewDatabaseRoleClient(context),
 		DynamicTable:       NewDynamicTableClient(context),
+		NetworkPolicy:      NewNetworkPolicyClient(context),
 		PasswordPolicy:     NewPasswordPolicyClient(context),
 		Pipe:               NewPipeClient(context),
 		Role:               NewRoleClient(context),
