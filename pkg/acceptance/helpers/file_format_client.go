@@ -1,7 +1,12 @@
 package helpers
 
 import (
+	"context"
+	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/require"
 )
 
 type FileFormatClient struct {
@@ -16,4 +21,36 @@ func NewFileFormatClient(context *TestClientContext) *FileFormatClient {
 
 func (c *FileFormatClient) client() sdk.FileFormats {
 	return c.context.client.FileFormats
+}
+
+func (c *FileFormatClient) CreateFileFormat(t *testing.T) (*sdk.FileFormat, func()) {
+	t.Helper()
+	return c.CreateFileFormatWithOptions(t, &sdk.CreateFileFormatOptions{
+		Type: sdk.FileFormatTypeCSV,
+	})
+}
+
+func (c *FileFormatClient) CreateFileFormatWithOptions(t *testing.T, opts *sdk.CreateFileFormatOptions) (*sdk.FileFormat, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, random.AlphanumericN(12))
+
+	err := c.client().Create(ctx, id, opts)
+	require.NoError(t, err)
+
+	fileFormat, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return fileFormat, c.DropFileFormatFunc(t, id)
+}
+
+func (c *FileFormatClient) DropFileFormatFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, id, &sdk.DropFileFormatOptions{IfExists: sdk.Bool(true)})
+		require.NoError(t, err)
+	}
 }
