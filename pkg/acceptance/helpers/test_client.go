@@ -17,6 +17,7 @@ type TestClient struct {
 	SessionPolicy      *SessionPolicyClient
 	Stage              *StageClient
 	Table              *TableClient
+	Tag                *TagClient
 	User               *UserClient
 	Warehouse          *WarehouseClient
 }
@@ -41,6 +42,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Schema:             NewSchemaClient(context),
 		SessionPolicy:      NewSessionPolicyClient(context),
 		Stage:              NewStageClient(context),
+		Tag:                NewTagClient(context),
 		Table:              NewTableClient(context),
 		User:               NewUserClient(context),
 		Warehouse:          NewWarehouseClient(context),
