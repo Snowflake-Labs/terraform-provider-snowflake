@@ -304,7 +304,7 @@ func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.MaskingPolicies.Drop(ctx, objectIdentifier)
+	err := client.MaskingPolicies.Drop(ctx, objectIdentifier, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

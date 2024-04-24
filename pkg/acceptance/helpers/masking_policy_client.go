@@ -79,8 +79,7 @@ func (c *MaskingPolicyClient) DropMaskingPolicyFunc(t *testing.T, id sdk.SchemaO
 	ctx := context.Background()
 
 	return func() {
-		// no if exists in the docs: https://docs.snowflake.com/en/sql-reference/sql/drop-masking-policy#syntax
-		err := c.client().Drop(ctx, id)
+		err := c.client().Drop(ctx, id, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Bool(true)})
 		assert.NoError(t, err)
 	}
 }
