@@ -33,61 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createAlert(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, warehouse *sdk.Warehouse) (*sdk.Alert, func()) {
-	t.Helper()
-	schedule := "USING CRON * * * * * UTC"
-	condition := "SELECT 1"
-	action := "SELECT 1"
-	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &sdk.CreateAlertOptions{})
-}
-
-func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, warehouse *sdk.Warehouse, schedule string, condition string, action string, opts *sdk.CreateAlertOptions) (*sdk.Alert, func()) {
-	t.Helper()
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
-	}
-	var warehouseCleanup func()
-	if warehouse == nil {
-		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
-	}
-
-	name := random.String()
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
-	ctx := context.Background()
-	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
-	require.NoError(t, err)
-
-	showOptions := &sdk.ShowAlertOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(name),
-		},
-		In: &sdk.In{
-			Schema: schema.ID(),
-		},
-	}
-	alertList, err := client.Alerts.Show(ctx, showOptions)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(alertList))
-	return &alertList[0], func() {
-		err := client.Alerts.Drop(ctx, id)
-		require.NoError(t, err)
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-		if warehouseCleanup != nil {
-			warehouseCleanup()
-		}
-	}
-}
-
 func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
