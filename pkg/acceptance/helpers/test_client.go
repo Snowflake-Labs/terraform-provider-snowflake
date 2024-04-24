@@ -27,6 +27,7 @@ type TestClient struct {
 	Table              *TableClient
 	Tag                *TagClient
 	User               *UserClient
+	View               *ViewClient
 	Warehouse          *WarehouseClient
 }
 
@@ -61,6 +62,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Tag:                NewTagClient(context),
 		Table:              NewTableClient(context),
 		User:               NewUserClient(context),
+		View:               NewViewClient(context),
 		Warehouse:          NewWarehouseClient(context),
 	}
 }
