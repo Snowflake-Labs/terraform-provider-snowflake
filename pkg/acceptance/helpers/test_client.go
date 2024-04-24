@@ -5,6 +5,7 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 type TestClient struct {
 	context *TestClientContext
 
+	Account            *AccountClient
 	Alert              *AlertClient
 	ApiIntegration     *ApiIntegrationClient
 	Application        *ApplicationClient
@@ -44,6 +45,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	}
 	return &TestClient{
 		context:            context,
+		Account:            NewAccountClient(context),
 		Alert:              NewAlertClient(context),
 		ApiIntegration:     NewApiIntegrationClient(context),
 		Application:        NewApplicationClient(context),

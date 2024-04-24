@@ -137,7 +137,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		accountsToAdd := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, secondaryClient),
+			secondaryTestClientHelper().Account.GetAccountIdentifier(t),
 		}
 		// first add the account.
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
@@ -196,7 +196,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		})
 
 		accountsToSet := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, client),
+			testClientHelper().Account.GetAccountIdentifier(t),
 		}
 
 		// first add the account.
@@ -388,7 +388,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		err = providerClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			Add: &sdk.ShareAdd{
 				Accounts: []sdk.AccountIdentifier{
-					getAccountIdentifier(t, consumerClient),
+					testClientHelper().Account.GetAccountIdentifier(t),
 				},
 			},
 		})
