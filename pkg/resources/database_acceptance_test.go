@@ -196,8 +196,6 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		return vars
 	}
 
-	client := acc.Client(t)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -207,7 +205,10 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
+				PreConfig: func() {
+					revertParameter := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "5")
+					t.Cleanup(revertParameter)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
@@ -216,7 +217,9 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
+				PreConfig: func() {
+					_ = acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "10")
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
@@ -285,8 +288,6 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		return vars
 	}
 
-	client := acc.Client(t)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -296,7 +297,10 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
+				PreConfig: func() {
+					revertParameter := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "5")
+					t.Cleanup(revertParameter)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
@@ -314,7 +318,9 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				),
 			},
 			{
-				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
+				PreConfig: func() {
+					_ = acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "10")
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
