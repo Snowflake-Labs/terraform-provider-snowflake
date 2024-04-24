@@ -6,7 +6,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,7 +43,7 @@ func (c *ApplicationPackageClient) DropApplicationPackageFunc(t *testing.T, id s
 
 	return func() {
 		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id).WithIfExists(sdk.Bool(true)))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 

@@ -33,16 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetworkPolicyRequest) (error, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.NetworkPolicies.Create(ctx, req)
-	return err, func() {
-		err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(req.GetName()))
-		require.NoError(t, err)
-	}
-}
-
 func createResourceMonitor(t *testing.T, client *sdk.Client) (*sdk.ResourceMonitor, func()) {
 	t.Helper()
 	return createResourceMonitorWithOptions(t, client, &sdk.CreateResourceMonitorOptions{
