@@ -8,10 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
-)
-
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
 // the account locator and by filtering the list of accounts in replication accounts by the account locator
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {

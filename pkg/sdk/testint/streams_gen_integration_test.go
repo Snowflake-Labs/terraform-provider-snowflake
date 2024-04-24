@@ -55,7 +55,7 @@ func TestInt_Streams(t *testing.T) {
 		stageName := random.AlphaN(10)
 		stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName)
 		stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-		_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID, nycWeatherDataURL)
+		_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
 		t.Cleanup(stageCleanup)
 
 		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))

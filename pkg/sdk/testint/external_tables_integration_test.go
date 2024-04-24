@@ -18,7 +18,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
 	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID, nycWeatherDataURL)
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
 	t.Cleanup(stageCleanup)
 
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
@@ -425,7 +425,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
 	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
-	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage, nycWeatherDataURL)
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage)
 	t.Cleanup(stageCleanup)
 
 	stageLocation := fmt.Sprintf("@%s", stage.FullyQualifiedName())
