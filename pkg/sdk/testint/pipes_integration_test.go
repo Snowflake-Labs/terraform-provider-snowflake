@@ -75,14 +75,12 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
-	pipe1Name := random.AlphanumericN(20)
 	pipe1CopyStatement := createPipeCopyStatement(t, table1, stage)
-	pipe1, pipe1Cleanup := createPipe(t, itc.client, testDb(t), testSchema(t), pipe1Name, pipe1CopyStatement)
+	pipe1, pipe1Cleanup := testClientHelper().Pipe.CreatePipe(t, pipe1CopyStatement)
 	t.Cleanup(pipe1Cleanup)
 
-	pipe2Name := random.AlphanumericN(20)
 	pipe2CopyStatement := createPipeCopyStatement(t, table2, stage)
-	pipe2, pipe2Cleanup := createPipe(t, itc.client, testDb(t), testSchema(t), pipe2Name, pipe2CopyStatement)
+	pipe2, pipe2Cleanup := testClientHelper().Pipe.CreatePipe(t, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)
 
 	t.Run("show: without options", func(t *testing.T) {
@@ -111,7 +109,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Run("show: like", func(t *testing.T) {
 		showOptions := &sdk.ShowPipeOptions{
 			Like: &sdk.Like{
-				Pattern: sdk.String(pipe1Name),
+				Pattern: sdk.String(pipe1.Name),
 			},
 		}
 		pipes, err := itc.client.Pipes.Show(itc.ctx, showOptions)
@@ -227,9 +225,8 @@ func TestInt_PipeDrop(t *testing.T) {
 	t.Cleanup(stageCleanup)
 
 	t.Run("pipe exists", func(t *testing.T) {
-		pipeName := random.AlphanumericN(20)
 		pipeCopyStatement := createPipeCopyStatement(t, table, stage)
-		pipe, _ := createPipe(t, itc.client, testDb(t), testSchema(t), pipeName, pipeCopyStatement)
+		pipe, _ := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 
 		err := itc.client.Pipes.Drop(itc.ctx, pipe.ID())
 
@@ -257,8 +254,7 @@ func TestInt_PipeAlter(t *testing.T) {
 
 	// TODO: test error integration when we have them in project
 	t.Run("set value and unset value", func(t *testing.T) {
-		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), testSchema(t), pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		alterOptions := &sdk.AlterPipeOptions{
@@ -296,8 +292,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		tag, tagCleanup := createTag(t, itc.client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
 
-		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), testSchema(t), pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		tagValue := "abc"
@@ -332,8 +327,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	})
 
 	t.Run("refresh with all", func(t *testing.T) {
-		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), testSchema(t), pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		alterOptions := &sdk.AlterPipeOptions{

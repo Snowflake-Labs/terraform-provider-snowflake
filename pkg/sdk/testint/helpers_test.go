@@ -48,34 +48,6 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 	}
 }
 
-func createPipe(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string, copyStatement string) (*sdk.Pipe, func()) {
-	t.Helper()
-	require.NotNil(t, database, "database has to be created")
-	require.NotNil(t, schema, "schema has to be created")
-
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	pipeCleanup := func() {
-		err := client.Pipes.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-
-	err := client.Pipes.Create(ctx, id, copyStatement, &sdk.CreatePipeOptions{})
-	if err != nil {
-		return nil, pipeCleanup
-	}
-	require.NoError(t, err)
-
-	createdPipe, errDescribe := client.Pipes.Describe(ctx, id)
-	if errDescribe != nil {
-		return nil, pipeCleanup
-	}
-	require.NoError(t, errDescribe)
-
-	return createdPipe, pipeCleanup
-}
-
 func createPasswordPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.PasswordPolicy, func()) {
 	t.Helper()
 	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
