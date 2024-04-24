@@ -33,29 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, func()) {
-	t.Helper()
-	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
-	currentAccount := testClientHelper().Context.CurrentAccount(t)
-	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
-	allowedAccounts := []sdk.AccountIdentifier{accountID}
-	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
-}
-
-func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectTypes []sdk.PluralObjectType, allowedAccounts []sdk.AccountIdentifier, opts *sdk.CreateFailoverGroupOptions) (*sdk.FailoverGroup, func()) {
-	t.Helper()
-	id := sdk.RandomAlphanumericAccountObjectIdentifier()
-	ctx := context.Background()
-	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
-	require.NoError(t, err)
-	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return failoverGroup, func() {
-		err := client.FailoverGroups.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
-
 func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
 	t.Helper()
 	// TODO(SNOW-1058419): Try with identifier containing dot during identifiers rework
