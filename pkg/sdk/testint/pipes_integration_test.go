@@ -238,7 +238,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	t.Run("pipe does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testDb(t).Name, "does_not_exist")
 
-		err := itc.client.Alerts.Drop(itc.ctx, id)
+		err := itc.client.Pipes.Drop(itc.ctx, id, &sdk.DropPipeOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

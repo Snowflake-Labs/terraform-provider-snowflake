@@ -52,8 +52,7 @@ func (c *AlertClient) DropAlertFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
 	return func() {
-		// TODO: add if exists
-		err := c.client().Drop(ctx, id)
+		err := c.client().Drop(ctx, id, &sdk.DropAlertOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 	}
 }

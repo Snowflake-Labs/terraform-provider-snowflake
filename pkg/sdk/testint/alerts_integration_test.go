@@ -367,7 +367,7 @@ func TestInt_AlertDrop(t *testing.T) {
 	t.Run("when alert exists", func(t *testing.T) {
 		alert, _ := testClientHelper().Alert.CreateAlert(t)
 		id := alert.ID()
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -375,7 +375,7 @@ func TestInt_AlertDrop(t *testing.T) {
 
 	t.Run("when alert does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -388,7 +388,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
-			err := client.Alerts.Drop(ctx, id)
+			err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}

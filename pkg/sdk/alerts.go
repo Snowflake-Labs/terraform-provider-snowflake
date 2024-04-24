@@ -13,14 +13,14 @@ var _ Alerts = (*alerts)(nil)
 var (
 	_ validatable = new(CreateAlertOptions)
 	_ validatable = new(AlterAlertOptions)
-	_ validatable = new(dropAlertOptions)
+	_ validatable = new(DropAlertOptions)
 	_ validatable = new(ShowAlertOptions)
 )
 
 type Alerts interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error
-	Drop(ctx context.Context, id SchemaObjectIdentifier) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error
 	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*AlertDetails, error)
@@ -160,13 +160,14 @@ func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alt
 }
 
 // DropAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-alert.
-type dropAlertOptions struct {
-	drop  bool                   `ddl:"static" sql:"DROP"`
-	alert bool                   `ddl:"static" sql:"ALERT"`
-	name  SchemaObjectIdentifier `ddl:"identifier"`
+type DropAlertOptions struct {
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	alert    bool                   `ddl:"static" sql:"ALERT"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *dropAlertOptions) validate() error {
+func (opts *DropAlertOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
@@ -176,11 +177,11 @@ func (opts *dropAlertOptions) validate() error {
 	return nil
 }
 
-func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
-	// alert drop does not support [IF EXISTS] so there are no drop options.
-	opts := &dropAlertOptions{
-		name: id,
+func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate alert options: %w", err)
 	}
