@@ -5,6 +5,7 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 type TestClient struct {
 	context *TestClientContext
 
+	Alert              *AlertClient
 	Application        *ApplicationClient
 	ApplicationPackage *ApplicationPackageClient
 	Context            *ContextClient
@@ -35,6 +36,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	}
 	return &TestClient{
 		context:            context,
+		Alert:              NewAlertClient(context),
 		Application:        NewApplicationClient(context),
 		ApplicationPackage: NewApplicationPackageClient(context),
 		Context:            NewContextClient(context),
@@ -64,6 +66,12 @@ type TestClientContext struct {
 	warehouse string
 }
 
-func (c *TestClientContext) SchemaId() sdk.DatabaseObjectIdentifier {
+// TODO: use
+func (c *TestClientContext) schemaId() sdk.DatabaseObjectIdentifier {
 	return sdk.NewDatabaseObjectIdentifier(c.database, c.schema)
+}
+
+// TODO: use
+func (c *TestClientContext) warehouseId() sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(c.warehouse)
 }

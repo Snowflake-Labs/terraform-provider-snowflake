@@ -26,7 +26,7 @@ func (c *MaskingPolicyClient) client() sdk.MaskingPolicies {
 
 func (c *MaskingPolicyClient) CreateMaskingPolicy(t *testing.T) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
-	return c.CreateMaskingPolicyInSchema(t, c.context.SchemaId())
+	return c.CreateMaskingPolicyInSchema(t, c.context.schemaId())
 }
 
 func (c *MaskingPolicyClient) CreateMaskingPolicyInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.MaskingPolicy, func()) {
@@ -55,7 +55,7 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyIdentity(t *testing.T, columnTy
 		},
 	}
 	expression := "a"
-	return c.CreateMaskingPolicyWithOptions(t, c.context.SchemaId(), signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
+	return c.CreateMaskingPolicyWithOptions(t, c.context.schemaId(), signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
 }
 
 func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
