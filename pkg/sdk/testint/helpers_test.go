@@ -33,42 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createApiIntegration(t *testing.T, client *sdk.Client) (sdk.AccountObjectIdentifier, func()) {
-	t.Helper()
-	ctx := context.Background()
-	id := sdk.NewAccountObjectIdentifier(random.String())
-	apiAllowedPrefixes := []sdk.ApiIntegrationEndpointPrefix{{Path: "https://xyz.execute-api.us-west-2.amazonaws.com/production"}}
-	req := sdk.NewCreateApiIntegrationRequest(id, apiAllowedPrefixes, true)
-	req.WithAwsApiProviderParams(sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiGateway, "arn:aws:iam::123456789012:role/hello_cloud_account_role"))
-	err := client.ApiIntegrations.Create(ctx, req)
-	require.NoError(t, err)
-
-	return id, func() {
-		err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
-		require.NoError(t, err)
-	}
-}
-
-func createExternalFunction(t *testing.T, client *sdk.Client, schema *sdk.Schema) (sdk.SchemaObjectIdentifier, func()) {
-	t.Helper()
-	ctx := context.Background()
-	apiIntegration, cleanupApiIntegration := createApiIntegration(t, client)
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.StringN(4))
-	argument := sdk.NewExternalFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
-	argumentsRequest := []sdk.ExternalFunctionArgumentRequest{*argument}
-	as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
-	request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, &apiIntegration, as).
-		WithOrReplace(sdk.Bool(true)).
-		WithArguments(argumentsRequest)
-	err := client.ExternalFunctions.Create(ctx, request)
-	require.NoError(t, err)
-	return id, func() {
-		cleanupApiIntegration()
-		err = client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
-		require.NoError(t, err)
-	}
-}
-
 // TODO: extract getting row access policies as resource (like getting tag in system functions)
 // getRowAccessPolicyFor is based on https://docs.snowflake.com/en/user-guide/security-row-intro#obtain-database-objects-with-a-row-access-policy.
 func getRowAccessPolicyFor(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) (*policyReference, error) {
