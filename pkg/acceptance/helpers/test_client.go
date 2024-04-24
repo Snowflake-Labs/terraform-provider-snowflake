@@ -20,6 +20,7 @@ type TestClient struct {
 	Pipe               *PipeClient
 	ResourceMonitor    *ResourceMonitorClient
 	Role               *RoleClient
+	RowAccessPolicy    *RowAccessPolicyClient
 	Schema             *SchemaClient
 	SessionPolicy      *SessionPolicyClient
 	Share              *ShareClient
@@ -55,6 +56,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Pipe:               NewPipeClient(context),
 		ResourceMonitor:    NewResourceMonitorClient(context),
 		Role:               NewRoleClient(context),
+		RowAccessPolicy:    NewRowAccessPolicyClient(context),
 		Schema:             NewSchemaClient(context),
 		SessionPolicy:      NewSessionPolicyClient(context),
 		Share:              NewShareClient(context),
