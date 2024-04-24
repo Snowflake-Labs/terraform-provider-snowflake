@@ -119,15 +119,23 @@ func TestResourceMonitorDrop(t *testing.T) {
 	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &dropResourceMonitorOptions{}
+		opts := &DropResourceMonitorOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &dropResourceMonitorOptions{
+		opts := &DropResourceMonitorOptions{
 			name: id,
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP RESOURCE MONITOR %s", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropResourceMonitorOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP RESOURCE MONITOR IF EXISTS %s", id.FullyQualifiedName())
 	})
 }
 

@@ -64,8 +64,7 @@ func (c *ResourceMonitorClient) DropResourceMonitorFunc(t *testing.T, id sdk.Acc
 	ctx := context.Background()
 
 	return func() {
-		// TODO: add if exists
-		err := c.client().Drop(ctx, id)
+		err := c.client().Drop(ctx, id, &sdk.DropResourceMonitorOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 	}
 }
