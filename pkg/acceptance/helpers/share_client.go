@@ -56,3 +56,15 @@ func (c *ShareClient) DropShareFunc(t *testing.T, id sdk.AccountObjectIdentifier
 		require.NoError(t, err)
 	}
 }
+
+func (c *ShareClient) SetAccountOnShare(t *testing.T, accountId sdk.AccountIdentifier, shareId sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, shareId, &sdk.AlterShareOptions{
+		Set: &sdk.ShareSet{
+			Accounts: []sdk.AccountIdentifier{accountId},
+		},
+	})
+	require.NoError(t, err)
+}

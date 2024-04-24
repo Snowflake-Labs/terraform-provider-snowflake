@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,9 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
@@ -1103,15 +1100,10 @@ func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: func(state *terraform.State) error {
-			return errors.Join(
-				acc.CheckAccountRolePrivilegesRevoked(t)(state),
-				dropSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName),
-			)
-		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { assert.NoError(t, createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName)) },
+				PreConfig:       func() { createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/ImportedPrivileges"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
