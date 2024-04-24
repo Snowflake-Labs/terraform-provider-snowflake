@@ -333,6 +333,28 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 //	})
 //}
 
+func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      tableConstraintEmptyForeignKeyProperties(name, acc.TestDatabaseName, acc.TestSchemaName),
+				ExpectError: regexp.MustCompile(`At least 1 "references" blocks are required.`),
+			},
+			{
+				Config: tableConstraintForeignKeyProperties(name, acc.TestDatabaseName, acc.TestSchemaName),
+			},
+		},
+	})
+}
+
 func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
@@ -377,25 +399,54 @@ resource "snowflake_table_constraint" "unique" {
 `, n, databaseName, schemaName, n)
 }
 
-func tableConstraintWithNameAndComment(databaseName string, schemaName string, name string, comment string) string {
+func tableConstraintEmptyForeignKeyProperties(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_table" "t" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
-
-	column {
-		name = "col1"
-		type = "NUMBER(38,0)"
+	resource "snowflake_table" "t" {
+		name     = "%[3]s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+	
+		column {
+			name = "col1"
+			type = "NUMBER(38,0)"
+		}
 	}
+	
+	resource "snowflake_table_constraint" "unique" {
+		name = "%[3]s"
+		type = "FOREIGN KEY"
+		table_id = snowflake_table.t.qualified_name
+		columns = ["col1"]
+		foreign_key_properties {
+		}
+	}
+	`, databaseName, schemaName, name)
 }
 
-resource "snowflake_table_constraint" "test" {
-	name     = "%s"
-	comment  = "%s"
-	type     = "UNIQUE"
-	table_id = snowflake_table.t.id
-	columns  = ["col1"]
-}
-`, name, databaseName, schemaName, name, comment)
+func tableConstraintForeignKeyProperties(name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_table" "t" {
+		name     = "%[3]s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+	
+		column {
+			name = "col1"
+			type = "NUMBER(38,0)"
+		}
+	}
+	
+	resource "snowflake_table_constraint" "unique" {
+		name = "%[3]s"
+		type = "FOREIGN KEY"
+		table_id = snowflake_table.t.qualified_name
+		columns = ["col1"]
+		foreign_key_properties {
+			references {
+				columns = ["col1"]
+				table_id = snowflake_table.t.qualified_name
+			}
+		}
+	}
+	`, databaseName, schemaName, name)
 }

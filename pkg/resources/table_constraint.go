@@ -112,7 +112,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 			Schema: map[string]*schema.Schema{
 				"references": {
 					Type:        schema.TypeList,
-					Optional:    true,
+					Required:    true,
 					ForceNew:    true,
 					MaxItems:    1,
 					Description: "The table and columns that the foreign key references. Not applicable for primary/unique keys",

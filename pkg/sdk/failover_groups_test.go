@@ -55,6 +55,24 @@ func TestCreateSecondaryReplicationGroup(t *testing.T) {
 func TestFailoverGroupAlterSource(t *testing.T) {
 	id := NewAccountObjectIdentifier("fg1")
 
+	t.Run("validate: empty unset", func(t *testing.T) {
+		opts := &AlterSourceFailoverGroupOptions{
+			name:  id,
+			Unset: &FailoverGroupUnset{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("FailoverGroupUnset", "ReplicationSchedule"))
+	})
+
+	t.Run("unset replication schedule", func(t *testing.T) {
+		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
+			Unset: &FailoverGroupUnset{
+				ReplicationSchedule: Bool(true),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" UNSET REPLICATION_SCHEDULE`)
+	})
+
 	t.Run("rename", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
 			name:    id,

@@ -402,7 +402,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("snowflake_user_mapping_attribute") {
 		val, ok := d.GetOk("snowflake_user_mapping_attribute")
 		if ok {
-			alterInput.ExternalOauthSnowflakeUserMappingAttribute = val.(snowflake.SFUserMappingAttribute)
+			alterInput.ExternalOauthSnowflakeUserMappingAttribute = snowflake.SFUserMappingAttribute(val.(string))
 			alterInput.ExternalOauthSnowflakeUserMappingAttributeOk = true
 			runAlter = true
 		} else {
@@ -479,7 +479,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("any_role_mode") {
 		val, ok := d.GetOk("any_role_mode")
 		if ok {
-			alterInput.ExternalOauthAnyRoleMode = val.(snowflake.AnyRoleMode)
+			alterInput.ExternalOauthAnyRoleMode = snowflake.AnyRoleMode(val.(string))
 			alterInput.ExternalOauthAnyRoleModeOk = true
 			runAlter = true
 		} else {
