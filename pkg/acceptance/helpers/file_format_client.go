@@ -34,7 +34,7 @@ func (c *FileFormatClient) CreateFileFormatWithOptions(t *testing.T, opts *sdk.C
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, random.AlphanumericN(12))
+	id := c.context.newSchemaObjectIdentifier(random.AlphanumericN(12))
 
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)

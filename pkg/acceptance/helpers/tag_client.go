@@ -25,7 +25,7 @@ func (c *TagClient) client() sdk.Tags {
 
 func (c *TagClient) CreateTag(t *testing.T) (*sdk.Tag, func()) {
 	t.Helper()
-	return c.CreateTagInSchema(t, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+	return c.CreateTagInSchema(t, c.context.schemaId())
 }
 
 func (c *TagClient) CreateTagInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Tag, func()) {

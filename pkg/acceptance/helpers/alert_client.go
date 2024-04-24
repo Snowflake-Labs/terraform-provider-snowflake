@@ -36,7 +36,7 @@ func (c *AlertClient) CreateAlertWithOptions(t *testing.T, schedule string, cond
 	ctx := context.Background()
 
 	name := random.String()
-	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, name)
+	id := c.context.newSchemaObjectIdentifier(name)
 
 	err := c.client().Create(ctx, id, c.context.warehouseId(), schedule, condition, action, opts)
 	require.NoError(t, err)

@@ -41,13 +41,13 @@ func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdenti
 
 func (c *StageClient) CreateStageWithDirectory(t *testing.T) (*sdk.Stage, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, random.AlphaN(8))
+	id := c.context.newSchemaObjectIdentifier(random.AlphaN(8))
 	return c.CreateStageWithRequest(t, sdk.NewCreateInternalStageRequest(id).WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true))))
 }
 
 func (c *StageClient) CreateStage(t *testing.T) (*sdk.Stage, func()) {
 	t.Helper()
-	return c.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+	return c.CreateStageInSchema(t, c.context.schemaId())
 }
 
 func (c *StageClient) CreateStageInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Stage, func()) {

@@ -70,12 +70,18 @@ type TestClientContext struct {
 	warehouse string
 }
 
-// TODO: use
+func (c *TestClientContext) databaseId() sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(c.database)
+}
+
 func (c *TestClientContext) schemaId() sdk.DatabaseObjectIdentifier {
 	return sdk.NewDatabaseObjectIdentifier(c.database, c.schema)
 }
 
-// TODO: use
 func (c *TestClientContext) warehouseId() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.warehouse)
+}
+
+func (c *TestClientContext) newSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifier(c.database, c.schema, name)
 }
