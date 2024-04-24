@@ -709,7 +709,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
@@ -797,7 +797,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),
@@ -1760,7 +1760,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 func TestInt_ShowGrants(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),

@@ -116,7 +116,7 @@ func TestInt_CreateShared(t *testing.T) {
 	databaseTest, databaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
-	shareTest, shareCleanup := createShare(t, secondaryClient)
+	shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{

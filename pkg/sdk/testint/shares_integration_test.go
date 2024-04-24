@@ -12,10 +12,10 @@ import (
 func TestInt_SharesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	_, shareCleanup2 := createShare(t, client)
+	_, shareCleanup2 := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup2)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -112,7 +112,8 @@ func TestInt_SharesDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when share exists", func(t *testing.T) {
-		shareTest, _ := createShare(t, client)
+		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
+		t.Cleanup(shareCleanup)
 		err := client.Shares.Drop(ctx, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -129,7 +130,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("add and remove accounts", func(t *testing.T) {
-		shareTest, shareCleanup := createShare(t, client)
+		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
@@ -186,7 +187,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		db, dbCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(dbCleanup)
 
-		shareTest, shareCleanup := createShare(t, secondaryClient)
+		shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
 		err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -226,7 +227,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset comment", func(t *testing.T) {
-		shareTest, shareCleanup := createShare(t, client)
+		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -282,7 +283,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tags", func(t *testing.T) {
-		shareTest, shareCleanup := createShare(t, client)
+		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
@@ -342,7 +343,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("describe share", func(t *testing.T) {
-		shareTest, shareCleanup := createShare(t, client)
+		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -375,7 +376,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		db, dbCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(dbCleanup)
 
-		shareTest, shareCleanup := createShare(t, providerClient)
+		shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
 		err := providerClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{

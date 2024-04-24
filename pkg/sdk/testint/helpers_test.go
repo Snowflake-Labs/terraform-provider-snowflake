@@ -33,26 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
-	t.Helper()
-	// TODO(SNOW-1058419): Try with identifier containing dot during identifiers rework
-	id := sdk.RandomAlphanumericAccountObjectIdentifier()
-	return createShareWithOptions(t, client, id, &sdk.CreateShareOptions{})
-}
-
-func createShareWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Shares.Create(ctx, id, opts)
-	require.NoError(t, err)
-	share, err := client.Shares.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return share, func() {
-		err := client.Shares.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-}
-
 func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentifier, asQuery string) func() {
 	t.Helper()
 	ctx := context.Background()
