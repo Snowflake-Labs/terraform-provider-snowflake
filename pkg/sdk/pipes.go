@@ -10,7 +10,7 @@ var _ convertibleRow[Pipe] = new(pipeDBRow)
 type Pipes interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *CreatePipeOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPipeOptions) error
-	Drop(ctx context.Context, id SchemaObjectIdentifier) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPipeOptions) error
 	Show(ctx context.Context, opts *ShowPipeOptions) ([]Pipe, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)

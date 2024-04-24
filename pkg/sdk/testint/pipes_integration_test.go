@@ -228,7 +228,7 @@ func TestInt_PipeDrop(t *testing.T) {
 		pipeCopyStatement := createPipeCopyStatement(t, table, stage)
 		pipe, _ := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 
-		err := itc.client.Pipes.Drop(itc.ctx, pipe.ID())
+		err := itc.client.Pipes.Drop(itc.ctx, pipe.ID(), nil)
 
 		require.NoError(t, err)
 		_, err = itc.client.Pipes.Describe(itc.ctx, pipe.ID())
@@ -355,7 +355,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	cleanupPipeHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
-			err := client.Pipes.Drop(ctx, id)
+			err := client.Pipes.Drop(ctx, id, nil)
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
