@@ -227,7 +227,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset password policy", func(t *testing.T) {
-		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicyTest, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		t.Cleanup(passwordPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{

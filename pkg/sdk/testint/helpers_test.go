@@ -33,50 +33,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createPasswordPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.PasswordPolicy, func()) {
-	t.Helper()
-	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
-}
-
-func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, options *sdk.CreatePasswordPolicyOptions) (*sdk.PasswordPolicy, func()) {
-	t.Helper()
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
-	}
-	name := random.UUID()
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
-	ctx := context.Background()
-	err := client.PasswordPolicies.Create(ctx, id, options)
-	require.NoError(t, err)
-
-	showOptions := &sdk.ShowPasswordPolicyOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(name),
-		},
-		In: &sdk.In{
-			Schema: schema.ID(),
-		},
-	}
-	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(passwordPolicyList))
-	return &passwordPolicyList[0], func() {
-		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		require.NoError(t, err)
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-	}
-}
-
 func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetworkPolicyRequest) (error, func()) {
 	t.Helper()
 	ctx := context.Background()
