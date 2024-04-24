@@ -53,27 +53,6 @@ func createShareWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObje
 	}
 }
 
-func createFileFormat(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjectIdentifier) (*sdk.FileFormat, func()) {
-	t.Helper()
-	return createFileFormatWithOptions(t, client, schema, &sdk.CreateFileFormatOptions{
-		Type: sdk.FileFormatTypeCSV,
-	})
-}
-
-func createFileFormatWithOptions(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjectIdentifier, opts *sdk.CreateFileFormatOptions) (*sdk.FileFormat, func()) {
-	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName(), schema.Name(), random.String())
-	ctx := context.Background()
-	err := client.FileFormats.Create(ctx, id, opts)
-	require.NoError(t, err)
-	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return fileFormat, func() {
-		err := client.FileFormats.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
-
 func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentifier, asQuery string) func() {
 	t.Helper()
 	ctx := context.Background()
