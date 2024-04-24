@@ -45,7 +45,7 @@ func (c *NetworkPolicyClient) DropNetworkPolicyFunc(t *testing.T, id sdk.Account
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropNetworkPolicyRequest(id))
+		err := c.client().Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(sdk.Bool(true)))
 		require.NoError(t, err)
 	}
 }
