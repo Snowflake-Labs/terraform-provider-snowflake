@@ -373,7 +373,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 		id := maskingPolicy.ID()
-		err := client.MaskingPolicies.Drop(ctx, id, &sdk.DropMaskingPolicyOptions{})
+		err := client.MaskingPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		_, err = client.MaskingPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -381,7 +381,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.MaskingPolicies.Drop(ctx, id, &sdk.DropMaskingPolicyOptions{})
+		err := client.MaskingPolicies.Drop(ctx, id, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

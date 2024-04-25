@@ -116,7 +116,7 @@ func TestInt_CreateShared(t *testing.T) {
 	databaseTest, databaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
-	shareTest, shareCleanup := createShare(t, secondaryClient)
+	shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -131,7 +131,7 @@ func TestInt_CreateShared(t *testing.T) {
 	})
 
 	accountsToSet := []sdk.AccountIdentifier{
-		getAccountIdentifier(t, client),
+		testClientHelper().Account.GetAccountIdentifier(t),
 	}
 
 	// first add the account.
@@ -275,7 +275,6 @@ func TestInt_AlterReplication(t *testing.T) {
 }
 
 func TestInt_AlterFailover(t *testing.T) {
-	client := testClient(t)
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
@@ -283,7 +282,7 @@ func TestInt_AlterFailover(t *testing.T) {
 	t.Cleanup(databaseCleanup)
 
 	toAccounts := []sdk.AccountIdentifier{
-		getAccountIdentifier(t, client),
+		testClientHelper().Account.GetAccountIdentifier(t),
 	}
 
 	t.Run("enable and disable failover", func(t *testing.T) {

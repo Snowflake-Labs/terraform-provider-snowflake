@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -178,21 +177,9 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	})
 }
 
-type StagedFile struct {
-	Name string `json:"name"`
-	Size int    `json:"size"`
-}
-
-type ApplicationPackageVersion struct {
-	Version string `json:"version"`
-	Patch   int    `json:"patch"`
-}
-
 func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 
 	cleanupApplicationPackageHandle := func(id sdk.AccountObjectIdentifier) func() {
 		return func() {
@@ -207,7 +194,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T) *sdk.ApplicationPackage {
 		t.Helper()
 
-		id := sdk.NewAccountObjectIdentifier("snowflake_package_test")
+		id := sdk.RandomAccountObjectIdentifier()
 		request := sdk.NewCreateApplicationPackageRequest(id).WithDistribution(sdk.DistributionPointer(sdk.DistributionInternal))
 		err := client.ApplicationPackages.Create(ctx, request)
 		require.NoError(t, err)
@@ -222,65 +209,22 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		return e
 	}
 
-	createStageHandle := func(t *testing.T) *sdk.Stage {
-		t.Helper()
-
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "stage_test")
-		co := sdk.NewStageCopyOptionsRequest().WithOnError(sdk.NewStageCopyOnErrorOptionsRequest().WithSkipFile())
-		cr := sdk.NewCreateInternalStageRequest(id).WithCopyOptions(co)
-		err := client.Stages.CreateInternal(ctx, cr)
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
-			require.NoError(t, err)
-		})
-
-		e, err := client.Stages.ShowByID(ctx, id)
-		require.NoError(t, err)
-		return e
-	}
-
-	putOnStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, name string) {
-		t.Helper()
-
-		tempFile := fmt.Sprintf("/tmp/%s", name)
-		f, err := os.Create(tempFile)
-		require.NoError(t, err)
-		f.Close()
-		defer os.Remove(name)
-
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), name))
-			require.NoError(t, err)
-		})
-	}
-
-	showApplicationPackageVersion := func(t *testing.T, name string) []ApplicationPackageVersion {
-		t.Helper()
-
-		var versions []ApplicationPackageVersion
-		err := client.QueryForTests(ctx, &versions, fmt.Sprintf(`SHOW VERSIONS IN APPLICATION PACKAGE "%s"`, name))
-		require.NoError(t, err)
-		return versions
-	}
-
 	t.Run("alter application package: add, patch and drop version", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
-		s := createStageHandle(t)
-		putOnStageHandle(t, s.ID(), "manifest.yml")
-		putOnStageHandle(t, s.ID(), "setup.sql")
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(stageCleanup)
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "")
 
 		version := "V001"
-		using := "@" + s.ID().FullyQualifiedName()
+		using := "@" + stage.ID().FullyQualifiedName()
 		// add version to application package
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 		vr := sdk.NewAddVersionRequest(using).WithVersionIdentifier(&version).WithLabel(sdk.String("add version V001"))
 		r1 := sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(vr)
 		err := client.ApplicationPackages.Alter(ctx, r1)
 		require.NoError(t, err)
-		versions := showApplicationPackageVersion(t, e.Name)
+		versions := testClientHelper().ApplicationPackage.ShowVersions(t, e.ID())
 		require.Equal(t, 1, len(versions))
 		require.Equal(t, version, versions[0].Version)
 		require.Equal(t, 0, versions[0].Patch)
@@ -290,7 +234,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		r2 := sdk.NewAlterApplicationPackageRequest(id).WithAddPatchForVersion(pr)
 		err = client.ApplicationPackages.Alter(ctx, r2)
 		require.NoError(t, err)
-		versions = showApplicationPackageVersion(t, e.Name)
+		versions = testClientHelper().ApplicationPackage.ShowVersions(t, e.ID())
 		require.Equal(t, 2, len(versions))
 		require.Equal(t, version, versions[0].Version)
 		require.Equal(t, 0, versions[0].Patch)
@@ -301,25 +245,26 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		r3 := sdk.NewAlterApplicationPackageRequest(id).WithDropVersion(sdk.NewDropVersionRequest(version))
 		err = client.ApplicationPackages.Alter(ctx, r3)
 		require.NoError(t, err)
-		versions = showApplicationPackageVersion(t, e.Name)
+		versions = testClientHelper().ApplicationPackage.ShowVersions(t, e.ID())
 		require.Equal(t, 0, len(versions))
 	})
 
 	t.Run("alter application package: set default release directive", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
-		s := createStageHandle(t)
-		putOnStageHandle(t, s.ID(), "manifest.yml")
-		putOnStageHandle(t, s.ID(), "setup.sql")
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(stageCleanup)
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
+		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "")
 
 		version := "V001"
-		using := "@" + s.ID().FullyQualifiedName()
+		using := "@" + stage.ID().FullyQualifiedName()
 		// add version to application package
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 		vr := sdk.NewAddVersionRequest(using).WithVersionIdentifier(&version).WithLabel(sdk.String("add version V001"))
 		r1 := sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(vr)
 		err := client.ApplicationPackages.Alter(ctx, r1)
 		require.NoError(t, err)
-		versions := showApplicationPackageVersion(t, e.Name)
+		versions := testClientHelper().ApplicationPackage.ShowVersions(t, e.ID())
 		require.Equal(t, 1, len(versions))
 		require.Equal(t, version, versions[0].Version)
 		require.Equal(t, 0, versions[0].Patch)

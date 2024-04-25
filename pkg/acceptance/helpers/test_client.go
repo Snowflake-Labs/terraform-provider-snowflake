@@ -5,7 +5,9 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 type TestClient struct {
 	context *TestClientContext
 
+	Account            *AccountClient
 	Alert              *AlertClient
+	ApiIntegration     *ApiIntegrationClient
 	Application        *ApplicationClient
 	ApplicationPackage *ApplicationPackageClient
 	Context            *ContextClient
@@ -16,16 +18,21 @@ type TestClient struct {
 	FileFormat         *FileFormatClient
 	MaskingPolicy      *MaskingPolicyClient
 	NetworkPolicy      *NetworkPolicyClient
+	Parameter          *ParameterClient
 	PasswordPolicy     *PasswordPolicyClient
 	Pipe               *PipeClient
 	ResourceMonitor    *ResourceMonitorClient
 	Role               *RoleClient
+	RowAccessPolicy    *RowAccessPolicyClient
 	Schema             *SchemaClient
 	SessionPolicy      *SessionPolicyClient
+	Share              *ShareClient
 	Stage              *StageClient
 	Table              *TableClient
 	Tag                *TagClient
+	Task               *TaskClient
 	User               *UserClient
+	View               *ViewClient
 	Warehouse          *WarehouseClient
 }
 
@@ -38,7 +45,9 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	}
 	return &TestClient{
 		context:            context,
+		Account:            NewAccountClient(context),
 		Alert:              NewAlertClient(context),
+		ApiIntegration:     NewApiIntegrationClient(context),
 		Application:        NewApplicationClient(context),
 		ApplicationPackage: NewApplicationPackageClient(context),
 		Context:            NewContextClient(context),
@@ -49,16 +58,21 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		FileFormat:         NewFileFormatClient(context),
 		MaskingPolicy:      NewMaskingPolicyClient(context),
 		NetworkPolicy:      NewNetworkPolicyClient(context),
+		Parameter:          NewParameterClient(context),
 		PasswordPolicy:     NewPasswordPolicyClient(context),
 		Pipe:               NewPipeClient(context),
 		ResourceMonitor:    NewResourceMonitorClient(context),
 		Role:               NewRoleClient(context),
+		RowAccessPolicy:    NewRowAccessPolicyClient(context),
 		Schema:             NewSchemaClient(context),
 		SessionPolicy:      NewSessionPolicyClient(context),
+		Share:              NewShareClient(context),
 		Stage:              NewStageClient(context),
-		Tag:                NewTagClient(context),
 		Table:              NewTableClient(context),
+		Tag:                NewTagClient(context),
+		Task:               NewTaskClient(context),
 		User:               NewUserClient(context),
+		View:               NewViewClient(context),
 		Warehouse:          NewWarehouseClient(context),
 	}
 }

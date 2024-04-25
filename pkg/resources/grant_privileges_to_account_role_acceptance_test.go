@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1026,15 +1024,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: func(state *terraform.State) error {
-			return errors.Join(
-				acc.CheckAccountRolePrivilegesRevoked(t)(state),
-				dropSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName),
-			)
-		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { assert.NoError(t, createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName)) },
+				PreConfig:       func() { createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivileges"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1549,29 +1542,20 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 	})
 }
 
-func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
+func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) {
 	t.Helper()
-	secondaryClient := acc.SecondaryClient(t)
-	ctx := context.Background()
-	accountName := acc.TestClient().Context.CurrentAccount(t)
-	return errors.Join(
-		secondaryClient.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{}),
-		secondaryClient.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.CreateShareOptions{}),
-		secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: sdk.NewAccountObjectIdentifier(databaseName)}, sdk.NewAccountObjectIdentifier(shareName)),
-		secondaryClient.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.AlterShareOptions{Set: &sdk.ShareSet{
-			Accounts: []sdk.AccountIdentifier{sdk.NewAccountIdentifierFromAccountLocator(accountName)},
-		}}),
-	)
-}
 
-func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
-	t.Helper()
-	secondaryClient := acc.SecondaryClient(t)
-	ctx := context.Background()
-	return errors.Join(
-		secondaryClient.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
-		secondaryClient.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
-	)
+	database, databaseCleanup := acc.SecondaryTestClient().Database.CreateDatabaseWithName(t, databaseName)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShareWithName(t, shareName)
+	t.Cleanup(shareCleanup)
+
+	acc.SecondaryTestClient().Role.GrantPrivilegeOnDatabaseToShare(t, database.ID(), share.ID())
+
+	accountName := acc.TestClient().Context.CurrentAccount(t)
+	accountId := sdk.NewAccountIdentifierFromAccountLocator(accountName)
+	acc.SecondaryTestClient().Share.SetAccountOnShare(t, accountId, share.ID())
 }
 
 func queriedAccountRolePrivilegesEqualTo(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {

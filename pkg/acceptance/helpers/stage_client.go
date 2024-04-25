@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
+)
+
 type StageClient struct {
 	context *TestClientContext
 }
@@ -26,11 +30,11 @@ func (c *StageClient) client() sdk.Stages {
 	return c.context.client.Stages
 }
 
-func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
+func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
 	t.Helper()
 	ctx := context.Background()
 	err := c.client().CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
-		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(url)))
+		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(nycWeatherDataURL)))
 	require.NoError(t, err)
 
 	stage, err := c.client().ShowByID(ctx, id)
