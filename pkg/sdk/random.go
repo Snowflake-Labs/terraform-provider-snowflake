@@ -33,17 +33,17 @@ func randomSchemaObjectIdentifier() SchemaObjectIdentifier {
 }
 
 func randomExternalObjectIdentifier() ExternalObjectIdentifier {
-	return NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(random.StringN(12)), RandomAccountObjectIdentifier())
+	return NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(random.StringN(12)), randomAccountObjectIdentifier())
 }
 
 func randomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(random.StringN(12), random.StringN(12))
 }
 
-func RandomAccountObjectIdentifier() AccountObjectIdentifier {
+func randomAccountObjectIdentifier() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(random.StringN(12))
 }
 
-func RandomAlphanumericAccountObjectIdentifier() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(random.AlphanumericN(12))
+func RandomAccountObjectIdentifier() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(random.StringN(12))
 }

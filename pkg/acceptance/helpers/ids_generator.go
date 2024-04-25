@@ -33,6 +33,10 @@ func (c *IdsGenerator) newSchemaObjectIdentifier(name string) sdk.SchemaObjectId
 	return sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, name)
 }
 
+func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(c.Alpha())
+}
+
 func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
 	return c.newSchemaObjectIdentifier(c.Alpha())
 }
@@ -54,10 +58,6 @@ func (c *IdsGenerator) AlphaWithPrefix(part string) string {
 }
 
 // TODO: will be added in the following PRs if needed or removed
-//func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
-//	return sdk.NewAccountObjectIdentifier(c.Alpha())
-//}
-//
 //func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
 //	return sdk.NewDatabaseObjectIdentifier(c.Alpha(), c.Alpha())
 //}

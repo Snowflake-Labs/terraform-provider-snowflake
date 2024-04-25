@@ -10,11 +10,13 @@ import (
 
 type FailoverGroupClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewFailoverGroupClient(context *TestClientContext) *FailoverGroupClient {
+func NewFailoverGroupClient(context *TestClientContext, idsGenerator *IdsGenerator) *FailoverGroupClient {
 	return &FailoverGroupClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -36,7 +38,7 @@ func (c *FailoverGroupClient) CreateFailoverGroupWithOptions(t *testing.T, objec
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.RandomAlphanumericAccountObjectIdentifier()
+	id := c.ids.RandomAccountObjectIdentifier()
 
 	err := c.client().Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)

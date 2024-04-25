@@ -60,7 +60,7 @@ func TestTasks_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		warehouseId := RandomAccountObjectIdentifier()
+		warehouseId := randomAccountObjectIdentifier()
 		otherTaskId := randomSchemaObjectIdentifier()
 		tagId := randomSchemaObjectIdentifier()
 
@@ -173,7 +173,7 @@ func TestTasks_Alter(t *testing.T) {
 	})
 
 	t.Run("validation: conflicting fields for [opts.Set.Warehouse opts.Set.UserTaskManagedInitialWarehouseSize]", func(t *testing.T) {
-		warehouseId := RandomAccountObjectIdentifier()
+		warehouseId := randomAccountObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &TaskSet{}
 		opts.Set.Warehouse = &warehouseId
@@ -245,7 +245,7 @@ func TestTasks_Alter(t *testing.T) {
 	})
 
 	t.Run("alter set warehouse", func(t *testing.T) {
-		warehouseId := RandomAccountObjectIdentifier()
+		warehouseId := randomAccountObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &TaskSet{
 			Warehouse: &warehouseId,

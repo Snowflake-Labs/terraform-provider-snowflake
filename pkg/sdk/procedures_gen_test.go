@@ -634,7 +634,7 @@ func TestProcedures_Call(t *testing.T) {
 }
 
 func TestProcedures_CreateAndCallForJava(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateAndCallForJavaProcedureOptions {
 		return &CreateAndCallForJavaProcedureOptions{
@@ -755,7 +755,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 }
 
 func TestProcedures_CreateAndCallForScala(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateAndCallForScalaProcedureOptions {
 		return &CreateAndCallForScalaProcedureOptions{
@@ -878,7 +878,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 }
 
 func TestProcedures_CreateAndCallForPython(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateAndCallForPythonProcedureOptions {
 		return &CreateAndCallForPythonProcedureOptions{
@@ -1000,7 +1000,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 }
 
 func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateAndCallForJavaScriptProcedureOptions {
 		return &CreateAndCallForJavaScriptProcedureOptions{
@@ -1062,7 +1062,7 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 }
 
 func TestProcedures_CreateAndCallForSQL(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateAndCallForSQLProcedureOptions {
 		return &CreateAndCallForSQLProcedureOptions{

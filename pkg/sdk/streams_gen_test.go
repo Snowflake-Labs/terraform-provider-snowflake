@@ -345,7 +345,7 @@ func TestStreams_Alter(t *testing.T) {
 	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetTags]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetTags = []ObjectIdentifier{RandomAccountObjectIdentifier()}
+		opts.UnsetTags = []ObjectIdentifier{randomAccountObjectIdentifier()}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterStreamOptions", "IfExists", "UnsetTags"))
 	})
 

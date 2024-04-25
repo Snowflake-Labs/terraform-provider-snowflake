@@ -63,7 +63,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Database:           NewDatabaseClient(context),
 		DatabaseRole:       NewDatabaseRoleClient(context),
 		DynamicTable:       NewDynamicTableClient(context),
-		FailoverGroup:      NewFailoverGroupClient(context),
+		FailoverGroup:      NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:         NewFileFormatClient(context),
 		MaskingPolicy:      NewMaskingPolicyClient(context),
 		NetworkPolicy:      NewNetworkPolicyClient(context),

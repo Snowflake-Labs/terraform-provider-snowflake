@@ -7,7 +7,7 @@ import (
 )
 
 func TestUserCreate(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateUserOptions{}
@@ -48,7 +48,7 @@ func TestUserCreate(t *testing.T) {
 }
 
 func TestUserAlter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterUserOptions{}
@@ -130,7 +130,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("reset password", func(t *testing.T) {
-		id := RandomAccountObjectIdentifier()
+		id := randomAccountObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:          id,
 			ResetPassword: Bool(true),
@@ -139,7 +139,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
-		id := RandomAccountObjectIdentifier()
+		id := randomAccountObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:            id,
 			AbortAllQueries: Bool(true),
@@ -218,7 +218,7 @@ func TestUserAlter(t *testing.T) {
 }
 
 func TestUserDrop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropUserOptions{}
@@ -285,7 +285,7 @@ func TestUserShow(t *testing.T) {
 }
 
 func TestUserDescribe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describeUserOptions{}
