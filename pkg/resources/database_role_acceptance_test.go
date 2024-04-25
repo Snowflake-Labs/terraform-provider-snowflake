@@ -15,7 +15,7 @@ import (
 
 func TestAcc_DatabaseRole(t *testing.T) {
 	resourceName := "snowflake_database_role.test_db_role"
-	dbRoleName := "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dbRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := "dummy"
 	comment2 := "test comment"
 

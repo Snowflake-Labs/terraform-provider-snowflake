@@ -421,7 +421,7 @@ todo: this test is failing due to error message below. Need to figure out why th
 
 
 	func TestAcc_Task_Managed(t *testing.T) {
-		accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+		accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 		resource.Test(t, resource.TestCase{
 					ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -547,7 +547,7 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
