@@ -121,7 +121,7 @@ func (opts *CreateShareOptions) validate() error {
 	return nil
 }
 
-func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error {
+func (s *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error {
 	if opts == nil {
 		opts = &CreateShareOptions{}
 	}
@@ -133,7 +133,7 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	if err != nil {
 		return err
 	}
-	_, err = v.client.exec(ctx, sql)
+	_, err = s.client.exec(ctx, sql)
 	return err
 }
 
@@ -155,10 +155,8 @@ func (opts *DropShareOptions) validate() error {
 	return nil
 }
 
-func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
+func (s *shares) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error {
+	opts = createIfNil(opts)
 	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err
@@ -167,7 +165,7 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier, opts *Dro
 	if err != nil {
 		return err
 	}
-	_, err = v.client.exec(ctx, sql)
+	_, err = s.client.exec(ctx, sql)
 	return err
 }
 
@@ -265,7 +263,7 @@ func (v *ShareUnset) validate() error {
 	return nil
 }
 
-func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error {
+func (s *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error {
 	if opts == nil {
 		opts = &AlterShareOptions{}
 	}
@@ -277,7 +275,7 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Al
 	if err != nil {
 		return err
 	}
-	_, err = v.client.exec(ctx, sql)
+	_, err = s.client.exec(ctx, sql)
 	return err
 }
 
@@ -376,7 +374,7 @@ func (opts *describeShareOptions) validate() error {
 	return nil
 }
 
-func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error) {
+func (s *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error) {
 	opts := &describeShareOptions{
 		name: id,
 	}
@@ -385,14 +383,14 @@ func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifie
 		return nil, err
 	}
 	var rows []shareDetailsRow
-	err = c.client.query(ctx, &rows, sql)
+	err = s.client.query(ctx, &rows, sql)
 	if err != nil {
 		return nil, err
 	}
 	return shareDetailsFromRows(rows), nil
 }
 
-func (c *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error) {
+func (s *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error) {
 	opts := &describeShareOptions{
 		name: id,
 	}
@@ -401,7 +399,7 @@ func (c *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifi
 		return nil, err
 	}
 	var rows []shareDetailsRow
-	err = c.client.query(ctx, &rows, sql)
+	err = s.client.query(ctx, &rows, sql)
 	if err != nil {
 		return nil, err
 	}
