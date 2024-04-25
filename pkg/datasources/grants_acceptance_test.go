@@ -3,14 +3,12 @@ package datasources_test
 import (
 	"context"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
@@ -79,7 +77,7 @@ func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
 }
 
 func TestAcc_Grants_On_SchemaObject(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database": config.StringVariable(acc.TestDatabaseName),
 		"schema":   config.StringVariable(acc.TestSchemaName),
@@ -167,8 +165,8 @@ func TestAcc_Grants_To_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database":      config.StringVariable(databaseName),
 		"database_role": config.StringVariable(databaseRoleName),
@@ -215,8 +213,8 @@ func TestAcc_Grants_To_User(t *testing.T) {
 }
 
 func TestAcc_Grants_To_Share(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	shareName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database": config.StringVariable(databaseName),
 		"share":    config.StringVariable(shareName),
@@ -334,8 +332,8 @@ func TestAcc_Grants_Of_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_Of_DatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database":      config.StringVariable(databaseName),
 		"database_role": config.StringVariable(databaseRoleName),
@@ -366,8 +364,8 @@ func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
 // TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Grants_Of_Share(t *testing.T) {
 	t.Skip("TestAcc_Share are skipped")
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	shareName := acc.TestClient().Ids.Alpha()
 
 	getSecondaryAccountIdentifier := func(t *testing.T) *sdk.AccountIdentifier {
 		t.Helper()
@@ -473,7 +471,7 @@ func TestAcc_Grants_Of_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Database(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database": config.StringVariable(databaseName),
 	}
@@ -496,8 +494,8 @@ func TestAcc_Grants_FutureIn_Database(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Schema(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database": config.StringVariable(databaseName),
 		"schema":   config.StringVariable(schemaName),
@@ -557,7 +555,7 @@ func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database": config.StringVariable(databaseName),
 	}
@@ -580,8 +578,8 @@ func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_DatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"database":      config.StringVariable(databaseName),
 		"database_role": config.StringVariable(databaseRoleName),

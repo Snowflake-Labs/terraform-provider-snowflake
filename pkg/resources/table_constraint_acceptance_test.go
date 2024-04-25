@@ -222,7 +222,7 @@ resource "snowflake_table_constraint" "unique" {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
 func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -254,7 +254,7 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
 func TestAcc_Table_issue2535_existingTable(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },

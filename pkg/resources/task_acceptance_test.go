@@ -3,7 +3,6 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 	"text/template"
 
@@ -421,7 +420,7 @@ todo: this test is failing due to error message below. Need to figure out why th
 
 
 	func TestAcc_Task_Managed(t *testing.T) {
-		accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+		accName := acc.TestClient().Ids.Alpha()
 		resource.Test(t, resource.TestCase{
 					ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -547,8 +546,8 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	taskRootName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

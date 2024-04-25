@@ -10,14 +10,13 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -62,10 +61,10 @@ func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 // contains escaped identifier, it won't match in the comparison grant.GranteeName == role_name. This results in
 // setting privileges to an empty array, which causes infinite plan.
 func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
-	name := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	name := []byte(acc.TestClient().Ids.Alpha())
 	name[3] = '.'
 	name[7] = '-'
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -106,7 +105,7 @@ func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
 
 /*
 	func TestAcc_GrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
-		name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+		name := acc.TestClient().Ids.Alpha()
 
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -168,7 +167,7 @@ func grantPrivilegesToRole_onAccountConfigAllPrivileges(name string) string {
 }
 
 func TestAcc_GrantPrivilegesToRole_onAccountObject(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -210,7 +209,7 @@ func TestAcc_GrantPrivilegesToRole_onAccountObject(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -280,7 +279,7 @@ func grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name string, datab
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchema(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -358,7 +357,7 @@ func grantPrivilegesToRole_onSchemaConfigAllPrivileges(name string, databaseName
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -388,7 +387,7 @@ func TestAcc_GrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -429,7 +428,7 @@ func TestAcc_GrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -505,7 +504,7 @@ func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, p
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -578,7 +577,7 @@ func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []s
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -645,7 +644,7 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -712,7 +711,7 @@ func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges 
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -779,7 +778,7 @@ func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	objectType := "TABLES"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -846,7 +845,7 @@ func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectTy
 }
 
 func TestAcc_GrantPrivilegesToRole_multipleResources(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -918,7 +917,7 @@ func grantPrivilegesToRole_multipleResources(name string, privileges1, privilege
 }
 
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	objectType := "EXTERNAL TABLES"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -961,7 +960,7 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 }
 
 func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -1079,9 +1078,9 @@ resource "snowflake_grant_privileges_to_role" "test_invalidation" {
 }
 
 func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
-	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	sharedDatabaseName := acc.TestClient().Ids.Alpha()
+	shareName := acc.TestClient().Ids.Alpha()
+	roleName := acc.TestClient().Ids.Alpha()
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
@@ -1128,7 +1127,7 @@ func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToRole_MultiplePartsInRoleName(t *testing.T) {
-	nameBytes := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	nameBytes := []byte(acc.TestClient().Ids.Alpha())
 	nameBytes[3] = '.'
 	nameBytes[6] = '.'
 	name := string(nameBytes)

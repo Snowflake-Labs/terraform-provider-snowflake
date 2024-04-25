@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -15,8 +14,8 @@ import (
 )
 
 func TestAcc_Warehouse(t *testing.T) {
-	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
+	prefix2 := acc.TestClient().Ids.Alpha()
 	comment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	newComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
@@ -114,7 +113,7 @@ func TestAcc_Warehouse(t *testing.T) {
 }
 
 func TestAcc_WarehousePattern(t *testing.T) {
-	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

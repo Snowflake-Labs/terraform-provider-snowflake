@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -10,14 +9,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_DynamicTable_basic(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_dynamic_table.dt"
 	tableName := name + "_table"
 	m := func() map[string]config.Variable {
@@ -157,11 +155,11 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2173 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173 issue.
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
 	tableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
-	otherSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	otherSchema := acc.TestClient().Ids.Alpha()
 	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -234,7 +232,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2134 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2134 issue.
 func TestAcc_DynamicTable_issue2134(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
 	// whitespace (initial tab) is added on purpose here
 	query := fmt.Sprintf(`	select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
@@ -297,7 +295,7 @@ func TestAcc_DynamicTable_issue2134(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2276 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2276 issue.
 func TestAcc_DynamicTable_issue2276(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	newQuery := fmt.Sprintf(`select "data" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)

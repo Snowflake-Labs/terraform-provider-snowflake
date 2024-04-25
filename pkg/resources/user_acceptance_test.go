@@ -10,6 +10,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
@@ -38,11 +39,11 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
-	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
+	prefix2 := acc.TestClient().Ids.Alpha()
 
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)

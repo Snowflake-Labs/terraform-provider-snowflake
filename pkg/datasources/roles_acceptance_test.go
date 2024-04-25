@@ -3,13 +3,12 @@ package datasources_test
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -20,9 +19,9 @@ const (
 )
 
 func TestAcc_Roles(t *testing.T) {
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := acc.TestClient().Ids.Alpha()
+	roleName2 := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -56,8 +55,8 @@ func TestAcc_AccountRoles_basic(t *testing.T) {
 	accountRoleNamePrefix := "account_roles_test_prefix_"
 	accountRoleName1 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
 	accountRoleName2 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
-	accountRoleName3 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName3 := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
 
 	configVariables := config.Variables{
 		"account_role_name_1": config.StringVariable(accountRoleName1),

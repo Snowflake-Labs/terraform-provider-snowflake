@@ -3,7 +3,6 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -36,7 +35,7 @@ func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 }
 
 func TestAcc_StreamCreateOnStage(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -63,8 +62,8 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
 func TestAcc_Stream_OnTable(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	tableName2 := acc.TestClient().Ids.Alpha()
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
@@ -108,7 +107,7 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
 func TestAcc_Stream_OnView(t *testing.T) {
 	tableName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
@@ -140,8 +139,8 @@ func TestAcc_Stream(t *testing.T) {
 	// Current error is User: <redacted> is not authorized to perform: sts:AssumeRole on resource: <redacted> duration 1.162414333s args {}] ()
 	t.Skip("Skipping TestAcc_Stream")
 
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	accNameExternalTable := acc.TestClient().Ids.Alpha()
 	bucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	roleName := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
 

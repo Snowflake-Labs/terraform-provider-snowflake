@@ -2,18 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TaskGrant(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -72,7 +70,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 }
 
 func TestAcc_TaskGrant_onAll(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -109,7 +107,7 @@ func TestAcc_TaskGrant_onAll(t *testing.T) {
 }
 
 func TestAcc_TaskGrant_onFuture(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -194,8 +192,8 @@ resource "snowflake_task_grant" "test" {
 }
 
 func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	new_name := name + "_NEW"
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -219,14 +217,14 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 			},
 			// UPDATE SCHEMA level FUTURE OWNERSHIP grant to role <new_name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", new_name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", newName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OWNERSHIP"),
-					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", new_name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", newName),
 				),
 			},
 			// IMPORT

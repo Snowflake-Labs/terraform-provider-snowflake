@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -22,7 +21,7 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	// TODO [SNOW-1011985]: unskip the tests
 	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminPass := acc.TestClient().Ids.AlphaWithPrefix("A1")
 

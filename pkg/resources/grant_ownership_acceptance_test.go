@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,16 +16,15 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -115,11 +113,11 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -163,11 +161,11 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
 
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -211,12 +209,12 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	tableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -261,12 +259,12 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	tableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName).FullyQualifiedName()
 
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -311,14 +309,14 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+	secondTableName := acc.TestClient().Ids.Alpha()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -364,14 +362,14 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
 
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	secondTableName := acc.TestClient().Ids.Alpha()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -417,10 +415,10 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -464,11 +462,11 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -514,8 +512,8 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 
 func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
-		"database_name":     config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
+		"account_role_name": config.StringVariable(acc.TestClient().Ids.Alpha()),
+		"database_name":     config.StringVariable(acc.TestClient().Ids.Alpha()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -536,8 +534,8 @@ func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
 
 func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
-		"database_name":     config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
+		"account_role_name": config.StringVariable(acc.TestClient().Ids.Alpha()),
+		"database_name":     config.StringVariable(acc.TestClient().Ids.Alpha()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -557,10 +555,10 @@ func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -616,10 +614,10 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	_, cleanupAccountRole := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
@@ -667,13 +665,13 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	materializedViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+	materializedViewName := acc.TestClient().Ids.Alpha()
 	materializedViewFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, materializedViewName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -722,9 +720,9 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	t.Skip("Will be un-skipped in SNOW-1313849")
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
 	userName := acc.TestClient().Context.CurrentUser(t)
 
 	resource.Test(t, resource.TestCase{
@@ -799,13 +797,13 @@ resource "snowflake_schema" "test" {
 }
 
 func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
-	otherAccountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	otherAccountRoleName := acc.TestClient().Ids.Alpha()
 
 	configVariables := config.Variables{
 		"account_role_name":       config.StringVariable(accountRoleName),
@@ -857,11 +855,11 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newDatabaseOwningAccountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	newDatabaseOwningAccountRoleName := acc.TestClient().Ids.Alpha()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(newDatabaseOwningAccountRoleName),
@@ -900,10 +898,10 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	pipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	stageName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+	pipeName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 	pipeFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, pipeName).FullyQualifiedName()
 
@@ -948,11 +946,11 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	pipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondPipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	stageName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+	pipeName := acc.TestClient().Ids.Alpha()
+	secondPipeName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
 
@@ -993,8 +991,8 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnTask(t *testing.T) {
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	taskName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	taskName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 	taskFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, taskName).FullyQualifiedName()
 
@@ -1038,9 +1036,9 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	taskName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondTaskName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
+	taskName := acc.TestClient().Ids.Alpha()
+	secondTaskName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
 
@@ -1083,12 +1081,12 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.Alpha()
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{

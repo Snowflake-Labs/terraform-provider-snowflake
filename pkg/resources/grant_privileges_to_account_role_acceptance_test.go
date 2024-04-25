@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +18,7 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -69,7 +67,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -118,7 +116,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -182,7 +180,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 // This proves that infinite plan is not produced as in snowflake_grant_privileges_to_role.
 // More details can be found in the fix pr https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2364.
 func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -212,7 +210,7 @@ func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *te
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -266,7 +264,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -289,7 +287,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -341,7 +339,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -393,7 +391,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	tblName := "test_database_role_table_name"
 	tableName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tblName).FullyQualifiedName()
@@ -449,8 +447,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
 		"table_name": config.StringVariable(tableName),
@@ -484,7 +482,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -539,7 +537,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -591,7 +589,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -648,7 +646,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 // TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InDatabase(t *testing.T) {
 	t.Skip("Fix after it starts working on Snowflake side, reference: SNOW-1272222")
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -683,7 +681,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InD
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -729,7 +727,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InData
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
@@ -821,7 +819,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name)
 	schemaName := "test_database_role_schema_name"
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
@@ -910,7 +908,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := func(alwaysApply bool) config.Variables {
@@ -1003,9 +1001,9 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
-	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	sharedDatabaseName := acc.TestClient().Ids.Alpha()
+	shareName := acc.TestClient().Ids.Alpha()
+	roleName := acc.TestClient().Ids.Alpha()
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
@@ -1053,7 +1051,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1998 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"role_name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -1103,7 +1101,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 // TODO(SNOW-1213622): Add test for custom applications using on_account_object.object_type = "DATABASE"
 
 func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) {
-	nameBytes := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	nameBytes := []byte(acc.TestClient().Ids.Alpha())
 	nameBytes[3] = '.'
 	nameBytes[6] = '.'
 	name := string(nameBytes)
@@ -1142,9 +1140,9 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2533 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	externalVolumeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	externalVolumeName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name":            config.StringVariable(roleName),
 		"external_volume": config.StringVariable(externalVolumeName),
@@ -1190,7 +1188,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
 // TODO [SNOW-1270457]: This seems to be a Snowflake error, we are waiting for the confirmation. Alter the test when the behavior is fixed. Update the resource documentation (section known issues).
 func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -1244,9 +1242,9 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
 
 	configVariables := config.Variables{
 		"name":       config.StringVariable(roleName),
@@ -1303,9 +1301,9 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
 
 	configVariables := config.Variables{
 		"name":       config.StringVariable(roleName),
@@ -1415,9 +1413,9 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(roleName),
 		"database": config.StringVariable(databaseName),
@@ -1459,9 +1457,9 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(roleName),
 		"database": config.StringVariable(databaseName),
@@ -1504,7 +1502,7 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2689 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := func(alwaysApply bool) config.Variables {

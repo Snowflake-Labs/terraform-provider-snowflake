@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -10,13 +9,12 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_PasswordPolicy(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	m := func(minLength int, maxLength int, minUpperCaseChars int, minLowerCaseChars int, minNumericChars int, minSpecialChars int, minAgeDays int, maxAgeDays int, maxRetries int, lockoutTimeMins int, history int, comment string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":                 config.StringVariable(accName),
@@ -104,8 +102,8 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
 
 	m := func(maxAgeDays int) map[string]config.Variable {
 		return map[string]config.Variable{

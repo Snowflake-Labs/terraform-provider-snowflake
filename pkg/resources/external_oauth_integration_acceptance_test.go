@@ -14,7 +14,7 @@ import (
 )
 
 func TestAcc_ExternalOauthIntegration(t *testing.T) {
-	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := acc.TestClient().Ids.Alpha()
 	integrationType := "AZURE"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
@@ -122,7 +122,7 @@ func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
-	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := acc.TestClient().Ids.Alpha()
 	integrationType := "CUSTOM"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())

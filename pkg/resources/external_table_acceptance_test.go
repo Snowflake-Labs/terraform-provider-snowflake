@@ -16,7 +16,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +26,7 @@ import (
 func TestAcc_ExternalTable_basic(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -130,7 +129,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -188,7 +187,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -247,7 +246,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
