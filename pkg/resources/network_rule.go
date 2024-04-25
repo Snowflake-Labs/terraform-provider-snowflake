@@ -2,12 +2,9 @@ package resources
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 
@@ -79,56 +76,6 @@ func NetworkRule() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: customdiff.Sequence(
-			func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for az_mode
-				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
-
-				ruleTypeRaw, ok := diff.GetOk("type")
-				if !ok {
-					return nil
-				}
-				ruleType := sdk.NetworkRuleType(ruleTypeRaw.(string))
-				ruleModeRaw, ok := diff.GetOk("mode")
-				if !ok {
-					return nil
-				}
-				ruleMode := sdk.NetworkRuleMode(ruleModeRaw.(string))
-
-				// TODO: add valueList validators for different rule types
-				//valueListRaw, ok := diff.GetOk("value_list")
-				//if !ok {
-				//	return nil
-				//}
-				//
-				//valueList := expandStringList(valueListRaw.(*schema.Set).List())
-
-				switch ruleType {
-				case sdk.NetworkRuleTypeIpv4:
-					if ruleMode != sdk.NetworkRuleModeIngress {
-						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type IPv4. The network rule mode must be one of [INGRESS].", ruleMode)
-						return errors.New(s)
-					}
-				case sdk.NetworkRuleTypeAwsVpcEndpointId:
-					if ruleMode != sdk.NetworkRuleModeIngress && ruleMode != sdk.NetworkRuleModeInternalStage {
-						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type AWSVPCEID. The network rule mode must be one of [INGRESS, INTERNAL_STAGE].", ruleMode)
-						return errors.New(s)
-					}
-				case sdk.NetworkRuleTypeAzureLinkId:
-					if ruleMode != sdk.NetworkRuleModeIngress {
-						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type AZURELINKID. The network rule mode must be one of [INGRESS, INTERNAL_STAGE].", ruleMode)
-						return errors.New(s)
-					}
-				case sdk.NetworkRuleTypeHostPort:
-					if ruleMode != sdk.NetworkRuleModeEgress {
-						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type HOST_PORT. The network rule mode must be one of [EGRESS].", ruleMode)
-						return errors.New(s)
-					}
-				}
-
-				return nil
-			},
-		),
 	}
 }
 
@@ -217,23 +164,40 @@ func ReadContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta in
 func UpdateContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	baseReq := sdk.NewAlterNetworkRuleRequest(id)
 
-	if d.HasChange("comment") || d.HasChange("value_list") {
-		valueList := expandStringList(d.Get("value_list").(*schema.Set).List())
-		networkRuleValues := make([]sdk.NetworkRuleValue, len(valueList))
-		for i, v := range valueList {
-			networkRuleValues[i] = sdk.NetworkRuleValue{Value: v}
+	valueList := expandStringList(d.Get("value_list").(*schema.Set).List())
+	networkRuleValues := make([]sdk.NetworkRuleValue, len(valueList))
+	for i, v := range valueList {
+		networkRuleValues[i] = sdk.NetworkRuleValue{Value: v}
+	}
+	comment := d.Get("comment").(string)
+
+	if d.HasChange("value_list") {
+		baseReq := sdk.NewAlterNetworkRuleRequest(id)
+		if len(valueList) == 0 {
+			unsetReq := sdk.NewNetworkRuleUnsetRequest().WithValueList(sdk.Bool(true))
+			baseReq.WithUnset(unsetReq)
+		} else {
+			setReq := sdk.NewNetworkRuleSetRequest(networkRuleValues)
+			baseReq.WithSet(setReq)
 		}
 
-		// TODO: use sdk.NewNetworkRuleUnsetRequest() if valueList is empty
-		setReq := sdk.NewNetworkRuleSetRequest(networkRuleValues)
-
-		if d.HasChange("comment") {
-			comment := d.Get("comment").(string)
-			setReq.WithComment(sdk.String(comment))
+		if err := client.NetworkRules.Alter(ctx, baseReq); err != nil {
+			return diag.FromErr(err)
 		}
-		if err := client.NetworkRules.Alter(ctx, baseReq.WithSet(setReq)); err != nil {
+	}
+
+	if d.HasChange("comment") {
+		baseReq := sdk.NewAlterNetworkRuleRequest(id)
+		if len(comment) == 0 {
+			unsetReq := sdk.NewNetworkRuleUnsetRequest().WithComment(sdk.Bool(true))
+			baseReq.WithUnset(unsetReq)
+		} else {
+			setReq := sdk.NewNetworkRuleSetRequest(networkRuleValues).WithComment(sdk.String(comment))
+			baseReq.WithSet(setReq)
+		}
+
+		if err := client.NetworkRules.Alter(ctx, baseReq); err != nil {
 			return diag.FromErr(err)
 		}
 	}
