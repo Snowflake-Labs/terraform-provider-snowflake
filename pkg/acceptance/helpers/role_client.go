@@ -10,11 +10,13 @@ import (
 
 type RoleClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewRoleClient(context *TestClientContext) *RoleClient {
+func NewRoleClient(context *TestClientContext, idsGenerator *IdsGenerator) *RoleClient {
 	return &RoleClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -40,7 +42,7 @@ func (c *RoleClient) UseRole(t *testing.T, roleName string) func() {
 
 func (c *RoleClient) CreateRole(t *testing.T) (*sdk.Role, func()) {
 	t.Helper()
-	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
+	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(c.ids.RandomAccountObjectIdentifier()))
 }
 
 func (c *RoleClient) CreateRoleWithName(t *testing.T, name string) (*sdk.Role, func()) {

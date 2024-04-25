@@ -10,11 +10,13 @@ import (
 
 type UserClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewUserClient(context *TestClientContext) *UserClient {
+func NewUserClient(context *TestClientContext, idsGenerator *IdsGenerator) *UserClient {
 	return &UserClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -24,7 +26,7 @@ func (c *UserClient) client() sdk.Users {
 
 func (c *UserClient) CreateUser(t *testing.T) (*sdk.User, func()) {
 	t.Helper()
-	return c.CreateUserWithOptions(t, sdk.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{})
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{})
 }
 
 func (c *UserClient) CreateUserWithName(t *testing.T, name string) (*sdk.User, func()) {

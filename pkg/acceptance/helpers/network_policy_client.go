@@ -10,11 +10,13 @@ import (
 
 type NetworkPolicyClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewNetworkPolicyClient(context *TestClientContext) *NetworkPolicyClient {
+func NewNetworkPolicyClient(context *TestClientContext, idsGenerator *IdsGenerator) *NetworkPolicyClient {
 	return &NetworkPolicyClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -24,7 +26,7 @@ func (c *NetworkPolicyClient) client() sdk.NetworkPolicies {
 
 func (c *NetworkPolicyClient) CreateNetworkPolicy(t *testing.T) (*sdk.NetworkPolicy, func()) {
 	t.Helper()
-	return c.CreateNetworkPolicyWithRequest(t, sdk.NewCreateNetworkPolicyRequest(sdk.RandomAccountObjectIdentifier()))
+	return c.CreateNetworkPolicyWithRequest(t, sdk.NewCreateNetworkPolicyRequest(c.ids.RandomAccountObjectIdentifier()))
 }
 
 func (c *NetworkPolicyClient) CreateNetworkPolicyWithRequest(t *testing.T, request *sdk.CreateNetworkPolicyRequest) (*sdk.NetworkPolicy, func()) {
