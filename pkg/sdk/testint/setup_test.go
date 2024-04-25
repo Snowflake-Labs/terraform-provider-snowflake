@@ -176,8 +176,8 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.secondaryWarehouse = secondaryWarehouse
 
-	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName)
-	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
+	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
 	return nil
 }

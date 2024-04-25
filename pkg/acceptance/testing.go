@@ -85,8 +85,8 @@ func init() {
 	}
 	atc.secondaryClient = secondaryClient
 
-	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName)
-	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
 }
 
 type acceptanceTestContext struct {

@@ -1,9 +1,13 @@
 package helpers
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+)
 
 type TestClient struct {
 	context *TestClientContext
+
+	Ids *IdsGenerator
 
 	Account            *AccountClient
 	Alert              *AlertClient
@@ -36,17 +40,22 @@ type TestClient struct {
 	Warehouse          *WarehouseClient
 }
 
-func NewTestClient(c *sdk.Client, database string, schema string, warehouse string) *TestClient {
+func NewTestClient(c *sdk.Client, database string, schema string, warehouse string, testObjectSuffix string) *TestClient {
 	context := &TestClientContext{
-		client:    c,
-		database:  database,
-		schema:    schema,
-		warehouse: warehouse,
+		client:           c,
+		database:         database,
+		schema:           schema,
+		warehouse:        warehouse,
+		testObjectSuffix: testObjectSuffix,
 	}
+	idsGenerator := NewIdsGenerator(context)
 	return &TestClient{
-		context:            context,
+		context: context,
+
+		Ids: idsGenerator,
+
 		Account:            NewAccountClient(context),
-		Alert:              NewAlertClient(context),
+		Alert:              NewAlertClient(context, idsGenerator),
 		ApiIntegration:     NewApiIntegrationClient(context),
 		Application:        NewApplicationClient(context),
 		ApplicationPackage: NewApplicationPackageClient(context),
@@ -78,10 +87,11 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 }
 
 type TestClientContext struct {
-	client    *sdk.Client
-	database  string
-	schema    string
-	warehouse string
+	client           *sdk.Client
+	database         string
+	schema           string
+	warehouse        string
+	testObjectSuffix string
 }
 
 func (c *TestClientContext) databaseId() sdk.AccountObjectIdentifier {
