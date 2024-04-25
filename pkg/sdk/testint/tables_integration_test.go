@@ -2,10 +2,10 @@ package testint
 
 import (
 	"bufio"
-	"database/sql"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -59,6 +59,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, "TABLE", table.Kind)
 		assert.Equal(t, 0, table.Rows)
 		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
+		assert.Equal(t, "ROLE", table.OwnerRoleType)
 	}
 
 	assertTableTerse := func(t *testing.T, table *sdk.Table, id sdk.SchemaObjectIdentifier) {
@@ -501,7 +502,6 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, currentColumns)
 
 		assert.Equal(t, "", table.Comment)
-		assert.Equal(t, sql.NullString{}, currentColumns[2].SchemaEvolutionRecord)
 	})
 
 	t.Run("alter table: rename column", func(t *testing.T) {
@@ -1028,6 +1028,24 @@ func TestInt_TablesShowByID(t *testing.T) {
 		t.Cleanup(cleanupTableHandle(id))
 	}
 
+	uploadFile := func(t *testing.T, stage *sdk.Stage) string {
+		t.Helper()
+		f, err := os.CreateTemp("/tmp", "sf_test")
+		require.NoError(t, err)
+		w := bufio.NewWriter(f)
+		_, err = w.WriteString(`{"c1": 1, "c2": "42"}`)
+		require.NoError(t, err)
+		err = w.Flush()
+		require.NoError(t, err)
+		// disable auto compress to prevent changing file name
+		_, err = client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s AUTO_COMPRESS=FALSE", f.Name(), stage.ID().FullyQualifiedName()))
+		name := f.Name()
+		require.NoError(t, err)
+		err = os.Remove(f.Name())
+		require.NoError(t, err)
+		return filepath.Base(name)
+	}
+
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -1048,14 +1066,39 @@ func TestInt_TablesShowByID(t *testing.T) {
 		require.Equal(t, id2, e2.ID())
 	})
 
-	t.Run("show by id: check fields", func(t *testing.T) {
+	t.Run("show by id: check schema evolution record", func(t *testing.T) {
 		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		createTableHandle(t, id1)
-
-		sl, err := client.Tables.ShowByID(ctx, id1)
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
+		}
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithEnableSchemaEvolution(sdk.Pointer(true)))
 		require.NoError(t, err)
-		assert.Equal(t, "ROLE", sl.OwnerRoleType)
+		t.Cleanup(cleanupTableHandle(id))
+
+		table, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx,
+			&sdk.AccountRoleGrantPrivileges{SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeEvolveSchema}},
+			&sdk.AccountRoleGrantOn{SchemaObject: &sdk.GrantOnSchemaObject{SchemaObject: &sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: sdk.NewObjectIdentifierFromFullyQualifiedName(table.ID().FullyQualifiedName())}}},
+			sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"),
+			nil)
+		require.NoError(t, err)
+
+		stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(4)))
+		t.Cleanup(stageCleanup)
+		filename := uploadFile(t, stage)
+
+		_, err = client.QueryUnsafe(ctx, fmt.Sprintf(`COPY INTO %s
+		FROM @%s/%s
+		FILE_FORMAT = (type=json)
+		MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName(), filename))
+		require.NoError(t, err)
+
+		currentColumns := getTableColumnsFor(t, client, table.ID())
+		require.Len(t, currentColumns, 2)
+		assert.NotEmpty(t, currentColumns[1].SchemaEvolutionRecord)
 	})
 }
