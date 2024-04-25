@@ -867,7 +867,7 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 						On: &sdk.ShowGrantsOn{
 							Object: &sdk.Object{
 								ObjectType: sdk.ObjectTypeDatabase,
-								Name:       sdk.NewAccountObjectIdentifierFromFullyQualifiedName(databaseFullyQualifiedName),
+								Name:       databaseId,
 							},
 						},
 					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
