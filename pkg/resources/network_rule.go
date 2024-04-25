@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -93,6 +94,8 @@ func NetworkRule() *schema.Resource {
 					return nil
 				}
 				ruleMode := sdk.NetworkRuleMode(ruleModeRaw.(string))
+
+				// TODO: add valueList validators for different rule types
 				//valueListRaw, ok := diff.GetOk("value_list")
 				//if !ok {
 				//	return nil
@@ -100,8 +103,27 @@ func NetworkRule() *schema.Resource {
 				//
 				//valueList := expandStringList(valueListRaw.(*schema.Set).List())
 
-				if ruleType == sdk.NetworkRuleTypeIpv4 && ruleMode == sdk.NetworkRuleModeEgress {
-					return errors.New("the network rule mode EGRESS is not supported by the network rule type IPv4. The network rule mode must be one of [INGRESS].")
+				switch ruleType {
+				case sdk.NetworkRuleTypeIpv4:
+					if ruleMode != sdk.NetworkRuleModeIngress {
+						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type IPv4. The network rule mode must be one of [INGRESS].", ruleMode)
+						return errors.New(s)
+					}
+				case sdk.NetworkRuleTypeAwsVpcEndpointId:
+					if ruleMode != sdk.NetworkRuleModeIngress && ruleMode != sdk.NetworkRuleModeInternalStage {
+						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type AWSVPCEID. The network rule mode must be one of [INGRESS, INTERNAL_STAGE].", ruleMode)
+						return errors.New(s)
+					}
+				case sdk.NetworkRuleTypeAzureLinkId:
+					if ruleMode != sdk.NetworkRuleModeIngress {
+						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type AZURELINKID. The network rule mode must be one of [INGRESS, INTERNAL_STAGE].", ruleMode)
+						return errors.New(s)
+					}
+				case sdk.NetworkRuleTypeHostPort:
+					if ruleMode != sdk.NetworkRuleModeEgress {
+						s := fmt.Sprintf("the network rule mode %s is not supported by the network rule type HOST_PORT. The network rule mode must be one of [EGRESS].", ruleMode)
+						return errors.New(s)
+					}
 				}
 
 				return nil
@@ -204,6 +226,7 @@ func UpdateContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta 
 			networkRuleValues[i] = sdk.NetworkRuleValue{Value: v}
 		}
 
+		// TODO: use sdk.NewNetworkRuleUnsetRequest() if valueList is empty
 		setReq := sdk.NewNetworkRuleSetRequest(networkRuleValues)
 
 		if d.HasChange("comment") {
@@ -219,8 +242,9 @@ func UpdateContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func DeleteContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Id()
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(name).(sdk.SchemaObjectIdentifier)
 
 	if err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id)); err != nil {
 		diag.FromErr(err)
@@ -229,14 +253,3 @@ func DeleteContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId("")
 	return nil
 }
-
-//// ipChangeParser is a helper function to parse a given ip list change from ResourceData.
-//func ipChangeParser(data *schema.ResourceData, key string) []string {
-//	ipChangeSet := data.Get(key)
-//	ipList := ipChangeSet.(*schema.Set).List()
-//	newIps := make([]string, len(ipList))
-//	for idx, value := range ipList {
-//		newIps[idx] = fmt.Sprintf("%v", value)
-//	}
-//	return newIps
-//}
