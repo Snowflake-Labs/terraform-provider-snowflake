@@ -1073,7 +1073,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 			nil)
 		require.NoError(t, err)
 
-		stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(4)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
 		t.Cleanup(stageCleanup)
 		filename := uploadFile(t, stage)
 
