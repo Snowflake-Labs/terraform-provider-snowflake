@@ -57,15 +57,6 @@ func (c *IdsGenerator) AlphaWithPrefix(part string) string {
 	return c.withTestObjectSuffix(part + c.Alpha())
 }
 
-// TODO: will be added in the following PRs if needed or removed
-//func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
-//	return sdk.NewDatabaseObjectIdentifier(c.Alpha(), c.Alpha())
-//}
-//
-//func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
-//	return sdk.NewSchemaObjectIdentifier(c.Alpha(), c.Alpha(), c.Alpha())
-//}
-
 func (c *IdsGenerator) withTestObjectSuffix(text string) string {
 	return text + c.context.testObjectSuffix
 }
