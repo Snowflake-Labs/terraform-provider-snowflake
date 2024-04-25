@@ -43,7 +43,3 @@ func randomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
 func randomAccountObjectIdentifier() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(random.StringN(12))
 }
-
-func RandomAccountObjectIdentifier() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(random.StringN(12))
-}

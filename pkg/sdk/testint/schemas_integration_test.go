@@ -50,13 +50,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 			Clone: &sdk.Clone{
@@ -90,7 +90,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
 		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
@@ -250,7 +250,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
 		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{

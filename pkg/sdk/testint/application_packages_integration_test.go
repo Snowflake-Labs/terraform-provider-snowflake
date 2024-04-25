@@ -194,7 +194,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T) *sdk.ApplicationPackage {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		request := sdk.NewCreateApplicationPackageRequest(id).WithDistribution(sdk.DistributionPointer(sdk.DistributionInternal))
 		err := client.ApplicationPackages.Create(ctx, request)
 		require.NoError(t, err)

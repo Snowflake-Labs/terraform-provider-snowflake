@@ -141,7 +141,7 @@ func TestInt_Applications(t *testing.T) {
 		version, patch := "V001", 0
 		_, applicationPackage := createApplicationPackageHandle(t, version, patch, false)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
@@ -159,7 +159,7 @@ func TestInt_Applications(t *testing.T) {
 		version, patch := "V001", 0
 		stage, applicationPackage := createApplicationPackageHandle(t, version, patch, false)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).

@@ -50,7 +50,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 
 	createApiIntegrationAwsRequest := func(t *testing.T) *sdk.CreateApiIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateApiIntegrationRequest(id, prefixes(awsPrefix), true).
 			WithAwsApiProviderParams(sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiGateway, apiAwsRoleArn))
@@ -58,7 +58,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 
 	createApiIntegrationAzureRequest := func(t *testing.T) *sdk.CreateApiIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateApiIntegrationRequest(id, prefixes(azurePrefix), true).
 			WithAzureApiProviderParams(sdk.NewAzureApiParamsRequest(azureTenantId, azureAdApplicationId))
@@ -66,7 +66,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 
 	createApiIntegrationGoogleRequest := func(t *testing.T) *sdk.CreateApiIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateApiIntegrationRequest(id, prefixes(googlePrefix), true).
 			WithGoogleApiProviderParams(sdk.NewGoogleApiParamsRequest(googleAudience))
