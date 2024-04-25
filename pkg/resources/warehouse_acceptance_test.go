@@ -6,8 +6,8 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -16,8 +16,8 @@ import (
 func TestAcc_Warehouse(t *testing.T) {
 	prefix := acc.TestClient().Ids.Alpha()
 	prefix2 := acc.TestClient().Ids.Alpha()
-	comment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	newComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

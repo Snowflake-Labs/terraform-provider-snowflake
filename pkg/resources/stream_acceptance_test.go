@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -64,7 +63,7 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 func TestAcc_Stream_OnTable(t *testing.T) {
 	tableName := acc.TestClient().Ids.Alpha()
 	tableName2 := acc.TestClient().Ids.Alpha()
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -106,9 +105,9 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
 func TestAcc_Stream_OnView(t *testing.T) {
-	tableName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	tableName := acc.TestClient().Ids.Alpha()
 	viewName := acc.TestClient().Ids.Alpha()
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

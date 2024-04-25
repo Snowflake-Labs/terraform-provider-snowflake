@@ -14,7 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -134,7 +133,7 @@ func TestAcc_User(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
-	userName := sdk.NewAccountObjectIdentifier(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
 	config := fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"

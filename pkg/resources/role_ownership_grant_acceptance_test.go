@@ -6,14 +6,13 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_RoleOwnershipGrant_defaults(t *testing.T) {
-	onRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	toRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	onRoleName := acc.TestClient().Ids.Alpha()
+	toRoleName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
