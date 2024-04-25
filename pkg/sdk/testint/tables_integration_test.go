@@ -33,8 +33,10 @@ func TestInt_Table(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-	tag1, _ := createTag(t, client, database, schema)
-	tag2, _ := createTag(t, client, database, schema)
+	tag1, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup2)
 
 	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []informationSchemaColumns) {
 		t.Helper()
@@ -91,17 +93,10 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("create table: complete optionals", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-			{
-				Name: "col2",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1, 2)", nil)
-		table2, _ := testClientHelper().Table.CreateTable(t)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		t.Cleanup(maskingPolicyCleanup)
+		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
+		t.Cleanup(table2Cleanup)
 		name := random.String()
 		comment := random.String()
 
@@ -169,12 +164,8 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("create table as select", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1)", nil)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
+		t.Cleanup(maskingPolicyCleanup)
 		columns := []sdk.TableAsSelectColumnRequest{
 			*sdk.NewTableAsSelectColumnRequest("COLUMN_3").
 				WithType_(sdk.Pointer(sdk.DataTypeVARCHAR)).
@@ -213,7 +204,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: fix this test, it should create two integer column but is creating 3 text ones instead
 	t.Run("create table using template", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
@@ -534,12 +525,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: unset masking policy", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1)", nil)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
 		t.Cleanup(maskingPolicyCleanup)
 
 		name := random.String()

@@ -78,7 +78,7 @@ func getResourceMonitorSweeper(client *Client, suffix string) func() error {
 		for _, rm := range rms {
 			if strings.HasSuffix(rm.Name, suffix) {
 				log.Printf("[DEBUG] Dropping resource monitor %s", rm.ID().FullyQualifiedName())
-				if err := client.ResourceMonitors.Drop(ctx, rm.ID()); err != nil {
+				if err := client.ResourceMonitors.Drop(ctx, rm.ID(), &DropResourceMonitorOptions{IfExists: Bool(true)}); err != nil {
 					return fmt.Errorf("sweeping resource monitor %s ended with error, err = %w", rm.ID().FullyQualifiedName(), err)
 				}
 			} else {

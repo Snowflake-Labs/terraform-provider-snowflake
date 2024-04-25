@@ -139,7 +139,7 @@ func TestInt_Views(t *testing.T) {
 		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
 		t.Cleanup(rowAccessPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		request := createViewBasicRequest(t).
@@ -280,7 +280,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("alter view: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		view := createView(t)
@@ -318,7 +318,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("alter view: set and unset masking policy", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicyIdentity(t, client, testDb(t), testSchema(t), sdk.DataTypeNumber)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
 		t.Cleanup(maskingPolicyCleanup)
 
 		view := createView(t)
@@ -350,7 +350,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("alter view: set and unset tags on column", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		view := createView(t)

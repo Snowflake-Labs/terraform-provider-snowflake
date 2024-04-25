@@ -21,7 +21,8 @@ func TestInt_ExternalTables(t *testing.T) {
 	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID, nycWeatherDataURL)
 	t.Cleanup(stageCleanup)
 
-	tag, _ := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
 
 	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
 		return []*sdk.ExternalTableColumnRequest{
@@ -112,7 +113,8 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create: infer schema", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
 
 		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)

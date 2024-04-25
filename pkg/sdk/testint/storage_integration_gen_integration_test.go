@@ -310,7 +310,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	t.Run("Alter - set and unset tags", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).

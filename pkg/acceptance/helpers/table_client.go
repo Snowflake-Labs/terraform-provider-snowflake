@@ -26,7 +26,7 @@ func (c *TableClient) client() sdk.Tables {
 
 func (c *TableClient) CreateTable(t *testing.T) (*sdk.Table, func()) {
 	t.Helper()
-	return c.CreateTableInSchema(t, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+	return c.CreateTableInSchema(t, c.context.schemaId())
 }
 
 func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {

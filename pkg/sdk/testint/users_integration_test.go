@@ -80,7 +80,7 @@ func TestInt_UserCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {

@@ -221,7 +221,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		s, err := client.Schemas.ShowByID(ctx, schemaID)
 		require.NoError(t, err)
 
-		tag, cleanupTag := createTag(t, client, testDb(t), s)
+		tag, cleanupTag := testClientHelper().Tag.CreateTagInSchema(t, s.ID())
 		t.Cleanup(cleanupTag)
 
 		tagValue := "tag-value"

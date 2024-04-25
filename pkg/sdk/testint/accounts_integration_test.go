@@ -215,7 +215,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set resource monitor", func(t *testing.T) {
-		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitorTest, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -227,7 +227,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset password policy", func(t *testing.T) {
-		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicyTest, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		t.Cleanup(passwordPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -270,9 +270,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tagTest1, tagCleanup1 := createTag(t, client, testDb(t), testSchema(t))
+		tagTest1, tagCleanup1 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
+		tagTest2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{

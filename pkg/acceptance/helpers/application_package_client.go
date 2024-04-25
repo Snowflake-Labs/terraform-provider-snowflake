@@ -6,7 +6,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,9 +42,8 @@ func (c *ApplicationPackageClient) DropApplicationPackageFunc(t *testing.T, id s
 	ctx := context.Background()
 
 	return func() {
-		// no if exists supported based on the docs https://docs.snowflake.com/en/sql-reference/sql/drop-application-package#syntax
-		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id))
-		assert.NoError(t, err)
+		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id).WithIfExists(sdk.Bool(true)))
+		require.NoError(t, err)
 	}
 }
 

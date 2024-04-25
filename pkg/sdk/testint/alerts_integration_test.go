@@ -15,10 +15,10 @@ func TestInt_AlertsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	alertTest, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alertTest, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alertCleanup)
 
-	alert2Test, alert2Cleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alert2Test, alert2Cleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alert2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -228,7 +228,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alertCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {
@@ -249,7 +249,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
@@ -275,7 +275,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newCondition := "select * from DUAL where false"
 
@@ -319,7 +319,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("resume and then suspend", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &sdk.AlterAlertOptions{
@@ -365,9 +365,9 @@ func TestInt_AlertDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when alert exists", func(t *testing.T) {
-		alert, _ := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, _ := testClientHelper().Alert.CreateAlert(t)
 		id := alert.ID()
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -375,7 +375,7 @@ func TestInt_AlertDrop(t *testing.T) {
 
 	t.Run("when alert does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -388,7 +388,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
-			err := client.Alerts.Drop(ctx, id)
+			err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}

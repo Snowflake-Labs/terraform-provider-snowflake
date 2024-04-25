@@ -25,7 +25,7 @@ func (c *SessionPolicyClient) client() sdk.SessionPolicies {
 
 func (c *SessionPolicyClient) CreateSessionPolicy(t *testing.T) (*sdk.SessionPolicy, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, random.StringN(12))
+	id := c.context.newSchemaObjectIdentifier(random.StringN(12))
 	return c.CreateSessionPolicyWithOptions(t, id, sdk.NewCreateSessionPolicyRequest(id))
 }
 

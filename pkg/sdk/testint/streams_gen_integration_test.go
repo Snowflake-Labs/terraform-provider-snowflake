@@ -167,7 +167,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tag, cleanupTag := createTag(t, client, db, schema)
+		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)

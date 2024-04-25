@@ -16,7 +16,7 @@ func TestInt_EventTables(t *testing.T) {
 	ctx := context.Background()
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleaup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleaup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleaup)
 
 	assertEventTableHandle := func(t *testing.T, et *sdk.EventTable, expectedName string, expectedComment string, _ []string) {

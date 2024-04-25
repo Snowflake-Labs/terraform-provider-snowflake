@@ -14,7 +14,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
+	resourceMonitorTest, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 	t.Cleanup(resourceMonitorCleanup)
 
 	t.Run("with like", func(t *testing.T) {
@@ -107,10 +107,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		}
 		assert.Equal(t, thresholds, allThresholds)
 
-		t.Cleanup(func() {
-			err = client.ResourceMonitors.Drop(ctx, id)
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -139,10 +136,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.Empty(t, resourceMonitor.SuspendAt)
 		assert.Empty(t, resourceMonitor.SuspendImmediateAt)
 
-		t.Cleanup(func() {
-			err = client.ResourceMonitors.Drop(ctx, id)
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 	})
 }
 
@@ -151,7 +145,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when adding a new trigger", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 
 		var oldNotifyTriggers []sdk.TriggerDefinition
@@ -190,7 +184,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when setting credit quota", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		creditQuota := 100
 		alterOptions := &sdk.AlterResourceMonitorOptions{
@@ -212,7 +206,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		alterOptions := &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
@@ -236,7 +230,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when changing scheduling info", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		frequency, err := sdk.FrequencyFromString("NEVER")
 		require.NoError(t, err)
@@ -270,7 +264,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("all options together", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 
 		newTriggers := make([]sdk.TriggerDefinition, 0)
@@ -309,9 +303,10 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
-		resourceMonitor, _ := createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
+		t.Cleanup(resourceMonitorCleanup)
 		id := resourceMonitor.ID()
-		err := client.ResourceMonitors.Drop(ctx, id)
+		err := client.ResourceMonitors.Drop(ctx, id, &sdk.DropResourceMonitorOptions{})
 		require.NoError(t, err)
 		_, err = client.ResourceMonitors.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -319,7 +314,7 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 
 	t.Run("when resource monitor does not exist", func(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier("does_not_exist")
-		err := client.ResourceMonitors.Drop(ctx, id)
+		err := client.ResourceMonitors.Drop(ctx, id, &sdk.DropResourceMonitorOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

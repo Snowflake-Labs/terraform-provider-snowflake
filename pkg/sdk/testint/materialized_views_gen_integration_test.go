@@ -116,7 +116,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
 		t.Cleanup(rowAccessPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		request := createMaterializedViewBasicRequest(t).
@@ -314,7 +314,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	// Based on usage notes, set/unset tags is done through VIEW (https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view#usage-notes).
 	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	t.Run("alter materialized view: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		materializedView := createMaterializedView(t)

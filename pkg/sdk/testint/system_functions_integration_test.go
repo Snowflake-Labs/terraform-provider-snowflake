@@ -15,11 +15,11 @@ func TestInt_GetTag(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	t.Run("masking policy tag", func(t *testing.T) {
-		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicyTest, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 
 		tagValue := random.String()
@@ -38,7 +38,7 @@ func TestInt_GetTag(t *testing.T) {
 	})
 
 	t.Run("masking policy with no set tag", func(t *testing.T) {
-		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicyTest, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 
 		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
@@ -60,7 +60,7 @@ func TestInt_PipeStatus(t *testing.T) {
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
-	pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+	pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 	t.Cleanup(pipeCleanup)
 
 	pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
@@ -109,7 +109,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
-	pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+	pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 	t.Cleanup(pipeCleanup)
 
 	pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
