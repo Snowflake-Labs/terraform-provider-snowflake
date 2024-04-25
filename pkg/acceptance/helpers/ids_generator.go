@@ -45,8 +45,12 @@ func (c *IdsGenerator) AlphaN(n int) string {
 	return c.withTestObjectSuffix(strings.ToUpper(random.AlphaN(n)))
 }
 
-func (c *IdsGenerator) AlphaNContaining(part string) string {
+func (c *IdsGenerator) AlphaContaining(part string) string {
 	return c.withTestObjectSuffix(c.Alpha() + part)
+}
+
+func (c *IdsGenerator) AlphaWithPrefix(part string) string {
+	return c.withTestObjectSuffix(part + c.Alpha())
 }
 
 // TODO: will be added in the following PRs if needed or removed

@@ -13,7 +13,7 @@ import (
 )
 
 func TestAcc_SessionParameterWithUser(t *testing.T) {
-	prefix := "TEST_USER_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

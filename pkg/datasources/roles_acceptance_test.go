@@ -54,8 +54,8 @@ func TestAcc_Roles(t *testing.T) {
 
 func TestAcc_AccountRoles_basic(t *testing.T) {
 	accountRoleNamePrefix := "account_roles_test_prefix_"
-	accountRoleName1 := accountRoleNamePrefix + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	accountRoleName2 := accountRoleNamePrefix + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleName1 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
+	accountRoleName2 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
 	accountRoleName3 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

@@ -345,7 +345,7 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
@@ -392,7 +392,7 @@ func TestAcc_DynamicTable_issue2329(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329_with_matching_comment proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {

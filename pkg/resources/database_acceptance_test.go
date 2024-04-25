@@ -21,7 +21,7 @@ import (
 )
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
-	prefix := "_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.AlphaWithPrefix("_")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

@@ -34,7 +34,7 @@ func TestAcc_ParametersOnAccount(t *testing.T) {
 }
 
 func TestAcc_ParametersOnSession(t *testing.T) {
-	userName := "TEST_USER_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -56,7 +56,7 @@ func TestAcc_ParametersOnSession(t *testing.T) {
 }
 
 func TestAcc_ParametersOnObject(t *testing.T) {
-	dbName := "TEST_DB_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

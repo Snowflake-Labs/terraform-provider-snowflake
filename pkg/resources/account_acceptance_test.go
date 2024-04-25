@@ -18,7 +18,7 @@ func TestAcc_Account_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	accountName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	password := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "123ABC"
+	password := acc.TestClient().Ids.AlphaContaining("123ABC")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

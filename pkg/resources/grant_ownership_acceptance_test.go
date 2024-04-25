@@ -69,10 +69,10 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(5, acctest.CharSetAlpha) + "." + acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.AlphaContaining(".")
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
-	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(5, acctest.CharSetAlpha) + "." + acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	accountRoleName := acc.TestClient().Ids.AlphaContaining(".")
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
 	configVariables := config.Variables{

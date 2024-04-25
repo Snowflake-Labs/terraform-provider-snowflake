@@ -42,9 +42,9 @@ type (
 )
 
 var (
-	rootname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_root_task"
-	childname = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_child_task"
-	soloname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_standalone_task"
+	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
+	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
+	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,

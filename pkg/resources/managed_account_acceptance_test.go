@@ -24,7 +24,7 @@ func TestAcc_ManagedAccount(t *testing.T) {
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	adminPass := acc.TestClient().Ids.AlphaWithPrefix("A1")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

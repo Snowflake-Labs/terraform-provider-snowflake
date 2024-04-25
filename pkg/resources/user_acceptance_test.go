@@ -235,7 +235,7 @@ resource "snowflake_user" "w" {
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
 	r := require.New(t)
-	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
+	prefix := acc.TestClient().Ids.AlphaContaining(".")
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")
