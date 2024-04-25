@@ -358,9 +358,7 @@ func (opts *DropResourceMonitorOptions) validate() error {
 }
 
 func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
+	opts = createIfNil(opts)
 	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err

@@ -231,7 +231,8 @@ func TestApplicationPackages_Drop(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DROP APPLICATION PACKAGE %s`, id.FullyQualifiedName())
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP APPLICATION PACKAGE IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
