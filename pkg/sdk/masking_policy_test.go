@@ -136,6 +136,14 @@ func TestMaskingPolicyDrop(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP MASKING POLICY %s", id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropMaskingPolicyOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP MASKING POLICY IF EXISTS %s", id.FullyQualifiedName())
+	})
 }
 
 func TestMaskingPolicyShow(t *testing.T) {

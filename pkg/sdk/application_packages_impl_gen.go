@@ -136,7 +136,8 @@ func (r *AlterApplicationPackageRequest) toOpts() *AlterApplicationPackageOption
 
 func (r *DropApplicationPackageRequest) toOpts() *DropApplicationPackageOptions {
 	opts := &DropApplicationPackageOptions{
-		name: r.name,
+		name:     r.name,
+		IfExists: r.IfExists,
 	}
 	return opts
 }

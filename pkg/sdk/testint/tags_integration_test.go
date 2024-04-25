@@ -170,7 +170,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: set and unset masking policies", func(t *testing.T) {
-		policyTest, policyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
+		policyTest, policyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyInSchema(t, schemaTest.ID())
 		t.Cleanup(policyCleanup)
 
 		tag := createTagHandle(t)

@@ -89,7 +89,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on account object", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
+		resourceMonitorTest, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			AccountObjectPrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeMonitor},
@@ -235,19 +235,18 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(schemaCleanup)
+		schema := testSchema(t)
 
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(pipeCleanup)
 
-		secondPipe, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		secondPipe, secondPipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
@@ -295,19 +294,18 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(schemaCleanup)
+		schema := testSchema(t)
 
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
-		_, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		_, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(pipeCleanup)
 
-		_, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		_, secondPipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
@@ -588,19 +586,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(schemaCleanup)
+		schema := testSchema(t)
 
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(pipeCleanup)
 
-		secondPipe, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
+		secondPipe, secondPipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
 		role, roleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
@@ -648,19 +645,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(schemaCleanup)
+		schema := testSchema(t)
 
 		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
 		t.Cleanup(stageCleanup)
 
-		_, pipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		_, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(pipeCleanup)
 
-		_, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
+		_, secondPipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
 		role, roleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
@@ -774,8 +770,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		appPackageName := random.AlphaN(8)
-		cleanupAppPackage := createApplicationPackage(t, client, appPackageName)
+		applicationPackage, cleanupAppPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
 		t.Cleanup(cleanupAppPackage)
 		// TODO [SNOW-1284382]: alter the test when the syntax starts working
 		// 2024/03/29 17:04:20 [DEBUG] sql-conn-query: [query SHOW GRANTS TO SHARE "0a8DMkl3NOx7" IN APPLICATION PACKAGE "hziiAtqY" err 001003 (42000): SQL compilation error:
@@ -784,7 +779,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			To: &sdk.ShowGrantsTo{
 				Share: &sdk.ShowGrantsToShare{
 					Name:                 shareTest.ID(),
-					InApplicationPackage: sdk.Pointer(sdk.NewAccountObjectIdentifier(appPackageName)),
+					InApplicationPackage: sdk.Pointer(applicationPackage.ID()),
 				},
 			},
 		})
@@ -827,7 +822,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
-	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphaN(20)))
+	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
@@ -1133,7 +1128,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on pipe - with ownership", func(t *testing.T) {
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(pipeCleanup)
 
 		pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
@@ -1181,7 +1176,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
@@ -1243,7 +1238,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
@@ -1303,7 +1298,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = testClientHelper().Role.UseRole(t, pipeRole.Name)
 			defer usePreviousRole()
@@ -1349,7 +1344,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
@@ -1382,10 +1377,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on all pipes", func(t *testing.T) {
-		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(pipeCleanup)
 
-		secondPipe, secondPipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		secondPipe, secondPipeCleanup := testClientHelper().Pipe.CreatePipe(t, copyStatement)
 		t.Cleanup(secondPipeCleanup)
 
 		pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())

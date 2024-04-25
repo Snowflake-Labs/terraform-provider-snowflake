@@ -91,7 +91,8 @@ type AddPatchForVersionRequest struct {
 }
 
 type DropApplicationPackageRequest struct {
-	name AccountObjectIdentifier // required
+	IfExists *bool
+	name     AccountObjectIdentifier // required
 }
 
 type ShowApplicationPackageRequest struct {

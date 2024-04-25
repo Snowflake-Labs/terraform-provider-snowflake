@@ -130,6 +130,12 @@ func TestDynamicTableDrop(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DROP DYNAMIC TABLE %s`, id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP DYNAMIC TABLE IF EXISTS %s`, id.FullyQualifiedName())
+	})
 }
 
 func TestDynamicTableShow(t *testing.T) {

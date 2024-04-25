@@ -118,15 +118,23 @@ func TestAlertDrop(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &dropAlertOptions{}
+		opts := &DropAlertOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &dropAlertOptions{
+		opts := &DropAlertOptions{
 			name: id,
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP ALERT %s", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropAlertOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP ALERT IF EXISTS %s", id.FullyQualifiedName())
 	})
 }
 

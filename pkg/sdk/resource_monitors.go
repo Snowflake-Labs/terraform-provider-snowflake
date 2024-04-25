@@ -12,14 +12,14 @@ import (
 var (
 	_ validatable = new(CreateResourceMonitorOptions)
 	_ validatable = new(AlterResourceMonitorOptions)
-	_ validatable = new(dropResourceMonitorOptions)
+	_ validatable = new(DropResourceMonitorOptions)
 	_ validatable = new(ShowResourceMonitorOptions)
 )
 
 type ResourceMonitors interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error
-	Drop(ctx context.Context, id AccountObjectIdentifier) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error
 	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
@@ -339,14 +339,15 @@ type ResourceMonitorSet struct {
 	NotifyUsers    *NotifyUsers `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 }
 
-// dropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
-type dropResourceMonitorOptions struct {
+// DropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
+type DropResourceMonitorOptions struct {
 	drop            bool                    `ddl:"static" sql:"DROP"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
+	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *dropResourceMonitorOptions) validate() error {
+func (opts *DropResourceMonitorOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
@@ -356,10 +357,11 @@ func (opts *dropResourceMonitorOptions) validate() error {
 	return nil
 }
 
-func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &dropResourceMonitorOptions{
-		name: id,
+func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return err
 	}

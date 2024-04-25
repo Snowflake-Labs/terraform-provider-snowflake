@@ -18,9 +18,11 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
 	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID, nycWeatherDataURL)
+	t.Cleanup(stageCleanup)
 
-	tag, _ := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
 
 	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
 		return []*sdk.ExternalTableColumnRequest{
@@ -111,7 +113,8 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create: infer schema", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
 
 		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
@@ -422,7 +425,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
 	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
-	_, stageCleanup := createStageWithURL(t, client, stage, nycWeatherDataURL)
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage, nycWeatherDataURL)
 	t.Cleanup(stageCleanup)
 
 	stageLocation := fmt.Sprintf("@%s", stage.FullyQualifiedName())

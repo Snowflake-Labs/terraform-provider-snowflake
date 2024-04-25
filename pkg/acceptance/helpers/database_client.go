@@ -50,7 +50,7 @@ func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIden
 	return func() {
 		err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+		err = c.context.client.Sessions.UseSchema(ctx, c.context.schemaId())
 		require.NoError(t, err)
 	}
 }
@@ -79,7 +79,7 @@ func (c *DatabaseClient) CreateSecondaryDatabaseWithOptions(t *testing.T, id sdk
 		// TODO [926148]: make this wait better with tests stabilization
 		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
 		time.Sleep(1 * time.Second)
-		err = c.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+		err = c.context.client.Sessions.UseSchema(ctx, c.context.schemaId())
 		require.NoError(t, err)
 	}
 }

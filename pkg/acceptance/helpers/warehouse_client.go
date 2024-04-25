@@ -28,7 +28,7 @@ func (c *WarehouseClient) UseWarehouse(t *testing.T, id sdk.AccountObjectIdentif
 	err := c.context.client.Sessions.UseWarehouse(ctx, id)
 	require.NoError(t, err)
 	return func() {
-		err = c.context.client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(c.context.warehouse))
+		err = c.context.client.Sessions.UseWarehouse(ctx, c.context.warehouseId())
 		require.NoError(t, err)
 	}
 }
@@ -53,7 +53,7 @@ func (c *WarehouseClient) DropWarehouseFunc(t *testing.T, id sdk.AccountObjectId
 	return func() {
 		err := c.client().Drop(ctx, id, &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
-		err = c.context.client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(c.context.warehouse))
+		err = c.context.client.Sessions.UseWarehouse(ctx, c.context.warehouseId())
 		require.NoError(t, err)
 	}
 }

@@ -107,45 +107,45 @@ func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stag
 	return collections.FindOne(stages, func(r Stage) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
+func (s *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 	opts := &CreateInternalStageOptions{
-		OrReplace:   r.OrReplace,
-		Temporary:   r.Temporary,
-		IfNotExists: r.IfNotExists,
-		name:        r.name,
+		OrReplace:   s.OrReplace,
+		Temporary:   s.Temporary,
+		IfNotExists: s.IfNotExists,
+		name:        s.name,
 
-		Comment: r.Comment,
-		Tag:     r.Tag,
+		Comment: s.Comment,
+		Tag:     s.Tag,
 	}
-	if r.Encryption != nil {
+	if s.Encryption != nil {
 		opts.Encryption = &InternalStageEncryption{
-			Type: r.Encryption.Type,
+			Type: s.Encryption.Type,
 		}
 	}
-	if r.DirectoryTableOptions != nil {
+	if s.DirectoryTableOptions != nil {
 		opts.DirectoryTableOptions = &InternalDirectoryTableOptions{
-			Enable:          r.DirectoryTableOptions.Enable,
-			RefreshOnCreate: r.DirectoryTableOptions.RefreshOnCreate,
+			Enable:          s.DirectoryTableOptions.Enable,
+			RefreshOnCreate: s.DirectoryTableOptions.RefreshOnCreate,
 		}
 	}
-	if r.FileFormat != nil {
-		opts.FileFormat = r.FileFormat.toOpts()
+	if s.FileFormat != nil {
+		opts.FileFormat = s.FileFormat.toOpts()
 	}
-	if r.CopyOptions != nil {
+	if s.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-			SizeLimit:         r.CopyOptions.SizeLimit,
-			Purge:             r.CopyOptions.Purge,
-			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
-			MatchByColumnName: r.CopyOptions.MatchByColumnName,
-			EnforceLength:     r.CopyOptions.EnforceLength,
-			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
-			Force:             r.CopyOptions.Force,
+			SizeLimit:         s.CopyOptions.SizeLimit,
+			Purge:             s.CopyOptions.Purge,
+			ReturnFailedOnly:  s.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: s.CopyOptions.MatchByColumnName,
+			EnforceLength:     s.CopyOptions.EnforceLength,
+			Truncatecolumns:   s.CopyOptions.Truncatecolumns,
+			Force:             s.CopyOptions.Force,
 		}
-		if r.CopyOptions.OnError != nil {
+		if s.CopyOptions.OnError != nil {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
-				Continue:       r.CopyOptions.OnError.Continue,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+				Continue:       s.CopyOptions.OnError.Continue,
+				SkipFile:       s.CopyOptions.OnError.SkipFile,
+				AbortStatement: s.CopyOptions.OnError.AbortStatement,
 			}
 		}
 	}

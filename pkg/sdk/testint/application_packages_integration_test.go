@@ -27,8 +27,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	cleanupApplicationPackageHandle := func(id sdk.AccountObjectIdentifier) func() {

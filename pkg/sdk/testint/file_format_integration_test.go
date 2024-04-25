@@ -375,7 +375,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("rename", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
 		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), random.String())
@@ -404,7 +404,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	})
 
 	t.Run("set + set comment", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, testSchema(t).ID(), &sdk.CreateFileFormatOptions{
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormatWithOptions(t, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
 				CSVCompression: &sdk.CSVCompressionAuto,
@@ -435,7 +435,9 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("no options", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
+
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), nil)
 		require.NoError(t, err)
 
@@ -444,7 +446,9 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
+
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), &sdk.DropFileFormatOptions{
 			IfExists: sdk.Bool(true),
 		})
@@ -459,9 +463,9 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest, cleanupFileFormat := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat)
-	fileFormatTest2, cleanupFileFormat2 := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest2, cleanupFileFormat2 := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat2)
 
 	t.Run("without options", func(t *testing.T) {
@@ -500,7 +504,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest, cleanupFileFormat := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat)
 
 	// new database and schema created on purpose
