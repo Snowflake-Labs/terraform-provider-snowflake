@@ -32,7 +32,7 @@ func randomSchemaObjectIdentifier() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(random.StringN(12), random.StringN(12), random.StringN(12))
 }
 
-func RandomExternalObjectIdentifier() ExternalObjectIdentifier {
+func randomExternalObjectIdentifier() ExternalObjectIdentifier {
 	return NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(random.StringN(12)), RandomAccountObjectIdentifier())
 }
 
