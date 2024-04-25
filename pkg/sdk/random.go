@@ -26,7 +26,9 @@ import (
 // 4. Do nothing
 //    Just leave these helpers exported.
 
-func RandomSchemaObjectIdentifier() SchemaObjectIdentifier {
+// UPDATE: with introduction of ids generation for integration and acceptance tests, this file will contain only methods used in sdk unit tests
+
+func randomSchemaObjectIdentifier() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(random.StringN(12), random.StringN(12), random.StringN(12))
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestProcedures_CreateForJava(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavaProcedureOptions {
 		return &CreateForJavaProcedureOptions{
@@ -115,7 +115,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 }
 
 func TestProcedures_CreateForJavaScript(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavaScriptProcedureOptions {
 		return &CreateForJavaScriptProcedureOptions{
@@ -162,7 +162,7 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 }
 
 func TestProcedures_CreateForPython(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForPythonProcedureOptions {
 		return &CreateForPythonProcedureOptions{
@@ -256,7 +256,7 @@ func TestProcedures_CreateForPython(t *testing.T) {
 }
 
 func TestProcedures_CreateForScala(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForScalaProcedureOptions {
 		return &CreateForScalaProcedureOptions{
@@ -343,7 +343,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 }
 
 func TestProcedures_CreateForSQL(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForSQLProcedureOptions {
 		return &CreateForSQLProcedureOptions{
@@ -405,7 +405,7 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 }
 
 func TestProcedures_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropProcedureOptions {
 		return &DropProcedureOptions{
@@ -437,7 +437,7 @@ func TestProcedures_Drop(t *testing.T) {
 }
 
 func TestProcedures_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterProcedureOptions {
 		return &AlterProcedureOptions{
@@ -564,7 +564,7 @@ func TestProcedures_Show(t *testing.T) {
 }
 
 func TestProcedures_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeProcedureOptions {
 		return &DescribeProcedureOptions{
@@ -596,7 +596,7 @@ func TestProcedures_Describe(t *testing.T) {
 }
 
 func TestProcedures_Call(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CallProcedureOptions {
 		return &CallProcedureOptions{

@@ -30,7 +30,7 @@ func TestApplicationPackages_Create(t *testing.T) {
 		opts.DefaultDdlCollation = String("en_US")
 		opts.Comment = String("comment")
 		opts.Distribution = DistributionPointer(DistributionInternal)
-		t1 := RandomSchemaObjectIdentifier()
+		t1 := randomSchemaObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
 				Name:  t1,

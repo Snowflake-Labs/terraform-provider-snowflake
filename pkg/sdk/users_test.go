@@ -234,7 +234,7 @@ func TestUserDrop(t *testing.T) {
 }
 
 func TestUserShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowUserOptions{}

@@ -750,7 +750,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -778,7 +778,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -817,7 +817,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -845,7 +845,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{

@@ -5,7 +5,7 @@ import (
 )
 
 func TestTasks_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	sql := "SELECT CURRENT_TIMESTAMP"
 
 	// Minimal valid CreateTaskOptions
@@ -61,8 +61,8 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		warehouseId := RandomAccountObjectIdentifier()
-		otherTaskId := RandomSchemaObjectIdentifier()
-		tagId := RandomSchemaObjectIdentifier()
+		otherTaskId := randomSchemaObjectIdentifier()
+		tagId := randomSchemaObjectIdentifier()
 
 		req := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -91,8 +91,8 @@ func TestTasks_Create(t *testing.T) {
 }
 
 func TestTasks_Clone(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	sourceId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	sourceId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CloneTaskOptions
 	defaultOpts := func() *CloneTaskOptions {
@@ -133,8 +133,8 @@ func TestTasks_Clone(t *testing.T) {
 }
 
 func TestTasks_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	otherTaskId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	otherTaskId := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterTaskOptions
 	defaultOpts := func() *AlterTaskOptions {
@@ -318,7 +318,7 @@ func TestTasks_Alter(t *testing.T) {
 }
 
 func TestTasks_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropTaskOptions
 	defaultOpts := func() *DropTaskOptions {
@@ -377,7 +377,7 @@ func TestTasks_Show(t *testing.T) {
 }
 
 func TestTasks_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeTaskOptions
 	defaultOpts := func() *DescribeTaskOptions {
@@ -404,7 +404,7 @@ func TestTasks_Describe(t *testing.T) {
 }
 
 func TestTasks_Execute(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid ExecuteTaskOptions
 	defaultOpts := func() *ExecuteTaskOptions {

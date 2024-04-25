@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestNetworkRules_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateNetworkRuleOptions
 	defaultOpts := func() *CreateNetworkRuleOptions {
@@ -43,7 +43,7 @@ func TestNetworkRules_Create(t *testing.T) {
 }
 
 func TestNetworkRules_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterNetworkRuleOptions
 	defaultOpts := func() *AlterNetworkRuleOptions {
@@ -103,7 +103,7 @@ func TestNetworkRules_Alter(t *testing.T) {
 }
 
 func TestNetworkRules_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropNetworkRuleOptions
 	defaultOpts := func() *DropNetworkRuleOptions {
@@ -168,7 +168,7 @@ func TestNetworkRules_Show(t *testing.T) {
 }
 
 func TestNetworkRules_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeNetworkRuleOptions
 	defaultOpts := func() *DescribeNetworkRuleOptions {

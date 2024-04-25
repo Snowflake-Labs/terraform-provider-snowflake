@@ -140,7 +140,7 @@ func TestResourceMonitorDrop(t *testing.T) {
 }
 
 func TestResourceMonitorShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowResourceMonitorOptions{}
