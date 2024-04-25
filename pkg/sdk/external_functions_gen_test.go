@@ -282,7 +282,7 @@ func TestExternalFunctions_Show(t *testing.T) {
 	})
 
 	t.Run("show with in", func(t *testing.T) {
-		id := RandomDatabaseObjectIdentifier()
+		id := randomDatabaseObjectIdentifier()
 		opts := defaultOpts()
 		opts.In = &In{
 			Schema: id,

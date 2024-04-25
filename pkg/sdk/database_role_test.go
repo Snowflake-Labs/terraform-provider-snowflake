@@ -7,7 +7,7 @@ import (
 )
 
 func TestDatabaseRoleCreate(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *createDatabaseRoleOptions {
 		return &createDatabaseRoleOptions{
@@ -56,7 +56,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 }
 
 func TestDatabaseRoleAlter(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *alterDatabaseRoleOptions {
 		return &alterDatabaseRoleOptions{
@@ -156,7 +156,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 }
 
 func TestDatabaseRoleDrop(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *dropDatabaseRoleOptions {
 		return &dropDatabaseRoleOptions{
@@ -228,8 +228,8 @@ func TestDatabaseRolesShow(t *testing.T) {
 }
 
 func TestDatabaseRoles_Grant(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	databaseRoleId := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	databaseRoleId := randomDatabaseObjectIdentifier()
 	accountRoleId := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleOptions {
@@ -277,8 +277,8 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 }
 
 func TestDatabaseRoles_Revoke(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	databaseRoleId := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	databaseRoleId := randomDatabaseObjectIdentifier()
 	accountRoleId := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleOptions {
@@ -326,7 +326,7 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 }
 
 func TestDatabaseRoles_GrantToShare(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 	share := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleToShareOptions {
@@ -361,7 +361,7 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 }
 
 func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 	share := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleFromShareOptions {

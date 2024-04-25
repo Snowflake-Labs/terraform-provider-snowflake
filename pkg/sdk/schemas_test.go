@@ -6,7 +6,7 @@ import (
 )
 
 func TestSchemasCreate(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateSchemaOptions{

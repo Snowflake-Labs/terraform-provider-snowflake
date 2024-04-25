@@ -36,7 +36,7 @@ func randomExternalObjectIdentifier() ExternalObjectIdentifier {
 	return NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(random.StringN(12)), RandomAccountObjectIdentifier())
 }
 
-func RandomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
+func randomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(random.StringN(12), random.StringN(12))
 }
 

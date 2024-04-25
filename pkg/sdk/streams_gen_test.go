@@ -442,7 +442,7 @@ func TestStreams_Show(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{Pattern: String("pattern")}
-		schemaId := RandomDatabaseObjectIdentifier()
+		schemaId := randomDatabaseObjectIdentifier()
 		opts.In = &In{Schema: schemaId}
 		opts.StartsWith = String("starts with pattern")
 		opts.Limit = &LimitFrom{Rows: Int(123), From: String("from pattern")}
