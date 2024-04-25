@@ -19,7 +19,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 	ctx := context.Background()
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		name := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),
 		}

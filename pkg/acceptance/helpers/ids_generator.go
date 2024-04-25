@@ -33,7 +33,7 @@ func (c *IdsGenerator) newSchemaObjectIdentifier(name string) sdk.SchemaObjectId
 	return sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, name)
 }
 
-func (c *IdsGenerator) randomSchemaObjectIdentifierInDefaultSchema() sdk.SchemaObjectIdentifier {
+func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
 	return c.newSchemaObjectIdentifier(c.Alpha())
 }
 
@@ -49,6 +49,7 @@ func (c *IdsGenerator) AlphaNContaining(part string) string {
 	return c.withTestObjectSuffix(c.Alpha() + part)
 }
 
+// TODO: will be added in the following PRs if needed or removed
 //func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
 //	return sdk.NewAccountObjectIdentifier(c.Alpha())
 //}
