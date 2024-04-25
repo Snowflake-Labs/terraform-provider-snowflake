@@ -81,8 +81,8 @@ func TestInt_SchemasCreate(t *testing.T) {
 	})
 
 	t.Run("with tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
+		tagID := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		tagName := tagID.Name()
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -241,8 +241,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
+		tagID := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		tagName := tagID.Name()
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
 		t.Cleanup(func() {

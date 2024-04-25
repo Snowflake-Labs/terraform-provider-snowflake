@@ -56,32 +56,32 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 
 		Account:            NewAccountClient(context),
 		Alert:              NewAlertClient(context, idsGenerator),
-		ApiIntegration:     NewApiIntegrationClient(context),
-		Application:        NewApplicationClient(context),
-		ApplicationPackage: NewApplicationPackageClient(context),
+		ApiIntegration:     NewApiIntegrationClient(context, idsGenerator),
+		Application:        NewApplicationClient(context, idsGenerator),
+		ApplicationPackage: NewApplicationPackageClient(context, idsGenerator),
 		Context:            NewContextClient(context),
 		Database:           NewDatabaseClient(context, idsGenerator),
-		DatabaseRole:       NewDatabaseRoleClient(context),
-		DynamicTable:       NewDynamicTableClient(context),
+		DatabaseRole:       NewDatabaseRoleClient(context, idsGenerator),
+		DynamicTable:       NewDynamicTableClient(context, idsGenerator),
 		FailoverGroup:      NewFailoverGroupClient(context, idsGenerator),
-		FileFormat:         NewFileFormatClient(context),
-		MaskingPolicy:      NewMaskingPolicyClient(context),
+		FileFormat:         NewFileFormatClient(context, idsGenerator),
+		MaskingPolicy:      NewMaskingPolicyClient(context, idsGenerator),
 		NetworkPolicy:      NewNetworkPolicyClient(context, idsGenerator),
 		Parameter:          NewParameterClient(context),
-		PasswordPolicy:     NewPasswordPolicyClient(context),
-		Pipe:               NewPipeClient(context),
+		PasswordPolicy:     NewPasswordPolicyClient(context, idsGenerator),
+		Pipe:               NewPipeClient(context, idsGenerator),
 		ResourceMonitor:    NewResourceMonitorClient(context, idsGenerator),
 		Role:               NewRoleClient(context, idsGenerator),
-		RowAccessPolicy:    NewRowAccessPolicyClient(context),
-		Schema:             NewSchemaClient(context),
-		SessionPolicy:      NewSessionPolicyClient(context),
-		Share:              NewShareClient(context),
-		Stage:              NewStageClient(context),
-		Table:              NewTableClient(context),
-		Tag:                NewTagClient(context),
-		Task:               NewTaskClient(context),
+		RowAccessPolicy:    NewRowAccessPolicyClient(context, idsGenerator),
+		Schema:             NewSchemaClient(context, idsGenerator),
+		SessionPolicy:      NewSessionPolicyClient(context, idsGenerator),
+		Share:              NewShareClient(context, idsGenerator),
+		Stage:              NewStageClient(context, idsGenerator),
+		Table:              NewTableClient(context, idsGenerator),
+		Tag:                NewTagClient(context, idsGenerator),
+		Task:               NewTaskClient(context, idsGenerator),
 		User:               NewUserClient(context, idsGenerator),
-		View:               NewViewClient(context),
+		View:               NewViewClient(context, idsGenerator),
 		Warehouse:          NewWarehouseClient(context, idsGenerator),
 	}
 }
@@ -92,20 +92,4 @@ type TestClientContext struct {
 	schema           string
 	warehouse        string
 	testObjectSuffix string
-}
-
-func (c *TestClientContext) databaseId() sdk.AccountObjectIdentifier {
-	return sdk.NewAccountObjectIdentifier(c.database)
-}
-
-func (c *TestClientContext) schemaId() sdk.DatabaseObjectIdentifier {
-	return sdk.NewDatabaseObjectIdentifier(c.database, c.schema)
-}
-
-func (c *TestClientContext) warehouseId() sdk.AccountObjectIdentifier {
-	return sdk.NewAccountObjectIdentifier(c.warehouse)
-}
-
-func (c *TestClientContext) newSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifier(c.database, c.schema, name)
 }

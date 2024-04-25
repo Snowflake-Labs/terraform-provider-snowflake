@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type SessionPolicyClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewSessionPolicyClient(context *TestClientContext) *SessionPolicyClient {
+func NewSessionPolicyClient(context *TestClientContext, idsGenerator *IdsGenerator) *SessionPolicyClient {
 	return &SessionPolicyClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,7 +26,7 @@ func (c *SessionPolicyClient) client() sdk.SessionPolicies {
 
 func (c *SessionPolicyClient) CreateSessionPolicy(t *testing.T) (*sdk.SessionPolicy, func()) {
 	t.Helper()
-	id := c.context.newSchemaObjectIdentifier(random.StringN(12))
+	id := c.ids.RandomSchemaObjectIdentifier()
 	return c.CreateSessionPolicyWithOptions(t, id, sdk.NewCreateSessionPolicyRequest(id))
 }
 

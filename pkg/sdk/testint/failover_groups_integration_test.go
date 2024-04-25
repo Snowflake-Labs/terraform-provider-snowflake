@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
@@ -79,7 +78,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with identifier containing a dot", func(t *testing.T) {
-		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
+		shareId := testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".")
 
 		shareWithDot, shareWithDotCleanup := testClientHelper().Share.CreateShareWithOptions(t, shareId, &sdk.CreateShareOptions{})
 		t.Cleanup(shareWithDotCleanup)
@@ -815,7 +814,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowFailoverGroupOptions{
-			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.GetAccountLocator()),
+			InAccount: testClientHelper().Ids.AccountIdentifierWithLocator(),
 		}
 		failoverGroups, err := client.FailoverGroups.Show(ctx, showOptions)
 		require.NoError(t, err)

@@ -14,8 +14,10 @@ import (
 )
 
 func TestAcc_Warehouse(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
-	prefix2 := acc.TestClient().Ids.Alpha()
+	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	prefix := warehouseId.Name()
+	prefix2 := warehouseId2.Name()
 	comment := random.Comment()
 	newComment := random.Comment()
 
@@ -81,7 +83,7 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
-				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, prefix2, 10) },
+				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, warehouseId2, 10) },
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},

@@ -122,6 +122,10 @@ type Application struct {
 	RetentionTime int
 }
 
+func (a *Application) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(a.Name)
+}
+
 // DescribeApplicationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-application.
 type DescribeApplicationOptions struct {
 	describe    bool                    `ddl:"static" sql:"DESCRIBE"`

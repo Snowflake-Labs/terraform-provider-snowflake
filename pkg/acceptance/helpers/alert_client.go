@@ -38,7 +38,7 @@ func (c *AlertClient) CreateAlertWithOptions(t *testing.T, schedule string, cond
 
 	id := c.ids.RandomSchemaObjectIdentifier()
 
-	err := c.client().Create(ctx, id, c.ids.warehouseId(), schedule, condition, action, opts)
+	err := c.client().Create(ctx, id, c.ids.WarehouseId(), schedule, condition, action, opts)
 	require.NoError(t, err)
 
 	alert, err := c.client().ShowByID(ctx, id)

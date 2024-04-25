@@ -31,7 +31,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -85,7 +85,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -210,7 +210,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -263,7 +263,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -409,7 +409,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -463,7 +463,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -518,7 +518,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -608,7 +608,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -663,7 +663,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -837,7 +837,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1010,7 +1010,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
-						acc.TestDatabaseName,
+						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						false,
 					)
@@ -1064,7 +1064,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
-						acc.TestDatabaseName,
+						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						true,
 					)
@@ -1084,7 +1084,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
-	databaseName := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(name),
 		"database": config.StringVariable(databaseName),
@@ -1107,7 +1108,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 				PreConfig: func() {
 					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(databaseCleanup)
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -1127,7 +1128,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
-	databaseName := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(name),
 		"database": config.StringVariable(databaseName),
@@ -1150,7 +1152,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 				PreConfig: func() {
 					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(dbCleanup)
-					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
+					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -1181,7 +1183,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1231,7 +1233,7 @@ func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.Database
 func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
 	databaseRoleName sdk.DatabaseObjectIdentifier,
-	databaseName string,
+	databaseId sdk.AccountObjectIdentifier,
 	privileges []sdk.AccountObjectPrivilege,
 	withGrantOption bool,
 ) {
@@ -1244,7 +1246,7 @@ func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 			DatabasePrivileges: privileges,
 		},
 		&sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(databaseName)),
+			Database: sdk.Pointer(databaseId),
 		},
 		databaseRoleName,
 		new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
@@ -1259,7 +1261,7 @@ func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 			DatabasePrivileges: privileges,
 		},
 		&sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(databaseName)),
+			Database: sdk.Pointer(databaseId),
 		},
 		databaseRoleName,
 		&sdk.GrantPrivilegesToDatabaseRoleOptions{

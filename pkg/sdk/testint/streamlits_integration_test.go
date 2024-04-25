@@ -117,7 +117,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -129,7 +129,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -184,7 +184,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -196,7 +196,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}

@@ -17,16 +17,20 @@ func NewIdsGenerator(context *TestClientContext) *IdsGenerator {
 	}
 }
 
-func (c *IdsGenerator) databaseId() sdk.AccountObjectIdentifier {
+func (c *IdsGenerator) DatabaseId() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.context.database)
 }
 
-func (c *IdsGenerator) schemaId() sdk.DatabaseObjectIdentifier {
+func (c *IdsGenerator) SchemaId() sdk.DatabaseObjectIdentifier {
 	return sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema)
 }
 
-func (c *IdsGenerator) warehouseId() sdk.AccountObjectIdentifier {
+func (c *IdsGenerator) WarehouseId() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.context.warehouse)
+}
+
+func (c *IdsGenerator) AccountIdentifierWithLocator() sdk.AccountIdentifier {
+	return sdk.NewAccountIdentifierFromAccountLocator(c.context.client.GetAccountLocator())
 }
 
 func (c *IdsGenerator) newSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
@@ -35,6 +39,14 @@ func (c *IdsGenerator) newSchemaObjectIdentifier(name string) sdk.SchemaObjectId
 
 func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.Alpha())
+}
+
+func (c *IdsGenerator) RandomAccountObjectIdentifierWithPrefix(prefix string) sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(c.AlphaWithPrefix(prefix))
+}
+
+func (c *IdsGenerator) RandomAccountObjectIdentifierContaining(part string) sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(c.AlphaContaining(part))
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
@@ -53,8 +65,8 @@ func (c *IdsGenerator) AlphaContaining(part string) string {
 	return c.withTestObjectSuffix(c.Alpha() + part)
 }
 
-func (c *IdsGenerator) AlphaWithPrefix(part string) string {
-	return c.withTestObjectSuffix(part + c.Alpha())
+func (c *IdsGenerator) AlphaWithPrefix(prefix string) string {
+	return c.withTestObjectSuffix(prefix + c.Alpha())
 }
 
 func (c *IdsGenerator) withTestObjectSuffix(text string) string {

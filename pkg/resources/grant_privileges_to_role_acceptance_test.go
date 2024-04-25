@@ -960,11 +960,12 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 }
 
 func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleName := roleId.Name()
+	roleFullyQualifiedName := roleId.FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
-		"name": config.StringVariable(roleName),
+		"name": config.StringVariable(roleFullyQualifiedName),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeMonitor)),
 		),
@@ -983,13 +984,13 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "role_name", roleFullyQualifiedName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeMonitor)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
@@ -997,7 +998,7 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypePipes)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|MONITOR|false|false|false|false|false|true|true|false|||PIPES|false||true|%s", roleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|MONITOR|false|false|false|false|false|true|true|false|||PIPES|false||true|%s", roleFullyQualifiedName, databaseName)),
 				),
 			},
 			{

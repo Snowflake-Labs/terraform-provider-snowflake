@@ -134,7 +134,7 @@ func TestInt_UserCreate(t *testing.T) {
 		tagValue := random.String()
 		tags := []sdk.TagAssociation{
 			{
-				Name:  sdk.NewAccountObjectIdentifier(tag.Name),
+				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}

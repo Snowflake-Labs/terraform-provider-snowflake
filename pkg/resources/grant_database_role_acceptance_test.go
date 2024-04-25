@@ -131,8 +131,8 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
 	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
-	shareName := acc.TestClient().Ids.Alpha()
-	shareId := sdk.NewAccountObjectIdentifier(shareName).FullyQualifiedName()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := shareId.Name()
 	resourceName := "snowflake_grant_database_role.test"
 	configVariables := func() config.Variables {
 		return config.Variables{
@@ -155,7 +155,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId.FullyQualifiedName())),
 				),
 			},
 			// test import

@@ -18,6 +18,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_dynamic_table.dt"
 	tableName := name + "_table"
+	newWarehouseName := acc.TestClient().Ids.Alpha()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(name),
@@ -30,7 +31,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		}
 	}
 	variableSet2 := m()
-	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
+	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	variableSet3 := m()
@@ -96,7 +97,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName2),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
@@ -195,7 +196,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, otherSchemaId, dynamicTableName, sdk.NewAccountObjectIdentifier(acc.TestWarehouseName), tableId)
+					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, otherSchemaId, dynamicTableName, acc.TestClient().Ids.WarehouseId(), tableId)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),

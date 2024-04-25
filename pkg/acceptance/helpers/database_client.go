@@ -30,6 +30,7 @@ func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
+// TODO [SNOW-955520]: we have to control the name
 func (c *DatabaseClient) CreateDatabaseWithName(t *testing.T, name string) (*sdk.Database, func()) {
 	t.Helper()
 	return c.CreateDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateDatabaseOptions{})
@@ -55,7 +56,7 @@ func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIden
 	return func() {
 		err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, c.ids.schemaId())
+		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
 		require.NoError(t, err)
 	}
 }
@@ -84,7 +85,7 @@ func (c *DatabaseClient) CreateSecondaryDatabaseWithOptions(t *testing.T, id sdk
 		// TODO [926148]: make this wait better with tests stabilization
 		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
 		time.Sleep(1 * time.Second)
-		err = c.context.client.Sessions.UseSchema(ctx, c.ids.schemaId())
+		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
 		require.NoError(t, err)
 	}
 }

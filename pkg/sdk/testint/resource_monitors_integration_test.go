@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,8 +45,8 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewAccountObjectIdentifier(name)
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		name := id.Name()
 		frequency, err := sdk.FrequencyFromString("Monthly")
 		require.NoError(t, err)
 		startTimeStamp := "IMMEDIATELY"
@@ -111,8 +110,8 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewAccountObjectIdentifier(name)
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		name := id.Name()
 
 		err := client.ResourceMonitors.Create(ctx, id, nil)
 

@@ -27,9 +27,7 @@ func (c *FailoverGroupClient) client() sdk.FailoverGroups {
 func (c *FailoverGroupClient) CreateFailoverGroup(t *testing.T) (*sdk.FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
-	currentAccount, err := c.context.client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
+	accountID := c.ids.AccountIdentifierWithLocator()
 	allowedAccounts := []sdk.AccountIdentifier{accountID}
 	return c.CreateFailoverGroupWithOptions(t, objectTypes, allowedAccounts, nil)
 }

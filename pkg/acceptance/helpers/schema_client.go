@@ -11,11 +11,13 @@ import (
 
 type SchemaClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewSchemaClient(context *TestClientContext) *SchemaClient {
+func NewSchemaClient(context *TestClientContext, idsGenerator *IdsGenerator) *SchemaClient {
 	return &SchemaClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,7 +27,7 @@ func (c *SchemaClient) client() sdk.Schemas {
 
 func (c *SchemaClient) CreateSchema(t *testing.T) (*sdk.Schema, func()) {
 	t.Helper()
-	return c.CreateSchemaInDatabase(t, c.context.databaseId())
+	return c.CreateSchemaInDatabase(t, c.ids.DatabaseId())
 }
 
 func (c *SchemaClient) CreateSchemaInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.Schema, func()) {
@@ -35,7 +37,7 @@ func (c *SchemaClient) CreateSchemaInDatabase(t *testing.T, databaseId sdk.Accou
 
 func (c *SchemaClient) CreateSchemaWithName(t *testing.T, name string) (*sdk.Schema, func()) {
 	t.Helper()
-	return c.CreateSchemaInDatabaseWithIdentifier(t, c.context.databaseId(), name)
+	return c.CreateSchemaInDatabaseWithIdentifier(t, c.ids.DatabaseId(), name)
 }
 
 func (c *SchemaClient) CreateSchemaInDatabaseWithIdentifier(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.Schema, func()) {
@@ -56,7 +58,7 @@ func (c *SchemaClient) DropSchemaFunc(t *testing.T, id sdk.DatabaseObjectIdentif
 	return func() {
 		err := c.client().Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, c.context.schemaId())
+		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
 		require.NoError(t, err)
 	}
 }

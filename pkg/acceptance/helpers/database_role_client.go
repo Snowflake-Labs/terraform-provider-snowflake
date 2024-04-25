@@ -12,11 +12,13 @@ import (
 
 type DatabaseRoleClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewDatabaseRoleClient(context *TestClientContext) *DatabaseRoleClient {
+func NewDatabaseRoleClient(context *TestClientContext, idsGenerator *IdsGenerator) *DatabaseRoleClient {
 	return &DatabaseRoleClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -26,7 +28,7 @@ func (c *DatabaseRoleClient) client() sdk.DatabaseRoles {
 
 func (c *DatabaseRoleClient) CreateDatabaseRole(t *testing.T) (*sdk.DatabaseRole, func()) {
 	t.Helper()
-	return c.CreateDatabaseRoleInDatabase(t, c.context.databaseId())
+	return c.CreateDatabaseRoleInDatabase(t, c.ids.DatabaseId())
 }
 
 func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.DatabaseRole, func()) {
@@ -36,7 +38,7 @@ func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabase(t *testing.T, database
 
 func (c *DatabaseRoleClient) CreateDatabaseRoleWithName(t *testing.T, name string) (*sdk.DatabaseRole, func()) {
 	t.Helper()
-	return c.CreateDatabaseRoleInDatabaseWithName(t, c.context.databaseId(), name)
+	return c.CreateDatabaseRoleInDatabaseWithName(t, c.ids.DatabaseId(), name)
 }
 
 func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabaseWithName(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.DatabaseRole, func()) {

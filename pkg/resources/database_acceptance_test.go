@@ -106,7 +106,8 @@ func TestAcc_Database(t *testing.T) {
 }
 
 func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
-	name := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	name := id.Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -131,7 +132,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, sdk.NewAccountObjectIdentifier(name))() },
+				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, id)() },
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
 					"db": config.StringVariable(name),
@@ -179,12 +180,11 @@ func TestAcc_Database_issue2021(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	id := sdk.NewAccountObjectIdentifier(databaseName)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database": config.StringVariable(databaseName),
+			"database": config.StringVariable(id.Name()),
 		}
 	}
 
@@ -271,12 +271,11 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	id := sdk.NewAccountObjectIdentifier(databaseName)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database": config.StringVariable(databaseName),
+			"database": config.StringVariable(id.Name()),
 		}
 	}
 

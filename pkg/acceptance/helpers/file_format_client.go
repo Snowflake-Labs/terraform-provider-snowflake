@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type FileFormatClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewFileFormatClient(context *TestClientContext) *FileFormatClient {
+func NewFileFormatClient(context *TestClientContext, idsGenerator *IdsGenerator) *FileFormatClient {
 	return &FileFormatClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -34,7 +35,7 @@ func (c *FileFormatClient) CreateFileFormatWithOptions(t *testing.T, opts *sdk.C
 	t.Helper()
 	ctx := context.Background()
 
-	id := c.context.newSchemaObjectIdentifier(random.AlphanumericN(12))
+	id := c.ids.RandomSchemaObjectIdentifier()
 
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)

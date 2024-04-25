@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type ApplicationPackageClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewApplicationPackageClient(context *TestClientContext) *ApplicationPackageClient {
+func NewApplicationPackageClient(context *TestClientContext, idsGenerator *IdsGenerator) *ApplicationPackageClient {
 	return &ApplicationPackageClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -28,7 +29,7 @@ func (c *ApplicationPackageClient) CreateApplicationPackage(t *testing.T) (*sdk.
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewAccountObjectIdentifier(random.AlphaN(8))
+	id := c.ids.RandomAccountObjectIdentifier()
 	err := c.client().Create(ctx, sdk.NewCreateApplicationPackageRequest(id))
 	require.NoError(t, err)
 

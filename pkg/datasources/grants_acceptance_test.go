@@ -1,13 +1,11 @@
 package datasources_test
 
 import (
-	"context"
 	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -367,26 +365,7 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
 	shareName := acc.TestClient().Ids.Alpha()
 
-	getSecondaryAccountIdentifier := func(t *testing.T) *sdk.AccountIdentifier {
-		t.Helper()
-
-		client := acc.Client(t)
-		secondaryClient := acc.SecondaryClient(t)
-		ctx := context.Background()
-
-		replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, replicationAccount := range replicationAccounts {
-			if replicationAccount.AccountLocator == secondaryClient.GetAccountLocator() {
-				return sdk.Pointer(sdk.NewAccountIdentifier(replicationAccount.OrganizationName, replicationAccount.AccountName))
-			}
-		}
-		return nil
-	}
-
-	accountId := getSecondaryAccountIdentifier(t)
+	accountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	require.NotNil(t, accountId)
 
 	configVariables := config.Variables{

@@ -17,8 +17,8 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -68,9 +68,9 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -123,10 +123,10 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 // TODO(SNOW-1021686): Add on_function test
 
 func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
 	tableName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -178,9 +178,9 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -231,11 +231,11 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
 	tableName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
 	viewName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -288,10 +288,10 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
 	tagName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -343,8 +343,8 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool, privileges []sdk.ObjectPrivilege) config.Variables {
 		variables := config.Variables{
@@ -414,8 +414,8 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
@@ -465,8 +465,8 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 }
 
 func TestAcc_GrantPrivilegesToShare_NoPrivileges(t *testing.T) {
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func() config.Variables {
 		return config.Variables{
@@ -492,7 +492,7 @@ func TestAcc_GrantPrivilegesToShare_NoPrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
-	shareName := sdk.NewAccountObjectIdentifier(acc.TestClient().Ids.Alpha())
+	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func() config.Variables {
 		return config.Variables{
