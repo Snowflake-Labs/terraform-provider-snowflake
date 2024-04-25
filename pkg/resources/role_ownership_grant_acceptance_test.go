@@ -12,8 +12,8 @@ import (
 )
 
 func TestAcc_RoleOwnershipGrant_defaults(t *testing.T) {
-	onRoleName := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	toRoleName := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	onRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	toRoleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

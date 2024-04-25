@@ -44,8 +44,8 @@ func TestAcc_DatabaseWithUnderscore(t *testing.T) {
 }
 
 func TestAcc_Database(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
