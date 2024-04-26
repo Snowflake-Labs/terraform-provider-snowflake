@@ -131,4 +131,5 @@ type InformationSchemaColumns struct {
 	IdentityCycle          sql.NullString `db:"IDENTITY_CYCLE"`
 	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
 	Comment                sql.NullString `db:"COMMENT"`
+	SchemaEvolutionRecord  sql.NullString `db:"SCHEMA_EVOLUTION_RECORD"`
 }

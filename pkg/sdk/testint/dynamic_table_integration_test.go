@@ -46,6 +46,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, name.Name(), dynamicTableById.Name)
 		require.Equal(t, testWarehouse(t).ID().Name(), dynamicTableById.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, dynamicTableById.TargetLag)
+		assert.Equal(t, "ROLE", dynamicTableById.OwnerRoleType)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {

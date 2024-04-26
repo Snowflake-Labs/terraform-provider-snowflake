@@ -553,6 +553,7 @@ func TestInt_Stages(t *testing.T) {
 		assert.Nil(t, stage.StorageIntegration)
 		assert.Nil(t, stage.Endpoint)
 		assert.True(t, stage.DirectoryEnabled)
+		assert.Equal(t, "ROLE", *stage.OwnerRoleType)
 	})
 }
 

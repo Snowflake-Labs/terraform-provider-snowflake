@@ -24,6 +24,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		assert.Equal(t, expectedComment, sessionPolicy.Comment)
 		assert.Equal(t, "SESSION_POLICY", sessionPolicy.Kind)
 		assert.Equal(t, "", sessionPolicy.Options)
+		assert.Equal(t, "ROLE", sessionPolicy.OwnerRoleType)
 	}
 
 	assertSessionPolicyDescription := func(

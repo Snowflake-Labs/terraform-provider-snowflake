@@ -669,33 +669,35 @@ type describeTableColumnsOptions struct {
 }
 
 type TableColumnDetails struct {
-	Name       string
-	Type       DataType
-	Kind       string
-	IsNullable bool
-	Default    *string
-	IsPrimary  bool
-	IsUnique   bool
-	Check      *bool
-	Expression *string
-	Comment    *string
-	PolicyName *string
-	Collation  *string
+	Name                  string
+	Type                  DataType
+	Kind                  string
+	IsNullable            bool
+	Default               *string
+	IsPrimary             bool
+	IsUnique              bool
+	Check                 *bool
+	Expression            *string
+	Comment               *string
+	PolicyName            *string
+	Collation             *string
+	SchemaEvolutionRecord *string
 }
 
 // tableColumnDetailsRow based on https://docs.snowflake.com/en/sql-reference/sql/desc-table
 type tableColumnDetailsRow struct {
-	Name       string         `db:"name"`
-	Type       DataType       `db:"type"`
-	Kind       string         `db:"kind"`
-	IsNullable string         `db:"null?"`
-	Default    sql.NullString `db:"default"`
-	IsPrimary  string         `db:"primary key"`
-	IsUnique   string         `db:"unique key"`
-	Check      sql.NullString `db:"check"`
-	Expression sql.NullString `db:"expression"`
-	Comment    sql.NullString `db:"comment"`
-	PolicyName sql.NullString `db:"policy name"`
+	Name                  string         `db:"name"`
+	Type                  DataType       `db:"type"`
+	Kind                  string         `db:"kind"`
+	IsNullable            string         `db:"null?"`
+	Default               sql.NullString `db:"default"`
+	IsPrimary             string         `db:"primary key"`
+	IsUnique              string         `db:"unique key"`
+	Check                 sql.NullString `db:"check"`
+	Expression            sql.NullString `db:"expression"`
+	Comment               sql.NullString `db:"comment"`
+	PolicyName            sql.NullString `db:"policy name"`
+	SchemaEvolutionRecord sql.NullString `db:"schema evolution record"`
 }
 
 func (r tableColumnDetailsRow) convert() *TableColumnDetails {
@@ -724,6 +726,9 @@ func (r tableColumnDetailsRow) convert() *TableColumnDetails {
 	}
 	if r.PolicyName.Valid {
 		details.PolicyName = String(r.PolicyName.String)
+	}
+	if r.SchemaEvolutionRecord.Valid {
+		details.SchemaEvolutionRecord = String(r.SchemaEvolutionRecord.String)
 	}
 	return details
 }

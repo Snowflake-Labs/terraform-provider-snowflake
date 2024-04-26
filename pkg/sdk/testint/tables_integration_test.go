@@ -61,6 +61,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, "TABLE", table.Kind)
 		assert.Equal(t, 0, table.Rows)
 		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
+		assert.Equal(t, "ROLE", table.OwnerRoleType)
 	}
 
 	assertTableTerse := func(t *testing.T, table *sdk.Table, id sdk.SchemaObjectIdentifier) {
@@ -1031,5 +1032,43 @@ func TestInt_TablesShowByID(t *testing.T) {
 		e2, err := client.Tables.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show by id: check schema evolution record", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
+		}
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithEnableSchemaEvolution(sdk.Pointer(true)))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableHandle(id))
+
+		table, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx,
+			&sdk.AccountRoleGrantPrivileges{SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeEvolveSchema}},
+			&sdk.AccountRoleGrantOn{SchemaObject: &sdk.GrantOnSchemaObject{SchemaObject: &sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: sdk.NewObjectIdentifierFromFullyQualifiedName(table.ID().FullyQualifiedName())}}},
+			sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"),
+			nil)
+		require.NoError(t, err)
+
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
+		t.Cleanup(stageCleanup)
+
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "schema_evolution_record.json")
+
+		testClientHelper().Stage.CopyIntoTableFromFile(t, table.ID(), stage.ID(), "schema_evolution_record.json")
+
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
+		require.Len(t, currentColumns, 2)
+		assert.NotEmpty(t, currentColumns[1].SchemaEvolutionRecord)
+
+		descColumns, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
+		require.NoError(t, err)
+		require.Len(t, descColumns, 2)
+		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
 	})
 }

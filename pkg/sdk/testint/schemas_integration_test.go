@@ -333,6 +333,7 @@ func TestInt_SchemasShow(t *testing.T) {
 			schemaNames[i] = s.Name
 		}
 		assert.Contains(t, schemaNames, schema.Name)
+		assert.Equal(t, "ROLE", schema.OwnerRoleType)
 	})
 }
 

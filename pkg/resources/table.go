@@ -145,6 +145,11 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Column collation, e.g. utf8",
 				},
+				"schema_evolution_record": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Record of schema evolution.",
+				},
 			},
 		},
 	},
@@ -496,6 +501,11 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 				flat["default"] = []any{def}
 			}
 		}
+
+		if td.SchemaEvolutionRecord != nil {
+			flat["schema_evolution_record"] = *td.SchemaEvolutionRecord
+		}
+
 		flattened = append(flattened, flat)
 	}
 	return flattened

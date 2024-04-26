@@ -67,7 +67,7 @@ We've included an example env file `test.env.example` with the environment varia
 
 ## Advanced Debugging
 
-If you want to build and test the provider locally you should edit you `~.terraformrc` file to include the following:
+If you want to build and test the provider locally you should edit your `~/.terraformrc` file to include the following:
 
 ```
 provider_installation {
