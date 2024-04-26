@@ -116,6 +116,58 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	}
 }
 
+func SafelyDecodeSnowflakeID[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier](stringIdentifier string) (id T, err error) {
+	// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+	if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
+		var accountObjectIdentifier any = sdk.NewAccountObjectIdentifier(stringIdentifier)
+		return accountObjectIdentifier.(T), nil
+	}
+
+	objectIdentifier, err := DecodeSnowflakeParameterID(stringIdentifier)
+	if err != nil {
+		return id, fmt.Errorf(
+			"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %w",
+			stringIdentifier,
+			GetExpectedIdentifierRepresentationFromGeneric[T](),
+			err,
+		)
+	}
+
+	if _, ok := objectIdentifier.(T); !ok {
+		return id, fmt.Errorf(
+			"expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
+			reflect.TypeOf(new(T)).Elem().Name(),
+			objectIdentifier,
+			GetExpectedIdentifierRepresentationFromGeneric[T](),
+			GetExpectedIdentifierRepresentationFromParam(objectIdentifier),
+		)
+	}
+
+	return objectIdentifier.(T), nil
+}
+
+func GetExpectedIdentifierRepresentationFromGeneric[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() string {
+	return getExpectedIdentifierForm(new(T))
+}
+
+func GetExpectedIdentifierRepresentationFromParam(id sdk.ObjectIdentifier) string {
+	return getExpectedIdentifierForm(id)
+}
+
+func getExpectedIdentifierForm(id any) string {
+	switch id.(type) {
+	case sdk.AccountObjectIdentifier, *sdk.AccountObjectIdentifier:
+		return "<name>"
+	case sdk.DatabaseObjectIdentifier, *sdk.DatabaseObjectIdentifier:
+		return "<database_name>.<name>"
+	case sdk.SchemaObjectIdentifier, *sdk.SchemaObjectIdentifier:
+		return "<database_name>.<schema_name>.<name>"
+	case sdk.TableColumnIdentifier, *sdk.TableColumnIdentifier:
+		return "<database_name>.<schema_name>.<table_name>.<column_name>"
+	}
+	return ""
+}
+
 // DecodeSnowflakeParameterID decodes identifier (usually passed as one of the parameter in tf configuration) into sdk.ObjectIdentifier.
 // identifier can be specified in two ways: quoted and unquoted, e.g.
 //

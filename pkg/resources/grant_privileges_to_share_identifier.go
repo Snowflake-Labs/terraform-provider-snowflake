@@ -65,8 +65,8 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 		} else {
 			return grantPrivilegesToShareId, fmt.Errorf(
 				"invalid identifier, expected fully qualified name of account object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
+				helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
+				helpers.GetExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
 	case OnSchemaShareGrantKind, OnAllTablesInSchemaShareGrantKind:
@@ -75,8 +75,8 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 		} else {
 			return grantPrivilegesToShareId, fmt.Errorf(
 				"invalid identifier, expected fully qualified name of database object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
+				helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
+				helpers.GetExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
 	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind: // TODO(SNOW-1021686) , OnFunctionShareGrantKind:
@@ -85,8 +85,8 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 		} else {
 			return grantPrivilegesToShareId, fmt.Errorf(
 				"invalid identifier, expected fully qualified name of schema object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
+				helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
+				helpers.GetExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
 	default:

@@ -3,6 +3,8 @@ package resources
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -141,22 +143,22 @@ func TestGetExpectedIdentifierFormGeneric(t *testing.T) {
 		{
 			Name:     "correct account object identifier from generic parameter",
 			Expected: "<name>",
-			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
+			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
 		},
 		{
 			Name:     "correct database object identifier from generic parameter",
 			Expected: "<database_name>.<name>",
-			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
+			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
 		},
 		{
 			Name:     "correct schema object identifier from generic parameter",
 			Expected: "<database_name>.<schema_name>.<name>",
-			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
+			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
 		},
 		{
 			Name:     "correct table column identifier from generic parameter",
 			Expected: "<database_name>.<schema_name>.<table_name>.<column_name>",
-			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
+			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
 		},
 	}
 
@@ -202,11 +204,11 @@ func TestGetExpectedIdentifierFormParam(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.Name+" - non-pointer", func(t *testing.T) {
-			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.Identifier))
+			assert.Equal(t, tt.Expected, helpers.GetExpectedIdentifierRepresentationFromParam(tt.Identifier))
 		})
 
 		t.Run(tt.Name+" - pointer", func(t *testing.T) {
-			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
+			assert.Equal(t, tt.Expected, helpers.GetExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
 		})
 	}
 }

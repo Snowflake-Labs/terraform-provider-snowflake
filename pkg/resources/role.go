@@ -192,18 +192,12 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 	if d.HasChange("name") {
 		_, newName := d.GetChange("name")
 
-		newId, err := helpers.DecodeSnowflakeParameterID(newName.(string))
+		newId, err := helpers.SafelyDecodeSnowflakeID[sdk.AccountObjectIdentifier](newName.(string))
 		if err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to parse account role name",
-					Detail:   fmt.Sprintf("Account role name: %s, err: %s", newName, err),
-				},
-			}
+			return diag.FromErr(err)
 		}
 
-		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId.(sdk.AccountObjectIdentifier)))
+		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId))
 		if err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
