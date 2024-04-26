@@ -188,9 +188,7 @@ func (opts *DropMaskingPolicyOptions) validate() error {
 }
 
 func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropMaskingPolicyOptions) error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
+	opts = createIfNil(opts)
 	opts.name = id
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)

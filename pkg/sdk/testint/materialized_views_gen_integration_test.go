@@ -113,7 +113,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("create materialized view: almost complete case", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
 
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
@@ -127,7 +127,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 			}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("comment")).
-			WithRowAccessPolicy(sdk.NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"column_with_comment"})).
+			WithRowAccessPolicy(sdk.NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"column_with_comment"})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -139,9 +139,9 @@ func TestInt_MaterializedViews(t *testing.T) {
 		view := createMaterializedViewWithRequest(t, request)
 
 		assertMaterializedViewWithOptions(t, view, id, true, "comment", fmt.Sprintf(`LINEAR("%s")`, "COLUMN_WITH_COMMENT"))
-		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
 		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
 		assert.Equal(t, "MATERIALIZED_VIEW", rowAccessPolicyReference.RefEntityDomain)

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
@@ -39,7 +40,7 @@ func TestInt_Table(t *testing.T) {
 	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup2)
 
-	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []informationSchemaColumns) {
+	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []helpers.InformationSchemaColumns) {
 		t.Helper()
 
 		require.Len(t, createdColumns, len(expectedColumns))
@@ -156,7 +157,7 @@ func TestInt_Table(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "30", param.Value)
 
-		tableColumns := getTableColumnsFor(t, client, table.ID())
+		tableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -195,7 +196,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		tableColumns := getTableColumnsFor(t, client, table.ID())
+		tableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -236,7 +237,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		returnedTableColumns := getTableColumnsFor(t, client, table.ID())
+		returnedTableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"C1", sdk.DataTypeVARCHAR},
 			{"C2", sdk.DataTypeVARCHAR},
@@ -263,7 +264,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
-		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
+		sourceTableColumns := testClientHelper().Table.GetTableColumnsFor(t, sourceTable.ID())
 		expectedColumns := []expectedColumn{
 			{"id", sdk.DataTypeNumber},
 			{"col2", sdk.DataTypeVARCHAR},
@@ -274,7 +275,7 @@ func TestInt_Table(t *testing.T) {
 		likeTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		likeTableColumns := getTableColumnsFor(t, client, likeTable.ID())
+		likeTableColumns := testClientHelper().Table.GetTableColumnsFor(t, likeTable.ID())
 		assertColumns(t, expectedColumns, likeTableColumns)
 	})
 
@@ -296,14 +297,14 @@ func TestInt_Table(t *testing.T) {
 			WithMoment(sdk.CloneMomentAt))
 
 		// ensure that time travel is allowed (and revert if needed after the test)
-		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
+		revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "1")
 		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
-		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
+		sourceTableColumns := testClientHelper().Table.GetTableColumnsFor(t, sourceTable.ID())
 		expectedColumns := []expectedColumn{
 			{"id", sdk.DataTypeNumber},
 			{"col2", sdk.DataTypeVARCHAR},
@@ -314,7 +315,7 @@ func TestInt_Table(t *testing.T) {
 		cloneTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		cloneTableColumns := getTableColumnsFor(t, client, cloneTable.ID())
+		cloneTableColumns := testClientHelper().Table.GetTableColumnsFor(t, cloneTable.ID())
 		assertColumns(t, expectedColumns, cloneTableColumns)
 	})
 
@@ -484,7 +485,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -516,7 +517,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -632,7 +633,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
 		}
@@ -802,7 +803,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -832,7 +833,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, table.Comment, "")
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -860,7 +861,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 		}
@@ -1083,7 +1084,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 		MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName(), filename))
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		require.Len(t, currentColumns, 2)
 		assert.NotEmpty(t, currentColumns[1].SchemaEvolutionRecord)
 	})

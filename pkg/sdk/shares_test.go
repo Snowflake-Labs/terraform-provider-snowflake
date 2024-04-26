@@ -127,7 +127,7 @@ func TestShareShow(t *testing.T) {
 
 func TestShareDrop(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &dropShareOptions{
+		opts := &DropShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DROP SHARE "myshare"`)

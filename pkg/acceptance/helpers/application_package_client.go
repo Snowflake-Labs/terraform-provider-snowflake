@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -55,4 +56,18 @@ func (c *ApplicationPackageClient) AddApplicationPackageVersion(t *testing.T, id
 
 	err := c.client().Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(sdk.NewAddVersionRequest(using).WithVersionIdentifier(sdk.String(versionName))))
 	require.NoError(t, err)
+}
+
+func (c *ApplicationPackageClient) ShowVersions(t *testing.T, id sdk.AccountObjectIdentifier) []ApplicationPackageVersion {
+	t.Helper()
+
+	var versions []ApplicationPackageVersion
+	err := c.context.client.QueryForTests(context.Background(), &versions, fmt.Sprintf(`SHOW VERSIONS IN APPLICATION PACKAGE %s`, id.FullyQualifiedName()))
+	require.NoError(t, err)
+	return versions
+}
+
+type ApplicationPackageVersion struct {
+	Version string `json:"version"`
+	Patch   int    `json:"patch"`
 }

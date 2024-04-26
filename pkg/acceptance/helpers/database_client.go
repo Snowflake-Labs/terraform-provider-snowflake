@@ -36,10 +36,13 @@ func (c *DatabaseClient) CreateDatabaseWithName(t *testing.T, name string) (*sdk
 func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
+
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
+
 	database, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
+
 	return database, c.DropDatabaseFunc(t, id)
 }
 

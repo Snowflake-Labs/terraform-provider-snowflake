@@ -245,7 +245,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()))
+	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.DropShareOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return fmt.Errorf("error deleting share (%v) err = %w", d.Id(), err)
 	}

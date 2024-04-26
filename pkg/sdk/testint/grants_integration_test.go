@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -709,7 +708,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
@@ -797,7 +796,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),
@@ -1428,7 +1427,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on task - with ownership", func(t *testing.T) {
-		task, taskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		task, taskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
@@ -1473,9 +1472,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
-		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
-		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
-		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithSchedule(sdk.String("60 minutes")))
+		task, taskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(func() {
 			usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 			defer usePreviousRole()
@@ -1521,9 +1518,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
-		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
-		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
-		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithSchedule(sdk.String("60 minutes")))
+		task, taskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Grants.GrantPrivilegesToAccountRole(
@@ -1579,13 +1574,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on all tasks - with ownership", func(t *testing.T) {
-		task, taskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		task, taskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		secondTask, secondTaskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		secondTask, secondTaskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(secondTaskCleanup)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(sdk.Bool(true)))
@@ -1651,13 +1646,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
-		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
-		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
-		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithSchedule(sdk.String("60 minutes")))
+		task, taskCleanup := testClientHelper().Task.CreateTask(t)
 		t.Cleanup(taskCleanup)
 
-		secondTaskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
-		secondTask, secondTaskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(secondTaskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithAfter([]sdk.SchemaObjectIdentifier{task.ID()}))
+		secondTask, secondTaskCleanup := testClientHelper().Task.CreateTaskWithAfter(t, task.ID())
 		t.Cleanup(secondTaskCleanup)
 
 		err := client.Grants.GrantPrivilegesToAccountRole(
@@ -1760,7 +1752,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 func TestInt_ShowGrants(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),

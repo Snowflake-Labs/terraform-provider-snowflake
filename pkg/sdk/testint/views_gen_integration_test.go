@@ -136,7 +136,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("create view: almost complete case", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
 
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
@@ -151,7 +151,7 @@ func TestInt_Views(t *testing.T) {
 			}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("comment")).
-			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"column_with_comment"})).
+			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"column_with_comment"})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -162,9 +162,9 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "comment")
-		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
 		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
 		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
@@ -390,62 +390,62 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("alter view: add and drop row access policies", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
-		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy2, rowAccessPolicy2Cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
 		view := createView(t)
 		id := view.ID()
 
 		// add policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"ID"}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy.ID().Name(), rowAccessPolicyReference.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
 		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
 		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
 		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
 
 		// remove policy
-		alterRequest = sdk.NewAlterViewRequest(id).WithDropRowAccessPolicy(sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicyId))
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropRowAccessPolicy(sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"ID"}))
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy.ID().Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewViewDropAndAddRowAccessPolicyRequest(
-			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicyId),
-			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2Id, []string{"ID"}),
+			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []string{"ID"}),
 		))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicy2Id.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy2.ID().Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop all policies
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 

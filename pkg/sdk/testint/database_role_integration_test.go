@@ -259,7 +259,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role := createDatabaseRole(t)
 		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
 
-		share, shareCleanup := createShare(t, client)
+		share, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testDb(t).ID()}, share.ID())

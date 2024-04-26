@@ -20,7 +20,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
@@ -81,7 +81,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	t.Run("test with identifier containing a dot", func(t *testing.T) {
 		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
 
-		shareWithDot, shareWithDotCleanup := createShareWithOptions(t, client, shareId, &sdk.CreateShareOptions{})
+		shareWithDot, shareWithDotCleanup := testClientHelper().Share.CreateShareWithOptions(t, shareId, &sdk.CreateShareOptions{})
 		t.Cleanup(shareWithDotCleanup)
 
 		id := sdk.RandomAccountObjectIdentifier()
@@ -224,12 +224,12 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := getAccountIdentifier(t, client)
+	primaryAccountID := testClientHelper().Account.GetAccountIdentifier(t)
 	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	secondaryClientID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
 	// create a temp share
-	shareTest, cleanupDatabase := createShare(t, client)
+	shareTest, cleanupDatabase := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
@@ -400,7 +400,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove share account object", func(t *testing.T) {
-		shareTest, cleanupDatabase := createShare(t, client)
+		shareTest, cleanupDatabase := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(cleanupDatabase)
 		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
@@ -497,7 +497,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
-		secondaryAccountID := getAccountIdentifier(t, testSecondaryClient(t))
+		secondaryAccountID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 		// first add target account
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
@@ -526,7 +526,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.AllowedAccounts))
-		assert.Contains(t, failoverGroup.AllowedAccounts, getAccountIdentifier(t, client))
+		assert.Contains(t, failoverGroup.AllowedAccounts, testClientHelper().Account.GetAccountIdentifier(t))
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
@@ -551,7 +551,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// create a temp share
-		shareTest, cleanupShare := createShare(t, client)
+		shareTest, cleanupShare := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(cleanupShare)
 
 		// now add share to allowed shares of failover group 1
@@ -654,9 +654,9 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := getAccountIdentifier(t, client)
+	primaryAccountID := testClientHelper().Account.GetAccountIdentifier(t)
 	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	secondaryClientID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
 	// create a temp database
 	databaseTest, cleanupDatabase := testClientHelper().Database.CreateDatabase(t)
@@ -871,7 +871,7 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 	failoverGroupTest, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 	t.Cleanup(failoverGroupCleanup)
 
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	opts := &sdk.AlterSourceFailoverGroupOptions{
 		Set: &sdk.FailoverGroupSet{

@@ -306,7 +306,7 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
 		id := resourceMonitor.ID()
-		err := client.ResourceMonitors.Drop(ctx, id, &sdk.DropResourceMonitorOptions{})
+		err := client.ResourceMonitors.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		_, err = client.ResourceMonitors.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -314,7 +314,7 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 
 	t.Run("when resource monitor does not exist", func(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier("does_not_exist")
-		err := client.ResourceMonitors.Drop(ctx, id, &sdk.DropResourceMonitorOptions{})
+		err := client.ResourceMonitors.Drop(ctx, id, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
