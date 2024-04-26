@@ -1069,7 +1069,6 @@ func TestInt_TablesShowByID(t *testing.T) {
 		descColumns, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 		require.NoError(t, err)
 		require.Len(t, descColumns, 2)
-		fmt.Println(*descColumns[1].SchemaEvolutionRecord)
 		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
 	})
 }
