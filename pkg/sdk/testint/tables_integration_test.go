@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -1015,24 +1014,6 @@ func TestInt_TablesShowByID(t *testing.T) {
 		t.Cleanup(cleanupTableHandle(id))
 	}
 
-	uploadFile := func(t *testing.T, stage *sdk.Stage) string {
-		t.Helper()
-		f, err := os.CreateTemp("/tmp", "sf_test")
-		require.NoError(t, err)
-		w := bufio.NewWriter(f)
-		_, err = w.WriteString(`{"c1": 1, "c2": "42"}`)
-		require.NoError(t, err)
-		err = w.Flush()
-		require.NoError(t, err)
-		// disable auto compress to prevent changing file name
-		_, err = client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s AUTO_COMPRESS=FALSE", f.Name(), stage.ID().FullyQualifiedName()))
-		name := f.Name()
-		require.NoError(t, err)
-		err = os.Remove(f.Name())
-		require.NoError(t, err)
-		return filepath.Base(name)
-	}
-
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -1076,16 +1057,19 @@ func TestInt_TablesShowByID(t *testing.T) {
 
 		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
 		t.Cleanup(stageCleanup)
-		filename := uploadFile(t, stage)
 
-		_, err = client.QueryUnsafe(ctx, fmt.Sprintf(`COPY INTO %s
-		FROM @%s/%s
-		FILE_FORMAT = (type=json)
-		MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName(), filename))
-		require.NoError(t, err)
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "schema_evolution_record.json")
+
+		testClientHelper().Stage.CopyIntoTableFromFile(t, table.ID(), stage.ID(), "schema_evolution_record.json")
 
 		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		require.Len(t, currentColumns, 2)
 		assert.NotEmpty(t, currentColumns[1].SchemaEvolutionRecord)
+
+		descColumns, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
+		require.NoError(t, err)
+		require.Len(t, descColumns, 2)
+		fmt.Println(*descColumns[1].SchemaEvolutionRecord)
+		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
 	})
 }
