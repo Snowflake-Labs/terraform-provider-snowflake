@@ -92,8 +92,6 @@ body:
       description: Choose object type(s) causing the issue (if any). Specify object types and add **multiple** if you suspect more objects are affected. Use **all** with caution!
       multiple: true
       options:
-        - all
-        - multiple
         - resource:account
         - resource:account_parameter
         - resource:account_password_policy
