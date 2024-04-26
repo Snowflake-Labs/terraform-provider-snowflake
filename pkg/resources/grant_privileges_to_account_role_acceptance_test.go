@@ -494,7 +494,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
-		"nasme": config.StringVariable(roleFullyQualifiedName),
+		"name": config.StringVariable(roleFullyQualifiedName),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),

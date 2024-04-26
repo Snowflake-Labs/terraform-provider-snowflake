@@ -205,7 +205,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE SCHEMA level FUTURE ownership grant to role <name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: taskOwnershipGrantConfig(name, newName, onFuture, "OWNERSHIP", name, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -217,7 +217,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 			},
 			// UPDATE SCHEMA level FUTURE OWNERSHIP grant to role <new_name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", newName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: taskOwnershipGrantConfig(name, newName, onFuture, "OWNERSHIP", newName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -240,7 +240,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 	})
 }
 
-func taskOwnershipGrantConfig(name string, grantType grantType, privilege string, rolename string, databaseName string, schemaName string) string {
+func taskOwnershipGrantConfig(name string, newName string, grantType grantType, privilege string, rolename string, databaseName string, schemaName string) string {
 	var taskNameConfig string
 	switch grantType {
 	case normal:
@@ -257,17 +257,18 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_role" "test_new" {
-	name = "%v_NEW"
-  }
+  name = "%v"
+}
 
 resource "snowflake_task_grant" "test" {
+  depends_on = [snowflake_role.test, snowflake_role.test_new]
   %s
-  roles             = [ "%s" ]
+  roles             = ["%s"]
   database_name 	= "%s"
   schema_name       = "%s"
   privilege 	    = "%s"
   with_grant_option = false
 }
 `
-	return fmt.Sprintf(s, name, name, taskNameConfig, rolename, databaseName, schemaName, privilege)
+	return fmt.Sprintf(s, name, newName, taskNameConfig, rolename, databaseName, schemaName, privilege)
 }
