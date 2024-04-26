@@ -44,6 +44,7 @@ var streamSchema = map[string]*schema.Schema{
 		Description:      "Specifies an identifier for the table the stream will monitor.",
 		ExactlyOneOf:     []string{"on_table", "on_view", "on_stage"},
 		DiffSuppressFunc: suppressIdentifierQuoting,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"on_view": {
 		Type:             schema.TypeString,
@@ -52,6 +53,7 @@ var streamSchema = map[string]*schema.Schema{
 		Description:      "Specifies an identifier for the view the stream will monitor.",
 		ExactlyOneOf:     []string{"on_table", "on_view", "on_stage"},
 		DiffSuppressFunc: suppressIdentifierQuoting,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"on_stage": {
 		Type:         schema.TypeString,
@@ -63,6 +65,7 @@ var streamSchema = map[string]*schema.Schema{
 			// Suppress diff if the stage name is the same, even if database and schema are not specified
 			return strings.Trim(strings.Split(old, ".")[len(strings.Split(old, "."))-1], "\"") == strings.Trim(strings.Split(new, ".")[len(strings.Split(new, "."))-1], "\"")
 		},
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"append_only": {
 		Type:        schema.TypeBool,

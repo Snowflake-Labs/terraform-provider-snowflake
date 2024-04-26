@@ -23,16 +23,18 @@ const (
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
 	"tag_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ForceNew:         true,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"masking_policy_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The resource id of the masking policy",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "The resource id of the masking policy",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
