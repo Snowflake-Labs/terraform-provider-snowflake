@@ -74,12 +74,14 @@ host="<host of your account, e.g. organisation-account_name.snowflakecomputing.c
 
 We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts.
 
+**⚠️ Important ⚠️** Some of the tests require the privileged role (like `ACCOUNTADMIN`). Otherwise, the managed objects may not be created. If you want to use lower role, you have to make sure it has all the necessary privileges added.
+
 To run the tests we have three different commands:
 - `make test` run unit and integration tests
 - `make test-acceptance` run acceptance tests
 - `make test-integration` run integration tests
 
-You can run the particular tests form inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you).
+You can run the particular tests form inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). It is also worth adding the `TF_LOG=DEBUG` environment variable too, because the output of the execution is much more verbose.
 
 ## Making a contribution
 
