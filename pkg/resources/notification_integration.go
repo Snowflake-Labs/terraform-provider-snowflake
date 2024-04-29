@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1021713]: split this resource into smaller ones as part of SNOW-867235
-// TODO [SNOW-1021713]: remove SQS entirely
-// TODO [SNOW-1021713]: support Azure push notifications (AZURE_EVENT_GRID)
+// TODO [SNOW-1348345]: split this resource into smaller ones (SNOW-1021713)
+// TODO [SNOW-1348345]: remove SQS entirely
+// TODO [SNOW-1348345]: support Azure push notifications (AZURE_EVENT_GRID)
 var notificationIntegrationSchema = map[string]*schema.Schema{
 	// The first part of the schema is shared between all integration vendors
 	"name": {
