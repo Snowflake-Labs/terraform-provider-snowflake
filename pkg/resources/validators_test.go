@@ -60,16 +60,17 @@ func TestIsValidIdentifier(t *testing.T) {
 	tableColumnIdentifierCheck := IsValidIdentifier[sdk.TableColumnIdentifier]()
 
 	testCases := []struct {
-		Name       string
-		Value      any
-		Error      string
-		CheckingFn schema.SchemaValidateDiagFunc
+		Name         string
+		Value        any
+		Error        string
+		ErrorDetails string
+		CheckingFn   schema.SchemaValidateDiagFunc
 	}{
 		{
-			Name:       "validation: invalid value type",
-			Value:      123,
-			Error:      "Expected schema string type, but got: int",
-			CheckingFn: accountObjectIdentifierCheck,
+			Name:         "validation: invalid value type",
+			Value:        123,
+			ErrorDetails: "Expected schema string type, but got: int",
+			CheckingFn:   accountObjectIdentifierCheck,
 		},
 		{
 			Name:       "validation: incorrect form for database object identifier",
@@ -124,9 +125,10 @@ func TestIsValidIdentifier(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			diag := tt.CheckingFn(tt.Value, cty.IndexStringPath("path"))
-			if tt.Error != "" {
+			if tt.Error != "" || tt.ErrorDetails != "" {
 				assert.Len(t, diag, 1)
-				assert.Contains(t, diag[0].Detail, tt.Error)
+				assert.Contains(t, diag[0].Summary, tt.Error)
+				assert.Contains(t, diag[0].Detail, tt.ErrorDetails)
 			} else {
 				assert.Len(t, diag, 0)
 			}
