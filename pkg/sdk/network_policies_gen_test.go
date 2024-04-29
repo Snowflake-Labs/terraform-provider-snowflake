@@ -5,10 +5,10 @@ import (
 )
 
 func TestNetworkPolicies_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
-	allowedNetworkRule := RandomSchemaObjectIdentifier()
-	blockedNetworkRule := RandomSchemaObjectIdentifier()
+	allowedNetworkRule := randomSchemaObjectIdentifier()
+	blockedNetworkRule := randomSchemaObjectIdentifier()
 	// Minimal valid CreateNetworkPolicyOptions
 	defaultOpts := func() *CreateNetworkPolicyOptions {
 		return &CreateNetworkPolicyOptions{
@@ -40,7 +40,7 @@ func TestNetworkPolicies_Create(t *testing.T) {
 }
 
 func TestNetworkPolicies_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterNetworkPolicyOptions
 	defaultOpts := func() *AlterNetworkPolicyOptions {
@@ -74,8 +74,8 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("validation: exactly one field from [opts.Add.AllowedNetworkRuleList opts.Add.BlockedNetworkRuleList] should be present", func(t *testing.T) {
-		allowedNetworkRule := RandomSchemaObjectIdentifier()
-		blockedNetworkRule := RandomSchemaObjectIdentifier()
+		allowedNetworkRule := randomSchemaObjectIdentifier()
+		blockedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Add = &AddNetworkRule{
 			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
@@ -85,8 +85,8 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("validation: exactly one field from [opts.Remove.AllowedNetworkRuleList opts.Remove.BlockedNetworkRuleList] should be present", func(t *testing.T) {
-		allowedNetworkRule := RandomSchemaObjectIdentifier()
-		blockedNetworkRule := RandomSchemaObjectIdentifier()
+		allowedNetworkRule := randomSchemaObjectIdentifier()
+		blockedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Remove = &RemoveNetworkRule{
 			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
@@ -112,7 +112,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("set allowed network rule list", func(t *testing.T) {
-		allowedNetworkRule := RandomSchemaObjectIdentifier()
+		allowedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
 			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
@@ -121,7 +121,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("set blocked network rule list", func(t *testing.T) {
-		blockedNetworkRule := RandomSchemaObjectIdentifier()
+		blockedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
 			BlockedNetworkRuleList: []SchemaObjectIdentifier{blockedNetworkRule},
@@ -130,7 +130,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("add allowed network rule", func(t *testing.T) {
-		allowedNetworkRule := RandomSchemaObjectIdentifier()
+		allowedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Add = &AddNetworkRule{
 			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
@@ -139,7 +139,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("add blocked network rule", func(t *testing.T) {
-		blockedNetworkRule := RandomSchemaObjectIdentifier()
+		blockedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Add = &AddNetworkRule{
 			BlockedNetworkRuleList: []SchemaObjectIdentifier{blockedNetworkRule},
@@ -148,7 +148,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("remove allowed network rule", func(t *testing.T) {
-		allowedNetworkRule := RandomSchemaObjectIdentifier()
+		allowedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Remove = &RemoveNetworkRule{
 			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
@@ -157,7 +157,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("remove blocked network rule", func(t *testing.T) {
-		blockedNetworkRule := RandomSchemaObjectIdentifier()
+		blockedNetworkRule := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Remove = &RemoveNetworkRule{
 			BlockedNetworkRuleList: []SchemaObjectIdentifier{blockedNetworkRule},
@@ -181,14 +181,14 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		newName := RandomAccountObjectIdentifier()
+		newName := randomAccountObjectIdentifier()
 		opts.RenameTo = &newName
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s RENAME TO %s", id.FullyQualifiedName(), newName.FullyQualifiedName())
 	})
 }
 
 func TestNetworkPolicies_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropNetworkPolicyOptions
 	defaultOpts := func() *DropNetworkPolicyOptions {
@@ -233,7 +233,7 @@ func TestNetworkPolicies_Show(t *testing.T) {
 }
 
 func TestNetworkPolicies_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DescribeNetworkPolicyOptions
 	defaultOpts := func() *DescribeNetworkPolicyOptions {

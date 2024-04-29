@@ -1,16 +1,13 @@
 package testint
 
 import (
-	"fmt"
 	"log"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +51,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		t.Skip("ORGADMIN role is not in current session")
 	}
 	t.Run("complete case", func(t *testing.T) {
-		accountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", random.IntRange(100, 999)))
+		accountID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		region := testClientHelper().Context.CurrentRegion(t)
 
 		opts := &sdk.CreateAccountOptions{
@@ -90,7 +87,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		assert.Equal(t, region, account.SnowflakeRegion)
 
 		// rename
-		newAccountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", random.IntRange(100, 999)))
+		newAccountID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		alterOpts := &sdk.AlterAccountOptions{
 			Rename: &sdk.AccountRename{
 				Name:       accountID,
@@ -289,11 +286,10 @@ func TestInt_AccountAlter(t *testing.T) {
 		}
 		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
-		currentAccount := testClientHelper().Context.CurrentAccount(t)
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
+		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, "abc", tagValue)
-		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
+		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, "123", tagValue)
 	})

@@ -23,15 +23,11 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	account := testClientHelper().Context.CurrentAccount(t)
-	accountId := sdk.NewAccountIdentifierFromAccountLocator(account)
-
-	secondaryAccount := secondaryTestClientHelper().Context.CurrentAccount(t)
-	secondaryAccountId := sdk.NewAccountIdentifierFromAccountLocator(secondaryAccount)
+	accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
+	secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
 	db1Name := random.AlphaN(10)
 	db2Name := random.AlphaN(10)
-	db3Name := random.AlphaN(10)
 	db, dbCleanup := testClientHelper().Database.CreateDatabaseWithName(t, db1Name)
 	t.Cleanup(dbCleanup)
 	db2, dbCleanup2 := testClientHelper().Database.CreateDatabaseWithName(t, db2Name)
@@ -42,7 +38,7 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	err = client.Databases.AlterReplication(ctx, db2.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 
-	db3, dbCleanup3 := secondaryTestClientHelper().Database.CreateSecondaryDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
+	db3, dbCleanup3 := secondaryTestClientHelper().Database.CreateSecondaryDatabaseWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
 	t.Cleanup(dbCleanup3)
 
 	getByName := func(replicationDatabases []sdk.ReplicationDatabase, name sdk.AccountObjectIdentifier) *sdk.ReplicationDatabase {

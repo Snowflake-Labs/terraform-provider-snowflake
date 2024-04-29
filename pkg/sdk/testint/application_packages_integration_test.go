@@ -42,7 +42,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T) *sdk.ApplicationPackage {
 		t.Helper()
 
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		request := sdk.NewCreateApplicationPackageRequest(id).WithDistribution(sdk.DistributionPointer(sdk.DistributionInternal))
 		err := client.ApplicationPackages.Create(ctx, request)
 		require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	}
 
 	t.Run("create application package", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationPackageRequest(id).
 			WithComment(&comment).
@@ -112,7 +112,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 
 	t.Run("alter application package: set", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		distribution := sdk.DistributionPointer(sdk.DistributionExternal)
 		set := sdk.NewApplicationPackageSetRequest().
@@ -133,7 +133,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 
 	t.Run("alter application package: unset", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		// unset comment and distribution
 		unset := sdk.NewApplicationPackageUnsetRequest().WithComment(sdk.Bool(true)).WithDistribution(sdk.Bool(true))
@@ -147,7 +147,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 
 	t.Run("alter application package: set and unset tags", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		setTags := []sdk.TagAssociation{
 			{
@@ -194,7 +194,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T) *sdk.ApplicationPackage {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		request := sdk.NewCreateApplicationPackageRequest(id).WithDistribution(sdk.DistributionPointer(sdk.DistributionInternal))
 		err := client.ApplicationPackages.Create(ctx, request)
 		require.NoError(t, err)
@@ -219,7 +219,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		version := "V001"
 		using := "@" + stage.ID().FullyQualifiedName()
 		// add version to application package
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 		vr := sdk.NewAddVersionRequest(using).WithVersionIdentifier(&version).WithLabel(sdk.String("add version V001"))
 		r1 := sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(vr)
 		err := client.ApplicationPackages.Alter(ctx, r1)
@@ -259,7 +259,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		version := "V001"
 		using := "@" + stage.ID().FullyQualifiedName()
 		// add version to application package
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 		vr := sdk.NewAddVersionRequest(using).WithVersionIdentifier(&version).WithLabel(sdk.String("add version V001"))
 		r1 := sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(vr)
 		err := client.ApplicationPackages.Alter(ctx, r1)

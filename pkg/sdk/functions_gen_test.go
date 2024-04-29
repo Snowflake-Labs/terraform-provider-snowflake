@@ -7,7 +7,7 @@ import (
 )
 
 func TestFunctions_CreateForJava(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavaFunctionOptions {
 		return &CreateForJavaFunctionOptions{
@@ -122,7 +122,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 }
 
 func TestFunctions_CreateForJavascript(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavascriptFunctionOptions {
 		return &CreateForJavascriptFunctionOptions{
@@ -185,7 +185,7 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 }
 
 func TestFunctions_CreateForPython(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForPythonFunctionOptions {
 		return &CreateForPythonFunctionOptions{
@@ -290,7 +290,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 }
 
 func TestFunctions_CreateForScala(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForScalaFunctionOptions {
 		return &CreateForScalaFunctionOptions{
@@ -359,7 +359,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 }
 
 func TestFunctions_CreateForSQL(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForSQLFunctionOptions {
 		return &CreateForSQLFunctionOptions{
@@ -433,7 +433,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 }
 
 func TestFunctions_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropFunctionOptions {
 		return &DropFunctionOptions{
@@ -468,7 +468,7 @@ func TestFunctions_Drop(t *testing.T) {
 }
 
 func TestFunctions_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterFunctionOptions {
 		return &AlterFunctionOptions{
@@ -617,7 +617,7 @@ func TestFunctions_Show(t *testing.T) {
 }
 
 func TestFunctions_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeFunctionOptions {
 		return &DescribeFunctionOptions{

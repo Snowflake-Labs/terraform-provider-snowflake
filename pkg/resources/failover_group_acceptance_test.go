@@ -2,14 +2,12 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -18,7 +16,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -56,7 +54,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -97,7 +95,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -196,7 +194,7 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -227,7 +225,7 @@ func TestAcc_FailoverGroup_issue2544(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{

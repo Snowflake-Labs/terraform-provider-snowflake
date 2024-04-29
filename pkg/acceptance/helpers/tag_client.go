@@ -11,11 +11,13 @@ import (
 
 type TagClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewTagClient(context *TestClientContext) *TagClient {
+func NewTagClient(context *TestClientContext, idsGenerator *IdsGenerator) *TagClient {
 	return &TagClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,7 +27,7 @@ func (c *TagClient) client() sdk.Tags {
 
 func (c *TagClient) CreateTag(t *testing.T) (*sdk.Tag, func()) {
 	t.Helper()
-	return c.CreateTagInSchema(t, c.context.schemaId())
+	return c.CreateTagInSchema(t, c.ids.SchemaId())
 }
 
 func (c *TagClient) CreateTagInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Tag, func()) {

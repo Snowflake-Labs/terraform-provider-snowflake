@@ -1,9 +1,13 @@
 package helpers
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+)
 
 type TestClient struct {
 	context *TestClientContext
+
+	Ids *IdsGenerator
 
 	Account            *AccountClient
 	Alert              *AlertClient
@@ -36,66 +40,56 @@ type TestClient struct {
 	Warehouse          *WarehouseClient
 }
 
-func NewTestClient(c *sdk.Client, database string, schema string, warehouse string) *TestClient {
+func NewTestClient(c *sdk.Client, database string, schema string, warehouse string, testObjectSuffix string) *TestClient {
 	context := &TestClientContext{
-		client:    c,
-		database:  database,
-		schema:    schema,
-		warehouse: warehouse,
+		client:           c,
+		database:         database,
+		schema:           schema,
+		warehouse:        warehouse,
+		testObjectSuffix: testObjectSuffix,
 	}
+	idsGenerator := NewIdsGenerator(context)
 	return &TestClient{
-		context:            context,
+		context: context,
+
+		Ids: idsGenerator,
+
 		Account:            NewAccountClient(context),
-		Alert:              NewAlertClient(context),
-		ApiIntegration:     NewApiIntegrationClient(context),
-		Application:        NewApplicationClient(context),
-		ApplicationPackage: NewApplicationPackageClient(context),
+		Alert:              NewAlertClient(context, idsGenerator),
+		ApiIntegration:     NewApiIntegrationClient(context, idsGenerator),
+		Application:        NewApplicationClient(context, idsGenerator),
+		ApplicationPackage: NewApplicationPackageClient(context, idsGenerator),
 		Context:            NewContextClient(context),
-		Database:           NewDatabaseClient(context),
-		DatabaseRole:       NewDatabaseRoleClient(context),
-		DynamicTable:       NewDynamicTableClient(context),
-		FailoverGroup:      NewFailoverGroupClient(context),
-		FileFormat:         NewFileFormatClient(context),
-		MaskingPolicy:      NewMaskingPolicyClient(context),
-		NetworkPolicy:      NewNetworkPolicyClient(context),
+		Database:           NewDatabaseClient(context, idsGenerator),
+		DatabaseRole:       NewDatabaseRoleClient(context, idsGenerator),
+		DynamicTable:       NewDynamicTableClient(context, idsGenerator),
+		FailoverGroup:      NewFailoverGroupClient(context, idsGenerator),
+		FileFormat:         NewFileFormatClient(context, idsGenerator),
+		MaskingPolicy:      NewMaskingPolicyClient(context, idsGenerator),
+		NetworkPolicy:      NewNetworkPolicyClient(context, idsGenerator),
 		Parameter:          NewParameterClient(context),
-		PasswordPolicy:     NewPasswordPolicyClient(context),
-		Pipe:               NewPipeClient(context),
-		ResourceMonitor:    NewResourceMonitorClient(context),
-		Role:               NewRoleClient(context),
-		RowAccessPolicy:    NewRowAccessPolicyClient(context),
-		Schema:             NewSchemaClient(context),
-		SessionPolicy:      NewSessionPolicyClient(context),
-		Share:              NewShareClient(context),
-		Stage:              NewStageClient(context),
-		Table:              NewTableClient(context),
-		Tag:                NewTagClient(context),
-		Task:               NewTaskClient(context),
-		User:               NewUserClient(context),
-		View:               NewViewClient(context),
-		Warehouse:          NewWarehouseClient(context),
+		PasswordPolicy:     NewPasswordPolicyClient(context, idsGenerator),
+		Pipe:               NewPipeClient(context, idsGenerator),
+		ResourceMonitor:    NewResourceMonitorClient(context, idsGenerator),
+		Role:               NewRoleClient(context, idsGenerator),
+		RowAccessPolicy:    NewRowAccessPolicyClient(context, idsGenerator),
+		Schema:             NewSchemaClient(context, idsGenerator),
+		SessionPolicy:      NewSessionPolicyClient(context, idsGenerator),
+		Share:              NewShareClient(context, idsGenerator),
+		Stage:              NewStageClient(context, idsGenerator),
+		Table:              NewTableClient(context, idsGenerator),
+		Tag:                NewTagClient(context, idsGenerator),
+		Task:               NewTaskClient(context, idsGenerator),
+		User:               NewUserClient(context, idsGenerator),
+		View:               NewViewClient(context, idsGenerator),
+		Warehouse:          NewWarehouseClient(context, idsGenerator),
 	}
 }
 
 type TestClientContext struct {
-	client    *sdk.Client
-	database  string
-	schema    string
-	warehouse string
-}
-
-func (c *TestClientContext) databaseId() sdk.AccountObjectIdentifier {
-	return sdk.NewAccountObjectIdentifier(c.database)
-}
-
-func (c *TestClientContext) schemaId() sdk.DatabaseObjectIdentifier {
-	return sdk.NewDatabaseObjectIdentifier(c.database, c.schema)
-}
-
-func (c *TestClientContext) warehouseId() sdk.AccountObjectIdentifier {
-	return sdk.NewAccountObjectIdentifier(c.warehouse)
-}
-
-func (c *TestClientContext) newSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifier(c.database, c.schema, name)
+	client           *sdk.Client
+	database         string
+	schema           string
+	warehouse        string
+	testObjectSuffix string
 }

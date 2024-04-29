@@ -67,7 +67,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	t.Run("Show", func(t *testing.T) {
 		ctx := context.Background()
 		req := sdk.NewShowApplicationRoleRequest().
-			WithApplicationName(sdk.NewAccountObjectIdentifier(application.Name)).
+			WithApplicationName(application.ID()).
 			WithLimit(&sdk.LimitFrom{
 				Rows: sdk.Int(2),
 			})
@@ -112,7 +112,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		require.NotEmpty(t, grants)
 		require.NotEmpty(t, grants[0].CreatedOn)
 		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
-		require.Equal(t, sdk.NewAccountObjectIdentifier(application.Name), grants[0].GrantedBy)
+		require.Equal(t, application.ID(), grants[0].GrantedBy)
 	})
 
 	t.Run("show grants to application", func(t *testing.T) {
@@ -129,16 +129,16 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(application2.Name).FullyQualifiedName()))
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), application2.ID().FullyQualifiedName()))
 		require.NoError(t, err)
 		defer func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(application2.Name).FullyQualifiedName()))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), application2.ID().FullyQualifiedName()))
 			require.NoError(t, err)
 		}()
 
 		opts := new(sdk.ShowGrantOptions)
 		opts.To = &sdk.ShowGrantsTo{
-			Application: sdk.NewAccountObjectIdentifier(application2.Name),
+			Application: application2.ID(),
 		}
 		grants, err := client.Grants.Show(ctx, opts)
 		require.NoError(t, err)

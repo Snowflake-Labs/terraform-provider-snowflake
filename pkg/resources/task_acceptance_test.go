@@ -3,7 +3,6 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 	"text/template"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,9 +40,9 @@ type (
 )
 
 var (
-	rootname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_root_task"
-	childname = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_child_task"
-	soloname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_standalone_task"
+	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
+	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
+	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
@@ -421,7 +419,7 @@ todo: this test is failing due to error message below. Need to figure out why th
 
 
 	func TestAcc_Task_Managed(t *testing.T) {
-		accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+		accName := acc.TestClient().Ids.Alpha()
 		resource.Test(t, resource.TestCase{
 					ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -547,8 +545,8 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	taskRootName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -683,7 +681,7 @@ func checkInt64(name, key string, value int64) func(*terraform.State) error {
 }
 
 func TestAcc_Task_issue2207(t *testing.T) {
-	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix := acc.TestClient().Ids.Alpha()
 	rootName := prefix + "_root_task"
 	childName := prefix + "_child_task"
 
@@ -735,7 +733,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 }
 
 func TestAcc_Task_issue2036(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -13,7 +12,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +19,7 @@ import (
 )
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
-	prefix := "_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.AlphaWithPrefix("_")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -44,8 +42,8 @@ func TestAcc_DatabaseWithUnderscore(t *testing.T) {
 }
 
 func TestAcc_Database(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
+	prefix2 := acc.TestClient().Ids.Alpha()
 
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
@@ -108,7 +106,8 @@ func TestAcc_Database(t *testing.T) {
 }
 
 func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
-	name := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	name := id.Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -133,7 +132,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, sdk.NewAccountObjectIdentifier(name))() },
+				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, id)() },
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
 					"db": config.StringVariable(name),
@@ -153,7 +152,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2021
 func TestAcc_Database_issue2021(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
@@ -181,12 +180,11 @@ func TestAcc_Database_issue2021(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	id := sdk.NewAccountObjectIdentifier(databaseName)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database": config.StringVariable(databaseName),
+			"database": config.StringVariable(id.Name()),
 		}
 	}
 
@@ -273,12 +271,11 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	id := sdk.NewAccountObjectIdentifier(databaseName)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database": config.StringVariable(databaseName),
+			"database": config.StringVariable(id.Name()),
 		}
 	}
 

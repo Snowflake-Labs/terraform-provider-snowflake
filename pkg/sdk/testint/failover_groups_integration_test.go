@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
@@ -27,7 +26,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeShares,
 			sdk.PluralObjectTypeDatabases,
@@ -79,12 +78,12 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with identifier containing a dot", func(t *testing.T) {
-		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
+		shareId := testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".")
 
 		shareWithDot, shareWithDotCleanup := testClientHelper().Share.CreateShareWithOptions(t, shareId, &sdk.CreateShareOptions{})
 		t.Cleanup(shareWithDotCleanup)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeShares,
 		}
@@ -111,7 +110,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with allowed integration types", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 		}
@@ -151,7 +150,7 @@ func TestInt_Issue2544(t *testing.T) {
 	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
 
 	t.Run("alter object types, replication schedule, and allowed integration types at the same time", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 			sdk.PluralObjectTypeDatabases,
@@ -233,7 +232,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := sdk.RandomAccountObjectIdentifier()
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedShares: []sdk.AccountObjectIdentifier{
@@ -304,7 +303,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(failoverGroupCleanup)
 		oldID := failoverGroup.ID()
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			NewName: newID,
 		}
@@ -663,7 +662,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := sdk.RandomAccountObjectIdentifier()
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedDatabases: []sdk.AccountObjectIdentifier{
@@ -815,7 +814,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowFailoverGroupOptions{
-			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.GetAccountLocator()),
+			InAccount: testClientHelper().Ids.AccountIdentifierWithLocator(),
 		}
 		failoverGroups, err := client.FailoverGroups.Show(ctx, showOptions)
 		require.NoError(t, err)

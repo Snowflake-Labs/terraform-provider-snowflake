@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -50,13 +49,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 			Clone: &sdk.Clone{
@@ -81,21 +80,15 @@ func TestInt_SchemasCreate(t *testing.T) {
 	})
 
 	t.Run("with tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
-			require.NoError(t, err)
-		})
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
-		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{
-					Name:  tagID,
+					Name:  tag.ID(),
 					Value: tagValue,
 				},
 			},
@@ -106,7 +99,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tv, err := client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})
@@ -241,21 +234,15 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
-			require.NoError(t, err)
-		})
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
-		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{
-					Name:  tagID,
+					Name:  tag.ID(),
 					Value: tagValue,
 				},
 			},
@@ -268,12 +255,12 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
 			UnsetTag: []sdk.ObjectIdentifier{
-				tagID,
+				tag.ID(),
 			},
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
 		require.Error(t, err)
 	})
 

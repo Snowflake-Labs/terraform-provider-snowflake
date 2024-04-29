@@ -19,7 +19,7 @@ func TestInt_Roles(t *testing.T) {
 	t.Cleanup(tagCleanup2)
 
 	t.Run("create no options", func(t *testing.T) {
-		roleID := sdk.RandomAccountObjectIdentifier()
+		roleID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -34,7 +34,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create if not exists", func(t *testing.T) {
-		roleID := sdk.RandomAccountObjectIdentifier()
+		roleID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID).WithIfNotExists(true))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -48,7 +48,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create complete", func(t *testing.T) {
-		roleID := sdk.RandomAccountObjectIdentifier()
+		roleID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.Comment()
 		createReq := sdk.NewCreateRoleRequest(roleID).
 			WithOrReplace(true).
@@ -89,7 +89,7 @@ func TestInt_Roles(t *testing.T) {
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
 
-		newName := sdk.RandomAccountObjectIdentifier()
+		newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithRenameTo(newName))
 		require.NoError(t, err)
@@ -123,7 +123,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset tags", func(t *testing.T) {
 		tagValue := "tag-value"
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		role, cleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id).
 			WithTag([]sdk.TagAssociation{
 				{
@@ -159,7 +159,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset comment", func(t *testing.T) {
 		comment := random.Comment()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		role, cleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)
 

@@ -2,18 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_OAuthIntegration(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	oauthClient := "CUSTOM"
 	clientType := "PUBLIC"
 
@@ -71,7 +69,7 @@ func oauthIntegrationConfig(name, oauthClient, clientType string, blockedRole st
 }
 
 func TestAcc_OAuthIntegrationTableau(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	oauthClient := "TABLEAU_DESKTOP"
 	clientType := "PUBLIC" // not used, but left to fail the test
 

@@ -10,11 +10,13 @@ import (
 
 type ResourceMonitorClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewResourceMonitorClient(context *TestClientContext) *ResourceMonitorClient {
+func NewResourceMonitorClient(context *TestClientContext, idsGenerator *IdsGenerator) *ResourceMonitorClient {
 	return &ResourceMonitorClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -49,7 +51,7 @@ func (c *ResourceMonitorClient) CreateResourceMonitorWithOptions(t *testing.T, o
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.RandomAccountObjectIdentifier()
+	id := c.ids.RandomAccountObjectIdentifier()
 
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)

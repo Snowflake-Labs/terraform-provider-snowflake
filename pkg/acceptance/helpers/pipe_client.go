@@ -11,11 +11,13 @@ import (
 
 type PipeClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewPipeClient(context *TestClientContext) *PipeClient {
+func NewPipeClient(context *TestClientContext, idsGenerator *IdsGenerator) *PipeClient {
 	return &PipeClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,7 +27,7 @@ func (c *PipeClient) client() sdk.Pipes {
 
 func (c *PipeClient) CreatePipe(t *testing.T, copyStatement string) (*sdk.Pipe, func()) {
 	t.Helper()
-	return c.CreatePipeInSchema(t, c.context.schemaId(), copyStatement)
+	return c.CreatePipeInSchema(t, c.ids.SchemaId(), copyStatement)
 }
 
 func (c *PipeClient) CreatePipeInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, copyStatement string) (*sdk.Pipe, func()) {

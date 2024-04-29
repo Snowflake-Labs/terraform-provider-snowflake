@@ -905,7 +905,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 			RETURN message;
 		END;`
 
-		name := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		name := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
 		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)

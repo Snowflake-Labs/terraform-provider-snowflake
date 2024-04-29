@@ -5,22 +5,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func testAccFunction(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_function.f"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -111,7 +110,7 @@ func TestAcc_Function_Python(t *testing.T) {
 */
 
 func TestAcc_Function_complex(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_function.f"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -186,8 +185,8 @@ func TestAcc_Function_complex(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
 	resourceName := "snowflake_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -232,10 +231,10 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_Function_Rename(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
+	newComment := random.Comment()
 	resourceName := "snowflake_function.f"
 
 	resource.Test(t, resource.TestCase{

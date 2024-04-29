@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type AlertClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewAlertClient(context *TestClientContext) *AlertClient {
+func NewAlertClient(context *TestClientContext, idsGenerator *IdsGenerator) *AlertClient {
 	return &AlertClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -35,10 +36,9 @@ func (c *AlertClient) CreateAlertWithOptions(t *testing.T, schedule string, cond
 	t.Helper()
 	ctx := context.Background()
 
-	name := random.String()
-	id := c.context.newSchemaObjectIdentifier(name)
+	id := c.ids.RandomSchemaObjectIdentifier()
 
-	err := c.client().Create(ctx, id, c.context.warehouseId(), schedule, condition, action, opts)
+	err := c.client().Create(ctx, id, c.ids.WarehouseId(), schedule, condition, action, opts)
 	require.NoError(t, err)
 
 	alert, err := c.client().ShowByID(ctx, id)
