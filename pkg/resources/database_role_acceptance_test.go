@@ -6,6 +6,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -14,8 +15,8 @@ import (
 func TestAcc_DatabaseRole(t *testing.T) {
 	resourceName := "snowflake_database_role.test_db_role"
 	dbRoleName := acc.TestClient().Ids.Alpha()
-	comment := "dummy"
-	comment2 := "test comment"
+	comment := random.Comment()
+	comment2 := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
