@@ -127,7 +127,7 @@ resource "snowflake_table_constraint" "unique" {
 
 Required:
 
-- `references` (Block List, Min: 1, Max: 1) The table and columns that the foreign key references. Not applicable for primary/unique keys (see [below for nested schema](#nestedblock--foreign_key_properties--references))
+- `references` (Block List, Min: 1, Max: 1) The table and columns that the foreign key references. (see [below for nested schema](#nestedblock--foreign_key_properties--references))
 
 Optional:
 

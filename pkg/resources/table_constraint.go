@@ -116,7 +116,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					Required:    true,
 					ForceNew:    true,
 					MaxItems:    1,
-					Description: "The table and columns that the foreign key references. Not applicable for primary/unique keys",
+					Description: "The table and columns that the foreign key references.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"table_id": {
@@ -215,7 +215,7 @@ func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
 	if strings.Contains(s, "|") {
 		objectIdentifier = helpers.DecodeSnowflakeID(s)
 	} else {
-		objectIdentifier, err = helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](s)
+		objectIdentifier, err = helpers.DecodeSnowflakeParameterID(s)
 	}
 
 	if err != nil {
@@ -288,9 +288,13 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		foreignKeyProperties := v.([]interface{})[0].(map[string]interface{})
 		references := foreignKeyProperties["references"].([]interface{})[0].(map[string]interface{})
 		fkTableID := references["table_id"].(string)
-		referencedTableIdentifier, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](fkTableID)
+		fkId, err := helpers.DecodeSnowflakeParameterID(fkTableID)
 		if err != nil {
 			return fmt.Errorf("table id is incorrect: %s, err: %w", fkTableID, err)
+		}
+		referencedTableIdentifier, ok := fkId.(sdk.SchemaObjectIdentifier)
+		if !ok {
+			return fmt.Errorf("table id is incorrect: %s", fkId)
 		}
 
 		cols := references["columns"].([]interface{})

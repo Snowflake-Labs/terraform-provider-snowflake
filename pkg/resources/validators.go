@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -50,13 +51,70 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			}
 		}
 
-		_, err := helpers.SafelyDecodeSnowflakeID[T](value.(string))
+		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
+			return nil
+		}
+
+		stringValue := value.(string)
+		id, err := helpers.DecodeSnowflakeParameterID(stringValue)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to parse the identifier",
+					Detail: fmt.Sprintf(
+						"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s",
+						stringValue,
+						getExpectedIdentifierRepresentationFromGeneric[T](),
+						err.Error(),
+					),
+					AttributePath: path,
+				},
+			}
+		}
+
+		if _, ok := id.(T); !ok {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Invalid identifier type",
+					Detail: fmt.Sprintf(
+						"Expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
+						reflect.TypeOf(new(T)).Elem().Name(),
+						id,
+						getExpectedIdentifierRepresentationFromGeneric[T](),
+						getExpectedIdentifierRepresentationFromParam(id),
+					),
+					AttributePath: path,
+				},
+			}
 		}
 
 		return nil
 	}
+}
+
+func getExpectedIdentifierRepresentationFromGeneric[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() string {
+	return getExpectedIdentifierForm(new(T))
+}
+
+func getExpectedIdentifierRepresentationFromParam(id sdk.ObjectIdentifier) string {
+	return getExpectedIdentifierForm(id)
+}
+
+func getExpectedIdentifierForm(id any) string {
+	switch id.(type) {
+	case sdk.AccountObjectIdentifier, *sdk.AccountObjectIdentifier:
+		return "<name>"
+	case sdk.DatabaseObjectIdentifier, *sdk.DatabaseObjectIdentifier:
+		return "<database_name>.<name>"
+	case sdk.SchemaObjectIdentifier, *sdk.SchemaObjectIdentifier:
+		return "<database_name>.<schema_name>.<name>"
+	case sdk.TableColumnIdentifier, *sdk.TableColumnIdentifier:
+		return "<database_name>.<schema_name>.<table_name>.<column_name>"
+	}
+	return ""
 }
 
 // StringInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc

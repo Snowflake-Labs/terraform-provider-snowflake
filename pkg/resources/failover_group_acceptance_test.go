@@ -167,6 +167,18 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
 			},
+			// Remove replication schedule
+			{
+				Config: failoverGroupWithoutReplicationSchedule(randomCharacters, accountName, acc.TestDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.#", "0"),
+				),
+			},
 			// Change to Interval
 			{
 				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
@@ -179,18 +191,6 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.interval", "10"),
-				),
-			},
-			// Remove replication schedule
-			{
-				Config: failoverGroupWithoutReplicationSchedule(randomCharacters, accountName, acc.TestDatabaseName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.#", "0"),
 				),
 			},
 			// IMPORT

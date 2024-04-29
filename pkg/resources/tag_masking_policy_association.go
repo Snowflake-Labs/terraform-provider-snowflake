@@ -90,18 +90,10 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 
 func CreateContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-
-	tagId := d.Get("tag_id").(string)
-	tid, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](tagId)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	maskingPolicyId := d.Get("masking_policy_id").(string)
-	mid, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](maskingPolicyId)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	value := d.Get("tag_id").(string)
+	tid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
+	value = d.Get("masking_policy_id").(string)
+	mid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
 
 	set := sdk.NewTagSetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{mid})
 	if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tid).WithSet(set)); err != nil {

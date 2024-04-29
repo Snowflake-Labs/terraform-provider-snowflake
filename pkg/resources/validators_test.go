@@ -3,8 +3,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -60,17 +58,16 @@ func TestIsValidIdentifier(t *testing.T) {
 	tableColumnIdentifierCheck := IsValidIdentifier[sdk.TableColumnIdentifier]()
 
 	testCases := []struct {
-		Name         string
-		Value        any
-		Error        string
-		ErrorDetails string
-		CheckingFn   schema.SchemaValidateDiagFunc
+		Name       string
+		Value      any
+		Error      string
+		CheckingFn schema.SchemaValidateDiagFunc
 	}{
 		{
-			Name:         "validation: invalid value type",
-			Value:        123,
-			ErrorDetails: "Expected schema string type, but got: int",
-			CheckingFn:   accountObjectIdentifierCheck,
+			Name:       "validation: invalid value type",
+			Value:      123,
+			Error:      "Expected schema string type, but got: int",
+			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{
 			Name:       "validation: incorrect form for database object identifier",
@@ -125,10 +122,9 @@ func TestIsValidIdentifier(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			diag := tt.CheckingFn(tt.Value, cty.IndexStringPath("path"))
-			if tt.Error != "" || tt.ErrorDetails != "" {
+			if tt.Error != "" {
 				assert.Len(t, diag, 1)
-				assert.Contains(t, diag[0].Summary, tt.Error)
-				assert.Contains(t, diag[0].Detail, tt.ErrorDetails)
+				assert.Contains(t, diag[0].Detail, tt.Error)
 			} else {
 				assert.Len(t, diag, 0)
 			}
@@ -145,22 +141,22 @@ func TestGetExpectedIdentifierFormGeneric(t *testing.T) {
 		{
 			Name:     "correct account object identifier from generic parameter",
 			Expected: "<name>",
-			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
+			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
 		},
 		{
 			Name:     "correct database object identifier from generic parameter",
 			Expected: "<database_name>.<name>",
-			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
+			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
 		},
 		{
 			Name:     "correct schema object identifier from generic parameter",
 			Expected: "<database_name>.<schema_name>.<name>",
-			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
+			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
 		},
 		{
 			Name:     "correct table column identifier from generic parameter",
 			Expected: "<database_name>.<schema_name>.<table_name>.<column_name>",
-			Actual:   helpers.GetExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
+			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
 		},
 	}
 
@@ -206,11 +202,11 @@ func TestGetExpectedIdentifierFormParam(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.Name+" - non-pointer", func(t *testing.T) {
-			assert.Equal(t, tt.Expected, helpers.GetExpectedIdentifierRepresentationFromParam(tt.Identifier))
+			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.Identifier))
 		})
 
 		t.Run(tt.Name+" - pointer", func(t *testing.T) {
-			assert.Equal(t, tt.Expected, helpers.GetExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
+			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
 		})
 	}
 }

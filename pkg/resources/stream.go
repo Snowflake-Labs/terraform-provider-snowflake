@@ -128,10 +128,11 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case onTableSet:
-		tableId, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](onTable.(string))
+		tableObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onTable.(string))
 		if err != nil {
 			return err
 		}
+		tableId := tableObjectIdentifier.(sdk.SchemaObjectIdentifier)
 
 		table, err := client.Tables.ShowByID(ctx, tableId)
 		if err != nil {
@@ -167,7 +168,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	case onViewSet:
-		viewId, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](onView.(string))
+		viewObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onView.(string))
+		viewId := viewObjectIdentifier.(sdk.SchemaObjectIdentifier)
 		if err != nil {
 			return err
 		}
@@ -192,16 +194,15 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating stream %v err = %w", name, err)
 		}
 	case onStageSet:
-		stageId, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](onStage.(string))
+		stageObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onStage.(string))
+		stageId := stageObjectIdentifier.(sdk.SchemaObjectIdentifier)
 		if err != nil {
 			return err
 		}
-
 		stageProperties, err := client.Stages.Describe(ctx, stageId)
 		if err != nil {
 			return err
 		}
-
 		if findStagePropertyValueByName(stageProperties, "ENABLE") != "true" {
 			return fmt.Errorf("directory must be enabled on stage")
 		}

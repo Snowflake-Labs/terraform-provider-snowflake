@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -41,12 +42,12 @@ func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interfac
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
-	passwordPolicy, err := helpers.SafelyDecodeSnowflakeID[sdk.SchemaObjectIdentifier](d.Get("password_policy").(string))
-	if err != nil {
-		return err
+	passwordPolicy, ok := sdk.NewObjectIdentifierFromFullyQualifiedName(d.Get("password_policy").(string)).(sdk.SchemaObjectIdentifier)
+	if !ok {
+		return fmt.Errorf("password_policy %s is not a valid password policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("password_policy"))
 	}
 
-	err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{
 			PasswordPolicy: passwordPolicy,
 		},
