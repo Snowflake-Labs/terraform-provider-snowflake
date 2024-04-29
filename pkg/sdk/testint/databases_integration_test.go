@@ -329,6 +329,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		}
 		assert.Contains(t, databaseIDs, databaseTest.ID())
 		assert.Contains(t, databaseIDs, databaseTest2.ID())
+		assert.Equal(t, "ROLE", databases[0].OwnerRoleType)
 	})
 
 	t.Run("with terse", func(t *testing.T) {

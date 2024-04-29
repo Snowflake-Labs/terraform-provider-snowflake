@@ -39,6 +39,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 		assert.Equal(t, 1, len(warehouses))
 		assert.Equal(t, warehouse.Name, warehouses[0].Name)
 		assert.Equal(t, sdk.WarehouseSizeSmall, warehouses[0].Size)
+		assert.Equal(t, "ROLE", warehouses[0].OwnerRoleType)
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {

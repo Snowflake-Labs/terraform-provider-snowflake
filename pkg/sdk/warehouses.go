@@ -378,40 +378,42 @@ type Warehouse struct {
 	QueryAccelerationMaxScaleFactor int
 	ResourceMonitor                 string
 	ScalingPolicy                   ScalingPolicy
+	OwnerRoleType                   string
 }
 
 type warehouseDBRow struct {
-	Name                            string        `db:"name"`
-	State                           string        `db:"state"`
-	Type                            string        `db:"type"`
-	Size                            string        `db:"size"`
-	MinClusterCount                 int           `db:"min_cluster_count"`
-	MaxClusterCount                 int           `db:"max_cluster_count"`
-	StartedClusters                 int           `db:"started_clusters"`
-	Running                         int           `db:"running"`
-	Queued                          int           `db:"queued"`
-	IsDefault                       string        `db:"is_default"`
-	IsCurrent                       string        `db:"is_current"`
-	AutoSuspend                     sql.NullInt64 `db:"auto_suspend"`
-	AutoResume                      bool          `db:"auto_resume"`
-	Available                       string        `db:"available"`
-	Provisioning                    string        `db:"provisioning"`
-	Quiescing                       string        `db:"quiescing"`
-	Other                           string        `db:"other"`
-	CreatedOn                       time.Time     `db:"created_on"`
-	ResumedOn                       time.Time     `db:"resumed_on"`
-	UpdatedOn                       time.Time     `db:"updated_on"`
-	Owner                           string        `db:"owner"`
-	Comment                         string        `db:"comment"`
-	EnableQueryAcceleration         bool          `db:"enable_query_acceleration"`
-	QueryAccelerationMaxScaleFactor int           `db:"query_acceleration_max_scale_factor"`
-	ResourceMonitor                 string        `db:"resource_monitor"`
-	Actives                         string        `db:"actives"`
-	Pendings                        string        `db:"pendings"`
-	Failed                          string        `db:"failed"`
-	Suspended                       string        `db:"suspended"`
-	UUID                            string        `db:"uuid"`
-	ScalingPolicy                   string        `db:"scaling_policy"`
+	Name                            string         `db:"name"`
+	State                           string         `db:"state"`
+	Type                            string         `db:"type"`
+	Size                            string         `db:"size"`
+	MinClusterCount                 int            `db:"min_cluster_count"`
+	MaxClusterCount                 int            `db:"max_cluster_count"`
+	StartedClusters                 int            `db:"started_clusters"`
+	Running                         int            `db:"running"`
+	Queued                          int            `db:"queued"`
+	IsDefault                       string         `db:"is_default"`
+	IsCurrent                       string         `db:"is_current"`
+	AutoSuspend                     sql.NullInt64  `db:"auto_suspend"`
+	AutoResume                      bool           `db:"auto_resume"`
+	Available                       string         `db:"available"`
+	Provisioning                    string         `db:"provisioning"`
+	Quiescing                       string         `db:"quiescing"`
+	Other                           string         `db:"other"`
+	CreatedOn                       time.Time      `db:"created_on"`
+	ResumedOn                       time.Time      `db:"resumed_on"`
+	UpdatedOn                       time.Time      `db:"updated_on"`
+	Owner                           string         `db:"owner"`
+	Comment                         string         `db:"comment"`
+	EnableQueryAcceleration         bool           `db:"enable_query_acceleration"`
+	QueryAccelerationMaxScaleFactor int            `db:"query_acceleration_max_scale_factor"`
+	ResourceMonitor                 string         `db:"resource_monitor"`
+	Actives                         string         `db:"actives"`
+	Pendings                        string         `db:"pendings"`
+	Failed                          string         `db:"failed"`
+	Suspended                       string         `db:"suspended"`
+	UUID                            string         `db:"uuid"`
+	ScalingPolicy                   string         `db:"scaling_policy"`
+	OwnerRoleType                   sql.NullString `db:"owner_role_type"`
 }
 
 func (row warehouseDBRow) convert() *Warehouse {
@@ -452,6 +454,9 @@ func (row warehouseDBRow) convert() *Warehouse {
 	}
 	if row.AutoSuspend.Valid {
 		wh.AutoSuspend = int(row.AutoSuspend.Int64)
+	}
+	if row.OwnerRoleType.Valid {
+		wh.OwnerRoleType = row.OwnerRoleType.String
 	}
 	return wh
 }

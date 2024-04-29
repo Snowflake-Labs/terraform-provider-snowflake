@@ -28,6 +28,7 @@ func TestInt_Tags(t *testing.T) {
 		assert.Equal(t, "ACCOUNTADMIN", tag.Owner)
 		assert.Equal(t, expectedComment, tag.Comment)
 		assert.Equal(t, expectedAllowedValues, tag.AllowedValues)
+		assert.Equal(t, "ROLE", tag.OwnerRoleType)
 	}
 	cleanupTagHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {

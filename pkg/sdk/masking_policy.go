@@ -230,6 +230,7 @@ type MaskingPolicy struct {
 	Owner               string
 	Comment             string
 	ExemptOtherPolicies bool
+	OwnerRoleType       string
 }
 
 func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
@@ -267,6 +268,7 @@ func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 		Owner:               row.Owner,
 		Comment:             row.Comment,
 		ExemptOtherPolicies: exemptOtherPolicies,
+		OwnerRoleType:       row.OwnerRoleType,
 	}
 }
 

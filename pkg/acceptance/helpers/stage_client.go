@@ -118,3 +118,14 @@ func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIde
 		require.NoError(t, err)
 	})
 }
+
+func (c *StageClient) CopyIntoTableFromFile(t *testing.T, table, stage sdk.SchemaObjectIdentifier, filename string) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`COPY INTO %s
+	FROM @%s/%s
+	FILE_FORMAT = (type=json)
+	MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.FullyQualifiedName(), stage.FullyQualifiedName(), filename))
+	require.NoError(t, err)
+}

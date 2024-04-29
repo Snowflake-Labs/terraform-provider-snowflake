@@ -418,6 +418,20 @@ func TestInt_MaskingPoliciesShowByID(t *testing.T) {
 		t.Cleanup(cleanupMaskingPolicyHandle(t, id))
 	}
 
+	assertMaskingPolicy := func(t *testing.T, mp *sdk.MaskingPolicy, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		assert.Equal(t, id, mp.ID())
+		assert.NotEmpty(t, mp.CreatedOn)
+		assert.Equal(t, id.Name(), mp.Name)
+		assert.Equal(t, testDb(t).Name, mp.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, mp.SchemaName)
+		assert.Equal(t, "MASKING_POLICY", mp.Kind)
+		assert.Equal(t, "ACCOUNTADMIN", mp.Owner)
+		assert.Equal(t, "", mp.Comment)
+		assert.Equal(t, false, mp.ExemptOtherPolicies)
+		assert.Equal(t, "ROLE", mp.OwnerRoleType)
+	}
+
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -436,5 +450,16 @@ func TestInt_MaskingPoliciesShowByID(t *testing.T) {
 		e2, err := client.MaskingPolicies.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show by id: check fields", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+
+		createMaskingPolicyHandle(t, id)
+
+		mp, err := client.MaskingPolicies.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertMaskingPolicy(t, mp, id)
 	})
 }
