@@ -91,7 +91,7 @@ body:
     type: dropdown
     attributes:
       label: Object type(s)
-      description: Choose object type(s) causing the issue (if any). Specify object types and add **multiple** if you suspect more objects are affected. Use **all** with caution!
+      description: Choose object type(s) causing the issue (if any).
       multiple: true
       options:
         - resource:account

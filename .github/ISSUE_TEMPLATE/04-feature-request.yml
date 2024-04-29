@@ -58,7 +58,7 @@ body:
     type: dropdown
     attributes:
       label: Object type(s)
-      description: Choose object type(s) affected by the proposal (if any). Specify object types and add *multiple* if you are unsure which ones specifically. Use **all** with caution!
+      description: Choose object type(s) affected by the proposal (if any).
       multiple: true
       options:
         - resource:account
