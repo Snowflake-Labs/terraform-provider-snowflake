@@ -4,19 +4,23 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_NetworkPolicyAttachment(t *testing.T) {
+func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
 	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	policyNameUser := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	policyNameAccount := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -50,10 +54,19 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 			},
 		},
 	})
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+
+}
+
+func TestAcc_NetworkPolicyAttachmentAccount(t *testing.T) {
+	policyNameAccount := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckNetworkPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: networkPolicyAttachmentConfigAccount(policyNameAccount),
@@ -64,6 +77,27 @@ func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 			},
 		},
 	})
+}
+
+
+func testAccCheckNetworkPolicyAttachmentDestroy(s *terraform.State) error {
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_network_policy_attachment" {
+			continue
+		}
+		ctx := context.Background()
+		parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterNetworkPolicy)
+		if err != nil {
+			fmt.Printf("[WARN] network policy (%s) not found on account", rs.Primary.Attributes["Id"])
+			return nil
+		}
+		if err == nil && parameter.Level == "ACCOUNT" && parameter.Key == "NETWORK_POLICY" && parameter.Value == rs.Primary.Attributes["network_policy_name"] {
+			return fmt.Errorf("network policy attachment %v still exists", rs.Primary.Attributes["Id"])
+		}
+	}
+	return nil
 }
 
 func networkPolicyAttachmentConfigSingle(user1, policyName string) string {
