@@ -35,11 +35,27 @@ type AlterNetworkPolicyRequest struct {
 }
 
 type NetworkPolicySetRequest struct {
-	AllowedNetworkRuleList []SchemaObjectIdentifier
-	BlockedNetworkRuleList []SchemaObjectIdentifier
-	AllowedIpList          []IPRequest
-	BlockedIpList          []IPRequest
+	AllowedNetworkRuleList *AllowedNetworkRuleListRequest
+	BlockedNetworkRuleList *BlockedNetworkRuleListRequest
+	AllowedIpList          *AllowedIPListRequest
+	BlockedIpList          *BlockedIPListRequest
 	Comment                *string
+}
+
+type AllowedNetworkRuleListRequest struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier
+}
+
+type BlockedNetworkRuleListRequest struct {
+	BlockedNetworkRuleList []SchemaObjectIdentifier
+}
+
+type AllowedIPListRequest struct {
+	AllowedIPList []IP
+}
+
+type BlockedIPListRequest struct {
+	BlockedIPList []IP
 }
 
 type NetworkPolicyUnsetRequest struct {

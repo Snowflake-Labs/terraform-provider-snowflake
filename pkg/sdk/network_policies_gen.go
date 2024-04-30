@@ -42,11 +42,27 @@ type AlterNetworkPolicyOptions struct {
 }
 
 type NetworkPolicySet struct {
-	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
-	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
-	AllowedIpList          []IP                     `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList          []IP                     `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
-	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AllowedNetworkRuleList *AllowedNetworkRuleList `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList *BlockedNetworkRuleList `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          *AllowedIPList          `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          *BlockedIPList          `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
+	Comment                *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type AllowedNetworkRuleList struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+type BlockedNetworkRuleList struct {
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+type AllowedIPList struct {
+	AllowedIPList []IP `ddl:"list,must_parentheses"`
+}
+
+type BlockedIPList struct {
+	BlockedIPList []IP `ddl:"list,must_parentheses"`
 }
 
 type NetworkPolicyUnset struct {

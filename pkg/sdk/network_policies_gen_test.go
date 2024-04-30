@@ -103,35 +103,67 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	t.Run("set allowed ip list", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
-			AllowedIpList: []IP{{IP: "123.0.0.1"}},
+			AllowedIpList: &AllowedIPList{[]IP{{"123.0.0.1"}}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET ALLOWED_IP_LIST = ('123.0.0.1')", id.FullyQualifiedName())
+	})
+
+	t.Run("set empty ip list", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NetworkPolicySet{
+			AllowedIpList: &AllowedIPList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET ALLOWED_IP_LIST = ()", id.FullyQualifiedName())
 	})
 
 	t.Run("set blocked ip list", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
-			BlockedIpList: []IP{{IP: "123.0.0.1"}},
+			BlockedIpList: &BlockedIPList{[]IP{{"123.0.0.1"}}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET BLOCKED_IP_LIST = ('123.0.0.1')", id.FullyQualifiedName())
+	})
+
+	t.Run("set empty blocked ip list", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NetworkPolicySet{
+			BlockedIpList: &BlockedIPList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET BLOCKED_IP_LIST = ()", id.FullyQualifiedName())
 	})
 
 	t.Run("set allowed network rule list", func(t *testing.T) {
 		allowedNetworkRule := RandomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
-			AllowedNetworkRuleList: []SchemaObjectIdentifier{allowedNetworkRule},
+			AllowedNetworkRuleList: &AllowedNetworkRuleList{[]SchemaObjectIdentifier{allowedNetworkRule}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET ALLOWED_NETWORK_RULE_LIST = (%s)", id.FullyQualifiedName(), allowedNetworkRule.FullyQualifiedName())
+	})
+
+	t.Run("set empty allowed network rule list", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NetworkPolicySet{
+			AllowedNetworkRuleList: &AllowedNetworkRuleList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET ALLOWED_NETWORK_RULE_LIST = ()", id.FullyQualifiedName())
 	})
 
 	t.Run("set blocked network rule list", func(t *testing.T) {
 		blockedNetworkRule := RandomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{
-			BlockedNetworkRuleList: []SchemaObjectIdentifier{blockedNetworkRule},
+			BlockedNetworkRuleList: &BlockedNetworkRuleList{[]SchemaObjectIdentifier{blockedNetworkRule}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET BLOCKED_NETWORK_RULE_LIST = (%s)", id.FullyQualifiedName(), blockedNetworkRule.FullyQualifiedName())
+	})
+
+	t.Run("set empty blocked network rule list", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NetworkPolicySet{
+			BlockedNetworkRuleList: &BlockedNetworkRuleList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET BLOCKED_NETWORK_RULE_LIST = ()", id.FullyQualifiedName())
 	})
 
 	t.Run("unset single", func(t *testing.T) {

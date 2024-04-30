@@ -8,6 +8,18 @@ var (
 	ip = g.NewQueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes().Required())
 
+	allowedNetworkRuleList = g.NewQueryStruct("AllowedNetworkRuleList").
+				List("AllowedNetworkRuleList", "SchemaObjectIdentifier", g.ListOptions().MustParentheses())
+
+	blockedNetworkRuleList = g.NewQueryStruct("BlockedNetworkRuleList").
+				List("BlockedNetworkRuleList", "SchemaObjectIdentifier", g.ListOptions().MustParentheses())
+
+	allowedIPList = g.NewQueryStruct("AllowedIPList").
+			List("AllowedIPList", "IP", g.ListOptions().MustParentheses())
+
+	blockedIPList = g.NewQueryStruct("BlockedIPList").
+			List("BlockedIPList", "IP", g.ListOptions().MustParentheses())
+
 	networkPoliciesAddNetworkRule = g.NewQueryStruct("AddNetworkRule").
 					ListAssignment("ALLOWED_NETWORK_RULE_LIST", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
 					ListAssignment("BLOCKED_NETWORK_RULE_LIST", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
@@ -47,10 +59,10 @@ var (
 				OptionalQueryStructField(
 					"Set",
 					g.NewQueryStruct("NetworkPolicySet").
-						ListAssignment("ALLOWED_NETWORK_RULE_LIST", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListAssignment("BLOCKED_NETWORK_RULE_LIST", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
-						ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
+						OptionalQueryStructField("AllowedNetworkRuleList", allowedNetworkRuleList, g.ParameterOptions().SQL("ALLOWED_NETWORK_RULE_LIST").Parentheses()).
+						OptionalQueryStructField("BlockedNetworkRuleList", blockedNetworkRuleList, g.ParameterOptions().SQL("BLOCKED_NETWORK_RULE_LIST").Parentheses()).
+						OptionalQueryStructField("AllowedIpList", allowedIPList, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
+						OptionalQueryStructField("BlockedIpList", blockedIPList, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 						WithValidation(g.AtLeastOneValueSet, "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"),
 					g.KeywordOptions().SQL("SET"),

@@ -92,28 +92,64 @@ func NewNetworkPolicySetRequest() *NetworkPolicySetRequest {
 	return &NetworkPolicySetRequest{}
 }
 
-func (s *NetworkPolicySetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList []SchemaObjectIdentifier) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList *AllowedNetworkRuleListRequest) *NetworkPolicySetRequest {
 	s.AllowedNetworkRuleList = AllowedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList []SchemaObjectIdentifier) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList *BlockedNetworkRuleListRequest) *NetworkPolicySetRequest {
 	s.BlockedNetworkRuleList = BlockedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList []IPRequest) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList *AllowedIPListRequest) *NetworkPolicySetRequest {
 	s.AllowedIpList = AllowedIpList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList []IPRequest) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList *BlockedIPListRequest) *NetworkPolicySetRequest {
 	s.BlockedIpList = BlockedIpList
 	return s
 }
 
 func (s *NetworkPolicySetRequest) WithComment(Comment *string) *NetworkPolicySetRequest {
 	s.Comment = Comment
+	return s
+}
+
+func NewAllowedNetworkRuleListRequest() *AllowedNetworkRuleListRequest {
+	return &AllowedNetworkRuleListRequest{}
+}
+
+func (s *AllowedNetworkRuleListRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList []SchemaObjectIdentifier) *AllowedNetworkRuleListRequest {
+	s.AllowedNetworkRuleList = AllowedNetworkRuleList
+	return s
+}
+
+func NewBlockedNetworkRuleListRequest() *BlockedNetworkRuleListRequest {
+	return &BlockedNetworkRuleListRequest{}
+}
+
+func (s *BlockedNetworkRuleListRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList []SchemaObjectIdentifier) *BlockedNetworkRuleListRequest {
+	s.BlockedNetworkRuleList = BlockedNetworkRuleList
+	return s
+}
+
+func NewAllowedIPListRequest() *AllowedIPListRequest {
+	return &AllowedIPListRequest{}
+}
+
+func (s *AllowedIPListRequest) WithAllowedIPList(AllowedIPList []IP) *AllowedIPListRequest {
+	s.AllowedIPList = AllowedIPList
+	return s
+}
+
+func NewBlockedIPListRequest() *BlockedIPListRequest {
+	return &BlockedIPListRequest{}
+}
+
+func (s *BlockedIPListRequest) WithBlockedIPList(BlockedIPList []IP) *BlockedIPListRequest {
+	s.BlockedIPList = BlockedIPList
 	return s
 }
 

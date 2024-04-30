@@ -149,7 +149,8 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnsetComment(sdk.Bool(true)))
+			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
+			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
 			if err != nil {
 				return fmt.Errorf("error unsetting comment for network policy %v err = %w", name, err)
 			}
