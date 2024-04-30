@@ -109,13 +109,27 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 			}
 		}
 		if r.Set.AllowedIpList != nil {
-			opts.Set.AllowedIpList = &AllowedIPList{
-				AllowedIPList: r.Set.AllowedIpList.AllowedIPList,
+			opts.Set.AllowedIpList = &AllowedIPList{}
+			if r.Set.AllowedIpList.AllowedIPList != nil {
+				s := make([]IP, len(r.Set.AllowedIpList.AllowedIPList))
+				for i, v := range r.Set.AllowedIpList.AllowedIPList {
+					s[i] = IP{
+						IP: v.IP,
+					}
+				}
+				opts.Set.AllowedIpList.AllowedIPList = s
 			}
 		}
 		if r.Set.BlockedIpList != nil {
-			opts.Set.BlockedIpList = &BlockedIPList{
-				BlockedIPList: r.Set.BlockedIpList.BlockedIPList,
+			opts.Set.BlockedIpList = &BlockedIPList{}
+			if r.Set.BlockedIpList.BlockedIPList != nil {
+				s := make([]IP, len(r.Set.BlockedIpList.BlockedIPList))
+				for i, v := range r.Set.BlockedIpList.BlockedIPList {
+					s[i] = IP{
+						IP: v.IP,
+					}
+				}
+				opts.Set.BlockedIpList.BlockedIPList = s
 			}
 		}
 	}

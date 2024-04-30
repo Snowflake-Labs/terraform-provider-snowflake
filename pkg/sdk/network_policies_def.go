@@ -15,10 +15,10 @@ var (
 				List("BlockedNetworkRuleList", "SchemaObjectIdentifier", g.ListOptions().MustParentheses())
 
 	allowedIPList = g.NewQueryStruct("AllowedIPList").
-			List("AllowedIPList", "IP", g.ListOptions().MustParentheses())
+			ListQueryStructField("AllowedIPList", ip, g.ListOptions().MustParentheses())
 
 	blockedIPList = g.NewQueryStruct("BlockedIPList").
-			List("BlockedIPList", "IP", g.ListOptions().MustParentheses())
+			ListQueryStructField("BlockedIPList", ip, g.ListOptions().MustParentheses())
 
 	networkPoliciesAddNetworkRule = g.NewQueryStruct("AddNetworkRule").
 					ListAssignment("ALLOWED_NETWORK_RULE_LIST", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).

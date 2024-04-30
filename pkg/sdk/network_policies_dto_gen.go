@@ -51,11 +51,11 @@ type BlockedNetworkRuleListRequest struct {
 }
 
 type AllowedIPListRequest struct {
-	AllowedIPList []IP
+	AllowedIPList []IPRequest
 }
 
 type BlockedIPListRequest struct {
-	BlockedIPList []IP
+	BlockedIPList []IPRequest
 }
 
 type NetworkPolicyUnsetRequest struct {

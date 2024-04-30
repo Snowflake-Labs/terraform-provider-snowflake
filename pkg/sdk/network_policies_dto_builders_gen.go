@@ -139,7 +139,7 @@ func NewAllowedIPListRequest() *AllowedIPListRequest {
 	return &AllowedIPListRequest{}
 }
 
-func (s *AllowedIPListRequest) WithAllowedIPList(AllowedIPList []IP) *AllowedIPListRequest {
+func (s *AllowedIPListRequest) WithAllowedIPList(AllowedIPList []IPRequest) *AllowedIPListRequest {
 	s.AllowedIPList = AllowedIPList
 	return s
 }
@@ -148,7 +148,7 @@ func NewBlockedIPListRequest() *BlockedIPListRequest {
 	return &BlockedIPListRequest{}
 }
 
-func (s *BlockedIPListRequest) WithBlockedIPList(BlockedIPList []IP) *BlockedIPListRequest {
+func (s *BlockedIPListRequest) WithBlockedIPList(BlockedIPList []IPRequest) *BlockedIPListRequest {
 	s.BlockedIPList = BlockedIPList
 	return s
 }
