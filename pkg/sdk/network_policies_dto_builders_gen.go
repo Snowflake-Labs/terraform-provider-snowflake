@@ -68,6 +68,11 @@ func (s *AlterNetworkPolicyRequest) WithSet(Set *NetworkPolicySetRequest) *Alter
 	return s
 }
 
+func (s *AlterNetworkPolicyRequest) WithUnset(Unset *NetworkPolicyUnsetRequest) *AlterNetworkPolicyRequest {
+	s.Unset = Unset
+	return s
+}
+
 func (s *AlterNetworkPolicyRequest) WithAdd(Add *AddNetworkRuleRequest) *AlterNetworkPolicyRequest {
 	s.Add = Add
 	return s
@@ -75,11 +80,6 @@ func (s *AlterNetworkPolicyRequest) WithAdd(Add *AddNetworkRuleRequest) *AlterNe
 
 func (s *AlterNetworkPolicyRequest) WithRemove(Remove *RemoveNetworkRuleRequest) *AlterNetworkPolicyRequest {
 	s.Remove = Remove
-	return s
-}
-
-func (s *AlterNetworkPolicyRequest) WithUnsetComment(UnsetComment *bool) *AlterNetworkPolicyRequest {
-	s.UnsetComment = UnsetComment
 	return s
 }
 
@@ -113,6 +113,35 @@ func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList []IPRequest) *
 }
 
 func (s *NetworkPolicySetRequest) WithComment(Comment *string) *NetworkPolicySetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func NewNetworkPolicyUnsetRequest() *NetworkPolicyUnsetRequest {
+	return &NetworkPolicyUnsetRequest{}
+}
+
+func (s *NetworkPolicyUnsetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList *bool) *NetworkPolicyUnsetRequest {
+	s.AllowedNetworkRuleList = AllowedNetworkRuleList
+	return s
+}
+
+func (s *NetworkPolicyUnsetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList *bool) *NetworkPolicyUnsetRequest {
+	s.BlockedNetworkRuleList = BlockedNetworkRuleList
+	return s
+}
+
+func (s *NetworkPolicyUnsetRequest) WithAllowedIpList(AllowedIpList *bool) *NetworkPolicyUnsetRequest {
+	s.AllowedIpList = AllowedIpList
+	return s
+}
+
+func (s *NetworkPolicyUnsetRequest) WithBlockedIpList(BlockedIpList *bool) *NetworkPolicyUnsetRequest {
+	s.BlockedIpList = BlockedIpList
+	return s
+}
+
+func (s *NetworkPolicyUnsetRequest) WithComment(Comment *bool) *NetworkPolicyUnsetRequest {
 	s.Comment = Comment
 	return s
 }

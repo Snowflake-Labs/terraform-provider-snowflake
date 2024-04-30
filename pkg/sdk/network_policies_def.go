@@ -56,6 +56,17 @@ var (
 					g.KeywordOptions().SQL("SET"),
 				).
 				OptionalQueryStructField(
+					"Unset",
+					g.NewQueryStruct("NetworkPolicyUnset").
+						OptionalSQL("ALLOWED_NETWORK_RULE_LIST").
+						OptionalSQL("BLOCKED_NETWORK_RULE_LIST").
+						OptionalSQL("ALLOWED_IP_LIST").
+						OptionalSQL("BLOCKED_IP_LIST").
+						OptionalSQL("COMMENT").
+						WithValidation(g.AtLeastOneValueSet, "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"),
+					g.ListOptions().NoParentheses().SQL("UNSET"),
+				).
+				OptionalQueryStructField(
 					"Add",
 					networkPoliciesAddNetworkRule,
 					g.KeywordOptions().SQL("ADD"),
@@ -65,10 +76,9 @@ var (
 					networkPoliciesRemoveNetworkRule,
 					g.KeywordOptions().SQL("REMOVE"),
 				).
-				OptionalSQL("UNSET COMMENT").
 				Identifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				WithValidation(g.ValidIdentifier, "name").
-				WithValidation(g.ExactlyOneValueSet, "Set", "UnsetComment", "RenameTo", "Add", "Remove").
+				WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "RenameTo", "Add", "Remove").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
 		).
 		DropOperation(

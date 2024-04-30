@@ -58,19 +58,24 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		opts.UnsetComment = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field from [opts.Set opts.UnsetComment opts.RenameTo opts.Add opts.Remove] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.RenameTo opts.Add opts.Remove] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "UnsetComment", "RenameTo", "Add", "Remove"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "Unset", "RenameTo", "Add", "Remove"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.AllowedIpList opts.Set.BlockedIpList opts.Set.Comment opts.Set.AllowedNetworkRuleList opts.Set.BlockedNetworkRuleList] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNetworkPolicyOptions.Set", "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.AllowedIpList opts.Unset.BlockedIpList opts.Unset.Comment opts.Unset.AllowedNetworkRuleList opts.Unset.BlockedNetworkRuleList] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &NetworkPolicyUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNetworkPolicyOptions.Unset", "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Add.AllowedNetworkRuleList opts.Add.BlockedNetworkRuleList] should be present", func(t *testing.T) {
@@ -129,6 +134,26 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET BLOCKED_NETWORK_RULE_LIST = (%s)", id.FullyQualifiedName(), blockedNetworkRule.FullyQualifiedName())
 	})
 
+	t.Run("unset single", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &NetworkPolicyUnset{
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("unset multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &NetworkPolicyUnset{
+			AllowedNetworkRuleList: Bool(true),
+			BlockedNetworkRuleList: Bool(true),
+			AllowedIpList:          Bool(true),
+			BlockedIpList:          Bool(true),
+			Comment:                Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s UNSET ALLOWED_NETWORK_RULE_LIST, BLOCKED_NETWORK_RULE_LIST, ALLOWED_IP_LIST, BLOCKED_IP_LIST, COMMENT", id.FullyQualifiedName())
+	})
+
 	t.Run("add allowed network rule", func(t *testing.T) {
 		allowedNetworkRule := RandomSchemaObjectIdentifier()
 		opts := defaultOpts()
@@ -171,12 +196,6 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 			Comment: String("some_comment"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET COMMENT = 'some_comment'", id.FullyQualifiedName())
-	})
-
-	t.Run("unset comment", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.UnsetComment = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s UNSET COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("rename to", func(t *testing.T) {

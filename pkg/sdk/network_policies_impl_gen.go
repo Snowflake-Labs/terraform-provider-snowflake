@@ -69,14 +69,18 @@ func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 	if r.AllowedIpList != nil {
 		s := make([]IP, len(r.AllowedIpList))
 		for i, v := range r.AllowedIpList {
-			s[i] = IP(v)
+			s[i] = IP{
+				IP: v.IP,
+			}
 		}
 		opts.AllowedIpList = s
 	}
 	if r.BlockedIpList != nil {
 		s := make([]IP, len(r.BlockedIpList))
 		for i, v := range r.BlockedIpList {
-			s[i] = IP(v)
+			s[i] = IP{
+				IP: v.IP,
+			}
 		}
 		opts.BlockedIpList = s
 	}
@@ -88,8 +92,7 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 		IfExists: r.IfExists,
 		name:     r.name,
 
-		UnsetComment: r.UnsetComment,
-		RenameTo:     r.RenameTo,
+		RenameTo: r.RenameTo,
 	}
 	if r.Set != nil {
 		opts.Set = &NetworkPolicySet{
@@ -101,16 +104,29 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 		if r.Set.AllowedIpList != nil {
 			s := make([]IP, len(r.Set.AllowedIpList))
 			for i, v := range r.Set.AllowedIpList {
-				s[i] = IP(v)
+				s[i] = IP{
+					IP: v.IP,
+				}
 			}
 			opts.Set.AllowedIpList = s
 		}
 		if r.Set.BlockedIpList != nil {
 			s := make([]IP, len(r.Set.BlockedIpList))
 			for i, v := range r.Set.BlockedIpList {
-				s[i] = IP(v)
+				s[i] = IP{
+					IP: v.IP,
+				}
 			}
 			opts.Set.BlockedIpList = s
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &NetworkPolicyUnset{
+			AllowedNetworkRuleList: r.Unset.AllowedNetworkRuleList,
+			BlockedNetworkRuleList: r.Unset.BlockedNetworkRuleList,
+			AllowedIpList:          r.Unset.AllowedIpList,
+			BlockedIpList:          r.Unset.BlockedIpList,
+			Comment:                r.Unset.Comment,
 		}
 	}
 	if r.Add != nil {

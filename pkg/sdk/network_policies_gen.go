@@ -35,9 +35,9 @@ type AlterNetworkPolicyOptions struct {
 	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier  `ddl:"identifier"`
 	Set           *NetworkPolicySet        `ddl:"keyword" sql:"SET"`
+	Unset         *NetworkPolicyUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
 	Add           *AddNetworkRule          `ddl:"keyword" sql:"ADD"`
 	Remove        *RemoveNetworkRule       `ddl:"keyword" sql:"REMOVE"`
-	UnsetComment  *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
 	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 
@@ -47,6 +47,14 @@ type NetworkPolicySet struct {
 	AllowedIpList          []IP                     `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
 	BlockedIpList          []IP                     `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
 	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type NetworkPolicyUnset struct {
+	AllowedNetworkRuleList *bool `ddl:"keyword" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList *bool `ddl:"keyword" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          *bool `ddl:"keyword" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          *bool `ddl:"keyword" sql:"BLOCKED_IP_LIST"`
+	Comment                *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 type AddNetworkRule struct {
