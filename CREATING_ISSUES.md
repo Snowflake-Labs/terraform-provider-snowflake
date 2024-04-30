@@ -1,5 +1,24 @@
 # Creating GitHub issues
 
+* [Creating GitHub issues](#creating-github-issues)
+  * [1. Check the existing GitHub issues.](#1-check-the-existing-github-issues)
+  * [2. Go through the frequently asked questions and commonly known issues.](#2-go-through-the-frequently-asked-questions-and-commonly-known-issues)
+  * [3. Check the official Snowflake documentation](#3-check-the-official-snowflake-documentation)
+  * [4. Choose the correct template and use as much information as possible.](#4-choose-the-correct-template-and-use-as-much-information-as-possible)
+* [FAQ](#faq)
+  * [When will the Snowflake feature X be available in the provider?](#when-will-the-snowflake-feature-x-be-available-in-the-provider)
+  * [When will my bug report be fixed/released?](#when-will-my-bug-report-be-fixedreleased)
+  * [How to migrate from version X to Y?](#how-to-migrate-from-version-x-to-y)
+  * [What are the current/future plans for the provider?](#what-are-the-currentfuture-plans-for-the-provider)
+  * [How can I contribute?](#how-can-i-contribute)
+  * [How can I debug the issue myself?](#how-can-i-debug-the-issue-myself)
+* [Commonly known issues](#commonly-known-issues)
+  * [Old Terraform CLI version](#old-terraform-cli-version)
+  * [Errors with connection to Snowflake](#errors-with-connection-to-snowflake)
+  * [How to set up the connection with the private key?](#how-to-set-up-the-connection-with-the-private-key)
+  * [Incorrect identifier (index out of bounds) (even with the old error message)](#incorrect-identifier-index-out-of-bounds-even-with-the-old-error-message)
+  * [Incorrect account identifier (snowflake_database.from_share)](#incorrect-account-identifier-snowflake_databasefrom_share)
+
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible. 
 To correctly report the issue, we suggest going through the following steps.
 
