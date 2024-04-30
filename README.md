@@ -21,6 +21,7 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   - [Migration guide](#migration-guide)
   - [Roadmap](#roadmap)
   - [Getting Help](#getting-help)
+  - [Would you like to create an issue?](#would-you-like-to-create-an-issue)
   - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
   - [Additional SQL Client configuration](#additional-sql-client-configuration)
   - [Contributing](#contributing)
@@ -73,6 +74,10 @@ Some links that might help you:
 - The [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo, we use this forum to discuss new features and changes to the provider.
 - **If you are an enterprise customer**, reach out to your account team. This helps us prioritize issues.
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
+
+## Would you like to create an issue?
+If you would like to create a GitHub issue, please read our [guide](./CREATING_ISSUES.md) first. 
+It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
 
 ## Additional debug logs for `snowflake_grant_privileges_to_role` resource
 Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. Additional logs will be visible with `sf-tf-additional-debug` prefix, e.g.:
