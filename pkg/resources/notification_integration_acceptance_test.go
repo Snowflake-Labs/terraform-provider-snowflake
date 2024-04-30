@@ -211,7 +211,7 @@ func TestAcc_NotificationIntegration_PushGoogle(t *testing.T) {
 }
 
 // TODO [SNOW-1017802]: handle after "create and describe notification integration - push azure" test passes
-// TODO [SNOW-1021713]: handle after it's added to the resource
+// TODO [SNOW-1348345]: handle after it's added to the resource
 func TestAcc_NotificationIntegration_PushAzure(t *testing.T) {
 	t.Skip("Skipping because can't be currently created. Check 'create and describe notification integration - push azure' test in the SDK.")
 }
