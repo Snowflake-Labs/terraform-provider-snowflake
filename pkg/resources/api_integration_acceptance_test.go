@@ -1,14 +1,12 @@
 package resources_test
 
 import (
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -19,7 +17,7 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 	const dummyAwsApiRoleArn = "arn:aws:iam::000000000001:/role/test"
 	const dummyAwsOtherApiRoleArn = "arn:aws:iam::000000000001:/role/other"
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {
@@ -111,7 +109,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
 	const dummyAzureOtherAdApplicationId = "33333333-3333-3333-3333-333333333333"
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {
@@ -204,7 +202,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 	const dummyGoogleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
 	const dummyGoogleOtherAudience = "api-gateway-id-666777.apigateway.gcp-project.cloud.goog"
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	comment := "acceptance test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -295,7 +293,7 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 	const dummyAzureTenantId = "00000000-0000-0000-0000-000000000000"
 	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {

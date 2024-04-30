@@ -3,8 +3,8 @@ package sdk
 import "testing"
 
 func TestStreams_CreateOnTable(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	tableId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	tableId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnTableStreamOptions
 	defaultOpts := func() *CreateOnTableStreamOptions {
@@ -81,8 +81,8 @@ func TestStreams_CreateOnTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnExternalTable(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	externalTableId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	externalTableId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnExternalTableStreamOptions
 	defaultOpts := func() *CreateOnExternalTableStreamOptions {
@@ -158,8 +158,8 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnDirectoryTable(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	stageId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	stageId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnStageStreamOptions
 	defaultOpts := func() *CreateOnDirectoryTableStreamOptions {
@@ -208,8 +208,8 @@ func TestStreams_CreateOnDirectoryTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnView(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	viewId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	viewId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnViewStreamOptions
 	defaultOpts := func() *CreateOnViewStreamOptions {
@@ -286,8 +286,8 @@ func TestStreams_CreateOnView(t *testing.T) {
 }
 
 func TestStreams_Clone(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-	sourceId := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
+	sourceId := randomSchemaObjectIdentifier()
 
 	// Minimal valid CloneStreamOptions
 	defaultOpts := func() *CloneStreamOptions {
@@ -322,7 +322,7 @@ func TestStreams_Clone(t *testing.T) {
 }
 
 func TestStreams_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterStreamOptions
 	defaultOpts := func() *AlterStreamOptions {
@@ -345,7 +345,7 @@ func TestStreams_Alter(t *testing.T) {
 	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetTags]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetTags = []ObjectIdentifier{RandomAccountObjectIdentifier()}
+		opts.UnsetTags = []ObjectIdentifier{randomAccountObjectIdentifier()}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterStreamOptions", "IfExists", "UnsetTags"))
 	})
 
@@ -395,7 +395,7 @@ func TestStreams_Alter(t *testing.T) {
 }
 
 func TestStreams_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropStreamOptions
 	defaultOpts := func() *DropStreamOptions {
@@ -442,7 +442,7 @@ func TestStreams_Show(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{Pattern: String("pattern")}
-		schemaId := RandomDatabaseObjectIdentifier()
+		schemaId := randomDatabaseObjectIdentifier()
 		opts.In = &In{Schema: schemaId}
 		opts.StartsWith = String("starts with pattern")
 		opts.Limit = &LimitFrom{Rows: Int(123), From: String("from pattern")}
@@ -451,7 +451,7 @@ func TestStreams_Show(t *testing.T) {
 }
 
 func TestStreams_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeStreamOptions
 	defaultOpts := func() *DescribeStreamOptions {

@@ -14,11 +14,13 @@ import (
 
 type TableClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewTableClient(context *TestClientContext) *TableClient {
+func NewTableClient(context *TestClientContext, idsGenerator *IdsGenerator) *TableClient {
 	return &TableClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -28,7 +30,7 @@ func (c *TableClient) client() sdk.Tables {
 
 func (c *TableClient) CreateTable(t *testing.T) (*sdk.Table, func()) {
 	t.Helper()
-	return c.CreateTableInSchema(t, c.context.schemaId())
+	return c.CreateTableInSchema(t, c.ids.SchemaId())
 }
 
 func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {
@@ -131,4 +133,5 @@ type InformationSchemaColumns struct {
 	IdentityCycle          sql.NullString `db:"IDENTITY_CYCLE"`
 	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
 	Comment                sql.NullString `db:"COMMENT"`
+	SchemaEvolutionRecord  sql.NullString `db:"SCHEMA_EVOLUTION_RECORD"`
 }

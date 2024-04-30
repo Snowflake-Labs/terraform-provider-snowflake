@@ -876,7 +876,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				AccountObject: &sdk.GrantOnAccountObject{
-					Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					Database: sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 			roleId,

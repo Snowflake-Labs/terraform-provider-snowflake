@@ -230,7 +230,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 		require.Contains(t, es, *e1)
 
-		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseTest.Name)}))
+		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: testClientHelper().Ids.DatabaseId()}))
 		require.NoError(t, err)
 
 		require.Contains(t, es, *e1)

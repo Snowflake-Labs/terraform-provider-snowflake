@@ -34,7 +34,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	}
 
 	defaultCreateRequest := func() *sdk.CreateNetworkPolicyRequest {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := "some_comment"
 		return sdk.NewCreateNetworkPolicyRequest(id).
 			WithOrReplace(sdk.Bool(true)).
@@ -352,7 +352,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req)
 		t.Cleanup(dropNetworkPolicy)
 
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithRenameTo(&newID))
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().NetworkPolicy.DropNetworkPolicyFunc(t, newID))

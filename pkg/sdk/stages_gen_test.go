@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestStages_CreateInternal(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateInternalStageOptions
 	defaultOpts := func() *CreateInternalStageOptions {
@@ -73,7 +73,7 @@ func TestStages_CreateInternal(t *testing.T) {
 }
 
 func TestStages_CreateOnS3(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnS3StageOptions
 	defaultOpts := func() *CreateOnS3StageOptions {
@@ -159,7 +159,7 @@ func TestStages_CreateOnS3(t *testing.T) {
 }
 
 func TestStages_CreateOnGCS(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnGCSStageOptions
 	defaultOpts := func() *CreateOnGCSStageOptions {
@@ -208,7 +208,7 @@ func TestStages_CreateOnGCS(t *testing.T) {
 }
 
 func TestStages_CreateOnAzure(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnAzureStageOptions
 	defaultOpts := func() *CreateOnAzureStageOptions {
@@ -285,7 +285,7 @@ func TestStages_CreateOnAzure(t *testing.T) {
 }
 
 func TestStages_CreateOnS3Compatible(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnS3CompatibleStageOptions
 	defaultOpts := func() *CreateOnS3CompatibleStageOptions {
@@ -325,7 +325,7 @@ func TestStages_CreateOnS3Compatible(t *testing.T) {
 }
 
 func TestStages_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterStageOptions
 	defaultOpts := func() *AlterStageOptions {
@@ -369,7 +369,7 @@ func TestStages_Alter(t *testing.T) {
 	t.Run("rename", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		newId := RandomSchemaObjectIdentifier()
+		newId := randomSchemaObjectIdentifier()
 		opts.RenameTo = &newId
 		assertOptsValidAndSQLEquals(t, opts, "ALTER STAGE IF EXISTS %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
@@ -401,7 +401,7 @@ func TestStages_Alter(t *testing.T) {
 }
 
 func TestStages_AlterInternalStage(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterInternalStageStageOptions
 	defaultOpts := func() *AlterInternalStageStageOptions {
@@ -445,7 +445,7 @@ func TestStages_AlterInternalStage(t *testing.T) {
 }
 
 func TestStages_AlterExternalS3Stage(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterExternalS3StageStageOptions
 	defaultOpts := func() *AlterExternalS3StageStageOptions {
@@ -520,7 +520,7 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 }
 
 func TestStages_AlterExternalGCSStage(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterExternalGCSStageStageOptions
 	defaultOpts := func() *AlterExternalGCSStageStageOptions {
@@ -572,7 +572,7 @@ func TestStages_AlterExternalGCSStage(t *testing.T) {
 }
 
 func TestStages_AlterExternalAzureStage(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterExternalAzureStageStageOptions
 	defaultOpts := func() *AlterExternalAzureStageStageOptions {
@@ -634,7 +634,7 @@ func TestStages_AlterExternalAzureStage(t *testing.T) {
 }
 
 func TestStages_AlterDirectoryTable(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterDirectoryTableStageOptions
 	defaultOpts := func() *AlterDirectoryTableStageOptions {
@@ -674,7 +674,7 @@ func TestStages_AlterDirectoryTable(t *testing.T) {
 }
 
 func TestStages_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropStageOptions
 	defaultOpts := func() *DropStageOptions {
@@ -702,7 +702,7 @@ func TestStages_Drop(t *testing.T) {
 }
 
 func TestStages_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeStageOptions
 	defaultOpts := func() *DescribeStageOptions {

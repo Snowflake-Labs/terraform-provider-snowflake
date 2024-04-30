@@ -1,4 +1,7 @@
-
+resource "snowflake_warehouse" "t" {
+  name           = var.warehouse
+  warehouse_size = "XSMALL"
+}
 
 resource "snowflake_table" "t" {
   database        = var.database
@@ -12,7 +15,7 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_dynamic_table" "dt" {
-  depends_on = [snowflake_table.t]
+  depends_on = [snowflake_table.t, snowflake_warehouse.t]
   name       = var.name
   database   = var.database
   schema     = var.schema

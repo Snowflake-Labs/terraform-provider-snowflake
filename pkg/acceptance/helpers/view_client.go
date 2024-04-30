@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type ViewClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewViewClient(context *TestClientContext) *ViewClient {
+func NewViewClient(context *TestClientContext, idsGenerator *IdsGenerator) *ViewClient {
 	return &ViewClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -27,7 +28,7 @@ func (c *ViewClient) CreateView(t *testing.T, query string) (*sdk.View, func()) 
 	t.Helper()
 	ctx := context.Background()
 
-	id := c.context.newSchemaObjectIdentifier(random.AlphanumericN(12))
+	id := c.ids.RandomSchemaObjectIdentifier()
 
 	err := c.client().Create(ctx, sdk.NewCreateViewRequest(id, query))
 	require.NoError(t, err)

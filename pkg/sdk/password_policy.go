@@ -251,13 +251,14 @@ func (opts *ShowPasswordPolicyOptions) validate() error {
 
 // PasswordPolicy is a user-friendly result for a CREATE PASSWORD POLICY query.
 type PasswordPolicy struct {
-	CreatedOn    time.Time
-	Name         string
-	DatabaseName string
-	SchemaName   string
-	Kind         string
-	Owner        string
-	Comment      string
+	CreatedOn     time.Time
+	Name          string
+	DatabaseName  string
+	SchemaName    string
+	Kind          string
+	Owner         string
+	Comment       string
+	OwnerRoleType string
 }
 
 func (v *PasswordPolicy) ID() SchemaObjectIdentifier {
@@ -283,13 +284,14 @@ type passwordPolicyDBRow struct {
 
 func (row passwordPolicyDBRow) convert() PasswordPolicy {
 	return PasswordPolicy{
-		CreatedOn:    row.CreatedOn,
-		Name:         row.Name,
-		DatabaseName: row.DatabaseName,
-		SchemaName:   row.SchemaName,
-		Kind:         row.Kind,
-		Owner:        row.Owner,
-		Comment:      row.Comment,
+		CreatedOn:     row.CreatedOn,
+		Name:          row.Name,
+		DatabaseName:  row.DatabaseName,
+		SchemaName:    row.SchemaName,
+		Kind:          row.Kind,
+		Owner:         row.Owner,
+		Comment:       row.Comment,
+		OwnerRoleType: row.OwnerRoleType,
 	}
 }
 

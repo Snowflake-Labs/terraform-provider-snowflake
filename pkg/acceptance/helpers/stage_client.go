@@ -18,11 +18,13 @@ const (
 
 type StageClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewStageClient(context *TestClientContext) *StageClient {
+func NewStageClient(context *TestClientContext, idsGenerator *IdsGenerator) *StageClient {
 	return &StageClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -45,13 +47,13 @@ func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdenti
 
 func (c *StageClient) CreateStageWithDirectory(t *testing.T) (*sdk.Stage, func()) {
 	t.Helper()
-	id := c.context.newSchemaObjectIdentifier(random.AlphaN(8))
+	id := c.ids.RandomSchemaObjectIdentifier()
 	return c.CreateStageWithRequest(t, sdk.NewCreateInternalStageRequest(id).WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true))))
 }
 
 func (c *StageClient) CreateStage(t *testing.T) (*sdk.Stage, func()) {
 	t.Helper()
-	return c.CreateStageInSchema(t, c.context.schemaId())
+	return c.CreateStageInSchema(t, c.ids.SchemaId())
 }
 
 func (c *StageClient) CreateStageInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Stage, func()) {
@@ -115,4 +117,15 @@ func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIde
 		_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))
 		require.NoError(t, err)
 	})
+}
+
+func (c *StageClient) CopyIntoTableFromFile(t *testing.T, table, stage sdk.SchemaObjectIdentifier, filename string) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`COPY INTO %s
+	FROM @%s/%s
+	FILE_FORMAT = (type=json)
+	MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.FullyQualifiedName(), stage.FullyQualifiedName(), filename))
+	require.NoError(t, err)
 }

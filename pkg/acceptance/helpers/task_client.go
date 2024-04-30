@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type TaskClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewTaskClient(context *TestClientContext) *TaskClient {
+func NewTaskClient(context *TestClientContext, idsGenerator *IdsGenerator) *TaskClient {
 	return &TaskClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,8 +26,8 @@ func (c *TaskClient) client() sdk.Tasks {
 
 func (c *TaskClient) defaultCreateTaskRequest(t *testing.T) *sdk.CreateTaskRequest {
 	t.Helper()
-	id := c.context.newSchemaObjectIdentifier(random.AlphanumericN(12))
-	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(c.context.warehouseId()))
+	id := c.ids.RandomSchemaObjectIdentifier()
+	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(c.ids.WarehouseId()))
 	return sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithWarehouse(warehouseReq)
 }
 

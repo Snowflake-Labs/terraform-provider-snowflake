@@ -11,11 +11,13 @@ import (
 
 type ShareClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewShareClient(context *TestClientContext) *ShareClient {
+func NewShareClient(context *TestClientContext, idsGenerator *IdsGenerator) *ShareClient {
 	return &ShareClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -29,6 +31,7 @@ func (c *ShareClient) CreateShare(t *testing.T) (*sdk.Share, func()) {
 	return c.CreateShareWithName(t, random.AlphanumericN(12))
 }
 
+// TODO [SNOW-955520]: we have to control the name
 func (c *ShareClient) CreateShareWithName(t *testing.T, name string) (*sdk.Share, func()) {
 	t.Helper()
 	return c.CreateShareWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateShareOptions{})

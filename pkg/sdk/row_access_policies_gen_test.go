@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestRowAccessPolicies_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateRowAccessPolicyOptions
 	defaultOpts := func() *CreateRowAccessPolicyOptions {
@@ -73,7 +73,7 @@ func TestRowAccessPolicies_Create(t *testing.T) {
 }
 
 func TestRowAccessPolicies_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterRowAccessPolicyOptions
 	defaultOpts := func() *AlterRowAccessPolicyOptions {
@@ -106,7 +106,7 @@ func TestRowAccessPolicies_Alter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newId := RandomSchemaObjectIdentifier()
+		newId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.RenameTo = &newId
@@ -157,7 +157,7 @@ func TestRowAccessPolicies_Alter(t *testing.T) {
 }
 
 func TestRowAccessPolicies_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropRowAccessPolicyOptions
 	defaultOpts := func() *DropRowAccessPolicyOptions {
@@ -218,7 +218,7 @@ func TestRowAccessPolicies_Show(t *testing.T) {
 }
 
 func TestRowAccessPolicies_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeRowAccessPolicyOptions
 	defaultOpts := func() *DescribeRowAccessPolicyOptions {

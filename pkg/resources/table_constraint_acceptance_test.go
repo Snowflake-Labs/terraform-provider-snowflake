@@ -11,14 +11,13 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TableConstraint_fk(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -90,7 +89,7 @@ resource "snowflake_table_constraint" "fk" {
 // It is connected with https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2629.
 // Provider defaults will be reworked during resources redesign.
 func TestAcc_TableConstraint_pk(t *testing.T) {
-	tableName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	tableName := acc.TestClient().Ids.Alpha()
 	constraintName := fmt.Sprintf("%s_pk", tableName)
 
 	resource.Test(t, resource.TestCase{
@@ -169,7 +168,7 @@ func checkPrimaryKeyExists(tableId sdk.SchemaObjectIdentifier, constraintName st
 }
 
 func TestAcc_TableConstraint_unique(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -222,7 +221,7 @@ resource "snowflake_table_constraint" "unique" {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
 func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -254,7 +253,7 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
 func TestAcc_Table_issue2535_existingTable(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },

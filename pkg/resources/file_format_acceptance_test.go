@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_FileFormatCSV(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -83,7 +82,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 }
 
 func TestAcc_FileFormatJSON(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -123,7 +122,7 @@ func TestAcc_FileFormatJSON(t *testing.T) {
 }
 
 func TestAcc_FileFormatAvro(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -152,7 +151,7 @@ func TestAcc_FileFormatAvro(t *testing.T) {
 }
 
 func TestAcc_FileFormatORC(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -180,7 +179,7 @@ func TestAcc_FileFormatORC(t *testing.T) {
 }
 
 func TestAcc_FileFormatParquet(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -210,7 +209,7 @@ func TestAcc_FileFormatParquet(t *testing.T) {
 }
 
 func TestAcc_FileFormatXML(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -243,7 +242,7 @@ func TestAcc_FileFormatXML(t *testing.T) {
 // The following tests check that Terraform will accept the default values generated at creation and not drift.
 // See https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1706
 func TestAcc_FileFormatCSVDefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -272,7 +271,7 @@ func TestAcc_FileFormatCSVDefaults(t *testing.T) {
 }
 
 func TestAcc_FileFormatJSONDefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -301,7 +300,7 @@ func TestAcc_FileFormatJSONDefaults(t *testing.T) {
 }
 
 func TestAcc_FileFormatAVRODefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -330,7 +329,7 @@ func TestAcc_FileFormatAVRODefaults(t *testing.T) {
 }
 
 func TestAcc_FileFormatORCDefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -359,7 +358,7 @@ func TestAcc_FileFormatORCDefaults(t *testing.T) {
 }
 
 func TestAcc_FileFormatPARQUETDefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -388,7 +387,7 @@ func TestAcc_FileFormatPARQUETDefaults(t *testing.T) {
 }
 
 func TestAcc_FileFormatXMLDefaults(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -418,7 +417,7 @@ func TestAcc_FileFormatXMLDefaults(t *testing.T) {
 
 // TestAcc_FileFormat_issue1947 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1947 issue.
 func TestAcc_FileFormat_issue1947(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -451,10 +450,10 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 }
 
 func TestAcc_FileFormat_Rename(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	newName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	comment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	newComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
+	newComment := random.Comment()
 	resourceName := "snowflake_file_format.test"
 
 	resource.Test(t, resource.TestCase{

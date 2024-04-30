@@ -11,11 +11,13 @@ import (
 
 type PasswordPolicyClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewPasswordPolicyClient(context *TestClientContext) *PasswordPolicyClient {
+func NewPasswordPolicyClient(context *TestClientContext, idsGenerator *IdsGenerator) *PasswordPolicyClient {
 	return &PasswordPolicyClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,7 +27,7 @@ func (c *PasswordPolicyClient) client() sdk.PasswordPolicies {
 
 func (c *PasswordPolicyClient) CreatePasswordPolicy(t *testing.T) (*sdk.PasswordPolicy, func()) {
 	t.Helper()
-	return c.CreatePasswordPolicyInSchema(t, c.context.schemaId())
+	return c.CreatePasswordPolicyInSchema(t, c.ids.SchemaId())
 }
 
 func (c *PasswordPolicyClient) CreatePasswordPolicyInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.PasswordPolicy, func()) {
@@ -35,7 +37,7 @@ func (c *PasswordPolicyClient) CreatePasswordPolicyInSchema(t *testing.T, schema
 
 func (c *PasswordPolicyClient) CreatePasswordPolicyWithOptions(t *testing.T, options *sdk.CreatePasswordPolicyOptions) (*sdk.PasswordPolicy, func()) {
 	t.Helper()
-	return c.CreatePasswordPolicyInSchemaWithOptions(t, c.context.schemaId(), options)
+	return c.CreatePasswordPolicyInSchemaWithOptions(t, c.ids.SchemaId(), options)
 }
 
 func (c *PasswordPolicyClient) CreatePasswordPolicyInSchemaWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, options *sdk.CreatePasswordPolicyOptions) (*sdk.PasswordPolicy, func()) {

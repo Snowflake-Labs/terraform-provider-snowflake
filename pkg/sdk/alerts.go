@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -218,35 +219,37 @@ func (v *Alert) ObjectType() ObjectType {
 }
 
 type Alert struct {
-	CreatedOn    time.Time
-	Name         string
-	DatabaseName string
-	SchemaName   string
-	Owner        string
-	Comment      *string
-	Warehouse    string
-	Schedule     string
-	State        AlertState
-	Condition    string
-	Action       string
+	CreatedOn     time.Time
+	Name          string
+	DatabaseName  string
+	SchemaName    string
+	Owner         string
+	Comment       *string
+	Warehouse     string
+	Schedule      string
+	State         AlertState
+	Condition     string
+	Action        string
+	OwnerRoleType string
 }
 
 type alertDBRow struct {
-	CreatedOn    time.Time `db:"created_on"`
-	Name         string    `db:"name"`
-	DatabaseName string    `db:"database_name"`
-	SchemaName   string    `db:"schema_name"`
-	Owner        string    `db:"owner"`
-	Comment      *string   `db:"comment"`
-	Warehouse    string    `db:"warehouse"`
-	Schedule     string    `db:"schedule"`
-	State        string    `db:"state"` // suspended, started
-	Condition    string    `db:"condition"`
-	Action       string    `db:"action"`
+	CreatedOn     time.Time      `db:"created_on"`
+	Name          string         `db:"name"`
+	DatabaseName  string         `db:"database_name"`
+	SchemaName    string         `db:"schema_name"`
+	Owner         string         `db:"owner"`
+	Comment       *string        `db:"comment"`
+	Warehouse     string         `db:"warehouse"`
+	Schedule      string         `db:"schedule"`
+	State         string         `db:"state"` // suspended, started
+	Condition     string         `db:"condition"`
+	Action        string         `db:"action"`
+	OwnerRoleType sql.NullString `db:"owner_role_type"`
 }
 
 func (row alertDBRow) convert() *Alert {
-	return &Alert{
+	alert := &Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -259,6 +262,11 @@ func (row alertDBRow) convert() *Alert {
 		Condition:    row.Condition,
 		Action:       row.Action,
 	}
+	if row.OwnerRoleType.Valid {
+		alert.OwnerRoleType = row.OwnerRoleType.String
+	}
+
+	return alert
 }
 
 func (opts *ShowAlertOptions) validate() error {

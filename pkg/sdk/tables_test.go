@@ -9,7 +9,7 @@ import (
 )
 
 func TestTableCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	sampleColumnName := "FIRST_COLUMN"
 	sampleColumnType := DataTypeVARCHAR
 
@@ -65,7 +65,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: both expression and identity of a column are present", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = RandomSchemaObjectIdentifier()
+		opts.name = randomSchemaObjectIdentifier()
 		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
 			Columns: []TableColumn{{
 				Name: "a",
@@ -83,7 +83,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: both order and noorder are present for identity", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = RandomSchemaObjectIdentifier()
+		opts.name = randomSchemaObjectIdentifier()
 		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
 			Columns: []TableColumn{{
 				Name: "a",
@@ -102,7 +102,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: column masking policy incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = RandomSchemaObjectIdentifier()
+		opts.name = randomSchemaObjectIdentifier()
 		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
 			Columns: []TableColumn{{
 				Name: "a",
@@ -116,7 +116,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = RandomSchemaObjectIdentifier()
+		opts.name = randomSchemaObjectIdentifier()
 		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
 			Columns: []TableColumn{{
 				Name: "a",
@@ -303,7 +303,7 @@ func TestTableCreate(t *testing.T) {
 		outOfLineConstraint := OutOfLineConstraint{
 			Type: ColumnConstraintTypeUnique,
 			ForeignKey: &OutOfLineForeignKey{
-				TableName: RandomSchemaObjectIdentifier(),
+				TableName: randomSchemaObjectIdentifier(),
 			},
 		}
 		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
@@ -377,7 +377,7 @@ func TestTableCreate(t *testing.T) {
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
 		maskingPolicy := ColumnMaskingPolicy{
-			Name:  RandomSchemaObjectIdentifier(),
+			Name:  randomSchemaObjectIdentifier(),
 			Using: []string{"FOO", "BAR"},
 		}
 		columnTags := []TagAssociation{
@@ -411,7 +411,7 @@ func TestTableCreate(t *testing.T) {
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
-				TableName:   RandomSchemaObjectIdentifier(),
+				TableName:   randomSchemaObjectIdentifier(),
 				ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
 				Match:       Pointer(FullMatchType),
 				On: &ForeignKeyOnAction{
@@ -439,7 +439,7 @@ func TestTableCreate(t *testing.T) {
 			OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 		}
 		rowAccessPolicy := TableRowAccessPolicy{
-			Name: RandomSchemaObjectIdentifier(),
+			Name: randomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
 		columns := []TableColumn{{
@@ -508,7 +508,7 @@ func TestTableCreate(t *testing.T) {
 }
 
 func TestTableCreateAsSelect(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableAsSelectOptions {
 		return &createTableAsSelectOptions{
@@ -541,15 +541,15 @@ func TestTableCreateAsSelect(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		id := RandomSchemaObjectIdentifier()
+		id := randomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
 		require.NoError(t, err)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
-			Name: RandomSchemaObjectIdentifier(),
+			Name: randomSchemaObjectIdentifier(),
 		}
 		rowAccessPolicy := TableRowAccessPolicy{
-			Name: RandomSchemaObjectIdentifier(),
+			Name: randomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
 		opts := &createTableAsSelectOptions{
@@ -577,7 +577,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 }
 
 func TestTableCreateUsingTemplate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableUsingTemplateOptions {
 		return &createTableUsingTemplateOptions{
@@ -597,7 +597,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		id := RandomSchemaObjectIdentifier()
+		id := randomSchemaObjectIdentifier()
 		opts := &createTableUsingTemplateOptions{
 			OrReplace:  Bool(true),
 			name:       id,
@@ -609,7 +609,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 }
 
 func TestTableCreateLike(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableLikeOptions {
 		return &createTableLikeOptions{
@@ -641,8 +641,8 @@ func TestTableCreateLike(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		id := RandomSchemaObjectIdentifier()
-		sourceTable := RandomSchemaObjectIdentifier()
+		id := randomSchemaObjectIdentifier()
+		sourceTable := randomSchemaObjectIdentifier()
 		opts := &createTableLikeOptions{
 			OrReplace:   Bool(true),
 			name:        id,
@@ -655,7 +655,7 @@ func TestTableCreateLike(t *testing.T) {
 }
 
 func TestTableCreateClone(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableCloneOptions {
 		return &createTableCloneOptions{
@@ -687,8 +687,8 @@ func TestTableCreateClone(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		id := RandomSchemaObjectIdentifier()
-		sourceTable := RandomSchemaObjectIdentifier()
+		id := randomSchemaObjectIdentifier()
+		sourceTable := randomSchemaObjectIdentifier()
 		clonePoint := ClonePoint{
 			Moment: CloneMomentAt,
 			At: TimeTravel{
@@ -707,7 +707,7 @@ func TestTableCreateClone(t *testing.T) {
 }
 
 func TestTableAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *alterTableOptions {
 		return &alterTableOptions{
@@ -1050,7 +1050,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter: set masking policy", func(t *testing.T) {
-		maskingPolicyName := RandomSchemaObjectIdentifier()
+		maskingPolicyName := randomSchemaObjectIdentifier()
 		opts := &alterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
@@ -1176,7 +1176,7 @@ func TestTableAlter(t *testing.T) {
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
-				TableName:   RandomSchemaObjectIdentifier(),
+				TableName:   randomSchemaObjectIdentifier(),
 				ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
 				Match:       Pointer(FullMatchType),
 				On: &ForeignKeyOnAction{
@@ -1380,7 +1380,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("add row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := &alterTableOptions{
 			name: id,
@@ -1393,7 +1393,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("drop row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := &alterTableOptions{
 			name: id,
@@ -1405,8 +1405,8 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("drop and add row access policy", func(t *testing.T) {
-		rowAccessPolicyId1 := RandomSchemaObjectIdentifier()
-		rowAccessPolicyId2 := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId1 := randomSchemaObjectIdentifier()
+		rowAccessPolicyId2 := randomSchemaObjectIdentifier()
 
 		opts := &alterTableOptions{
 			name: id,
@@ -1433,7 +1433,7 @@ func TestTableAlter(t *testing.T) {
 }
 
 func TestTableDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *dropTableOptions {
 		return &dropTableOptions{
@@ -1472,7 +1472,7 @@ func TestTableDrop(t *testing.T) {
 }
 
 func TestTableShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *showTableOptions {
 		return &showTableOptions{}
@@ -1504,7 +1504,7 @@ func TestTableShow(t *testing.T) {
 }
 
 func TestTableDescribeColumns(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *describeTableColumnsOptions {
 		return &describeTableColumnsOptions{
 			name: id,
@@ -1581,7 +1581,7 @@ func TestTableColumnDetailsRow_SplitTypeAndCollation(t *testing.T) {
 }
 
 func TestTableDescribeStage(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *describeTableStageOptions {
 		return &describeTableStageOptions{
 			name: id,

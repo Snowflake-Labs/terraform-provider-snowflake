@@ -19,7 +19,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 	ctx := context.Background()
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		name := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),
 		}
@@ -46,6 +46,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, name.Name(), dynamicTableById.Name)
 		require.Equal(t, testWarehouse(t).ID().Name(), dynamicTableById.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, dynamicTableById.TargetLag)
+		assert.Equal(t, "ROLE", dynamicTableById.OwnerRoleType)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {

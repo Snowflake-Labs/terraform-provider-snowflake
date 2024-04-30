@@ -15,7 +15,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("minimal", func(t *testing.T) {
-		databaseID := sdk.RandomAccountObjectIdentifier()
+		databaseID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Databases.Create(ctx, databaseID, nil)
 		require.NoError(t, err)
 		database, err := client.Databases.ShowByID(ctx, databaseID)
@@ -30,7 +30,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	t.Run("as clone", func(t *testing.T) {
 		cloneDatabase, cloneDatabaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(cloneDatabaseCleanup)
-		databaseID := sdk.RandomAccountObjectIdentifier()
+		databaseID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateDatabaseOptions{
 			Clone: &sdk.Clone{
 				SourceObject: cloneDatabase.ID(),
@@ -51,7 +51,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
-		databaseID := sdk.RandomAccountObjectIdentifier()
+		databaseID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		// new database and schema created on purpose
 		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
@@ -143,7 +143,7 @@ func TestInt_CreateShared(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	databaseID := sdk.RandomAccountObjectIdentifier()
+	databaseID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 	err = client.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -219,7 +219,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 	t.Run("renaming", func(t *testing.T) {
 		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
-		newName := sdk.RandomAccountObjectIdentifier()
+		newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
 		})
@@ -329,6 +329,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		}
 		assert.Contains(t, databaseIDs, databaseTest.ID())
 		assert.Contains(t, databaseIDs, databaseTest2.ID())
+		assert.Equal(t, "ROLE", databases[0].OwnerRoleType)
 	})
 
 	t.Run("with terse", func(t *testing.T) {

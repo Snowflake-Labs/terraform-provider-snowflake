@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 type ApiIntegrationClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewApiIntegrationClient(context *TestClientContext) *ApiIntegrationClient {
+func NewApiIntegrationClient(context *TestClientContext, idsGenerator *IdsGenerator) *ApiIntegrationClient {
 	return &ApiIntegrationClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -27,7 +28,7 @@ func (c *ApiIntegrationClient) CreateApiIntegration(t *testing.T) (*sdk.ApiInteg
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewAccountObjectIdentifier(random.AlphanumericN(12))
+	id := c.ids.RandomAccountObjectIdentifier()
 	apiAllowedPrefixes := []sdk.ApiIntegrationEndpointPrefix{{Path: "https://xyz.execute-api.us-west-2.amazonaws.com/production"}}
 	req := sdk.NewCreateApiIntegrationRequest(id, apiAllowedPrefixes, true)
 	req.WithAwsApiProviderParams(sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiGateway, "arn:aws:iam::123456789012:role/hello_cloud_account_role"))

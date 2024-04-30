@@ -37,7 +37,7 @@ func TestRolesCreate(t *testing.T) {
 
 	t.Run("validation: one of OrReplace, IfNotExists", func(t *testing.T) {
 		opts := &CreateRoleOptions{
-			name:        RandomAccountObjectIdentifier(),
+			name:        randomAccountObjectIdentifier(),
 			IfNotExists: Bool(true),
 			OrReplace:   Bool(true),
 		}
@@ -133,14 +133,14 @@ func TestRolesAlter(t *testing.T) {
 
 	t.Run("validation: no alter action specified", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name: RandomAccountObjectIdentifier(),
+			name: randomAccountObjectIdentifier(),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: more than one alter action specified", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name:         RandomAccountObjectIdentifier(),
+			name:         randomAccountObjectIdentifier(),
 			SetComment:   String("comment"),
 			UnsetComment: Bool(true),
 		}
@@ -221,7 +221,7 @@ func TestRolesGrant(t *testing.T) {
 	t.Run("validation: invalid object identifier for granted role", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("")
 		opts := &GrantRoleOptions{
-			name: RandomAccountObjectIdentifier(),
+			name: randomAccountObjectIdentifier(),
 			Grant: GrantRole{
 				Role: &id,
 			},
@@ -232,7 +232,7 @@ func TestRolesGrant(t *testing.T) {
 	t.Run("validation: invalid object identifier for granted user", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("")
 		opts := &GrantRoleOptions{
-			name: RandomAccountObjectIdentifier(),
+			name: randomAccountObjectIdentifier(),
 			Grant: GrantRole{
 				User: &id,
 			},

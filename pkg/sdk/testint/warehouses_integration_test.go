@@ -13,7 +13,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	id := sdk.RandomAccountObjectIdentifier()
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 	// new warehouses created on purpose
 	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
 		WarehouseSize: &sdk.WarehouseSizeSmall,
@@ -39,6 +39,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 		assert.Equal(t, 1, len(warehouses))
 		assert.Equal(t, warehouse.Name, warehouses[0].Name)
 		assert.Equal(t, sdk.WarehouseSizeSmall, warehouses[0].Size)
+		assert.Equal(t, "ROLE", warehouses[0].OwnerRoleType)
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
@@ -62,7 +63,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 			OrReplace:                       sdk.Bool(true),
 			WarehouseType:                   &sdk.WarehouseTypeStandard,
@@ -127,7 +128,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -192,7 +193,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	t.Cleanup(tagCleanup2)
 
 	t.Run("terraform acc test", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateWarehouseOptions{
 			Comment:            sdk.String("test comment"),
 			WarehouseSize:      &sdk.WarehouseSizeXSmall,
@@ -223,7 +224,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
 
 		// rename
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: &newID,
 		}
@@ -281,7 +282,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: &newID,
 		}
@@ -304,7 +305,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 			Comment:         sdk.String("test comment"),
 			MaxClusterCount: sdk.Int(10),
 		}
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, createOptions)
 		t.Cleanup(warehouseCleanup)

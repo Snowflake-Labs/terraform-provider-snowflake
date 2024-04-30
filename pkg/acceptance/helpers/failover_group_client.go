@@ -10,11 +10,13 @@ import (
 
 type FailoverGroupClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewFailoverGroupClient(context *TestClientContext) *FailoverGroupClient {
+func NewFailoverGroupClient(context *TestClientContext, idsGenerator *IdsGenerator) *FailoverGroupClient {
 	return &FailoverGroupClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,9 +27,7 @@ func (c *FailoverGroupClient) client() sdk.FailoverGroups {
 func (c *FailoverGroupClient) CreateFailoverGroup(t *testing.T) (*sdk.FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
-	currentAccount, err := c.context.client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
+	accountID := c.ids.AccountIdentifierWithLocator()
 	allowedAccounts := []sdk.AccountIdentifier{accountID}
 	return c.CreateFailoverGroupWithOptions(t, objectTypes, allowedAccounts, nil)
 }
@@ -36,7 +36,7 @@ func (c *FailoverGroupClient) CreateFailoverGroupWithOptions(t *testing.T, objec
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.RandomAlphanumericAccountObjectIdentifier()
+	id := c.ids.RandomAccountObjectIdentifier()
 
 	err := c.client().Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
