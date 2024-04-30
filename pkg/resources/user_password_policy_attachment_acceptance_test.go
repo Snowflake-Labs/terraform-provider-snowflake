@@ -23,6 +23,9 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
+				PreConfig: func() {
+					acc.TestClient().Warehouse.UseWarehouse(t, acc.TestClient().Ids.WarehouseId())
+				},
 				Config: userPasswordPolicyAttachmentConfig(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),

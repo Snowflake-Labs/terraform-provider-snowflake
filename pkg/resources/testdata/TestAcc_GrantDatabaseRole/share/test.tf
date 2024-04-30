@@ -32,4 +32,5 @@ resource "snowflake_grant_privileges_to_share" "test" {
 resource "snowflake_grant_database_role" "test" {
   database_role_name = "\"${snowflake_database.test.name}\".\"${snowflake_database_role.test.name}\""
   share_name         = snowflake_share.test.name
+  depends_on         = [snowflake_grant_privileges_to_share.test]
 }
