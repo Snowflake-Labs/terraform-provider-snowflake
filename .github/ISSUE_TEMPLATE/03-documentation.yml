@@ -1,6 +1,6 @@
 name: Documentation
 description: Issues or feature requests for the documentation.
-title: [Docs]:
+title: "[Docs]: "
 labels: ["docs"]
 body:
   # TODO(SNOW-1003360): Link doc how to submit issues and FAQ
