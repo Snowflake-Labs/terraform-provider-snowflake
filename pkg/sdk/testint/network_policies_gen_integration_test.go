@@ -77,7 +77,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}})))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.Pointer(sdk.AllowedIPListRequest{[]sdk.IP{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}}}))))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
@@ -86,6 +86,23 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 2, np.EntriesInAllowedIpList)
+	})
+
+	t.Run("Alter - set empty allowed ip list", func(t *testing.T) {
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req)
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.Pointer(sdk.AllowedIPListRequest{}))))
+		require.NoError(t, err)
+
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
+		require.NoError(t, err)
+
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInAllowedIpList)
 	})
 
 	t.Run("Alter - unset allowed ip list", func(t *testing.T) {
@@ -111,7 +128,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}})))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.Pointer(sdk.BlockedIPListRequest{[]sdk.IP{{IP: "123.0.0.1"}}}))))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
@@ -120,6 +137,23 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 1, np.EntriesInBlockedIpList)
+	})
+
+	t.Run("Alter - set empty blocked ip list", func(t *testing.T) {
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req)
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.Pointer(sdk.BlockedIPListRequest{}))))
+		require.NoError(t, err)
+
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
+		require.NoError(t, err)
+
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInBlockedIpList)
 	})
 
 	t.Run("Alter - unset blocked ip list", func(t *testing.T) {
@@ -147,12 +181,44 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList([]sdk.SchemaObjectIdentifier{allowedNetworkRule, allowedNetworkRule2})))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.Pointer(
+				sdk.AllowedNetworkRuleListRequest{[]sdk.SchemaObjectIdentifier{allowedNetworkRule, allowedNetworkRule2}}))))
 		require.NoError(t, err)
 
 		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
 		require.NoError(t, err)
 		assert.Equal(t, 2, np.EntriesInAllowedNetworkRules)
+	})
+
+	t.Run("Alter - set empty allowed network rule list", func(t *testing.T) {
+		allowedNetworkRule := createNetworkRuleHandle(t, client)
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req.WithAllowedNetworkRuleList([]sdk.SchemaObjectIdentifier{allowedNetworkRule}))
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.Pointer(
+				sdk.AllowedNetworkRuleListRequest{}))))
+		require.NoError(t, err)
+
+		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInAllowedNetworkRules)
+	})
+
+	t.Run("Alter - unset allowed network rule list", func(t *testing.T) {
+		allowedNetworkRule := createNetworkRuleHandle(t, client)
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req.WithAllowedNetworkRuleList([]sdk.SchemaObjectIdentifier{allowedNetworkRule}))
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithUnset(sdk.NewNetworkPolicyUnsetRequest().WithAllowedNetworkRuleList(sdk.Bool(true))))
+		require.NoError(t, err)
+
+		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInAllowedNetworkRules)
 	})
 
 	t.Run("Alter - set blocked network rule list", func(t *testing.T) {
@@ -163,12 +229,43 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList([]sdk.SchemaObjectIdentifier{blockedNetworkRule})))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.Pointer(sdk.BlockedNetworkRuleListRequest{[]sdk.SchemaObjectIdentifier{blockedNetworkRule}}))))
 		require.NoError(t, err)
 
 		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
 		require.NoError(t, err)
 		assert.Equal(t, 1, np.EntriesInBlockedNetworkRules)
+	})
+
+	t.Run("Alter - set empty allowed network rule list", func(t *testing.T) {
+		blockedNetworkRule := createNetworkRuleHandle(t, client)
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req.WithBlockedNetworkRuleList([]sdk.SchemaObjectIdentifier{blockedNetworkRule}))
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.Pointer(
+				sdk.BlockedNetworkRuleListRequest{}))))
+		require.NoError(t, err)
+
+		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInAllowedNetworkRules)
+	})
+
+	t.Run("Alter - unset blocked network rule list", func(t *testing.T) {
+		blockedNetworkRule := createNetworkRuleHandle(t, client)
+		req := defaultCreateRequest()
+		_, dropNetworkPolicy := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, req.WithBlockedNetworkRuleList([]sdk.SchemaObjectIdentifier{blockedNetworkRule}))
+		t.Cleanup(dropNetworkPolicy)
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithUnset(sdk.NewNetworkPolicyUnsetRequest().WithBlockedNetworkRuleList(sdk.Bool(true))))
+		require.NoError(t, err)
+
+		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Equal(t, 0, np.EntriesInBlockedNetworkRules)
 	})
 
 	t.Run("Alter - add and remove allowed network rule list", func(t *testing.T) {

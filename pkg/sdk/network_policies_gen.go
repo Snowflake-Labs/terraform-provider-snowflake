@@ -24,6 +24,10 @@ type CreateNetworkPolicyOptions struct {
 	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
+func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type IP struct {
 	IP string `ddl:"keyword,single_quotes"`
 }
