@@ -77,7 +77,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList([]sdk.IPRequest{{"123.0.0.1"}, {"125.0.0.1"}}))))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList([]sdk.IPRequest{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}}))))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
@@ -128,7 +128,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList([]sdk.IPRequest{{"123.0.0.1"}}))))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList([]sdk.IPRequest{{IP: "123.0.0.1"}}))))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
