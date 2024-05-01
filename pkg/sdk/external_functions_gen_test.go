@@ -5,7 +5,7 @@ import (
 )
 
 func TestExternalFunctions_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateExternalFunctionOptions {
 		return &CreateExternalFunctionOptions{
@@ -94,7 +94,7 @@ func TestExternalFunctions_Create(t *testing.T) {
 }
 
 func TestExternalFunctions_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterExternalFunctionOptions {
 		return &AlterExternalFunctionOptions{
@@ -209,7 +209,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 
 	t.Run("alter: set request translator", func(t *testing.T) {
 		opts := defaultOpts()
-		rt := RandomSchemaObjectIdentifier()
+		rt := randomSchemaObjectIdentifier()
 		opts.Set = &ExternalFunctionSet{
 			RequestTranslator: &rt,
 		}
@@ -218,7 +218,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 
 	t.Run("alter: set response translator", func(t *testing.T) {
 		opts := defaultOpts()
-		st := RandomSchemaObjectIdentifier()
+		st := randomSchemaObjectIdentifier()
 		opts.Set = &ExternalFunctionSet{
 			ResponseTranslator: &st,
 		}
@@ -282,7 +282,7 @@ func TestExternalFunctions_Show(t *testing.T) {
 	})
 
 	t.Run("show with in", func(t *testing.T) {
-		id := RandomDatabaseObjectIdentifier()
+		id := randomDatabaseObjectIdentifier()
 		opts := defaultOpts()
 		opts.In = &In{
 			Schema: id,
@@ -292,7 +292,7 @@ func TestExternalFunctions_Show(t *testing.T) {
 }
 
 func TestExternalFunctions_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeExternalFunctionOptions {
 		return &DescribeExternalFunctionOptions{

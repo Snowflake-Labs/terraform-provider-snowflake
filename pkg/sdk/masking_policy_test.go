@@ -7,7 +7,7 @@ import (
 )
 
 func TestMaskingPolicyCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	signature := []TableColumnSignature{
 		{
 			Name: "col1",
@@ -77,7 +77,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 
 // TODO: add tests for body and tags
 func TestMaskingPolicyAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{}
@@ -123,7 +123,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 }
 
 func TestMaskingPolicyDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{}
@@ -136,10 +136,18 @@ func TestMaskingPolicyDrop(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP MASKING POLICY %s", id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropMaskingPolicyOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP MASKING POLICY IF EXISTS %s", id.FullyQualifiedName())
+	})
 }
 
 func TestMaskingPolicyShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowMaskingPolicyOptions{}
@@ -202,7 +210,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 }
 
 func TestMaskingPolicyDescribe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describeMaskingPolicyOptions{}

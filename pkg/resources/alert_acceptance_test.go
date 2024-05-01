@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 	"testing"
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -35,7 +33,7 @@ type (
 )
 
 var (
-	alertName = "a_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	alertName = acc.TestClient().Ids.Alpha()
 
 	alertInitialState = &AccAlertTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,

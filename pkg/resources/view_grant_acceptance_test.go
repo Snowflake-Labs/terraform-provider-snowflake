@@ -3,20 +3,18 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_ViewGrantBasic(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -54,9 +52,9 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 }
 
 func TestAcc_ViewGrantShares(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
+	roleName := acc.TestClient().Ids.Alpha()
+	shareName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -86,7 +84,7 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 }
 
 func TestAcc_ViewGrantChange(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -216,7 +214,7 @@ resource "snowflake_view_grant" "test" {
 }
 
 func TestAcc_ViewGrantOnAll(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

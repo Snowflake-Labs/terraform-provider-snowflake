@@ -22,8 +22,8 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
-	idLowerCase := strings.ToLower(generateUnsafeExecuteTestDatabaseName(t))
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	idLowerCase := strings.ToLower(acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name())
 	idLowerCaseEscaped := fmt.Sprintf(`"%s"`, idLowerCase)
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
@@ -90,7 +90,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_withRead(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -136,7 +136,7 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -185,7 +185,7 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -269,8 +269,8 @@ func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
-	updatedId := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	invalidDropStatement := "drop database"
@@ -361,7 +361,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	notMatchingRevert := "select 1"
@@ -424,7 +424,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -502,7 +502,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	roleId := generateUnsafeExecuteTestRoleName(t)
 	privilege := sdk.AccountObjectPrivilegeCreateSchema
 	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId)
@@ -560,8 +560,8 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
 
-	dbId1 := generateUnsafeExecuteTestDatabaseName(t)
-	dbId2 := generateUnsafeExecuteTestDatabaseName(t)
+	dbId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	dbId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
 	roleId1 := generateUnsafeExecuteTestRoleName(t)
 	roleId2 := generateUnsafeExecuteTestRoleName(t)
 	privilege1 := sdk.AccountObjectPrivilegeCreateSchema
@@ -691,17 +691,6 @@ output "unsafe" {
   value = snowflake_unsafe_execute.test.query_results
 }
 `, queryNumber)
-}
-
-// generateUnsafeExecuteTestDatabaseName returns capitalized name on purpose.
-// Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
-func generateUnsafeExecuteTestDatabaseName(t *testing.T) string {
-	t.Helper()
-	id, err := rand.Int(rand.Reader, big.NewInt(10000))
-	if err != nil {
-		t.Fatalf("Failed to generate database id: %v", err)
-	}
-	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", id)
 }
 
 // generateUnsafeExecuteTestRoleName returns capitalized name on purpose.

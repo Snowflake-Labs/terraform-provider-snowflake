@@ -7,8 +7,8 @@ import (
 )
 
 func TestApplications_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
-	pid := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
+	pid := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateApplicationOptions {
 		return &CreateApplicationOptions{
@@ -93,7 +93,7 @@ func TestApplications_Create(t *testing.T) {
 }
 
 func TestApplications_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *AlterApplicationOptions {
 		return &AlterApplicationOptions{
@@ -230,7 +230,7 @@ func TestApplications_Alter(t *testing.T) {
 }
 
 func TestApplications_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DropApplicationOptions {
 		return &DropApplicationOptions{
@@ -257,7 +257,7 @@ func TestApplications_Drop(t *testing.T) {
 }
 
 func TestApplications_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DescribeApplicationOptions {
 		return &DescribeApplicationOptions{

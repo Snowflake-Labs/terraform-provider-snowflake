@@ -82,14 +82,15 @@ func (s *AlterDynamicTableRequest) toOpts() *alterDynamicTableOptions {
 		opts.Refresh = s.refresh
 	}
 	if s.set != nil {
-		opts.Set = &DynamicTableSet{s.set.targetLag, s.set.warehourse}
+		opts.Set = &DynamicTableSet{s.set.targetLag, s.set.warehouse}
 	}
 	return &opts
 }
 
 func (s *DropDynamicTableRequest) toOpts() *dropDynamicTableOptions {
 	return &dropDynamicTableOptions{
-		name: s.name,
+		name:     s.name,
+		IfExists: s.IfExists,
 	}
 }
 

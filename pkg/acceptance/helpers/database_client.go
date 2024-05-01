@@ -11,11 +11,13 @@ import (
 
 type DatabaseClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewDatabaseClient(context *TestClientContext) *DatabaseClient {
+func NewDatabaseClient(context *TestClientContext, idsGenerator *IdsGenerator) *DatabaseClient {
 	return &DatabaseClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -25,9 +27,10 @@ func (c *DatabaseClient) client() sdk.Databases {
 
 func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	t.Helper()
-	return c.CreateDatabaseWithOptions(t, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
+	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
+// TODO [SNOW-955520]: we have to control the name
 func (c *DatabaseClient) CreateDatabaseWithName(t *testing.T, name string) (*sdk.Database, func()) {
 	t.Helper()
 	return c.CreateDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateDatabaseOptions{})
@@ -36,10 +39,13 @@ func (c *DatabaseClient) CreateDatabaseWithName(t *testing.T, name string) (*sdk
 func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
+
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
+
 	database, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
+
 	return database, c.DropDatabaseFunc(t, id)
 }
 
@@ -50,7 +56,7 @@ func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIden
 	return func() {
 		err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
 		require.NoError(t, err)
 	}
 }
@@ -79,7 +85,7 @@ func (c *DatabaseClient) CreateSecondaryDatabaseWithOptions(t *testing.T, id sdk
 		// TODO [926148]: make this wait better with tests stabilization
 		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
 		time.Sleep(1 * time.Second)
-		err = c.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
 		require.NoError(t, err)
 	}
 }

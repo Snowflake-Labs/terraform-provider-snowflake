@@ -104,6 +104,7 @@ type AddPatchForVersion struct {
 type DropApplicationPackageOptions struct {
 	drop               bool                    `ddl:"static" sql:"DROP"`
 	applicationPackage bool                    `ddl:"static" sql:"APPLICATION PACKAGE"`
+	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name               AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -142,4 +143,8 @@ type ApplicationPackage struct {
 	Options          string
 	DroppedOn        string
 	ApplicationClass string
+}
+
+func (a *ApplicationPackage) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(a.Name)
 }

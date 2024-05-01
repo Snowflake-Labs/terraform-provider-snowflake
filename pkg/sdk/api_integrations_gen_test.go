@@ -14,7 +14,7 @@ const (
 )
 
 func TestApiIntegrations_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateApiIntegrationOptions for AWS
 	defaultOptsAws := func() *CreateApiIntegrationOptions {
@@ -123,7 +123,7 @@ func TestApiIntegrations_Create(t *testing.T) {
 }
 
 func TestApiIntegrations_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterApiIntegrationOptions
 	defaultOpts := func() *AlterApiIntegrationOptions {
@@ -303,7 +303,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 }
 
 func TestApiIntegrations_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropApiIntegrationOptions
 	defaultOpts := func() *DropApiIntegrationOptions {
@@ -331,7 +331,7 @@ func TestApiIntegrations_Drop(t *testing.T) {
 }
 
 func TestApiIntegrations_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowApiIntegrationOptions
 	defaultOpts := func() *ShowApiIntegrationOptions {
@@ -358,7 +358,7 @@ func TestApiIntegrations_Show(t *testing.T) {
 }
 
 func TestApiIntegrations_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DescribeApiIntegrationOptions
 	defaultOpts := func() *DescribeApiIntegrationOptions {

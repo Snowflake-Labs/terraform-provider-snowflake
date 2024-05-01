@@ -2,18 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_SequenceGrant_onFuture(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -47,7 +45,7 @@ func TestAcc_SequenceGrant_onFuture(t *testing.T) {
 }
 
 func TestAcc_SequenceGrant_onAll(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

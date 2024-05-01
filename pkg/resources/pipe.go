@@ -263,7 +263,7 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.Pipes.Drop(ctx, objectIdentifier)
+	err := client.Pipes.Drop(ctx, objectIdentifier, &sdk.DropPipeOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

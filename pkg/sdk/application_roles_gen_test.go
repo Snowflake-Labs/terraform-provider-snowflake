@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestApplicationRoles_Show(t *testing.T) {
-	appId := RandomAccountObjectIdentifier()
+	appId := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowApplicationRoleOptions
 	defaultOpts := func() *ShowApplicationRoleOptions {

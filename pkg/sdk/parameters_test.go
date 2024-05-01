@@ -6,7 +6,7 @@ import (
 
 // TODO: add more tests
 func TestSetObjectParameterOnObject(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *setParameterOnObject {
 		return &setParameterOnObject{

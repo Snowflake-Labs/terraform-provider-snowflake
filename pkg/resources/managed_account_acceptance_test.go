@@ -2,14 +2,12 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -22,9 +20,9 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	// TODO [SNOW-1011985]: unskip the tests
 	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	adminName := acc.TestClient().Ids.Alpha()
+	adminPass := acc.TestClient().Ids.AlphaWithPrefix("A1")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

@@ -33,12 +33,13 @@ type AlterDynamicTableRequest struct {
 }
 
 type DynamicTableSetRequest struct {
-	targetLag  *TargetLag
-	warehourse *AccountObjectIdentifier
+	targetLag *TargetLag
+	warehouse *AccountObjectIdentifier
 }
 
 type DropDynamicTableRequest struct {
-	name SchemaObjectIdentifier // required
+	name     SchemaObjectIdentifier // required
+	IfExists *bool
 }
 
 type DescribeDynamicTableRequest struct {

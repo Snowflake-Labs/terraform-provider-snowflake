@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
@@ -34,7 +33,7 @@ func TestAcc_StorageIntegration_Empty_StorageAllowedLocations(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_AWSObjectACL_Update(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := func(awsObjectACLSet bool) config.Variables {
 		variables := config.Variables{
 			"name": config.StringVariable(name),
@@ -88,7 +87,7 @@ func TestAcc_StorageIntegration_AWSObjectACL_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 	awsRoleArn := "arn:aws:iam::000000000001:/role/test"
 	configVariables := func(set bool) config.Variables {
 		variables := config.Variables{
@@ -173,7 +172,7 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 func TestAcc_StorageIntegration_Azure_Update(t *testing.T) {
 	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
 
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 	azureTenantId, err := uuid.GenerateUUID()
 	require.NoError(t, err)
 	configVariables := func(set bool) config.Variables {
@@ -253,7 +252,7 @@ func TestAcc_StorageIntegration_Azure_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := func(set bool) config.Variables {
 		variables := config.Variables{
 			"name": config.StringVariable(name),

@@ -154,7 +154,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	createS3StorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, s3AllowedLocations).
 			WithIfNotExists(sdk.Bool(true)).
 			WithS3StorageProviderParams(sdk.NewS3StorageParamsRequest(awsRoleARN)).
@@ -175,7 +175,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	createGCSStorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, gcsAllowedLocations).
 			WithIfNotExists(sdk.Bool(true)).
 			WithGCSStorageProviderParams(sdk.NewGCSStorageParamsRequest()).
@@ -196,7 +196,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	createAzureStorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, azureAllowedLocations).
 			WithIfNotExists(sdk.Bool(true)).
 			WithAzureStorageProviderParams(sdk.NewAzureStorageParamsRequest(sdk.String(azureTenantId))).
@@ -310,7 +310,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	t.Run("Alter - set and unset tags", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).

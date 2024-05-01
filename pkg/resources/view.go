@@ -40,7 +40,7 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
-	// TODO [SNOW-867235]: this is used only during or_replace, we would like to change the behavior before v1
+	// TODO [SNOW-1348118: this is used only during or_replace, we would like to change the behavior before v1
 	"copy_grants": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -125,7 +125,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
-	// TODO [SNOW-867235]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
+	// TODO [SNOW-1348118]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
 	// Will be discussed with parser topic during resources redesign.
 	if _, ok := d.GetOk("tag"); ok {
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
@@ -175,7 +175,6 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if view.Text != "" {
-		// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
 		// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
 		extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
 		substringOfQuery, err := extractor.Extract()

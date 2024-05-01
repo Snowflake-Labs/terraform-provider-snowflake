@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -14,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +21,7 @@ import (
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -72,7 +70,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 }
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -137,10 +135,10 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 }
 
 func TestAcc_Table(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
-	table2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	table3Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	table2Name := acc.TestClient().Ids.Alpha()
+	table3Name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -164,6 +162,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.comment", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.schema_evolution_record", ""),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
@@ -884,7 +883,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableDefaults(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1023,9 +1022,9 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableTags(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	tagName := acc.TestClient().Ids.Alpha()
+	tag2Name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1103,7 +1102,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableIdentity(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1240,7 +1239,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableCollate(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1399,10 +1398,10 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableRename(t *testing.T) {
-	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	oldComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oldTableName := acc.TestClient().Ids.Alpha()
+	newTableName := acc.TestClient().Ids.Alpha()
+	oldComment := acc.TestClient().Ids.Alpha()
+	newComment := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1466,7 +1465,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_Table_MaskingPolicy(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1497,9 +1496,9 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1601,9 +1600,9 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1666,9 +1665,9 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1792,7 +1791,7 @@ resource "snowflake_table" "test_table" {
 
 // proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
 func TestAcc_Table_ClusterBy(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1839,7 +1838,7 @@ resource "snowflake_table" "test_table" {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2588 is fixed
 func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

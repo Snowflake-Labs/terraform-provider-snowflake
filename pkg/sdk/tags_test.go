@@ -8,7 +8,7 @@ import (
 )
 
 func TestTagCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *createTagOptions {
 		return &createTagOptions{
 			name: id,
@@ -69,7 +69,7 @@ func TestTagCreate(t *testing.T) {
 }
 
 func TestTagDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *dropTagOptions {
 		return &dropTagOptions{
 			name: id,
@@ -100,7 +100,7 @@ func TestTagDrop(t *testing.T) {
 }
 
 func TestTagUndrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *undropTagOptions {
 		return &undropTagOptions{
 			name: id,
@@ -166,7 +166,7 @@ func TestTagShow(t *testing.T) {
 }
 
 func TestTagAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *alterTagOptions {
 		return &alterTagOptions{
 			name: id,
@@ -317,7 +317,7 @@ func TestTagAlter(t *testing.T) {
 }
 
 func TestTagSet(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *setTagOptions {
 		return &setTagOptions{
 			objectType: ObjectTypeStage,
@@ -362,7 +362,7 @@ func TestTagSet(t *testing.T) {
 }
 
 func TestTagUnset(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *unsetTagOptions {
 		return &unsetTagOptions{
 			objectType: ObjectTypeStage,

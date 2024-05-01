@@ -199,7 +199,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool, withArguments bool) {

@@ -14,10 +14,10 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+	passwordPolicyTest, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 	t.Cleanup(passwordPolicyCleanup)
 
-	passwordPolicy2Test, passwordPolicy2Cleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+	passwordPolicy2Test, passwordPolicy2Cleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 	t.Cleanup(passwordPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -165,7 +165,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+	passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 	t.Cleanup(passwordPolicyCleanup)
 
 	t.Run("when password policy exists", func(t *testing.T) {
@@ -187,7 +187,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when setting new values", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		t.Cleanup(passwordPolicyCleanup)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			Set: &sdk.PasswordPolicySet{
@@ -207,7 +207,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		oldID := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
 		newName := random.UUID()
@@ -234,7 +234,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			PasswordMaxRetries: sdk.Int(10),
 			Comment:            sdk.String("test comment"),
 		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, testDb(t), testSchema(t), createOptions)
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicyWithOptions(t, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
@@ -265,7 +265,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			PasswordMaxRetries: sdk.Int(10),
 			Comment:            sdk.String("test comment"),
 		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, testDb(t), testSchema(t), createOptions)
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicyWithOptions(t, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
@@ -285,7 +285,8 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when password policy exists", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
+		t.Cleanup(passwordPolicyCleanup)
 		id := passwordPolicy.ID()
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
@@ -300,7 +301,8 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, testDb(t), testSchema(t))
+		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
+		t.Cleanup(passwordPolicyCleanup)
 		id := passwordPolicy.ID()
 		dropOptions := &sdk.DropPasswordPolicyOptions{IfExists: sdk.Bool(true)}
 		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
@@ -353,5 +355,16 @@ func TestInt_PasswordPoliciesShowByID(t *testing.T) {
 		e2, err := client.PasswordPolicies.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show by id: check fields", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+
+		createPasswordPolicyHandle(t, id1)
+
+		sl, err := client.PasswordPolicies.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		assert.Equal(t, "ROLE", sl.OwnerRoleType)
 	})
 }

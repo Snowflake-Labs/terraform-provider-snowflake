@@ -1,0 +1,254 @@
+name: General Usage
+description: General help or questions about the usage of provider.
+title: "[General Usage]: "
+labels: ["general-usage"]
+body:
+  - type: markdown
+    attributes:
+      # TODO(SNOW-1003360): Link doc how to submit issues and FAQ
+      # - [Frequently Asked Questions](https://github.com/Snowflake-Labs/)
+      value: |
+        # Thank you for raising an issue!
+        
+        This form is meant to be used as a way to report issues connected strictly to the provider usage.
+        Here are a few examples of general usage issues:
+        - Configurations presented as examples are not working as expected.
+        - Help with setting up provider configuration for two different accounts.
+        - Poor ergonomics of usage between two closely related resources like stage and external table.
+        
+        Before submitting, we ask that you first search existing issues (also the closed ones) to see if someone else may have experienced the same issue. 
+        This helps to keep all relevant information in one place, including any potential workarounds.
+        
+        Here's a list of useful links that may help you with your issue:
+        - [Migration Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) - when introducing breaking changes, we note them in the migration guide and describe how to upgrade to the next version. If you recently upgraded the provider version, please check if you applied all the needed changes.
+
+  - type: markdown
+    attributes:
+      value: |
+        # Terraform CLI and Snowflake Provider Versions
+        
+        Please run `terraform version` to show Terraform CLI and Snowflake Provider versions. 
+        If you are not running the latest version of either CLI or the Provider, please consider upgrading as your issue could be already resolved.
+
+  - id: terraform-cli-version
+    type: input
+    attributes:
+      label: Terraform CLI Version
+      description: The semantic version of Terraform CLI
+      placeholder: "x.y.z"
+
+  - id: terraform-provider-version
+    type: input
+    attributes:
+      label: Terraform Provider Version
+      description: The semantic version of Terraform Provider
+      placeholder: "x.y.z"
+
+  - type: markdown
+    attributes:
+      value: |
+        # Issue Description
+        
+        In the following fields, please provide as much information as possible to reduce the time of us providing help.
+        Remember to put the configuration and logs in the form below for additional context if you feel they will be relevant in this case.
+
+  - id: issue-description
+    type: textarea
+    attributes:
+      label: Terraform Configuration
+      description: Please copy and paste any relevant Terraform configuration. This will be automatically formatted into code, so no need for backticks.
+      render: terraform
+
+  - id: category
+    type: dropdown
+    attributes:
+      label: Category
+      description: |
+        Choose an appropriate category for the issue:
+        - **resource** - an issue with resource(s)
+        - **grants** - an issue with resource(s) / data source(s) dedicated for access management (granting privileges, roles, etc.)
+        - **data_source** - an issue with data source(s)
+        - **import** - difficulties when importing resource(s) / data source(s) with the *terraform import* command
+        - **sdk** - an issue with the underlying SDK (could be deduced by looking into stack traces in logs)
+        - **identifiers** - an issue with resource(s) / data source(s) having problems with accepting particular form of identifier
+        - **provider_config** - an issue with the provider configuration
+        - **other** - for any other type of issue in the provider
+      options:
+        - category:resource
+        - category:data_source
+        - category:import
+        - category:sdk
+        - category:identifiers
+        - category:provider_config
+        - category:grants
+        - category:other
+    validations:
+      required: true
+
+  - id: object_type
+    type: dropdown
+    attributes:
+      label: Object type(s)
+      description: Choose object type(s) causing the issue (if any).
+      multiple: true
+      options:
+        - resource:account
+        - resource:account_parameter
+        - resource:account_password_policy
+        - resource:alert
+        - resource:api_integration
+        - resource:database
+        - resource:database_role
+        - resource:dynamic_table
+        - resource:email_notification_integration
+        - resource:external_function
+        - resource:external_oauth_integration
+        - resource:external_table
+        - resource:failover_group
+        - resource:file_format
+        - resource:function
+        - resource:grant_account_role
+        - resource:grant_database_role
+        - resource:grant_ownership
+        - resource:grant_privileges_to_account_role
+        - resource:grant_privileges_to_database_role
+        - resource:grant_privileges_to_share
+        - resource:managed_account
+        - resource:masking_policy
+        - resource:materialized_view
+        - resource:network_policy
+        - resource:network_policy_attachment
+        - resource:notification_integration
+        - resource:oauth_integration
+        - resource:object_parameter
+        - resource:password_policy
+        - resource:pipe
+        - resource:procedure
+        - resource:resource_monitor
+        - resource:role
+        - resource:row_access_policy
+        - resource:saml_integration
+        - resource:schema
+        - resource:scim_integration
+        - resource:sequence
+        - resource:session_parameter
+        - resource:share
+        - resource:stage
+        - resource:storage_integration
+        - resource:stream
+        - resource:table
+        - resource:table_column_masking_policy_application
+        - resource:table_constraint
+        - resource:tag
+        - resource:tag_association
+        - resource:tag_masking_policy_association
+        - resource:task
+        - resource:unsafe_execute
+        - resource:user
+        - resource:user_password_policy_attachment
+        - resource:user_public_keys
+        - resource:view
+        - resource:warehouse
+        - data_source:accounts
+        - data_source:alerts
+        - data_source:current_account
+        - data_source:current_role
+        - data_source:database
+        - data_source:database_roles
+        - data_source:databases
+        - data_source:dynamic_tables
+        - data_source:external_functions
+        - data_source:external_tables
+        - data_source:failover_groups
+        - data_source:file_formats
+        - data_source:functions
+        - data_source:grants
+        - data_source:masking_policies
+        - data_source:materialized_views
+        - data_source:parameters
+        - data_source:pipes
+        - data_source:procedures
+        - data_source:resource_monitors
+        - data_source:roles
+        - data_source:row_access_policies
+        - data_source:schemas
+        - data_source:sequences
+        - data_source:shares
+        - data_source:stages
+        - data_source:storage_integrations
+        - data_source:streams
+        - data_source:system_generate_scim_access_token
+        - data_source:system_get_aws_sns_iam_policy
+        - data_source:system_get_privatelink_config
+        - data_source:system_get_snowflake_platform_info
+        - data_source:tables
+        - data_source:tasks
+        - data_source:users
+        - data_source:views
+        - data_source:warehouses
+
+  - id: expected-behavior
+    type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - id: actual-behavior
+    type: textarea
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - id: reproduction-steps
+    type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: List of steps to reproduce the issue.
+      placeholder: |
+        For example:
+        1. Copy the following configuration ...
+        2. Run *terraform apply*
+        3. Update field *x* in resource *y* to value *z*
+        4. Run *terraform apply*
+    validations:
+      required: true
+
+  - id: impact
+    type: dropdown
+    attributes:
+      label: How much impact is this issue causing?
+      description: |
+        Please choose the appropriate impact for the issue keeping in mind that:
+        - **High** - completely not able to use the provider or unexpected destruction of data/infrastructure.
+        - **Medium** - unable to upgrade provider version or an issue with potential workaround.
+        - **Low** - minor provider code or configuration issues.
+      options:
+        - High
+        - Medium
+        - Low
+      default:
+        2 # Low
+    validations:
+      required: true
+
+  - id: logs
+    type: input
+    attributes:
+      label: Logs
+      description: |
+        Please provide a link to a [GitHub Gist](https://gist.github.com) containing log output. [Terraform Debugging Documentation](https://www.terraform.io/internals/debugging)
+        
+        Here's a list of environment variables you can set for logging additional information:
+        - *TF_LOG=DEBUG* - this one is a must-have as it's printing executed SQLs which helps us to see what is happening underneath.
+        - *SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug* - if you feel the problem may be connected with the Snowflake driver, please set this one for additional driver logs.
+      placeholder: https://gist.github.com/example/12345678
+
+  - id: additional-information
+    type: textarea
+    attributes:
+      label: Additional Information
+      description: Are there any additional details about your environment, workflow, or recent changes that might be relevant? Have you discovered a workaround? Are there links to other related issues?

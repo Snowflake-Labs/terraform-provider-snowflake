@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-867235]: old implementation was quoting every column, SDK is not quoting them, therefore they are quoted here: decide if we quote columns or not
+// TODO [SNOW-1348114]: old implementation was quoting every column, SDK is not quoting them, therefore they are quoted here: decide if we quote columns or not
 // TODO [SNOW-1031688]: move data manipulation logic to the SDK - SQL generation or builders part (e.g. different default types/identity)
 var tableSchema = map[string]*schema.Schema{
 	"name": {
@@ -78,7 +78,7 @@ var tableSchema = map[string]*schema.Schema{
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						// TODO [SNOW-867235]: there is no such separation on SDK level. Should we keep it in V1?
+						// TODO [SNOW-1348114]: there is no such separation on SDK level. Should we keep it in V1?
 						Schema: map[string]*schema.Schema{
 							"constant": {
 								Type:        schema.TypeString,
@@ -144,6 +144,11 @@ var tableSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Default:     "",
 					Description: "Column collation, e.g. utf8",
+				},
+				"schema_evolution_record": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Record of schema evolution.",
 				},
 			},
 		},
@@ -496,6 +501,11 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 				flat["default"] = []any{def}
 			}
 		}
+
+		if td.SchemaEvolutionRecord != nil {
+			flat["schema_evolution_record"] = *td.SchemaEvolutionRecord
+		}
+
 		flattened = append(flattened, flat)
 	}
 	return flattened

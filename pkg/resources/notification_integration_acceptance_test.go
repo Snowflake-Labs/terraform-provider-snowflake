@@ -2,20 +2,18 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const gcpOtherPubsubSubscriptionName = "projects/project-1234/subscriptions/other"
@@ -62,7 +60,7 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_AutoAzure(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	const azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
 	const azureOtherStorageQueuePrimaryUri = "azure://great-bucket/other-great-path/"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
@@ -112,7 +110,7 @@ func TestAcc_NotificationIntegration_AutoAzure(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
 	const awsOtherSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:OtherTopic"
 	const awsSnsRoleArn = "arn:aws:iam::000000000001:/role/test"
@@ -164,7 +162,7 @@ func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_changeNotificationProvider(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
@@ -213,14 +211,14 @@ func TestAcc_NotificationIntegration_PushGoogle(t *testing.T) {
 }
 
 // TODO [SNOW-1017802]: handle after "create and describe notification integration - push azure" test passes
-// TODO [SNOW-1021713]: handle after it's added to the resource
+// TODO [SNOW-1348345]: handle after it's added to the resource
 func TestAcc_NotificationIntegration_PushAzure(t *testing.T) {
 	t.Skip("Skipping because can't be currently created. Check 'create and describe notification integration - push azure' test in the SDK.")
 }
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2501
 func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 
@@ -264,7 +262,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 

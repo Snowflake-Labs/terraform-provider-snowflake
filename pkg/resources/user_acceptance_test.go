@@ -10,10 +10,9 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -38,11 +37,11 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
+	prefix2 := acc.TestClient().Ids.Alpha()
 
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
@@ -133,7 +132,7 @@ func TestAcc_User(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
-	userName := sdk.NewAccountObjectIdentifier(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	config := fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
@@ -235,7 +234,7 @@ resource "snowflake_user" "w" {
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
 	r := require.New(t)
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
+	prefix := acc.TestClient().Ids.AlphaContaining(".")
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")

@@ -1,9 +1,7 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -11,16 +9,16 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_DynamicTable_basic(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_dynamic_table.dt"
 	tableName := name + "_table"
+	newWarehouseName := acc.TestClient().Ids.Alpha()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(name),
@@ -33,7 +31,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		}
 	}
 	variableSet2 := m()
-	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
+	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	variableSet3 := m()
@@ -99,7 +97,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName2),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
@@ -158,10 +156,12 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2173 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173 issue.
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
-	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
-	otherSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
+	otherSchema := acc.TestClient().Ids.Alpha()
+	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":         config.StringVariable(dynamicTableName),
@@ -195,7 +195,9 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:       func() { createDynamicTableOutsideTerraform(t, otherSchema, dynamicTableName, query) },
+				PreConfig: func() {
+					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, otherSchemaId, dynamicTableName, acc.TestClient().Ids.WarehouseId(), tableId)
+				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -231,7 +233,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2134 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2134 issue.
 func TestAcc_DynamicTable_issue2134(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
 	// whitespace (initial tab) is added on purpose here
 	query := fmt.Sprintf(`	select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
@@ -294,7 +296,7 @@ func TestAcc_DynamicTable_issue2134(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2276 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2276 issue.
 func TestAcc_DynamicTable_issue2276(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	newQuery := fmt.Sprintf(`select "data" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
@@ -342,7 +344,7 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
@@ -389,7 +391,7 @@ func TestAcc_DynamicTable_issue2329(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329_with_matching_comment proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
-	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
 	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
@@ -423,16 +425,4 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 			},
 		},
 	})
-}
-
-// TODO [SNOW-926148]: currently this dynamic table is not cleaned in the test; it is removed when the whole database is removed - this currently happens in a sweeper
-func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamicTableName string, query string) {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	dynamicTableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, schemaName, dynamicTableName)
-	if err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(dynamicTableId, sdk.NewAccountObjectIdentifier(acc.TestWarehouseName), sdk.TargetLag{MaximumDuration: sdk.String("2 minutes")}, query)); err != nil {
-		t.Fatal(fmt.Errorf("error creating dynamic table: %w", err))
-	}
 }

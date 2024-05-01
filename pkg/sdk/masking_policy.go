@@ -23,7 +23,7 @@ var (
 type MaskingPolicies interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *CreateMaskingPolicyOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error
-	Drop(ctx context.Context, id SchemaObjectIdentifier) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropMaskingPolicyOptions) error
 	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
@@ -173,6 +173,7 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 type DropMaskingPolicyOptions struct {
 	drop          bool                   `ddl:"static" sql:"DROP"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
+	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
@@ -186,11 +187,9 @@ func (opts *DropMaskingPolicyOptions) validate() error {
 	return nil
 }
 
-func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
-	// masking policy drop does not support [IF EXISTS] so there are no drop options.
-	opts := &DropMaskingPolicyOptions{
-		name: id,
-	}
+func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropMaskingPolicyOptions) error {
+	opts = createIfNil(opts)
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
@@ -231,6 +230,7 @@ type MaskingPolicy struct {
 	Owner               string
 	Comment             string
 	ExemptOtherPolicies bool
+	OwnerRoleType       string
 }
 
 func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
@@ -268,6 +268,7 @@ func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 		Owner:               row.Owner,
 		Comment:             row.Comment,
 		ExemptOtherPolicies: exemptOtherPolicies,
+		OwnerRoleType:       row.OwnerRoleType,
 	}
 }
 

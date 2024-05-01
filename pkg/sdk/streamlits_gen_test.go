@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestStreamlits_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateStreamlitOptions {
 		return &CreateStreamlitOptions{
@@ -42,7 +42,7 @@ func TestStreamlits_Create(t *testing.T) {
 }
 
 func TestStreamlits_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterStreamlitOptions {
 		return &AlterStreamlitOptions{
@@ -82,7 +82,7 @@ func TestStreamlits_Alter(t *testing.T) {
 }
 
 func TestStreamlits_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropStreamlitOptions {
 		return &DropStreamlitOptions{
@@ -152,7 +152,7 @@ func TestStreamlits_Show(t *testing.T) {
 }
 
 func TestStreamlits_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeStreamlitOptions {
 		return &DescribeStreamlitOptions{

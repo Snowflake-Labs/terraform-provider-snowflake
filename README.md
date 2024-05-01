@@ -21,9 +21,11 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   - [Migration guide](#migration-guide)
   - [Roadmap](#roadmap)
   - [Getting Help](#getting-help)
+  - [Would you like to create an issue?](#would-you-like-to-create-an-issue)
   - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
   - [Additional SQL Client configuration](#additional-sql-client-configuration)
   - [Contributing](#contributing)
+  - [Releases](#releases)
 
 
 ## Getting started
@@ -73,6 +75,10 @@ Some links that might help you:
 - **If you are an enterprise customer**, reach out to your account team. This helps us prioritize issues.
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
 
+## Would you like to create an issue?
+If you would like to create a GitHub issue, please read our [guide](./CREATING_ISSUES.md) first. 
+It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
+
 ## Additional debug logs for `snowflake_grant_privileges_to_role` resource
 Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. Additional logs will be visible with `sf-tf-additional-debug` prefix, e.g.:
 ```text
@@ -96,4 +102,10 @@ By default, the underlying driver is set to error level logging. It can be chang
 
 ## Contributing
 
-Cf. [Contributing](./CONTRIBUTING.md).
+Check [Contributing](./CONTRIBUTING.md).
+
+## Releases
+
+Releases will be performed as needed, typically once every 2 weeks.
+
+Releases are published to [the terraform registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest). Each change has its own release notes (e.g. https://github.com/Snowflake-Labs/terraform-provider-snowflake/releases/tag/v0.89.0) and migration guide if needed (e.g. https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0880--v0890).

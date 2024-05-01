@@ -2,23 +2,24 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	newComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	prefix := warehouseId.Name()
+	prefix2 := warehouseId2.Name()
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -82,7 +83,7 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
-				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, prefix2, 10) },
+				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, warehouseId2, 10) },
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
@@ -114,7 +115,7 @@ func TestAcc_Warehouse(t *testing.T) {
 }
 
 func TestAcc_WarehousePattern(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

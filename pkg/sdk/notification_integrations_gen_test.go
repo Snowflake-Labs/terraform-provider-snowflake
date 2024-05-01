@@ -11,7 +11,7 @@ const (
 )
 
 func TestNotificationIntegrations_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateNotificationIntegrationOptions for AutomatedDataLoads
 	defaultOptsAutomatedDataLoads := func() *CreateNotificationIntegrationOptions {
@@ -175,7 +175,7 @@ func TestNotificationIntegrations_Create(t *testing.T) {
 }
 
 func TestNotificationIntegrations_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterNotificationIntegrationOptions
 	defaultOpts := func() *AlterNotificationIntegrationOptions {
@@ -373,7 +373,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 }
 
 func TestNotificationIntegrations_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropNotificationIntegrationOptions
 	defaultOpts := func() *DropNotificationIntegrationOptions {
@@ -401,7 +401,7 @@ func TestNotificationIntegrations_Drop(t *testing.T) {
 }
 
 func TestNotificationIntegrations_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowNotificationIntegrationOptions
 	defaultOpts := func() *ShowNotificationIntegrationOptions {
@@ -428,7 +428,7 @@ func TestNotificationIntegrations_Show(t *testing.T) {
 }
 
 func TestNotificationIntegrations_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DescribeNotificationIntegrationOptions
 	defaultOpts := func() *DescribeNotificationIntegrationOptions {

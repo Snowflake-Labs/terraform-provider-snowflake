@@ -7,7 +7,7 @@ import (
 )
 
 func TestDatabaseRoleCreate(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *createDatabaseRoleOptions {
 		return &createDatabaseRoleOptions{
@@ -56,7 +56,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 }
 
 func TestDatabaseRoleAlter(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *alterDatabaseRoleOptions {
 		return &alterDatabaseRoleOptions{
@@ -156,7 +156,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 }
 
 func TestDatabaseRoleDrop(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *dropDatabaseRoleOptions {
 		return &dropDatabaseRoleOptions{
@@ -188,7 +188,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 }
 
 func TestDatabaseRolesShow(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *showDatabaseRoleOptions {
 		return &showDatabaseRoleOptions{
@@ -228,9 +228,9 @@ func TestDatabaseRolesShow(t *testing.T) {
 }
 
 func TestDatabaseRoles_Grant(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	databaseRoleId := RandomDatabaseObjectIdentifier()
-	accountRoleId := RandomAccountObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	databaseRoleId := randomDatabaseObjectIdentifier()
+	accountRoleId := randomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleOptions {
 		return &grantDatabaseRoleOptions{
@@ -277,9 +277,9 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 }
 
 func TestDatabaseRoles_Revoke(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	databaseRoleId := RandomDatabaseObjectIdentifier()
-	accountRoleId := RandomAccountObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	databaseRoleId := randomDatabaseObjectIdentifier()
+	accountRoleId := randomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleOptions {
 		return &revokeDatabaseRoleOptions{
@@ -326,8 +326,8 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 }
 
 func TestDatabaseRoles_GrantToShare(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	share := RandomAccountObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	share := randomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleToShareOptions {
 		return &grantDatabaseRoleToShareOptions{
@@ -361,8 +361,8 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 }
 
 func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
-	share := RandomAccountObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
+	share := randomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleFromShareOptions {
 		return &revokeDatabaseRoleFromShareOptions{
