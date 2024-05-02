@@ -317,6 +317,146 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantOwnership_OnObject_Procedure_ToAccountRole(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	schemaName := acc.TestClient().Ids.Alpha()
+	withArgProcedureName := sdk.NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, acc.TestClient().Ids.Alpha(), []sdk.DataType{sdk.DataTypeVARCHAR})
+	withoutArgProcedureName := sdk.NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, acc.TestClient().Ids.Alpha(), []sdk.DataType{})
+
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleName := accountRoleId.Name()
+	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"account_role_name":          config.StringVariable(accountRoleName),
+		"database_name":              config.StringVariable(databaseName),
+		"schema_name":                config.StringVariable(schemaName),
+		"with_arg_procedure_name":    config.StringVariable(withArgProcedureName.Name()),
+		"without_arg_procedure_name": config.StringVariable(withoutArgProcedureName.Name()),
+	}
+	withArgResourceName := "snowflake_grant_ownership.with_arguments"
+	withoutArgResourceName := "snowflake_grant_ownership.without_arguments"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToAccountRole"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(withArgResourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(withArgResourceName, "on.0.object_type", "PROCEDURE"),
+					resource.TestCheckResourceAttr(withArgResourceName, "on.0.object_name", withArgProcedureName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(withArgResourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|PROCEDURE|%s", accountRoleFullyQualifiedName, withArgProcedureName.FullyQualifiedName())),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							Role: accountRoleId,
+						},
+					}, sdk.ObjectTypeProcedure, accountRoleName, fmt.Sprintf("%s.%s.\"%s(ARG1 VARCHAR):VARCHAR(16777216)", databaseName, schemaName, withArgProcedureName.Name())),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "on.0.object_type", "PROCEDURE"),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "on.0.object_name", withoutArgProcedureName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|PROCEDURE|%s", accountRoleFullyQualifiedName, withoutArgProcedureName.FullyQualifiedName())),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							Role: accountRoleId,
+						},
+					}, sdk.ObjectTypeProcedure, accountRoleName, fmt.Sprintf("%s.%s.\"%s():VARCHAR(16777216)", databaseName, schemaName, withoutArgProcedureName.Name())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToAccountRole"),
+				ConfigVariables:   configVariables,
+				ResourceName:      withArgResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToAccountRole"),
+				ConfigVariables:   configVariables,
+				ResourceName:      withoutArgResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantOwnership_OnObject_Procedure_ToDatabaseRole(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	schemaName := acc.TestClient().Ids.Alpha()
+	withArgProcedureName := sdk.NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, acc.TestClient().Ids.Alpha(), []sdk.DataType{sdk.DataTypeVARCHAR})
+	withoutArgProcedureName := sdk.NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, acc.TestClient().Ids.Alpha(), []sdk.DataType{})
+
+	databaseRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseRoleName := databaseRoleId.Name()
+	databaseRoleFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"database_role_name":         config.StringVariable(databaseRoleName),
+		"database_name":              config.StringVariable(databaseName),
+		"schema_name":                config.StringVariable(schemaName),
+		"with_arg_procedure_name":    config.StringVariable(withArgProcedureName.Name()),
+		"without_arg_procedure_name": config.StringVariable(withoutArgProcedureName.Name()),
+	}
+	withArgResourceName := "snowflake_grant_ownership.with_arguments"
+	withoutArgResourceName := "snowflake_grant_ownership.without_arguments"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToDatabaseRole"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(withArgResourceName, "database_role_name", databaseRoleFullyQualifiedName),
+					resource.TestCheckResourceAttr(withArgResourceName, "on.0.object_type", "PROCEDURE"),
+					resource.TestCheckResourceAttr(withArgResourceName, "on.0.object_name", withArgProcedureName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(withArgResourceName, "id", fmt.Sprintf("ToDatabaseRole|%s||OnObject|PROCEDURE|%s", databaseRoleFullyQualifiedName, withArgProcedureName.FullyQualifiedName())),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							DatabaseRole: sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName),
+						},
+					}, sdk.ObjectTypeProcedure, databaseRoleName, fmt.Sprintf("%s.%s.\"%s(ARG1 VARCHAR):VARCHAR(16777216)", databaseName, schemaName, withArgProcedureName.Name())),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "database_role_name", databaseRoleFullyQualifiedName),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "on.0.object_type", "PROCEDURE"),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "on.0.object_name", withoutArgProcedureName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(withoutArgResourceName, "id", fmt.Sprintf("ToDatabaseRole|%s||OnObject|PROCEDURE|%s", databaseRoleFullyQualifiedName, withoutArgProcedureName.FullyQualifiedName())),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							DatabaseRole: sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName),
+						},
+					}, sdk.ObjectTypeProcedure, databaseRoleName, fmt.Sprintf("%s.%s.\"%s():VARCHAR(16777216)", databaseName, schemaName, withoutArgProcedureName.Name())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToDatabaseRole"),
+				ConfigVariables:   configVariables,
+				ResourceName:      withArgResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Procedure_ToDatabaseRole"),
+				ConfigVariables:   configVariables,
+				ResourceName:      withoutArgResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
