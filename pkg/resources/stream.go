@@ -38,18 +38,20 @@ var streamSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the stream.",
 	},
 	"on_table": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		Description:  "Specifies an identifier for the table the stream will monitor.",
-		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		Description:      "Specifies an identifier for the table the stream will monitor.",
+		ExactlyOneOf:     []string{"on_table", "on_view", "on_stage"},
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"on_view": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		Description:  "Specifies an identifier for the view the stream will monitor.",
-		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		Description:      "Specifies an identifier for the view the stream will monitor.",
+		ExactlyOneOf:     []string{"on_table", "on_view", "on_stage"},
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"on_stage": {
 		Type:         schema.TypeString,
@@ -221,7 +223,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	stream, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+	stream, err := client.Streams.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")

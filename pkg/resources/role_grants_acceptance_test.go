@@ -6,13 +6,13 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func mustParseInt(t *testing.T, input string) int64 {
@@ -91,11 +91,11 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 }
 
 func TestAcc_RoleGrant(t *testing.T) {
-	role1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	role2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	role3 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	user1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	user2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	role1 := acc.TestClient().Ids.Alpha()
+	role2 := acc.TestClient().Ids.Alpha()
+	role3 := acc.TestClient().Ids.Alpha()
+	user1 := acc.TestClient().Ids.Alpha()
+	user2 := acc.TestClient().Ids.Alpha()
 
 	basicChecks := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr("snowflake_role.r", "name", role1),
@@ -112,8 +112,11 @@ func TestAcc_RoleGrant(t *testing.T) {
 		),
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

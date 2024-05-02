@@ -2,19 +2,22 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TaskGrant(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -67,10 +70,13 @@ func TestAcc_TaskGrant(t *testing.T) {
 }
 
 func TestAcc_TaskGrant_onAll(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -101,10 +107,13 @@ func TestAcc_TaskGrant_onAll(t *testing.T) {
 }
 
 func TestAcc_TaskGrant_onFuture(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -163,7 +172,7 @@ resource "snowflake_task" "test" {
 	schema   		= "%s"
 	warehouse 		= snowflake_warehouse.test.name
 	sql_statement = "SHOW FUNCTIONS"
-	enabled  	  	= true
+	enabled  	  	= false
 	schedule 	  	= "15 MINUTES"
 	lifecycle {
 		ignore_changes = [session_parameters]
@@ -176,23 +185,27 @@ resource "snowflake_task_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = "%s"
 	privilege 	= "%s"
+	depends_on = [snowflake_task.test]
 }
 `
 	return fmt.Sprintf(s, name, name, concurrency, name, databaseName, schemaName, taskNameConfig, databaseName, schemaName, privilege)
 }
 
 func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	new_name := name + "_NEW"
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// CREATE SCHEMA level FUTURE ownership grant to role <name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: taskOwnershipGrantConfig(name, newName, onFuture, "OWNERSHIP", name, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -204,14 +217,14 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 			},
 			// UPDATE SCHEMA level FUTURE OWNERSHIP grant to role <new_name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", new_name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: taskOwnershipGrantConfig(name, newName, onFuture, "OWNERSHIP", newName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "privilege", "OWNERSHIP"),
-					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", new_name),
+					resource.TestCheckResourceAttr("snowflake_task_grant.test", "roles.0", newName),
 				),
 			},
 			// IMPORT
@@ -227,7 +240,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 	})
 }
 
-func taskOwnershipGrantConfig(name string, grantType grantType, privilege string, rolename string, databaseName string, schemaName string) string {
+func taskOwnershipGrantConfig(name string, newName string, grantType grantType, privilege string, rolename string, databaseName string, schemaName string) string {
 	var taskNameConfig string
 	switch grantType {
 	case normal:
@@ -244,17 +257,18 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_role" "test_new" {
-	name = "%v_NEW"
-  }
+  name = "%v"
+}
 
 resource "snowflake_task_grant" "test" {
+  depends_on = [snowflake_role.test, snowflake_role.test_new]
   %s
-  roles             = [ "%s" ]
+  roles             = ["%s"]
   database_name 	= "%s"
   schema_name       = "%s"
   privilege 	    = "%s"
   with_grant_option = false
 }
 `
-	return fmt.Sprintf(s, name, name, taskNameConfig, rolename, databaseName, schemaName, privilege)
+	return fmt.Sprintf(s, name, newName, taskNameConfig, rolename, databaseName, schemaName, privilege)
 }

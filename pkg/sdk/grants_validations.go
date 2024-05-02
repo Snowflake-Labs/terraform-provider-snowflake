@@ -17,6 +17,128 @@ var (
 	_ validatable = new(ShowGrantOptions)
 )
 
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters
+var validGrantOwnershipObjectTypes = []ObjectType{
+	ObjectTypeAggregationPolicy,
+	ObjectTypeAlert,
+	ObjectTypeAuthenticationPolicy,
+	ObjectTypeComputePool,
+	ObjectTypeDataMetricFunction,
+	ObjectTypeDatabase,
+	ObjectTypeDatabaseRole,
+	ObjectTypeDynamicTable,
+	ObjectTypeEventTable,
+	ObjectTypeExternalTable,
+	ObjectTypeExternalVolume,
+	ObjectTypeFailoverGroup,
+	ObjectTypeFileFormat,
+	ObjectTypeFunction,
+	ObjectTypeGitRepository,
+	ObjectTypeHybridTable,
+	ObjectTypeIcebergTable,
+	ObjectTypeImageRepository,
+	ObjectTypeIntegration,
+	ObjectTypeMaterializedView,
+	ObjectTypeNetworkPolicy,
+	ObjectTypeNetworkRule,
+	ObjectTypePackagesPolicy,
+	ObjectTypePipe,
+	ObjectTypeProcedure,
+	ObjectTypeMaskingPolicy,
+	ObjectTypePasswordPolicy,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeReplicationGroup,
+	ObjectTypeRole,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSchema,
+	ObjectTypeSessionPolicy,
+	ObjectTypeSecret,
+	ObjectTypeSequence,
+	ObjectTypeStage,
+	ObjectTypeStream,
+	ObjectTypeTable,
+	ObjectTypeTag,
+	ObjectTypeTask,
+	ObjectTypeUser,
+	ObjectTypeView,
+	ObjectTypeWarehouse,
+}
+
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters
+var validGrantToObjectTypes = []ObjectType{
+	ObjectTypeAggregationPolicy,
+	ObjectTypeAlert,
+	ObjectTypeAuthenticationPolicy,
+	ObjectTypeDataMetricFunction,
+	ObjectTypeDynamicTable,
+	ObjectTypeEventTable,
+	ObjectTypeExternalTable,
+	ObjectTypeFileFormat,
+	ObjectTypeFunction,
+	ObjectTypeGitRepository,
+	ObjectTypeHybridTable,
+	ObjectTypeImageRepository,
+	ObjectTypeIcebergTable,
+	ObjectTypeMaskingPolicy,
+	ObjectTypeMaterializedView,
+	ObjectTypeModel,
+	ObjectTypeNetworkRule,
+	ObjectTypePackagesPolicy,
+	ObjectTypePasswordPolicy,
+	ObjectTypePipe,
+	ObjectTypeProcedure,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSecret,
+	ObjectTypeService,
+	ObjectTypeSessionPolicy,
+	ObjectTypeSequence,
+	ObjectTypeStage,
+	ObjectTypeStream,
+	ObjectTypeTable,
+	ObjectTypeTag,
+	ObjectTypeTask,
+	ObjectTypeView,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
+}
+
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#restrictions-and-limitations
+var invalidGrantToFutureObjectTypes = []ObjectType{
+	ObjectTypeComputePool,
+	ObjectTypeExternalFunction,
+	ObjectTypeImageRepository,
+	ObjectTypeAggregationPolicy,
+	ObjectTypeMaskingPolicy,
+	ObjectTypePackagesPolicy,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSessionPolicy,
+	ObjectTypeTag,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
+}
+
+var (
+	ValidGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
+	ValidGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
+	ValidGrantToObjectTypesString              = make([]string, len(validGrantToObjectTypes))
+	ValidGrantToPluralObjectTypesString        = make([]string, len(validGrantToObjectTypes))
+	ValidGrantToFuturePluralObjectTypesString  = make([]string, 0)
+)
+
+func init() {
+	for i, objectType := range validGrantOwnershipObjectTypes {
+		ValidGrantOwnershipObjectTypesString[i] = objectType.String()
+		ValidGrantOwnershipPluralObjectTypesString[i] = objectType.Plural().String()
+	}
+	for i, objectType := range validGrantToObjectTypes {
+		ValidGrantToObjectTypesString[i] = objectType.String()
+		ValidGrantToPluralObjectTypesString[i] = objectType.Plural().String()
+		if !slices.Contains(invalidGrantToFutureObjectTypes, objectType) {
+			ValidGrantToFuturePluralObjectTypesString = append(ValidGrantToFuturePluralObjectTypesString, objectType.Plural().String())
+		}
+	}
+}
+
 func (opts *GrantPrivilegesToAccountRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)

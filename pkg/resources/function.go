@@ -657,15 +657,17 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
-		name := d.Get("name")
-		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string))))); err != nil {
+		name := d.Get("name").(string)
+		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name, id.Arguments())
+
+		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments()))); err != nil {
 			return diag.FromErr(err)
 		}
-		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
-		if err := d.Set("name", name); err != nil {
-			return diag.FromErr(err)
-		}
+
+		d.SetId(newId.FullyQualifiedName())
+		id = newId
 	}
+
 	if d.HasChange("is_secure") {
 		secure := d.Get("is_secure")
 		if secure.(bool) {
@@ -678,6 +680,7 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 	}
+
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
@@ -690,6 +693,7 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 	}
+
 	return ReadContextFunction(ctx, d, meta)
 }
 

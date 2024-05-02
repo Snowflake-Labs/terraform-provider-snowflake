@@ -3,15 +3,14 @@ package resources_test
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -41,9 +40,9 @@ type (
 )
 
 var (
-	rootname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_root_task"
-	childname = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_child_task"
-	soloname  = acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "_standalone_task"
+	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
+	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
+	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
 
 	initialState = &AccTaskTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
@@ -192,9 +191,12 @@ var (
 
 func TestAcc_Task(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfig(initialState),
@@ -417,11 +419,14 @@ todo: this test is failing due to error message below. Need to figure out why th
 
 
 	func TestAcc_Task_Managed(t *testing.T) {
-		accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+		accName := acc.TestClient().Ids.Alpha()
 		resource.Test(t, resource.TestCase{
-			Providers:    acc.TestAccProviders(),
+					ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 			PreCheck:     func() { acc.TestAccPreCheck(t) },
-			CheckDestroy: nil,
+			CheckDestroy: acc.CheckDestroy(t, resources.Task),
 			Steps: []resource.TestStep{
 				{
 					Config: taskConfigManaged1(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -540,8 +545,8 @@ resource "snowflake_task" "managed_task" {
 }
 
 func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	taskRootName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -549,7 +554,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
 				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -612,6 +617,7 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
+	depends_on = [snowflake_task.test_task_root]
 	name     	  = "%[4]s"
 	database  	  = "%[2]s"
 	schema    	  = "%[3]s"
@@ -675,7 +681,7 @@ func checkInt64(name, key string, value int64) func(*terraform.State) error {
 }
 
 func TestAcc_Task_issue2207(t *testing.T) {
-	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	prefix := acc.TestClient().Ids.Alpha()
 	rootName := prefix + "_root_task"
 	childName := prefix + "_child_task"
 
@@ -698,7 +704,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -727,7 +733,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 }
 
 func TestAcc_Task_issue2036(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -744,7 +750,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			// create without when
 			{

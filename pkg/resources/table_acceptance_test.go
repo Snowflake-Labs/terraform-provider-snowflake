@@ -5,26 +5,23 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/stretchr/testify/require"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -32,7 +29,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -73,7 +70,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 }
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -81,7 +78,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -138,10 +135,10 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 }
 
 func TestAcc_Table(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
-	table2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	table3Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	table2Name := acc.TestClient().Ids.Alpha()
+	table3Name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -149,7 +146,7 @@ func TestAcc_Table(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -165,6 +162,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "VARIANT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.comment", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.schema_evolution_record", ""),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
@@ -452,6 +450,7 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -461,6 +460,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -488,6 +488,7 @@ resource "snowflake_table" "test_table" {
 		]
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -497,6 +498,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -532,6 +534,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -880,7 +883,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableDefaults(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -888,7 +891,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithDefaults(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1019,9 +1022,9 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableTags(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	tagName := acc.TestClient().Ids.Alpha()
+	tag2Name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1029,7 +1032,7 @@ func TestAcc_TableTags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableWithTags(accName, tagName, tag2Name, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1099,7 +1102,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableIdentity(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1107,7 +1110,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithIdentityDefault(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1236,7 +1239,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableCollate(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1244,7 +1247,7 @@ func TestAcc_TableCollate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1395,8 +1398,10 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableRename(t *testing.T) {
-	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oldTableName := acc.TestClient().Ids.Alpha()
+	newTableName := acc.TestClient().Ids.Alpha()
+	oldComment := acc.TestClient().Ids.Alpha()
+	newComment := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1404,14 +1409,15 @@ func TestAcc_TableRename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName, oldComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", oldComment),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
@@ -1420,11 +1426,17 @@ func TestAcc_TableRename(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfigWithName(newTableName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfigWithName(newTableName, acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
@@ -1436,23 +1448,24 @@ func TestAcc_TableRename(t *testing.T) {
 	})
 }
 
-func tableConfigWithName(tableName string, databaseName string, schemaName string) string {
+func tableConfigWithName(tableName string, databaseName string, schemaName string, comment string) string {
 	s := `
 resource "snowflake_table" "test_table" {
 	name     = "%s"
 	database = "%s"
 	schema   = "%s"
+    comment  = "%s"
 	column {
 		name = "column1"
 		type = "VARIANT"
 	}
 }
 `
-	return fmt.Sprintf(s, tableName, databaseName, schemaName)
+	return fmt.Sprintf(s, tableName, databaseName, schemaName, comment)
 }
 
 func TestAcc_Table_MaskingPolicy(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1460,7 +1473,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
@@ -1483,9 +1496,9 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1515,7 +1528,7 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
@@ -1587,9 +1600,9 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1614,7 +1627,7 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
@@ -1652,9 +1665,9 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
 
 	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
@@ -1684,7 +1697,7 @@ func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
@@ -1776,25 +1789,9 @@ resource "snowflake_table" "test_table" {
 	return fmt.Sprintf(s, name, databaseName, schemaName, policy)
 }
 
-func testAccCheckTableDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_table" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		existingTable, err := client.Tables.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("table %v still exists", existingTable.ID().FullyQualifiedName())
-		}
-	}
-	return nil
-}
-
 // proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
 func TestAcc_Table_ClusterBy(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1802,7 +1799,7 @@ func TestAcc_Table_ClusterBy(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfigWithComplexClusterBy(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1837,6 +1834,57 @@ resource "snowflake_table" "test_table" {
     }
 }
 `, name, databaseName, schemaName)
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2588 is fixed
+func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
+	accName := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(38,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+				),
+			},
+			{
+				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(36,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(36,0)"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithNumberColumnType(name string, databaseName string, schemaName string, columnType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	name                = "%[1]s"
+	database            = "%[2]s"
+	schema              = "%[3]s"
+
+	column {
+		name = "id"
+		type = "%[4]s"
+	}
+}
+`, name, databaseName, schemaName, columnType)
 }
 
 func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier, expectedDatabaseRetentionDays int, expectedSchemaRetentionDays int, expectedTableRetentionsDays int) func(state *terraform.State) error {
@@ -1893,11 +1941,10 @@ func setTableDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days
 	t.Helper()
 
 	return func() {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
+		client := acc.Client(t)
 		ctx := context.Background()
 
-		err = client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
+		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
 		require.NoError(t, err)
 	}
 }

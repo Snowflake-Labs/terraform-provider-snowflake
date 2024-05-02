@@ -13,10 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	pipeIDDelimiter = '|'
-)
-
 var pipeSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -267,7 +263,7 @@ func DeletePipe(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.Pipes.Drop(ctx, objectIdentifier)
+	err := client.Pipes.Drop(ctx, objectIdentifier, &sdk.DropPipeOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

@@ -1,12 +1,13 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
@@ -112,10 +113,10 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("create materialized view: almost complete case", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		request := createMaterializedViewBasicRequest(t).
@@ -126,7 +127,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 			}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("comment")).
-			WithRowAccessPolicy(sdk.NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"column_with_comment"})).
+			WithRowAccessPolicy(sdk.NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"column_with_comment"})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -138,9 +139,9 @@ func TestInt_MaterializedViews(t *testing.T) {
 		view := createMaterializedViewWithRequest(t, request)
 
 		assertMaterializedViewWithOptions(t, view, id, true, "comment", fmt.Sprintf(`LINEAR("%s")`, "COLUMN_WITH_COMMENT"))
-		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
 		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
 		assert.Equal(t, "MATERIALIZED_VIEW", rowAccessPolicyReference.RefEntityDomain)
@@ -313,7 +314,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	// Based on usage notes, set/unset tags is done through VIEW (https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view#usage-notes).
 	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	t.Run("alter materialized view: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		materializedView := createMaterializedView(t)
@@ -407,5 +408,54 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 		_, err := client.MaterializedViews.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_MaterializedViewsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	t.Cleanup(tableCleanup)
+
+	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+	cleanupMaterializedViewHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createMaterializedViewHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupMaterializedViewHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createMaterializedViewHandle(t, id1)
+		createMaterializedViewHandle(t, id2)
+
+		e1, err := client.MaterializedViews.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.MaterializedViews.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

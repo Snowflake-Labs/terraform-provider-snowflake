@@ -5,28 +5,20 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"regexp"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/snowflakedb/gosnowflake"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func init() {
-	// This message should be used in DeprecationMessage to get a nice link in the documentation to the replacing resource.
-	deprecationMessageRegex := regexp.MustCompile(`Please use (snowflake_(\w+)) instead.`)
-	// This allows us to get relative link to the resource/datasource in the same subtree. Will have to change when we introduce subcategories.
-	relativeLinkOnTheSameLevel := func(title string, page string) string {
-		return fmt.Sprintf(`[%s](./%s)`, title, page)
-	}
-
 	// useful links:
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/10#issuecomment-767682837
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/156#issuecomment-1600427216
@@ -34,9 +26,9 @@ func init() {
 		desc := r.Description
 		if r.DeprecationMessage != "" {
 			deprecationMessage := r.DeprecationMessage
-			resourcesRepl := deprecationMessageRegex.FindStringSubmatch(deprecationMessage)
-			if len(resourcesRepl) == 3 {
-				deprecationMessage = strings.ReplaceAll(deprecationMessage, resourcesRepl[1], relativeLinkOnTheSameLevel(resourcesRepl[1], resourcesRepl[2]))
+			replacement, path, ok := docs.GetDeprecatedResourceReplacement(deprecationMessage)
+			if ok {
+				deprecationMessage = strings.ReplaceAll(deprecationMessage, replacement, docs.RelativeLink(replacement, path))
 			}
 			// <deprecation> tag is a hack to split description into two parts (deprecation/real description) nicely. This tag won't be rendered.
 			// Check resources.md.tmpl for usage example.
@@ -476,6 +468,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_function":                                resources.Function(),
 		"snowflake_grant_account_role":                      resources.GrantAccountRole(),
 		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
+		"snowflake_grant_ownership":                         resources.GrantOwnership(),
 		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_grant_privileges_to_account_role":        resources.GrantPrivilegesToAccountRole(),
 		"snowflake_grant_privileges_to_database_role":       resources.GrantPrivilegesToDatabaseRole(),
@@ -572,7 +565,22 @@ func getDataSources() map[string]*schema.Resource {
 	return dataSources
 }
 
+var (
+	configuredClient     *sdk.Client
+	configureClientError error //nolint:errname
+)
+
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+	// hacky way to speed up our acceptance tests
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		if configuredClient != nil {
+			return &provider.Context{Client: configuredClient}, nil
+		}
+		if configureClientError != nil {
+			return nil, configureClientError
+		}
+	}
+
 	config := &gosnowflake.Config{
 		Application: "terraform-provider-snowflake",
 	}
@@ -712,7 +720,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			redirectURI := tokenAccessor["redirect_uri"].(string)
 			accessToken, err := GetAccessTokenWithRefreshToken(tokenEndpoint, clientID, clientSecret, refreshToken, redirectURI)
 			if err != nil {
-				return nil, fmt.Errorf("could not retrieve access token from refresh token")
+				return nil, fmt.Errorf("could not retrieve access token from refresh token, err = %w", err)
 			}
 			config.Token = accessToken
 			config.Authenticator = gosnowflake.AuthTypeOAuth
@@ -775,14 +783,20 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		return nil, err
+	cl, clErr := sdk.NewClient(config)
+
+	// needed for tests verifying different provider setups
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		configuredClient = cl
+		configureClientError = clErr
+	} else {
+		configuredClient = nil
+		configureClientError = nil
 	}
 
-	providerContext := &provider.Context{
-		Client: client,
+	if clErr != nil {
+		return nil, clErr
 	}
 
-	return providerContext, nil
+	return &provider.Context{Client: cl}, nil
 }

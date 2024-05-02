@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -199,7 +199,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool, withArguments bool) {
@@ -457,5 +457,57 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.Equal(t, "FLOAT", pairs["returns"])
 		require.Equal(t, "3.141592654::FLOAT", pairs["body"])
 		require.Equal(t, "()", pairs["signature"])
+	})
+}
+
+func TestInt_FunctionsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+		return func() {
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createFunctionForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		definition := "3.141592654::FLOAT"
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).WithOrReplace(sdk.Bool(true))
+
+		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
+		request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
+		err := client.Functions.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createFunctionForSQLHandle(t, id1)
+		createFunctionForSQLHandle(t, id2)
+
+		e1, err := client.Functions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Functions.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

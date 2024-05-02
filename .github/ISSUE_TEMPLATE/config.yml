@@ -1,0 +1,14 @@
+blank_issues_enabled: false # turn off the possibility to create a new issue without using one of the existing templates
+contact_links:
+  - name: Provider Roadmap
+    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md
+    about: Roadmap for the upcoming work planned on the provider.
+
+  - name: Migration Guide
+    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md
+    about: Migration Guide that presents breaking changes between the versions with actions needed during upgrading.
+
+# TODO(SNOW-1003360): Link FAQ
+#- name: Frequently Asked Questions / Common issues with solutions
+#  url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/
+#  about: A list of common provider question and issues with workarounds or solutions for them.

@@ -2,27 +2,31 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Share(t *testing.T) {
 	t.Skip("second and third account must be set for Share acceptance tests")
 	var account2 string
 	var account3 string
 
 	shareComment := "Created by a Terraform acceptance test"
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Share),
 		Steps: []resource.TestStep{
 			{
 				Config: shareConfig(name, shareComment),

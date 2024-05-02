@@ -55,9 +55,10 @@ var stageSchema = map[string]*schema.Schema{
 		Description: "Specifies the file format for the stage.",
 	},
 	"copy_options": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the copy options for the stage.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Specifies the copy options for the stage.",
+		DiffSuppressFunc: suppressCopyOptionsQuoting,
 	},
 	"encryption": {
 		Type:        schema.TypeString,

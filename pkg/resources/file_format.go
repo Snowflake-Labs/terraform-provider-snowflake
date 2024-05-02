@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -93,7 +95,6 @@ var fileFormatSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the file format; must be unique for the database and schema in which the file format is created.",
-		ForceNew:    true,
 	},
 	"database": {
 		Type:        schema.TypeString,
@@ -767,6 +768,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("name") {
 		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
+
 		err := client.FileFormats.Alter(ctx, id, &sdk.AlterFileFormatOptions{
 			Rename: &sdk.AlterFileFormatRenameOptions{
 				NewName: newId,
@@ -775,6 +777,8 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error renaming file format: %w", err)
 		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
 		id = newId
 	}
 

@@ -1,13 +1,12 @@
 package testint
 
 import (
-	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,8 +41,7 @@ func TestInt_ManagedAccounts(t *testing.T) {
 	createManagedAccountBasicRequest := func(t *testing.T) *sdk.CreateManagedAccountRequest {
 		t.Helper()
 		// 090348 (42602): Account name or alias is invalid: (...) can only contain capital letters, numbers, and underscores
-		name := strings.ToUpper(random.AlphanumericN(10))
-		id := sdk.NewAccountObjectIdentifier(name)
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		// 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
 		// 090089 (22000): ADMIN_NAME must start with a letter.

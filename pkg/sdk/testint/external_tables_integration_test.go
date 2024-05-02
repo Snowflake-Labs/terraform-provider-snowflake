@@ -1,12 +1,13 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,9 +18,11 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
 	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
 
-	tag, _ := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
 
 	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
 		return []*sdk.ExternalTableColumnRequest{
@@ -63,7 +66,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -77,7 +80,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -104,13 +107,14 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
 
 	t.Run("Create: infer schema", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
 
 		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
@@ -129,7 +133,7 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithAutoRefresh(sdk.Bool(false)))
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
+		_, err = client.ExternalTables.ShowByID(ctx, id)
 		require.NoError(t, err)
 	})
 
@@ -139,7 +143,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -165,7 +169,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -346,7 +350,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		_, err = client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
@@ -412,5 +416,56 @@ func TestInt_ExternalTables(t *testing.T) {
 			PropertyValue:   "AUTO",
 			PropertyDefault: "AUTO",
 		})
+	})
+}
+
+func TestInt_ExternalTablesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
+	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage)
+	t.Cleanup(stageCleanup)
+
+	stageLocation := fmt.Sprintf("@%s", stage.FullyQualifiedName())
+	cleanupExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		request := sdk.NewCreateExternalTableRequest(id, stageLocation).WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON))
+		err := client.ExternalTables.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupExternalTableHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createExternalTableHandle(t, id1)
+		createExternalTableHandle(t, id2)
+
+		e1, err := client.ExternalTables.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.ExternalTables.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

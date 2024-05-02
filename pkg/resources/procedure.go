@@ -112,10 +112,14 @@ var procedureSchema = map[string]*schema.Schema{
 		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "OWNER",
-		Description: "Sets execute context - see caller's rights and owner's rights",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "OWNER",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		ValidateFunc: validation.StringInSlice([]string{"CALLER", "OWNER"}, true),
+		Description:  "Sets execution context. Allowed values are CALLER and OWNER (consult a proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1)). For more information see [caller's rights and owner's rights](https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-rights).",
 	},
 	"null_input_behavior": {
 		Type:     schema.TypeString,
@@ -656,16 +660,17 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
-		name := d.Get("name")
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string)))))
+		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), d.Get("name").(string), id.Arguments())
+
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments())))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
-		if err := d.Set("name", name); err != nil {
-			return diag.FromErr(err)
-		}
+
+		d.SetId(newId.FullyQualifiedName())
+		id = newId
 	}
+
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
@@ -678,12 +683,20 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 	}
+
 	if d.HasChange("execute_as") {
-		executeAs := d.Get("execute_as")
-		if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithExecuteAs(sdk.Pointer(sdk.ExecuteAs(executeAs.(string))))); err != nil {
+		req := sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments())
+		executeAs := d.Get("execute_as").(string)
+		if strings.ToUpper(executeAs) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(executeAs) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
+		if err := client.Procedures.Alter(ctx, req); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+
 	return ReadContextProcedure(ctx, d, meta)
 }
 

@@ -1,11 +1,12 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,6 +102,27 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.CSVEmptyFieldAsNull)
 		assert.Equal(t, true, *describeResult.Options.CSVSkipByteOrderMark)
 		assert.Equal(t, &sdk.CSVEncodingGB18030, describeResult.Options.CSVEncoding)
+	})
+
+	// Check that field_optionally_enclosed_by can take the value NONE
+	t.Run("CSV", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeCSV,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				CSVFieldOptionallyEnclosedBy: sdk.String("NONE"),
+			},
+		})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.FileFormats.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		})
+
+		result, err := client.FileFormats.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "NONE", *result.Options.CSVFieldOptionallyEnclosedBy)
 	})
 	t.Run("JSON", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
@@ -353,7 +375,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("rename", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
 		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), random.String())
@@ -382,7 +404,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	})
 
 	t.Run("set + set comment", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, testSchema(t).ID(), &sdk.CreateFileFormatOptions{
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormatWithOptions(t, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
 				CSVCompression: &sdk.CSVCompressionAuto,
@@ -413,7 +435,9 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("no options", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
+
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), nil)
 		require.NoError(t, err)
 
@@ -422,7 +446,9 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
+		t.Cleanup(fileFormatCleanup)
+
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), &sdk.DropFileFormatOptions{
 			IfExists: sdk.Bool(true),
 		})
@@ -437,9 +463,9 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest, cleanupFileFormat := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat)
-	fileFormatTest2, cleanupFileFormat2 := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest2, cleanupFileFormat2 := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat2)
 
 	t.Run("without options", func(t *testing.T) {
@@ -478,13 +504,13 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
+	fileFormatTest, cleanupFileFormat := testClientHelper().FileFormat.CreateFileFormat(t)
 	t.Cleanup(cleanupFileFormat)
 
 	// new database and schema created on purpose
-	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
+	databaseTest2, cleanupDatabase2 := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase2)
-	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
+	schemaTest2, cleanupSchema2 := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest2.ID())
 	t.Cleanup(cleanupSchema2)
 
 	t.Run("show format in different schema", func(t *testing.T) {
@@ -498,5 +524,51 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 		assert.Equal(t, testDb(t).Name, fileFormat.Name.DatabaseName())
 		assert.Equal(t, testSchema(t).Name, fileFormat.Name.SchemaName())
 		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
+	})
+}
+
+func TestInt_FileFormatsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupFileFormatHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.FileFormats.Drop(ctx, id, nil)
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createFileFormatHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{Type: sdk.FileFormatTypeCSV})
+		require.NoError(t, err)
+		t.Cleanup(cleanupFileFormatHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createFileFormatHandle(t, id1)
+		createFileFormatHandle(t, id2)
+
+		e1, err := client.FileFormats.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.FileFormats.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

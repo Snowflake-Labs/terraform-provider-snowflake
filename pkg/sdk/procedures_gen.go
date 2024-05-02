@@ -236,6 +236,10 @@ type Procedure struct {
 	IsSecure           bool
 }
 
+func (v *Procedure) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
+}
+
 // DescribeProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-procedure.
 type DescribeProcedureOptions struct {
 	describe          bool                   `ddl:"static" sql:"DESCRIBE"`

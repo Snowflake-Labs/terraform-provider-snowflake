@@ -14,24 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-var userProperties = []string{
-	"comment",
-	"login_name",
-	"password",
-	"disabled",
-	"default_namespace",
-	"default_role",
-	"default_secondary_roles",
-	"default_warehouse",
-	"rsa_public_key",
-	"rsa_public_key_2",
-	"must_change_password",
-	"email",
-	"display_name",
-	"first_name",
-	"last_name",
-}
-
 var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
 	return strings.EqualFold(old, new)
 }
@@ -311,19 +293,19 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		newName := n.(string)
-		newID := sdk.NewAccountObjectIdentifier(newName)
-		alterOptions := &sdk.AlterUserOptions{
+		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
 			NewName: newID,
-		}
-		err := client.Users.Alter(ctx, id, alterOptions)
+		})
 		if err != nil {
 			return err
 		}
+
 		d.SetId(helpers.EncodeSnowflakeID(newID))
 		id = newID
 	}
+
 	runSet := false
 	alterOptions := &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
@@ -428,7 +410,9 @@ func DeleteUser(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Users.Drop(ctx, objectIdentifier)
+	err := client.Users.Drop(ctx, objectIdentifier, &sdk.DropUserOptions{
+		IfExists: sdk.Bool(true),
+	})
 	if err != nil {
 		return err
 	}

@@ -2,9 +2,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -147,7 +149,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | ICEBERG TABLE",
+					Description: fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToObjectTypesString, " | ")),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -155,7 +157,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: ValidGrantedObjectType(),
+					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToObjectTypesString, true),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -179,7 +181,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnDatabaseRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(sdk.ValidGrantToPluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -197,7 +199,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on future objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnDatabaseRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(sdk.ValidGrantToFuturePluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -213,26 +215,30 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema{
-	"object_type_plural": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
-		ValidateDiagFunc: ValidGrantedPluralObjectType(),
-	},
-	"in_database": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-	},
-	"in_schema": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
-	},
+func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes []string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"object_type_plural": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
+			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
+		},
+		"in_database": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			Description:      "The fully qualified name of the database.",
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
+		"in_schema": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			Description:      "The fully qualified name of the schema.",
+			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		},
+	}
 }
 
 func GrantPrivilegesToDatabaseRole() *schema.Resource {
@@ -374,6 +380,10 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	if d.HasChange("with_grant_option") {
+		id.WithGrantOption = d.Get("with_grant_option").(bool)
+	}
+
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
@@ -434,19 +444,29 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 			grantOn := getDatabaseRoleGrantOn(d)
 
 			if len(privilegesToAdd) > 0 {
-				err = client.Grants.GrantPrivilegesToDatabaseRole(
-					ctx,
-					getDatabaseRolePrivileges(
-						false,
-						privilegesToAdd,
-						id.Kind == OnDatabaseDatabaseRoleGrantKind,
-						id.Kind == OnSchemaDatabaseRoleGrantKind,
-						id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
-					),
-					grantOn,
-					id.DatabaseRoleName,
-					new(sdk.GrantPrivilegesToDatabaseRoleOptions),
+				privilegesToGrant := getDatabaseRolePrivileges(
+					false,
+					privilegesToAdd,
+					id.Kind == OnDatabaseDatabaseRoleGrantKind,
+					id.Kind == OnSchemaDatabaseRoleGrantKind,
+					id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
 				)
+
+				if !id.WithGrantOption {
+					if err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, &sdk.RevokePrivilegesFromDatabaseRoleOptions{
+						GrantOptionFor: sdk.Bool(true),
+					}); err != nil {
+						return diag.Diagnostics{
+							diag.Diagnostic{
+								Severity: diag.Error,
+								Summary:  "Failed to revoke privileges to add",
+								Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+							},
+						}
+					}
+				}
+
+				err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, &sdk.GrantPrivilegesToDatabaseRoleOptions{WithGrantOption: sdk.Bool(id.WithGrantOption)})
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{
@@ -636,8 +656,30 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	}
 
 	client := meta.(*provider.Context).Client
+	// TODO(SNOW-891217): Use custom error. Right now, "object does not exist" error is hidden in sdk/internal/collections package
+	if _, err := client.DatabaseRoles.ShowByID(ctx, id.DatabaseRoleName); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve database role. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve grants. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
@@ -875,6 +917,7 @@ func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) *Gr
 		id.Privileges = expandStringList(p.(*schema.Set).List())
 	}
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
+	id.AlwaysApply = d.Get("always_apply").(bool)
 
 	on := getDatabaseRoleGrantOn(d)
 	switch {

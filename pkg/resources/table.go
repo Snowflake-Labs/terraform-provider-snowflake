@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-867235]: old implementation was quoting every column, SDK is not quoting them, therefore they are quoted here: decide if we quote columns or not
+// TODO [SNOW-1348114]: old implementation was quoting every column, SDK is not quoting them, therefore they are quoted here: decide if we quote columns or not
 // TODO [SNOW-1031688]: move data manipulation logic to the SDK - SQL generation or builders part (e.g. different default types/identity)
 var tableSchema = map[string]*schema.Schema{
 	"name": {
@@ -43,7 +43,6 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
-
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -79,7 +78,7 @@ var tableSchema = map[string]*schema.Schema{
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						// TODO [SNOW-867235]: there is no such separation on SDK level. Should we keep it in V1?
+						// TODO [SNOW-1348114]: there is no such separation on SDK level. Should we keep it in V1?
 						Schema: map[string]*schema.Schema{
 							"constant": {
 								Type:        schema.TypeString,
@@ -145,6 +144,11 @@ var tableSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Default:     "",
 					Description: "Column collation, e.g. utf8",
+				},
+				"schema_evolution_record": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Record of schema evolution.",
 				},
 			},
 		},
@@ -497,6 +501,11 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 				flat["default"] = []any{def}
 			}
 		}
+
+		if td.SchemaEvolutionRecord != nil {
+			flat["schema_evolution_record"] = *td.SchemaEvolutionRecord
+		}
+
 		flattened = append(flattened, flat)
 	}
 	return flattened
@@ -688,9 +697,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
-		newName := d.Get("name").(string)
-
-		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
 
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithNewName(&newId))
 		if err != nil {
@@ -818,7 +825,11 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 		for _, cA := range changed {
 			if cA.changedDataType || cA.changedCollate {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(sdk.String(cA.newColumn.collate))})))
+				var newCollation *string
+				if sdk.IsStringType(cA.newColumn.dataType) && cA.newColumn.collate != "" {
+					newCollation = sdk.String(cA.newColumn.collate)
+				}
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(newCollation)})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}

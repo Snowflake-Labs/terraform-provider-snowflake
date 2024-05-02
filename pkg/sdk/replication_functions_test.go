@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestReplicationFunctions_ShowReplicationDatabases(t *testing.T) {
-	externalId := RandomExternalObjectIdentifier()
+	externalId := randomExternalObjectIdentifier()
 
 	// Minimal valid ShowReplicationDatabasesOptions
 	defaultOpts := func() *ShowReplicationDatabasesOptions {

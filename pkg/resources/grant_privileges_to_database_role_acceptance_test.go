@@ -4,14 +4,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,7 +17,7 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -35,7 +31,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -43,10 +39,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -72,7 +71,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -86,7 +85,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -94,10 +93,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -123,7 +125,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -145,10 +147,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -180,7 +185,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema_ExactlyOneOf(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema_ExactlyOneOf"),
@@ -192,7 +197,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema_ExactlyOneOf(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -205,7 +210,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -213,10 +218,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -242,7 +250,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -255,7 +263,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -263,10 +271,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -292,7 +303,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	tblName := "test_database_role_table_name"
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
@@ -316,10 +327,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -346,7 +360,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	tableName := "test_database_role_table_name"
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
@@ -365,10 +379,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
@@ -378,20 +395,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"with_grant_option": config.BoolVariable(false),
+		"database":           config.StringVariable(acc.TestDatabaseName),
+		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeTables.String()),
+		"with_grant_option":  config.BoolVariable(false),
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -399,10 +417,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -430,7 +451,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -442,7 +463,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -450,10 +471,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -480,20 +504,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"with_grant_option": config.BoolVariable(false),
+		"database":           config.StringVariable(acc.TestDatabaseName),
+		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeTables.String()),
+		"with_grant_option":  config.BoolVariable(false),
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -501,10 +526,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -531,8 +559,90 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 	})
 }
 
+// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
+func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_InDatabase(t *testing.T) {
+	t.Skip("Fix after it starts working on Snowflake side, reference: SNOW-1272222")
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":           config.StringVariable(acc.TestDatabaseName),
+		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeStreamlits.String()),
+		"with_grant_option":  config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("Unsupported feature 'STREAMLIT'"),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDatabase(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":           config.StringVariable(acc.TestDatabaseName),
+		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeStreamlits.String()),
+		"with_grant_option":  config.BoolVariable(false),
+	}
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypeStreamlits)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnAll|STREAMLITS|InDatabase|%s", databaseRoleName, databaseName)),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
 		configVariables := config.Variables{
 			"name":     config.StringVariable(name),
@@ -553,7 +663,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -561,10 +671,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
@@ -622,7 +735,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	schemaName := "test_database_role_schema_name"
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
@@ -653,10 +766,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -709,7 +825,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configVariables := func(alwaysApply bool) config.Variables {
 		return config.Variables{
 			"name":           config.StringVariable(name),
@@ -721,7 +837,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
 	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -729,10 +845,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -799,17 +918,296 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	})
 }
 
-func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
-	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
+// TODO [SNOW-1270457]: This seems to be a Snowflake error, we are waiting for the confirmation. Alter the test when the behavior is fixed. Update the resource documentation (section known issues).
+func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
+			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
 	}
-	ctx := context.Background()
-	databaseRoleId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name)
-	if err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(databaseRoleId).WithOrReplace(true)); err != nil {
-		t.Fatal(fmt.Errorf("error database role (%s): %w", databaseRoleId.FullyQualifiedName(), err))
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", databaseRoleName, schemaName)),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"with_grant_option": config.BoolVariable(true),
 	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						acc.TestClient().Ids.DatabaseId(),
+						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
+						false,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						acc.TestClient().Ids.DatabaseId(),
+						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
+						true,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	configVariables := config.Variables{
+		"name":     config.StringVariable(name),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var databaseCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(databaseCleanup)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { databaseCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to database role"),
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	configVariables := config.Variables{
+		"name":     config.StringVariable(name),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var databaseRoleCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(dbCleanup)
+					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { databaseRoleCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to database role"),
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2689 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := func(alwaysApply bool) config.Variables {
+		return config.Variables{
+			"name":           config.StringVariable(name),
+			"all_privileges": config.BoolVariable(true),
+			"database":       config.StringVariable(acc.TestDatabaseName),
+			"always_apply":   config.BoolVariable(alwaysApply),
+		}
+	}
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
+					t.Cleanup(databaseRoleCleanup)
+				},
+				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
+				ConfigVariables:    configVariables(true),
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+				),
+			},
+		},
+	})
 }
 
 func queriedPrivilegesToDatabaseRoleEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
@@ -832,33 +1230,45 @@ func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.Database
 	}, databaseRoleName, privileges...)
 }
 
-func testAccCheckDatabaseRolePrivilegesRevoked(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_grant_privileges_to_database_role" {
-			continue
-		}
-		ctx := context.Background()
-
-		id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["database_role_name"])
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				DatabaseRole: id,
-			},
-		})
-		if err != nil {
-			return err
-		}
-		var grantedPrivileges []string
-		for _, grant := range grants {
-			// usage is the default privilege available after creation (it won't be revoked)
-			if grant.Privilege != "USAGE" {
-				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
-			}
-		}
-		if len(grantedPrivileges) > 0 {
-			return fmt.Errorf("database role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
-		}
+func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+	t *testing.T,
+	databaseRoleName sdk.DatabaseObjectIdentifier,
+	databaseId sdk.AccountObjectIdentifier,
+	privileges []sdk.AccountObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	client := acc.Client(t)
+	ctx := context.Background()
+	err := client.Grants.RevokePrivilegesFromDatabaseRole(
+		ctx,
+		&sdk.DatabaseRoleGrantPrivileges{
+			DatabasePrivileges: privileges,
+		},
+		&sdk.DatabaseRoleGrantOn{
+			Database: sdk.Pointer(databaseId),
+		},
+		databaseRoleName,
+		new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
-	return nil
+
+	err = client.Grants.GrantPrivilegesToDatabaseRole(
+		ctx,
+		&sdk.DatabaseRoleGrantPrivileges{
+			DatabasePrivileges: privileges,
+		},
+		&sdk.DatabaseRoleGrantOn{
+			Database: sdk.Pointer(databaseId),
+		},
+		databaseRoleName,
+		&sdk.GrantPrivilegesToDatabaseRoleOptions{
+			WithGrantOption: sdk.Bool(withGrantOption),
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

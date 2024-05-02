@@ -51,7 +51,7 @@ type PolicyReference struct {
 	TagDatabase       *string
 	TagSchema         *string
 	TagName           *string
-	PolicyStatus      string
+	PolicyStatus      *string
 }
 
 type policyReferenceDBRow struct {
@@ -68,7 +68,7 @@ type policyReferenceDBRow struct {
 	TagDatabase       sql.NullString `db:"TAG_DATABASE"`
 	TagSchema         sql.NullString `db:"TAG_SCHEMA"`
 	TagName           sql.NullString `db:"TAG_NAME"`
-	PolicyStatus      string         `db:"POLICY_STATUS"`
+	PolicyStatus      sql.NullString `db:"POLICY_STATUS"`
 }
 
 func (row policyReferenceDBRow) convert() *PolicyReference {
@@ -77,7 +77,6 @@ func (row policyReferenceDBRow) convert() *PolicyReference {
 		PolicyKind:      row.PolicyKind,
 		RefEntityName:   row.RefEntityName,
 		RefEntityDomain: row.RefEntityDomain,
-		PolicyStatus:    row.PolicyStatus,
 	}
 	if row.PolicyDb.Valid {
 		policyReference.PolicyDb = &row.PolicyDb.String
@@ -105,6 +104,9 @@ func (row policyReferenceDBRow) convert() *PolicyReference {
 	}
 	if row.TagName.Valid {
 		policyReference.TagName = &row.TagName.String
+	}
+	if row.TagName.Valid {
+		policyReference.PolicyStatus = &row.PolicyStatus.String
 	}
 	return &policyReference
 }

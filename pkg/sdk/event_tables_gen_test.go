@@ -3,11 +3,11 @@ package sdk
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestEventTables_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateEventTableOptions {
 		return &CreateEventTableOptions{
@@ -53,7 +53,7 @@ func TestEventTables_Create(t *testing.T) {
 }
 
 func TestEventTables_Show(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	defaultOpts := func() *ShowEventTableOptions {
 		return &ShowEventTableOptions{}
 	}
@@ -93,7 +93,7 @@ func TestEventTables_Show(t *testing.T) {
 }
 
 func TestEventTables_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeEventTableOptions {
 		return &DescribeEventTableOptions{
@@ -119,7 +119,7 @@ func TestEventTables_Describe(t *testing.T) {
 }
 
 func TestEventTables_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterEventTableOptions {
 		return &AlterEventTableOptions{
@@ -278,7 +278,7 @@ func TestEventTables_Alter(t *testing.T) {
 	})
 
 	t.Run("alter: add row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &EventTableAddRowAccessPolicy{
@@ -289,7 +289,7 @@ func TestEventTables_Alter(t *testing.T) {
 	})
 
 	t.Run("alter: drop row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.DropRowAccessPolicy = &EventTableDropRowAccessPolicy{
@@ -299,8 +299,8 @@ func TestEventTables_Alter(t *testing.T) {
 	})
 
 	t.Run("alter: drop and add row access policy", func(t *testing.T) {
-		rowAccessPolicy1Id := RandomSchemaObjectIdentifier()
-		rowAccessPolicy2Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicy1Id := randomSchemaObjectIdentifier()
+		rowAccessPolicy2Id := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &EventTableDropAndAddRowAccessPolicy{

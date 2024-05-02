@@ -3,11 +3,11 @@ package sdk
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestPasswordPolicyCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreatePasswordPolicyOptions{}
@@ -44,7 +44,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 }
 
 func TestPasswordPolicyAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterPasswordPolicyOptions{}
@@ -118,7 +118,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 }
 
 func TestPasswordPolicyDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropPasswordPolicyOptions{}
@@ -142,7 +142,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 }
 
 func TestPasswordPolicyShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowPasswordPolicyOptions{}
@@ -205,7 +205,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 }
 
 func TestPasswordPolicyDescribe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describePasswordPolicyOptions{}

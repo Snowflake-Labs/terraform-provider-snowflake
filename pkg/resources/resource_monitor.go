@@ -223,10 +223,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := ReadResourceMonitor(d, meta); err != nil {
-		return err
-	}
-	return nil
+	return ReadResourceMonitor(d, meta)
 }
 
 // ReadResourceMonitor implements schema.ReadFunc.
@@ -495,7 +492,7 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.ResourceMonitors.Drop(ctx, objectIdentifier)
+	err := client.ResourceMonitors.Drop(ctx, objectIdentifier, &sdk.DropResourceMonitorOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

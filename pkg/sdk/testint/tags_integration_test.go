@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,9 +16,9 @@ func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
 	t.Cleanup(schemaCleanup)
 
 	assertTagHandle := func(t *testing.T, tag *sdk.Tag, expectedName string, expectedComment string, expectedAllowedValues []string) {
@@ -28,6 +28,7 @@ func TestInt_Tags(t *testing.T) {
 		assert.Equal(t, "ACCOUNTADMIN", tag.Owner)
 		assert.Equal(t, expectedComment, tag.Comment)
 		assert.Equal(t, expectedAllowedValues, tag.AllowedValues)
+		assert.Equal(t, "ROLE", tag.OwnerRoleType)
 	}
 	cleanupTagHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
@@ -87,8 +88,17 @@ func TestInt_Tags(t *testing.T) {
 
 		comment := random.Comment()
 		values := []string{"value1", "value2"}
-		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id).WithOrReplace(true).WithComment(&comment).WithAllowedValues(values))
-		sdk.ErrorsEqual(t, sdk.ErrOneOf("createTagOptions", "Comment", "AllowedValues"), err)
+		request := sdk.NewCreateTagRequest(id).
+			WithOrReplace(true).
+			WithComment(&comment).
+			WithAllowedValues(values)
+		err := client.Tags.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTagHandle(id))
+
+		tag, err := client.Tags.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertTagHandle(t, tag, name, comment, values)
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {
@@ -160,7 +170,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: set and unset masking policies", func(t *testing.T) {
-		policyTest, policyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
+		policyTest, policyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyInSchema(t, schemaTest.ID())
 		t.Cleanup(policyCleanup)
 
 		tag := createTagHandle(t)
@@ -266,5 +276,49 @@ func TestInt_Tags(t *testing.T) {
 		tags, err := client.Tags.Show(ctx, sdk.NewShowTagRequest().WithLike("non-existent"))
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(tags))
+	})
+}
+
+func TestInt_TagsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupTagHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+	createTagHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTagHandle(id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createTagHandle(t, id1)
+		createTagHandle(t, id2)
+
+		e1, err := client.Tags.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Tags.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

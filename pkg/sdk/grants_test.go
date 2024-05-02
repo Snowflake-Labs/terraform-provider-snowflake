@@ -724,9 +724,9 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 }
 
 func TestGrantPrivilegeToShare(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 	t.Run("on database", func(t *testing.T) {
-		otherID := RandomAccountObjectIdentifier()
+		otherID := randomAccountObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -738,7 +738,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		otherID := RandomDatabaseObjectIdentifier()
+		otherID := randomDatabaseObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -750,7 +750,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -764,7 +764,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on all tables", func(t *testing.T) {
-		otherID := RandomDatabaseObjectIdentifier()
+		otherID := randomDatabaseObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -778,7 +778,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -791,9 +791,9 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 }
 
 func TestRevokePrivilegeFromShare(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 	t.Run("on database", func(t *testing.T) {
-		otherID := RandomAccountObjectIdentifier()
+		otherID := randomAccountObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -805,7 +805,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		otherID := RandomDatabaseObjectIdentifier()
+		otherID := randomDatabaseObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -817,7 +817,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -831,7 +831,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on all tables", func(t *testing.T) {
-		otherID := RandomDatabaseObjectIdentifier()
+		otherID := randomDatabaseObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -845,7 +845,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := RandomSchemaObjectIdentifier()
+		otherID := randomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeUsage},
 			On: &ShareGrantOn{
@@ -1005,7 +1005,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("on database", func(t *testing.T) {
-		dbID := RandomAccountObjectIdentifier()
+		dbID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Object: &Object{
@@ -1018,7 +1018,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to role", func(t *testing.T) {
-		roleID := RandomAccountObjectIdentifier()
+		roleID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				Role: roleID,
@@ -1028,7 +1028,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to user", func(t *testing.T) {
-		userID := RandomAccountObjectIdentifier()
+		userID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				User: userID,
@@ -1038,17 +1038,33 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to share", func(t *testing.T) {
-		shareID := RandomAccountObjectIdentifier()
+		shareID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
-				Share: shareID,
+				Share: &ShowGrantsToShare{
+					Name: shareID,
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS TO SHARE %s", shareID.FullyQualifiedName())
 	})
 
+	t.Run("to share in application package", func(t *testing.T) {
+		shareID := randomAccountObjectIdentifier()
+		packageId := randomAccountObjectIdentifier()
+		opts := &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				Share: &ShowGrantsToShare{
+					Name:                 shareID,
+					InApplicationPackage: &packageId,
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS TO SHARE %s IN APPLICATION PACKAGE %s", shareID.FullyQualifiedName(), packageId.FullyQualifiedName())
+	})
+
 	t.Run("of role", func(t *testing.T) {
-		roleID := RandomAccountObjectIdentifier()
+		roleID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Role: roleID,
@@ -1058,7 +1074,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("of database role", func(t *testing.T) {
-		roleID := RandomDatabaseObjectIdentifier()
+		roleID := randomDatabaseObjectIdentifier()
 		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				DatabaseRole: roleID,
@@ -1068,7 +1084,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("of share", func(t *testing.T) {
-		shareID := RandomAccountObjectIdentifier()
+		shareID := randomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Share: shareID,

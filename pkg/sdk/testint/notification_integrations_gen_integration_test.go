@@ -42,7 +42,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationAutoGoogleRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(gcpPubsubSubscriptionName)))
@@ -50,7 +50,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationAutoAzureRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(azureStorageQueuePrimaryUri, azureTenantId)))
@@ -58,7 +58,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationPushAmazonRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAmazonPushParams(sdk.NewAmazonPushParamsRequest(awsSnsTopicArn, awsSnsRoleArn)))
@@ -66,7 +66,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationPushGoogleRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithGooglePushParams(sdk.NewGooglePushParamsRequest(gcpPubsubTopicName)))
@@ -74,7 +74,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationPushAzureRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAzurePushParams(sdk.NewAzurePushParamsRequest(azureEventGridTopicEndpoint, azureTenantId)))
@@ -82,7 +82,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 	createNotificationIntegrationEmailRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
 		t.Helper()
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		// TODO [SNOW-1007539]: use email of our service user
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
@@ -252,7 +252,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("create and describe notification integration - email, with empty allowed recipients", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		request := sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithEmailParams(sdk.NewEmailParamsRequest().WithAllowedRecipients([]sdk.NotificationIntegrationAllowedRecipient{}))
 
@@ -359,7 +359,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter notification integration: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		integration := createNotificationIntegrationEmail(t)

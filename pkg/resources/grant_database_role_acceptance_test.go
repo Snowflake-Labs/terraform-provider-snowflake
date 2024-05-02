@@ -1,26 +1,20 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
-	"strings"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentDatabaseRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -35,7 +29,7 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/database_role"),
@@ -59,9 +53,9 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentDatabaseRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -77,7 +71,7 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantDatabaseRole/issue2402"),
@@ -93,8 +87,8 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 }
 
 func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -109,7 +103,7 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/account_role"),
@@ -134,11 +128,11 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2410 is fixed
 func TestAcc_GrantDatabaseRole_share(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareId := sdk.NewAccountObjectIdentifier(shareName).FullyQualifiedName()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := shareId.Name()
 	resourceName := "snowflake_grant_database_role.test"
 	configVariables := func() config.Variables {
 		return config.Variables{
@@ -153,7 +147,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
@@ -161,7 +155,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId.FullyQualifiedName())),
 				),
 			},
 			// test import
@@ -174,35 +168,4 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckGrantDatabaseRoleDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_grant_database_role" {
-			continue
-		}
-		ctx := context.Background()
-		id := rs.Primary.ID
-		ids := strings.Split(id, "|")
-		databaseRoleName := ids[0]
-		objectType := ids[1]
-		parentRoleName := ids[2]
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			Of: &sdk.ShowGrantsOf{
-				DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName),
-			},
-		})
-		if err != nil {
-			continue
-		}
-		for _, grant := range grants {
-			if grant.GrantedTo == sdk.ObjectType(objectType) {
-				if grant.GranteeName.FullyQualifiedName() == parentRoleName {
-					return fmt.Errorf("database role grant %v still exists", grant)
-				}
-			}
-		}
-	}
-	return nil
 }

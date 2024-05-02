@@ -326,7 +326,7 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id.WithoutArguments(), id.Arguments())
+	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id)
 	if err != nil {
 		d.SetId("")
 		return nil

@@ -7,6 +7,8 @@ name: tests
 
 jobs:
   all-tests:
+    env:
+      TEST_SF_TF_TEST_OBJECT_SUFFIX: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.pull_request.head.sha) || (github.event_name == 'pull_request' && github.event.pull_request.head.sha) }}
     name: all-tests
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
@@ -43,9 +45,36 @@ jobs:
 
       - run: make test
         if: steps.create_config.conclusion == 'success'
+        env:
+          SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
+          TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
+          TEST_SF_TF_AWS_EXTERNAL_KEY_ID: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_KEY_ID }}
+          TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN }}
+          TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY }}
+          TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL }}
+          TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN }}
+          TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
+          TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
+
+      - name: Setup Terraform
+        if: steps.create_config.conclusion == 'success'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.4
+          terraform_wrapper: false
 
       - run: make test-acceptance
         if: steps.create_config.conclusion == 'success'
+        env:
+          SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
+          TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
+          TEST_SF_TF_AWS_EXTERNAL_KEY_ID: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_KEY_ID }}
+          TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN }}
+          TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY }}
+          TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL }}
+          TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN }}
+          TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
+          TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
 
       - name: sweepers cleanup
         if: ${{ always() }}

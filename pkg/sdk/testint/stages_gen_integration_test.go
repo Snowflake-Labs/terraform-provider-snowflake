@@ -1,12 +1,13 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -236,7 +237,7 @@ func TestInt_Stages(t *testing.T) {
 
 	t.Run("Alter - set unset tags", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
-		tag, cleanupTag := createTag(t, client, testDb(t), testSchema(t))
+		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
@@ -346,6 +347,11 @@ func TestInt_Stages(t *testing.T) {
 		stage, err := client.Stages.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertStage(t, stage, id, "EXTERNAL", "Updated comment", "AWS", awsBucketUrl, s3StorageIntegration.Name)
+
+		props, err := client.Stages.Describe(ctx, id)
+
+		require.NoError(t, err)
+		require.NotNil(t, props)
 	})
 
 	t.Run("AlterExternalGCSStage", func(t *testing.T) {
@@ -547,5 +553,50 @@ func TestInt_Stages(t *testing.T) {
 		assert.Nil(t, stage.StorageIntegration)
 		assert.Nil(t, stage.Endpoint)
 		assert.True(t, stage.DirectoryEnabled)
+		assert.Equal(t, "ROLE", *stage.OwnerRoleType)
+	})
+}
+
+func TestInt_StagesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupStageHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+	createStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(cleanupStageHandle(id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createStageHandle(t, id1)
+		createStageHandle(t, id2)
+
+		e1, err := client.Stages.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Stages.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

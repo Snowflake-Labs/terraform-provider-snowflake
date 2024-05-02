@@ -7,9 +7,9 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -18,18 +18,23 @@ import (
 func testAccProcedure(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
+
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-			"comment":  config.StringVariable("Terraform acceptance test"),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"execute_as": config.StringVariable("CALLER"),
 		}
 	}
 	variableSet2 := m()
+	variableSet2["name"] = config.StringVariable(newName)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+	variableSet2["execute_as"] = config.StringVariable("OWNER")
 
 	ignoreDuringImport := []string{"null_input_behavior"}
 	if strings.Contains(configDirectory, "/sql") {
@@ -42,7 +47,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
@@ -53,24 +58,30 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
+					resource.TestCheckResourceAttr(resourceName, "execute_as", "CALLER"),
 
 					// computed attributes
 					resource.TestCheckResourceAttrSet(resourceName, "return_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "statement"),
-					resource.TestCheckResourceAttrSet(resourceName, "execute_as"),
 					resource.TestCheckResourceAttrSet(resourceName, "secure"),
 				),
 			},
 
-			// test - change comment
+			// test - rename + change comment and caller (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2642)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
 				ConfigVariables: variableSet2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", newName),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+					resource.TestCheckResourceAttr(resourceName, "execute_as", "OWNER"),
 				),
 			},
 
@@ -111,14 +122,15 @@ func TestAcc_Procedure_Scala(t *testing.T) {
 }
 
 func TestAcc_Procedure_complex(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-			"comment":  config.StringVariable("Terraform acceptance test"),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"execute_as": config.StringVariable("CALLER"),
 		}
 	}
 	variableSet2 := m()
@@ -131,7 +143,7 @@ func TestAcc_Procedure_complex(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Procedure/complex"),
@@ -186,7 +198,7 @@ func TestAcc_Procedure_complex(t *testing.T) {
 }
 
 func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_procedure.p"
 
 	resource.Test(t, resource.TestCase{
@@ -194,7 +206,7 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 
 		Steps: []resource.TestStep{
 			{

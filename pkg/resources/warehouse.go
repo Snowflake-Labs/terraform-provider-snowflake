@@ -319,18 +319,17 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	// Change name separately
 	if d.HasChange("name") {
-		if v, ok := d.GetOk("name"); ok {
-			newName := sdk.NewAccountObjectIdentifier(v.(string))
-			err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
-				NewName: &newName,
-			})
-			if err != nil {
-				return err
-			}
-			d.SetId(helpers.EncodeSnowflakeID(newName))
-		} else {
-			panic("name has to be set")
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+
+		err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
+			NewName: &newId,
+		})
+		if err != nil {
+			return err
 		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	// Batch SET operations and UNSET operations

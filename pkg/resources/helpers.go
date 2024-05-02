@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -127,4 +128,95 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 		return nil
 	}
 	return &typedValue
+}
+
+type tags []tag
+
+func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
+	sT := make([]snowflake.TagValue, len(t))
+	for i, tag := range t {
+		sT[i] = tag.toSnowflakeTagValue()
+	}
+	return sT
+}
+
+func (t tag) toSnowflakeTagValue() snowflake.TagValue {
+	return snowflake.TagValue{
+		Name:     t.name,
+		Value:    t.value,
+		Database: t.database,
+		Schema:   t.schema,
+	}
+}
+
+func (t tags) getNewIn(new tags) (added tags) {
+	added = tags{}
+	for _, t0 := range t {
+		found := false
+		for _, cN := range new {
+			if t0.name == cN.name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, t0)
+		}
+	}
+	return
+}
+
+func (t tags) getChangedTagProperties(new tags) (changed tags) {
+	changed = tags{}
+	for _, t0 := range t {
+		for _, tN := range new {
+			if t0.name == tN.name && t0.value != tN.value {
+				changed = append(changed, tN)
+			}
+		}
+	}
+	return
+}
+
+func (t tags) diffs(new tags) (removed tags, added tags, changed tags) {
+	return t.getNewIn(new), new.getNewIn(t), t.getChangedTagProperties(new)
+}
+
+func (t columns) getNewIn(new columns) (added columns) {
+	added = columns{}
+	for _, cO := range t {
+		found := false
+		for _, cN := range new {
+			if cO.name == cN.name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, cO)
+		}
+	}
+	return
+}
+
+type tag struct {
+	name     string
+	value    string
+	database string
+	schema   string
+}
+
+func getTags(from interface{}) (to tags) {
+	tags := from.([]interface{})
+	to = make([]tag, len(tags))
+	for i, t := range tags {
+		v := t.(map[string]interface{})
+		to[i] = tag{
+			name:     v["name"].(string),
+			value:    v["value"].(string),
+			database: v["database"].(string),
+			schema:   v["schema"].(string),
+		}
+	}
+	return to
 }

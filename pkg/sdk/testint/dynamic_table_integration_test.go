@@ -2,10 +2,11 @@ package testint
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -13,12 +14,12 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	tableTest, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+	tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	ctx := context.Background()
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		name := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),
 		}
@@ -45,6 +46,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, name.Name(), dynamicTableById.Name)
 		require.Equal(t, testWarehouse(t).ID().Name(), dynamicTableById.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, dynamicTableById.TargetLag)
+		assert.Equal(t, "ROLE", dynamicTableById.OwnerRoleType)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
@@ -106,7 +108,10 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	t.Cleanup(tableCleanup)
+
+	dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 	t.Cleanup(dynamicTableCleanup)
 
 	t.Run("when dynamic table exists", func(t *testing.T) {
@@ -125,14 +130,17 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	t.Cleanup(tableCleanup)
+
 	t.Run("alter with suspend or resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
-		require.Equal(t, sdk.DynamicTableSchedulingStateRunning, entities[0].SchedulingState)
+		require.Equal(t, sdk.DynamicTableSchedulingStateActive, entities[0].SchedulingState)
 
 		err = client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)))
 		require.NoError(t, err)
@@ -148,11 +156,11 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 		entities, err = client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
-		require.Equal(t, sdk.DynamicTableSchedulingStateRunning, entities[0].SchedulingState)
+		require.Equal(t, sdk.DynamicTableSchedulingStateActive, entities[0].SchedulingState)
 	})
 
 	t.Run("alter with refresh", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithRefresh(sdk.Bool(true)))
@@ -164,7 +172,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with suspend and resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
@@ -173,7 +181,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with set", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 		t.Cleanup(dynamicTableCleanup)
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}
@@ -185,5 +193,57 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 			require.Equal(t, 1, len(entities))
 			require.Equal(t, value, entities[0].TargetLag)
 		}
+	})
+}
+
+func TestInt_DynamicTablesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	warehouseTest, databaseTest, schemaTest := testWarehouse(t), testDb(t), testSchema(t)
+
+	cleanupDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
+		t.Cleanup(tableCleanup)
+		targetLag := sdk.TargetLag{
+			MaximumDuration: sdk.String("2 minutes"),
+		}
+		query := "select id from " + tableTest.ID().FullyQualifiedName()
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(id, warehouseTest.ID(), targetLag, query).WithOrReplace(true))
+		require.NoError(t, err)
+		t.Cleanup(cleanupDynamicTableHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createDynamicTableHandle(t, id1)
+		createDynamicTableHandle(t, id2)
+
+		e1, err := client.DynamicTables.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.DynamicTables.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

@@ -13,12 +13,13 @@ func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 	// new warehouses created on purpose
-	testWarehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
+	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
 		WarehouseSize: &sdk.WarehouseSizeSmall,
 	})
 	t.Cleanup(warehouseCleanup)
-	_, warehouse2Cleanup := createWarehouse(t, client)
+	_, warehouse2Cleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouse2Cleanup)
 
 	t.Run("show without options", func(t *testing.T) {
@@ -30,14 +31,15 @@ func TestInt_WarehousesShow(t *testing.T) {
 	t.Run("show with options", func(t *testing.T) {
 		showOptions := &sdk.ShowWarehouseOptions{
 			Like: &sdk.Like{
-				Pattern: &testWarehouse.Name,
+				Pattern: &warehouse.Name,
 			},
 		}
 		warehouses, err := client.Warehouses.Show(ctx, showOptions)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
-		assert.Equal(t, testWarehouse.Name, warehouses[0].Name)
+		assert.Equal(t, warehouse.Name, warehouses[0].Name)
 		assert.Equal(t, sdk.WarehouseSizeSmall, warehouses[0].Size)
+		assert.Equal(t, "ROLE", warehouses[0].OwnerRoleType)
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
@@ -55,13 +57,13 @@ func TestInt_WarehousesShow(t *testing.T) {
 func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
-	tag2Test, tag2Cleanup := createTag(t, client, testDb(t), testSchema(t))
+	tag2Test, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 			OrReplace:                       sdk.Bool(true),
 			WarehouseType:                   &sdk.WarehouseTypeStandard,
@@ -126,7 +128,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -163,7 +165,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 	ctx := testContext(t)
 
 	// new warehouse created on purpose
-	warehouse, warehouseCleanup := createWarehouse(t, client)
+	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when warehouse exists", func(t *testing.T) {
@@ -185,13 +187,13 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
-	tag2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
+	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup2)
 
 	t.Run("terraform acc test", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateWarehouseOptions{
 			Comment:            sdk.String("test comment"),
 			WarehouseSize:      &sdk.WarehouseSizeXSmall,
@@ -222,7 +224,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
 
 		// rename
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: &newID,
 		}
@@ -249,7 +251,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("set", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -276,11 +278,11 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: &newID,
 		}
@@ -303,10 +305,10 @@ func TestInt_WarehouseAlter(t *testing.T) {
 			Comment:         sdk.String("test comment"),
 			MaxClusterCount: sdk.Int(10),
 		}
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouseWithOptions(t, client, createOptions)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, createOptions)
 		t.Cleanup(warehouseCleanup)
-		id := warehouse.ID()
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			Unset: &sdk.WarehouseUnset{
@@ -331,7 +333,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("suspend & resume", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -367,7 +369,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("resume without suspending", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -389,10 +391,10 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("abort all queries", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
-		resetWarehouse := useWarehouse(t, client, warehouse.ID())
+		resetWarehouse := testClientHelper().Warehouse.UseWarehouse(t, warehouse.ID())
 		t.Cleanup(resetWarehouse)
 
 		// Start a long query
@@ -436,7 +438,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("set tags", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -464,7 +466,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 	t.Run("unset tags", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -512,7 +514,8 @@ func TestInt_WarehouseDrop(t *testing.T) {
 
 	t.Run("when warehouse exists", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, _ := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
 
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), nil)
 		require.NoError(t, err)
@@ -528,7 +531,8 @@ func TestInt_WarehouseDrop(t *testing.T) {
 
 	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, _ := createWarehouse(t, client)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
 
 		dropOptions := &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)}
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), dropOptions)

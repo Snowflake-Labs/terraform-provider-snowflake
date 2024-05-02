@@ -3,11 +3,11 @@ package sdk
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestSequences_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateSequenceOptions {
 		return &CreateSequenceOptions{
@@ -45,7 +45,7 @@ func TestSequences_Create(t *testing.T) {
 }
 
 func TestSequences_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterSequenceOptions {
 		return &AlterSequenceOptions{
@@ -139,7 +139,7 @@ func TestSequences_Show(t *testing.T) {
 }
 
 func TestSequences_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeSequenceOptions {
 		return &DescribeSequenceOptions{
@@ -165,7 +165,7 @@ func TestSequences_Describe(t *testing.T) {
 }
 
 func TestSequences_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropSequenceOptions {
 		return &DropSequenceOptions{

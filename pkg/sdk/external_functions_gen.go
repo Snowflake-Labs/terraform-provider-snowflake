@@ -9,7 +9,7 @@ type ExternalFunctions interface {
 	Create(ctx context.Context, request *CreateExternalFunctionRequest) error
 	Alter(ctx context.Context, request *AlterExternalFunctionRequest) error
 	Show(ctx context.Context, request *ShowExternalFunctionRequest) ([]ExternalFunction, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier, arguments []DataType) (*ExternalFunction, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error)
 	Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error)
 }
 
@@ -130,6 +130,10 @@ type ExternalFunction struct {
 	Language           string
 	IsMemoizable       bool
 	IsDataMetric       bool
+}
+
+func (v *ExternalFunction) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
 }
 
 // DescribeExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

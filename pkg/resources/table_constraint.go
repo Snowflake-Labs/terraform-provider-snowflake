@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-867235]: refine this resource during redesign:
+// TODO [SNOW-1348114]: refine this resource during redesign:
 // - read (from the existing comment it seems that active warehouse is needed (it should be probably added to the resource as required)
 // - drop (in tests it's not dropped correctly, probably also because missing warehouse)
 // - do we need it?
@@ -343,6 +342,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTableConstraint implements schema.ReadFunc.
 func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
+	// TODO(issue-2683): Implement read operation
 	// commenting this out since it requires an active warehouse to be set which may not be intuitive.
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
 	// step like in tag association. People don't like waiting 40 minutes for Terraform to run.
@@ -363,6 +363,7 @@ func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 
 // UpdateTableConstraint implements schema.UpdateFunc.
 func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
+	/* TODO(issue-2683): Update isn't be possible with non-existing Read operation. The Update logic is ready to be uncommented once the Read operation is ready.
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
@@ -374,15 +375,20 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		constraintRequest := sdk.NewTableConstraintRenameActionRequest().WithOldName(tc.name).WithNewName(n.(string))
-		alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithRename(constraintRequest))
-		err = client.Tables.Alter(ctx, alterStatement)
-		if err != nil {
-			return fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
+		if d.HasChange("name") {
+			newName := d.Get("name").(string)
+			constraintRequest := sdk.NewTableConstraintRenameActionRequest().WithOldName(tc.name).WithNewName(newName)
+			alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithRename(constraintRequest))
+
+			err = client.Tables.Alter(ctx, alterStatement)
+			if err != nil {
+				return fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
+			}
+
+			tc.name = newName
+			d.SetId(tc.String())
 		}
-	}
+	*/
 
 	return ReadTableConstraint(d, meta)
 }

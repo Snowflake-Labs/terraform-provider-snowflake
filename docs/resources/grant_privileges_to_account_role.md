@@ -11,6 +11,8 @@ description: |-
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
+~> **Note** When granting privileges on applications (for example, the default "SNOWFLAKE" application) use `on_account_object.object_type = "DATABASE"` instead.
+
 # snowflake_grant_privileges_to_account_role (Resource)
 
 
@@ -88,6 +90,18 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 }
 
 ## ID: "\"role_name\"|true|false|ALL|OnAccountObject|DATABASE|\"database\""
+
+# grant IMPORTED PRIVILEGES on SNOWFLAKE application
+resource "snowflake_grant_privileges_to_account_role" "example" {
+  account_role_name = snowflake_role.db_role.name
+  privileges        = ["IMPORTED PRIVILEGES"]
+  on_account_object {
+    object_type = "DATABASE" # All applications should be using DATABASE object_type
+    object_name = "SNOWFLAKE"
+  }
+}
+
+## ID: "\"role_name\"|false|false|IMPORTED PRIVILEGES|OnAccountObject|DATABASE|\"SNOWFLAKE\""
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -286,16 +300,16 @@ Optional:
 Optional:
 
 - `all` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--all))
-- `future` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
+- `future` (Block List, Max: 1) Configures the privilege to be granted on future objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
 - `object_name` (String) The fully qualified name of the object on which privileges will be granted.
-- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | ICEBERG TABLE
+- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | DATA METRIC FUNCTION | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | IMAGE REPOSITORY | ICEBERG TABLE | MASKING POLICY | MATERIALIZED VIEW | MODEL | NETWORK RULE | PACKAGES POLICY | PASSWORD POLICY | PIPE | PROCEDURE | PROJECTION POLICY | ROW ACCESS POLICY | SECRET | SERVICE | SESSION POLICY | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | VIEW | STREAMLIT
 
 <a id="nestedblock--on_schema_object--all"></a>
 ### Nested Schema for `on_schema_object.all`
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | IMAGE REPOSITORIES | ICEBERG TABLES | MASKING POLICIES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PACKAGES POLICIES | PASSWORD POLICIES | PIPES | PROCEDURES | PROJECTION POLICIES | ROW ACCESS POLICIES | SECRETS | SERVICES | SESSION POLICIES | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | VIEWS | STREAMLITS.
 
 Optional:
 
@@ -308,16 +322,19 @@ Optional:
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PASSWORD POLICIES | PIPES | PROCEDURES | SECRETS | SERVICES | SEQUENCES | STAGES | STREAMS | TABLES | TASKS | VIEWS.
 
 Optional:
 
 - `in_database` (String)
 - `in_schema` (String)
 
+## Known limitations
+- Setting the `CREATE SNOWFLAKE.ML.ANOMALY_DETECTION` or `CREATE SNOWFLAKE.ML.FORECAST` privileges on schema results in a permadiff because of the probably incorrect Snowflake's behavior of `SHOW GRANTS ON <object_type> <object_name>`. More in the [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651#issuecomment-2022634952).
+
 ## Import
 
-~> **Note** All the ..._name parts should be fully qualified names, e.g. for schema object it is `"<database_name>"."<schema_name>"."<object_name>"`
+~> **Note** All the ..._name parts should be fully qualified names (where every part is quoted), e.g. for schema object it is `"<database_name>"."<schema_name>"."<object_name>"`
 ~> **Note** To import all_privileges write ALL or ALL PRIVILEGES in place of `<privileges>`
 
 Import is supported using the following syntax:

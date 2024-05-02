@@ -15,6 +15,24 @@ type Tags interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error)
 	Drop(ctx context.Context, request *DropTagRequest) error
 	Undrop(ctx context.Context, request *UndropTagRequest) error
+	Set(ctx context.Context, request *SetTagRequest) error
+	Unset(ctx context.Context, request *UnsetTagRequest) error
+}
+
+type setTagOptions struct {
+	alter      bool             `ddl:"static" sql:"ALTER"`
+	objectType ObjectType       `ddl:"keyword"`
+	objectName ObjectIdentifier `ddl:"identifier"`
+	column     *string          `ddl:"parameter,no_equals,double_quotes" sql:"MODIFY COLUMN"`
+	SetTags    []TagAssociation `ddl:"keyword" sql:"SET TAG"`
+}
+
+type unsetTagOptions struct {
+	alter      bool               `ddl:"static" sql:"ALTER"`
+	objectType ObjectType         `ddl:"keyword"`
+	objectName ObjectIdentifier   `ddl:"identifier"`
+	column     *string            `ddl:"parameter,no_equals,double_quotes" sql:"MODIFY COLUMN"`
+	UnsetTags  []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 // createTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-tag
@@ -24,8 +42,8 @@ type createTagOptions struct {
 	tag           string                 `ddl:"static" sql:"TAG"`
 	IfNotExists   *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
-	Comment       *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	AllowedValues *AllowedValues         `ddl:"keyword" sql:"ALLOWED_VALUES"`
+	Comment       *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type AllowedValues struct {
@@ -52,7 +70,7 @@ type Tag struct {
 	Owner         string
 	Comment       string
 	AllowedValues []string
-	OwnerRole     string
+	OwnerRoleType string
 }
 
 func (v *Tag) ID() SchemaObjectIdentifier {
@@ -72,13 +90,13 @@ type tagRow struct {
 
 func (tr tagRow) convert() *Tag {
 	t := &Tag{
-		CreatedOn:    tr.CreatedOn,
-		Name:         tr.Name,
-		DatabaseName: tr.DatabaseName,
-		SchemaName:   tr.SchemaName,
-		Owner:        tr.Owner,
-		Comment:      tr.Comment,
-		OwnerRole:    tr.OwnerRoleType,
+		CreatedOn:     tr.CreatedOn,
+		Name:          tr.Name,
+		DatabaseName:  tr.DatabaseName,
+		SchemaName:    tr.SchemaName,
+		Owner:         tr.Owner,
+		Comment:       tr.Comment,
+		OwnerRoleType: tr.OwnerRoleType,
 	}
 	if tr.AllowedValues.Valid {
 		// remove brackets

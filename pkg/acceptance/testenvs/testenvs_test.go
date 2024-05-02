@@ -18,14 +18,14 @@ func Test_GetOrSkipTest(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			env = testenvs.GetOrSkipTest(t, testenvs.User)
+			env = testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 		}()
 		wg.Wait()
 		return env
 	}
 
 	t.Run("skip test if missing", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "")
 
 		tut := &testing.T{}
 		env := runGetOrSkipInGoroutineAndWaitForCompletion(tut)
@@ -35,7 +35,7 @@ func Test_GetOrSkipTest(t *testing.T) {
 	})
 
 	t.Run("get env if exists", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "user")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "user")
 
 		tut := &testing.T{}
 		env := runGetOrSkipInGoroutineAndWaitForCompletion(tut)
@@ -60,19 +60,19 @@ func Test_SkipTestIfSet(t *testing.T) {
 	}
 
 	t.Run("skip test if env is set", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "1")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "1")
 
 		tut := &testing.T{}
-		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.User)
+		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.BusinessCriticalAccount)
 
 		require.True(t, tut.Skipped())
 	})
 
 	t.Run("do not skip if env not set", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "")
 
 		tut := &testing.T{}
-		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.User)
+		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.BusinessCriticalAccount)
 
 		require.False(t, tut.Skipped())
 	})
@@ -92,26 +92,26 @@ func Test_Assertions(t *testing.T) {
 	}
 
 	t.Run("test if env does not exist", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "")
 
 		tut1 := &testing.T{}
-		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.BusinessCriticalAccount)) })
 
 		tut2 := &testing.T{}
-		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.BusinessCriticalAccount)) })
 
 		require.False(t, tut1.Failed())
 		require.True(t, tut2.Failed())
 	})
 
 	t.Run("test if env exists", func(t *testing.T) {
-		t.Setenv(string(testenvs.User), "user")
+		t.Setenv(string(testenvs.BusinessCriticalAccount), "user")
 
 		tut1 := &testing.T{}
-		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.BusinessCriticalAccount)) })
 
 		tut2 := &testing.T{}
-		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.BusinessCriticalAccount)) })
 
 		require.True(t, tut1.Failed())
 		require.False(t, tut2.Failed())

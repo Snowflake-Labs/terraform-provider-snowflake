@@ -57,16 +57,16 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 	return resultList, nil
 }
 
-func (v *streams) ShowByID(ctx context.Context, request *ShowByIdStreamRequest) (*Stream, error) {
+func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
 	streams, err := v.Show(ctx, NewShowStreamRequest().
 		WithIn(&In{
-			Schema: NewDatabaseObjectIdentifier(request.name.DatabaseName(), request.name.SchemaName()),
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
 		}).
-		WithLike(&Like{Pattern: String(request.name.Name())}))
+		WithLike(&Like{Pattern: String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(streams, func(r Stream) bool { return r.Name == request.name.Name() })
+	return collections.FindOne(streams, func(r Stream) bool { return r.Name == id.Name() })
 }
 
 func (v *streams) Describe(ctx context.Context, request *DescribeStreamRequest) (*Stream, error) {

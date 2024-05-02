@@ -4,24 +4,22 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_View(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	otherQuery := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
 
@@ -51,7 +49,7 @@ func TestAcc_View(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -125,9 +123,9 @@ func TestAcc_View(t *testing.T) {
 }
 
 func TestAcc_View_Tags(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag1Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
+	tag1Name := acc.TestClient().Ids.Alpha()
+	tag2Name := acc.TestClient().Ids.Alpha()
 
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
@@ -148,7 +146,7 @@ func TestAcc_View_Tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			// create tags
 			{
@@ -185,8 +183,8 @@ func TestAcc_View_Tags(t *testing.T) {
 }
 
 func TestAcc_View_Rename(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
+	newViewName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
 	m := func() map[string]config.Variable {
@@ -211,7 +209,7 @@ func TestAcc_View_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -224,6 +222,11 @@ func TestAcc_View_Rename(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
 				ConfigVariables: m2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newViewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "new comment"),
@@ -234,7 +237,7 @@ func TestAcc_View_Rename(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -260,7 +263,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -296,7 +299,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -321,7 +324,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -353,16 +356,19 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_ViewStatementUpdate(t *testing.T) {
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, `\"name\"`),
+				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, `\"name\"`),
 				Check: resource.ComposeTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -370,7 +376,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, "*"),
+				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
@@ -381,7 +387,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 }
 
 func TestAcc_View_copyGrants(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
 	resource.Test(t, resource.TestCase{
@@ -390,7 +396,7 @@ func TestAcc_View_copyGrants(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				Config:      viewConfigWithCopyGrants(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
@@ -412,12 +418,60 @@ func TestAcc_View_copyGrants(t *testing.T) {
 	})
 }
 
-func viewConfigWithGrants(databaseName string, schemaName string, selectStatement string) string {
+func TestAcc_View_Issue2640(t *testing.T) {
+	viewName := acc.TestClient().Ids.Alpha()
+	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	roleName := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, viewName, part1, part2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", fmt.Sprintf("%s\n\tunion\n%s\n", part1, part2)),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+				),
+			},
+			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
+			{
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					t.Cleanup(roleCleanup)
+					alterViewOwnershipExternally(t, viewName, roleName)
+				},
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("`text` is missing; if the view is secure then the role used by the provider must own the view"),
+			},
+			// import with the proper role
+			{
+				PreConfig: func() {
+					alterViewOwnershipExternally(t, viewName, "ACCOUNTADMIN")
+				},
+				ResourceName:            "snowflake_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace"},
+			},
+		},
+	})
+}
+
+func viewConfigWithGrants(databaseName string, schemaName string, tableName string, viewName string, selectStatement string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "table" {
-  database = "%s"
-  schema = "%s"
-  name     = "view_test_table"
+  database = "%[1]s"
+  schema = "%[2]s"
+  name     = "%[3]s"
 
   column {
     name = "name"
@@ -427,11 +481,11 @@ resource "snowflake_table" "table" {
 
 resource "snowflake_view" "test" {
   depends_on = [snowflake_table.table]
-  name = "test"
+  name = "%[4]s"
   comment = "created by terraform"
-  database = "%s"
-  schema = "%s"
-  statement = "select %s from \"%s\".\"%s\".\"${snowflake_table.table.name}\""
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"${snowflake_table.table.name}\""
   or_replace = true
   copy_grants = true
   is_secure = true
@@ -441,27 +495,23 @@ resource "snowflake_role" "test" {
   name = "test"
 }
 
-resource "snowflake_view_grant" "grant" {
-  database_name = "%s"
-  schema_name = "%s"
-  view_name = snowflake_view.test.name
-  privilege = "SELECT"
-  roles = [snowflake_role.test.name]
+resource "snowflake_grant_privileges_to_account_role" "grant" {
+  privileges        = ["SELECT"]
+  account_role_name = snowflake_role.test.name
+  on_schema_object {
+    object_type = "VIEW"
+    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
+  }
 }
 
 data "snowflake_grants" "grants" {
-  depends_on = [snowflake_view_grant.grant, snowflake_view.test]
+  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test]
   grants_on {
-    object_name = "\"%s\".\"%s\".\"${snowflake_view.test.name}\""
+    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
   }
 }
-	`, databaseName, schemaName,
-		databaseName, schemaName,
-		selectStatement,
-		databaseName, schemaName,
-		databaseName, schemaName,
-		databaseName, schemaName)
+	`, databaseName, schemaName, tableName, viewName, selectStatement)
 }
 
 func viewConfigWithCopyGrants(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool) string {
@@ -501,29 +551,53 @@ resource "snowflake_view" "test" {
 	`, databaseName, schemaName, name, selectStatement, orReplace)
 }
 
-func testAccCheckViewDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_view" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		existingView, err := client.Views.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("view %v still exists", existingView.ID().FullyQualifiedName())
-		}
-	}
-	return nil
+func viewConfigWithMultilineUnionStatement(databaseName string, schemaName string, name string, part1 string, part2 string) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+  name = "%[3]s"
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = <<-SQL
+%[4]s
+	union
+%[5]s
+SQL
+  is_secure = true
+}
+	`, databaseName, schemaName, name, part1, part2)
 }
 
 func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	err := client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	require.NoError(t, err)
+}
+
+func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string) {
+	t.Helper()
+
+	viewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName)
+	roleId := sdk.NewAccountObjectIdentifier(roleName)
+
+	client := acc.Client(t)
+	ctx := context.Background()
+
+	on := sdk.OwnershipGrantOn{
+		Object: &sdk.Object{
+			ObjectType: sdk.ObjectTypeView,
+			Name:       viewId,
+		},
+	}
+	to := sdk.OwnershipGrantTo{
+		AccountRoleName: &roleId,
+	}
+	currentGrants := sdk.OwnershipCurrentGrants{
+		OutboundPrivileges: sdk.Revoke,
+	}
+	err := client.Grants.GrantOwnership(ctx, on, to, &sdk.GrantOwnershipOptions{CurrentGrants: &currentGrants})
 	require.NoError(t, err)
 }

@@ -1,26 +1,24 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 const (
-	tagAttachmentPolicyIDDelimiter = '|'
+	tagAttachmentPolicyIDDelimiter = "|"
 )
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
@@ -47,54 +45,38 @@ type attachmentID struct {
 	MaskingPolicyName         string
 }
 
-// String() takes in a schemaID object and returns a pipe-delimited string:
-// TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName.
-func (ti *attachmentID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = tagAttachmentPolicyIDDelimiter
-	dataIdentifiers := [][]string{{ti.TagDatabaseName, ti.TagSchemaName, ti.TagName, ti.MaskingPolicyDatabaseName, ti.MaskingPolicySchemaName, ti.MaskingPolicyName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strTagID := strings.TrimSpace(buf.String())
-	return strTagID, nil
+func (v *attachmentID) String() string {
+	return strings.Join([]string{
+		v.TagDatabaseName,
+		v.TagSchemaName,
+		v.TagName,
+		v.MaskingPolicyDatabaseName,
+		v.MaskingPolicySchemaName,
+		v.MaskingPolicyName,
+	}, tagAttachmentPolicyIDDelimiter)
 }
 
-// attachedPolicyIDFromString() takes in a pipe-delimited string: TagDatabaseName | TagSchemaName | TagName | MaskingPolicyDatabaseName | MaskingPolicySchemaName | MaskingPolicyName
-// and returns a attachmentID object.
-func attachedPolicyIDFromString(stringID string) (*attachmentID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = tagAttachmentPolicyIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per schema")
-	}
-	if len(lines[0]) != 6 {
+func parseAttachmentID(id string) (*attachmentID, error) {
+	parts := strings.Split(id, tagAttachmentPolicyIDDelimiter)
+	if len(parts) != 6 {
 		return nil, fmt.Errorf("6 fields allowed")
 	}
-
-	attachmentResult := &attachmentID{
-		TagDatabaseName:           lines[0][0],
-		TagSchemaName:             lines[0][1],
-		TagName:                   lines[0][2],
-		MaskingPolicyDatabaseName: lines[0][3],
-		MaskingPolicySchemaName:   lines[0][4],
-		MaskingPolicyName:         lines[0][5],
-	}
-	return attachmentResult, nil
+	return &attachmentID{
+		TagDatabaseName:           parts[0],
+		TagSchemaName:             parts[1],
+		TagName:                   parts[2],
+		MaskingPolicyDatabaseName: parts[3],
+		MaskingPolicySchemaName:   parts[4],
+		MaskingPolicyName:         parts[5],
+	}, nil
 }
 
 // Schema returns a pointer to the resource representing a schema.
 func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTagMaskingPolicyAssociation,
-		Read:   ReadTagMaskingPolicyAssociation,
-		Delete: DeleteTagMaskingPolicyAssociation,
+		CreateContext: CreateContextTagMaskingPolicyAssociation,
+		ReadContext:   ReadContextTagMaskingPolicyAssociation,
+		DeleteContext: DeleteContextTagMaskingPolicyAssociation,
 
 		Schema: mpAttachmentPolicySchema,
 		Importer: &schema.ResourceImporter{
@@ -104,99 +86,64 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 	}
 }
 
-// CreateTagMaskingPolicyAssociation implements schema.CreateFunc.
-func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
+func CreateContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
-	tagID := d.Get("tag_id").(string)
-	tagIDStruct, idErr := tagIDFromString(tagID)
-	if idErr != nil {
-		return idErr
+	value := d.Get("tag_id").(string)
+	tid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
+	value = d.Get("masking_policy_id").(string)
+	mid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
+
+	set := sdk.NewTagSetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{mid})
+	if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tid).WithSet(set)); err != nil {
+		return diag.FromErr(err)
 	}
-	tagDB := tagIDStruct.DatabaseName
-	tagSchema := tagIDStruct.SchemaName
-	tagName := tagIDStruct.TagName
-
-	mpID := d.Get("masking_policy_id").(string)
-	mpIDStruct := helpers.DecodeSnowflakeID(mpID).(sdk.SchemaObjectIdentifier)
-	mpDB := mpIDStruct.DatabaseName()
-	mpSchema := mpIDStruct.SchemaName()
-	mpName := mpIDStruct.Name()
-
-	mP := snowflake.MaskingPolicy(mpName, mpDB, mpSchema)
-	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDB).WithSchema(tagSchema).WithMaskingPolicy(mP)
-
-	q := builder.AddMaskingPolicy()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error attaching masking policy %v to tag %v", mpName, tagName)
+	aid := attachmentID{
+		TagDatabaseName:           tid.DatabaseName(),
+		TagSchemaName:             tid.SchemaName(),
+		TagName:                   tid.Name(),
+		MaskingPolicyDatabaseName: mid.DatabaseName(),
+		MaskingPolicySchemaName:   mid.SchemaName(),
+		MaskingPolicyName:         mid.Name(),
 	}
-
-	mpAttachmentID := &attachmentID{
-		TagDatabaseName:           tagDB,
-		TagSchemaName:             tagSchema,
-		TagName:                   tagName,
-		MaskingPolicyDatabaseName: mpDB,
-		MaskingPolicySchemaName:   mpSchema,
-		MaskingPolicyName:         mpName,
-	}
-	dataIDInput, err := mpAttachmentID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
-
-	return ReadTagMaskingPolicyAssociation(d, meta)
+	fmt.Printf("attachment id: %s\n", aid.String())
+	d.SetId(aid.String())
+	return ReadContextTagMaskingPolicyAssociation(ctx, d, meta)
 }
 
-// ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc.
-func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
+func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
-	attachementID, err := attachedPolicyIDFromString(d.Id())
+	db := client.GetConn().DB
+	aid, err := parseAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-
-	tagDBName := attachementID.TagDatabaseName
-	tagSchemaName := attachementID.TagSchemaName
-	tagName := attachementID.TagName
-	mpDBName := attachementID.MaskingPolicyDatabaseName
-	mpSchameName := attachementID.MaskingPolicySchemaName
-	mpName := attachementID.MaskingPolicyName
-
-	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchameName)
-	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	// create temp warehouse to query the tag, and make sure to clean it up
-	db := client.GetConn().DB
-	ctx := context.Background()
-	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if originalWarehouse == "" {
+	if warehouse == "" {
 		log.Printf("[DEBUG] no current warehouse set, creating a temporary warehouse")
 		randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
-		tempWarehouseID := sdk.NewAccountObjectIdentifier(randomWarehouseName)
-		err = client.Warehouses.Create(ctx, tempWarehouseID, nil)
-		if err != nil {
-			return err
+		wid := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+		if err := client.Warehouses.Create(ctx, wid, nil); err != nil {
+			return diag.FromErr(err)
 		}
 		defer func() {
-			err := client.Warehouses.Drop(ctx, tempWarehouseID, nil)
-			if err != nil {
+			if err := client.Warehouses.Drop(ctx, wid, nil); err != nil {
 				log.Printf("[WARN] error cleaning up temp warehouse %v", err)
 			}
-			err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(originalWarehouse))
-			if err != nil {
-				log.Printf("[WARN] error resetting warehouse %v", err)
-			}
 		}()
-		err = client.Sessions.UseWarehouse(ctx, tempWarehouseID)
-		if err != nil {
-			return err
+		if err := client.Sessions.UseWarehouse(ctx, wid); err != nil {
+			return diag.FromErr(err)
 		}
 	}
+	// show attached masking policy
+	tid := sdk.NewSchemaObjectIdentifier(aid.TagDatabaseName, aid.TagSchemaName, aid.TagName)
+	mid := sdk.NewSchemaObjectIdentifier(aid.MaskingPolicyDatabaseName, aid.MaskingPolicySchemaName, aid.MaskingPolicyName)
+	builder := snowflake.NewTagBuilder(tid).WithMaskingPolicy(mid)
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
 	t, err := snowflake.ScanTagPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -205,44 +152,28 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-
-	mpIDString := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
-
-	if err := d.Set("masking_policy_id", mpIDString); err != nil {
-		return err
+	id := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
+	if err := d.Set("masking_policy_id", id); err != nil {
+		return diag.FromErr(err)
 	}
-	return nil
+	return diags
 }
 
-// DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.
-func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
+func DeleteContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
-	attachmentID, err := attachedPolicyIDFromString(d.Id())
+	aid, err := parseAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-
-	tagDBName := attachmentID.TagDatabaseName
-	tagSchemaName := attachmentID.TagSchemaName
-	tagName := attachmentID.TagName
-	mpDBName := attachmentID.MaskingPolicyDatabaseName
-	mpSchemaName := attachmentID.MaskingPolicySchemaName
-	mpName := attachmentID.MaskingPolicyName
-
-	mP := snowflake.MaskingPolicy(mpName, mpDBName, mpSchemaName)
-
-	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
-
-	if err := snowflake.Exec(db, builder.RemoveMaskingPolicy()); err != nil {
-		return fmt.Errorf("error unattaching masking policy for %v err = %w", d.Id(), err)
+	tid := sdk.NewSchemaObjectIdentifier(aid.TagDatabaseName, aid.TagSchemaName, aid.TagName)
+	mid := sdk.NewSchemaObjectIdentifier(aid.MaskingPolicyDatabaseName, aid.MaskingPolicySchemaName, aid.MaskingPolicyName)
+	unset := sdk.NewTagUnsetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{mid})
+	if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tid).WithUnset(unset)); err != nil {
+		return diag.FromErr(err)
 	}
-
 	d.SetId("")
-
 	return nil
 }

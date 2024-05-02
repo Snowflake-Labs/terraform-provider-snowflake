@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"context"
 
@@ -18,9 +17,9 @@ import (
 )
 
 func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
-	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	user2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	policyNameUser := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	user1 := acc.TestClient().Ids.Alpha()
+	user2 := acc.TestClient().Ids.Alpha()
+	policyNameUser := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

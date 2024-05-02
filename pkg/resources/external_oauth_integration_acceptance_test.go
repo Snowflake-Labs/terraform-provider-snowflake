@@ -6,20 +6,24 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ExternalOauthIntegration(t *testing.T) {
-	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := acc.TestClient().Ids.Alpha()
 	integrationType := "AZURE"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +49,17 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
-	oauthIntName := strings.ToLower(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := strings.ToLower(acc.TestClient().Ids.Alpha())
 	integrationType := "AZURE"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -78,14 +85,17 @@ func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
-	oauthIntName := strings.ToLower(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := strings.ToLower(acc.TestClient().Ids.Alpha())
 	integrationType := "AZURE"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -111,14 +121,17 @@ func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
-	oauthIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oauthIntName := acc.TestClient().Ids.Alpha()
 	integrationType := "CUSTOM"
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

@@ -1,11 +1,12 @@
 package testint
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,10 +15,10 @@ func TestInt_AlertsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	alertTest, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alertTest, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alertCleanup)
 
-	alert2Test, alert2Cleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alert2Test, alert2Cleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alert2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -227,7 +228,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+	alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 	t.Cleanup(alertCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {
@@ -248,7 +249,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
@@ -274,7 +275,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newCondition := "select * from DUAL where false"
 
@@ -318,7 +319,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("resume and then suspend", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &sdk.AlterAlertOptions{
@@ -364,9 +365,9 @@ func TestInt_AlertDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when alert exists", func(t *testing.T) {
-		alert, _ := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		alert, _ := testClientHelper().Alert.CreateAlert(t)
 		id := alert.ID()
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -374,7 +375,63 @@ func TestInt_AlertDrop(t *testing.T) {
 
 	t.Run("when alert does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.Alerts.Drop(ctx, id)
+		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_AlertsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest, warehouseTest := testDb(t), testSchema(t), testWarehouse(t)
+	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		schedule, condition, action := "USING CRON * * * * * UTC", "SELECT 1", "SELECT 1"
+		err := client.Alerts.Create(ctx, id, warehouseTest.ID(), schedule, condition, action, &sdk.CreateAlertOptions{})
+		require.NoError(t, err)
+		t.Cleanup(cleanupAlertHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createAlertHandle(t, id1)
+		createAlertHandle(t, id2)
+
+		e1, err := client.Alerts.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Alerts.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show by id: check fields", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		createAlertHandle(t, id1)
+
+		alert, err := client.Alerts.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		assert.Equal(t, "ROLE", alert.OwnerRoleType)
 	})
 }

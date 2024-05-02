@@ -2,24 +2,29 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_DatabaseRole(t *testing.T) {
 	resourceName := "snowflake_database_role.test_db_role"
-	dbRoleName := "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := "dummy"
-	comment2 := "test comment"
+	dbRoleName := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
+	comment2 := random.Comment()
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.DatabaseRole),
 		Steps: []resource.TestStep{
 			{
 				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment),

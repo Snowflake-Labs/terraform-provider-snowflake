@@ -37,7 +37,7 @@ func TestInt_ToTimestampLTZ(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// new warehouse created on purpose
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	err = client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestInt_ToTimestampNTZ(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// new warehouse created on purpose
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	err = client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)

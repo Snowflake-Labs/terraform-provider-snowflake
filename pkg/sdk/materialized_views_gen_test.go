@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestMaterializedViews_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	sql := "SELECT id FROM t"
 
 	// Minimal valid CreateMaterializedViewOptions
@@ -43,7 +43,7 @@ func TestMaterializedViews_Create(t *testing.T) {
 	t.Run("validation: [opts.RowAccessPolicy.On] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
-			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			RowAccessPolicy: randomSchemaObjectIdentifier(),
 			On:              []string{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaterializedViewOptions.RowAccessPolicy", "On"))
@@ -63,11 +63,11 @@ func TestMaterializedViews_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
-		tag1Id := RandomSchemaObjectIdentifier()
-		tag2Id := RandomSchemaObjectIdentifier()
-		maskingPolicy1Id := RandomSchemaObjectIdentifier()
-		maskingPolicy2Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
+		tag1Id := randomSchemaObjectIdentifier()
+		tag2Id := randomSchemaObjectIdentifier()
+		maskingPolicy1Id := randomSchemaObjectIdentifier()
+		maskingPolicy2Id := randomSchemaObjectIdentifier()
 
 		req := NewCreateMaterializedViewRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -99,7 +99,7 @@ func TestMaterializedViews_Create(t *testing.T) {
 }
 
 func TestMaterializedViews_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterMaterializedViewOptions
 	defaultOpts := func() *AlterMaterializedViewOptions {
@@ -170,7 +170,7 @@ func TestMaterializedViews_Alter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newId := RandomSchemaObjectIdentifier()
+		newId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.RenameTo = &newId
@@ -233,7 +233,7 @@ func TestMaterializedViews_Alter(t *testing.T) {
 }
 
 func TestMaterializedViews_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropMaterializedViewOptions
 	defaultOpts := func() *DropMaterializedViewOptions {
@@ -288,7 +288,7 @@ func TestMaterializedViews_Show(t *testing.T) {
 }
 
 func TestMaterializedViews_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeMaterializedViewOptions
 	defaultOpts := func() *DescribeMaterializedViewOptions {

@@ -10,7 +10,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ import (
 
 func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,7 +26,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
 				Config: resourceMonitorConfig(name, acc.TestWarehouseName),
@@ -74,7 +74,7 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -82,7 +82,7 @@ func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
 				Config: resourceMonitorConfigInitialTimestamp(name),
@@ -153,7 +153,7 @@ resource "snowflake_resource_monitor" "test" {
 func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
 	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
 	users := strings.Split(userEnv, ",")
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	config, err := resourceMonitorNotifyUsersConfig(name, users)
 	if err != nil {
 		t.Error(err)
@@ -176,7 +176,7 @@ func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
 				Config: emptyUsersConfig,
@@ -230,7 +230,7 @@ resource "snowflake_resource_monitor" "test" {
 // Second step is purposely error, because tests TestAcc_ResourceMonitorUpdateNotifyUsers and TestAcc_ResourceMonitorNotifyUsers are still skipped.
 // It can be fixed with them.
 func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	configNoUsers, err := resourceMonitorNotifyUsersConfig(name, []string{})
 	require.NoError(t, err)
 	config, err := resourceMonitorNotifyUsersConfig(name, []string{"non_existing_user"})
@@ -242,7 +242,7 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
 				Config: configNoUsers,
@@ -261,7 +261,7 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
 	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
 	users := strings.Split(userEnv, ",")
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	config, err := resourceMonitorNotifyUsersConfig(name, users)
 	if err != nil {
 		t.Error(err)
@@ -279,7 +279,7 @@ func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

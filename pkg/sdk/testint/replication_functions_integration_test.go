@@ -2,10 +2,9 @@ package testint
 
 import (
 	"testing"
-	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,39 +21,25 @@ func TestInt_ShowReplicationFunctions(t *testing.T) {
 
 func TestInt_ShowReplicationDatabases(t *testing.T) {
 	client := testClient(t)
-	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	account, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-	accountId := sdk.NewAccountIdentifierFromAccountLocator(account)
-
-	secondaryAccount, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-	secondaryAccountId := sdk.NewAccountIdentifierFromAccountLocator(secondaryAccount)
+	accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
+	secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
 	db1Name := random.AlphaN(10)
 	db2Name := random.AlphaN(10)
-	db3Name := random.AlphaN(10)
-	db, dbCleanup := createDatabaseWithOptions(t, client, sdk.NewAccountObjectIdentifier(db1Name), &sdk.CreateDatabaseOptions{})
+	db, dbCleanup := testClientHelper().Database.CreateDatabaseWithName(t, db1Name)
 	t.Cleanup(dbCleanup)
-	db2, dbCleanup2 := createDatabaseWithOptions(t, client, sdk.NewAccountObjectIdentifier(db2Name), &sdk.CreateDatabaseOptions{})
+	db2, dbCleanup2 := testClientHelper().Database.CreateDatabaseWithName(t, db2Name)
 	t.Cleanup(dbCleanup2)
 
-	err = client.Databases.AlterReplication(ctx, db.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
+	err := client.Databases.AlterReplication(ctx, db.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 	err = client.Databases.AlterReplication(ctx, db2.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 
-	// TODO [926148]: make this wait better with tests stabilization
-	// waiting because sometimes creating secondary db right after primary creation resulted in error
-	time.Sleep(1 * time.Second)
-	db3, dbCleanup3 := createSecondaryDatabaseWithOptions(t, secondaryClient, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
+	db3, dbCleanup3 := secondaryTestClientHelper().Database.CreateSecondaryDatabaseWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
 	t.Cleanup(dbCleanup3)
-
-	// TODO [926148]: make this wait better with tests stabilization
-	// waiting because sometimes secondary database is not shown as SHOW REPLICATION DATABASES results right after creation
-	time.Sleep(1 * time.Second)
 
 	getByName := func(replicationDatabases []sdk.ReplicationDatabase, name sdk.AccountObjectIdentifier) *sdk.ReplicationDatabase {
 		for _, rdb := range replicationDatabases {

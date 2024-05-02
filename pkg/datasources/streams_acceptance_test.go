@@ -2,20 +2,25 @@ package datasources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Streams(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	streamName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	streamName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +76,6 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 	data snowflake_streams "t" {
 		database = snowflake_stream.test_stream.database
 		schema = snowflake_stream.test_stream.schema
-		depends_on = [snowflake_stream.test_stream]
 	}
 	`, databaseName, schemaName, tableName, streamName)
 }

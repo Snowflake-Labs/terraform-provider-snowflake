@@ -66,7 +66,7 @@ func TestInt_CurrentSessionDetails(t *testing.T) {
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
 	require.NoError(t, err)
@@ -80,9 +80,9 @@ func TestInt_CurrentSchema(t *testing.T) {
 	ctx := testContext(t)
 
 	// new database and schema created on purpose
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
 	t.Cleanup(schemaCleanup)
 	err := client.Sessions.UseSchema(ctx, schemaTest.ID())
 	require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 	ctx := testContext(t)
 
 	// new warehouse created on purpose
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	err := client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)
@@ -122,7 +122,7 @@ func TestInt_RolesUse(t *testing.T) {
 	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
 	require.NoError(t, err)
 
-	role, cleanup := createRole(t, client)
+	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 
@@ -147,7 +147,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
-	role, cleanup := createRole(t, client)
+	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 

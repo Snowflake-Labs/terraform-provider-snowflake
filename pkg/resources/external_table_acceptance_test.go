@@ -9,14 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +26,7 @@ import (
 func TestAcc_ExternalTable_basic(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -65,7 +64,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckExternalTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -73,7 +72,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					publishExternalTablesTestData(sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name), data)
+					publishExternalTablesTestData(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name), data)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: configVariables,
@@ -130,7 +129,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -149,7 +148,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckExternalTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
@@ -188,7 +187,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -207,7 +206,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckExternalTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
@@ -247,7 +246,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -266,7 +265,7 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckExternalTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
@@ -297,7 +296,7 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 						client := acc.TestAccProvider.Meta().(*provider.Context).Client
 						ctx := context.Background()
 						id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name)
-						result, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
+						result, err := client.ExternalTables.ShowByID(ctx, id)
 						if err != nil {
 							return err
 						}
@@ -344,14 +343,12 @@ func externalTableContainsData(name string, contains func(rows []map[string]*any
 	}
 }
 
-func publishExternalTablesTestData(stageName sdk.SchemaObjectIdentifier, data []byte) {
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		log.Fatal(err)
-	}
+func publishExternalTablesTestData(t *testing.T, stageName sdk.SchemaObjectIdentifier, data []byte) {
+	t.Helper()
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageName.FullyQualifiedName(), string(data)))
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageName.FullyQualifiedName(), string(data)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -426,20 +423,4 @@ func expectTableDDLContains(tableName string, substr string) func(s *terraform.S
 
 		return nil
 	}
-}
-
-func testAccCheckExternalTableDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_external_table" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		dynamicTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
-		if err == nil {
-			return fmt.Errorf("external table %v still exists", dynamicTable.Name)
-		}
-	}
-	return nil
 }

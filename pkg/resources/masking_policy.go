@@ -35,7 +35,6 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.",
-		ForceNew:    true,
 	},
 	"database": {
 		Type:        schema.TypeString,
@@ -227,16 +226,15 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	signature := []map[string]interface{}{}
+	columns := []map[string]interface{}{}
 	for _, s := range maskingPolicyDetails.Signature {
-		signature = append(signature, map[string]interface{}{
-			"column": []map[string]interface{}{
-				{
-					"name": s.Name,
-					"type": s.Type,
-				},
-			},
+		columns = append(columns, map[string]interface{}{
+			"name": s.Name,
+			"type": s.Type,
 		})
+	}
+	signature := []map[string]interface{}{
+		{"column": columns},
 	}
 	if err := d.Set("signature", signature); err != nil {
 		return err
@@ -251,8 +249,22 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // UpdateMaskingPolicy implements schema.UpdateFunc.
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
+
+	if d.HasChange("name") {
+		newID := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
+
+		err := client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
+			NewName: &newID,
+		})
+		if err != nil {
+			return err
+		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newID))
+		id = newID
+	}
 
 	if d.HasChange("masking_expression") {
 		alterOptions := &sdk.AlterMaskingPolicyOptions{}
@@ -260,7 +272,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		alterOptions.Set = &sdk.MaskingPolicySet{
 			Body: sdk.String(n.(string)),
 		}
-		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		if err != nil {
 			return err
 		}
@@ -277,24 +289,10 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 				Comment: sdk.Bool(true),
 			}
 		}
-		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		if err != nil {
 			return err
 		}
-	}
-
-	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		newName := n.(string)
-		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
-		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			NewName: &newID,
-		}
-		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
-		if err != nil {
-			return err
-		}
-		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
 	return ReadMaskingPolicy(d, meta)
@@ -306,7 +304,7 @@ func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.MaskingPolicies.Drop(ctx, objectIdentifier)
+	err := client.MaskingPolicies.Drop(ctx, objectIdentifier, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

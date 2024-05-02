@@ -40,7 +40,7 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
-	// TODO [SNOW-867235]: this is used only during or_replace, we would like to change the behavior before v1
+	// TODO [SNOW-1348118: this is used only during or_replace, we would like to change the behavior before v1
 	"copy_grants": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -55,7 +55,7 @@ var viewSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Specifies that the view is secure.",
+		Description: "Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -125,7 +125,7 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
-	// TODO [SNOW-867235]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
+	// TODO [SNOW-1348118]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
 	// Will be discussed with parser topic during resources redesign.
 	if _, ok := d.GetOk("tag"); ok {
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
@@ -174,16 +174,18 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
-	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
-	extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
-	substringOfQuery, err := extractor.Extract()
-	if err != nil {
-		return err
-	}
-
-	if err = d.Set("statement", substringOfQuery); err != nil {
-		return err
+	if view.Text != "" {
+		// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+		extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
+		substringOfQuery, err := extractor.Extract()
+		if err != nil {
+			return err
+		}
+		if err = d.Set("statement", substringOfQuery); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("error reading view %v, err = %w, `text` is missing; if the view is secure then the role used by the provider must own the view (consult https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)", d.Id(), err)
 	}
 
 	return nil
@@ -220,9 +222,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("name") {
-		newName := d.Get("name").(string)
-
-		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
 
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(&newId))
 		if err != nil {

@@ -33,7 +33,8 @@ func (v *externalFunctions) Show(ctx context.Context, request *ShowExternalFunct
 	return resultList, nil
 }
 
-func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier, arguments []DataType) (*ExternalFunction, error) {
+func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error) {
+	arguments := id.Arguments()
 	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().
 		WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).
 		WithLike(&Like{Pattern: String(id.Name())}))
@@ -72,7 +73,7 @@ func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions 
 	opts := &CreateExternalFunctionOptions{
 		OrReplace: r.OrReplace,
 		Secure:    r.Secure,
-		name:      r.name,
+		name:      r.name.WithoutArguments(),
 
 		ResultDataType:        r.ResultDataType,
 		ReturnNullValues:      r.ReturnNullValues,
@@ -114,7 +115,7 @@ func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions 
 func (r *AlterExternalFunctionRequest) toOpts() *AlterExternalFunctionOptions {
 	opts := &AlterExternalFunctionOptions{
 		IfExists:          r.IfExists,
-		name:              r.name,
+		name:              r.name.WithoutArguments(),
 		ArgumentDataTypes: r.ArgumentDataTypes,
 	}
 	if r.Set != nil {

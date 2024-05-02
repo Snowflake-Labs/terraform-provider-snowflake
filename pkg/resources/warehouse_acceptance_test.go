@@ -1,24 +1,25 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	prefix := warehouseId.Name()
+	prefix2 := warehouseId2.Name()
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,69 +27,75 @@ func TestAcc_Warehouse(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: wConfig(prefix),
+				Config: wConfig(prefix, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
 				),
 			},
 			// RENAME
 			{
-				Config: wConfig(prefix2),
+				Config: wConfig(prefix2, newComment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
 				),
 			},
-			// CHANGE PROPERTIES
+			// CHANGE PROPERTIES (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2652)
 			{
-				Config: wConfig2(prefix2, "X-LARGE", 20),
+				Config: wConfig2(prefix2, "X-LARGE", 20, 2, newComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "20"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "2"),
 				),
 			},
 			// CHANGE JUST max_concurrency_level
 			{
-				Config: wConfig2(prefix2, "XLARGE", 16),
+				Config: wConfig2(prefix2, "XLARGE", 16, 2, newComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "16"),
 				),
 			},
-			// CHANGE max_concurrency_level EXTERNALLY proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318
+			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
-				PreConfig: func() { alterWarehouseMaxConcurrencyLevelExternally(t, prefix2, 10) },
+				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, warehouseId2, 10) },
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
-				Config: wConfig2(prefix2, "XLARGE", 16),
+				Config: wConfig2(prefix2, "XLARGE", 16, 2, newComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "16"),
 				),
 			},
-
 			// IMPORT
 			{
 				ResourceName:      "snowflake_warehouse.w",
@@ -108,7 +115,7 @@ func TestAcc_Warehouse(t *testing.T) {
 }
 
 func TestAcc_WarehousePattern(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -116,7 +123,7 @@ func TestAcc_WarehousePattern(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
 				Config: wConfigPattern(prefix),
@@ -129,42 +136,40 @@ func TestAcc_WarehousePattern(t *testing.T) {
 	})
 }
 
-func wConfig(prefix string) string {
-	s := `
+func wConfig(prefix string, comment string) string {
+	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name    = "%s"
-	comment = "test comment"
+	comment = "%s"
 
 	auto_suspend          = 60
-	max_cluster_count     = 1
+	max_cluster_count     = 4
 	min_cluster_count     = 1
 	scaling_policy        = "STANDARD"
 	auto_resume           = true
 	initially_suspended   = true
 	wait_for_provisioning = false
 }
-`
-	return fmt.Sprintf(s, prefix)
+`, prefix, comment)
 }
 
-func wConfig2(prefix string, size string, maxConcurrencyLevel int) string {
-	s := `
+func wConfig2(prefix string, size string, maxConcurrencyLevel int, minClusterCount int, comment string) string {
+	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
-	name           = "%s"
-	comment        = "test comment 2"
-	warehouse_size = "%s"
+	name           = "%[1]s"
+	comment        = "%[5]s"
+	warehouse_size = "%[2]s"
 
 	auto_suspend          = 60
-	max_cluster_count     = 1
-	min_cluster_count     = 1
+	max_cluster_count     = 4
+	min_cluster_count     = %[4]d
 	scaling_policy        = "STANDARD"
 	auto_resume           = true
 	initially_suspended   = true
 	wait_for_provisioning = false
-	max_concurrency_level = %d
+	max_concurrency_level = %[3]d
 }
-`
-	return fmt.Sprintf(s, prefix, size, maxConcurrencyLevel)
+`, prefix, size, maxConcurrencyLevel, minClusterCount, comment)
 }
 
 func wConfigPattern(prefix string) string {
@@ -177,15 +182,4 @@ resource "snowflake_warehouse" "w2" {
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
-}
-
-func alterWarehouseMaxConcurrencyLevelExternally(t *testing.T, warehouseId string, level int) {
-	t.Helper()
-
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	ctx := context.Background()
-
-	err = client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(warehouseId), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
-	require.NoError(t, err)
 }

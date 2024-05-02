@@ -15,7 +15,7 @@ type Streams interface {
 	Alter(ctx context.Context, request *AlterStreamRequest) error
 	Drop(ctx context.Context, request *DropStreamRequest) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
-	ShowByID(ctx context.Context, request *ShowByIdStreamRequest) (*Stream, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 	Describe(ctx context.Context, request *DescribeStreamRequest) (*Stream, error)
 }
 
@@ -169,6 +169,10 @@ type Stream struct {
 	StaleAfter    *time.Time
 	InvalidReason *string
 	OwnerRoleType *string
+}
+
+func (v *Stream) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.

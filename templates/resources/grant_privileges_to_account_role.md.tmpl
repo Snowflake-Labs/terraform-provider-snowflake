@@ -15,6 +15,8 @@ description: |-
 {{/* SNOW-990811 */}}
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
+~> **Note** When granting privileges on applications (for example, the default "SNOWFLAKE" application) use `on_account_object.object_type = "DATABASE"` instead.
+
 # {{.Name}} ({{.Type}})
 
 {{ .Description | trimspace }}
@@ -27,9 +29,12 @@ description: |-
 
 {{ .SchemaMarkdown | trimspace }}
 
+## Known limitations
+- Setting the `CREATE SNOWFLAKE.ML.ANOMALY_DETECTION` or `CREATE SNOWFLAKE.ML.FORECAST` privileges on schema results in a permadiff because of the probably incorrect Snowflake's behavior of `SHOW GRANTS ON <object_type> <object_name>`. More in the [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651#issuecomment-2022634952).
+
 ## Import
 
-~> **Note** All the ..._name parts should be fully qualified names, e.g. for schema object it is `"<database_name>"."<schema_name>"."<object_name>"`
+~> **Note** All the ..._name parts should be fully qualified names (where every part is quoted), e.g. for schema object it is `"<database_name>"."<schema_name>"."<object_name>"`
 ~> **Note** To import all_privileges write ALL or ALL PRIVILEGES in place of `<privileges>`
 
 Import is supported using the following syntax:

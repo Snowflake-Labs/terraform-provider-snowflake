@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -346,7 +346,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	assertProcedure := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool) {
@@ -905,7 +905,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 			RETURN message;
 		END;`
 
-		name := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		name := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
 		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
@@ -970,5 +970,59 @@ def filter_by_role(session, name, role):
 			WithCallArguments(ca)
 		err := client.Procedures.CreateAndCallForJava(ctx, request)
 		require.NoError(t, err)
+	})
+}
+
+func TestInt_ProceduresShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+		return func() {
+			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id, dts))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createProcedureForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		definition := `
+	BEGIN
+		RETURN message;
+	END;`
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(dt).WithNotNull(sdk.Bool(true))
+		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createProcedureForSQLHandle(t, id1)
+		createProcedureForSQLHandle(t, id2)
+
+		e1, err := client.Procedures.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Procedures.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

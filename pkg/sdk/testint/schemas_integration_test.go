@@ -1,11 +1,10 @@
 package testint
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +14,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, cleanupSchema := createSchema(t, client, testDb(t))
+	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("replace", func(t *testing.T) {
@@ -50,13 +49,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 			Clone: &sdk.Clone{
@@ -81,21 +80,15 @@ func TestInt_SchemasCreate(t *testing.T) {
 	})
 
 	t.Run("with tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
-			require.NoError(t, err)
-		})
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
-		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{
-					Name:  tagID,
+					Name:  tag.ID(),
 					Value: tagValue,
 				},
 			},
@@ -106,7 +99,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tv, err := client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})
@@ -118,7 +111,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		// new schema created on purpose
-		schema, _ := createSchema(t, client, testDb(t))
+		schema, _ := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(func() {
 			err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 			require.NoError(t, err)
@@ -139,12 +132,12 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("swap with", func(t *testing.T) {
 		// new schemas created on purpose
-		schema, cleanupSchema := createSchema(t, client, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
-		swapSchema, cleanupSwapSchema := createSchema(t, client, testDb(t))
+		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := createTable(t, client, testDb(t), schema)
+		table, _ := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(func() {
 			newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, swapSchema.Name, table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
@@ -165,7 +158,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("set", func(t *testing.T) {
 		// new schema created on purpose
-		schema, cleanupSchema := createSchema(t, client, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 
 		comment := random.Comment()
@@ -221,7 +214,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		s, err := client.Schemas.ShowByID(ctx, schemaID)
 		require.NoError(t, err)
 
-		tag, cleanupTag := createTag(t, client, testDb(t), s)
+		tag, cleanupTag := testClientHelper().Tag.CreateTagInSchema(t, s.ID())
 		t.Cleanup(cleanupTag)
 
 		tagValue := "tag-value"
@@ -241,21 +234,15 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		tagName := random.String()
-		tagID := sdk.NewAccountObjectIdentifier(tagName)
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
-			require.NoError(t, err)
-		})
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, sdk.RandomAccountObjectIdentifier().Name())
+		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
 		tagValue := random.String()
-		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{
-					Name:  tagID,
+					Name:  tag.ID(),
 					Value: tagValue,
 				},
 			},
@@ -268,18 +255,18 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
 			UnsetTag: []sdk.ObjectIdentifier{
-				tagID,
+				tag.ID(),
 			},
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
 		require.Error(t, err)
 	})
 
 	t.Run("enable managed access", func(t *testing.T) {
 		// new schema created on purpose
-		schema, cleanupSchema := createSchema(t, client, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
@@ -299,7 +286,7 @@ func TestInt_SchemasShow(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, cleanupSchema := createSchema(t, client, testDb(t))
+	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("no options", func(t *testing.T) {
@@ -333,6 +320,7 @@ func TestInt_SchemasShow(t *testing.T) {
 			schemaNames[i] = s.Name
 		}
 		assert.Contains(t, schemaNames, schema.Name)
+		assert.Equal(t, "ROLE", schema.OwnerRoleType)
 	})
 }
 
@@ -341,7 +329,7 @@ func TestInt_SchemasDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, _ := createSchema(t, client, testDb(t))
+	schema, _ := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(func() {
 		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)

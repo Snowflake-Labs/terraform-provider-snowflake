@@ -259,7 +259,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(name)
-	return nil
+	return ReadFailoverGroup(d, meta)
 }
 
 // ReadFailoverGroup implements schema.ReadFunc.

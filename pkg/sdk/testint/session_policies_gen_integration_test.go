@@ -3,9 +3,9 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,6 +24,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		assert.Equal(t, expectedComment, sessionPolicy.Comment)
 		assert.Equal(t, "SESSION_POLICY", sessionPolicy.Kind)
 		assert.Equal(t, "", sessionPolicy.Options)
+		assert.Equal(t, "ROLE", sessionPolicy.OwnerRoleType)
 	}
 
 	assertSessionPolicyDescription := func(
@@ -147,7 +148,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		name := random.String()

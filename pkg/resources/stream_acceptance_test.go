@@ -3,24 +3,27 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
 		Steps: []resource.TestStep{
 			{
 				Config:      stageStreamConfig(accName, false),
@@ -31,11 +34,14 @@ func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 }
 
 func TestAcc_StreamCreateOnStage(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+	accName := acc.TestClient().Ids.Alpha()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
 		Steps: []resource.TestStep{
 			{
 				Config: stageStreamConfig(accName, true),
@@ -53,12 +59,87 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 	})
 }
 
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
+func TestAcc_Stream_OnTable(t *testing.T) {
+	tableName := acc.TestClient().Ids.Alpha()
+	tableName2 := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
+		Steps: []resource.TestStep{
+			{
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+			{
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName2, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName2)),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
+func TestAcc_Stream_OnView(t *testing.T) {
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
+		Steps: []resource.TestStep{
+			{
+				Config: streamConfigOnView(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_view", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, viewName)),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
 func TestAcc_Stream(t *testing.T) {
 	// Current error is User: <redacted> is not authorized to perform: sts:AssumeRole on resource: <redacted> duration 1.162414333s args {}] ()
 	t.Skip("Skipping TestAcc_Stream")
 
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	accNameExternalTable := acc.TestClient().Ids.Alpha()
 	bucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	roleName := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
 
@@ -68,7 +149,7 @@ func TestAcc_Stream(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
 		Steps: []resource.TestStep{
 			{
 				Config: streamConfig(accName, false),
@@ -152,6 +233,72 @@ func TestAcc_Stream(t *testing.T) {
 			},
 		},
 	})
+}
+
+func streamConfigOnTable(databaseName string, schemaName string, tableName string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_stream_on_table" {
+	database        = "%[1]s"
+	schema          = "%[2]s"
+	name            = "%[3]s"
+	comment         = "Terraform acceptance test"
+	change_tracking = true
+
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR"
+	}
+}
+
+resource "snowflake_stream" "test_stream" {
+	database    = "%[1]s"
+	schema      = "%[2]s"
+	name        = "%[4]s"
+	comment     = "Terraform acceptance test"
+	on_table    = "\"%[1]s\".\"%[2]s\".\"${snowflake_table.test_stream_on_table.name}\""
+}
+`, databaseName, schemaName, tableName, name)
+}
+
+func streamConfigOnView(databaseName string, schemaName string, tableName string, viewName string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test" {
+	database        = "%[1]s"
+	schema          = "%[2]s"
+	name            = "%[3]s"
+	comment         = "Terraform acceptance test"
+	change_tracking = true
+
+	column {
+		name = "column1"
+		type = "VARIANT"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR"
+	}
+}
+
+resource "snowflake_view" "test" {
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[4]s"
+
+	statement = "select * from \"${snowflake_table.test.name}\""
+}
+
+resource "snowflake_stream" "test_stream" {
+	database    = "%[1]s"
+	schema      = "%[2]s"
+	name        = "%[5]s"
+	comment     = "Terraform acceptance test"
+	on_view     = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
+}
+`, databaseName, schemaName, tableName, viewName, name)
 }
 
 func streamConfig(name string, appendOnly bool) string {

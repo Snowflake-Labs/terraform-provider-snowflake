@@ -7,12 +7,9 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
@@ -410,63 +407,4 @@ func isNotOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
 		}
 		return diags
 	}
-}
-
-func ValidGrantedObjectType() schema.SchemaValidateDiagFunc {
-	return StringInSlice([]string{
-		sdk.ObjectTypeAlert.String(),
-		sdk.ObjectTypeDynamicTable.String(),
-		sdk.ObjectTypeEventTable.String(),
-		sdk.ObjectTypeFileFormat.String(),
-		sdk.ObjectTypeFunction.String(),
-		sdk.ObjectTypeProcedure.String(),
-		sdk.ObjectTypeSecret.String(),
-		sdk.ObjectTypeSequence.String(),
-		sdk.ObjectTypePipe.String(),
-		sdk.ObjectTypeMaskingPolicy.String(),
-		sdk.ObjectTypePasswordPolicy.String(),
-		sdk.ObjectTypeRowAccessPolicy.String(),
-		sdk.ObjectTypeSessionPolicy.String(),
-		sdk.ObjectTypeTag.String(),
-		sdk.ObjectTypeStage.String(),
-		sdk.ObjectTypeStream.String(),
-		sdk.ObjectTypeTable.String(),
-		sdk.ObjectTypeExternalTable.String(),
-		sdk.ObjectTypeTask.String(),
-		sdk.ObjectTypeView.String(),
-		sdk.ObjectTypeMaterializedView.String(),
-		sdk.ObjectTypeNetworkRule.String(),
-		sdk.ObjectTypePackagesPolicy.String(),
-		sdk.ObjectTypeIcebergTable.String(),
-	}, true)
-}
-
-func ValidGrantedPluralObjectType() schema.SchemaValidateDiagFunc {
-	return StringInSlice(
-		[]string{
-			sdk.PluralObjectTypeAlerts.String(),
-			sdk.PluralObjectTypeDynamicTables.String(),
-			sdk.PluralObjectTypeEventTables.String(),
-			sdk.PluralObjectTypeFileFormats.String(),
-			sdk.PluralObjectTypeFunctions.String(),
-			sdk.PluralObjectTypeProcedures.String(),
-			sdk.PluralObjectTypeSecrets.String(),
-			sdk.PluralObjectTypeSequences.String(),
-			sdk.PluralObjectTypePipes.String(),
-			sdk.PluralObjectTypeMaskingPolicies.String(),
-			sdk.PluralObjectTypePasswordPolicies.String(),
-			sdk.PluralObjectTypeRowAccessPolicies.String(),
-			sdk.PluralObjectTypeSessionPolicies.String(),
-			sdk.PluralObjectTypeTags.String(),
-			sdk.PluralObjectTypeStages.String(),
-			sdk.PluralObjectTypeStreams.String(),
-			sdk.PluralObjectTypeTables.String(),
-			sdk.PluralObjectTypeExternalTables.String(),
-			sdk.PluralObjectTypeTasks.String(),
-			sdk.PluralObjectTypeViews.String(),
-			sdk.PluralObjectTypeMaterializedViews.String(),
-			sdk.PluralObjectTypeNetworkRules.String(),
-			sdk.PluralObjectTypePackagesPolicies.String(),
-			sdk.PluralObjectTypeIcebergTables.String(),
-		}, true)
 }

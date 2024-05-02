@@ -242,6 +242,10 @@ type Function struct {
 	IsMemoizable       bool
 }
 
+func (v *Function) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
+}
+
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
 type DescribeFunctionOptions struct {
 	describe          bool                   `ddl:"static" sql:"DESCRIBE"`

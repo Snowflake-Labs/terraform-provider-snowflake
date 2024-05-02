@@ -2,26 +2,29 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Account_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-	accountName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	password := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "123ABC"
+	accountName := acc.TestClient().Ids.Alpha()
+	password := acc.TestClient().Ids.AlphaContaining("123ABC")
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		// this errors with: Error running post-test destroy, there may be dangling resources: exit status 1
 		// unless we change the resource to return nil on destroy then this is unavoidable
 		Steps: []resource.TestStep{

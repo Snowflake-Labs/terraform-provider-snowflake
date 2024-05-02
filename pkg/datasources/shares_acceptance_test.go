@@ -2,21 +2,26 @@ package datasources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Shares(t *testing.T) {
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := acc.TestClient().Ids.Alpha()
+	shareName2 := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
 	pattern := shareName
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

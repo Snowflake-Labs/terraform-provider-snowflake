@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,16 +8,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,23 +37,31 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	prefix := acc.TestClient().Ids.Alpha()
+	prefix2 := acc.TestClient().Ids.Alpha()
+
+	comment := random.Comment()
+	newComment := random.Comment()
+
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
+
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
@@ -72,10 +78,15 @@ func TestAcc_User(t *testing.T) {
 			},
 			// RENAME
 			{
-				Config: uConfig(prefix2, sshkey1, sshkey2),
+				Config: uConfig(prefix2, sshkey1, sshkey2, newComment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
@@ -121,7 +132,7 @@ func TestAcc_User(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
-	userName := sdk.NewAccountObjectIdentifier(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	config := fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
@@ -144,7 +155,7 @@ resource "snowflake_user" "test" {
 				},
 			},
 			{
-				PreConfig: removeUserOutsideOfTerraform(t, userName),
+				PreConfig: acc.TestClient().User.DropUserFunc(t, userName),
 				Config:    config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -167,25 +178,11 @@ resource "snowflake_user" "test" {
 	})
 }
 
-func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	return func() {
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
-		ctx := context.Background()
-		if err := client.Users.Drop(ctx, name); err != nil {
-			t.Fatalf("failed to drop user: %s", name.FullyQualifiedName())
-		}
-	}
-}
-
-func uConfig(prefix, key1, key2 string) string {
+func uConfig(prefix, key1, key2, comment string) string {
 	s := `
 resource "snowflake_user" "w" {
 	name = "%s"
-	comment = "test comment"
+	comment = "%s"
 	login_name = "%s_login"
 	display_name = "Display Name"
 	first_name = "Marcin"
@@ -205,7 +202,7 @@ KEY
 	must_change_password = true
 }
 `
-	s = fmt.Sprintf(s, prefix, prefix, key1, key2)
+	s = fmt.Sprintf(s, prefix, comment, prefix, key1, key2)
 	log.Printf("[DEBUG] s %s", s)
 	return s
 }
@@ -237,19 +234,22 @@ resource "snowflake_user" "w" {
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
 	r := require.New(t)
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
+	prefix := acc.TestClient().Ids.AlphaContaining(".")
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, "test_comment"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 				),

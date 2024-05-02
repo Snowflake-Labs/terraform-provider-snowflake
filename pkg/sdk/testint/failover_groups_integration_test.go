@@ -8,23 +8,25 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeShares,
 			sdk.PluralObjectTypeDatabases,
@@ -76,12 +78,12 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with identifier containing a dot", func(t *testing.T) {
-		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
+		shareId := testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".")
 
-		shareWithDot, shareWithDotCleanup := createShareWithOptions(t, client, shareId, &sdk.CreateShareOptions{})
+		shareWithDot, shareWithDotCleanup := testClientHelper().Share.CreateShareWithOptions(t, shareId, &sdk.CreateShareOptions{})
 		t.Cleanup(shareWithDotCleanup)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeShares,
 		}
@@ -108,7 +110,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with allowed integration types", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 		}
@@ -138,6 +140,9 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 }
 
 func TestInt_Issue2544(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 
@@ -145,7 +150,7 @@ func TestInt_Issue2544(t *testing.T) {
 	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
 
 	t.Run("alter object types, replication schedule, and allowed integration types at the same time", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 			sdk.PluralObjectTypeDatabases,
@@ -218,16 +223,16 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := getAccountIdentifier(t, client)
+	primaryAccountID := testClientHelper().Account.GetAccountIdentifier(t)
 	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	secondaryClientID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
 	// create a temp share
-	shareTest, cleanupDatabase := createShare(t, client)
+	shareTest, cleanupDatabase := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := sdk.RandomAccountObjectIdentifier()
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedShares: []sdk.AccountObjectIdentifier{
@@ -295,9 +300,10 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("rename the failover group", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
+		failoverGroup, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
+		t.Cleanup(failoverGroupCleanup)
 		oldID := failoverGroup.ID()
-		newID := sdk.RandomAccountObjectIdentifier()
+		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			NewName: newID,
 		}
@@ -306,15 +312,11 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, newID)
 		require.NoError(t, err)
 		assert.Equal(t, newID.Name(), failoverGroup.Name)
-		cleanupFailoverGroup := func() {
-			err := client.FailoverGroups.Drop(ctx, newID, nil)
-			require.NoError(t, err)
-		}
-		t.Cleanup(cleanupFailoverGroup)
+		t.Cleanup(testClientHelper().FailoverGroup.DropFailoverGroupFunc(t, newID))
 	})
 
 	t.Run("reset the list of specified object types enabled for replication and failover.", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeDatabases,
@@ -332,7 +334,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("set or update the replication schedule for automatic refresh of secondary failover groups.", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 		replicationSchedule := "USING CRON 0 0 10-20 * TUE,THU UTC"
 		opts := &sdk.AlterSourceFailoverGroupOptions{
@@ -348,7 +350,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove database account object", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// first add databases to allowed object types
@@ -397,9 +399,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove share account object", func(t *testing.T) {
-		shareTest, cleanupDatabase := createShare(t, client)
+		shareTest, cleanupDatabase := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(cleanupDatabase)
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// first add shares to allowed object types
@@ -447,7 +449,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove security integration account object", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 		// first add security integrations to allowed object types
 		opts := &sdk.AlterSourceFailoverGroupOptions{
@@ -491,10 +493,10 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add or remove target accounts enabled for replication and failover", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
-		secondaryAccountID := getAccountIdentifier(t, testSecondaryClient(t))
+		secondaryAccountID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 		// first add target account
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
@@ -523,11 +525,11 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.AllowedAccounts))
-		assert.Contains(t, failoverGroup.AllowedAccounts, getAccountIdentifier(t, client))
+		assert.Contains(t, failoverGroup.AllowedAccounts, testClientHelper().Account.GetAccountIdentifier(t))
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// add "SHARES" to object types of both failover groups
@@ -541,14 +543,14 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		err := client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
 
-		failoverGroup2, cleanupFailoverGroup2 := createFailoverGroup(t, client)
+		failoverGroup2, cleanupFailoverGroup2 := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup2)
 
 		err = client.FailoverGroups.AlterSource(ctx, failoverGroup2.ID(), opts)
 		require.NoError(t, err)
 
 		// create a temp share
-		shareTest, cleanupShare := createShare(t, client)
+		shareTest, cleanupShare := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(cleanupShare)
 
 		// now add share to allowed shares of failover group 1
@@ -586,7 +588,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("move database to another failover group", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// add "DATABASES" to object types of both failover groups
@@ -600,14 +602,14 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		err := client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
 
-		failoverGroup2, cleanupFailoverGroup2 := createFailoverGroup(t, client)
+		failoverGroup2, cleanupFailoverGroup2 := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup2)
 
 		err = client.FailoverGroups.AlterSource(ctx, failoverGroup2.ID(), opts)
 		require.NoError(t, err)
 
 		// create a temp database
-		databaseTest, cleanupDatabase := createDatabase(t, client)
+		databaseTest, cleanupDatabase := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(cleanupDatabase)
 
 		// now add database to allowed databases of failover group 1
@@ -651,16 +653,16 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := getAccountIdentifier(t, client)
+	primaryAccountID := testClientHelper().Account.GetAccountIdentifier(t)
 	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	secondaryClientID := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
 	// create a temp database
-	databaseTest, cleanupDatabase := createDatabase(t, client)
+	databaseTest, cleanupDatabase := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := sdk.RandomAccountObjectIdentifier()
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedDatabases: []sdk.AccountObjectIdentifier{
@@ -777,13 +779,15 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("no options", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
+		failoverGroup, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
+		t.Cleanup(failoverGroupCleanup)
 		err := client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
+		failoverGroup, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
+		t.Cleanup(failoverGroupCleanup)
 		opts := &sdk.DropFailoverGroupOptions{
 			IfExists: sdk.Bool(true),
 		}
@@ -798,7 +802,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 	t.Cleanup(failoverGroupCleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -810,7 +814,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowFailoverGroupOptions{
-			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.GetAccountLocator()),
+			InAccount: testClientHelper().Ids.AccountIdentifierWithLocator(),
 		}
 		failoverGroups, err := client.FailoverGroups.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -830,7 +834,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 	t.Cleanup(failoverGroupCleanup)
 
 	opts := &sdk.AlterSourceFailoverGroupOptions{
@@ -863,10 +867,10 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 
 	client := testClient(t)
 	ctx := testContext(t)
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 	t.Cleanup(failoverGroupCleanup)
 
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	opts := &sdk.AlterSourceFailoverGroupOptions{
 		Set: &sdk.FailoverGroupSet{

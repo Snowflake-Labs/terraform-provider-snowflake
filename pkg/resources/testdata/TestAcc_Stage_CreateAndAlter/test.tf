@@ -17,4 +17,5 @@ resource "snowflake_stage" "test" {
   credentials         = var.credentials
   encryption          = var.encryption
   file_format         = var.file_format
+  copy_options        = var.copy_options
 }

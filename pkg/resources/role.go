@@ -75,7 +75,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	accountRole, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id))
+	accountRole, err := client.Roles.ShowByID(ctx, id)
 	if err != nil {
 		if err.Error() == "object does not exist" {
 			d.SetId("")
@@ -217,7 +217,7 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
 
-	return nil
+	return ReadAccountRole(ctx, d, meta)
 }
 
 func DeleteAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

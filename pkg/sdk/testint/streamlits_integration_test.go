@@ -1,11 +1,13 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,7 +57,7 @@ func TestInt_Streamlits(t *testing.T) {
 	}
 
 	t.Run("create streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		comment := random.StringN(4)
@@ -69,8 +71,141 @@ func TestInt_Streamlits(t *testing.T) {
 		assertStreamlit(t, id, comment, "")
 	})
 
+	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
+	t.Run("grant privilege to streamlits to role", func(t *testing.T) {
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+
+		role, roleCleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(roleCleanup)
+
+		comment := random.StringN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		mainFile := "manifest.yml"
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		err := client.Streamlits.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(id))
+
+		assertStreamlit(t, id, comment, "")
+
+		privileges := &sdk.AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeUsage},
+		}
+		on := &sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeStreamlit,
+					Name:       id,
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: role.ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(grants))
+		assert.Equal(t, sdk.SchemaObjectPrivilegeUsage.String(), grants[0].Privilege)
+		assert.Equal(t, id.FullyQualifiedName(), grants[0].Name.FullyQualifiedName())
+
+		on = &sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				Future: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "Unsupported feature 'STREAMLIT'")
+
+		on = &sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				All: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
+		require.NoError(t, err)
+	})
+
+	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
+	t.Run("grant privilege to streamlits to database role", func(t *testing.T) {
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
+		t.Cleanup(databaseRoleCleanup)
+
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+
+		comment := random.StringN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		mainFile := "manifest.yml"
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		err := client.Streamlits.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(id))
+
+		assertStreamlit(t, id, comment, "")
+
+		privileges := &sdk.DatabaseRoleGrantPrivileges{
+			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeUsage},
+		}
+		on := &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeStreamlit,
+					Name:       id,
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		// Expecting two grants because database role has usage on database by default
+		require.Equal(t, 2, len(grants))
+
+		on = &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				Future: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "Unsupported feature 'STREAMLIT'")
+
+		on = &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				All: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+	})
+
 	t.Run("alter streamlit: set", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		manifest := "manifest.yml"
 		e := createStreamlitHandle(t, stage, manifest)
@@ -84,7 +219,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -107,7 +242,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -118,7 +253,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: terse with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -139,7 +274,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("describe streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		mainFile := "manifest.yml"
@@ -154,5 +289,55 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, stage.Location(), detail.RootLocation)
 		require.Empty(t, detail.Title)
 		require.Empty(t, detail.QueryWarehouse)
+	})
+}
+
+func TestInt_StreamlitsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	cleanupStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, stage *sdk.Stage, mainFile string) {
+		t.Helper()
+
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile)
+		err := client.Streamlits.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+		manifest := "manifest.yml"
+
+		createStreamlitHandle(t, id1, stage, manifest)
+		createStreamlitHandle(t, id2, stage, manifest)
+
+		e1, err := client.Streamlits.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Streamlits.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

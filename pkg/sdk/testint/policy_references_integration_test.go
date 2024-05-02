@@ -3,8 +3,8 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +22,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 	})
 
 	t.Run("user domain", func(t *testing.T) {
-		user, userCleanup := createUser(t, client)
+		user, userCleanup := testClientHelper().User.CreateUser(t)
 		t.Cleanup(userCleanup)
 
 		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
@@ -40,10 +40,10 @@ func TestInt_PolicyReferences(t *testing.T) {
 	})
 
 	t.Run("tag domain", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tag.ID()).WithSet(

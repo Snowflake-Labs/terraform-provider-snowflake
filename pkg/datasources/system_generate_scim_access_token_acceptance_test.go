@@ -2,18 +2,16 @@ package datasources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
-	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	scimIntName := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -40,17 +38,15 @@ func generateAccessTokenConfig(name string) string {
 		comment = "test comment"
 	}
 
-	resource "snowflake_account_grant" "azurecud" {
-		roles     = [snowflake_role.azured.name]
-		privilege = "CREATE USER"
+	resource "snowflake_grant_privileges_to_account_role" "azure_grants" {
+	  	account_role_name = snowflake_role.azured.name
+  		privileges        = ["CREATE USER", "CREATE ROLE"]
+		on_account        = true
 	}
-	resource "snowflake_account_grant" "azurecrd" {
-		roles     = [snowflake_role.azured.name]
-		privilege = "CREATE ROLE"
-	}
-	resource "snowflake_role_grants" "azured" {
-		role_name = snowflake_role.azured.name
-		roles = ["ACCOUNTADMIN"]
+
+	resource "snowflake_grant_account_role" "azured" {
+		role_name        = snowflake_role.azured.name
+		parent_role_name = "ACCOUNTADMIN"
 	}
 
 	resource "snowflake_scim_integration" "azured" {
@@ -58,9 +54,8 @@ func generateAccessTokenConfig(name string) string {
 		scim_client = "AZURE"
 		provisioner_role = snowflake_role.azured.name
 		depends_on = [
-			snowflake_account_grant.azurecud,
-			snowflake_account_grant.azurecrd,
-			snowflake_role_grants.azured
+			snowflake_grant_privileges_to_account_role.azure_grants,
+			snowflake_grant_account_role.azured
 		]
 	}
 
