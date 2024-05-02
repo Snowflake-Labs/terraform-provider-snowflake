@@ -70,6 +70,18 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return err
 		}
 		opts.Set.Parameters.AccountParameters.AllowIDToken = b
+	case AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForImageRepository = b
+	case AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = b
 	case AccountParameterEventTable:
 		opts.Set.Parameters.AccountParameters.EventTable = &value
 	case AccountParameterEnableUnredactedQuerySyntaxError:
@@ -313,22 +325,24 @@ type AccountParameter string
 // Account Parameters include Session Parameters, Object Parameters and User Parameters
 const (
 	// Account Parameters
-	AccountParameterAllowClientMFACaching                        AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
-	AccountParameterAllowIDToken                                 AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
-	AccountParameterClientEncryptionKeySize                      AccountParameter = "CLIENT_ENCRYPTION_KEY_SIZE"
-	AccountParameterEnableInternalStagesPrivatelink              AccountParameter = "ENABLE_INTERNAL_STAGES_PRIVATELINK"
-	AccountParameterEventTable                                   AccountParameter = "EVENT_TABLE"
-	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList AccountParameter = "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"
-	AccountParameterInitialReplicationSizeLimitInTB              AccountParameter = "INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"
-	AccountParameterMinDataRetentionTimeInDays                   AccountParameter = "MIN_DATA_RETENTION_TIME_IN_DAYS"
-	AccountParameterNetworkPolicy                                AccountParameter = "NETWORK_POLICY"
-	AccountParameterPeriodicDataRekeying                         AccountParameter = "PERIODIC_DATA_REKEYING"
-	AccountParameterPreventLoadFromInlineURL                     AccountParameter = "PREVENT_LOAD_FROM_INLINE_URL"
-	AccountParameterPreventUnloadToInlineURL                     AccountParameter = "PREVENT_UNLOAD_TO_INLINE_URL"
-	AccountParameterPreventUnloadToInternalStages                AccountParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
-	AccountParameterRequireStorageIntegrationForStageCreation    AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"
-	AccountParameterRequireStorageIntegrationForStageOperation   AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"
-	AccountParameterSSOLoginPage                                 AccountParameter = "SSO_LOGIN_PAGE"
+	AccountParameterAllowClientMFACaching                            AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
+	AccountParameterAllowIDToken                                     AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
+	AccountParameterClientEncryptionKeySize                          AccountParameter = "CLIENT_ENCRYPTION_KEY_SIZE"
+	AccountParameterEnableInternalStagesPrivatelink                  AccountParameter = "ENABLE_INTERNAL_STAGES_PRIVATELINK"
+	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository  AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"
+	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"
+	AccountParameterEventTable                                       AccountParameter = "EVENT_TABLE"
+	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList     AccountParameter = "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"
+	AccountParameterInitialReplicationSizeLimitInTB                  AccountParameter = "INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"
+	AccountParameterMinDataRetentionTimeInDays                       AccountParameter = "MIN_DATA_RETENTION_TIME_IN_DAYS"
+	AccountParameterNetworkPolicy                                    AccountParameter = "NETWORK_POLICY"
+	AccountParameterPeriodicDataRekeying                             AccountParameter = "PERIODIC_DATA_REKEYING"
+	AccountParameterPreventLoadFromInlineURL                         AccountParameter = "PREVENT_LOAD_FROM_INLINE_URL"
+	AccountParameterPreventUnloadToInlineURL                         AccountParameter = "PREVENT_UNLOAD_TO_INLINE_URL"
+	AccountParameterPreventUnloadToInternalStages                    AccountParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
+	AccountParameterRequireStorageIntegrationForStageCreation        AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"
+	AccountParameterRequireStorageIntegrationForStageOperation       AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"
+	AccountParameterSSOLoginPage                                     AccountParameter = "SSO_LOGIN_PAGE"
 
 	// Session Parameters (inherited)
 	AccountParameterAbortDetachedQuery                    AccountParameter = "ABORT_DETACHED_QUERY"
@@ -507,23 +521,25 @@ const (
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
-	AllowClientMFACaching                        *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
-	AllowIDToken                                 *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
-	ClientEncryptionKeySize                      *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
-	EnableInternalStagesPrivatelink              *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
-	EnableUnredactedQuerySyntaxError             *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
-	EventTable                                   *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
-	ExternalOAuthAddPrivilegedRolesToBlockedList *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	InitialReplicationSizeLimitInTB              *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                   *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
-	PeriodicDataRekeying                         *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
-	PreventLoadFromInlineURL                     *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
-	PreventUnloadToInlineURL                     *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages                *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation    *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation   *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                                 *bool    `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
+	AllowClientMFACaching                            *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
+	AllowIDToken                                     *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
+	ClientEncryptionKeySize                          *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	EnableInternalStagesPrivatelink                  *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnableUnredactedQuerySyntaxError                 *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
+	EnableTriSecretAndRekeyOptOutForImageRepository  *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
+	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EventTable                                       *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
+	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	InitialReplicationSizeLimitInTB                  *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MinDataRetentionTimeInDays                       *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                                    *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	PeriodicDataRekeying                             *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
+	PreventLoadFromInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
+	PreventUnloadToInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages                    *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation        *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation       *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                                     *bool    `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
 }
 
 func (v *AccountParameters) validate() error {
@@ -548,21 +564,23 @@ func (v *AccountParameters) validate() error {
 }
 
 type AccountParametersUnset struct {
-	AllowClientMFACaching                        *bool `ddl:"keyword" sql:"ALLOW_CLIENT_MFA_CACHING"`
-	AllowIDToken                                 *bool `ddl:"keyword" sql:"ALLOW_ID_TOKEN"`
-	ClientEncryptionKeySize                      *bool `ddl:"keyword" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
-	EnableInternalStagesPrivatelink              *bool `ddl:"keyword" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
-	EventTable                                   *bool `ddl:"keyword" sql:"EVENT_TABLE"`
-	ExternalOAuthAddPrivilegedRolesToBlockedList *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	InitialReplicationSizeLimitInTB              *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                   *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
-	PeriodicDataRekeying                         *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
-	PreventUnloadToInlineURL                     *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages                *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation    *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation   *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                                 *bool `ddl:"keyword" sql:"SSO_LOGIN_PAGE"`
+	AllowClientMFACaching                            *bool `ddl:"keyword" sql:"ALLOW_CLIENT_MFA_CACHING"`
+	AllowIDToken                                     *bool `ddl:"keyword" sql:"ALLOW_ID_TOKEN"`
+	ClientEncryptionKeySize                          *bool `ddl:"keyword" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	EnableInternalStagesPrivatelink                  *bool `ddl:"keyword" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnableTriSecretAndRekeyOptOutForImageRepository  *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
+	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EventTable                                       *bool `ddl:"keyword" sql:"EVENT_TABLE"`
+	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	InitialReplicationSizeLimitInTB                  *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MinDataRetentionTimeInDays                       *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                                    *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
+	PeriodicDataRekeying                             *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
+	PreventUnloadToInlineURL                         *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages                    *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation        *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation       *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                                     *bool `ddl:"keyword" sql:"SSO_LOGIN_PAGE"`
 }
 
 type GeographyOutputFormat string
