@@ -231,7 +231,7 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{}).FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),

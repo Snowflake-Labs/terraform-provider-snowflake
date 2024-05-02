@@ -275,7 +275,7 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""
 	}
-	if len(i.arguments) == 0 {
+	if i.arguments == nil {
 		return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
 	}
 	// if this is a function or procedure, we need to include the arguments

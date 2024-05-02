@@ -128,7 +128,8 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 // The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
 // inside database called "db", not a database called "db.name". In this case quotes should be used.
 func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
-	reader := csv.NewReader(strings.NewReader(identifier))
+	identifierWithoutArgs, args := sdk.SplitObjectNameArgument(identifier)
+	reader := csv.NewReader(strings.NewReader(identifierWithoutArgs))
 	reader.Comma = ParameterIDDelimiter
 	lines, err := reader.ReadAll()
 	if err != nil {
@@ -144,7 +145,7 @@ func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error)
 	case 2:
 		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]), nil
 	case 3:
-		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2]), nil
+		return sdk.NewSchemaObjectIdentifierWithArguments(parts[0], parts[1], parts[2], args), nil
 	case 4:
 		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
 	default:

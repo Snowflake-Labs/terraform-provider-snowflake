@@ -25,6 +25,14 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 			id:                 `"db"."schema"."test.name"`,
 			fullyQualifiedName: `"db"."schema"."test.name"`,
 		},
+		"decodes quoted schema object identifier with arguments": {
+			id:                 `"db"."schema"."test.name"(varchar, number)`,
+			fullyQualifiedName: `"db"."schema"."test.name"(VARCHAR, NUMBER)`,
+		},
+		"decodes quoted schema object identifier with empty arguments": {
+			id:                 `"db"."schema"."test.name"()`,
+			fullyQualifiedName: `"db"."schema"."test.name"()`,
+		},
 		"decodes quoted table column identifier": {
 			id:                 `"db"."schema"."table.name"."test.name"`,
 			fullyQualifiedName: `"db"."schema"."table.name"."test.name"`,
@@ -40,6 +48,14 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 		"decodes unquoted schema object identifier": {
 			id:                 `db.schema.name`,
 			fullyQualifiedName: `"db"."schema"."name"`,
+		},
+		"decodes unquoted schema object identifier with arguments": {
+			id:                 `db.schema.name(varchar, number)`,
+			fullyQualifiedName: `"db"."schema"."name"(VARCHAR, NUMBER)`,
+		},
+		"decodes unquoted schema object identifier with empty arguments": {
+			id:                 `db.schema.name()`,
+			fullyQualifiedName: `"db"."schema"."name"()`,
 		},
 		"decodes unquoted table column identifier": {
 			id:                 `db.schema.table.name`,
