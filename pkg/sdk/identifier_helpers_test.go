@@ -47,6 +47,64 @@ func TestNewSchemaObjectIdentifierFromFullyQualifiedName(t *testing.T) {
 	}
 }
 
+func TestSplitObjectNameArgument(t *testing.T) {
+	type test struct {
+		input    string
+		wantArgs []DataType
+		wantId   string
+	}
+
+	tests := []test{
+		{
+			input:    "\"MY_DB\".\"MY_SCHEMA\".\"multiply\"(number, number)",
+			wantId:   "\"MY_DB\".\"MY_SCHEMA\".\"multiply\"",
+			wantArgs: []DataType{DataTypeNumber, DataTypeNumber},
+		},
+		{
+			input:    "\"multiply\"(number, number)",
+			wantId:   "\"multiply\"",
+			wantArgs: []DataType{DataTypeNumber, DataTypeNumber},
+		},
+		{
+			input:    "MY_DB.MY_SCHEMA.add(number, number)",
+			wantId:   "MY_DB.MY_SCHEMA.add",
+			wantArgs: []DataType{DataTypeNumber, DataTypeNumber},
+		},
+		{
+			input:    "add(number, number)",
+			wantId:   "add",
+			wantArgs: []DataType{DataTypeNumber, DataTypeNumber},
+		},
+		{
+			input:    "\"MY_DB\".\"MY_SCHEMA\".\"MY_UDF\"()",
+			wantId:   "\"MY_DB\".\"MY_SCHEMA\".\"MY_UDF\"",
+			wantArgs: []DataType{},
+		},
+		{
+			input:    "\"MY_UDF\"()",
+			wantId:   "\"MY_UDF\"",
+			wantArgs: []DataType{},
+		},
+		{
+			input:    "\"MY_DB\".\"MY_SCHEMA\".\"MY_PIPE\"",
+			wantId:   "\"MY_DB\".\"MY_SCHEMA\".\"MY_PIPE\"",
+			wantArgs: nil,
+		},
+		{
+			input:    "MY_DB.MY_SCHEMA.MY_STAGE",
+			wantId:   "MY_DB.MY_SCHEMA.MY_STAGE",
+			wantArgs: nil,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			id, args := SplitObjectNameArgument(tc.input)
+			require.Equal(t, tc.wantId, id)
+			require.Equal(t, tc.wantArgs, args)
+		})
+	}
+}
+
 func TestDatabaseObjectIdentifier(t *testing.T) {
 	t.Run("create from strings", func(t *testing.T) {
 		identifier := NewDatabaseObjectIdentifier("aaa", "bbb")

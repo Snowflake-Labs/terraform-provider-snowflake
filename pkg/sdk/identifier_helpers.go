@@ -216,22 +216,39 @@ func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) 
 
 	// this is either a function or procedure
 	if strings.HasSuffix(parts[2], ")") {
-		idx := strings.LastIndex(parts[2], "(")
-		id.name = strings.Trim(parts[2][:idx], `"`)
-		strArgs := strings.Split(strings.Trim(parts[2][idx+1:], `)`), ",")
-		id.arguments = make([]DataType, 0)
-		for _, arg := range strArgs {
-			trimmedArg := strings.TrimSpace(strings.Trim(arg, `"`))
-			if trimmedArg == "" {
-				continue
-			}
-			dt, _ := ToDataType(trimmedArg)
-			id.arguments = append(id.arguments, dt)
-		}
+		name, arguments := SplitObjectNameArgument(parts[2])
+		id.name = strings.Trim(name, `"`)
+		id.arguments = arguments
 	} else { // this is every other kind of schema object
 		id.name = strings.Trim(parts[2], `"`)
 	}
 	return id
+}
+
+// SplitObjectNameArgument splits the given name into its base name and arguments.
+// If the name does not have an argument part, it returns the name itself and nil.
+// If the argument part exists but is empty, it returns an empty slice.
+// This function expects the name to be in the form of "name(argument1, argument2, ...)".
+func SplitObjectNameArgument(name string) (string, []DataType) {
+	if !strings.HasSuffix(name, ")") {
+		return name, nil
+	}
+
+	idx := strings.LastIndex(name, "(")
+	nameWithoutArgument := name[:idx]
+	strArgs := strings.Split(strings.Trim(name[idx+1:], `)`), ",")
+
+	arguments := make([]DataType, 0)
+	for _, arg := range strArgs {
+		trimmedArg := strings.TrimSpace(strings.Trim(arg, `"`))
+		if trimmedArg == "" {
+			continue
+		}
+		dt, _ := ToDataType(trimmedArg)
+		arguments = append(arguments, dt)
+	}
+
+	return nameWithoutArgument, arguments
 }
 
 func (i SchemaObjectIdentifier) DatabaseName() string {
