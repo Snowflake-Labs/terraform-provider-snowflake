@@ -43,6 +43,9 @@ func loadIssuesToClose() []Issue {
 	defer f.Close()
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
 	issues := make([]Issue, 0)
 	for _, record := range records {
 		number, err := strconv.Atoi(record[0])

@@ -40,6 +40,9 @@ func loadPreSnowflakeBucket() []PreSnowflakeIssue {
 	defer f.Close()
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
 	issues := make([]PreSnowflakeIssue, 0)
 	for _, record := range records {
 		number, err := strconv.Atoi(record[0])
