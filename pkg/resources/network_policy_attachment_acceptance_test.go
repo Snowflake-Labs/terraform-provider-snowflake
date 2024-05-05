@@ -1,9 +1,10 @@
 package resources_test
 
 import (
-	"fmt"
-	"testing"
 	"context"
+	"fmt"
+	"strings"
+	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -77,7 +78,6 @@ func TestAcc_NetworkPolicyAttachmentAccount(t *testing.T) {
 		},
 	})
 }
-
 
 func testAccCheckNetworkPolicyAttachmentDestroy(s *terraform.State) error {
 	client := acc.TestAccProvider.Meta().(*provider.Context).Client
