@@ -1,0 +1,196 @@
+name: Feature Request
+description: Something is missing or could be improved.
+title: "[Feature]: "
+labels: ["feature-request"]
+body:
+  # TODO(SNOW-1003360): Link doc how to submit issues and FAQ
+  - type: markdown
+    attributes:
+      value: |
+        # Thank you for raising a feature request!
+        
+        Before submitting, we ask that you first search existing issues (also the closed ones) to see if someone else may have submitted the same issue.
+        This helps to keep all relevant information in one place, including any potential workarounds.
+        
+        If you are not running the latest version of either CLI or the Provider, please consider upgrading as the feature could be already implemented.
+        
+        If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
+
+        Here's a list of useful links that may answer your question:
+        - [Provider Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
+
+  - id: use-case
+    type: textarea
+    attributes:
+      label: Use Cases or Problem Statement
+      description: What use cases or problems are you trying to solve?
+      placeholder: Description of use cases or problems.
+    validations:
+      required: true
+
+  - id: category
+    type: dropdown
+    attributes:
+      label: Category
+      description: |
+        Choose an appropriate category for the issue:
+        - **resource** - a missing feature in resource(s)
+        - **grants** - a missing feature in resource(s) / data source(s) dedicated for access management (granting privileges, roles, etc.)
+        - **data_source** - a missing feature in data source(s)
+        - **import** - missing functionality in resource(s) / data source(s) when importing with *terraform import* command
+        - **sdk** - an issue with the underlying SDK
+        - **identifiers** - an unsupported type of identifier
+        - **provider_config** - a missing functionality in the provider configuration
+        - **other** - for any other missing functionality in the provider
+      options:
+        - category:resource
+        - category:data_source
+        - category:import
+        - category:sdk
+        - category:identifiers
+        - category:provider_config
+        - category:grants
+        - category:other
+    validations:
+      required: true
+
+  - id: object_type
+    type: dropdown
+    attributes:
+      label: Object type(s)
+      description: Choose object type(s) affected by the proposal (if any).
+      multiple: true
+      options:
+        - resource:account
+        - resource:account_parameter
+        - resource:account_password_policy
+        - resource:alert
+        - resource:api_integration
+        - resource:database
+        - resource:database_role
+        - resource:dynamic_table
+        - resource:email_notification_integration
+        - resource:external_function
+        - resource:external_oauth_integration
+        - resource:external_table
+        - resource:failover_group
+        - resource:file_format
+        - resource:function
+        - resource:grant_account_role
+        - resource:grant_database_role
+        - resource:grant_ownership
+        - resource:grant_privileges_to_account_role
+        - resource:grant_privileges_to_database_role
+        - resource:grant_privileges_to_share
+        - resource:managed_account
+        - resource:masking_policy
+        - resource:materialized_view
+        - resource:network_policy
+        - resource:network_policy_attachment
+        - resource:notification_integration
+        - resource:oauth_integration
+        - resource:object_parameter
+        - resource:password_policy
+        - resource:pipe
+        - resource:procedure
+        - resource:resource_monitor
+        - resource:role
+        - resource:row_access_policy
+        - resource:saml_integration
+        - resource:schema
+        - resource:scim_integration
+        - resource:sequence
+        - resource:session_parameter
+        - resource:share
+        - resource:stage
+        - resource:storage_integration
+        - resource:stream
+        - resource:table
+        - resource:table_column_masking_policy_application
+        - resource:table_constraint
+        - resource:tag
+        - resource:tag_association
+        - resource:tag_masking_policy_association
+        - resource:task
+        - resource:unsafe_execute
+        - resource:user
+        - resource:user_password_policy_attachment
+        - resource:user_public_keys
+        - resource:view
+        - resource:warehouse
+        - data_source:accounts
+        - data_source:alerts
+        - data_source:current_account
+        - data_source:current_role
+        - data_source:database
+        - data_source:database_roles
+        - data_source:databases
+        - data_source:dynamic_tables
+        - data_source:external_functions
+        - data_source:external_tables
+        - data_source:failover_groups
+        - data_source:file_formats
+        - data_source:functions
+        - data_source:grants
+        - data_source:masking_policies
+        - data_source:materialized_views
+        - data_source:parameters
+        - data_source:pipes
+        - data_source:procedures
+        - data_source:resource_monitors
+        - data_source:roles
+        - data_source:row_access_policies
+        - data_source:schemas
+        - data_source:sequences
+        - data_source:shares
+        - data_source:stages
+        - data_source:storage_integrations
+        - data_source:streams
+        - data_source:system_generate_scim_access_token
+        - data_source:system_get_aws_sns_iam_policy
+        - data_source:system_get_privatelink_config
+        - data_source:system_get_snowflake_platform_info
+        - data_source:tables
+        - data_source:tasks
+        - data_source:users
+        - data_source:views
+        - data_source:warehouses
+
+  - id: proposal
+    type: textarea
+    attributes:
+      label: Proposal
+      description: What solutions would you prefer?
+      placeholder: Description of proposed solutions.
+
+  - id: impact
+    type: dropdown
+    attributes:
+      label: How much impact is this issue causing?
+      description: |
+        Please choose the appropriate impact for the issue keeping in mind that:
+        - **High** - completely not able to use the provider or unexpected destruction of data/infrastructure.
+        - **Medium** - unable to upgrade provider version or an issue with potential workaround.
+        - **Low** - minor provider code or configuration issues.
+      options:
+        - High
+        - Medium
+        - Low
+      default:
+        2 # Low
+    validations:
+      required: true
+
+  - id: additional-information
+    type: textarea
+    attributes:
+      label: Additional Information
+      description: Are there any additional details about new feature that may be relevant?
+
+  - id: will-contribute
+    type: checkboxes
+    attributes:
+      label: Would you like to implement a fix?
+      description: If you plan to implement the feature, check this box to let the maintainers and community know (you can update this later if you change your mind).
+      options:
+        - label: Yeah, I'll take it 😎

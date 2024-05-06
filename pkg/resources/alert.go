@@ -356,7 +356,7 @@ func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.Alerts.Drop(ctx, objectIdentifier)
+	err := client.Alerts.Drop(ctx, objectIdentifier, &sdk.DropAlertOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

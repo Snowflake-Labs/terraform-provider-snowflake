@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -10,14 +9,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ExternalFunction_basic(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -88,7 +86,7 @@ func TestAcc_ExternalFunction_basic(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -155,7 +153,7 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_complete(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -228,7 +226,7 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -275,7 +273,7 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePresent(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -314,7 +312,7 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePrese
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemoved(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -369,8 +367,8 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemov
 // The problem originated from ShowById without IN clause. There was no IN clause in the docs at the time.
 // It was raised with the appropriate team in Snowflake.
 func TestAcc_ExternalFunction_issue2528(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
+	secondSchema := acc.TestClient().Ids.Alpha()
 
 	resourceName := "snowflake_external_function.f"
 

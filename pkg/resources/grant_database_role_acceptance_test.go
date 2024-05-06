@@ -2,21 +2,19 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentDatabaseRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -55,9 +53,9 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentDatabaseRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -89,8 +87,8 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 }
 
 func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	parentRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentRoleName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -130,11 +128,11 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2410 is fixed
 func TestAcc_GrantDatabaseRole_share(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	databaseRoleName := acc.TestClient().Ids.Alpha()
 	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareId := sdk.NewAccountObjectIdentifier(shareName).FullyQualifiedName()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := shareId.Name()
 	resourceName := "snowflake_grant_database_role.test"
 	configVariables := func() config.Variables {
 		return config.Variables{
@@ -157,7 +155,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId.FullyQualifiedName())),
 				),
 			},
 			// test import

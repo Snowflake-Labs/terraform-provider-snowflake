@@ -2,21 +2,22 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type ApplicationPackageClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewApplicationPackageClient(context *TestClientContext) *ApplicationPackageClient {
+func NewApplicationPackageClient(context *TestClientContext, idsGenerator *IdsGenerator) *ApplicationPackageClient {
 	return &ApplicationPackageClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -28,7 +29,7 @@ func (c *ApplicationPackageClient) CreateApplicationPackage(t *testing.T) (*sdk.
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewAccountObjectIdentifier(random.AlphaN(8))
+	id := c.ids.RandomAccountObjectIdentifier()
 	err := c.client().Create(ctx, sdk.NewCreateApplicationPackageRequest(id))
 	require.NoError(t, err)
 
@@ -43,9 +44,8 @@ func (c *ApplicationPackageClient) DropApplicationPackageFunc(t *testing.T, id s
 	ctx := context.Background()
 
 	return func() {
-		// no if exists supported based on the docs https://docs.snowflake.com/en/sql-reference/sql/drop-application-package#syntax
-		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id))
-		assert.NoError(t, err)
+		err := c.client().Drop(ctx, sdk.NewDropApplicationPackageRequest(id).WithIfExists(sdk.Bool(true)))
+		require.NoError(t, err)
 	}
 }
 
@@ -57,4 +57,18 @@ func (c *ApplicationPackageClient) AddApplicationPackageVersion(t *testing.T, id
 
 	err := c.client().Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithAddVersion(sdk.NewAddVersionRequest(using).WithVersionIdentifier(sdk.String(versionName))))
 	require.NoError(t, err)
+}
+
+func (c *ApplicationPackageClient) ShowVersions(t *testing.T, id sdk.AccountObjectIdentifier) []ApplicationPackageVersion {
+	t.Helper()
+
+	var versions []ApplicationPackageVersion
+	err := c.context.client.QueryForTests(context.Background(), &versions, fmt.Sprintf(`SHOW VERSIONS IN APPLICATION PACKAGE %s`, id.FullyQualifiedName()))
+	require.NoError(t, err)
+	return versions
+}
+
+type ApplicationPackageVersion struct {
+	Version string `json:"version"`
+	Patch   int    `json:"patch"`
 }

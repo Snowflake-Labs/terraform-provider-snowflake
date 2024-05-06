@@ -791,7 +791,7 @@ func (r *ResourceMonitorResource) delete(ctx context.Context, data *resourceMoni
 
 	diags := diag.Diagnostics{}
 	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(data.Id.ValueString())
-	err := client.ResourceMonitors.Drop(ctx, id)
+	err := client.ResourceMonitors.Drop(ctx, id, &sdk.DropResourceMonitorOptions{IfExists: sdk.Bool(true)})
 	if dryRun {
 		return data, client.TraceLogs(), diags
 	}

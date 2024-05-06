@@ -5,7 +5,7 @@ import (
 )
 
 func TestViews_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	sql := "SELECT id FROM t"
 
 	// Minimal valid CreateViewOptions
@@ -45,7 +45,7 @@ func TestViews_Create(t *testing.T) {
 	t.Run("validation: empty columns for row access policy", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &ViewRowAccessPolicy{
-			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			RowAccessPolicy: randomSchemaObjectIdentifier(),
 			On:              []string{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateViewOptions.RowAccessPolicy", "On"))
@@ -57,11 +57,11 @@ func TestViews_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
-		tag1Id := RandomSchemaObjectIdentifier()
-		tag2Id := RandomSchemaObjectIdentifier()
-		maskingPolicy1Id := RandomSchemaObjectIdentifier()
-		maskingPolicy2Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
+		tag1Id := randomSchemaObjectIdentifier()
+		tag2Id := randomSchemaObjectIdentifier()
+		maskingPolicy1Id := randomSchemaObjectIdentifier()
+		maskingPolicy2Id := randomSchemaObjectIdentifier()
 
 		req := NewCreateViewRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -94,7 +94,7 @@ func TestViews_Create(t *testing.T) {
 }
 
 func TestViews_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterViewOptions
 	defaultOpts := func() *AlterViewOptions {
@@ -145,7 +145,7 @@ func TestViews_Alter(t *testing.T) {
 	t.Run("validation: empty columns for row access policy (add)", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
-			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			RowAccessPolicy: randomSchemaObjectIdentifier(),
 			On:              []string{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterViewOptions.AddRowAccessPolicy", "On"))
@@ -158,7 +158,7 @@ func TestViews_Alter(t *testing.T) {
 				RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
 			},
 			Add: ViewAddRowAccessPolicy{
-				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+				RowAccessPolicy: randomSchemaObjectIdentifier(),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -168,7 +168,7 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
 			Drop: ViewDropRowAccessPolicy{
-				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+				RowAccessPolicy: randomSchemaObjectIdentifier(),
 			},
 			Add: ViewAddRowAccessPolicy{
 				RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
@@ -181,10 +181,10 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
 			Drop: ViewDropRowAccessPolicy{
-				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+				RowAccessPolicy: randomSchemaObjectIdentifier(),
 			},
 			Add: ViewAddRowAccessPolicy{
-				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+				RowAccessPolicy: randomSchemaObjectIdentifier(),
 				On:              []string{},
 			},
 		}
@@ -192,7 +192,7 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newId := RandomSchemaObjectIdentifier()
+		newId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.RenameTo = &newId
@@ -260,7 +260,7 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("add row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
@@ -271,7 +271,7 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("drop row access policy", func(t *testing.T) {
-		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.DropRowAccessPolicy = &ViewDropRowAccessPolicy{
@@ -281,8 +281,8 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("drop and add row access policy", func(t *testing.T) {
-		rowAccessPolicy1Id := RandomSchemaObjectIdentifier()
-		rowAccessPolicy2Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicy1Id := randomSchemaObjectIdentifier()
+		rowAccessPolicy2Id := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
@@ -304,7 +304,7 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("set masking policy on column", func(t *testing.T) {
-		maskingPolicyId := RandomSchemaObjectIdentifier()
+		maskingPolicyId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.SetMaskingPolicyOnColumn = &ViewSetColumnMaskingPolicy{
@@ -356,7 +356,7 @@ func TestViews_Alter(t *testing.T) {
 }
 
 func TestViews_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropViewOptions
 	defaultOpts := func() *DropViewOptions {
@@ -414,7 +414,7 @@ func TestViews_Show(t *testing.T) {
 }
 
 func TestViews_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeViewOptions
 	defaultOpts := func() *DescribeViewOptions {

@@ -3,22 +3,20 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_MaterializedView(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
 
 	queryEscaped := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\"", tableName)
 	query := fmt.Sprintf(`SELECT ID, DATA FROM "%s"`, tableName)
@@ -99,10 +97,10 @@ func TestAcc_MaterializedView(t *testing.T) {
 }
 
 func TestAcc_MaterializedView_Tags(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag1Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
+	tag1Name := acc.TestClient().Ids.Alpha()
+	tag2Name := acc.TestClient().Ids.Alpha()
 
 	queryEscaped := fmt.Sprintf("SELECT ID FROM \\\"%s\\\"", tableName)
 
@@ -144,9 +142,9 @@ func TestAcc_MaterializedView_Tags(t *testing.T) {
 }
 
 func TestAcc_MaterializedView_Rename(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
+	newViewName := acc.TestClient().Ids.Alpha()
 
 	queryEscaped := fmt.Sprintf("SELECT ID FROM \\\"%s\\\"", tableName)
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-867235]: refine this resource during redesign:
+// TODO [SNOW-1348114]: refine this resource during redesign:
 // - read (from the existing comment it seems that active warehouse is needed (it should be probably added to the resource as required)
 // - drop (in tests it's not dropped correctly, probably also because missing warehouse)
 // - do we need it?

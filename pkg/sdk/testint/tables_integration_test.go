@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
@@ -33,10 +34,12 @@ func TestInt_Table(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-	tag1, _ := createTag(t, client, database, schema)
-	tag2, _ := createTag(t, client, database, schema)
+	tag1, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup2)
 
-	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []informationSchemaColumns) {
+	assertColumns := func(t *testing.T, expectedColumns []expectedColumn, createdColumns []helpers.InformationSchemaColumns) {
 		t.Helper()
 
 		require.Len(t, createdColumns, len(expectedColumns))
@@ -58,6 +61,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, "TABLE", table.Kind)
 		assert.Equal(t, 0, table.Rows)
 		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
+		assert.Equal(t, "ROLE", table.OwnerRoleType)
 	}
 
 	assertTableTerse := func(t *testing.T, table *sdk.Table, id sdk.SchemaObjectIdentifier) {
@@ -91,17 +95,10 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("create table: complete optionals", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-			{
-				Name: "col2",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1, 2)", nil)
-		table2, _ := testClientHelper().Table.CreateTable(t)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		t.Cleanup(maskingPolicyCleanup)
+		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
+		t.Cleanup(table2Cleanup)
 		name := random.String()
 		comment := random.String()
 
@@ -159,7 +156,7 @@ func TestInt_Table(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "30", param.Value)
 
-		tableColumns := getTableColumnsFor(t, client, table.ID())
+		tableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -169,12 +166,8 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("create table as select", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1)", nil)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
+		t.Cleanup(maskingPolicyCleanup)
 		columns := []sdk.TableAsSelectColumnRequest{
 			*sdk.NewTableAsSelectColumnRequest("COLUMN_3").
 				WithType_(sdk.Pointer(sdk.DataTypeVARCHAR)).
@@ -202,7 +195,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		tableColumns := getTableColumnsFor(t, client, table.ID())
+		tableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -213,7 +206,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: fix this test, it should create two integer column but is creating 3 text ones instead
 	t.Run("create table using template", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
+		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
@@ -243,7 +236,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		returnedTableColumns := getTableColumnsFor(t, client, table.ID())
+		returnedTableColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"C1", sdk.DataTypeVARCHAR},
 			{"C2", sdk.DataTypeVARCHAR},
@@ -270,7 +263,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
-		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
+		sourceTableColumns := testClientHelper().Table.GetTableColumnsFor(t, sourceTable.ID())
 		expectedColumns := []expectedColumn{
 			{"id", sdk.DataTypeNumber},
 			{"col2", sdk.DataTypeVARCHAR},
@@ -281,7 +274,7 @@ func TestInt_Table(t *testing.T) {
 		likeTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		likeTableColumns := getTableColumnsFor(t, client, likeTable.ID())
+		likeTableColumns := testClientHelper().Table.GetTableColumnsFor(t, likeTable.ID())
 		assertColumns(t, expectedColumns, likeTableColumns)
 	})
 
@@ -303,14 +296,14 @@ func TestInt_Table(t *testing.T) {
 			WithMoment(sdk.CloneMomentAt))
 
 		// ensure that time travel is allowed (and revert if needed after the test)
-		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
+		revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "1")
 		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
-		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
+		sourceTableColumns := testClientHelper().Table.GetTableColumnsFor(t, sourceTable.ID())
 		expectedColumns := []expectedColumn{
 			{"id", sdk.DataTypeNumber},
 			{"col2", sdk.DataTypeVARCHAR},
@@ -321,7 +314,7 @@ func TestInt_Table(t *testing.T) {
 		cloneTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		cloneTableColumns := getTableColumnsFor(t, client, cloneTable.ID())
+		cloneTableColumns := testClientHelper().Table.GetTableColumnsFor(t, cloneTable.ID())
 		assertColumns(t, expectedColumns, cloneTableColumns)
 	})
 
@@ -491,7 +484,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -523,7 +516,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -534,12 +527,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: unset masking policy", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
-			{
-				Name: "col1",
-				Type: sdk.DataTypeVARCHAR,
-			},
-		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1)", nil)
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
 		t.Cleanup(maskingPolicyCleanup)
 
 		name := random.String()
@@ -644,7 +632,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
 		}
@@ -814,7 +802,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -844,7 +832,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, table.Comment, "")
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -872,7 +860,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := getTableColumnsFor(t, client, table.ID())
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
 		}
@@ -1044,5 +1032,43 @@ func TestInt_TablesShowByID(t *testing.T) {
 		e2, err := client.Tables.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show by id: check schema evolution record", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
+		}
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithEnableSchemaEvolution(sdk.Pointer(true)))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableHandle(id))
+
+		table, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx,
+			&sdk.AccountRoleGrantPrivileges{SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeEvolveSchema}},
+			&sdk.AccountRoleGrantOn{SchemaObject: &sdk.GrantOnSchemaObject{SchemaObject: &sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: sdk.NewObjectIdentifierFromFullyQualifiedName(table.ID().FullyQualifiedName())}}},
+			sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"),
+			nil)
+		require.NoError(t, err)
+
+		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
+		t.Cleanup(stageCleanup)
+
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "schema_evolution_record.json")
+
+		testClientHelper().Stage.CopyIntoTableFromFile(t, table.ID(), stage.ID(), "schema_evolution_record.json")
+
+		currentColumns := testClientHelper().Table.GetTableColumnsFor(t, table.ID())
+		require.Len(t, currentColumns, 2)
+		assert.NotEmpty(t, currentColumns[1].SchemaEvolutionRecord)
+
+		descColumns, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
+		require.NoError(t, err)
+		require.Len(t, descColumns, 2)
+		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
 	})
 }

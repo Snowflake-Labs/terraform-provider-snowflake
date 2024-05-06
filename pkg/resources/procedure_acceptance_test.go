@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -19,8 +18,8 @@ import (
 func testAccProcedure(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
 
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
@@ -123,7 +122,7 @@ func TestAcc_Procedure_Scala(t *testing.T) {
 }
 
 func TestAcc_Procedure_complex(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -199,7 +198,7 @@ func TestAcc_Procedure_complex(t *testing.T) {
 }
 
 func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_procedure.p"
 
 	resource.Test(t, resource.TestCase{

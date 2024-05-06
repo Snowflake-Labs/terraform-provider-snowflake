@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestApplicationPackages_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateApplicationPackageOptions {
 		return &CreateApplicationPackageOptions{
@@ -30,7 +30,7 @@ func TestApplicationPackages_Create(t *testing.T) {
 		opts.DefaultDdlCollation = String("en_US")
 		opts.Comment = String("comment")
 		opts.Distribution = DistributionPointer(DistributionInternal)
-		t1 := RandomSchemaObjectIdentifier()
+		t1 := randomSchemaObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
 				Name:  t1,
@@ -42,7 +42,7 @@ func TestApplicationPackages_Create(t *testing.T) {
 }
 
 func TestApplicationPackages_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *AlterApplicationPackageOptions {
 		return &AlterApplicationPackageOptions{
@@ -210,7 +210,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 }
 
 func TestApplicationPackages_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DropApplicationPackageOptions {
 		return &DropApplicationPackageOptions{
@@ -231,7 +231,8 @@ func TestApplicationPackages_Drop(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DROP APPLICATION PACKAGE %s`, id.FullyQualifiedName())
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP APPLICATION PACKAGE IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 

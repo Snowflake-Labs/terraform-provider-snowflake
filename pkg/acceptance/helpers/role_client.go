@@ -10,11 +10,13 @@ import (
 
 type RoleClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewRoleClient(context *TestClientContext) *RoleClient {
+func NewRoleClient(context *TestClientContext, idsGenerator *IdsGenerator) *RoleClient {
 	return &RoleClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -40,9 +42,10 @@ func (c *RoleClient) UseRole(t *testing.T, roleName string) func() {
 
 func (c *RoleClient) CreateRole(t *testing.T) (*sdk.Role, func()) {
 	t.Helper()
-	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
+	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(c.ids.RandomAccountObjectIdentifier()))
 }
 
+// TODO [SNOW-955520]: we have to control the name
 func (c *RoleClient) CreateRoleWithName(t *testing.T, name string) (*sdk.Role, func()) {
 	t.Helper()
 	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(name)))
@@ -108,5 +111,14 @@ func (c *RoleClient) GrantOwnershipOnAccountObject(t *testing.T, roleId sdk.Acco
 		},
 		new(sdk.GrantOwnershipOptions),
 	)
+	require.NoError(t, err)
+}
+
+// TODO: move later to grants client
+func (c *RoleClient) GrantPrivilegeOnDatabaseToShare(t *testing.T, databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.context.client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: databaseId}, shareId)
 	require.NoError(t, err)
 }

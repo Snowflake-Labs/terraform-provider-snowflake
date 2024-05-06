@@ -121,6 +121,10 @@ Optional:
 - `masking_policy` (String) Masking policy to apply on column. It has to be a fully qualified name.
 - `nullable` (Boolean) Whether this column can contain null values. **Note**: Depending on your Snowflake version, the default value will not suffice if this column is used in a primary key constraint.
 
+Read-Only:
+
+- `schema_evolution_record` (String) Record of schema evolution.
+
 <a id="nestedblock--column--default"></a>
 ### Nested Schema for `column.default`
 

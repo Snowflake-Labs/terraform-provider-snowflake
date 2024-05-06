@@ -22,8 +22,7 @@ func TestInt_Applications(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
 	cleanupApplicationHandle := func(id sdk.AccountObjectIdentifier) func() {
@@ -63,7 +62,7 @@ func TestInt_Applications(t *testing.T) {
 
 		stage, applicationPackage := createApplicationPackageHandle(t, version, patch, false)
 
-		id := sdk.NewAccountObjectIdentifier(random.AlphaN(4))
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
 		if versionDirectory {
 			vr = sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
@@ -113,7 +112,7 @@ func TestInt_Applications(t *testing.T) {
 		version, patch := "V001", 0
 		_, applicationPackage := createApplicationPackageHandle(t, version, patch, true)
 
-		id := sdk.NewAccountObjectIdentifier(random.AlphaN(4))
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
 			WithComment(&comment).
@@ -142,7 +141,7 @@ func TestInt_Applications(t *testing.T) {
 		version, patch := "V001", 0
 		_, applicationPackage := createApplicationPackageHandle(t, version, patch, false)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
@@ -160,7 +159,7 @@ func TestInt_Applications(t *testing.T) {
 		version, patch := "V001", 0
 		stage, applicationPackage := createApplicationPackageHandle(t, version, patch, false)
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
@@ -192,7 +191,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: set", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, _ := createApplicationHandle(t, version, patch, false, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		comment, mode := random.StringN(4), true
 		set := sdk.NewApplicationSetRequest().
@@ -218,7 +217,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: unset", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, _ := createApplicationHandle(t, version, patch, false, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		unset := sdk.NewApplicationUnsetRequest().WithComment(sdk.Bool(true)).WithDebugMode(sdk.Bool(true))
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnset(unset))
@@ -240,7 +239,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: set and unset tags", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, applicationPackage := createApplicationHandle(t, version, patch, false, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		setTags := []sdk.TagAssociation{
 			{
@@ -268,7 +267,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: upgrade with version and patch", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, applicationPackage := createApplicationHandle(t, version, patch, false, true, true)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		vr := sdk.NewVersionAndPatchRequest(version, sdk.Int(patch+1))
 		av := sdk.NewApplicationVersionRequest().WithVersionAndPatch(vr)
@@ -280,7 +279,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: upgrade with version directory", func(t *testing.T) {
 		version, patch := "V001", 0
 		s, e, applicationPackage := createApplicationHandle(t, version, patch, true, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		av := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + s.ID().FullyQualifiedName()))
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUpgradeVersion(av))
@@ -291,7 +290,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("alter application: unset references", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, applicationPackage := createApplicationHandle(t, version, patch, false, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetReferences(sdk.NewApplicationReferencesRequest()))
 		require.NoError(t, err)
@@ -301,7 +300,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("describe application", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, _ := createApplicationHandle(t, version, patch, false, true, false)
-		id := sdk.NewAccountObjectIdentifier(e.Name)
+		id := e.ID()
 
 		properties, err := client.Applications.Describe(ctx, id)
 		require.NoError(t, err)

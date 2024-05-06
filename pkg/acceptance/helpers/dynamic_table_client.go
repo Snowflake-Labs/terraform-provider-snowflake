@@ -12,11 +12,13 @@ import (
 
 type DynamicTableClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewDynamicTableClient(context *TestClientContext) *DynamicTableClient {
+func NewDynamicTableClient(context *TestClientContext, idsGenerator *IdsGenerator) *DynamicTableClient {
 	return &DynamicTableClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -26,7 +28,7 @@ func (c *DynamicTableClient) client() sdk.DynamicTables {
 
 func (c *DynamicTableClient) CreateDynamicTable(t *testing.T, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {
 	t.Helper()
-	return c.CreateDynamicTableWithOptions(t, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema), random.AlphaN(12), sdk.NewAccountObjectIdentifier(c.context.warehouse), tableId)
+	return c.CreateDynamicTableWithOptions(t, c.ids.SchemaId(), random.AlphaN(12), c.ids.WarehouseId(), tableId)
 }
 
 func (c *DynamicTableClient) CreateDynamicTableWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, warehouseId sdk.AccountObjectIdentifier, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {

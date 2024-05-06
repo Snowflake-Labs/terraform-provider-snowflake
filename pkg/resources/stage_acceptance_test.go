@@ -2,22 +2,21 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	name := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -50,11 +49,11 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
 
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
 	url := "s3://foo/"
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := random.Comment()
 	initialStorageIntegration := ""
 	credentials := fmt.Sprintf("AWS_KEY_ID = '%s' AWS_SECRET_KEY = '%s'", awsKeyId, awsSecretKey)
 	encryption := "TYPE = 'NONE'"
@@ -64,7 +63,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	changedStorageIntegration := "S3_STORAGE_INTEGRATION"
 	changedEncryption := "TYPE = 'AWS_SSE_S3'"
 	changedFileFormat := "TYPE = JSON NULL_IF = []"
-	changedComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	changedComment := random.Comment()
 	copyOptionsWithoutQuotes := "ON_ERROR = CONTINUE"
 
 	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string, copyOptions string) config.Variables {

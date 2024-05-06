@@ -24,6 +24,10 @@ type CreateNetworkPolicyOptions struct {
 	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
+func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type IP struct {
 	IP string `ddl:"keyword,single_quotes"`
 }
@@ -35,18 +39,42 @@ type AlterNetworkPolicyOptions struct {
 	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier  `ddl:"identifier"`
 	Set           *NetworkPolicySet        `ddl:"keyword" sql:"SET"`
+	Unset         *NetworkPolicyUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
 	Add           *AddNetworkRule          `ddl:"keyword" sql:"ADD"`
 	Remove        *RemoveNetworkRule       `ddl:"keyword" sql:"REMOVE"`
-	UnsetComment  *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
 	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 
 type NetworkPolicySet struct {
-	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
-	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
-	AllowedIpList          []IP                     `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList          []IP                     `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
-	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AllowedNetworkRuleList *AllowedNetworkRuleList `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList *BlockedNetworkRuleList `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          *AllowedIPList          `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          *BlockedIPList          `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
+	Comment                *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type AllowedNetworkRuleList struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+type BlockedNetworkRuleList struct {
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+type AllowedIPList struct {
+	AllowedIPList []IP `ddl:"list,must_parentheses"`
+}
+
+type BlockedIPList struct {
+	BlockedIPList []IP `ddl:"list,must_parentheses"`
+}
+
+type NetworkPolicyUnset struct {
+	AllowedNetworkRuleList *bool `ddl:"keyword" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList *bool `ddl:"keyword" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          *bool `ddl:"keyword" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          *bool `ddl:"keyword" sql:"BLOCKED_IP_LIST"`
+	Comment                *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 type AddNetworkRule struct {

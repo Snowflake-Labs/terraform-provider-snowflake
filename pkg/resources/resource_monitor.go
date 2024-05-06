@@ -492,7 +492,7 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.ResourceMonitors.Drop(ctx, objectIdentifier)
+	err := client.ResourceMonitors.Drop(ctx, objectIdentifier, &sdk.DropResourceMonitorOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestManagedAccounts_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateManagedAccountOptions
 	defaultOpts := func() *CreateManagedAccountOptions {
@@ -52,7 +52,7 @@ func TestManagedAccounts_Create(t *testing.T) {
 }
 
 func TestManagedAccounts_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropManagedAccountOptions
 	defaultOpts := func() *DropManagedAccountOptions {

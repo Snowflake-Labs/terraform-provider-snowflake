@@ -25,10 +25,9 @@ import (
 )
 
 var (
-	TestDatabaseName   = "acc_test_db_" + random.AcceptanceTestsSuffix
-	TestSchemaName     = "acc_test_sc_" + random.AcceptanceTestsSuffix
-	TestWarehouseName  = "acc_test_wh_" + random.AcceptanceTestsSuffix
-	TestWarehouseName2 = "acc_test_wh2_" + random.AcceptanceTestsSuffix
+	TestDatabaseName  = "acc_test_db_" + random.AcceptanceTestsSuffix
+	TestSchemaName    = "acc_test_sc_" + random.AcceptanceTestsSuffix
+	TestWarehouseName = "acc_test_wh_" + random.AcceptanceTestsSuffix
 )
 
 var (
@@ -85,8 +84,8 @@ func init() {
 	}
 	atc.secondaryClient = secondaryClient
 
-	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName)
-	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
 }
 
 type acceptanceTestContext struct {
@@ -118,34 +117,35 @@ var once sync.Once
 
 func TestAccPreCheck(t *testing.T) {
 	// use singleton design pattern to ensure we only create these resources once
+	// there is no cleanup currently, sweepers take care of it
 	once.Do(func() {
 		ctx := context.Background()
 
-		dbId := sdk.NewAccountObjectIdentifier(TestDatabaseName)
-		if err := atc.client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{
-			IfNotExists: sdk.Bool(true),
-		}); err != nil {
+		dbId := TestClient().Ids.DatabaseId()
+		schemaId := TestClient().Ids.SchemaId()
+		warehouseId := TestClient().Ids.WarehouseId()
+
+		if err := atc.client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
 			t.Fatal(err)
 		}
 
-		schemaId := sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName)
-		if err := atc.client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
-			IfNotExists: sdk.Bool(true),
-		}); err != nil {
+		if err := atc.client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(true)}); err != nil {
 			t.Fatal(err)
 		}
 
-		warehouseId := sdk.NewAccountObjectIdentifier(TestWarehouseName)
-		if err := atc.client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{
-			IfNotExists: sdk.Bool(true),
-		}); err != nil {
+		if err := atc.client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
 			t.Fatal(err)
 		}
 
-		warehouseId2 := sdk.NewAccountObjectIdentifier(TestWarehouseName2)
-		if err := atc.client.Warehouses.Create(ctx, warehouseId2, &sdk.CreateWarehouseOptions{
-			IfNotExists: sdk.Bool(true),
-		}); err != nil {
+		if err := atc.secondaryClient.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := atc.secondaryClient.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(true)}); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := atc.secondaryClient.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
 			t.Fatal(err)
 		}
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -14,14 +13,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_View(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	otherQuery := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
 
@@ -125,9 +123,9 @@ func TestAcc_View(t *testing.T) {
 }
 
 func TestAcc_View_Tags(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag1Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
+	tag1Name := acc.TestClient().Ids.Alpha()
+	tag2Name := acc.TestClient().Ids.Alpha()
 
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
@@ -185,8 +183,8 @@ func TestAcc_View_Tags(t *testing.T) {
 }
 
 func TestAcc_View_Rename(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
+	newViewName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
 	m := func() map[string]config.Variable {
@@ -239,7 +237,7 @@ func TestAcc_View_Rename(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -301,7 +299,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -358,8 +356,8 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_ViewStatementUpdate(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := acc.TestClient().Ids.Alpha()
+	viewName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -389,7 +387,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 }
 
 func TestAcc_View_copyGrants(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accName := acc.TestClient().Ids.Alpha()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
 	resource.Test(t, resource.TestCase{
@@ -421,10 +419,10 @@ func TestAcc_View_copyGrants(t *testing.T) {
 }
 
 func TestAcc_View_Issue2640(t *testing.T) {
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := acc.TestClient().Ids.Alpha()
 	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

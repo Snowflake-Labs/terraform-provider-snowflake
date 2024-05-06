@@ -1,73 +1,145 @@
 # Contributing
 
-## Development
+- [Setting up the development environment](#setting-up-the-development-environment)
+- [Repository structure](#repository-structure)
+- [Running the tests locally](#running-the-tests-locally)
+- [Making a contribution](#making-a-contribution)
+  - [Discuss a change with us!](#discuss-a-change-with-us)
+  - [Follow the code conventions inside the repository](#follow-the-code-conventions-inside-the-repository)
+  - [Introducing a new part of the SDK](#introducing-a-new-part-of-the-sdk)
+  - [Test the change](#test-the-change)
+  - [Describe the breaking changes](#describe-the-breaking-changes)
+  - [Before submitting the PR](#before-submitting-the-pr)
+  - [Naming and describing the PR](#naming-and-describing-the-pr)
+  - [Requesting the review](#requesting-the-review)
+- [Advanced Debugging](#advanced-debugging)
 
-1. Install Go (eg. `brew install golang` on MacOS)
-2. Ensure that your `GOPATH` is set to the desired location
-3. Fork this repo and clone it into `$GOPATH/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
-4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
-5. Build and install provider with `make install`
+## Setting up the development environment
 
-## Testing
+1. Install Golang environment (check instructions on the official page https://go.dev/doc/install depending on you OS).
+2. Fork this repo and clone it.
+3. Run `make dev-setup` in the main directory of the cloned repository.
+4. You can clean up the dev setup by running `make dev-cleanup`.
 
-The following environment variables need to be set for acceptance tests to run:
+## Repository structure
 
-* `SNOWFLAKE_ACCOUNT` - The account name
-* `SNOWFLAKE_USER` - A snowflake user for running tests.
-* `SNOWFLAKE_PASSWORD` - Password for that user.
-* `SNOWFLAKE_ROLE` - Needs to be ACCOUNTADMIN or similar.
-* `SNOWFLAKE_REGION` - Default is us-west-2, set this if your snowflake account is in a different region.
-* `TF_ACC` - to enable acceptance tests.
+The notable technical files/directories inside the repository:
 
-For example:
+- `Makefile` - contains instructions to set up the developer's environment, run tests, etc.
+- `pkg/provider` - definition of the provider
+- `pkg/resources`, `pkg/datasources` - definitions and tests (consult section [Running the tests locally](#running-the-tests-locally) below) for resources and datasources
+- `pkg/acceptance` - helpers for acceptance and integration tests
+- `pkg/sdk` - definitions of the SDK objects (SDK is our client to Snowflake, using [gosnowflake driver](https://github.com/snowflakedb/gosnowflake) underneath)
+- `pkg/sdk/testint` - integration tests for the SDK (consult section [Running the tests locally](#running-the-tests-locally) below)
 
-```sh
-export SNOWFLAKE_ACCOUNT=TESTACCOUNT
-export SNOWFLAKE_USER=TEST_USER
-export SNOWFLAKE_PASSWORD=hunter2
-export SNOWFLAKE_ROLE=ACCOUNTADMIN
-export SNOWFLAKE_REGION=us-west-2
-export TF_ACC=true
-```
+**⚠️ Important ⚠️** We are in progress of cleaning up the repository structure, so beware of the changes in the packages/directories.
 
-You can also read the config from a `~/.snowflake/config` file, although you will still need to set `TF_ACC` to true.
+## Running the tests locally
 
+Currently, we have three main types of tests:
+- SDK unit tests (in directory `pkg/sdk`, files ending with `_test.go`)
+- SDK integration tests (in directory `pkg/sdk/testint`, files ending with `_integration_test.go`)
+- resource/datasource acceptance tests (in directories `pkg/resources` and `pkg/datasources`, files ending with `_acceptance_test.go`)
 
-~/.snowflake/config
+Both integration and acceptance tests require the connection to Snowflake (some of the tests require multiple accounts).
+
+The preferred way of running particular tests locally is to create a config file `~/.snowflake/config`, with the following content.
+
 ```sh
 [default]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='ACCOUNTADMIN'
+account = "<your account in form of organisation-account_name>"
+user = "<your user>"
+password = "<your password>"
+role = "<your role>"
+host="<host of your account, e.g. organisation-account_name.snowflakecomputing.com>"
 ```
 
-**Note: PRs for new resources will not be accepted without passing acceptance tests.**
+To be able to run all the tests you additionally need two more profiles `[secondary_test_account]` and `[incorrect_test_profile]`:
 
-For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
+```sh
+[secondary_test_account]
+account = "<your secondary account in form of organisation-account_name2>"
+user = "<your user on the secondary account>"
+password = "<your password on the secondary account>"
+role = "<your role on the secondary account>"
+host="<host of your account, e.g. organisation-account_name2.snowflakecomputing.com>"
 
-The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
+[incorrect_test_profile]
+account = "<your account in form of organisation-account_name>"
+user = "<non-existing user>"
+password = "<bad password>"
+role = "<any role, e.g. ACCOUNTADMIN>"
+host="<host of your account, e.g. organisation-account_name.snowflakecomputing.com>"
+```
 
-The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
+We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts.
 
-You can run these first two sets of tests with `make test`.
+**⚠️ Important ⚠️** Some of the tests require the privileged role (like `ACCOUNTADMIN`). Otherwise, the managed objects may not be created. If you want to use lower role, you have to make sure it has all the necessary privileges added.
 
-The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity. You can create a new Snowflake Enterprise trial account and setup the environment variables for running acceptance tests.
+To run the tests we have three different commands:
+- `make test` run unit and integration tests
+- `make test-acceptance` run acceptance tests
+- `make test-integration` run integration tests
 
-To run all tests, including the acceptance tests, run `make test-acceptance`.
+You can run the particular tests form inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). It is also worth adding the `TF_LOG=DEBUG` environment variable too, because the output of the execution is much more verbose.
 
-### Running tests in VSCode
+## Making a contribution
 
-If you're using VSCode, this project comes pre-configured to source the `test.env` file before each test so you can run acceptance tests directly for the editor.
-We've included an example env file `test.env.example` with the environment variables described above so you can set up your acceptance tests by:
-- running `cp test.env.example test.env`
-- editing `test.env` with your Snowflake account values
-- installing the `golang.go` extension
-- running tests directly from VSCode!
+### Discuss a change with us!
+It's important to establish the scope of the change before the actual implementation. We want to avoid the situations in which the PR is rejected because it contradicts some other change we are introducing.
+
+Remember to consult [our roadmap](ROADMAP.md), maybe we are already working on the issue!
+
+It's best to approach us through the GitHub issues: either by commenting the already existing one or by creating a new one.
+
+### Follow the code conventions inside the repository
+We believe that code following the same conventions is easier to maintain and extend. When working on the given part of the provider try to follow the local solutions and not introduce too much new ideas.
+
+### Introducing a new part of the SDK
+
+To create new objects in our SDK we use quickly created generator that outputs the majority of the files needed. These files should be later edited and filled with the missing parts. We plan to improve the generator later on, but it should be enough for now. Please read more in the [generator readme](pkg/sdk/poc/README.md).
+
+### Test the change
+Every introduced change should be tested. Depending on the type of the change it may require (any or mix of):
+- adding/modifying existing unit tests (e.g. changing the behavior of validation in the SDK)
+- adding/modifying existing integration tests (e.g. adding missing SDK invocations)
+- adding/modifying existing acceptance tests (e.g. fixing the parameter on the resource level)
+
+It's best to discuss with us what checks we expect prior to making the change.
+
+### Describe the breaking changes
+
+If the change requires manual actions when bumping the provider version, they should be added to the [migration guide](MIGRATION_GUIDE.md).
+
+### Before submitting the PR
+
+The documentation for the provider is generated automatically. We follow the few formatting conventions that are automatically checked with every PR. They can fail and delay the resolution of your PR. To make it much less possible, run `make pre-push` before pushing your changes to GH. It will reformat your code (or suggest reformatting), generate all the missing docs, clean the dependencies, etc.
+
+### Naming and describing the PR
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
+
+Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
+
+Implemented changes should be described thoroughly (we will prepare PR template for the known use cases soon):
+- reference the issue that is addressed with the given change
+- summary of changes
+- summary of added tests
+- (optional) what parts will be covered in the subsequent PRs
+
+### Requesting the review
+
+We check for the new PRs in our repository every day Monday-Friday. We usually need 1-2 days to leave the review comments. However, there are times when you can expect even more than a week response time. In such cases, please be patient, and ping us after a week if we do not post a reason for the delay ourselves. It's possible that we just missed it.
+
+During our review we try to point out the unhandled special cases, missing tests, and deviations from the established conventions. Remember, review comment is like an invitation to dance: you don't have to agree but please provide the substantive reasons.
+
+**⚠️ Important ⚠️** Tests and checks are not run automatically after your PR. We run them manually, when we are happy with the state of the change (even if some corrections are still necessary).
 
 ## Advanced Debugging
 
-If you want to build and test the provider locally you should edit you `~.terraformrc` file to include the following:
+If you want to build and test the provider locally (manually, not through acceptance tests), build the binary first using `make build-local` or install to the proper local directory by invoking `make install-tf` (to uninstall run `make uninstall-tf`).
+
+Next, edit your `~/.terraformrc` file to include the following:
 
 ```
 provider_installation {
@@ -92,21 +164,8 @@ To debug the provider with a debugger:
    ```
 
 2. Open a terminal where you will execute Terraform and set the `TF_REATTACH_PROVIDERS` environment variable using the command from the first step.
-3. Run Terraform as usual from this terminal. Any breakpoints you set will halt execution and you can troubleshoot the provider from your debugger.
+3. Run Terraform as usual from this terminal. Any breakpoints you set will halt execution, and you can troubleshoot the provider from your debugger.
 
 **Note**: The `TF_REATTACH_PROVIDERS` environment variable needs to be set every time you restart your debugger session as some values like the `Pid` or the TCP port will change with every execution.
 
 For further instructions, please check the official [Terraform Plugin Development guide](https://www.terraform.io/plugin/debugging#starting-a-provider-in-debug-mode).
-
-## Contributing
-
-We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
-Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
-
-## Releasing
-
-Releases will be performed as needed, typically once every 1-2 weeks. If your change is more urgent and you need to use it sooner, use the commit hash.
-
-Releases are done by [goreleaser](https://goreleaser.com/) and run by our make files. There two goreleaser configs, `.goreleaser.yml` for regular releases and `.goreleaser.prerelease.yml` for doing prereleases (for testing).
-
-Releases are [published to the terraform registry](https://registry.terraform.io/providers/chanzuckerberg/snowflake/latest), which requires that releases by signed.

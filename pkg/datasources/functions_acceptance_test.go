@@ -1,19 +1,18 @@
 package datasources_test
 
 import (
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Functions(t *testing.T) {
-	functionNameOne := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	functionNameTwo := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	functionNameOne := acc.TestClient().Ids.Alpha()
+	functionNameTwo := acc.TestClient().Ids.Alpha()
 	dataSourceName := "data.snowflake_functions.functions"
 
 	m := func() map[string]config.Variable {
