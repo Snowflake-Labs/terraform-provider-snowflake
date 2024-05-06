@@ -27,3 +27,21 @@
 ```shell
   cd close-with-comment && SF_TF_SCRIPT_GH_ACCESS_TOKEN=<YOUR_PERSONAL_ACCESS_TOKEN> go run .
 ```
+
+# Creating new labels and assigning them to issues
+1. Firstly, make sure all the needed labels exist in the repository, by running:
+```shell
+  cd create-labels && SF_TF_SCRIPT_GH_ACCESS_TOKEN=<YOUR_PERSONAL_ACCESS_TOKEN> go run .
+```
+2. Then, we have to get data about the existing issues with:
+```shell
+  cd gh && SF_TF_SCRIPT_GH_ACCESS_TOKEN=<YOUR_PERSONAL_ACCESS_TOKEN> go run .
+```
+3. Afterward, we need to process `issues.json` with:
+```shell
+  cd file && go run .
+```
+4. Next you have to analyze generated CSV and assign categories in the `Category` column and resource / data source in the `Object` column (the `GitHub issues buckets` Excel should be used here named as `GitHubIssuesBucket.csv`). Then, you'll be able to use this csv (put it next to the `main.go`) to assign labels to the correct issues.
+```shell
+  cd assign-labels && SF_TF_SCRIPT_GH_ACCESS_TOKEN=<YOUR_PERSONAL_ACCESS_TOKEN> go run .
+```

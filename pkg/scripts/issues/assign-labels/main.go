@@ -1,0 +1,175 @@
+package main
+
+import (
+	"bytes"
+	"encoding/csv"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+)
+
+var lookupTable = make(map[string]string)
+
+func init() {
+	for _, label := range issues.RepositoryLabels {
+		parts := strings.Split(label, ":")
+		labelType := parts[0]
+		labelValue := parts[1]
+
+		switch labelType {
+		case "category":
+			lookupTable[strings.ToUpper(labelValue)] = label
+		case "resource", "data_source":
+			lookupTable[fmt.Sprintf("snowfalke_%s", labelValue)] = label
+		}
+	}
+}
+
+func main() {
+	accessToken := getAccessToken()
+	githubIssuesBucket := readGitHubIssuesBucket()
+	successful, failed := assignLabelsToIssues(accessToken, githubIssuesBucket)
+	fmt.Printf("\nSuccessfully assigned labels to issues:\n")
+	for _, assignResult := range successful {
+		fmt.Println(assignResult.IssueId, assignResult.Labels)
+	}
+	fmt.Printf("\nUnsuccessful to assign labels to issues:\n")
+	for _, assignResult := range failed {
+		fmt.Println(assignResult.IssueId, assignResult.Labels)
+	}
+}
+
+type AssignResult struct {
+	IssueId int
+	Labels  []string
+}
+
+type Issue struct {
+	ID       int    `json:"id"`
+	Category string `json:"category"`
+	Object   string `json:"object"`
+}
+
+func readGitHubIssuesBucket() []Issue {
+	f, err := os.Open("GitHubIssuesBucket.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	csvReader := csv.NewReader(f)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+	issues := make([]Issue, 0)
+	for _, record := range records[1:] { // Skip header
+		id, err := strconv.Atoi(record[14])
+		if err != nil {
+			panic(err)
+		}
+		issues = append(issues, Issue{
+			ID:       id,
+			Category: record[15],
+			Object:   record[16],
+		})
+	}
+	return issues
+}
+
+func assignLabelsToIssues(accessToken string, issues []Issue) (successful []AssignResult, failed []AssignResult) {
+	for _, issue := range issues {
+		addLabelsRequestBody := createAddLabelsRequestBody(issue)
+		if addLabelsRequestBody == nil {
+			log.Println("couldn't create add label request body from issue", issue)
+			failed = append(failed, AssignResult{
+				IssueId: issue.ID,
+			})
+			continue
+		}
+
+		addLabelsRequestBodyBytes, err := json.Marshal(addLabelsRequestBody)
+		if err != nil {
+			log.Println("failed to marshal add label request:", err)
+			failed = append(failed, AssignResult{
+				IssueId: issue.ID,
+				Labels:  addLabelsRequestBody.Labels,
+			})
+			continue
+		}
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://api.github.com/repos/Snowflake-Labs/terraform-provider-snowflake/issues/%d/labels", issue.ID), bytes.NewReader(addLabelsRequestBodyBytes))
+		if err != nil {
+			log.Println("failed to create add label request:", err)
+			failed = append(failed, AssignResult{
+				IssueId: issue.ID,
+				Labels:  addLabelsRequestBody.Labels,
+			})
+			continue
+		}
+		req.Header.Set("Accept", "application/vnd.github+json")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Println("failed to add a new labels:", err)
+			failed = append(failed, AssignResult{
+				IssueId: issue.ID,
+				Labels:  addLabelsRequestBody.Labels,
+			})
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Println("incorrect status code, expected 200, and got:", resp.StatusCode)
+			failed = append(failed, AssignResult{
+				IssueId: issue.ID,
+				Labels:  addLabelsRequestBody.Labels,
+			})
+			continue
+		}
+
+		successful = append(successful, AssignResult{
+			IssueId: issue.ID,
+			Labels:  addLabelsRequestBody.Labels,
+		})
+	}
+
+	return successful, failed
+}
+
+type AddLabelsRequestBody struct {
+	Labels []string `json:"labels"`
+}
+
+func createAddLabelsRequestBody(issue Issue) *AddLabelsRequestBody {
+	if categoryLabel, ok := lookupTable[issue.Category]; ok {
+		if issue.Category == "RESOURCE" || issue.Category == "DATA_SOURCE" {
+			if resourceName, ok := lookupTable[issue.Object]; ok {
+				return &AddLabelsRequestBody{
+					Labels: []string{categoryLabel, resourceName},
+				}
+			}
+		}
+
+		return &AddLabelsRequestBody{
+			Labels: []string{categoryLabel},
+		}
+	}
+
+	return nil
+}
+
+func getAccessToken() string {
+	token := os.Getenv("SF_TF_SCRIPT_GH_ACCESS_TOKEN")
+	if token == "" {
+		panic(errors.New("GitHub access token missing"))
+	}
+	return token
+}
