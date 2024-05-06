@@ -34,7 +34,11 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "SECURITY INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "API INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "STORAGE INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "EXTERNAL ACCESS INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "NOTIFICATION INTEGRATIONS"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.expression", "0 0 10-20 * TUE,THU"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
@@ -259,7 +263,7 @@ resource "snowflake_failover_group" "fg" {
 	object_types = ["WAREHOUSES", "DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
 	allowed_databases = ["%s"]
-	allowed_integration_types = ["SECURITY INTEGRATIONS"]
+	allowed_integration_types = ["SECURITY INTEGRATIONS", "API INTEGRATIONS", "STORAGE INTEGRATIONS", "EXTERNAL ACCESS INTEGRATIONS", "NOTIFICATION INTEGRATIONS"]
 	replication_schedule {
 		cron {
 			expression = "0 0 10-20 * TUE,THU"

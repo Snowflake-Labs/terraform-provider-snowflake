@@ -50,7 +50,7 @@ var failoverGroupSchema = map[string]*schema.Schema{
 		Elem:          &schema.Schema{Type: schema.TypeString},
 		Optional:      true,
 		ConflictsWith: []string{"from_replica"},
-		Description:   "Type(s) of integrations for which you are enabling replication and failover from the source account to the target account. This property requires that the OBJECT_TYPES list include INTEGRATIONS to set this parameter. The following integration types are supported: \"SECURITY INTEGRATIONS\", \"API INTEGRATIONS\"",
+		Description:   "Type(s) of integrations for which you are enabling replication and failover from the source account to the target account. This property requires that the OBJECT_TYPES list include INTEGRATIONS to set this parameter. The following integration types are supported: \"SECURITY INTEGRATIONS\", \"API INTEGRATIONS\", \"STORAGE INTEGRATIONS\", \"EXTERNAL ACCESS INTEGRATIONS\", \"NOTIFICATION INTEGRATIONS\"",
 	},
 	"allowed_accounts": {
 		Type:          schema.TypeSet,
