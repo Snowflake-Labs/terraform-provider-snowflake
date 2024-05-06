@@ -54,7 +54,6 @@ func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAcc_NetworkPolicyAttachmentAccount(t *testing.T) {

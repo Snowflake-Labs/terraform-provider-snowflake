@@ -20,7 +20,7 @@
 3. File `issues.json` should be generated in the `gh` directory. This is the input file for the second script. The next script is based also on `presnowflake_bucket.csv` that was created based on the GH issues filtering.
 4. To filter only closeable issues invoke [this script](./filter-closeable-old-issues/main.go):
 ```shell
-  cd file && go run .
+  cd filter-closeable-old-issues && go run .
 ```
 5. Script will output files `issues_to_close.csv` and `issues_edited.csv`. There are two files documenting closing action on 30.04.2024 (`20240430 - issues_edited.csv` and `20240430 - issues_to_close.csv`). In `20240430 - notes.MD` there are notes regarding the questionable issues and the decisions taken.
 6. To close the issues with the appropriate comment provide `issues_to_close.csv` in `close-with-comment` dir. Example `20240430 - issues_to_close.csv` is given. The run:
