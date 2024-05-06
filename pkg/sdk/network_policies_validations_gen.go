@@ -27,8 +27,8 @@ func (opts *AlterNetworkPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Set, opts.UnsetComment, opts.RenameTo, opts.Add, opts.Remove) {
-		errs = append(errs, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "UnsetComment", "RenameTo", "Add", "Remove"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.RenameTo, opts.Add, opts.Remove) {
+		errs = append(errs, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "Unset", "RenameTo", "Add", "Remove"))
 	}
 	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -36,6 +36,11 @@ func (opts *AlterNetworkPolicyOptions) validate() error {
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.AllowedIpList, opts.Set.BlockedIpList, opts.Set.Comment, opts.Set.AllowedNetworkRuleList, opts.Set.BlockedNetworkRuleList) {
 			errs = append(errs, errAtLeastOneOf("AlterNetworkPolicyOptions.Set", "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"))
+		}
+	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.AllowedIpList, opts.Unset.BlockedIpList, opts.Unset.Comment, opts.Unset.AllowedNetworkRuleList, opts.Unset.BlockedNetworkRuleList) {
+			errs = append(errs, errAtLeastOneOf("AlterNetworkPolicyOptions.Unset", "AllowedIpList", "BlockedIpList", "Comment", "AllowedNetworkRuleList", "BlockedNetworkRuleList"))
 		}
 	}
 	if valueSet(opts.Add) {
