@@ -17,7 +17,7 @@
 ```shell
   cd gh && SF_TF_SCRIPT_GH_ACCESS_TOKEN=<YOUR_PERSONAL_ACCESS_TOKEN> go run .
 ```
-3. File `issues.json` should be generated in the `gh` directory. This is the input file for the second script.
+3. File `issues.json` should be generated in the `gh` directory. This is the input file for the second script. The next script is based also on `presnowflake_bucket.csv` that was created based on the GH issues filtering.
 4. To filter only closeable issues invoke [this script](./filter-closeable-old-issues/main.go):
 ```shell
   cd file && go run .
