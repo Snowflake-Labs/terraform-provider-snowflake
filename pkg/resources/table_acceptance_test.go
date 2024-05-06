@@ -1948,3 +1948,67 @@ func setTableDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days
 		require.NoError(t, err)
 	}
 }
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2733 is fixed
+func TestAcc_Table_gh2733(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigGh2733(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "MY_INT"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "MY_STRING"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.type", "VARCHAR(16777216)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "MY_DATE"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "TIMESTAMP_NTZ(9)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.name", "MY_DATE2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.type", "TIMESTAMP_NTZ(9)"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigGh2733(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+  database            = "%[1]s"
+  schema              = "%[2]s"
+  name                = "%[3]s"
+
+  column {
+    name = "MY_INT"
+    type = "int"
+    # type  = "NUMBER(38,0)" # Should be equivalent
+  }
+
+  column {
+    name = "MY_STRING"
+    type = "VARCHAR(16777216)"
+    # type = "STRING" # Should be equivalent
+  }
+
+  column {
+    name = "MY_DATE"
+    type = "TIMESTAMP_NTZ"
+    # type = "TIMESTAMP_NTZ(9)" # Should be equivalent
+  }
+
+  column {
+    name = "MY_DATE2"
+    type = "DATETIME"
+    # type = "TIMESTAMP_NTZ" # Equivalent to TIMESTAMP_NTZ
+  }
+}
+`, database, schema, name)
+}
