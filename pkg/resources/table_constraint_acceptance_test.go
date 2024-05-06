@@ -350,7 +350,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 //}
 
 func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -361,11 +361,11 @@ func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testin
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      tableConstraintEmptyForeignKeyProperties(name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:      tableConstraintEmptyForeignKeyProperties(id.Name(), id.DatabaseName(), id.SchemaName()),
 				ExpectError: regexp.MustCompile(`At least 1 "references" blocks are required.`),
 			},
 			{
-				Config: tableConstraintForeignKeyProperties(name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConstraintForeignKeyProperties(id.Name(), id.DatabaseName(), id.SchemaName()),
 			},
 		},
 	})
