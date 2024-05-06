@@ -13,10 +13,11 @@ import (
 
 var accountPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	"password_policy": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
