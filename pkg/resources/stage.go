@@ -80,11 +80,15 @@ var stageSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
+		// Description based on https://docs.snowflake.com/en/user-guide/data-load-s3-config-aws-iam-role#step-3-create-an-external-stage
+		Description: "A unique ID assigned to the specific stage. The ID has the following format: &lt;snowflakeAccount&gt;_SFCRole=&lt;snowflakeRoleId&gt;_&lt;randomId&gt;",
 	},
 	"snowflake_iam_user": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
+		// Description based on https://docs.snowflake.com/en/user-guide/data-load-s3-config-aws-iam-role#step-3-create-an-external-stage
+		Description: "An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.",
 	},
 	"tag": tagReferenceSchema,
 }
