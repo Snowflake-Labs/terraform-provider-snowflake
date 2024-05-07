@@ -169,6 +169,18 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
 			},
+			// Remove replication schedule
+			{
+				Config: failoverGroupWithoutReplicationSchedule(randomCharacters, accountName, acc.TestDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.#", "0"),
+				),
+			},
 			// Change to Interval
 			{
 				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
@@ -287,6 +299,18 @@ resource "snowflake_failover_group" "fg" {
 	}
 }
 `, randomCharacters, accountName, databaseName, interval)
+}
+
+func failoverGroupWithoutReplicationSchedule(randomCharacters, accountName string, databaseName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_failover_group" "fg" {
+	name = "%s"
+	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
+	allowed_accounts= ["%s"]
+	allowed_databases = ["%s"]
+	allowed_integration_types = ["SECURITY INTEGRATIONS"]
+}
+`, randomCharacters, accountName, databaseName)
 }
 
 func failoverGroupWithNoWarehouse(randomCharacters, accountName string, interval int) string {

@@ -13,10 +13,11 @@ import (
 
 var accountPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	"password_policy": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
@@ -45,7 +46,6 @@ func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interfac
 	if !ok {
 		return fmt.Errorf("password_policy %s is not a valid password policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("password_policy"))
 	}
-	// passwordPolicy := sdk.NewAccountObjectIdentifier(d.Get("password_policy").(string))
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{

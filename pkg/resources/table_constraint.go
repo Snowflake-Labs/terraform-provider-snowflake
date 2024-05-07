@@ -38,10 +38,11 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		},
 	},
 	"table_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: `Identifier for table to create constraint on. Format must follow: "\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\".\"&lt;table_name&gt;\"" or "&lt;db_name&gt;.&lt;schema_name&gt;.&lt;table_name&gt;" (snowflake_table.my_table.id)`,
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      `Identifier for table to create constraint on. Format must follow: "\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\".\"&lt;table_name&gt;\"" or "&lt;db_name&gt;.&lt;schema_name&gt;.&lt;table_name&gt;" (snowflake_table.my_table.id)`,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"columns": {
 		Type:     schema.TypeList,
@@ -112,10 +113,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 			Schema: map[string]*schema.Schema{
 				"references": {
 					Type:        schema.TypeList,
-					Optional:    true,
+					Required:    true,
 					ForceNew:    true,
 					MaxItems:    1,
-					Description: "The table and columns that the foreign key references. Not applicable for primary/unique keys",
+					Description: "The table and columns that the foreign key references.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"table_id": {

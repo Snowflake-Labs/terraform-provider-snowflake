@@ -341,6 +341,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, cleanupFailoverGroup := testClientHelper().FailoverGroup.CreateFailoverGroup(t)
 		t.Cleanup(cleanupFailoverGroup)
 		replicationSchedule := "USING CRON 0 0 10-20 * TUE,THU UTC"
+
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			Set: &sdk.FailoverGroupSet{
 				ReplicationSchedule: &replicationSchedule,
@@ -348,9 +349,22 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		}
 		err := client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
+
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, replicationSchedule, failoverGroup.ReplicationSchedule)
+
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Unset: &sdk.FailoverGroupUnset{
+				ReplicationSchedule: sdk.Bool(true),
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
+		require.NoError(t, err)
+
+		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
+		require.NoError(t, err)
+		require.Empty(t, failoverGroup.ReplicationSchedule)
 	})
 
 	t.Run("add and remove database account object", func(t *testing.T) {

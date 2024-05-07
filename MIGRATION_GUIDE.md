@@ -13,6 +13,27 @@ While solving issue [#2733](https://github.com/Snowflake-Labs/terraform-provider
 #### *(behavior change)* Validation to arguments type added
 Diff suppression for `arguments.type` is needed for the same reason as above for `snowflake_table` resource.
 
+### tag_masking_policy_association resource changes
+Now the `tag_masking_policy_association` resource will only accept fully qualified names separated by dot `.` instead of pipe `|`.
+
+Before
+```terraform
+resource "snowflake_tag_masking_policy_association" "name" {
+    tag_id            = snowflake_tag.this.id
+    masking_policy_id = snowflake_masking_policy.example_masking_policy.id
+}
+```
+
+After
+```terraform
+resource "snowflake_tag_masking_policy_association" "name" {
+    tag_id            = "\"${snowflake_tag.this.database}\".\"${snowflake_tag.this.schema}\".\"${snowflake_tag.this.name}\""
+    masking_policy_id = "\"${snowflake_masking_policy.example_masking_policy.database}\".\"${snowflake_masking_policy.example_masking_policy.schema}\".\"${snowflake_masking_policy.example_masking_policy.name}\""
+}
+```
+
+It's more verbose now, but after identifier rework it should be similar to the previous form.
+
 ## v0.88.0 ➞ v0.89.0
 #### *(behavior change)* ForceNew removed
 The `ForceNew` field was removed in favor of in-place Update for `name` parameter in:

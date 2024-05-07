@@ -22,6 +22,6 @@ resource "snowflake_masking_policy" "test" {
 }
 
 resource "snowflake_tag_masking_policy_association" "test" {
-  tag_id            = snowflake_tag.test.id
-  masking_policy_id = snowflake_masking_policy.test.id
+  tag_id            = "${snowflake_tag.test.database}.${snowflake_tag.test.schema}.${snowflake_tag.test.name}"
+  masking_policy_id = "${snowflake_masking_policy.test.database}.${snowflake_masking_policy.test.schema}.${snowflake_masking_policy.test.name}"
 }

@@ -125,12 +125,15 @@ resource "snowflake_table_constraint" "unique" {
 <a id="nestedblock--foreign_key_properties"></a>
 ### Nested Schema for `foreign_key_properties`
 
+Required:
+
+- `references` (Block List, Min: 1, Max: 1) The table and columns that the foreign key references. (see [below for nested schema](#nestedblock--foreign_key_properties--references))
+
 Optional:
 
 - `match` (String) The match type for the foreign key. Not applicable for primary/unique keys
 - `on_delete` (String) Specifies the action performed when the primary/unique key for the foreign key is deleted. Not applicable for primary/unique keys
 - `on_update` (String) Specifies the action performed when the primary/unique key for the foreign key is updated. Not applicable for primary/unique keys
-- `references` (Block List, Max: 1) The table and columns that the foreign key references. Not applicable for primary/unique keys (see [below for nested schema](#nestedblock--foreign_key_properties--references))
 
 <a id="nestedblock--foreign_key_properties--references"></a>
 ### Nested Schema for `foreign_key_properties.references`
