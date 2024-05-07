@@ -4,6 +4,28 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.89.0 ➞ v0.90.0
+### tag_masking_policy_association resource changes
+Now the `tag_masking_policy_association` resource will only accept fully qualified names separated by dot `.` instead of pipe `|`.
+
+Before
+```terraform
+resource "snowflake_tag_masking_policy_association" "name" {
+    tag_id            = snowflake_tag.this.id
+    masking_policy_id = snowflake_masking_policy.example_masking_policy.id
+}
+```
+
+After
+```terraform
+resource "snowflake_tag_masking_policy_association" "name" {
+    tag_id            = "\"${snowflake_tag.this.database}\".\"${snowflake_tag.this.schema}\".\"${snowflake_tag.this.name}\""
+    masking_policy_id = "\"${snowflake_masking_policy.example_masking_policy.database}\".\"${snowflake_masking_policy.example_masking_policy.schema}\".\"${snowflake_masking_policy.example_masking_policy.name}\""
+}
+```
+
+It's more verbose now, but after identifier rework it should be similar to the previous form.
+
 ## v0.88.0 ➞ v0.89.0
 #### *(behavior change)* ForceNew removed
 The `ForceNew` field was removed in favor of in-place Update for `name` parameter in:
