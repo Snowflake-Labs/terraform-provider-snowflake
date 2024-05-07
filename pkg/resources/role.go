@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -77,7 +78,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	accountRole, err := client.Roles.ShowByID(ctx, id)
 	if err != nil {
-		if err.Error() == "object does not exist" {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
