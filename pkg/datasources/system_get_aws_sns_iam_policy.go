@@ -17,7 +17,6 @@ var systemGetAWSSNSIAMPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Amazon Resource Name (ARN) of the SNS topic for your S3 bucket",
 	},
-
 	"aws_sns_topic_policy_json": {
 		Type:        schema.TypeString,
 		Computed:    true,
