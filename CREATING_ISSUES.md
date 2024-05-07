@@ -57,15 +57,17 @@ It depends on the status of the feature. Snowflake marks features as follows:
 - Private Preview (PrPr)
 - Public Preview (PuPr)
 - Generally Available (GA)
-Currently, our main focus is on making the provider stable with the most stable GA features. 
-If you would like to see a preview feature in the provider, please place a request, but keep in mind that we will most likely take care of preview features after the first stable release (v1.0.0). 
-Also, If any of the features recently went GA, they will most likely be addressed after v1.0.0 right with the preview ones.
+
+Currently, our main focus is on making the provider stable with the most stable GA features, 
+but please take a closer look at our recently updated [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#05052024-roadmap-overview) 
+which describes our priorities for the next quarters.
 
 ### When will my bug report be fixed/released?
 Our team is checking daily incoming GitHub issues. The resolution depends on the complexity and the topic of a given issue, but the general rules are:
 - If the issue is easy enough, we tend to answer it immediately and provide fix depending on the issue and our current workload.
 - If the issue needs more insight, we tend to reproduce the issue usually in the matter of days and answer/fix it right away (also very dependent on our current workload).
 - If the issue is a part of the incoming topic on the [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md), we postpone it to resolve it with the related tasks.
+
 The releases are usually happening once every two weeks, mostly done on Wednesday.
 
 ### How to migrate from version X to Y?
@@ -86,6 +88,12 @@ The provider is simply an abstraction issuing SQL commands through the Go Snowfl
 To see what SQLs are being run you have to set the `TF_LOG=DEBUG` environment variable. 
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
 
+### How can I import already existing Snowflake infrastructure into Terraform?
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#3-two-options-from-here) 
+as it describes different approaches of importing the existing Snowflake infrastructure into Terrafrom as configuration. 
+One thing worth noting is that some approaches can be automated by scripts interacting with Snowflake and generating needed configuration blocks, 
+which is highly recommended for large-scale migrations.
+
 ## Commonly known issues
 ### Old Terraform CLI version
 **Problem:** Sometimes you can get errors similar to:
@@ -102,9 +110,15 @@ To confirm the correctness of the SQLs, refer to the [official Snowflake documen
 **Solution:** You have to be using at least 1.1.5 version of the Terraform CLI.
 
 ### Errors with connection to Snowflake
-**Problem:** If you are getting connection errors, there may be a chance of finding solution by error id.
+**Problem**: If you are getting connection errors with Snowflake error code, similar to this one:
+```text
+│
+│ Error: open snowflake connection: 390144 (08004): JWT token is invalid.
+│
+```
+**Solution**: Go to the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth-troubleshooting#list-of-errors) and search by error code (390144 in this case).
 
-**Solution:** Go to the [official Snowflake documentation](https://docs.snowflake.com/) and search for your issue by error id.
+[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
 
 ### How to set up the connection with the private key?
 **Problem:** From the version v0.78.0, we introduced a lot of provider configuration changes. One of them was deprecating `private_key_path` in favor of `private_key`.
