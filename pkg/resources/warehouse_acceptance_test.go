@@ -8,8 +8,10 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -182,4 +184,78 @@ resource "snowflake_warehouse" "w2" {
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2763
+// TODO [SNOW-1348102]: probably to remove with warehouse rework (we will remove default and also logic with enable_query_acceleration seems superficial - nothing in the docs)
+func TestAcc_Warehouse_Issue2763(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
+						EnableQueryAcceleration: sdk.Bool(false),
+					})
+					t.Cleanup(warehouseCleanup)
+				},
+				Config:             wConfigWithQueryAcceleration(id.Name()),
+				ResourceName:       "snowflake_warehouse.w",
+				ImportState:        true,
+				ImportStateId:      id.Name(),
+				ImportStatePersist: true,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					var warehouse *terraform.InstanceState
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+					warehouse = s[0]
+					// verify that query_acceleration_max_scale_factor is not set in state after import
+					_, ok := warehouse.Attributes["query_acceleration_max_scale_factor"]
+					if ok {
+						return fmt.Errorf("query_acceleration_max_scale_factor is present in state but shouldn't")
+					}
+					warehouseInSnowflake, err := acc.TestClient().Warehouse.Show(t, id)
+					if err != nil {
+						return fmt.Errorf("error getting warehouse from SF: %w", err)
+					}
+					// verify that by default QueryAccelerationMaxScaleFactor is 8 in SF
+					if warehouseInSnowflake.QueryAccelerationMaxScaleFactor != 8 {
+						return fmt.Errorf("expected QueryAccelerationMaxScaleFactor to be equal to 8 but got %d", warehouseInSnowflake.QueryAccelerationMaxScaleFactor)
+					}
+					return nil
+				},
+			},
+			{
+				Config: wConfigWithQueryAcceleration(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+				),
+			},
+		},
+	})
+}
+
+func wConfigWithQueryAcceleration(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                      = "%s"
+    enable_query_acceleration = false
+    query_acceleration_max_scale_factor = 8
+}
+`, name)
 }

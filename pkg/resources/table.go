@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -56,14 +55,11 @@ var tableSchema = map[string]*schema.Schema{
 					Description: "Column name",
 				},
 				"type": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Column type, e.g. VARIANT",
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						// these are all equivalent as per https://docs.snowflake.com/en/sql-reference/data-types-text.html
-						varcharType := []string{"VARCHAR(16777216)", "VARCHAR", "text", "string", "NVARCHAR", "NVARCHAR2", "CHAR VARYING", "NCHAR VARYING"}
-						return slices.Contains(varcharType, new) && slices.Contains(varcharType, old)
-					},
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Column type, e.g. VARIANT",
+					ValidateFunc:     dataTypeValidateFunc,
+					DiffSuppressFunc: dataTypeDiffSuppressFunc,
 				},
 				"nullable": {
 					Type:        schema.TypeBool,

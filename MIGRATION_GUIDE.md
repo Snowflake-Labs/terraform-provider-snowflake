@@ -4,6 +4,11 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.89.0 ➞ v0.90.0
+### snowflake_table resource changes
+#### *(behavior change)* Validation to column type added
+While solving issue [#2733](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2733) we have introduced diff suppression for `column.type`. To make it work correctly we have also added a validation to it. It should not cause any problems, but it's worth noting in case of any data types used that the provider is not aware of.
+
 ## v0.88.0 ➞ v0.89.0
 #### *(behavior change)* ForceNew removed
 The `ForceNew` field was removed in favor of in-place Update for `name` parameter in:
