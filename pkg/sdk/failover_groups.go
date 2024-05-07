@@ -45,9 +45,11 @@ type failoverGroups struct {
 type IntegrationType string
 
 const (
-	IntegrationTypeSecurityIntegrations     IntegrationType = "SECURITY INTEGRATIONS"
-	IntegrationTypeAPIIntegrations          IntegrationType = "API INTEGRATIONS"
-	IntegrationTypeNotificationIntegrations IntegrationType = "NOTIFICATION INTEGRATIONS"
+	IntegrationTypeSecurityIntegrations       IntegrationType = "SECURITY INTEGRATIONS"
+	IntegrationTypeAPIIntegrations            IntegrationType = "API INTEGRATIONS"
+	IntegrationTypeStorageIntegrations        IntegrationType = "STORAGE INTEGRATIONS"
+	IntegrationTypeExternalAccessIntegrations IntegrationType = "EXTERNAL ACCESS INTEGRATIONS"
+	IntegrationTypeNotificationIntegrations   IntegrationType = "NOTIFICATION INTEGRATIONS"
 )
 
 // CreateFailoverGroupOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-failover-group.
@@ -423,7 +425,7 @@ func (row failoverGroupDBRow) convert() *FailoverGroup {
 		if it == "" {
 			continue
 		}
-		allowedIntegrationTypes = append(allowedIntegrationTypes, IntegrationType(strings.TrimSpace(it)+" INTEGRATIONS"))
+		allowedIntegrationTypes = append(allowedIntegrationTypes, IntegrationType(strings.ReplaceAll(strings.TrimSpace(it), "_", " ")+" INTEGRATIONS"))
 	}
 	aas := strings.Split(row.AllowedAccounts, ",")
 	allowedAccounts := make([]AccountIdentifier, 0, len(aas))
