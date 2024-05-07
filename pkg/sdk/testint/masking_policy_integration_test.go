@@ -24,7 +24,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	t.Run("without show options", func(t *testing.T) {
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, nil)
 		require.NoError(t, err)
-		assert.GreaterOrEqual(t, 2, len(maskingPolicies))
+		assert.GreaterOrEqual(t, len(maskingPolicies), 2)
 	})
 
 	t.Run("with show options", func(t *testing.T) {
