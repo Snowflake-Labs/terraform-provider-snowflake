@@ -113,12 +113,16 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
+			sdk.PluralObjectTypeRoles,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
 			businessCriticalAccountId,
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeSecurityIntegrations,
 			sdk.IntegrationTypeAPIIntegrations,
+			sdk.IntegrationTypeStorageIntegrations,
+			sdk.IntegrationTypeExternalAccessIntegrations,
 			sdk.IntegrationTypeNotificationIntegrations,
 		}
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
