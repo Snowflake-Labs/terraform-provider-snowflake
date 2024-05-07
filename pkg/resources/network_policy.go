@@ -260,15 +260,18 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// TODO: empty ip list (that is unsetting) does not work, as WithUnset is missing.
-	// Removing the validation in network_policies_validations_gen.go does not solve the problem, as the SDK cannot
-	// handle empty lists
 	if d.HasChange("allowed_ip_list") {
 		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 		ipRequests := parseIPList(d.Get("allowed_ip_list"))
 
-		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
+		var err error
+		if len(ipRequests) == 0 {
+			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithAllowedIpList(sdk.Bool(true))
+			err = client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
+		} else {
+			setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
+			err = client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
+		}
 
 		if err != nil {
 			return diag.Diagnostics{
@@ -281,15 +284,18 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// TODO: empty ip list (that is unsetting) does not work, as WithUnset is missing.
-	// Removing the validation in network_policies_validations_gen.go does not solve the problem, as the SDK cannot
-	// handle empty lists
 	if d.HasChange("blocked_ip_list") {
 		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 		ipRequests := parseIPList(d.Get("blocked_ip_list"))
 
-		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
+		var err error
+		if len(ipRequests) == 0 {
+			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithBlockedIpList(sdk.Bool(true))
+			err = client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
+		} else {
+			setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
+			err = client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
+		}
 
 		if err != nil {
 			return diag.Diagnostics{
@@ -321,7 +327,6 @@ func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)))
 	if err != nil {
-
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
