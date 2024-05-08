@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.90.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.89.0...v0.90.0) (2024-05-08)
+
+
+### 🎉 **What's new:**
+
+* Adjust owner_role_type and schema_evolution_record columns ([#2740](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2740)) ([424e393](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/424e393813b1c0d668250937bf04487fb323b9f0))
+
+
+### 🔧 **Misc**
+
+* Add a guide on creating issues ([#2758](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2758)) ([2b006aa](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2b006aa12d0d0b0fae72ae295cb82404262288be))
+* Add missing documentation ([#2781](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2781)) ([cc0a6a7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cc0a6a7e605735d83e3247c27b75679f45142659))
+* Add scripts to close issues from Pre Snowflake bucket ([#2762](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2762)) ([44c0c37](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/44c0c37047ee15cd2856056270a1fb708473c4d6))
+* Add small adjustments ([#2783](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2783)) ([e5b0b4b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e5b0b4b95bde9e0d29c0066278393a572dccd825))
+* Adjust issue templates ([#2748](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2748)) ([64ab76d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/64ab76d82662b8e21679e887d5b3df8d15cfaf3a))
+* Cleanup helpers part 3 ([#2730](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2730)) ([eb7bee4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/eb7bee400f6a5ec94b6a142eaeed78dbc349fc00))
+* Cleanup helpers part 5 ([#2744](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2744)) ([1f165bf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1f165bf72e29d1a9135d2e5e8bf3f46a0ffdddb6))
+* Cleanup helpers part4 ([#2741](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2741)) ([9475e35](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9475e35dfca2c15876ee14ace0a6f17c7225d615))
+* Cleanup helpers part6 ([#2745](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2745)) ([eba3029](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/eba3029bd2b6def28901c47df7e142a417d6ba3a))
+* Cleanup helpers poc ([#2724](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2724)) ([70b99fb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/70b99fb19be76bff673e4ba7740d07b9a131ca4f))
+* Helpers cleanup continuation ([#2726](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2726)) ([a70d1af](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a70d1afc607c5e9501762448a96a11c22efca3d4))
+* Prepare new roadmap entry ([#2773](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2773)) ([b0bf28f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b0bf28f4e08f36a5aee74bba21ec2cf2d1d1179b))
+* Prepare parallel builds ([#2737](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2737)) ([6974e25](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6974e255ebdd772f18b164943c82aab2f19708d6))
+* Update the contribution guidelines (and small fixes) ([#2753](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2753)) ([aafdc72](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/aafdc72f21314f809f1ab1f7e4f00d5b2df5e0f5))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix issue templates ([#2760](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2760)) ([d0d5048](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d0d504868b0dda15e3a779e94969d7742253160c))
+* Fix setup for two tests ([#2757](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2757)) ([df025b0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/df025b0c4dce30554eaf15b29031357aababe192))
+* Fix Test (wrong order of arguments) ([#2780](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2780)) ([02f467e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/02f467ebe230e077ce0f67ae1d1025d9219f65ed))
+* Fix/prove issues [#2733](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2733) [#2735](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2735) [#2763](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2763) [#2767](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2767) ([#2777](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2777)) ([7b1c67e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7b1c67e115f3dddeed796ae00f160efeeb64f85b))
+* Prove problems with procedure resource data types ([#2782](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2782)) ([68d0318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/68d03184047ebe6891fbcebb1524377e10fb82fd))
+* read after create ([#2718](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2718)) ([2e9b68f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2e9b68f9da09150c5976d175a225ff368f37f2d2))
+* UNSET and empty SET in network policies ([#2759](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2759)) ([3eacb0b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3eacb0bd869bc073be756dca9337b69e07bb52f4))
+* unset network policy should not have single quotes ([#2584](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2584)) ([8f2a363](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8f2a363db7ea0bcc747ef7c3576d24255f4bf208))
+* Update failover group allowed integration types ([#2776](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2776)) ([efde48d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/efde48db07a9eb47c34a5febf1b4de6e4f0671f9))
+
 ## [0.89.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.88.0...v0.89.0) (2024-04-18)
 
 
