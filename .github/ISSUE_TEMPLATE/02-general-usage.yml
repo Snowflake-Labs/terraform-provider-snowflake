@@ -5,8 +5,6 @@ labels: ["general-usage"]
 body:
   - type: markdown
     attributes:
-      # TODO(SNOW-1003360): Link doc how to submit issues and FAQ
-      # - [Frequently Asked Questions](https://github.com/Snowflake-Labs/)
       value: |
         # Thank you for raising an issue!
         
@@ -20,6 +18,7 @@ body:
         This helps to keep all relevant information in one place, including any potential workarounds.
         
         Here's a list of useful links that may help you with your issue:
+        - [Guide on creating issues + FAQ + Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) - If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
         - [Migration Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) - when introducing breaking changes, we note them in the migration guide and describe how to upgrade to the next version. If you recently upgraded the provider version, please check if you applied all the needed changes.
 
   - type: markdown

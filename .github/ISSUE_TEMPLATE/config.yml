@@ -8,7 +8,10 @@ contact_links:
     url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md
     about: Migration Guide that presents breaking changes between the versions with actions needed during upgrading.
 
-# TODO(SNOW-1003360): Link FAQ
-#- name: Frequently Asked Questions / Common issues with solutions
-#  url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/
-#  about: A list of common provider question and issues with workarounds or solutions for them.
+  - name: Migrating from deprecated resources
+    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md
+    about: This guide may help you with migrating your deprecated resources to the newer counter-parts. It also presents different strategies on importing already existing Snowflake infrastructure into Terraform.
+
+  - name: Guide on creating issues + FAQ + Commonly Known Issues
+    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md
+    about: If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.

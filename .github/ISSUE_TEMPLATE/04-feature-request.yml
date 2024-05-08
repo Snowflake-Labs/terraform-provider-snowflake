@@ -3,7 +3,6 @@ description: Something is missing or could be improved.
 title: "[Feature]: "
 labels: ["feature-request"]
 body:
-  # TODO(SNOW-1003360): Link doc how to submit issues and FAQ
   - type: markdown
     attributes:
       value: |
@@ -17,6 +16,7 @@ body:
         If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
         Here's a list of useful links that may answer your question:
+        - [Guide on creating issues + FAQ + Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) - If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
         - [Provider Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
 
   - id: use-case
