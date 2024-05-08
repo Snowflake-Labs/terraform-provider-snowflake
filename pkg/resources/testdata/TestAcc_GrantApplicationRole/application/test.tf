@@ -1,3 +1,8 @@
+provider "snowflake" {
+  profile   = "default"
+  warehouse = "\"${var.warehouse}\""
+}
+
 resource "snowflake_stage" "stage" {
   name     = var.random_name
   database = var.database_name
@@ -46,7 +51,7 @@ resource "snowflake_unsafe_execute" "application2" {
 }
 
 resource "snowflake_grant_application_role" "g" {
-  depends_on            = [snowflake_unsafe_execute.application2]
+  depends_on            = [snowflake_unsafe_execute.application, snowflake_unsafe_execute.application2]
   application_role_name = local.application_role_identifier
   application_name      = "\"${var.application_name2}\""
 }

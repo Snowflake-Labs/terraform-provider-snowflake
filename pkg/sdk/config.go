@@ -69,6 +69,9 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig.Host == "" {
 		baseConfig.Host = mergeConfig.Host
 	}
+	if baseConfig.Warehouse == "" {
+		baseConfig.Warehouse = mergeConfig.Warehouse
+	}
 	return baseConfig
 }
 

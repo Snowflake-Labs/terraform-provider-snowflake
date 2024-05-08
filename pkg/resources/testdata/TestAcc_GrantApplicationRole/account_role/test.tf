@@ -1,3 +1,8 @@
+provider "snowflake" {
+  profile   = "default"
+  warehouse = "\"${var.warehouse}\""
+}
+
 resource "snowflake_stage" "stage" {
   name     = var.random_name
   database = var.database_name

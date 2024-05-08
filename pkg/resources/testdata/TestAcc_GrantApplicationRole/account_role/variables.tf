@@ -17,3 +17,7 @@ variable "application_name" {
 variable "random_name" {
   type = string
 }
+
+variable "warehouse" {
+  type = string
+}

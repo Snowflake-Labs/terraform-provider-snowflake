@@ -31,19 +31,20 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 			"parent_account_role_name": config.StringVariable(parentAccountRoleName),
 			"application_name":         config.StringVariable(applicationName),
 			"random_name":              config.StringVariable(randomName),
+			"warehouse":                config.StringVariable(acc.TestWarehouseName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: testAccCheckGrantApplicationRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/account_role"),
-				ConfigVariables: m(),
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/account_role"),
+				ConfigVariables:          m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
 					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", fmt.Sprintf("\"%s\"", parentAccountRoleName)),
@@ -52,11 +53,12 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 			},
 			// test import
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/account_role"),
-				ConfigVariables:   m(),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/account_role"),
+				ConfigVariables:          m(),
+				ResourceName:             resourceName,
+				ImportState:              true,
+				ImportStateVerify:        true,
 			},
 		},
 	})
@@ -77,19 +79,20 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 			"application_name":  config.StringVariable(applicationName),
 			"application_name2": config.StringVariable(applicationName2),
 			"random_name":       config.StringVariable(randomName),
+			"warehouse":         config.StringVariable(acc.TestWarehouseName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: testAccCheckGrantApplicationRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/application"),
-				ConfigVariables: m(),
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/application"),
+				ConfigVariables:          m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
 					resource.TestCheckResourceAttr(resourceName, "application_name", fmt.Sprintf("\"%s\"", applicationName2)),
@@ -98,11 +101,12 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 			},
 			// test import
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/application"),
-				ConfigVariables:   m(),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TestAcc_GrantApplicationRole/application"),
+				ConfigVariables:          m(),
+				ResourceName:             resourceName,
+				ImportState:              true,
+				ImportStateVerify:        true,
 			},
 		},
 	})

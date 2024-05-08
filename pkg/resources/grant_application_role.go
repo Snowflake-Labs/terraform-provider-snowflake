@@ -121,7 +121,7 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 	switch objectType {
 	case sdk.ObjectTypeRole:
 		{
-			if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier))); err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				d.SetId("")
 				return diag.Diagnostics{
 					diag.Diagnostic{

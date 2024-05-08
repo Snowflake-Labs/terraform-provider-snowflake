@@ -2,6 +2,7 @@ package testint
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -100,7 +101,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	})
 
 	t.Run("Grant and Revoke: Role", func(t *testing.T) {
-		role, cleanupRole := createRole(t, client)
+		role, cleanupRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupRole)
 
 		id := sdk.NewDatabaseObjectIdentifier(appName, "app_role_1")
@@ -184,5 +185,35 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		require.NotEmpty(t, grants[0].CreatedOn)
 		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
 		require.Equal(t, sdk.NewAccountObjectIdentifier(appName), grants[0].GrantedBy)
+	})
+	t.Run("show grants to application", func(t *testing.T) {
+		// Need second app to be able to grant application role to the first one.
+		// Cannot grant to parent application (098806 (0A000): Cannot grant an APPLICATION ROLE to the parent APPLICATION).
+		appName2 := "snowflake_app_2"
+		createAppHandle(t, appName2)
+
+		name := "app_role_1"
+		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		ctx := context.Background()
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+		require.NoError(t, err)
+		defer func() {
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+			require.NoError(t, err)
+		}()
+
+		opts := new(sdk.ShowGrantOptions)
+		opts.To = &sdk.ShowGrantsTo{
+			Application: sdk.NewAccountObjectIdentifier(appName2),
+		}
+		grants, err := client.Grants.Show(ctx, opts)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, grants)
+		require.NotEmpty(t, grants[0].CreatedOn)
+		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
+		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedOn)
+		require.Equal(t, sdk.ObjectTypeApplication, grants[0].GrantedTo)
 	})
 }
