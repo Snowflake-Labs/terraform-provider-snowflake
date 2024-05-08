@@ -26,15 +26,13 @@ var networkPolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies a list of network rules that contain the network identifiers that are allowed access to Snowflake.",
-		// TODO: Add a ValidationFunc to ensure that each entry in the list is a fully qualified name
+		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
 	},
 	"blocked_network_rule_list": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies a list of network rules that contain the network identifiers that are denied access to Snowflake.",
-		// TODO: Add a ValidationFunc to ensure that each entry in the list is a fully qualified name
+		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
 	},
 	"allowed_ip_list": {
 		Type:        schema.TypeSet,
