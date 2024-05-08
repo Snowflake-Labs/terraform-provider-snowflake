@@ -70,7 +70,7 @@ type Tag struct {
 	Owner         string
 	Comment       string
 	AllowedValues []string
-	OwnerRole     string
+	OwnerRoleType string
 }
 
 func (v *Tag) ID() SchemaObjectIdentifier {
@@ -90,13 +90,13 @@ type tagRow struct {
 
 func (tr tagRow) convert() *Tag {
 	t := &Tag{
-		CreatedOn:    tr.CreatedOn,
-		Name:         tr.Name,
-		DatabaseName: tr.DatabaseName,
-		SchemaName:   tr.SchemaName,
-		Owner:        tr.Owner,
-		Comment:      tr.Comment,
-		OwnerRole:    tr.OwnerRoleType,
+		CreatedOn:     tr.CreatedOn,
+		Name:          tr.Name,
+		DatabaseName:  tr.DatabaseName,
+		SchemaName:    tr.SchemaName,
+		Owner:         tr.Owner,
+		Comment:       tr.Comment,
+		OwnerRoleType: tr.OwnerRoleType,
 	}
 	if tr.AllowedValues.Valid {
 		// remove brackets

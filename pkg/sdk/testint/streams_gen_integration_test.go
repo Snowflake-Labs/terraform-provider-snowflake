@@ -17,9 +17,7 @@ func TestInt_Streams(t *testing.T) {
 	ctx := testContext(t)
 
 	db := testDb(t)
-
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema)
+	schema := testSchema(t)
 
 	assertStream := func(t *testing.T, s *sdk.Stream, id sdk.SchemaObjectIdentifier, sourceType string, mode string) {
 		t.Helper()
@@ -57,7 +55,8 @@ func TestInt_Streams(t *testing.T) {
 		stageName := random.AlphaN(10)
 		stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName)
 		stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-		_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
+		_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
+		t.Cleanup(stageCleanup)
 
 		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
 		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)))
@@ -84,7 +83,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnDirectoryTable", func(t *testing.T) {
-		stage, cleanupStage := createStageWithDirectory(t, client, db, schema, "test_stage")
+		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t)
 		stageId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
 		t.Cleanup(cleanupStage)
 
@@ -108,12 +107,11 @@ func TestInt_Streams(t *testing.T) {
 		tableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
-		viewId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
-		cleanupView := createView(t, client, viewId, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
+		view, cleanupView := testClientHelper().View.CreateView(t, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
 		t.Cleanup(cleanupView)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
-		req := sdk.NewCreateStreamOnViewRequest(id, viewId).WithComment(sdk.String("some comment"))
+		req := sdk.NewCreateStreamOnViewRequest(id, view.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnView(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -168,7 +166,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tag, cleanupTag := createTag(t, client, db, schema)
+		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)

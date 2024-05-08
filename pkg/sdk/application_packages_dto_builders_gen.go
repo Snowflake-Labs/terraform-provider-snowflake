@@ -266,6 +266,11 @@ func NewDropApplicationPackageRequest(
 	return &s
 }
 
+func (s *DropApplicationPackageRequest) WithIfExists(IfExists *bool) *DropApplicationPackageRequest {
+	s.IfExists = IfExists
+	return s
+}
+
 func NewShowApplicationPackageRequest() *ShowApplicationPackageRequest {
 	return &ShowApplicationPackageRequest{}
 }

@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestApplicationRoles_Grant(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	// Minimal valid GrantApplicationRoleOptions
 	defaultOpts := func() *GrantApplicationRoleOptions {
@@ -29,7 +29,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 	})
 
 	t.Run("grant to role", func(t *testing.T) {
-		roleId := RandomAccountObjectIdentifier()
+		roleId := randomAccountObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.To = KindOfRole{
@@ -39,7 +39,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 	})
 
 	t.Run("grant to application role", func(t *testing.T) {
-		appRoleId := RandomDatabaseObjectIdentifier()
+		appRoleId := randomDatabaseObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.To = KindOfRole{
@@ -49,7 +49,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 	})
 
 	t.Run("grant to application", func(t *testing.T) {
-		appId := RandomAccountObjectIdentifier()
+		appId := randomAccountObjectIdentifier()
 		opts := defaultOpts()
 		opts.To = KindOfRole{
 			ApplicationName: &appId,
@@ -59,7 +59,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 }
 
 func TestApplicationRoles_Revoke(t *testing.T) {
-	id := RandomDatabaseObjectIdentifier()
+	id := randomDatabaseObjectIdentifier()
 
 	// Minimal valid RevokeApplicationRoleOptions
 	defaultOpts := func() *RevokeApplicationRoleOptions {
@@ -80,7 +80,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 	})
 
 	t.Run("revoke from role", func(t *testing.T) {
-		roleId := RandomAccountObjectIdentifier()
+		roleId := randomAccountObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.From = KindOfRole{
@@ -90,7 +90,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 	})
 
 	t.Run("revoke from application role", func(t *testing.T) {
-		appRoleId := RandomDatabaseObjectIdentifier()
+		appRoleId := randomDatabaseObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.From = KindOfRole{
@@ -100,7 +100,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 	})
 
 	t.Run("revoke from application", func(t *testing.T) {
-		appId := RandomAccountObjectIdentifier()
+		appId := randomAccountObjectIdentifier()
 		opts := defaultOpts()
 		opts.From = KindOfRole{
 			ApplicationName: &appId,
@@ -110,7 +110,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 }
 
 func TestApplicationRoles_Show(t *testing.T) {
-	appId := RandomAccountObjectIdentifier()
+	appId := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowApplicationRoleOptions
 	defaultOpts := func() *ShowApplicationRoleOptions {

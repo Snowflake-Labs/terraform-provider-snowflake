@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestStorageIntegrations_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateStorageIntegrationOptions
 	defaultOpts := func() *CreateStorageIntegrationOptions {
@@ -88,7 +88,7 @@ func TestStorageIntegrations_Create(t *testing.T) {
 }
 
 func TestStorageIntegrations_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterStorageIntegrationOptions
 	defaultOpts := func() *AlterStorageIntegrationOptions {
@@ -203,7 +203,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 }
 
 func TestStorageIntegrations_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropStorageIntegrationOptions
 	defaultOpts := func() *DropStorageIntegrationOptions {
@@ -231,7 +231,7 @@ func TestStorageIntegrations_Drop(t *testing.T) {
 }
 
 func TestStorageIntegrations_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowStorageIntegrationOptions
 	defaultOpts := func() *ShowStorageIntegrationOptions {
@@ -258,7 +258,7 @@ func TestStorageIntegrations_Show(t *testing.T) {
 }
 
 func TestStorageIntegrations_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DescribeStorageIntegrationOptions
 	defaultOpts := func() *DescribeStorageIntegrationOptions {

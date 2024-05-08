@@ -1,0 +1,24 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ if gt (len (split .Description "<deprecation>")) 1 -}}
+{{ index (split .Description "<deprecation>") 1 | plainmarkdown | trimspace | prefixlines "  " }}
+{{- else -}}
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+{{- end }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+For more details, visit the official Snowflake documentation: https://docs.snowflake.com/en/sql-reference/functions/system_get_aws_sns_iam_policy.
+Read this guide to understand how to use the snowflake_system_get_aws_sns_iam_policy to integrate with AWS: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-s3#step-1-subscribe-the-snowflake-sqs-queue-to-the-sns-topic.
+It's SQL-based, but after knowing what has to be done use corresponding resources and data-sources from the Snowflake and AWS Terraform provider.
+
+## Example Usage
+
+{{ tffile (printf "examples/data-sources/%s/data-source.tf" .Name) }}
+
+{{ .SchemaMarkdown | trimspace }}

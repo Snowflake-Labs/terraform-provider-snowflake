@@ -33,7 +33,7 @@ func TestIsValidWarehouseSize(t *testing.T) {
 
 func TestValidObjectIdentifier(t *testing.T) {
 	t.Run("with valid object identifier", func(t *testing.T) {
-		ok := ValidObjectIdentifier(RandomAccountObjectIdentifier())
+		ok := ValidObjectIdentifier(randomAccountObjectIdentifier())
 		assert.Equal(t, ok, true)
 	})
 

@@ -20,5 +20,5 @@ TEST_SF_TF_TEST_ACCOUNT_CREATE=1
 | `ddl:"static"`     | `sqlStaticClause`     | `WORD`                                                                        |
 | `ddl:"keyword"`    | `sqlKeywordClause`    | `"WORD"` (quotes configurable)                                                |
 | `ddl:"identifier"` | `sqlIdentifierClause` | `"a.b.c"` or `OBJ_TYPE "a.b.c"`                                               |
-| `ddl:"parameter"`  | `sqlParameterClause`  | `PARAM = "value"` (quotes configurable) or `PARAM = 2`                        |                                          |
+| `ddl:"parameter"`  | `sqlParameterClause`  | `PARAM = "value"` (quotes configurable) or `PARAM = 2`                        |
 | `ddl:"list"`       | `sqlListClause`       | `WORD (<subclause>, <subclause>)` (WORD, parentheses, separator configurable) |

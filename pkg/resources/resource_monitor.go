@@ -223,10 +223,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := ReadResourceMonitor(d, meta); err != nil {
-		return err
-	}
-	return nil
+	return ReadResourceMonitor(d, meta)
 }
 
 // ReadResourceMonitor implements schema.ReadFunc.
@@ -467,7 +464,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
 		siTrigs := expandIntList(v.(*schema.Set).List())
 		for _, threshold := range siTrigs {
-			if suspendImmediateTrigger == nil || suspendTrigger.Threshold > threshold {
+			if suspendImmediateTrigger == nil || (suspendTrigger != nil && suspendTrigger.Threshold > threshold) {
 				suspendImmediateTrigger = &sdk.TriggerDefinition{
 					Threshold:     threshold,
 					TriggerAction: sdk.TriggerActionSuspendImmediate,
@@ -495,7 +492,7 @@ func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.ResourceMonitors.Drop(ctx, objectIdentifier)
+	err := client.ResourceMonitors.Drop(ctx, objectIdentifier, &sdk.DropResourceMonitorOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return err
 	}

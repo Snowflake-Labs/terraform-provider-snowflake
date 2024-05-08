@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-867235]: refine this resource during redesign:
+// TODO [SNOW-1348114]: refine this resource during redesign:
 // - read (from the existing comment it seems that active warehouse is needed (it should be probably added to the resource as required)
 // - drop (in tests it's not dropped correctly, probably also because missing warehouse)
 // - do we need it?
@@ -38,10 +38,11 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		},
 	},
 	"table_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: `Identifier for table to create constraint on. Format must follow: "\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\".\"&lt;table_name&gt;\"" or "&lt;db_name&gt;.&lt;schema_name&gt;.&lt;table_name&gt;" (snowflake_table.my_table.id)`,
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      `Identifier for table to create constraint on. Format must follow: "\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\".\"&lt;table_name&gt;\"" or "&lt;db_name&gt;.&lt;schema_name&gt;.&lt;table_name&gt;" (snowflake_table.my_table.id)`,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"columns": {
 		Type:     schema.TypeList,
@@ -112,10 +113,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 			Schema: map[string]*schema.Schema{
 				"references": {
 					Type:        schema.TypeList,
-					Optional:    true,
+					Required:    true,
 					ForceNew:    true,
 					MaxItems:    1,
-					Description: "The table and columns that the foreign key references. Not applicable for primary/unique keys",
+					Description: "The table and columns that the foreign key references.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"table_id": {

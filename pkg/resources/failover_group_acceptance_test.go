@@ -2,14 +2,12 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -18,7 +16,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -36,7 +34,11 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "SECURITY INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "API INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "STORAGE INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "EXTERNAL ACCESS INTEGRATIONS"),
+					resource.TestCheckTypeSetElemAttr("snowflake_failover_group.fg", "allowed_integration_types.*", "NOTIFICATION INTEGRATIONS"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.expression", "0 0 10-20 * TUE,THU"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
@@ -56,7 +58,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -97,7 +99,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -167,6 +169,18 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
 				),
 			},
+			// Remove replication schedule
+			{
+				Config: failoverGroupWithoutReplicationSchedule(randomCharacters, accountName, acc.TestDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.#", "0"),
+				),
+			},
 			// Change to Interval
 			{
 				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
@@ -196,7 +210,7 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -227,7 +241,7 @@ func TestAcc_FailoverGroup_issue2544(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	randomCharacters := acc.TestClient().Ids.Alpha()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -261,7 +275,7 @@ resource "snowflake_failover_group" "fg" {
 	object_types = ["WAREHOUSES", "DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
 	allowed_databases = ["%s"]
-	allowed_integration_types = ["SECURITY INTEGRATIONS"]
+	allowed_integration_types = ["SECURITY INTEGRATIONS", "API INTEGRATIONS", "STORAGE INTEGRATIONS", "EXTERNAL ACCESS INTEGRATIONS", "NOTIFICATION INTEGRATIONS"]
 	replication_schedule {
 		cron {
 			expression = "0 0 10-20 * TUE,THU"
@@ -285,6 +299,18 @@ resource "snowflake_failover_group" "fg" {
 	}
 }
 `, randomCharacters, accountName, databaseName, interval)
+}
+
+func failoverGroupWithoutReplicationSchedule(randomCharacters, accountName string, databaseName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_failover_group" "fg" {
+	name = "%s"
+	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
+	allowed_accounts= ["%s"]
+	allowed_databases = ["%s"]
+	allowed_integration_types = ["SECURITY INTEGRATIONS"]
+}
+`, randomCharacters, accountName, databaseName)
 }
 
 func failoverGroupWithNoWarehouse(randomCharacters, accountName string, interval int) string {

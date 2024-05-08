@@ -45,9 +45,11 @@ type failoverGroups struct {
 type IntegrationType string
 
 const (
-	IntegrationTypeSecurityIntegrations     IntegrationType = "SECURITY INTEGRATIONS"
-	IntegrationTypeAPIIntegrations          IntegrationType = "API INTEGRATIONS"
-	IntegrationTypeNotificationIntegrations IntegrationType = "NOTIFICATION INTEGRATIONS"
+	IntegrationTypeSecurityIntegrations       IntegrationType = "SECURITY INTEGRATIONS"
+	IntegrationTypeAPIIntegrations            IntegrationType = "API INTEGRATIONS"
+	IntegrationTypeStorageIntegrations        IntegrationType = "STORAGE INTEGRATIONS"
+	IntegrationTypeExternalAccessIntegrations IntegrationType = "EXTERNAL ACCESS INTEGRATIONS"
+	IntegrationTypeNotificationIntegrations   IntegrationType = "NOTIFICATION INTEGRATIONS"
 )
 
 // CreateFailoverGroupOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-failover-group.
@@ -142,6 +144,7 @@ type AlterSourceFailoverGroupOptions struct {
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	NewName       AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	Set           *FailoverGroupSet       `ddl:"keyword" sql:"SET"`
+	Unset         *FailoverGroupUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 	Add           *FailoverGroupAdd       `ddl:"keyword" sql:"ADD"`
 	Move          *FailoverGroupMove      `ddl:"keyword" sql:"MOVE"`
 	Remove        *FailoverGroupRemove    `ddl:"keyword" sql:"REMOVE"`
@@ -155,11 +158,16 @@ func (opts *AlterSourceFailoverGroupOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
-		errs = append(errs, errExactlyOneOf("AlterSourceFailoverGroupOptions", "Set", "Add", "Move", "Remove", "NewName"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Add, opts.Move, opts.Remove, opts.NewName) {
+		errs = append(errs, errExactlyOneOf("AlterSourceFailoverGroupOptions", "Set", "Unset", "Add", "Move", "Remove", "NewName"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if valueSet(opts.Unset) {
+		if err := opts.Unset.validate(); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -193,6 +201,17 @@ func (v *FailoverGroupSet) validate() error {
 		if !slices.Contains(v.ObjectTypes, PluralObjectTypeIntegrations) {
 			return errors.New("INTEGRATIONS must be set in OBJECT_TYPES when setting allowed integration types")
 		}
+	}
+	return nil
+}
+
+type FailoverGroupUnset struct {
+	ReplicationSchedule *bool `ddl:"keyword" sql:"REPLICATION_SCHEDULE"`
+}
+
+func (v *FailoverGroupUnset) validate() error {
+	if everyValueNil(v.ReplicationSchedule) {
+		return errAtLeastOneOf("FailoverGroupUnset", "ReplicationSchedule")
 	}
 	return nil
 }
@@ -423,7 +442,7 @@ func (row failoverGroupDBRow) convert() *FailoverGroup {
 		if it == "" {
 			continue
 		}
-		allowedIntegrationTypes = append(allowedIntegrationTypes, IntegrationType(strings.TrimSpace(it)+" INTEGRATIONS"))
+		allowedIntegrationTypes = append(allowedIntegrationTypes, IntegrationType(strings.ReplaceAll(strings.TrimSpace(it), "_", " ")+" INTEGRATIONS"))
 	}
 	aas := strings.Split(row.AllowedAccounts, ",")
 	allowedAccounts := make([]AccountIdentifier, 0, len(aas))

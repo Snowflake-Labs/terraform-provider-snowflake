@@ -66,25 +66,27 @@ type ShowSessionPolicyOptions struct {
 }
 
 type showSessionPolicyDBRow struct {
-	CreatedOn    string `db:"created_on"`
-	Name         string `db:"name"`
-	DatabaseName string `db:"database_name"`
-	SchemaName   string `db:"schema_name"`
-	Kind         string `db:"kind"`
-	Owner        string `db:"owner"`
-	Comment      string `db:"comment"`
-	Options      string `db:"options"`
+	CreatedOn     string `db:"created_on"`
+	Name          string `db:"name"`
+	DatabaseName  string `db:"database_name"`
+	SchemaName    string `db:"schema_name"`
+	Kind          string `db:"kind"`
+	Owner         string `db:"owner"`
+	Comment       string `db:"comment"`
+	Options       string `db:"options"`
+	OwnerRoleType string `db:"owner_role_type"`
 }
 
 type SessionPolicy struct {
-	CreatedOn    string
-	Name         string
-	DatabaseName string
-	SchemaName   string
-	Kind         string
-	Owner        string
-	Comment      string
-	Options      string
+	CreatedOn     string
+	Name          string
+	DatabaseName  string
+	SchemaName    string
+	Kind          string
+	Owner         string
+	Comment       string
+	Options       string
+	OwnerRoleType string
 }
 
 // DescribeSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy.

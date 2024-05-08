@@ -55,14 +55,11 @@ var procedureSchema = map[string]*schema.Schema{
 					Description: "The argument name",
 				},
 				"type": {
-					Type:     schema.TypeString,
-					Required: true,
-					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						return strings.EqualFold(old, new)
-					},
-					ValidateFunc: IsDataType(),
-					Description:  "The argument type",
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     dataTypeValidateFunc,
+					DiffSuppressFunc: dataTypeDiffSuppressFunc,
+					Description:      "The argument type",
 				},
 			},
 		},

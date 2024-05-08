@@ -25,10 +25,9 @@ func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alte
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
-	opts := &DropPipeOptions{
-		name: id,
-	}
+func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPipeOptions) error {
+	opts = createIfNil[DropPipeOptions](opts)
+	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
 }
 

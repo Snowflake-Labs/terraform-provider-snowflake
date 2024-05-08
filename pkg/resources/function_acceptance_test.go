@@ -5,22 +5,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func testAccFunction(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_function.f"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -111,7 +110,7 @@ func TestAcc_Function_Python(t *testing.T) {
 */
 
 func TestAcc_Function_complex(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_function.f"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -186,8 +185,8 @@ func TestAcc_Function_complex(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
 	resourceName := "snowflake_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -232,10 +231,10 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_Function_Rename(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := acc.TestClient().Ids.Alpha()
+	newName := acc.TestClient().Ids.Alpha()
+	comment := random.Comment()
+	newComment := random.Comment()
 	resourceName := "snowflake_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -289,4 +288,44 @@ resource "snowflake_function" "f" {
   }
 }
 `, database, schema, name, comment)
+}
+
+// TODO [SNOW-1348103]: do not trim the data type (e.g. NUMBER(10, 2) -> NUMBER loses the information as shown in this test); finish the test
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2735
+func TestAcc_Function_gh2735(t *testing.T) {
+	t.Skipf("Will be fixed with functions redesign in SNOW-1348103")
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				Config: functionConfigGh2735(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
+		},
+	})
+}
+
+func functionConfigGh2735(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type = "TABLE (NUM1 NUMBER, NUM2 NUMBER(10,2))"
+
+  statement = <<EOT
+    SELECT 12,13.4
+  EOT
+}
+`, database, schema, name)
 }

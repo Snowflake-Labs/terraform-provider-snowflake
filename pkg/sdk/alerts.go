@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -13,14 +14,14 @@ var _ Alerts = (*alerts)(nil)
 var (
 	_ validatable = new(CreateAlertOptions)
 	_ validatable = new(AlterAlertOptions)
-	_ validatable = new(dropAlertOptions)
+	_ validatable = new(DropAlertOptions)
 	_ validatable = new(ShowAlertOptions)
 )
 
 type Alerts interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error
-	Drop(ctx context.Context, id SchemaObjectIdentifier) error
+	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error
 	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*AlertDetails, error)
@@ -160,13 +161,14 @@ func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alt
 }
 
 // DropAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-alert.
-type dropAlertOptions struct {
-	drop  bool                   `ddl:"static" sql:"DROP"`
-	alert bool                   `ddl:"static" sql:"ALERT"`
-	name  SchemaObjectIdentifier `ddl:"identifier"`
+type DropAlertOptions struct {
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	alert    bool                   `ddl:"static" sql:"ALERT"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *dropAlertOptions) validate() error {
+func (opts *DropAlertOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
@@ -176,11 +178,11 @@ func (opts *dropAlertOptions) validate() error {
 	return nil
 }
 
-func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
-	// alert drop does not support [IF EXISTS] so there are no drop options.
-	opts := &dropAlertOptions{
-		name: id,
+func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
+	opts.name = id
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate alert options: %w", err)
 	}
@@ -217,35 +219,37 @@ func (v *Alert) ObjectType() ObjectType {
 }
 
 type Alert struct {
-	CreatedOn    time.Time
-	Name         string
-	DatabaseName string
-	SchemaName   string
-	Owner        string
-	Comment      *string
-	Warehouse    string
-	Schedule     string
-	State        AlertState
-	Condition    string
-	Action       string
+	CreatedOn     time.Time
+	Name          string
+	DatabaseName  string
+	SchemaName    string
+	Owner         string
+	Comment       *string
+	Warehouse     string
+	Schedule      string
+	State         AlertState
+	Condition     string
+	Action        string
+	OwnerRoleType string
 }
 
 type alertDBRow struct {
-	CreatedOn    time.Time `db:"created_on"`
-	Name         string    `db:"name"`
-	DatabaseName string    `db:"database_name"`
-	SchemaName   string    `db:"schema_name"`
-	Owner        string    `db:"owner"`
-	Comment      *string   `db:"comment"`
-	Warehouse    string    `db:"warehouse"`
-	Schedule     string    `db:"schedule"`
-	State        string    `db:"state"` // suspended, started
-	Condition    string    `db:"condition"`
-	Action       string    `db:"action"`
+	CreatedOn     time.Time      `db:"created_on"`
+	Name          string         `db:"name"`
+	DatabaseName  string         `db:"database_name"`
+	SchemaName    string         `db:"schema_name"`
+	Owner         string         `db:"owner"`
+	Comment       *string        `db:"comment"`
+	Warehouse     string         `db:"warehouse"`
+	Schedule      string         `db:"schedule"`
+	State         string         `db:"state"` // suspended, started
+	Condition     string         `db:"condition"`
+	Action        string         `db:"action"`
+	OwnerRoleType sql.NullString `db:"owner_role_type"`
 }
 
 func (row alertDBRow) convert() *Alert {
-	return &Alert{
+	alert := &Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -258,6 +262,11 @@ func (row alertDBRow) convert() *Alert {
 		Condition:    row.Condition,
 		Action:       row.Action,
 	}
+	if row.OwnerRoleType.Valid {
+		alert.OwnerRoleType = row.OwnerRoleType.String
+	}
+
+	return alert
 }
 
 func (opts *ShowAlertOptions) validate() error {

@@ -6,7 +6,7 @@ import (
 )
 
 func TestResourceMonitorCreate(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateResourceMonitorOptions{}
@@ -51,7 +51,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 }
 
 func TestResourceMonitorAlter(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{}
@@ -116,23 +116,31 @@ func TestResourceMonitorAlter(t *testing.T) {
 }
 
 func TestResourceMonitorDrop(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &dropResourceMonitorOptions{}
+		opts := &DropResourceMonitorOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &dropResourceMonitorOptions{
+		opts := &DropResourceMonitorOptions{
 			name: id,
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP RESOURCE MONITOR %s", id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropResourceMonitorOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP RESOURCE MONITOR IF EXISTS %s", id.FullyQualifiedName())
+	})
 }
 
 func TestResourceMonitorShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowResourceMonitorOptions{}

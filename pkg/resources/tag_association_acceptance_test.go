@@ -3,7 +3,6 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -12,14 +11,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TagAssociation(t *testing.T) {
-	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -50,7 +48,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 }
 
 func TestAcc_TagAssociationSchema(t *testing.T) {
-	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -79,8 +77,8 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 }
 
 func TestAcc_TagAssociationColumn(t *testing.T) {
-	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -115,8 +113,8 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1202(t *testing.T) {
-	tagName := "tag-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
-	tableName := "table-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -148,9 +146,9 @@ func TestAcc_TagAssociationIssue1202(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1909(t *testing.T) {
-	tagName := "tag-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
-	tableName := "table-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
-	tableName2 := "table-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
+	tableName2 := acc.TestClient().Ids.Alpha()
 	columnName := "test.column"
 	resourceName := "snowflake_tag_association.test"
 	objectID := sdk.NewTableColumnIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName, columnName)
@@ -207,8 +205,8 @@ func testAccCheckTableColumnTagAssociation(tagID sdk.SchemaObjectIdentifier, obj
 func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 	// todo: use role with ORGADMIN in CI (SNOW-1165821)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
-	tagName := "tag-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
-	accountName := "account_" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
+	accountName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -241,8 +239,8 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1926(t *testing.T) {
-	tagName := "tag-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
-	tableName := "table-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tagName := acc.TestClient().Ids.Alpha()
+	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	columnName := "test.column"
 	m := func() map[string]config.Variable {

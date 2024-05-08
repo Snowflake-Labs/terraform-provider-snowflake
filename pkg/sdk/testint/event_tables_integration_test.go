@@ -16,7 +16,7 @@ func TestInt_EventTables(t *testing.T) {
 	ctx := context.Background()
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	tagTest, tagCleaup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleaup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleaup)
 
 	assertEventTableHandle := func(t *testing.T, et *sdk.EventTable, expectedName string, expectedComment string, _ []string) {
@@ -215,9 +215,9 @@ func TestInt_EventTables(t *testing.T) {
 
 	// alter view: add and drop row access policies
 	t.Run("alter event table: add and drop row access policies", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, schemaTest)
+		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
-		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, schemaTest)
+		rowAccessPolicy2, rowAccessPolicy2Cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
 		table, tableCleanup := testClientHelper().Table.CreateTable(t)
@@ -225,53 +225,53 @@ func TestInt_EventTables(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(table.DatabaseName, table.SchemaName, table.Name)
 
 		// add policy
-		alterRequest := sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"id"}))
+		alterRequest := sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
 		err := client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err := getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		e, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), e.PolicyName)
+		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", e.PolicyKind)
 		assert.Equal(t, table.ID().Name(), e.RefEntityName)
 		assert.Equal(t, "TABLE", e.RefEntityDomain)
 		assert.Equal(t, "ACTIVE", e.PolicyStatus)
 
 		// remove policy
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicyId))
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"id"}))
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicyId.Name(), e.PolicyName)
+		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewEventTableDropAndAddRowAccessPolicyRequest(
-			*sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicyId),
-			*sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy2Id, []string{"id"}),
+			*sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
+			*sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []string{"id"}),
 		))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicy2Id.Name(), e.PolicyName)
+		assert.Equal(t, rowAccessPolicy2.ID().Name(), e.PolicyName)
 
 		// drop all policies
 		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 }

@@ -23,16 +23,18 @@ const (
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
 	"tag_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ForceNew:         true,
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"masking_policy_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The resource id of the masking policy",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "The resource id of the masking policy",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
@@ -88,22 +90,32 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 
 func CreateContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	value := d.Get("tag_id").(string)
-	tid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
-	value = d.Get("masking_policy_id").(string)
-	mid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
 
-	set := sdk.NewTagSetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{mid})
-	if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tid).WithSet(set)); err != nil {
+	value := d.Get("tag_id").(string)
+	tagObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(value)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	tagId := tagObjectIdentifier.(sdk.SchemaObjectIdentifier)
+
+	value = d.Get("masking_policy_id").(string)
+	maskingPolicyObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(value)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	maskingPolicyId := maskingPolicyObjectIdentifier.(sdk.SchemaObjectIdentifier)
+
+	set := sdk.NewTagSetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{maskingPolicyId})
+	if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tagId).WithSet(set)); err != nil {
 		return diag.FromErr(err)
 	}
 	aid := attachmentID{
-		TagDatabaseName:           tid.DatabaseName(),
-		TagSchemaName:             tid.SchemaName(),
-		TagName:                   tid.Name(),
-		MaskingPolicyDatabaseName: mid.DatabaseName(),
-		MaskingPolicySchemaName:   mid.SchemaName(),
-		MaskingPolicyName:         mid.Name(),
+		TagDatabaseName:           tagId.DatabaseName(),
+		TagSchemaName:             tagId.SchemaName(),
+		TagName:                   tagId.Name(),
+		MaskingPolicyDatabaseName: maskingPolicyId.DatabaseName(),
+		MaskingPolicySchemaName:   maskingPolicyId.SchemaName(),
+		MaskingPolicyName:         maskingPolicyId.Name(),
 	}
 	fmt.Printf("attachment id: %s\n", aid.String())
 	d.SetId(aid.String())
@@ -145,7 +157,7 @@ func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Resou
 	mid := sdk.NewSchemaObjectIdentifier(aid.MaskingPolicyDatabaseName, aid.MaskingPolicySchemaName, aid.MaskingPolicyName)
 	builder := snowflake.NewTagBuilder(tid).WithMaskingPolicy(mid)
 	row := snowflake.QueryRow(db, builder.ShowAttachedPolicy())
-	t, err := snowflake.ScanTagPolicy(row)
+	_, err = snowflake.ScanTagPolicy(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] attached policy (%s) not found", d.Id())
@@ -155,10 +167,7 @@ func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
-	if err := d.Set("masking_policy_id", id); err != nil {
-		return diag.FromErr(err)
-	}
+
 	return diags
 }
 

@@ -2,21 +2,19 @@ package resources_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
-	userName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	NewUserName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	passwordPolicyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newPasswordPolicyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := acc.TestClient().Ids.Alpha()
+	NewUserName := acc.TestClient().Ids.Alpha()
+	passwordPolicyName := acc.TestClient().Ids.Alpha()
+	newPasswordPolicyName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

@@ -7,7 +7,7 @@ import (
 )
 
 func TestAlertCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("with complete options", func(t *testing.T) {
 		newComment := random.String()
@@ -31,7 +31,7 @@ func TestAlertCreate(t *testing.T) {
 }
 
 func TestAlertAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("fail without alter action specified", func(t *testing.T) {
 		opts := &AlterAlertOptions{
@@ -115,23 +115,31 @@ func TestAlertAlter(t *testing.T) {
 }
 
 func TestAlertDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &dropAlertOptions{}
+		opts := &DropAlertOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
-		opts := &dropAlertOptions{
+		opts := &DropAlertOptions{
 			name: id,
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DROP ALERT %s", id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := &DropAlertOptions{
+			name:     id,
+			IfExists: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "DROP ALERT IF EXISTS %s", id.FullyQualifiedName())
+	})
 }
 
 func TestAlertShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAlertOptions{}
@@ -206,7 +214,7 @@ func TestAlertShow(t *testing.T) {
 }
 
 func TestAlertDescribe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeAlertOptions{}

@@ -110,14 +110,15 @@ func (r *ShowSessionPolicyRequest) toOpts() *ShowSessionPolicyOptions {
 
 func (r showSessionPolicyDBRow) convert() *SessionPolicy {
 	return &SessionPolicy{
-		CreatedOn:    r.CreatedOn,
-		Name:         r.Name,
-		DatabaseName: r.DatabaseName,
-		SchemaName:   r.SchemaName,
-		Kind:         r.Kind,
-		Owner:        r.Owner,
-		Comment:      r.Comment,
-		Options:      r.Options,
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		DatabaseName:  r.DatabaseName,
+		SchemaName:    r.SchemaName,
+		Kind:          r.Kind,
+		Owner:         r.Owner,
+		Comment:       r.Comment,
+		Options:       r.Options,
+		OwnerRoleType: r.OwnerRoleType,
 	}
 }
 

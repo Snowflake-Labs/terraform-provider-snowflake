@@ -50,7 +50,7 @@ var failoverGroupSchema = map[string]*schema.Schema{
 		Elem:          &schema.Schema{Type: schema.TypeString},
 		Optional:      true,
 		ConflictsWith: []string{"from_replica"},
-		Description:   "Type(s) of integrations for which you are enabling replication and failover from the source account to the target account. This property requires that the OBJECT_TYPES list include INTEGRATIONS to set this parameter. The following integration types are supported: \"SECURITY INTEGRATIONS\", \"API INTEGRATIONS\"",
+		Description:   "Type(s) of integrations for which you are enabling replication and failover from the source account to the target account. This property requires that the OBJECT_TYPES list include INTEGRATIONS to set this parameter. The following integration types are supported: \"SECURITY INTEGRATIONS\", \"API INTEGRATIONS\", \"STORAGE INTEGRATIONS\", \"EXTERNAL ACCESS INTEGRATIONS\", \"NOTIFICATION INTEGRATIONS\"",
 	},
 	"allowed_accounts": {
 		Type:          schema.TypeSet,
@@ -259,7 +259,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(name)
-	return nil
+	return ReadFailoverGroup(d, meta)
 }
 
 // ReadFailoverGroup implements schema.ReadFunc.
@@ -438,32 +438,42 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_schedule") {
-		_, n := d.GetChange("replication_schedule")
-		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
-		c := replicationSchedule["cron"].([]interface{})
-		var updatedReplicationSchedule string
-		if len(c) > 0 {
-			cron := c[0].(map[string]interface{})
-			cronExpression := cron["expression"].(string)
-			cronExpression = "USING CRON " + cronExpression
-			if v, ok := cron["time_zone"]; ok {
-				timeZone := v.(string)
-				if timeZone != "" {
-					cronExpression = cronExpression + " " + timeZone
+		replicationSchedules := d.Get("replication_schedule").([]any)
+		if len(replicationSchedules) > 0 {
+			replicationSchedule := replicationSchedules[0].(map[string]any)
+			crons := replicationSchedule["cron"].([]any)
+			var updatedReplicationSchedule string
+			if len(crons) > 0 {
+				cron := crons[0].(map[string]any)
+				cronExpression := cron["expression"].(string)
+				cronExpression = "USING CRON " + cronExpression
+				if v, ok := cron["time_zone"]; ok {
+					timeZone := v.(string)
+					if timeZone != "" {
+						cronExpression = cronExpression + " " + timeZone
+					}
 				}
+				updatedReplicationSchedule = cronExpression
+			} else {
+				updatedReplicationSchedule = fmt.Sprintf("%d MINUTE", replicationSchedule["interval"].(int))
 			}
-			updatedReplicationSchedule = cronExpression
+			err := client.FailoverGroups.AlterSource(ctx, id, &sdk.AlterSourceFailoverGroupOptions{
+				Set: &sdk.FailoverGroupSet{
+					ReplicationSchedule: sdk.String(updatedReplicationSchedule),
+				},
+			})
+			if err != nil {
+				return err
+			}
 		} else {
-			updatedReplicationSchedule = fmt.Sprintf("%d MINUTE", replicationSchedule["interval"].(int))
-		}
-
-		err := client.FailoverGroups.AlterSource(ctx, id, &sdk.AlterSourceFailoverGroupOptions{
-			Set: &sdk.FailoverGroupSet{
-				ReplicationSchedule: sdk.String(updatedReplicationSchedule),
-			},
-		})
-		if err != nil {
-			return err
+			err := client.FailoverGroups.AlterSource(ctx, id, &sdk.AlterSourceFailoverGroupOptions{
+				Unset: &sdk.FailoverGroupUnset{
+					ReplicationSchedule: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

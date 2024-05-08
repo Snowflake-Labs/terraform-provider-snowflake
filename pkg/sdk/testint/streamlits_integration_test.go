@@ -57,7 +57,7 @@ func TestInt_Streamlits(t *testing.T) {
 	}
 
 	t.Run("create streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		comment := random.StringN(4)
@@ -73,7 +73,7 @@ func TestInt_Streamlits(t *testing.T) {
 
 	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 	t.Run("grant privilege to streamlits to role", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
@@ -117,7 +117,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -129,7 +129,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -139,7 +139,7 @@ func TestInt_Streamlits(t *testing.T) {
 
 	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 	t.Run("grant privilege to streamlits to database role", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
@@ -184,7 +184,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -196,7 +196,7 @@ func TestInt_Streamlits(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeStreamlits,
-					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -205,7 +205,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter streamlit: set", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		manifest := "manifest.yml"
 		e := createStreamlitHandle(t, stage, manifest)
@@ -219,7 +219,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -242,7 +242,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -253,7 +253,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: terse with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -274,7 +274,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("describe streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
 		mainFile := "manifest.yml"
@@ -325,7 +325,7 @@ func TestInt_StreamlitsShowByID(t *testing.T) {
 		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
 
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		manifest := "manifest.yml"
 

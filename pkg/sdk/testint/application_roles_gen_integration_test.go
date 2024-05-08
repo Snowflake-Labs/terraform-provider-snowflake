@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -24,35 +23,31 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-	createAppHandle := func(t *testing.T, appName string) sdk.AccountObjectIdentifier {
+	createApp := func(t *testing.T) (*sdk.Application, *sdk.ApplicationPackage) {
 		t.Helper()
 
-		// create stage
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(8)))
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
-		// upload files onto stage
-		putOnStage(t, client, stage, "manifest.yml")
-		putOnStage(t, client, stage, "setup.sql")
-		// create application package
-		appPackageName := random.AlphaN(8)
-		cleanupAppPackage := createApplicationPackage(t, client, appPackageName)
-		t.Cleanup(cleanupAppPackage)
-		// add application package version
-		versionName := "v1"
-		addApplicationPackageVersion(t, client, stage, appPackageName, versionName)
-		cleanupApp := createApplication(t, client, appName, appPackageName, versionName)
-		t.Cleanup(cleanupApp)
-		return sdk.NewAccountObjectIdentifier(appName)
+
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "manifest.yml")
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "setup.sql")
+
+		applicationPackage, cleanupApplicationPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
+		t.Cleanup(cleanupApplicationPackage)
+
+		testClientHelper().ApplicationPackage.AddApplicationPackageVersion(t, applicationPackage.ID(), stage.ID(), "v1")
+
+		application, cleanupApplication := testClientHelper().Application.CreateApplication(t, applicationPackage.ID(), "v1")
+		t.Cleanup(cleanupApplication)
+		return application, applicationPackage
 	}
 
-	appName := random.AlphaN(8)
-	createAppHandle(t, appName)
+	application, applicationPackage := createApp(t)
 
 	assertApplicationRole := func(t *testing.T, appRole *sdk.ApplicationRole, name string, comment string) {
 		t.Helper()
 		assert.Equal(t, name, appRole.Name)
-		assert.Equal(t, appName, appRole.Owner)
+		assert.Equal(t, application.Name, appRole.Owner)
 		assert.Equal(t, comment, appRole.Comment)
 		assert.Equal(t, "APPLICATION", appRole.OwnerRoleType)
 	}
@@ -79,9 +74,10 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
+		ctx := context.Background()
 
-		appRole, err := client.ApplicationRoles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(appName), id)
+		appRole, err := client.ApplicationRoles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(application.Name), id)
 		require.NoError(t, err)
 
 		assertApplicationRole(t, appRole, name, "some comment")
@@ -89,7 +85,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("Show", func(t *testing.T) {
 		req := sdk.NewShowApplicationRoleRequest().
-			WithApplicationName(sdk.NewAccountObjectIdentifier(appName)).
+			WithApplicationName(application.ID()).
 			WithLimit(&sdk.LimitFrom{
 				Rows: sdk.Int(2),
 			})
@@ -104,7 +100,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		role, cleanupRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupRole)
 
-		id := sdk.NewDatabaseObjectIdentifier(appName, "app_role_1")
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, "app_role_1")
 		// grant the application role to the role
 		kindOfRole := sdk.NewKindOfRoleRequest().WithRoleName(sdk.Pointer(role.ID()))
 		gr := sdk.NewGrantApplicationRoleRequest(id).WithTo(*kindOfRole)
@@ -126,33 +122,32 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	})
 
 	t.Run("Grant and Revoke: Application", func(t *testing.T) {
-		otherAppName := random.AlphaN(8)
-		appId := createAppHandle(t, otherAppName)
+		app, _ := createApp(t)
 
-		id := sdk.NewDatabaseObjectIdentifier(appName, "app_role_1")
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, "app_role_1")
 		// grant the application role to the application
-		kindOfRole := sdk.NewKindOfRoleRequest().WithApplicationName(&appId)
+		kindOfRole := sdk.NewKindOfRoleRequest().WithApplicationName(sdk.Pointer(app.ID()))
 		gr := sdk.NewGrantApplicationRoleRequest(id).WithTo(*kindOfRole)
 		err := client.ApplicationRoles.Grant(ctx, gr)
 		require.NoError(t, err)
 
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: appId}})
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: app.ID()}})
 		require.NoError(t, err)
-		assertGrantToRoles(t, grants, id, appId, sdk.ObjectTypeApplicationRole)
+		assertGrantToRoles(t, grants, id, app.ID(), sdk.ObjectTypeApplicationRole)
 
 		// revoke the application role from the role
 		rr := sdk.NewRevokeApplicationRoleRequest(id).WithFrom(*kindOfRole)
 		err = client.ApplicationRoles.Revoke(ctx, rr)
 		require.NoError(t, err)
 
-		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: appId}})
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: app.ID()}})
 		require.NoError(t, err)
 		require.Equal(t, 0, len(grants))
 	})
 
 	t.Run("show grants to application role", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
 		opts := new(sdk.ShowGrantOptions)
@@ -171,7 +166,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	t.Run("show grants of application role", func(t *testing.T) {
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
 		opts := new(sdk.ShowGrantOptions)
@@ -184,28 +179,32 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		require.NotEmpty(t, grants)
 		require.NotEmpty(t, grants[0].CreatedOn)
 		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
-		require.Equal(t, sdk.NewAccountObjectIdentifier(appName), grants[0].GrantedBy)
+		require.Equal(t, application.ID(), grants[0].GrantedBy)
 	})
 	t.Run("show grants to application", func(t *testing.T) {
-		// Need second app to be able to grant application role to the first one.
-		// Cannot grant to parent application (098806 (0A000): Cannot grant an APPLICATION ROLE to the parent APPLICATION).
-		appName2 := "snowflake_app_2"
-		createAppHandle(t, appName2)
+		// Need second app to be able to grant application role to it. Cannot grant to parent application (098806 (0A000): Cannot grant an APPLICATION ROLE to the parent APPLICATION).
+		stage2, cleanupStage2 := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage2)
 
+		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "manifest2.yml")
+		testClientHelper().Stage.PutOnStage(t, stage2.ID(), "setup.sql")
+
+		application2, cleanupApplication2 := testClientHelper().Application.CreateApplication(t, applicationPackage.ID(), "v1")
+		t.Cleanup(cleanupApplication2)
 		name := "app_role_1"
-		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), application2.ID().FullyQualifiedName()))
 		require.NoError(t, err)
 		defer func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), application2.ID().FullyQualifiedName()))
 			require.NoError(t, err)
 		}()
 
 		opts := new(sdk.ShowGrantOptions)
 		opts.To = &sdk.ShowGrantsTo{
-			Application: sdk.NewAccountObjectIdentifier(appName2),
+			Application: application2.ID(),
 		}
 		grants, err := client.Grants.Show(ctx, opts)
 		require.NoError(t, err)
