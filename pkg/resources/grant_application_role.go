@@ -121,7 +121,7 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 	switch objectType {
 	case sdk.ObjectTypeRole:
 		{
-			if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -133,7 +133,7 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 			}
 		}
 	case sdk.ObjectTypeApplication:
-		if _, err := client.Applications.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+		if _, err := client.Applications.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{

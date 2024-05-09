@@ -17,7 +17,3 @@ variable "application_name2" {
 variable "random_name" {
   type = string
 }
-
-variable "warehouse" {
-  type = string
-}

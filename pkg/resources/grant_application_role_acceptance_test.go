@@ -31,7 +31,6 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 			"parent_account_role_name": config.StringVariable(parentAccountRoleName),
 			"application_name":         config.StringVariable(applicationName),
 			"random_name":              config.StringVariable(randomName),
-			"warehouse":                config.StringVariable(acc.TestWarehouseName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -79,7 +78,6 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 			"application_name":  config.StringVariable(applicationName),
 			"application_name2": config.StringVariable(applicationName2),
 			"random_name":       config.StringVariable(randomName),
-			"warehouse":         config.StringVariable(acc.TestWarehouseName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
