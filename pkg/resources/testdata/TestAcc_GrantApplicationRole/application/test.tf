@@ -40,7 +40,7 @@ resource "snowflake_unsafe_execute" "application" {
 }
 
 resource "snowflake_unsafe_execute" "application2" {
-  depends_on = [snowflake_unsafe_execute.application_version]
+  depends_on = [snowflake_unsafe_execute.application_version, snowflake_unsafe_execute.application]
   execute    = "CREATE APPLICATION \"${var.application_name2}\" FROM APPLICATION PACKAGE \"${var.random_name}\" USING VERSION v1"
   revert     = "DROP APPLICATION \"${var.application_name2}\""
 }
