@@ -53,8 +53,8 @@ resource "snowflake_masking_policy" "example_masking_policy" {
 }
 
 resource "snowflake_tag_masking_policy_association" "name" {
-  tag_id            = snowflake_tag.this.id
-  masking_policy_id = snowflake_masking_policy.example_masking_policy.id
+  tag_id            = "\"${snowflake_tag.this.database}\".\"${snowflake_tag.this.schema}\".\"${snowflake_tag.this.name}\""
+  masking_policy_id = "\"${snowflake_masking_policy.example_masking_policy.database}\".\"${snowflake_masking_policy.example_masking_policy.schema}\".\"${snowflake_masking_policy.example_masking_policy.name}\""
 }
 ```
 

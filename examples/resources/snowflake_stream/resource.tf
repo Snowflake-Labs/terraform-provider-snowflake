@@ -1,3 +1,14 @@
+resource "snowflake_table" "table" {
+  database = "database"
+  schema   = "schema"
+  name     = "name"
+
+  column {
+    type = "NUMBER(38,0)"
+    name = "id"
+  }
+}
+
 resource "snowflake_stream" "stream" {
   comment = "A stream."
 
@@ -5,7 +16,7 @@ resource "snowflake_stream" "stream" {
   schema   = "schema"
   name     = "stream"
 
-  on_table    = "table"
+  on_table    = snowflake_table.table.qualified_name
   append_only = false
   insert_only = false
 

@@ -7,11 +7,16 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var (
 	ErrNilOptions                    = NewError("options cannot be nil")
 	ErrPatternRequiredForLikeKeyword = NewError("pattern must be specified for like keyword")
+
+	// re-importing from internal package
+	ErrObjectNotFound = collections.ErrObjectNotFound
 
 	// go-snowflake errors.
 	ErrObjectNotExistOrAuthorized = NewError("object does not exist or not authorized")

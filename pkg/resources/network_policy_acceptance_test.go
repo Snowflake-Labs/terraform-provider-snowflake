@@ -35,7 +35,7 @@ func TestAcc_NetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
 				),
 			},
-			// CHANGE PROPERTIES
+			// CHANGE PROPERTIES - add to and remove from ip lists
 			{
 				Config: networkPolicyConfig2(name),
 				Check: resource.ComposeTestCheckFunc(
@@ -45,7 +45,23 @@ func TestAcc_NetworkPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "1"),
 				),
 			},
-			// IMPORT
+			// IMPORT - all fields are non-empty
+			{
+				ResourceName:      "snowflake_network_policy.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// CHANGE PROPERTIES - set empty ip lists
+			{
+				Config: networkPolicyConfig3(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "comment", networkPolicyComment),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "0"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
+				),
+			},
+			// IMPORT - incomplete
 			{
 				ResourceName:      "snowflake_network_policy.test",
 				ImportState:       true,
@@ -72,6 +88,16 @@ resource "snowflake_network_policy" "test" {
 	comment         = "%v"
 	allowed_ip_list = ["192.168.0.100/24"]
 	blocked_ip_list = ["192.168.0.101"]
+}
+`, name, networkPolicyComment)
+}
+
+func networkPolicyConfig3(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_network_policy" "test" {
+	name            = "%v"
+	comment         = "%v"
+	allowed_ip_list = []
 }
 `, name, networkPolicyComment)
 }

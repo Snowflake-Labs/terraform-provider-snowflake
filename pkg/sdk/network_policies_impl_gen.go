@@ -88,29 +88,50 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 		IfExists: r.IfExists,
 		name:     r.name,
 
-		UnsetComment: r.UnsetComment,
-		RenameTo:     r.RenameTo,
+		RenameTo: r.RenameTo,
 	}
 	if r.Set != nil {
 		opts.Set = &NetworkPolicySet{
-			AllowedNetworkRuleList: r.Set.AllowedNetworkRuleList,
-			BlockedNetworkRuleList: r.Set.BlockedNetworkRuleList,
-
 			Comment: r.Set.Comment,
 		}
-		if r.Set.AllowedIpList != nil {
-			s := make([]IP, len(r.Set.AllowedIpList))
-			for i, v := range r.Set.AllowedIpList {
-				s[i] = IP(v)
+		if r.Set.AllowedNetworkRuleList != nil {
+			opts.Set.AllowedNetworkRuleList = &AllowedNetworkRuleList{
+				AllowedNetworkRuleList: r.Set.AllowedNetworkRuleList.AllowedNetworkRuleList,
 			}
-			opts.Set.AllowedIpList = s
+		}
+		if r.Set.BlockedNetworkRuleList != nil {
+			opts.Set.BlockedNetworkRuleList = &BlockedNetworkRuleList{
+				BlockedNetworkRuleList: r.Set.BlockedNetworkRuleList.BlockedNetworkRuleList,
+			}
+		}
+		if r.Set.AllowedIpList != nil {
+			opts.Set.AllowedIpList = &AllowedIPList{}
+			if r.Set.AllowedIpList.AllowedIPList != nil {
+				s := make([]IP, len(r.Set.AllowedIpList.AllowedIPList))
+				for i, v := range r.Set.AllowedIpList.AllowedIPList {
+					s[i] = IP(v)
+				}
+				opts.Set.AllowedIpList.AllowedIPList = s
+			}
 		}
 		if r.Set.BlockedIpList != nil {
-			s := make([]IP, len(r.Set.BlockedIpList))
-			for i, v := range r.Set.BlockedIpList {
-				s[i] = IP(v)
+			opts.Set.BlockedIpList = &BlockedIPList{}
+			if r.Set.BlockedIpList.BlockedIPList != nil {
+				s := make([]IP, len(r.Set.BlockedIpList.BlockedIPList))
+				for i, v := range r.Set.BlockedIpList.BlockedIPList {
+					s[i] = IP(v)
+				}
+				opts.Set.BlockedIpList.BlockedIPList = s
 			}
-			opts.Set.BlockedIpList = s
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &NetworkPolicyUnset{
+			AllowedNetworkRuleList: r.Unset.AllowedNetworkRuleList,
+			BlockedNetworkRuleList: r.Unset.BlockedNetworkRuleList,
+			AllowedIpList:          r.Unset.AllowedIpList,
+			BlockedIpList:          r.Unset.BlockedIpList,
+			Comment:                r.Unset.Comment,
 		}
 	}
 	if r.Add != nil {

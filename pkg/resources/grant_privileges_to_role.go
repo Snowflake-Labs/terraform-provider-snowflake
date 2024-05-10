@@ -828,7 +828,7 @@ func setRolePrivilegeOptions(privileges []string, allPrivileges bool, onAccount 
 }
 
 func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
-	if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.RoleName)); err != nil && err.Error() == "object does not exist" {
+	if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.RoleName)); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
 		d.SetId("")
 		log.Printf("[DEBUG] Failed to retrieve account role. Marking the resource as removed.")
 		return nil

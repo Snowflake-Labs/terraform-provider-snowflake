@@ -123,9 +123,12 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
 	},
 	"query_acceleration_max_scale_factor": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Default:      8,
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  8,
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return !d.Get("enable_query_acceleration").(bool)
+		},
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},

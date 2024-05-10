@@ -237,12 +237,29 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:      tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "|"),
 				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
 			},
 			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.89.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "|"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
+				),
+			},
+			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:                   tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "|"),
+				ExpectError:              regexp.MustCompile(`.*Expected SchemaObjectIdentifier identifier type, but got:.*`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "."),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
 				),
@@ -270,7 +287,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "|"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
 				),
@@ -332,6 +349,28 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 //	})
 //}
 
+func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      tableConstraintEmptyForeignKeyProperties(id.Name(), id.DatabaseName(), id.SchemaName()),
+				ExpectError: regexp.MustCompile(`At least 1 "references" blocks are required.`),
+			},
+			{
+				Config: tableConstraintForeignKeyProperties(id.Name(), id.DatabaseName(), id.SchemaName()),
+			},
+		},
+	})
+}
+
 func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
@@ -354,12 +393,12 @@ resource "snowflake_table_constraint" "unique" {
 `, n, databaseName, schemaName, n)
 }
 
-func tableConstraintUniqueConfigUsingTableId(n string, databaseName string, schemaName string) string {
+func tableConstraintUniqueConfigUsingTableId(name string, databaseName string, schemaName string, idSeparator string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
 
 	column {
 		name = "col1"
@@ -368,33 +407,62 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table_constraint" "unique" {
-	name     = "%s"
+	name     = "%[1]s"
 	type     = "UNIQUE"
-	table_id = snowflake_table.t.id
+	table_id = "${snowflake_table.t.database}%[4]s${snowflake_table.t.schema}%[4]s${snowflake_table.t.name}"
 	columns  = ["col1"]
 }
-`, n, databaseName, schemaName, n)
+`, name, databaseName, schemaName, idSeparator)
 }
 
-func tableConstraintWithNameAndComment(databaseName string, schemaName string, name string, comment string) string {
+func tableConstraintEmptyForeignKeyProperties(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_table" "t" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
-
-	column {
-		name = "col1"
-		type = "NUMBER(38,0)"
+	resource "snowflake_table" "t" {
+		name     = "%[3]s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+	
+		column {
+			name = "col1"
+			type = "NUMBER(38,0)"
+		}
 	}
+	
+	resource "snowflake_table_constraint" "unique" {
+		name = "%[3]s"
+		type = "FOREIGN KEY"
+		table_id = snowflake_table.t.qualified_name
+		columns = ["col1"]
+		foreign_key_properties {
+		}
+	}
+	`, databaseName, schemaName, name)
 }
 
-resource "snowflake_table_constraint" "test" {
-	name     = "%s"
-	comment  = "%s"
-	type     = "UNIQUE"
-	table_id = snowflake_table.t.id
-	columns  = ["col1"]
-}
-`, name, databaseName, schemaName, name, comment)
+func tableConstraintForeignKeyProperties(name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_table" "t" {
+		name     = "%[3]s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+	
+		column {
+			name = "col1"
+			type = "NUMBER(38,0)"
+		}
+	}
+	
+	resource "snowflake_table_constraint" "unique" {
+		name = "%[3]s"
+		type = "FOREIGN KEY"
+		table_id = snowflake_table.t.qualified_name
+		columns = ["col1"]
+		foreign_key_properties {
+			references {
+				columns = ["col1"]
+				table_id = snowflake_table.t.qualified_name
+			}
+		}
+	}
+	`, databaseName, schemaName, name)
 }

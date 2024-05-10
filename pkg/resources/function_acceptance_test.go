@@ -289,3 +289,43 @@ resource "snowflake_function" "f" {
 }
 `, database, schema, name, comment)
 }
+
+// TODO [SNOW-1348103]: do not trim the data type (e.g. NUMBER(10, 2) -> NUMBER loses the information as shown in this test); finish the test
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2735
+func TestAcc_Function_gh2735(t *testing.T) {
+	t.Skipf("Will be fixed with functions redesign in SNOW-1348103")
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				Config: functionConfigGh2735(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
+		},
+	})
+}
+
+func functionConfigGh2735(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type = "TABLE (NUM1 NUMBER, NUM2 NUMBER(10,2))"
+
+  statement = <<EOT
+    SELECT 12,13.4
+  EOT
+}
+`, database, schema, name)
+}

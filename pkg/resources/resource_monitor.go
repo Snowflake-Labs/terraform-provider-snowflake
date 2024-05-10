@@ -464,7 +464,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 	if v, ok := d.GetOk("suspend_immediate_triggers"); ok {
 		siTrigs := expandIntList(v.(*schema.Set).List())
 		for _, threshold := range siTrigs {
-			if suspendImmediateTrigger == nil || suspendTrigger.Threshold > threshold {
+			if suspendImmediateTrigger == nil || (suspendTrigger != nil && suspendTrigger.Threshold > threshold) {
 				suspendImmediateTrigger = &sdk.TriggerDefinition{
 					Threshold:     threshold,
 					TriggerAction: sdk.TriggerActionSuspendImmediate,

@@ -32,14 +32,14 @@ resource "snowflake_stage" "example_stage" {
 
 ### Optional
 
-- `aws_external_id` (String)
+- `aws_external_id` (String) A unique ID assigned to the specific stage. The ID has the following format: &lt;snowflakeAccount&gt;_SFCRole=&lt;snowflakeRoleId&gt;_&lt;randomId&gt;
 - `comment` (String) Specifies a comment for the stage.
 - `copy_options` (String) Specifies the copy options for the stage.
 - `credentials` (String, Sensitive) Specifies the credentials for the stage.
 - `directory` (String) Specifies the directory settings for the stage.
 - `encryption` (String) Specifies the encryption settings for the stage.
 - `file_format` (String) Specifies the file format for the stage.
-- `snowflake_iam_user` (String)
+- `snowflake_iam_user` (String) An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.
 - `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 - `url` (String) Specifies the URL for the stage.

@@ -255,3 +255,134 @@ resource "snowflake_procedure" "p" {
 }
 `, database, schema, name)
 }
+
+func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.89.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: sqlProcedureConfigArgsPermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber}).FullyQualifiedName()),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate)},
+				},
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sqlProcedureConfigArgsPermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber}).FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+// TODO [SNOW-1348106]: diff suppression for the return type (the same with functions); finish this test
+func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.89.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: sqlProcedureConfigReturnTypePermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate)},
+				},
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sqlProcedureConfigReturnTypePermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+				),
+				// should be empty after SNOW-1348106
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate)},
+				},
+			},
+		},
+	})
+}
+
+func sqlProcedureConfigArgsPermanentDiff(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "SQL"
+  return_type = "NUMBER(38,0)"
+  arguments {
+    name = "arg1"
+    type = "VARCHAR"
+  }
+  arguments {
+    name = "MY_INT"
+    type = "int"
+  }
+  statement   = <<EOT
+BEGIN
+  RETURN 13.4;
+END;
+  EOT
+}
+`, database, schema, name)
+}
+
+func sqlProcedureConfigReturnTypePermanentDiff(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "SQL"
+  return_type = "TABLE (NUM1 NUMBER(10,2))"
+  arguments {
+    name = "ARG1"
+    type = "VARCHAR"
+  }
+  statement   = <<EOT
+BEGIN
+  RETURN 13.4;
+END;
+  EOT
+}
+`, database, schema, name)
+}

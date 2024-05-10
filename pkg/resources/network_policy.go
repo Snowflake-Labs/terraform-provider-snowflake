@@ -149,7 +149,8 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnsetComment(sdk.Bool(true)))
+			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
+			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
 			if err != nil {
 				return fmt.Errorf("error unsetting comment for network policy %v err = %w", name, err)
 			}
@@ -168,7 +169,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		for i, v := range newIps {
 			ipRequests[i] = *sdk.NewIPRequest(v)
 		}
-		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(ipRequests)
+		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
 			return fmt.Errorf("error updating ALLOWED_IP_LIST for network policy %v err = %w", name, err)
@@ -181,7 +182,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		for i, v := range newIps {
 			ipRequests[i] = *sdk.NewIPRequest(v)
 		}
-		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(ipRequests)
+		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
 			return fmt.Errorf("error updating BLOCKED_IP_LIST for network policy %v err = %w", name, err)

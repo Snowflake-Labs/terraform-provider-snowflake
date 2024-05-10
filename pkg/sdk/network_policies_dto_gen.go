@@ -20,30 +20,50 @@ type CreateNetworkPolicyRequest struct {
 	Comment                *string
 }
 
-func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
-	return r.name
-}
-
 type IPRequest struct {
 	IP string // required
 }
 
 type AlterNetworkPolicyRequest struct {
-	IfExists     *bool
-	name         AccountObjectIdentifier // required
-	Set          *NetworkPolicySetRequest
-	Add          *AddNetworkRuleRequest
-	Remove       *RemoveNetworkRuleRequest
-	UnsetComment *bool
-	RenameTo     *AccountObjectIdentifier
+	IfExists *bool
+	name     AccountObjectIdentifier // required
+	Set      *NetworkPolicySetRequest
+	Unset    *NetworkPolicyUnsetRequest
+	Add      *AddNetworkRuleRequest
+	Remove   *RemoveNetworkRuleRequest
+	RenameTo *AccountObjectIdentifier
 }
 
 type NetworkPolicySetRequest struct {
-	AllowedNetworkRuleList []SchemaObjectIdentifier
-	BlockedNetworkRuleList []SchemaObjectIdentifier
-	AllowedIpList          []IPRequest
-	BlockedIpList          []IPRequest
+	AllowedNetworkRuleList *AllowedNetworkRuleListRequest
+	BlockedNetworkRuleList *BlockedNetworkRuleListRequest
+	AllowedIpList          *AllowedIPListRequest
+	BlockedIpList          *BlockedIPListRequest
 	Comment                *string
+}
+
+type AllowedNetworkRuleListRequest struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier
+}
+
+type BlockedNetworkRuleListRequest struct {
+	BlockedNetworkRuleList []SchemaObjectIdentifier
+}
+
+type AllowedIPListRequest struct {
+	AllowedIPList []IPRequest
+}
+
+type BlockedIPListRequest struct {
+	BlockedIPList []IPRequest
+}
+
+type NetworkPolicyUnsetRequest struct {
+	AllowedNetworkRuleList *bool
+	BlockedNetworkRuleList *bool
+	AllowedIpList          *bool
+	BlockedIpList          *bool
+	Comment                *bool
 }
 
 type AddNetworkRuleRequest struct {
