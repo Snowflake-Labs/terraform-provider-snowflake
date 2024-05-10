@@ -43,7 +43,7 @@ var tableSchema = map[string]*schema.Schema{
 		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
 	"column": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Required:    true,
 		MinItems:    1,
 		Description: "Definitions of a column to create in the table. Minimum one required.",
@@ -274,30 +274,35 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 	changed = changedColumns{}
 	for _, cO := range c {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false, false, false}
-			if cO.name == cN.name && cO.dataType != cN.dataType {
-				changeColumn.changedDataType = true
-			}
-			if cO.name == cN.name && cO.nullable != cN.nullable {
-				changeColumn.changedNullConstraint = true
-			}
-			if cO.name == cN.name && cO._default != nil && cN._default == nil {
-				changeColumn.dropedDefault = true
-			}
+			if cO.name == cN.name {
+				changeColumn := changedColumn{cN, false, false, false, false, false, false}
 
-			if cO.name == cN.name && cO.comment != cN.comment {
-				changeColumn.changedComment = true
-			}
+				if cO.dataType != cN.dataType {
+					changeColumn.changedDataType = true
+				}
 
-			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
-				changeColumn.changedMaskingPolicy = true
-			}
+				if cO.nullable != cN.nullable {
+					changeColumn.changedNullConstraint = true
+				}
 
-			if cO.name == cN.name && cO.collate != cN.collate {
-				changeColumn.changedCollate = true
-			}
+				if cO._default != nil && cN._default == nil {
+					changeColumn.dropedDefault = true
+				}
 
-			changed = append(changed, changeColumn)
+				if cO.comment != cN.comment {
+					changeColumn.changedComment = true
+				}
+
+				if cO.maskingPolicy != cN.maskingPolicy {
+					changeColumn.changedMaskingPolicy = true
+				}
+
+				if cO.collate != cN.collate {
+					changeColumn.changedCollate = true
+				}
+
+				changed = append(changed, changeColumn)
+			}
 		}
 	}
 	return
@@ -373,7 +378,7 @@ func getColumn(from interface{}) (to column) {
 }
 
 func getColumns(from interface{}) (to columns) {
-	cols := from.([]interface{})
+	cols := from.(*schema.Set).List()
 	to = make(columns, len(cols))
 	for i, c := range cols {
 		to[i] = getColumn(c)
@@ -571,7 +576,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	tableColumnRequests := getTableColumnRequests(d.Get("column").([]interface{}))
+	tableColumnRequests := getTableColumnRequests(d.Get("column").(*schema.Set).List())
 
 	createRequest := sdk.NewCreateTableRequest(id, tableColumnRequests)
 
@@ -663,7 +668,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Set the relevant data in the state
-	toSet := map[string]interface{}{
+	toSet := map[string]any{
 		"name":            table.Name,
 		"owner":           table.Owner,
 		"database":        table.DatabaseName,
@@ -819,6 +824,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error adding column: %w", err)
 			}
 		}
+
 		for _, cA := range changed {
 			if cA.changedDataType || cA.changedCollate {
 				var newCollation *string
@@ -830,6 +836,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
+
 			if cA.changedNullConstraint {
 				nullabilityRequest := sdk.NewTableColumnNotNullConstraintRequest()
 				if !cA.newColumn.nullable {
@@ -842,12 +849,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
+
 			if cA.dropedDefault {
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(sdk.Bool(true))})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
+
 			if cA.changedComment {
 				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name))
 				if cA.newColumn.comment == "" {
@@ -855,12 +864,12 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				} else {
 					columnAlterActionRequest.WithComment(sdk.String(cA.newColumn.comment))
 				}
-
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*columnAlterActionRequest})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
+
 			if cA.changedMaskingPolicy {
 				columnAction := sdk.NewTableColumnActionRequest()
 				if strings.TrimSpace(cA.newColumn.maskingPolicy) == "" {

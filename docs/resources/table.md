@@ -84,7 +84,7 @@ resource "snowflake_table" "table" {
 
 ### Required
 
-- `column` (Block List, Min: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--column))
+- `column` (Block Set, Min: 1) Definitions of a column to create in the table. Minimum one required. (see [below for nested schema](#nestedblock--column))
 - `database` (String) The database in which to create the table.
 - `name` (String) Specifies the identifier for the table; must be unique for the database and schema in which the table is created.
 - `schema` (String) The schema in which to create the table.

@@ -1980,3 +1980,166 @@ resource "snowflake_table" "test_table" {
 }
 `, database, schema, name)
 }
+
+func TestAcc_Table_ColumnOrderCheck(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+
+	configVariables := config.Variables{
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
+		"table":    config.StringVariable(name),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.#", "5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.0.name", "column_1"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.1.name", "column_2"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.2.name", "column_3"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.3.name", "column_4"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.4.name", "column_5"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Swap places of columns in the config (should result in an empty plan)
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.#", "5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.0.name", "column_1"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.1.name", "column_2"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.2.name", "column_3"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.3.name", "column_4"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.4.name", "column_5"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Remove column_2 and add column_6
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.#", "5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.0.name", "column_1"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.1.name", "column_3"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.2.name", "column_4"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.3.name", "column_5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.4.name", "column_6"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Again, changing the order of columns (in the state they should remain in their previous order, resulting in an empty plan)
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.#", "5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.0.name", "column_1"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.1.name", "column_3"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.2.name", "column_4"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.3.name", "column_5"),
+					resource.TestCheckResourceAttr("snowflake_table.test", "column.4.name", "column_6"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAcc_Table_StateUpgradeFromV0_90_0(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.90.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: tableConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfig2(name, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
