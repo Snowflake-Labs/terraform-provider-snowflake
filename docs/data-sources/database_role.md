@@ -24,7 +24,7 @@ data "snowflake_database_role" "db_role" {
 ### Required
 
 - `database` (String) The database from which to return the database role from.
-- `role` (String) Database role name.
+- `name` (String) Database role name.
 
 ### Read-Only
 
