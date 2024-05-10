@@ -2,6 +2,7 @@ package datasources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -26,17 +27,14 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				Config: databaseRole(dbName, dbRoleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "role"),
+					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "name"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "comment"),
 					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "owner"),
 				),
 			},
 			{
-				Config: databaseRoleEmpty(dbName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("data.snowflake_database_role.db_role", "comment"),
-					resource.TestCheckNoResourceAttr("data.snowflake_database_role.db_role", "owner"),
-				),
+				Config:      databaseRoleEmpty(dbName),
+				ExpectError: regexp.MustCompile("Error: object does not exist"),
 			},
 		},
 	})
@@ -56,7 +54,7 @@ func databaseRole(dbName, dbRoleName string) string {
 
 		data snowflake_database_role "db_role" {
             database = snowflake_database.test_db.name
-			role = snowflake_database_role.test_role.name
+			name = snowflake_database_role.test_role.name
 			depends_on = [
 				snowflake_database_role.test_role,
 			]
@@ -72,7 +70,7 @@ func databaseRoleEmpty(dbName string) string {
 
 		data snowflake_database_role "db_role" {
             database = snowflake_database.test_db.name
-			role = "dummy_missing"
+			name = "dummy_missing"
 			depends_on = [
 				snowflake_database.test_db,
 			]

@@ -16,7 +16,7 @@ var databaseRoleSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "The database from which to return the database role from.",
 	},
-	"role": {
+	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Database role name.",
@@ -44,31 +44,28 @@ func DatabaseRole() *schema.Resource {
 // ReadDatabaseRole Reads the database role metadata information.
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	d.SetId("database_role_read")
 
 	databaseName := d.Get("database").(string)
-	roleName := d.Get("role").(string)
+	roleName := d.Get("name").(string)
 
 	ctx := context.Background()
-	showRequest := sdk.NewShowDatabaseRoleRequest(sdk.NewAccountObjectIdentifier(databaseName)).WithLike(roleName)
-	extractedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
+	dbObjId := sdk.NewDatabaseObjectIdentifier(databaseName, roleName)
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, dbObjId)
 	if err != nil {
 		log.Printf("[DEBUG] unable to show database role %s in db (%s)", roleName, databaseName)
 		d.SetId("")
 		return err
 	}
 
-	for _, databaseRole := range extractedDatabaseRoles {
-		err = d.Set("comment", databaseRole.Comment)
-		if err != nil {
-			return err
-		}
-		err = d.Set("owner", databaseRole.Owner)
-		if err != nil {
-			return err
-		}
-		break
+	err = d.Set("comment", databaseRole.Comment)
+	if err != nil {
+		return err
+	}
+	err = d.Set("owner", databaseRole.Owner)
+	if err != nil {
+		return err
 	}
 
-	return err
+	d.SetId("database_role_read")
+	return nil
 }
