@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
 func main() {

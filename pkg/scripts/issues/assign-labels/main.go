@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
 var lookupTable = make(map[string]string)
@@ -19,6 +20,10 @@ var lookupTable = make(map[string]string)
 func init() {
 	for _, label := range issues.RepositoryLabels {
 		parts := strings.Split(label, ":")
+		if len(parts) != 2 {
+			panic(fmt.Sprintf("invalid label: %s", label))
+		}
+
 		labelType := parts[0]
 		labelValue := parts[1]
 
@@ -26,7 +31,7 @@ func init() {
 		case "category":
 			lookupTable[strings.ToUpper(labelValue)] = label
 		case "resource", "data_source":
-			lookupTable[fmt.Sprintf("snowfalke_%s", labelValue)] = label
+			lookupTable[fmt.Sprintf("snowflake_%s", labelValue)] = label
 		}
 	}
 }
