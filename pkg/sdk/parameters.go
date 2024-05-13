@@ -751,26 +751,6 @@ func (v *SessionParametersUnset) validate() error {
 	return nil
 }
 
-type LogLevel string
-
-const (
-	LogLevelTrace LogLevel = "TRACE"
-	LogLevelDebug LogLevel = "DEBUG"
-	LogLevelInfo  LogLevel = "INFO"
-	LogLevelWarn  LogLevel = "WARN"
-	LogLevelError LogLevel = "ERROR"
-	LogLevelFatal LogLevel = "FATAL"
-	LogLevelOff   LogLevel = "OFF"
-)
-
-type TraceLevel string
-
-const (
-	TraceLevelAlways  TraceLevel = "ALWAYS"
-	TraceLevelOnEvent TraceLevel = "ON_EVENT"
-	TraceLevelOff     TraceLevel = "OFF"
-)
-
 // ObjectParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#object-parameters.
 type ObjectParameters struct {
 	DataRetentionTimeInDays             *int           `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`

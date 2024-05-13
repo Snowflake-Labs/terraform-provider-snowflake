@@ -6,6 +6,15 @@ import (
 )
 
 func TestDatabasesCreate(t *testing.T) {
+	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
+		opts := &CreateDatabaseOptions{
+			name:           NewAccountObjectIdentifier("db"),
+			ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
+			Catalog:        Pointer(NewAccountObjectIdentifier("")),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateDatabaseOptions", "ExternalVolume"), errInvalidIdentifier("CreateDatabaseOptions", "Catalog"))
+	})
+
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateDatabaseOptions{
 			name: NewAccountObjectIdentifier("db"),
@@ -20,6 +29,8 @@ func TestDatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
+		externalVolumeId := randomAccountObjectIdentifier()
+		catalogId := randomAccountObjectIdentifier()
 		opts := &CreateDatabaseOptions{
 			name:                       NewAccountObjectIdentifier("db"),
 			OrReplace:                  Bool(true),
@@ -27,6 +38,8 @@ func TestDatabasesCreate(t *testing.T) {
 			Comment:                    String("comment"),
 			DataRetentionTimeInDays:    Int(1),
 			MaxDataExtensionTimeInDays: Int(1),
+			ExternalVolume:             &externalVolumeId,
+			Catalog:                    &catalogId,
 			Tag: []TagAssociation{
 				{
 					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
@@ -75,6 +88,33 @@ func TestDatabasesDrop(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE "db1"`)
 	})
+
+	t.Run("all options - cascade", func(t *testing.T) {
+		opts := &DropDatabaseOptions{
+			name:     NewAccountObjectIdentifier("db1"),
+			IfExists: Bool(true),
+			Cascade:  Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE IF EXISTS "db1" CASCADE`)
+	})
+
+	t.Run("all options - restrict", func(t *testing.T) {
+		opts := &DropDatabaseOptions{
+			name:     NewAccountObjectIdentifier("db1"),
+			IfExists: Bool(true),
+			Restrict: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE IF EXISTS "db1" RESTRICT`)
+	})
+
+	t.Run("validation: cascade and restrict set together", func(t *testing.T) {
+		opts := &DropDatabaseOptions{
+			name:     NewAccountObjectIdentifier("db1"),
+			Cascade:  Bool(true),
+			Restrict: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DropDatabaseOptions", "Cascade", "Restrict"))
+	})
 }
 
 func TestDatabasesUndrop(t *testing.T) {
@@ -96,6 +136,17 @@ func TestDatabasesDescribe(t *testing.T) {
 }
 
 func TestDatabasesAlter(t *testing.T) {
+	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
+		opts := &AlterDatabaseOptions{
+			name: NewAccountObjectIdentifier("db1"),
+			Set: &DatabaseSet{
+				ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
+				Catalog:        Pointer(NewAccountObjectIdentifier("")),
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "ExternalVolume"), errInvalidIdentifier("DatabaseSet", "Catalog"))
+	})
+
 	t.Run("rename", func(t *testing.T) {
 		opts := &AlterDatabaseOptions{
 			IfExists: Bool(true),
@@ -121,15 +172,24 @@ func TestDatabasesAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SWAP WITH "db2"`)
 	})
 
-	t.Run("set comment and retention time in days", func(t *testing.T) {
+	t.Run("set", func(t *testing.T) {
+		externalVolumeId := randomAccountObjectIdentifier()
+		catalogId := randomAccountObjectIdentifier()
 		opts := &AlterDatabaseOptions{
 			name: NewAccountObjectIdentifier("db1"),
 			Set: &DatabaseSet{
-				DataRetentionTimeInDays: Int(1),
-				Comment:                 String("comment"),
+				DataRetentionTimeInDays:    Int(1),
+				MaxDataExtensionTimeInDays: Int(1),
+				ExternalVolume:             &externalVolumeId,
+				Catalog:                    &catalogId,
+				DefaultDDLCollation:        String("en_US"),
+				//TODO: Finish
+				//LogLevel:                   String("ERROR"),
+				//TraceLevel:                 String("ON_EVENT"),
+				Comment: String("comment"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SET DATA_RETENTION_TIME_IN_DAYS = 1, COMMENT = 'comment'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SET DATA_RETENTION_TIME_IN_DAYS = 1, MAX_DATA_EXTENSION_TIME_IN_DAYS = 1, EXTERNAL_VOLUME = %s, CATALOG = %s, DEFAULT_DDL_COLLATION = 'en_US', LOG_LEVEL = 'ERROR', TRACE_LEVEL = 'ON_EVENT', COMMENT = 'comment'`, externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
 	})
 
 	t.Run("unset comment", func(t *testing.T) {

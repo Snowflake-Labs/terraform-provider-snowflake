@@ -220,3 +220,23 @@ var (
 func DistributionPointer(v Distribution) *Distribution {
 	return &v
 }
+
+type LogLevel string
+
+const (
+	LogLevelTrace LogLevel = "TRACE"
+	LogLevelDebug LogLevel = "DEBUG"
+	LogLevelInfo  LogLevel = "INFO"
+	LogLevelWarn  LogLevel = "WARN"
+	LogLevelError LogLevel = "ERROR"
+	LogLevelFatal LogLevel = "FATAL"
+	LogLevelOff   LogLevel = "OFF"
+)
+
+type TraceLevel string
+
+const (
+	TraceLevelAlways  TraceLevel = "ALWAYS"
+	TraceLevelOnEvent TraceLevel = "ON_EVENT"
+	TraceLevelOff     TraceLevel = "OFF"
+)
