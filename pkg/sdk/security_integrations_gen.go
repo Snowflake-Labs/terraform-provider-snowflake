@@ -54,18 +54,18 @@ type EmailPattern struct {
 
 // CreateSCIMSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim.
 type CreateSCIMSecurityIntegrationOptions struct {
-	create              bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration bool                     `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists         *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier  `ddl:"identifier"`
-	integrationType     string                   `ddl:"static" sql:"TYPE = SCIM"`
-	Enabled             bool                     `ddl:"parameter" sql:"ENABLED"`
-	ScimClient          string                   `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
-	RunAsRole           string                   `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
-	NetworkPolicy       *AccountObjectIdentifier `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
-	SyncPassword        *bool                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
-	Comment             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create              bool                                     `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                                    `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration bool                                     `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists         *bool                                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                AccountObjectIdentifier                  `ddl:"identifier"`
+	integrationType     string                                   `ddl:"static" sql:"TYPE = SCIM"`
+	Enabled             bool                                     `ddl:"parameter" sql:"ENABLED"`
+	ScimClient          *SCIMSecurityIntegrationSCIMClientOption `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
+	RunAsRole           *SCIMSecurityIntegrationRunAsRoleOption  `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
+	NetworkPolicy       *AccountObjectIdentifier                 `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
+	SyncPassword        *bool                                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
+	Comment             *string                                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // AlterSAML2IntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2.

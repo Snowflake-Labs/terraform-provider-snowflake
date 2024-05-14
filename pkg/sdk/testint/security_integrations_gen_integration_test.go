@@ -74,7 +74,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(roleID, sdk.GrantRole{Role: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole))}))
 		require.NoError(t, err)
 
-		scimReq := sdk.NewCreateSCIMSecurityIntegrationRequest(siID, false, "GENERIC", roleID.Name())
+		scimReq := sdk.NewCreateSCIMSecurityIntegrationRequest(siID, false, &sdk.SCIMSecurityIntegrationSCIMClientGeneric, &sdk.SCIMSecurityIntegrationRunAsRoleGenericScimProvisioner)
 		if with != nil {
 			with(scimReq)
 		}

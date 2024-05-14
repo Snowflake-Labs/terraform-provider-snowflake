@@ -38,10 +38,10 @@ type CreateSAML2SecurityIntegrationRequest struct {
 type CreateSCIMSecurityIntegrationRequest struct {
 	OrReplace     *bool
 	IfNotExists   *bool
-	name          AccountObjectIdentifier // required
-	Enabled       bool                    // required
-	ScimClient    string                  // required
-	RunAsRole     string                  // required
+	name          AccountObjectIdentifier                  // required
+	Enabled       bool                                     // required
+	ScimClient    *SCIMSecurityIntegrationSCIMClientOption // required
+	RunAsRole     *SCIMSecurityIntegrationRunAsRoleOption  // required
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
 	Comment       *string

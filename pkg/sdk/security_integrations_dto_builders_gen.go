@@ -95,8 +95,8 @@ func (s *CreateSAML2SecurityIntegrationRequest) WithComment(Comment *string) *Cr
 func NewCreateSCIMSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
-	ScimClient string,
-	RunAsRole string,
+	ScimClient *SCIMSecurityIntegrationSCIMClientOption,
+	RunAsRole *SCIMSecurityIntegrationRunAsRoleOption,
 ) *CreateSCIMSecurityIntegrationRequest {
 	s := CreateSCIMSecurityIntegrationRequest{}
 	s.name = name

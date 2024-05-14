@@ -4,6 +4,22 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type SCIMSecurityIntegrationSCIMClientOption string
+
+var (
+	SCIMSecurityIntegrationSCIMClientOkta    SCIMSecurityIntegrationSCIMClientOption = "OKTA"
+	SCIMSecurityIntegrationSCIMClientAzure   SCIMSecurityIntegrationSCIMClientOption = "AZURE"
+	SCIMSecurityIntegrationSCIMClientGeneric SCIMSecurityIntegrationSCIMClientOption = "GENERIC"
+)
+
+type SCIMSecurityIntegrationRunAsRoleOption string
+
+var (
+	SCIMSecurityIntegrationRunAsRoleOktaProvisioner        SCIMSecurityIntegrationRunAsRoleOption = "OKTA_PROVISIONER"
+	SCIMSecurityIntegrationRunAsRoleAadProvisioner         SCIMSecurityIntegrationRunAsRoleOption = "AAD_PROVISIONER"
+	SCIMSecurityIntegrationRunAsRoleGenericScimProvisioner SCIMSecurityIntegrationRunAsRoleOption = "GENERIC_SCIM_PROVISIONER"
+)
+
 var (
 	userDomainDef   = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
 	emailPatternDef = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
@@ -118,8 +134,16 @@ var SecurityIntegrationsDef = g.NewInterface(
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SCIM")).
 				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
-				TextAssignment("SCIM_CLIENT", g.ParameterOptions().Required().SingleQuotes()).
-				TextAssignment("RUN_AS_ROLE", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalAssignment(
+					"SCIM_CLIENT",
+					g.KindOfT[SCIMSecurityIntegrationSCIMClientOption](),
+					g.ParameterOptions().SingleQuotes().Required(),
+				).
+				OptionalAssignment(
+					"RUN_AS_ROLE",
+					g.KindOfT[SCIMSecurityIntegrationRunAsRoleOption](),
+					g.ParameterOptions().SingleQuotes().Required(),
+				).
 				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 				OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions())
 		}),
