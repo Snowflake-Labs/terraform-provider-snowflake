@@ -4,6 +4,11 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+var (
+	userDomainDef   = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
+	emailPatternDef = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
+)
+
 func createSecurityIntegrationOperation(structName string, apply func(qs *g.QueryStruct) *g.QueryStruct) *g.QueryStruct {
 	qs := g.NewQueryStruct(structName).
 		Create().
@@ -31,6 +36,33 @@ func alterSecurityIntegrationOperation(structName string, apply func(qs *g.Query
 		WithValidation(g.ValidIdentifier, "name")
 }
 
+var saml2IntegrationSetDef = g.NewQueryStruct("SAML2IntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("SAML2_ISSUER", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("SAML2_SSO_URL", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("SAML2_PROVIDER", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("SAML2_X509_CERT", g.ParameterOptions().SingleQuotes()).
+	ListAssignment("ALLOWED_USER_DOMAINS", "UserDomain", g.ParameterOptions().Parentheses()).
+	ListAssignment("ALLOWED_EMAIL_PATTERNS", "EmailPattern", g.ParameterOptions().Parentheses()).
+	OptionalTextAssignment("SAML2_SP_INITIATED_LOGIN_PAGE_LABEL", g.ParameterOptions().SingleQuotes()).
+	OptionalBooleanAssignment("SAML2_ENABLE_SP_INITIATED", g.ParameterOptions()).
+	OptionalTextAssignment("SAML2_SNOWFLAKE_X509_CERT", g.ParameterOptions().SingleQuotes()).
+	OptionalBooleanAssignment("SAML2_SIGN_REQUEST", g.ParameterOptions()).
+	OptionalTextAssignment("SAML2_REQUESTED_NAMEID_FORMAT", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("SAML2_POST_LOGOUT_REDIRECT_URL", g.ParameterOptions().SingleQuotes()).
+	OptionalBooleanAssignment("SAML2_FORCE_AUTHN", g.ParameterOptions()).
+	OptionalTextAssignment("SAML2_SNOWFLAKE_ISSUER_URL", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("SAML2_SNOWFLAKE_ACS_URL", g.ParameterOptions().SingleQuotes()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2Issuer", "Saml2SsoUrl", "Saml2Provider", "Saml2X509Cert", "AllowedUserDomains", "AllowedEmailPatterns",
+		"Saml2SpInitiatedLoginPageLabel", "Saml2EnableSpInitiated", "Saml2SnowflakeX509Cert", "Saml2SignRequest", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl",
+		"Saml2ForceAuthn", "Saml2SnowflakeIssuerUrl", "Saml2SnowflakeAcsUrl", "Comment")
+
+var saml2IntegrationUnsetDef = g.NewQueryStruct("SAML2IntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("SAML2_FORCE_AUTHN").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2ForceAuthn")
+
 var scimIntegrationSetDef = g.NewQueryStruct("SCIMIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
@@ -50,6 +82,32 @@ var SecurityIntegrationsDef = g.NewInterface(
 	g.KindOfT[AccountObjectIdentifier](),
 ).
 	CustomOperation(
+		"CreateSAML2",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2",
+		createSecurityIntegrationOperation("CreateSAML2Integration", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SAML2")).
+				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				TextAssignment("SAML2_ISSUER", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("SAML2_SSO_URL", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("SAML2_PROVIDER", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("SAML2_X509_CERT", g.ParameterOptions().Required().SingleQuotes()).
+				ListAssignment("ALLOWED_USER_DOMAINS", "UserDomain", g.ParameterOptions().Parentheses()).
+				ListAssignment("ALLOWED_EMAIL_PATTERNS", "EmailPattern", g.ParameterOptions().Parentheses()).
+				OptionalTextAssignment("SAML2_SP_INITIATED_LOGIN_PAGE_LABEL", g.ParameterOptions().SingleQuotes()).
+				OptionalBooleanAssignment("SAML2_ENABLE_SP_INITIATED", g.ParameterOptions()).
+				OptionalTextAssignment("SAML2_SNOWFLAKE_X509_CERT", g.ParameterOptions().SingleQuotes()).
+				OptionalBooleanAssignment("SAML2_SIGN_REQUEST", g.ParameterOptions()).
+				OptionalTextAssignment("SAML2_REQUESTED_NAMEID_FORMAT", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("SAML2_POST_LOGOUT_REDIRECT_URL", g.ParameterOptions().SingleQuotes()).
+				OptionalBooleanAssignment("SAML2_FORCE_AUTHN", g.ParameterOptions()).
+				OptionalTextAssignment("SAML2_SNOWFLAKE_ISSUER_URL", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("SAML2_SNOWFLAKE_ACS_URL", g.ParameterOptions().SingleQuotes())
+		}),
+		userDomainDef,
+		emailPatternDef,
+	).
+	CustomOperation(
 		"CreateSCIM",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim",
 		createSecurityIntegrationOperation("CreateSCIMIntegration", func(qs *g.QueryStruct) *g.QueryStruct {
@@ -63,6 +121,21 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
+		"AlterSAML2Integration",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2",
+		alterSecurityIntegrationOperation("AlterSAML2Integration", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				saml2IntegrationSetDef,
+				g.KeywordOptions().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				saml2IntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).OptionalSQL("REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY")
+		}),
+	).
+	CustomOperation(
 		"AlterSCIMIntegration",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim",
 		alterSecurityIntegrationOperation("AlterSCIMIntegration", func(qs *g.QueryStruct) *g.QueryStruct {
@@ -73,7 +146,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 			).OptionalQueryStructField(
 				"Unset",
 				scimIntegrationUnsetDef,
-				g.KeywordOptions().SQL("UNSET"),
+				g.ListOptions().NoParentheses().SQL("UNSET"),
 			)
 		}),
 	).

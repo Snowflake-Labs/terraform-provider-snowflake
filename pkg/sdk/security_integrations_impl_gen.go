@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -13,7 +12,17 @@ type securityIntegrations struct {
 	client *Client
 }
 
+func (v *securityIntegrations) CreateSAML2(ctx context.Context, request *CreateSAML2SecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *securityIntegrations) CreateSCIM(ctx context.Context, request *CreateSCIMSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) AlterSAML2Integration(ctx context.Context, request *AlterSAML2IntegrationSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -36,7 +45,6 @@ func (v *securityIntegrations) Describe(ctx context.Context, id AccountObjectIde
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(rows)
 	return convertRows[securityIntegrationDescRow, SecurityIntegrationProperty](rows), nil
 }
 
@@ -59,6 +67,32 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
+func (r *CreateSAML2SecurityIntegrationRequest) toOpts() *CreateSAML2SecurityIntegrationOptions {
+	opts := &CreateSAML2SecurityIntegrationOptions{
+		OrReplace:                      r.OrReplace,
+		IfNotExists:                    r.IfNotExists,
+		name:                           r.name,
+		Enabled:                        r.Enabled,
+		Saml2Issuer:                    r.Saml2Issuer,
+		Saml2SsoUrl:                    r.Saml2SsoUrl,
+		Saml2Provider:                  r.Saml2Provider,
+		Saml2X509Cert:                  r.Saml2X509Cert,
+		AllowedUserDomains:             r.AllowedUserDomains,
+		AllowedEmailPatterns:           r.AllowedEmailPatterns,
+		Saml2SpInitiatedLoginPageLabel: r.Saml2SpInitiatedLoginPageLabel,
+		Saml2EnableSpInitiated:         r.Saml2EnableSpInitiated,
+		Saml2SnowflakeX509Cert:         r.Saml2SnowflakeX509Cert,
+		Saml2SignRequest:               r.Saml2SignRequest,
+		Saml2RequestedNameidFormat:     r.Saml2RequestedNameidFormat,
+		Saml2PostLogoutRedirectUrl:     r.Saml2PostLogoutRedirectUrl,
+		Saml2ForceAuthn:                r.Saml2ForceAuthn,
+		Saml2SnowflakeIssuerUrl:        r.Saml2SnowflakeIssuerUrl,
+		Saml2SnowflakeAcsUrl:           r.Saml2SnowflakeAcsUrl,
+		Comment:                        r.Comment,
+	}
+	return opts
+}
+
 func (r *CreateSCIMSecurityIntegrationRequest) toOpts() *CreateSCIMSecurityIntegrationOptions {
 	opts := &CreateSCIMSecurityIntegrationOptions{
 		OrReplace:     r.OrReplace,
@@ -70,6 +104,45 @@ func (r *CreateSCIMSecurityIntegrationRequest) toOpts() *CreateSCIMSecurityInteg
 		NetworkPolicy: r.NetworkPolicy,
 		SyncPassword:  r.SyncPassword,
 		Comment:       r.Comment,
+	}
+	return opts
+}
+
+func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2IntegrationSecurityIntegrationOptions {
+	opts := &AlterSAML2IntegrationSecurityIntegrationOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		RefreshSaml2SnowflakePrivateKey: r.RefreshSaml2SnowflakePrivateKey,
+		SetTag:                          r.SetTag,
+		UnsetTag:                        r.UnsetTag,
+	}
+	if r.Set != nil {
+		opts.Set = &SAML2IntegrationSet{
+			Enabled:                        r.Set.Enabled,
+			Saml2Issuer:                    r.Set.Saml2Issuer,
+			Saml2SsoUrl:                    r.Set.Saml2SsoUrl,
+			Saml2Provider:                  r.Set.Saml2Provider,
+			Saml2X509Cert:                  r.Set.Saml2X509Cert,
+			AllowedUserDomains:             r.Set.AllowedUserDomains,
+			AllowedEmailPatterns:           r.Set.AllowedEmailPatterns,
+			Saml2SpInitiatedLoginPageLabel: r.Set.Saml2SpInitiatedLoginPageLabel,
+			Saml2EnableSpInitiated:         r.Set.Saml2EnableSpInitiated,
+			Saml2SnowflakeX509Cert:         r.Set.Saml2SnowflakeX509Cert,
+			Saml2SignRequest:               r.Set.Saml2SignRequest,
+			Saml2RequestedNameidFormat:     r.Set.Saml2RequestedNameidFormat,
+			Saml2PostLogoutRedirectUrl:     r.Set.Saml2PostLogoutRedirectUrl,
+			Saml2ForceAuthn:                r.Set.Saml2ForceAuthn,
+			Saml2SnowflakeIssuerUrl:        r.Set.Saml2SnowflakeIssuerUrl,
+			Saml2SnowflakeAcsUrl:           r.Set.Saml2SnowflakeAcsUrl,
+			Comment:                        r.Set.Comment,
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &SAML2IntegrationUnset{
+			Enabled:         r.Unset.Enabled,
+			Saml2ForceAuthn: r.Unset.Saml2ForceAuthn,
+		}
 	}
 	return opts
 }
