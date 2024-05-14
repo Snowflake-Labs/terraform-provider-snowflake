@@ -74,11 +74,11 @@ type AlterSAML2IntegrationSecurityIntegrationOptions struct {
 	securityIntegration             bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists                        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name                            AccountObjectIdentifier `ddl:"identifier"`
+	SetTags                         []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags                       []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 	Set                             *SAML2IntegrationSet    `ddl:"keyword" sql:"SET"`
 	Unset                           *SAML2IntegrationUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	RefreshSaml2SnowflakePrivateKey *bool                   `ddl:"keyword" sql:"REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY"`
-	SetTag                          []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTag                        []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type SAML2IntegrationSet struct {
@@ -102,8 +102,11 @@ type SAML2IntegrationSet struct {
 }
 
 type SAML2IntegrationUnset struct {
-	Enabled         *bool `ddl:"keyword" sql:"ENABLED"`
-	Saml2ForceAuthn *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`
+	Enabled                    *bool `ddl:"keyword" sql:"ENABLED"`
+	Saml2ForceAuthn            *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`
+	Saml2RequestedNameidFormat *bool `ddl:"keyword" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
+	Saml2PostLogoutRedirectUrl *bool `ddl:"keyword" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 // AlterSCIMIntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim.
@@ -112,10 +115,10 @@ type AlterSCIMIntegrationSecurityIntegrationOptions struct {
 	securityIntegration bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier `ddl:"identifier"`
+	SetTags             []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *SCIMIntegrationSet     `ddl:"keyword" sql:"SET"`
 	Unset               *SCIMIntegrationUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTag              []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTag            []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type SCIMIntegrationSet struct {
@@ -126,6 +129,7 @@ type SCIMIntegrationSet struct {
 }
 
 type SCIMIntegrationUnset struct {
+	Enabled       *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool `ddl:"keyword" sql:"SYNC_PASSWORD"`
 	Comment       *bool `ddl:"keyword" sql:"COMMENT"`

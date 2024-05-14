@@ -50,11 +50,11 @@ type CreateSCIMSecurityIntegrationRequest struct {
 type AlterSAML2IntegrationSecurityIntegrationRequest struct {
 	IfExists                        *bool
 	name                            AccountObjectIdentifier // required
+	SetTags                         []TagAssociation
+	UnsetTags                       []ObjectIdentifier
 	Set                             *SAML2IntegrationSetRequest
 	Unset                           *SAML2IntegrationUnsetRequest
 	RefreshSaml2SnowflakePrivateKey *bool
-	SetTag                          []TagAssociation
-	UnsetTag                        []ObjectIdentifier
 }
 
 type SAML2IntegrationSetRequest struct {
@@ -78,17 +78,20 @@ type SAML2IntegrationSetRequest struct {
 }
 
 type SAML2IntegrationUnsetRequest struct {
-	Enabled         *bool
-	Saml2ForceAuthn *bool
+	Enabled                    *bool
+	Saml2ForceAuthn            *bool
+	Saml2RequestedNameidFormat *bool
+	Saml2PostLogoutRedirectUrl *bool
+	Comment                    *bool
 }
 
 type AlterSCIMIntegrationSecurityIntegrationRequest struct {
-	IfExists *bool
-	name     AccountObjectIdentifier // required
-	Set      *SCIMIntegrationSetRequest
-	Unset    *SCIMIntegrationUnsetRequest
-	SetTag   []TagAssociation
-	UnsetTag []ObjectIdentifier
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Set       *SCIMIntegrationSetRequest
+	Unset     *SCIMIntegrationUnsetRequest
 }
 
 type SCIMIntegrationSetRequest struct {
@@ -99,6 +102,7 @@ type SCIMIntegrationSetRequest struct {
 }
 
 type SCIMIntegrationUnsetRequest struct {
+	Enabled       *bool
 	NetworkPolicy *bool
 	SyncPassword  *bool
 	Comment       *bool

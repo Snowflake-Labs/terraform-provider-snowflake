@@ -144,6 +144,16 @@ func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithIfExists(IfExists 
 	return s
 }
 
+func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSAML2IntegrationSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSAML2IntegrationSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
 func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithSet(Set *SAML2IntegrationSetRequest) *AlterSAML2IntegrationSecurityIntegrationRequest {
 	s.Set = Set
 	return s
@@ -156,16 +166,6 @@ func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithUnset(Unset *SAML2
 
 func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithRefreshSaml2SnowflakePrivateKey(RefreshSaml2SnowflakePrivateKey *bool) *AlterSAML2IntegrationSecurityIntegrationRequest {
 	s.RefreshSaml2SnowflakePrivateKey = RefreshSaml2SnowflakePrivateKey
-	return s
-}
-
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithSetTag(SetTag []TagAssociation) *AlterSAML2IntegrationSecurityIntegrationRequest {
-	s.SetTag = SetTag
-	return s
-}
-
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithUnsetTag(UnsetTag []ObjectIdentifier) *AlterSAML2IntegrationSecurityIntegrationRequest {
-	s.UnsetTag = UnsetTag
 	return s
 }
 
@@ -272,6 +272,21 @@ func (s *SAML2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool
 	return s
 }
 
+func (s *SAML2IntegrationUnsetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *bool) *SAML2IntegrationUnsetRequest {
+	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
+	return s
+}
+
+func (s *SAML2IntegrationUnsetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *bool) *SAML2IntegrationUnsetRequest {
+	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
+	return s
+}
+
+func (s *SAML2IntegrationUnsetRequest) WithComment(Comment *bool) *SAML2IntegrationUnsetRequest {
+	s.Comment = Comment
+	return s
+}
+
 func NewAlterSCIMIntegrationSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 ) *AlterSCIMIntegrationSecurityIntegrationRequest {
@@ -285,6 +300,16 @@ func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithIfExists(IfExists *
 	return s
 }
 
+func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSCIMIntegrationSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSCIMIntegrationSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
 func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSet(Set *SCIMIntegrationSetRequest) *AlterSCIMIntegrationSecurityIntegrationRequest {
 	s.Set = Set
 	return s
@@ -292,16 +317,6 @@ func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSet(Set *SCIMIntegr
 
 func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithUnset(Unset *SCIMIntegrationUnsetRequest) *AlterSCIMIntegrationSecurityIntegrationRequest {
 	s.Unset = Unset
-	return s
-}
-
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSetTag(SetTag []TagAssociation) *AlterSCIMIntegrationSecurityIntegrationRequest {
-	s.SetTag = SetTag
-	return s
-}
-
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithUnsetTag(UnsetTag []ObjectIdentifier) *AlterSCIMIntegrationSecurityIntegrationRequest {
-	s.UnsetTag = UnsetTag
 	return s
 }
 
@@ -331,6 +346,11 @@ func (s *SCIMIntegrationSetRequest) WithComment(Comment *string) *SCIMIntegratio
 
 func NewSCIMIntegrationUnsetRequest() *SCIMIntegrationUnsetRequest {
 	return &SCIMIntegrationUnsetRequest{}
+}
+
+func (s *SCIMIntegrationUnsetRequest) WithEnabled(Enabled *bool) *SCIMIntegrationUnsetRequest {
+	s.Enabled = Enabled
+	return s
 }
 
 func (s *SCIMIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *SCIMIntegrationUnsetRequest {

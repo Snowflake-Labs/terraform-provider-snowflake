@@ -28,12 +28,12 @@ func alterSecurityIntegrationOperation(structName string, apply func(qs *g.Query
 		Alter().
 		SQL("SECURITY INTEGRATION").
 		IfExists().
-		Name()
-	qs = apply(qs)
-	return qs.
-		NamedList("SET TAG", g.KindOfT[TagAssociation]()).
-		NamedList("UNSET TAG", g.KindOfT[ObjectIdentifier]()).
+		Name().
+		OptionalSetTags().
+		OptionalUnsetTags().
 		WithValidation(g.ValidIdentifier, "name")
+	qs = apply(qs)
+	return qs
 }
 
 var saml2IntegrationSetDef = g.NewQueryStruct("SAML2IntegrationSet").
@@ -61,7 +61,10 @@ var saml2IntegrationSetDef = g.NewQueryStruct("SAML2IntegrationSet").
 var saml2IntegrationUnsetDef = g.NewQueryStruct("SAML2IntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("SAML2_FORCE_AUTHN").
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2ForceAuthn")
+	OptionalSQL("SAML2_REQUESTED_NAMEID_FORMAT").
+	OptionalSQL("SAML2_POST_LOGOUT_REDIRECT_URL").
+	OptionalSQL("COMMENT").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment")
 
 var scimIntegrationSetDef = g.NewQueryStruct("SCIMIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
@@ -71,10 +74,11 @@ var scimIntegrationSetDef = g.NewQueryStruct("SCIMIntegrationSet").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
 
 var scimIntegrationUnsetDef = g.NewQueryStruct("SCIMIntegrationUnset").
+	OptionalSQL("ENABLED").
 	OptionalSQL("NETWORK_POLICY").
 	OptionalSQL("SYNC_PASSWORD").
 	OptionalSQL("COMMENT").
-	WithValidation(g.AtLeastOneValueSet, "NetworkPolicy", "SyncPassword", "Comment")
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
 
 var SecurityIntegrationsDef = g.NewInterface(
 	"SecurityIntegrations",
@@ -132,7 +136,8 @@ var SecurityIntegrationsDef = g.NewInterface(
 				"Unset",
 				saml2IntegrationUnsetDef,
 				g.ListOptions().NoParentheses().SQL("UNSET"),
-			).OptionalSQL("REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY")
+			).OptionalSQL("REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY").
+				WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "RefreshSaml2SnowflakePrivateKey", "SetTags", "UnsetTags")
 		}),
 	).
 	CustomOperation(
@@ -147,7 +152,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 				"Unset",
 				scimIntegrationUnsetDef,
 				g.ListOptions().NoParentheses().SQL("UNSET"),
-			)
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),
 	).
 	DropOperation(

@@ -110,12 +110,12 @@ func (r *CreateSCIMSecurityIntegrationRequest) toOpts() *CreateSCIMSecurityInteg
 
 func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2IntegrationSecurityIntegrationOptions {
 	opts := &AlterSAML2IntegrationSecurityIntegrationOptions{
-		IfExists: r.IfExists,
-		name:     r.name,
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
 
 		RefreshSaml2SnowflakePrivateKey: r.RefreshSaml2SnowflakePrivateKey,
-		SetTag:                          r.SetTag,
-		UnsetTag:                        r.UnsetTag,
 	}
 	if r.Set != nil {
 		opts.Set = &SAML2IntegrationSet{
@@ -140,8 +140,11 @@ func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2In
 	}
 	if r.Unset != nil {
 		opts.Unset = &SAML2IntegrationUnset{
-			Enabled:         r.Unset.Enabled,
-			Saml2ForceAuthn: r.Unset.Saml2ForceAuthn,
+			Enabled:                    r.Unset.Enabled,
+			Saml2ForceAuthn:            r.Unset.Saml2ForceAuthn,
+			Saml2RequestedNameidFormat: r.Unset.Saml2RequestedNameidFormat,
+			Saml2PostLogoutRedirectUrl: r.Unset.Saml2PostLogoutRedirectUrl,
+			Comment:                    r.Unset.Comment,
 		}
 	}
 	return opts
@@ -149,11 +152,10 @@ func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2In
 
 func (r *AlterSCIMIntegrationSecurityIntegrationRequest) toOpts() *AlterSCIMIntegrationSecurityIntegrationOptions {
 	opts := &AlterSCIMIntegrationSecurityIntegrationOptions{
-		IfExists: r.IfExists,
-		name:     r.name,
-
-		SetTag:   r.SetTag,
-		UnsetTag: r.UnsetTag,
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
 		opts.Set = &SCIMIntegrationSet{
@@ -165,6 +167,7 @@ func (r *AlterSCIMIntegrationSecurityIntegrationRequest) toOpts() *AlterSCIMInte
 	}
 	if r.Unset != nil {
 		opts.Unset = &SCIMIntegrationUnset{
+			Enabled:       r.Unset.Enabled,
 			NetworkPolicy: r.Unset.NetworkPolicy,
 			SyncPassword:  r.Unset.SyncPassword,
 			Comment:       r.Unset.Comment,
@@ -210,6 +213,7 @@ func (r securityIntegrationShowRow) convert() *SecurityIntegration {
 		IntegrationType: r.Type,
 		Enabled:         r.Enabled,
 		CreatedOn:       r.CreatedOn,
+		Category:        r.Category,
 	}
 	if r.Comment.Valid {
 		s.Comment = r.Comment.String

@@ -49,11 +49,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSAML2SecurityIntegrationRequest)) {
 		t.Helper()
+		_, err := client.ExecForTests(ctx, "ALTER ACCOUNT SET ENABLE_IDENTIFIER_FIRST_LOGIN = true")
+		require.NoError(t, err)
+
 		saml2Req := sdk.NewCreateSAML2SecurityIntegrationRequest(siID, false, "test", "https://example.com", "Custom", x509)
 		if with != nil {
 			with(saml2Req)
 		}
-		err := client.SecurityIntegrations.CreateSAML2(ctx, saml2Req)
+		err = client.SecurityIntegrations.CreateSAML2(ctx, saml2Req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
 	}
@@ -86,6 +89,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Equal(t, siType, si.IntegrationType)
 		assert.Equal(t, enabled, si.Enabled)
 		assert.Equal(t, comment, si.Comment)
+		assert.Equal(t, "SECURITY", si.Category)
 	}
 
 	assertSCIMDescribe := func(details []sdk.SecurityIntegrationProperty, enabled, networkPolicy, runAsRole, syncPassword, comment string) {
@@ -109,6 +113,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		comment                   string
 		snowflakeIssuerURL        string
 		snowflakeAcsURL           string
+		allowedUserDomains        string
+		allowedEmailPatterns      string
 	}
 
 	assertSAML2Describe := func(details []sdk.SecurityIntegrationProperty, d saml2details) {
@@ -128,13 +134,15 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SNOWFLAKE_ISSUER_URL", Type: "String", Value: d.snowflakeIssuerURL, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SNOWFLAKE_ACS_URL", Type: "String", Value: d.snowflakeAcsURL, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_USER_DOMAINS", Type: "List", Value: d.allowedUserDomains, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
 
 	t.Run("CreateSAML2", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		createSAML2Integration(t, id, func(r *sdk.CreateSAML2SecurityIntegrationRequest) {
-			r. // WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}). TODO: fix
-				// WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}). TODO: fix
+			r.WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
+				WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}).
 				WithComment(sdk.Pointer("a")).
 				WithSaml2EnableSpInitiated(sdk.Pointer(true)).
 				WithSaml2ForceAuthn(sdk.Pointer(true)).
@@ -161,6 +169,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			comment:                   "a",
 			snowflakeIssuerURL:        issuerURL,
 			snowflakeAcsURL:           acsURL,
+			allowedUserDomains:        "[example.com]",
+			allowedEmailPatterns:      "[^(.+dev)@example.com$]",
 		})
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
@@ -203,7 +213,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSaml2SignRequest(sdk.Pointer(true)).
 					WithSaml2SnowflakeAcsUrl(&acsURL).
 					WithSaml2SnowflakeIssuerUrl(&issuerURL).
-					WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label")),
+					WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label")).
+					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
+					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
 			)
 		err := client.SecurityIntegrations.AlterSAML2Integration(ctx, setRequest)
 		require.NoError(t, err)
@@ -224,12 +236,16 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			comment:                   "a",
 			snowflakeIssuerURL:        issuerURL,
 			snowflakeAcsURL:           acsURL,
+			allowedUserDomains:        "[example.com]",
+			allowedEmailPatterns:      "[^(.+dev)@example.com$]",
 		})
 
 		unsetRequest := sdk.NewAlterSAML2IntegrationSecurityIntegrationRequest(id).
 			WithUnset(
 				sdk.NewSAML2IntegrationUnsetRequest().
-					WithSaml2ForceAuthn(sdk.Pointer(true)),
+					WithSaml2ForceAuthn(sdk.Pointer(true)).
+					WithSaml2RequestedNameidFormat(sdk.Pointer(true)).
+					WithSaml2PostLogoutRedirectUrl(sdk.Pointer(true)),
 			)
 		err = client.SecurityIntegrations.AlterSAML2Integration(ctx, unsetRequest)
 		require.NoError(t, err)
@@ -237,6 +253,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_FORCE_AUTHN", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress", Default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_POST_LOGOUT_REDIRECT_URL", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("AlterSAML2Integration - REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {
@@ -256,7 +274,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			WithSet(
 				sdk.NewSCIMIntegrationSetRequest().
 					WithEnabled(sdk.Bool(true)).
-					WithSyncPassword(sdk.Bool(true)).
+					WithSyncPassword(sdk.Bool(false)).
 					WithComment(sdk.String("altered")),
 			)
 		err := client.SecurityIntegrations.AlterSCIMIntegration(ctx, setRequest)
@@ -265,14 +283,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "altered")
+		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "false", "altered")
 
 		unsetRequest := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).
 			WithUnset(
 				sdk.NewSCIMIntegrationUnsetRequest().
 					WithNetworkPolicy(sdk.Bool(true)).
-					WithSyncPassword(sdk.Bool(true)).
-					WithComment(sdk.Bool(true)),
+					WithSyncPassword(sdk.Bool(true)),
 			)
 		err = client.SecurityIntegrations.AlterSCIMIntegration(ctx, unsetRequest)
 		require.NoError(t, err)
@@ -280,7 +297,43 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "", "")
+		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "altered")
+	})
+
+	t.Run("Alter - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSCIMIntegration(t, id, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterSCIMIntegration(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterSCIMIntegration(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
 	})
 
 	t.Run("Drop", func(t *testing.T) {

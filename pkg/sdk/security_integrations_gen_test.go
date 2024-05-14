@@ -114,6 +114,9 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Set = &SAML2IntegrationSet{
+			Enabled: Pointer(true),
+		}
 		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -129,7 +132,8 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SAML2IntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSAML2IntegrationSecurityIntegrationOptions.Unset", "Enabled", "Saml2ForceAuthn"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSAML2IntegrationSecurityIntegrationOptions.Unset",
+			"Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
@@ -162,10 +166,13 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SAML2IntegrationUnset{
-			Enabled:         Pointer(true),
-			Saml2ForceAuthn: Pointer(true),
+			Enabled:                    Pointer(true),
+			Saml2ForceAuthn:            Pointer(true),
+			Saml2RequestedNameidFormat: Pointer(true),
+			Saml2PostLogoutRedirectUrl: Pointer(true),
+			Comment:                    Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, SAML2_FORCE_AUTHN", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, SAML2_FORCE_AUTHN, SAML2_REQUESTED_NAMEID_FORMAT, SAML2_POST_LOGOUT_REDIRECT_URL, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("refresh SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {
@@ -192,20 +199,23 @@ func TestSecurityIntegrations_AlterSCIMIntegration(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Set = &SCIMIntegrationSet{
+			Enabled: Pointer(true),
+		}
 		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.Enabled opts.Set.NetworkPolicy opts.Set.SyncPassword opts.Set.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &SCIMIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSCIMIntegrationSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Unset.NetworkPolicy opts.Unset.SyncPassword opts.Unset.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SCIMIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSCIMIntegrationSecurityIntegrationOptions.Unset", "NetworkPolicy", "SyncPassword", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSCIMIntegrationSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
@@ -224,11 +234,12 @@ func TestSecurityIntegrations_AlterSCIMIntegration(t *testing.T) {
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SCIMIntegrationUnset{
+			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(true),
 			SyncPassword:  Pointer(true),
 			Comment:       Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET NETWORK_POLICY, SYNC_PASSWORD, COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD, COMMENT", id.FullyQualifiedName())
 	})
 }
 
