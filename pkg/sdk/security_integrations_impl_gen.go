@@ -59,8 +59,9 @@ func (v *securityIntegrations) Show(ctx context.Context, request *ShowSecurityIn
 }
 
 func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest())
+	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(&Like{
+		Pattern: String(id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
