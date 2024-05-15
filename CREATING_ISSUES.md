@@ -141,6 +141,20 @@ which is highly recommended for large-scale migrations.
 
 **Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
 
+### Incorrect identifier type (panic: interface conversion)
+**Problem** When getting stack traces similar to:
+```text
+panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier, not sdk.DatabaseObjectIdentifier
+```
+
+[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2779)
+
+**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
+- AccountObjectIdentifier - `<name>`
+- DatabaseObjectIdentifier - `<database>.<name>`
+- SchemaObjectIdentifier - `<database>.<schema>.<name>`
+- NewTableColumnIdentifier - `<database>.<schema>.<table>.<name>`
+
 ### Incorrect account identifier (snowflake_database.from_share)
 **Problem:** From 0.87.0 version, we are quoting incoming external account identifier correctly, which may break configurations that specified account identifier as `<org_name>.<acc_name>` that worked previously by accident.
 
