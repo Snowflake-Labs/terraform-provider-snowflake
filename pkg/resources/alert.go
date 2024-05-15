@@ -12,6 +12,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -107,10 +108,10 @@ var alertSchema = map[string]*schema.Schema{
 // Alert returns a pointer to the resource representing an alert.
 func Alert() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateAlert,
-		Read:   ReadAlert,
-		Update: UpdateAlert,
-		Delete: DeleteAlert,
+		CreateContext: CreateAlert,
+		ReadContext:   ReadAlert,
+		UpdateContext: UpdateAlert,
+		DeleteContext: DeleteAlert,
 
 		Schema: alertSchema,
 		Importer: &schema.ResourceImporter{
@@ -119,12 +120,11 @@ func Alert() *schema.Resource {
 	}
 }
 
-// ReadAlert implements schema.ReadFunc.
-func ReadAlert(d *schema.ResourceData, meta interface{}) error {
+// ReadAlert implements schema.ReadContextFunc.
+func ReadAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	ctx := context.Background()
 	alert, err := client.Alerts.ShowByID(ctx, objectIdentifier)
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
@@ -134,15 +134,15 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("enabled", alert.State == sdk.AlertStateStarted); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", alert.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", alert.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	alertSchedule := alert.Schedule
@@ -150,7 +150,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		if strings.Contains(alertSchedule, "MINUTE") {
 			interval, err := strconv.Atoi(strings.TrimSuffix(alertSchedule, " MINUTE"))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			err = d.Set("alert_schedule", []interface{}{
 				map[string]interface{}{
@@ -158,7 +158,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else {
 			repScheduleParts := strings.Split(alertSchedule, " ")
@@ -175,42 +175,41 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
 	if err := d.Set("schema", alert.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("warehouse", alert.Warehouse); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", alert.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("condition", alert.Condition); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("action", alert.Action); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
-// CreateAlert implements schema.CreateFunc.
-func CreateAlert(d *schema.ResourceData, meta interface{}) error {
+// CreateAlert implements schema.CreateContextFunc.
+func CreateAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	ctx := context.Background()
 	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	alertSchedule := getAlertSchedule(d.Get("alert_schedule"))
@@ -230,22 +229,24 @@ func CreateAlert(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Alerts.Create(ctx, objectIdentifier, warehouse, alertSchedule, condition, action, opts)
 	if err != nil {
-		return err
-	}
-
-	enabled := d.Get("enabled").(bool)
-
-	if enabled {
-		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
-		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
-		if err != nil {
-			return err
-		}
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
-	return ReadAlert(d, meta)
+	enabled := d.Get("enabled").(bool)
+	var diags diag.Diagnostics
+	if enabled {
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
+		err := client.Alerts.Alter(ctx, objectIdentifier, &opts)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Enabling alert: %s", err.Error()),
+			})
+		}
+	}
+	return append(diags, ReadAlert(ctx, d, meta)...)
 }
 
 func getAlertSchedule(v interface{}) string {
@@ -269,11 +270,10 @@ func getAlertSchedule(v interface{}) string {
 	return alertSchedule
 }
 
-// UpdateAlert implements schema.UpdateFunc.
-func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
+// UpdateAlert implements schema.UpdateContextFunc.
+func UpdateAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	ctx := context.Background()
 
 	enabled := d.Get("enabled").(bool)
 	if d.HasChanges("enabled", "warehouse", "alert_schedule", "condition", "action", "comment") {
@@ -314,7 +314,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		setOptions := &sdk.AlterAlertOptions{Set: opts.Set}
 		err := client.Alerts.Alter(ctx, objectIdentifier, setOptions)
 		if err != nil {
-			return fmt.Errorf("error updating alert %v: %w", objectIdentifier.Name(), err)
+			return diag.Errorf("error updating alert %v: %v", objectIdentifier.Name(), err)
 		}
 	}
 
@@ -324,7 +324,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		alterOptions.ModifyCondition = &[]string{condition}
 		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return fmt.Errorf("error updating schedule on condition %v: %w", objectIdentifier.Name(), err)
+			return diag.Errorf("error updating schedule on condition %v: %v", objectIdentifier.Name(), err)
 		}
 	}
 
@@ -334,31 +334,36 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 		alterOptions.ModifyAction = &action
 		err := client.Alerts.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return fmt.Errorf("error updating schedule on action %v: %w", objectIdentifier.Name(), err)
+			return diag.Errorf("error updating schedule on action %v: %v", objectIdentifier.Name(), err)
 		}
 	}
-
+	var diags diag.Diagnostics
 	if enabled {
 		if err := waitResumeAlert(ctx, client, objectIdentifier); err != nil {
-			log.Printf("[WARN] failed to resume alert %s", objectIdentifier.Name())
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("failed to resume alert %s", objectIdentifier.Name()),
+			})
 		}
 	} else {
 		if err := waitSuspendAlert(ctx, client, objectIdentifier); err != nil {
-			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("failed to suspend alert %s", objectIdentifier.Name()),
+			})
 		}
 	}
-	return ReadAlert(d, meta)
+	return append(diags, ReadAlert(ctx, d, meta)...)
 }
 
-// DeleteAlert implements schema.DeleteFunc.
-func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
+// DeleteAlert implements schema.DeleteContextFunc.
+func DeleteAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.Alerts.Drop(ctx, objectIdentifier, &sdk.DropAlertOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
