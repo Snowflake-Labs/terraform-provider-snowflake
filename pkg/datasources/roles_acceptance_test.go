@@ -52,7 +52,7 @@ func TestAcc_Roles(t *testing.T) {
 }
 
 func TestAcc_AccountRoles_basic(t *testing.T) {
-	accountRoleNamePrefix := "account_roles_test_prefix_"
+	accountRoleNamePrefix := "account_roles_test_prefix_" + random.AlphaN(4)
 	accountRoleName1 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
 	accountRoleName2 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix)
 	accountRoleName3 := acc.TestClient().Ids.Alpha()
