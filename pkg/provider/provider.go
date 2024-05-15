@@ -528,6 +528,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
 		"snowflake_database":                           datasources.Database(),
+		"snowflake_database_role":                      datasources.DatabaseRole(),
 		"snowflake_database_roles":                     datasources.DatabaseRoles(),
 		"snowflake_databases":                          datasources.Databases(),
 		"snowflake_dynamic_tables":                     datasources.DynamicTables(),
