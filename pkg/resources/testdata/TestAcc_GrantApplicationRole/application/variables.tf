@@ -14,6 +14,10 @@ variable "application_name2" {
   type = string
 }
 
-variable "random_name" {
+variable "stage_name" {
+  type = string
+}
+
+variable "application_package_name" {
   type = string
 }

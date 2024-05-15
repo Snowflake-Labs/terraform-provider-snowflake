@@ -1,19 +1,15 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -30,7 +26,8 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 			"schema_name":              config.StringVariable(acc.TestSchemaName),
 			"parent_account_role_name": config.StringVariable(parentAccountRoleName),
 			"application_name":         config.StringVariable(applicationName),
-			"random_name":              config.StringVariable(randomName),
+			"application_package_name": config.StringVariable(randomName),
+			"stage_name":               config.StringVariable(randomName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -38,7 +35,7 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantApplicationRoleDestroy,
+		CheckDestroy: acc.TestAccCheckGrantApplicationRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -73,11 +70,12 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"database_name":     config.StringVariable(acc.TestDatabaseName),
-			"schema_name":       config.StringVariable(acc.TestSchemaName),
-			"application_name":  config.StringVariable(applicationName),
-			"application_name2": config.StringVariable(applicationName2),
-			"random_name":       config.StringVariable(randomName),
+			"database_name":            config.StringVariable(acc.TestDatabaseName),
+			"schema_name":              config.StringVariable(acc.TestSchemaName),
+			"application_name":         config.StringVariable(applicationName),
+			"application_name2":        config.StringVariable(applicationName2),
+			"application_package_name": config.StringVariable(randomName),
+			"stage_name":               config.StringVariable(randomName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -85,7 +83,7 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantApplicationRoleDestroy,
+		CheckDestroy: acc.TestAccCheckGrantApplicationRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -108,35 +106,4 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_grant_application_role" {
-			continue
-		}
-		ctx := context.Background()
-		id := rs.Primary.ID
-		ids := strings.Split(id, "|")
-		applicationRoleName := ids[0]
-		objectType := ids[1]
-		parentRoleName := ids[2]
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			Of: &sdk.ShowGrantsOf{
-				ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRoleName),
-			},
-		})
-		if err != nil {
-			continue
-		}
-		for _, grant := range grants {
-			if grant.GrantedTo == sdk.ObjectType(objectType) {
-				if grant.GranteeName.FullyQualifiedName() == parentRoleName {
-					return fmt.Errorf("application role grant %v still exists", grant)
-				}
-			}
-		}
-	}
-	return nil
 }

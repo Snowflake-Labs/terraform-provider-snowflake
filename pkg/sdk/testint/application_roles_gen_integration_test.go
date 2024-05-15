@@ -60,6 +60,15 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		assertApplicationRole(t, appRole, name, comment)
 	}
 
+	assertGrant := func(t *testing.T, grants []sdk.Grant, privilege sdk.ObjectPrivilege, on, to sdk.ObjectType) {
+		t.Helper()
+		require.NotEmpty(t, grants)
+		assert.NotEmpty(t, grants[0].CreatedOn)
+		assert.Equal(t, privilege.String(), grants[0].Privilege)
+		assert.Equal(t, on, grants[0].GrantedOn)
+		assert.Equal(t, to, grants[0].GrantedTo)
+	}
+
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		name := "app_role_1"
 		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
@@ -97,11 +106,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Role: role.ID()}})
 		require.NoError(t, err)
-		require.NotEmpty(t, grants)
-		require.NotEmpty(t, grants[0].CreatedOn)
-		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
-		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedOn)
-		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
+		assertGrant(t, grants, sdk.ObjectPrivilegeUsage, sdk.ObjectTypeApplicationRole, sdk.ObjectTypeRole)
 
 		// revoke the application role from the role
 		rr := sdk.NewRevokeApplicationRoleRequest(id).WithFrom(*kindOfRole)
@@ -110,7 +115,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Role: role.ID()}})
 		require.NoError(t, err)
-		require.Equal(t, 0, len(grants))
+		require.Empty(t, grants)
 	})
 
 	t.Run("show grants to application - grant to application", func(t *testing.T) {
@@ -125,11 +130,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: application2.ID()}})
 		require.NoError(t, err)
-		require.NotEmpty(t, grants)
-		require.NotEmpty(t, grants[0].CreatedOn)
-		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
-		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedOn)
-		require.Equal(t, sdk.ObjectTypeApplication, grants[0].GrantedTo)
+		assertGrant(t, grants, sdk.ObjectPrivilegeUsage, sdk.ObjectTypeApplicationRole, sdk.ObjectTypeApplication)
 
 		// revoke the application role from the role
 		rr := sdk.NewRevokeApplicationRoleRequest(id).WithFrom(*kindOfRole)
@@ -138,7 +139,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Application: application2.ID()}})
 		require.NoError(t, err)
-		require.Equal(t, 0, len(grants))
+		require.Empty(t, grants)
 	})
 
 	t.Run("show grants to application role", func(t *testing.T) {
@@ -152,12 +153,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		}
 		grants, err := client.Grants.Show(ctx, opts)
 		require.NoError(t, err)
-
-		require.NotEmpty(t, grants)
-		require.NotEmpty(t, grants[0].CreatedOn)
-		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
-		require.Equal(t, sdk.ObjectTypeDatabase, grants[0].GrantedOn)
-		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedTo)
+		assertGrant(t, grants, sdk.ObjectPrivilegeUsage, sdk.ObjectTypeDatabase, sdk.ObjectTypeApplicationRole)
 	})
 
 	t.Run("show grants of application role", func(t *testing.T) {

@@ -1,5 +1,5 @@
 resource "snowflake_stage" "stage" {
-  name     = var.random_name
+  name     = var.stage_name
   database = var.database_name
   schema   = var.schema_name
 }
@@ -23,19 +23,19 @@ resource "snowflake_unsafe_execute" "put_setup" {
 
 resource "snowflake_unsafe_execute" "application_package" {
   depends_on = [snowflake_unsafe_execute.put_manifest, snowflake_unsafe_execute.put_setup]
-  execute    = "CREATE APPLICATION PACKAGE \"${var.random_name}\""
-  revert     = "DROP APPLICATION PACKAGE \"${var.random_name}\" "
+  execute    = "CREATE APPLICATION PACKAGE \"${var.application_package_name}\""
+  revert     = "DROP APPLICATION PACKAGE \"${var.application_package_name}\" "
 }
 
 resource "snowflake_unsafe_execute" "application_version" {
   depends_on = [snowflake_unsafe_execute.application_package]
-  execute    = "ALTER APPLICATION PACKAGE \"${var.random_name}\" ADD VERSION v1 USING '@${local.stage_identifier}'"
+  execute    = "ALTER APPLICATION PACKAGE \"${var.application_package_name}\" ADD VERSION v1 USING '@${local.stage_identifier}'"
   revert     = "SELECT 1"
 }
 
 resource "snowflake_unsafe_execute" "application" {
   depends_on = [snowflake_unsafe_execute.application_version]
-  execute    = "CREATE APPLICATION \"${var.application_name}\" FROM APPLICATION PACKAGE \"${var.random_name}\" USING VERSION v1"
+  execute    = "CREATE APPLICATION \"${var.application_name}\" FROM APPLICATION PACKAGE \"${var.application_package_name}\" USING VERSION v1"
   revert     = "DROP APPLICATION \"${var.application_name}\""
 }
 
