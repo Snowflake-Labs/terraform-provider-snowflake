@@ -3,16 +3,16 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateSAML2SecurityIntegrationOptions]           = new(CreateSAML2SecurityIntegrationRequest)
-	_ optionsProvider[CreateSCIMSecurityIntegrationOptions]            = new(CreateSCIMSecurityIntegrationRequest)
-	_ optionsProvider[AlterSAML2IntegrationSecurityIntegrationOptions] = new(AlterSAML2IntegrationSecurityIntegrationRequest)
-	_ optionsProvider[AlterSCIMIntegrationSecurityIntegrationOptions]  = new(AlterSCIMIntegrationSecurityIntegrationRequest)
-	_ optionsProvider[DropSecurityIntegrationOptions]                  = new(DropSecurityIntegrationRequest)
-	_ optionsProvider[DescribeSecurityIntegrationOptions]              = new(DescribeSecurityIntegrationRequest)
-	_ optionsProvider[ShowSecurityIntegrationOptions]                  = new(ShowSecurityIntegrationRequest)
+	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]          = new(CreateSaml2SecurityIntegrationRequest)
+	_ optionsProvider[CreateScimSecurityIntegrationOptions]           = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]           = new(AlterSaml2SecurityIntegrationRequest)
+	_ optionsProvider[AlterScimIntegrationSecurityIntegrationOptions] = new(AlterScimIntegrationSecurityIntegrationRequest)
+	_ optionsProvider[DropSecurityIntegrationOptions]                 = new(DropSecurityIntegrationRequest)
+	_ optionsProvider[DescribeSecurityIntegrationOptions]             = new(DescribeSecurityIntegrationRequest)
+	_ optionsProvider[ShowSecurityIntegrationOptions]                 = new(ShowSecurityIntegrationRequest)
 )
 
-type CreateSAML2SecurityIntegrationRequest struct {
+type CreateSaml2SecurityIntegrationRequest struct {
 	OrReplace                      *bool
 	IfNotExists                    *bool
 	name                           AccountObjectIdentifier // required
@@ -35,29 +35,37 @@ type CreateSAML2SecurityIntegrationRequest struct {
 	Comment                        *string
 }
 
-type CreateSCIMSecurityIntegrationRequest struct {
+func (r *CreateSaml2SecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
+type CreateScimSecurityIntegrationRequest struct {
 	OrReplace     *bool
 	IfNotExists   *bool
-	name          AccountObjectIdentifier                  // required
-	Enabled       bool                                     // required
-	ScimClient    *SCIMSecurityIntegrationSCIMClientOption // required
-	RunAsRole     *SCIMSecurityIntegrationRunAsRoleOption  // required
+	name          AccountObjectIdentifier                 // required
+	Enabled       bool                                    // required
+	ScimClient    ScimSecurityIntegrationScimClientOption // required
+	RunAsRole     ScimSecurityIntegrationRunAsRoleOption  // required
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
 	Comment       *string
 }
 
-type AlterSAML2IntegrationSecurityIntegrationRequest struct {
+func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
+type AlterSaml2SecurityIntegrationRequest struct {
 	IfExists                        *bool
 	name                            AccountObjectIdentifier // required
 	SetTags                         []TagAssociation
 	UnsetTags                       []ObjectIdentifier
-	Set                             *SAML2IntegrationSetRequest
-	Unset                           *SAML2IntegrationUnsetRequest
+	Set                             *Saml2IntegrationSetRequest
+	Unset                           *Saml2IntegrationUnsetRequest
 	RefreshSaml2SnowflakePrivateKey *bool
 }
 
-type SAML2IntegrationSetRequest struct {
+type Saml2IntegrationSetRequest struct {
 	Enabled                        *bool
 	Saml2Issuer                    *string
 	Saml2SsoUrl                    *string
@@ -77,7 +85,7 @@ type SAML2IntegrationSetRequest struct {
 	Comment                        *string
 }
 
-type SAML2IntegrationUnsetRequest struct {
+type Saml2IntegrationUnsetRequest struct {
 	Enabled                    *bool
 	Saml2ForceAuthn            *bool
 	Saml2RequestedNameidFormat *bool
@@ -85,23 +93,23 @@ type SAML2IntegrationUnsetRequest struct {
 	Comment                    *bool
 }
 
-type AlterSCIMIntegrationSecurityIntegrationRequest struct {
+type AlterScimIntegrationSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
-	Set       *SCIMIntegrationSetRequest
-	Unset     *SCIMIntegrationUnsetRequest
+	Set       *ScimIntegrationSetRequest
+	Unset     *ScimIntegrationUnsetRequest
 }
 
-type SCIMIntegrationSetRequest struct {
+type ScimIntegrationSetRequest struct {
 	Enabled       *bool
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
 	Comment       *string
 }
 
-type SCIMIntegrationUnsetRequest struct {
+type ScimIntegrationUnsetRequest struct {
 	Enabled       *bool
 	NetworkPolicy *bool
 	SyncPassword  *bool

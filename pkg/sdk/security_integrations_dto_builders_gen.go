@@ -4,15 +4,15 @@ package sdk
 
 import ()
 
-func NewCreateSAML2SecurityIntegrationRequest(
+func NewCreateSaml2SecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
 	Saml2Issuer string,
 	Saml2SsoUrl string,
 	Saml2Provider string,
 	Saml2X509Cert string,
-) *CreateSAML2SecurityIntegrationRequest {
-	s := CreateSAML2SecurityIntegrationRequest{}
+) *CreateSaml2SecurityIntegrationRequest {
+	s := CreateSaml2SecurityIntegrationRequest{}
 	s.name = name
 	s.Enabled = Enabled
 	s.Saml2Issuer = Saml2Issuer
@@ -22,83 +22,83 @@ func NewCreateSAML2SecurityIntegrationRequest(
 	return &s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSaml2SecurityIntegrationRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSaml2SecurityIntegrationRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithAllowedUserDomains(AllowedUserDomains []UserDomain) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithAllowedUserDomains(AllowedUserDomains []UserDomain) *CreateSaml2SecurityIntegrationRequest {
 	s.AllowedUserDomains = AllowedUserDomains
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithAllowedEmailPatterns(AllowedEmailPatterns []EmailPattern) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithAllowedEmailPatterns(AllowedEmailPatterns []EmailPattern) *CreateSaml2SecurityIntegrationRequest {
 	s.AllowedEmailPatterns = AllowedEmailPatterns
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2SpInitiatedLoginPageLabel = Saml2SpInitiatedLoginPageLabel
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2EnableSpInitiated = Saml2EnableSpInitiated
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2SnowflakeX509Cert = Saml2SnowflakeX509Cert
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2SignRequest = Saml2SignRequest
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2ForceAuthn = Saml2ForceAuthn
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2SnowflakeIssuerUrl = Saml2SnowflakeIssuerUrl
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2SnowflakeAcsUrl = Saml2SnowflakeAcsUrl
 	return s
 }
 
-func (s *CreateSAML2SecurityIntegrationRequest) WithComment(Comment *string) *CreateSAML2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithComment(Comment *string) *CreateSaml2SecurityIntegrationRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewCreateSCIMSecurityIntegrationRequest(
+func NewCreateScimSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
-	ScimClient *SCIMSecurityIntegrationSCIMClientOption,
-	RunAsRole *SCIMSecurityIntegrationRunAsRoleOption,
-) *CreateSCIMSecurityIntegrationRequest {
-	s := CreateSCIMSecurityIntegrationRequest{}
+	ScimClient ScimSecurityIntegrationScimClientOption,
+	RunAsRole ScimSecurityIntegrationRunAsRoleOption,
+) *CreateScimSecurityIntegrationRequest {
+	s := CreateScimSecurityIntegrationRequest{}
 	s.name = name
 	s.Enabled = Enabled
 	s.ScimClient = ScimClient
@@ -106,264 +106,264 @@ func NewCreateSCIMSecurityIntegrationRequest(
 	return &s
 }
 
-func (s *CreateSCIMSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSCIMSecurityIntegrationRequest {
+func (s *CreateScimSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateScimSecurityIntegrationRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateSCIMSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSCIMSecurityIntegrationRequest {
+func (s *CreateScimSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateScimSecurityIntegrationRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateSCIMSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateSCIMSecurityIntegrationRequest {
+func (s *CreateScimSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateScimSecurityIntegrationRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *CreateSCIMSecurityIntegrationRequest) WithSyncPassword(SyncPassword *bool) *CreateSCIMSecurityIntegrationRequest {
+func (s *CreateScimSecurityIntegrationRequest) WithSyncPassword(SyncPassword *bool) *CreateScimSecurityIntegrationRequest {
 	s.SyncPassword = SyncPassword
 	return s
 }
 
-func (s *CreateSCIMSecurityIntegrationRequest) WithComment(Comment *string) *CreateSCIMSecurityIntegrationRequest {
+func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment *string) *CreateScimSecurityIntegrationRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewAlterSAML2IntegrationSecurityIntegrationRequest(
+func NewAlterSaml2SecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterSAML2IntegrationSecurityIntegrationRequest {
-	s := AlterSAML2IntegrationSecurityIntegrationRequest{}
+) *AlterSaml2SecurityIntegrationRequest {
+	s := AlterSaml2SecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSaml2SecurityIntegrationRequest {
 	s.IfExists = IfExists
 	return s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSaml2SecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSaml2SecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithSet(Set *SAML2IntegrationSetRequest) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithSet(Set *Saml2IntegrationSetRequest) *AlterSaml2SecurityIntegrationRequest {
 	s.Set = Set
 	return s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithUnset(Unset *SAML2IntegrationUnsetRequest) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithUnset(Unset *Saml2IntegrationUnsetRequest) *AlterSaml2SecurityIntegrationRequest {
 	s.Unset = Unset
 	return s
 }
 
-func (s *AlterSAML2IntegrationSecurityIntegrationRequest) WithRefreshSaml2SnowflakePrivateKey(RefreshSaml2SnowflakePrivateKey *bool) *AlterSAML2IntegrationSecurityIntegrationRequest {
+func (s *AlterSaml2SecurityIntegrationRequest) WithRefreshSaml2SnowflakePrivateKey(RefreshSaml2SnowflakePrivateKey *bool) *AlterSaml2SecurityIntegrationRequest {
 	s.RefreshSaml2SnowflakePrivateKey = RefreshSaml2SnowflakePrivateKey
 	return s
 }
 
-func NewSAML2IntegrationSetRequest() *SAML2IntegrationSetRequest {
-	return &SAML2IntegrationSetRequest{}
+func NewSaml2IntegrationSetRequest() *Saml2IntegrationSetRequest {
+	return &Saml2IntegrationSetRequest{}
 }
 
-func (s *SAML2IntegrationSetRequest) WithEnabled(Enabled *bool) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithEnabled(Enabled *bool) *Saml2IntegrationSetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2Issuer(Saml2Issuer *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2Issuer(Saml2Issuer *string) *Saml2IntegrationSetRequest {
 	s.Saml2Issuer = Saml2Issuer
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SsoUrl(Saml2SsoUrl *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SsoUrl(Saml2SsoUrl *string) *Saml2IntegrationSetRequest {
 	s.Saml2SsoUrl = Saml2SsoUrl
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2Provider(Saml2Provider *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2Provider(Saml2Provider *string) *Saml2IntegrationSetRequest {
 	s.Saml2Provider = Saml2Provider
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2X509Cert(Saml2X509Cert *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2X509Cert(Saml2X509Cert *string) *Saml2IntegrationSetRequest {
 	s.Saml2X509Cert = Saml2X509Cert
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithAllowedUserDomains(AllowedUserDomains []UserDomain) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithAllowedUserDomains(AllowedUserDomains []UserDomain) *Saml2IntegrationSetRequest {
 	s.AllowedUserDomains = AllowedUserDomains
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithAllowedEmailPatterns(AllowedEmailPatterns []EmailPattern) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithAllowedEmailPatterns(AllowedEmailPatterns []EmailPattern) *Saml2IntegrationSetRequest {
 	s.AllowedEmailPatterns = AllowedEmailPatterns
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *Saml2IntegrationSetRequest {
 	s.Saml2SpInitiatedLoginPageLabel = Saml2SpInitiatedLoginPageLabel
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *Saml2IntegrationSetRequest {
 	s.Saml2EnableSpInitiated = Saml2EnableSpInitiated
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *Saml2IntegrationSetRequest {
 	s.Saml2SnowflakeX509Cert = Saml2SnowflakeX509Cert
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *Saml2IntegrationSetRequest {
 	s.Saml2SignRequest = Saml2SignRequest
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *Saml2IntegrationSetRequest {
 	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *Saml2IntegrationSetRequest {
 	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *Saml2IntegrationSetRequest {
 	s.Saml2ForceAuthn = Saml2ForceAuthn
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *Saml2IntegrationSetRequest {
 	s.Saml2SnowflakeIssuerUrl = Saml2SnowflakeIssuerUrl
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *Saml2IntegrationSetRequest {
 	s.Saml2SnowflakeAcsUrl = Saml2SnowflakeAcsUrl
 	return s
 }
 
-func (s *SAML2IntegrationSetRequest) WithComment(Comment *string) *SAML2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithComment(Comment *string) *Saml2IntegrationSetRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewSAML2IntegrationUnsetRequest() *SAML2IntegrationUnsetRequest {
-	return &SAML2IntegrationUnsetRequest{}
+func NewSaml2IntegrationUnsetRequest() *Saml2IntegrationUnsetRequest {
+	return &Saml2IntegrationUnsetRequest{}
 }
 
-func (s *SAML2IntegrationUnsetRequest) WithEnabled(Enabled *bool) *SAML2IntegrationUnsetRequest {
+func (s *Saml2IntegrationUnsetRequest) WithEnabled(Enabled *bool) *Saml2IntegrationUnsetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SAML2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *SAML2IntegrationUnsetRequest {
+func (s *Saml2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *Saml2IntegrationUnsetRequest {
 	s.Saml2ForceAuthn = Saml2ForceAuthn
 	return s
 }
 
-func (s *SAML2IntegrationUnsetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *bool) *SAML2IntegrationUnsetRequest {
+func (s *Saml2IntegrationUnsetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *bool) *Saml2IntegrationUnsetRequest {
 	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *SAML2IntegrationUnsetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *bool) *SAML2IntegrationUnsetRequest {
+func (s *Saml2IntegrationUnsetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *bool) *Saml2IntegrationUnsetRequest {
 	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *SAML2IntegrationUnsetRequest) WithComment(Comment *bool) *SAML2IntegrationUnsetRequest {
+func (s *Saml2IntegrationUnsetRequest) WithComment(Comment *bool) *Saml2IntegrationUnsetRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewAlterSCIMIntegrationSecurityIntegrationRequest(
+func NewAlterScimIntegrationSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterSCIMIntegrationSecurityIntegrationRequest {
-	s := AlterSCIMIntegrationSecurityIntegrationRequest{}
+) *AlterScimIntegrationSecurityIntegrationRequest {
+	s := AlterScimIntegrationSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSCIMIntegrationSecurityIntegrationRequest {
+func (s *AlterScimIntegrationSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterScimIntegrationSecurityIntegrationRequest {
 	s.IfExists = IfExists
 	return s
 }
 
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSCIMIntegrationSecurityIntegrationRequest {
+func (s *AlterScimIntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterScimIntegrationSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSCIMIntegrationSecurityIntegrationRequest {
+func (s *AlterScimIntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterScimIntegrationSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithSet(Set *SCIMIntegrationSetRequest) *AlterSCIMIntegrationSecurityIntegrationRequest {
+func (s *AlterScimIntegrationSecurityIntegrationRequest) WithSet(Set *ScimIntegrationSetRequest) *AlterScimIntegrationSecurityIntegrationRequest {
 	s.Set = Set
 	return s
 }
 
-func (s *AlterSCIMIntegrationSecurityIntegrationRequest) WithUnset(Unset *SCIMIntegrationUnsetRequest) *AlterSCIMIntegrationSecurityIntegrationRequest {
+func (s *AlterScimIntegrationSecurityIntegrationRequest) WithUnset(Unset *ScimIntegrationUnsetRequest) *AlterScimIntegrationSecurityIntegrationRequest {
 	s.Unset = Unset
 	return s
 }
 
-func NewSCIMIntegrationSetRequest() *SCIMIntegrationSetRequest {
-	return &SCIMIntegrationSetRequest{}
+func NewScimIntegrationSetRequest() *ScimIntegrationSetRequest {
+	return &ScimIntegrationSetRequest{}
 }
 
-func (s *SCIMIntegrationSetRequest) WithEnabled(Enabled *bool) *SCIMIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithEnabled(Enabled *bool) *ScimIntegrationSetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SCIMIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *SCIMIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *ScimIntegrationSetRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *SCIMIntegrationSetRequest) WithSyncPassword(SyncPassword *bool) *SCIMIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithSyncPassword(SyncPassword *bool) *ScimIntegrationSetRequest {
 	s.SyncPassword = SyncPassword
 	return s
 }
 
-func (s *SCIMIntegrationSetRequest) WithComment(Comment *string) *SCIMIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithComment(Comment *string) *ScimIntegrationSetRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewSCIMIntegrationUnsetRequest() *SCIMIntegrationUnsetRequest {
-	return &SCIMIntegrationUnsetRequest{}
+func NewScimIntegrationUnsetRequest() *ScimIntegrationUnsetRequest {
+	return &ScimIntegrationUnsetRequest{}
 }
 
-func (s *SCIMIntegrationUnsetRequest) WithEnabled(Enabled *bool) *SCIMIntegrationUnsetRequest {
+func (s *ScimIntegrationUnsetRequest) WithEnabled(Enabled *bool) *ScimIntegrationUnsetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SCIMIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *SCIMIntegrationUnsetRequest {
+func (s *ScimIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *ScimIntegrationUnsetRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *SCIMIntegrationUnsetRequest) WithSyncPassword(SyncPassword *bool) *SCIMIntegrationUnsetRequest {
+func (s *ScimIntegrationUnsetRequest) WithSyncPassword(SyncPassword *bool) *ScimIntegrationUnsetRequest {
 	s.SyncPassword = SyncPassword
 	return s
 }
 
-func (s *SCIMIntegrationUnsetRequest) WithComment(Comment *bool) *SCIMIntegrationUnsetRequest {
+func (s *ScimIntegrationUnsetRequest) WithComment(Comment *bool) *ScimIntegrationUnsetRequest {
 	s.Comment = Comment
 	return s
 }

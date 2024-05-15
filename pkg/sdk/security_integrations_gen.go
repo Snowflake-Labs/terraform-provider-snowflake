@@ -7,18 +7,18 @@ import (
 )
 
 type SecurityIntegrations interface {
-	CreateSAML2(ctx context.Context, request *CreateSAML2SecurityIntegrationRequest) error
-	CreateSCIM(ctx context.Context, request *CreateSCIMSecurityIntegrationRequest) error
-	AlterSAML2Integration(ctx context.Context, request *AlterSAML2IntegrationSecurityIntegrationRequest) error
-	AlterSCIMIntegration(ctx context.Context, request *AlterSCIMIntegrationSecurityIntegrationRequest) error
+	CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error
+	CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error
+	AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error
+	AlterScimIntegration(ctx context.Context, request *AlterScimIntegrationSecurityIntegrationRequest) error
 	Drop(ctx context.Context, request *DropSecurityIntegrationRequest) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error)
 	Show(ctx context.Context, request *ShowSecurityIntegrationRequest) ([]SecurityIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
 }
 
-// CreateSAML2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
-type CreateSAML2SecurityIntegrationOptions struct {
+// CreateSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
+type CreateSaml2SecurityIntegrationOptions struct {
 	create                         bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace                      *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration            bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -52,36 +52,36 @@ type EmailPattern struct {
 	Pattern string `ddl:"keyword,single_quotes"`
 }
 
-// CreateSCIMSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim.
-type CreateSCIMSecurityIntegrationOptions struct {
-	create              bool                                     `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                                    `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration bool                                     `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists         *bool                                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier                  `ddl:"identifier"`
-	integrationType     string                                   `ddl:"static" sql:"TYPE = SCIM"`
-	Enabled             bool                                     `ddl:"parameter" sql:"ENABLED"`
-	ScimClient          *SCIMSecurityIntegrationSCIMClientOption `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
-	RunAsRole           *SCIMSecurityIntegrationRunAsRoleOption  `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
-	NetworkPolicy       *AccountObjectIdentifier                 `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
-	SyncPassword        *bool                                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
-	Comment             *string                                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+// CreateScimSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim.
+type CreateScimSecurityIntegrationOptions struct {
+	create              bool                                    `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                                   `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration bool                                    `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists         *bool                                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                AccountObjectIdentifier                 `ddl:"identifier"`
+	integrationType     string                                  `ddl:"static" sql:"TYPE = SCIM"`
+	Enabled             bool                                    `ddl:"parameter" sql:"ENABLED"`
+	ScimClient          ScimSecurityIntegrationScimClientOption `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
+	RunAsRole           ScimSecurityIntegrationRunAsRoleOption  `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
+	NetworkPolicy       *AccountObjectIdentifier                `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
+	SyncPassword        *bool                                   `ddl:"parameter" sql:"SYNC_PASSWORD"`
+	Comment             *string                                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// AlterSAML2IntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2.
-type AlterSAML2IntegrationSecurityIntegrationOptions struct {
+// AlterSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2.
+type AlterSaml2SecurityIntegrationOptions struct {
 	alter                           bool                    `ddl:"static" sql:"ALTER"`
 	securityIntegration             bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists                        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name                            AccountObjectIdentifier `ddl:"identifier"`
 	SetTags                         []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags                       []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Set                             *SAML2IntegrationSet    `ddl:"keyword" sql:"SET"`
-	Unset                           *SAML2IntegrationUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                             *Saml2IntegrationSet    `ddl:"keyword" sql:"SET"`
+	Unset                           *Saml2IntegrationUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	RefreshSaml2SnowflakePrivateKey *bool                   `ddl:"keyword" sql:"REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY"`
 }
 
-type SAML2IntegrationSet struct {
+type Saml2IntegrationSet struct {
 	Enabled                        *bool          `ddl:"parameter" sql:"ENABLED"`
 	Saml2Issuer                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
 	Saml2SsoUrl                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
@@ -101,7 +101,7 @@ type SAML2IntegrationSet struct {
 	Comment                        *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type SAML2IntegrationUnset struct {
+type Saml2IntegrationUnset struct {
 	Enabled                    *bool `ddl:"keyword" sql:"ENABLED"`
 	Saml2ForceAuthn            *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`
 	Saml2RequestedNameidFormat *bool `ddl:"keyword" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
@@ -109,26 +109,26 @@ type SAML2IntegrationUnset struct {
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// AlterSCIMIntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim.
-type AlterSCIMIntegrationSecurityIntegrationOptions struct {
+// AlterScimIntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim.
+type AlterScimIntegrationSecurityIntegrationOptions struct {
 	alter               bool                    `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier `ddl:"identifier"`
 	SetTags             []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *SCIMIntegrationSet     `ddl:"keyword" sql:"SET"`
-	Unset               *SCIMIntegrationUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *ScimIntegrationSet     `ddl:"keyword" sql:"SET"`
+	Unset               *ScimIntegrationUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type SCIMIntegrationSet struct {
+type ScimIntegrationSet struct {
 	Enabled       *bool                    `ddl:"parameter" sql:"ENABLED"`
 	NetworkPolicy *AccountObjectIdentifier `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
 	Comment       *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type SCIMIntegrationUnset struct {
+type ScimIntegrationUnset struct {
 	Enabled       *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool `ddl:"keyword" sql:"SYNC_PASSWORD"`

@@ -47,21 +47,21 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	PhfG6C4ddUpAISJhmEViuXq4nVxe0Vk3Efo2
 	`
 
-	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSAML2SecurityIntegrationRequest)) {
+	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) {
 		t.Helper()
 		_, err := client.ExecForTests(ctx, "ALTER ACCOUNT SET ENABLE_IDENTIFIER_FIRST_LOGIN = true")
 		require.NoError(t, err)
 
-		saml2Req := sdk.NewCreateSAML2SecurityIntegrationRequest(siID, false, "test", "https://example.com", "Custom", x509)
+		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(siID, false, "test", "https://example.com", "Custom", x509)
 		if with != nil {
 			with(saml2Req)
 		}
-		err = client.SecurityIntegrations.CreateSAML2(ctx, saml2Req)
+		err = client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
 	}
 
-	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSCIMSecurityIntegrationRequest)) {
+	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateScimSecurityIntegrationRequest)) {
 		t.Helper()
 		roleID := sdk.NewAccountObjectIdentifier("GENERIC_SCIM_PROVISIONER")
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID).WithIfNotExists(true))
@@ -74,11 +74,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(roleID, sdk.GrantRole{Role: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole))}))
 		require.NoError(t, err)
 
-		scimReq := sdk.NewCreateSCIMSecurityIntegrationRequest(siID, false, &sdk.SCIMSecurityIntegrationSCIMClientGeneric, &sdk.SCIMSecurityIntegrationRunAsRoleGenericScimProvisioner)
+		scimReq := sdk.NewCreateScimSecurityIntegrationRequest(siID, false, sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner)
 		if with != nil {
 			with(scimReq)
 		}
-		err = client.SecurityIntegrations.CreateSCIM(ctx, scimReq)
+		err = client.SecurityIntegrations.CreateScim(ctx, scimReq)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
 	}
@@ -138,9 +138,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
 
-	t.Run("CreateSAML2", func(t *testing.T) {
+	t.Run("CreateSaml2", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSAML2Integration(t, id, func(r *sdk.CreateSAML2SecurityIntegrationRequest) {
+		createSAML2Integration(t, id, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
 			r.WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 				WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}).
 				WithComment(sdk.Pointer("a")).
@@ -152,6 +152,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithSaml2SnowflakeAcsUrl(&acsURL).
 				WithSaml2SnowflakeIssuerUrl(&issuerURL).
 				WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label"))
+			// WithSaml2SnowflakeX509Cert(sdk.Pointer(x509))
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
@@ -178,12 +179,12 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, si, id, "SAML2", false, "a")
 	})
 
-	t.Run("CreateSCIM", func(t *testing.T) {
+	t.Run("CreateScim", func(t *testing.T) {
 		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 		t.Cleanup(networkPolicyCleanup)
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, func(r *sdk.CreateSCIMSecurityIntegrationRequest) {
+		createSCIMIntegration(t, id, func(r *sdk.CreateScimSecurityIntegrationRequest) {
 			r.WithComment(sdk.Pointer("a")).
 				WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
 				WithSyncPassword(sdk.Pointer(false))
@@ -202,9 +203,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		createSAML2Integration(t, id, nil)
 
-		setRequest := sdk.NewAlterSAML2IntegrationSecurityIntegrationRequest(id).
+		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).
 			WithSet(
-				sdk.NewSAML2IntegrationSetRequest().
+				sdk.NewSaml2IntegrationSetRequest().
 					WithComment(sdk.Pointer("a")).
 					WithSaml2EnableSpInitiated(sdk.Pointer(true)).
 					WithSaml2ForceAuthn(sdk.Pointer(true)).
@@ -217,7 +218,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
 			)
-		err := client.SecurityIntegrations.AlterSAML2Integration(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -240,14 +241,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			allowedEmailPatterns:      "[^(.+dev)@example.com$]",
 		})
 
-		unsetRequest := sdk.NewAlterSAML2IntegrationSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).
 			WithUnset(
-				sdk.NewSAML2IntegrationUnsetRequest().
+				sdk.NewSaml2IntegrationUnsetRequest().
 					WithSaml2ForceAuthn(sdk.Pointer(true)).
 					WithSaml2RequestedNameidFormat(sdk.Pointer(true)).
 					WithSaml2PostLogoutRedirectUrl(sdk.Pointer(true)),
 			)
-		err = client.SecurityIntegrations.AlterSAML2Integration(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterSaml2(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -261,37 +262,77 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		createSAML2Integration(t, id, nil)
 
-		setRequest := sdk.NewAlterSAML2IntegrationSecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(sdk.Pointer(true))
-		err := client.SecurityIntegrations.AlterSAML2Integration(ctx, setRequest)
+		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(sdk.Pointer(true))
+		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
+	})
+
+	t.Run("AlterSAML2Integration - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSAML2Integration(t, id, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterSaml2(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterSaml2(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
 	})
 
 	t.Run("AlterSCIMIntegration", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		createSCIMIntegration(t, id, nil)
 
-		setRequest := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		t.Cleanup(networkPolicyCleanup)
+
+		setRequest := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).
 			WithSet(
-				sdk.NewSCIMIntegrationSetRequest().
+				sdk.NewScimIntegrationSetRequest().
+					WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
 					WithEnabled(sdk.Bool(true)).
 					WithSyncPassword(sdk.Bool(false)).
 					WithComment(sdk.String("altered")),
 			)
-		err := client.SecurityIntegrations.AlterSCIMIntegration(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterScimIntegration(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "false", "altered")
+		assertSCIMDescribe(details, "true", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
 
-		unsetRequest := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).
 			WithUnset(
-				sdk.NewSCIMIntegrationUnsetRequest().
+				sdk.NewScimIntegrationUnsetRequest().
 					WithNetworkPolicy(sdk.Bool(true)).
 					WithSyncPassword(sdk.Bool(true)),
 			)
-		err = client.SecurityIntegrations.AlterSCIMIntegration(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterScimIntegration(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -300,7 +341,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "altered")
 	})
 
-	t.Run("Alter - set and unset tags", func(t *testing.T) {
+	t.Run("AlterSCIMIntegration - set and unset tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
@@ -314,9 +355,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).WithSetTags(tags)
 
-		err := client.SecurityIntegrations.AlterSCIMIntegration(ctx, alterRequestSetTags)
+		err := client.SecurityIntegrations.AlterScimIntegration(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
@@ -327,9 +368,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := sdk.NewAlterSCIMIntegrationSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
 
-		err = client.SecurityIntegrations.AlterSCIMIntegration(ctx, alterRequestUnsetTags)
+		err = client.SecurityIntegrations.AlterScimIntegration(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)

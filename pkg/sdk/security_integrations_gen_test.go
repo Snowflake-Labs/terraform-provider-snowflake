@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestSecurityIntegrations_CreateSAML2(t *testing.T) {
+func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateSAML2SecurityIntegrationOptions
-	defaultOpts := func() *CreateSAML2SecurityIntegrationOptions {
-		return &CreateSAML2SecurityIntegrationOptions{
+	// Minimal valid CreateSaml2SecurityIntegrationOptions
+	defaultOpts := func() *CreateSaml2SecurityIntegrationOptions {
+		return &CreateSaml2SecurityIntegrationOptions{
 			name:          id,
 			Enabled:       true,
 			Saml2Issuer:   "issuer",
@@ -20,7 +20,7 @@ func TestSecurityIntegrations_CreateSAML2(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateSAML2SecurityIntegrationOptions = nil
+		var opts *CreateSaml2SecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -28,7 +28,7 @@ func TestSecurityIntegrations_CreateSAML2(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSAML2SecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSaml2SecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -57,12 +57,12 @@ func TestSecurityIntegrations_CreateSAML2(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_CreateSCIM(t *testing.T) {
+func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateSCIMSecurityIntegrationOptions
-	defaultOpts := func() *CreateSCIMSecurityIntegrationOptions {
-		return &CreateSCIMSecurityIntegrationOptions{
+	// Minimal valid CreateScimSecurityIntegrationOptions
+	defaultOpts := func() *CreateScimSecurityIntegrationOptions {
+		return &CreateScimSecurityIntegrationOptions{
 			name:       id,
 			Enabled:    true,
 			ScimClient: "GENERIC",
@@ -71,7 +71,7 @@ func TestSecurityIntegrations_CreateSCIM(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateSCIMSecurityIntegrationOptions = nil
+		var opts *CreateScimSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -79,7 +79,7 @@ func TestSecurityIntegrations_CreateSCIM(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSCIMSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateScimSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -97,24 +97,24 @@ func TestSecurityIntegrations_CreateSCIM(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
+func TestSecurityIntegrations_AlterSaml2Integration(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterSAML2IntegrationSecurityIntegrationOptions
-	defaultOpts := func() *AlterSAML2IntegrationSecurityIntegrationOptions {
-		return &AlterSAML2IntegrationSecurityIntegrationOptions{
+	// Minimal valid AlterSaml2IntegrationSecurityIntegrationOptions
+	defaultOpts := func() *AlterSaml2SecurityIntegrationOptions {
+		return &AlterSaml2SecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterSAML2IntegrationSecurityIntegrationOptions = nil
+		var opts *AlterSaml2SecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SAML2IntegrationSet{
+		opts.Set = &Saml2IntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -123,22 +123,22 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SAML2IntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSAML2IntegrationSecurityIntegrationOptions.Set", "Enabled", "Saml2Issuer", "Saml2SsoUrl", "Saml2Provider",
+		opts.Set = &Saml2IntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2IntegrationSecurityIntegrationOptions.Set", "Enabled", "Saml2Issuer", "Saml2SsoUrl", "Saml2Provider",
 			"Saml2X509Cert", "AllowedUserDomains", "AllowedEmailPatterns", "Saml2SpInitiatedLoginPageLabel", "Saml2EnableSpInitiated", "Saml2SnowflakeX509Cert", "Saml2SignRequest",
 			"Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Saml2ForceAuthn", "Saml2SnowflakeIssuerUrl", "Saml2SnowflakeAcsUrl", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SAML2IntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSAML2IntegrationSecurityIntegrationOptions.Unset",
+		opts.Unset = &Saml2IntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2IntegrationSecurityIntegrationOptions.Unset",
 			"Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SAML2IntegrationSet{
+		opts.Set = &Saml2IntegrationSet{
 			Enabled:                        Pointer(true),
 			Saml2Issuer:                    Pointer("issuer"),
 			Saml2SsoUrl:                    Pointer("url"),
@@ -165,7 +165,7 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SAML2IntegrationUnset{
+		opts.Unset = &Saml2IntegrationUnset{
 			Enabled:                    Pointer(true),
 			Saml2ForceAuthn:            Pointer(true),
 			Saml2RequestedNameidFormat: Pointer(true),
@@ -182,24 +182,24 @@ func TestSecurityIntegrations_AlterSAML2Integration(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterSCIMIntegration(t *testing.T) {
+func TestSecurityIntegrations_AlterScimIntegration(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterSCIMIntegrationSecurityIntegrationOptions
-	defaultOpts := func() *AlterSCIMIntegrationSecurityIntegrationOptions {
-		return &AlterSCIMIntegrationSecurityIntegrationOptions{
+	// Minimal valid AlterScimIntegrationSecurityIntegrationOptions
+	defaultOpts := func() *AlterScimIntegrationSecurityIntegrationOptions {
+		return &AlterScimIntegrationSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterSCIMIntegrationSecurityIntegrationOptions = nil
+		var opts *AlterScimIntegrationSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SCIMIntegrationSet{
+		opts.Set = &ScimIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -208,20 +208,20 @@ func TestSecurityIntegrations_AlterSCIMIntegration(t *testing.T) {
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SCIMIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSCIMIntegrationSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		opts.Set = &ScimIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SCIMIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSCIMIntegrationSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		opts.Unset = &ScimIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		networkPolicyID := randomAccountObjectIdentifier()
-		opts.Set = &SCIMIntegrationSet{
+		opts.Set = &ScimIntegrationSet{
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(networkPolicyID),
 			SyncPassword:  Pointer(true),
@@ -233,7 +233,7 @@ func TestSecurityIntegrations_AlterSCIMIntegration(t *testing.T) {
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SCIMIntegrationUnset{
+		opts.Unset = &ScimIntegrationUnset{
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(true),
 			SyncPassword:  Pointer(true),

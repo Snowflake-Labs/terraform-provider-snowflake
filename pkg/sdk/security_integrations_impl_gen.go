@@ -12,22 +12,22 @@ type securityIntegrations struct {
 	client *Client
 }
 
-func (v *securityIntegrations) CreateSAML2(ctx context.Context, request *CreateSAML2SecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) CreateSCIM(ctx context.Context, request *CreateSCIMSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterSAML2Integration(ctx context.Context, request *AlterSAML2IntegrationSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterSCIMIntegration(ctx context.Context, request *AlterSCIMIntegrationSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterScimIntegration(ctx context.Context, request *AlterScimIntegrationSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -68,8 +68,8 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateSAML2SecurityIntegrationRequest) toOpts() *CreateSAML2SecurityIntegrationOptions {
-	opts := &CreateSAML2SecurityIntegrationOptions{
+func (r *CreateSaml2SecurityIntegrationRequest) toOpts() *CreateSaml2SecurityIntegrationOptions {
+	opts := &CreateSaml2SecurityIntegrationOptions{
 		OrReplace:                      r.OrReplace,
 		IfNotExists:                    r.IfNotExists,
 		name:                           r.name,
@@ -94,8 +94,8 @@ func (r *CreateSAML2SecurityIntegrationRequest) toOpts() *CreateSAML2SecurityInt
 	return opts
 }
 
-func (r *CreateSCIMSecurityIntegrationRequest) toOpts() *CreateSCIMSecurityIntegrationOptions {
-	opts := &CreateSCIMSecurityIntegrationOptions{
+func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityIntegrationOptions {
+	opts := &CreateScimSecurityIntegrationOptions{
 		OrReplace:     r.OrReplace,
 		IfNotExists:   r.IfNotExists,
 		name:          r.name,
@@ -109,8 +109,8 @@ func (r *CreateSCIMSecurityIntegrationRequest) toOpts() *CreateSCIMSecurityInteg
 	return opts
 }
 
-func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2IntegrationSecurityIntegrationOptions {
-	opts := &AlterSAML2IntegrationSecurityIntegrationOptions{
+func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityIntegrationOptions {
+	opts := &AlterSaml2SecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
@@ -119,7 +119,7 @@ func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2In
 		RefreshSaml2SnowflakePrivateKey: r.RefreshSaml2SnowflakePrivateKey,
 	}
 	if r.Set != nil {
-		opts.Set = &SAML2IntegrationSet{
+		opts.Set = &Saml2IntegrationSet{
 			Enabled:                        r.Set.Enabled,
 			Saml2Issuer:                    r.Set.Saml2Issuer,
 			Saml2SsoUrl:                    r.Set.Saml2SsoUrl,
@@ -140,7 +140,7 @@ func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2In
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &SAML2IntegrationUnset{
+		opts.Unset = &Saml2IntegrationUnset{
 			Enabled:                    r.Unset.Enabled,
 			Saml2ForceAuthn:            r.Unset.Saml2ForceAuthn,
 			Saml2RequestedNameidFormat: r.Unset.Saml2RequestedNameidFormat,
@@ -151,15 +151,15 @@ func (r *AlterSAML2IntegrationSecurityIntegrationRequest) toOpts() *AlterSAML2In
 	return opts
 }
 
-func (r *AlterSCIMIntegrationSecurityIntegrationRequest) toOpts() *AlterSCIMIntegrationSecurityIntegrationOptions {
-	opts := &AlterSCIMIntegrationSecurityIntegrationOptions{
+func (r *AlterScimIntegrationSecurityIntegrationRequest) toOpts() *AlterScimIntegrationSecurityIntegrationOptions {
+	opts := &AlterScimIntegrationSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &SCIMIntegrationSet{
+		opts.Set = &ScimIntegrationSet{
 			Enabled:       r.Set.Enabled,
 			NetworkPolicy: r.Set.NetworkPolicy,
 			SyncPassword:  r.Set.SyncPassword,
@@ -167,7 +167,7 @@ func (r *AlterSCIMIntegrationSecurityIntegrationRequest) toOpts() *AlterSCIMInte
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &SCIMIntegrationUnset{
+		opts.Unset = &ScimIntegrationUnset{
 			Enabled:       r.Unset.Enabled,
 			NetworkPolicy: r.Unset.NetworkPolicy,
 			SyncPassword:  r.Unset.SyncPassword,

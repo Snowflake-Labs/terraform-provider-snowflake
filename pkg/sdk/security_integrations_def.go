@@ -4,20 +4,20 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-type SCIMSecurityIntegrationSCIMClientOption string
+type ScimSecurityIntegrationScimClientOption string
 
 var (
-	SCIMSecurityIntegrationSCIMClientOkta    SCIMSecurityIntegrationSCIMClientOption = "OKTA"
-	SCIMSecurityIntegrationSCIMClientAzure   SCIMSecurityIntegrationSCIMClientOption = "AZURE"
-	SCIMSecurityIntegrationSCIMClientGeneric SCIMSecurityIntegrationSCIMClientOption = "GENERIC"
+	ScimSecurityIntegrationScimClientOkta    ScimSecurityIntegrationScimClientOption = "OKTA"
+	ScimSecurityIntegrationScimClientAzure   ScimSecurityIntegrationScimClientOption = "AZURE"
+	ScimSecurityIntegrationScimClientGeneric ScimSecurityIntegrationScimClientOption = "GENERIC"
 )
 
-type SCIMSecurityIntegrationRunAsRoleOption string
+type ScimSecurityIntegrationRunAsRoleOption string
 
 var (
-	SCIMSecurityIntegrationRunAsRoleOktaProvisioner        SCIMSecurityIntegrationRunAsRoleOption = "OKTA_PROVISIONER"
-	SCIMSecurityIntegrationRunAsRoleAadProvisioner         SCIMSecurityIntegrationRunAsRoleOption = "AAD_PROVISIONER"
-	SCIMSecurityIntegrationRunAsRoleGenericScimProvisioner SCIMSecurityIntegrationRunAsRoleOption = "GENERIC_SCIM_PROVISIONER"
+	ScimSecurityIntegrationRunAsRoleOktaProvisioner        ScimSecurityIntegrationRunAsRoleOption = "OKTA_PROVISIONER"
+	ScimSecurityIntegrationRunAsRoleAadProvisioner         ScimSecurityIntegrationRunAsRoleOption = "AAD_PROVISIONER"
+	ScimSecurityIntegrationRunAsRoleGenericScimProvisioner ScimSecurityIntegrationRunAsRoleOption = "GENERIC_SCIM_PROVISIONER"
 )
 
 var (
@@ -52,7 +52,7 @@ func alterSecurityIntegrationOperation(structName string, apply func(qs *g.Query
 	return qs
 }
 
-var saml2IntegrationSetDef = g.NewQueryStruct("SAML2IntegrationSet").
+var saml2IntegrationSetDef = g.NewQueryStruct("Saml2IntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("SAML2_ISSUER", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("SAML2_SSO_URL", g.ParameterOptions().SingleQuotes()).
@@ -74,7 +74,7 @@ var saml2IntegrationSetDef = g.NewQueryStruct("SAML2IntegrationSet").
 		"Saml2SpInitiatedLoginPageLabel", "Saml2EnableSpInitiated", "Saml2SnowflakeX509Cert", "Saml2SignRequest", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl",
 		"Saml2ForceAuthn", "Saml2SnowflakeIssuerUrl", "Saml2SnowflakeAcsUrl", "Comment")
 
-var saml2IntegrationUnsetDef = g.NewQueryStruct("SAML2IntegrationUnset").
+var saml2IntegrationUnsetDef = g.NewQueryStruct("Saml2IntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("SAML2_FORCE_AUTHN").
 	OptionalSQL("SAML2_REQUESTED_NAMEID_FORMAT").
@@ -82,14 +82,14 @@ var saml2IntegrationUnsetDef = g.NewQueryStruct("SAML2IntegrationUnset").
 	OptionalSQL("COMMENT").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment")
 
-var scimIntegrationSetDef = g.NewQueryStruct("SCIMIntegrationSet").
+var scimIntegrationSetDef = g.NewQueryStruct("ScimIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 	OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions()).
 	OptionalComment().
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
 
-var scimIntegrationUnsetDef = g.NewQueryStruct("SCIMIntegrationUnset").
+var scimIntegrationUnsetDef = g.NewQueryStruct("ScimIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("NETWORK_POLICY").
 	OptionalSQL("SYNC_PASSWORD").
@@ -102,9 +102,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 	g.KindOfT[AccountObjectIdentifier](),
 ).
 	CustomOperation(
-		"CreateSAML2",
+		"CreateSaml2",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2",
-		createSecurityIntegrationOperation("CreateSAML2Integration", func(qs *g.QueryStruct) *g.QueryStruct {
+		createSecurityIntegrationOperation("CreateSaml2", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SAML2")).
 				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
@@ -128,20 +128,20 @@ var SecurityIntegrationsDef = g.NewInterface(
 		emailPatternDef,
 	).
 	CustomOperation(
-		"CreateSCIM",
+		"CreateScim",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim",
-		createSecurityIntegrationOperation("CreateSCIMIntegration", func(qs *g.QueryStruct) *g.QueryStruct {
+		createSecurityIntegrationOperation("CreateScim", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SCIM")).
 				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
-				OptionalAssignment(
+				Assignment(
 					"SCIM_CLIENT",
-					g.KindOfT[SCIMSecurityIntegrationSCIMClientOption](),
+					g.KindOfT[ScimSecurityIntegrationScimClientOption](),
 					g.ParameterOptions().SingleQuotes().Required(),
 				).
-				OptionalAssignment(
+				Assignment(
 					"RUN_AS_ROLE",
-					g.KindOfT[SCIMSecurityIntegrationRunAsRoleOption](),
+					g.KindOfT[ScimSecurityIntegrationRunAsRoleOption](),
 					g.ParameterOptions().SingleQuotes().Required(),
 				).
 				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
@@ -149,9 +149,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"AlterSAML2Integration",
+		"AlterSaml2",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2",
-		alterSecurityIntegrationOperation("AlterSAML2Integration", func(qs *g.QueryStruct) *g.QueryStruct {
+		alterSecurityIntegrationOperation("AlterSaml2", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
 				saml2IntegrationSetDef,
@@ -165,9 +165,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"AlterSCIMIntegration",
+		"AlterScim",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim",
-		alterSecurityIntegrationOperation("AlterSCIMIntegration", func(qs *g.QueryStruct) *g.QueryStruct {
+		alterSecurityIntegrationOperation("AlterScim", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
 				scimIntegrationSetDef,
