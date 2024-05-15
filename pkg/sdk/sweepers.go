@@ -16,7 +16,6 @@ func SweepAfterAcceptanceTests(client *Client, suffix string) error {
 	return sweep(client, suffix)
 }
 
-// TODO [SNOW-955520]: create account-level objects with appropriate suffix during tests (only the sweeped ones for now?)
 // TODO [SNOW-955520]: move this to test code
 // TODO [SNOW-955520]: use if exists/use method from helper for dropping
 // TODO [SNOW-867247]: sweep all missing account-level objects (like users, integrations, replication groups, network policies, ...)
@@ -152,8 +151,7 @@ func getDatabaseSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping databases ended with error, err = %w", err)
 		}
 		for _, db := range dbs {
-			// TODO [SNOW-955520]: remove "terraform_test_database" condition after this PR is merged
-			if strings.HasSuffix(db.Name, suffix) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
+			if strings.HasSuffix(db.Name, suffix) && db.Name != "SNOWFLAKE" {
 				log.Printf("[DEBUG] Dropping database %s", db.ID().FullyQualifiedName())
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
 					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
@@ -180,8 +178,7 @@ func getWarehouseSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping warehouses ended with error, err = %w", err)
 		}
 		for _, wh := range whs {
-			// TODO [SNOW-955520]: remove "terraform_test_database" condition after this PR is merged
-			if strings.HasSuffix(wh.Name, suffix) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
+			if strings.HasSuffix(wh.Name, suffix) && wh.Name != "SNOWFLAKE" {
 				log.Printf("[DEBUG] Dropping warehouse %s", wh.ID().FullyQualifiedName())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return fmt.Errorf("sweeping warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err)
