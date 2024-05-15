@@ -26,12 +26,14 @@ resource "snowflake_network_policy" "policy" {
 
 ### Required
 
-- `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account
 - `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created.
 
 ### Optional
 
-- `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account<br><br>**Do not** add `0.0.0.0/0` to `blocked_ip_list`
+- `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.
+- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.
+- `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account<br><br>**Do not** add `0.0.0.0/0` to `blocked_ip_list`.
+- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.
 - `comment` (String) Specifies a comment for the network policy.
 
 ### Read-Only

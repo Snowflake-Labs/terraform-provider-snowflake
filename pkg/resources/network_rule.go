@@ -36,7 +36,7 @@ var networkRuleSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ForceNew:     true,
-		Description:  "Specifies the type of network identifiers being allowed or blocked. A network rule can have only one type. Allowed values are IPV4, AWSVPCEID, AZURELINKID and HOST_PORT; see https://docs.snowflake.com/en/sql-reference/sql/create-network-rule#required-parameters for details.",
+		Description:  "Specifies the type of network identifiers being allowed or blocked. A network rule can have only one type. Allowed values are IPV4, AWSVPCEID, AZURELINKID and HOST_PORT; allowed values are determined by the mode of the network rule; see https://docs.snowflake.com/en/sql-reference/sql/create-network-rule#required-parameters for details.",
 		ValidateFunc: validation.StringInSlice([]string{"IPV4", "AWSVPCEID", "AZURELINKID", "HOST_PORT"}, false),
 	},
 	"value_list": {
