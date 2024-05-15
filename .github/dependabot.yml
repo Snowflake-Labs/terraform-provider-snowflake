@@ -2,14 +2,14 @@ version: 2
 updates:
   - package-ecosystem: gomod
     directory: '/'
-     open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     schedule:
-      interval: daily
+      interval: 'daily'
   - package-ecosystem: "gomod"
     directory: "/tools"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     schedule:
-      interval: "daily"
+      interval: 'weekly'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
