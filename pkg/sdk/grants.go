@@ -270,7 +270,7 @@ func (row grantRow) convert() *Grant {
 		GrantOn:     grantOn,
 		GrantedTo:   grantedTo,
 		GrantTo:     grantTo,
-		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
+		Name:        NewObjectIdentifierFromFullyQualifiedName(row.Name),
 		GranteeName: granteeName,
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
