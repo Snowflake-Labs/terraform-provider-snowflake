@@ -4,6 +4,51 @@ package sdk
 
 import ()
 
+func NewGrantApplicationRoleRequest(
+	name DatabaseObjectIdentifier,
+) *GrantApplicationRoleRequest {
+	s := GrantApplicationRoleRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *GrantApplicationRoleRequest) WithTo(To KindOfRoleRequest) *GrantApplicationRoleRequest {
+	s.To = To
+	return s
+}
+
+func NewKindOfRoleRequest() *KindOfRoleRequest {
+	return &KindOfRoleRequest{}
+}
+
+func (s *KindOfRoleRequest) WithRoleName(RoleName *AccountObjectIdentifier) *KindOfRoleRequest {
+	s.RoleName = RoleName
+	return s
+}
+
+func (s *KindOfRoleRequest) WithApplicationRoleName(ApplicationRoleName *DatabaseObjectIdentifier) *KindOfRoleRequest {
+	s.ApplicationRoleName = ApplicationRoleName
+	return s
+}
+
+func (s *KindOfRoleRequest) WithApplicationName(ApplicationName *AccountObjectIdentifier) *KindOfRoleRequest {
+	s.ApplicationName = ApplicationName
+	return s
+}
+
+func NewRevokeApplicationRoleRequest(
+	name DatabaseObjectIdentifier,
+) *RevokeApplicationRoleRequest {
+	s := RevokeApplicationRoleRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *RevokeApplicationRoleRequest) WithFrom(From KindOfRoleRequest) *RevokeApplicationRoleRequest {
+	s.From = From
+	return s
+}
+
 func NewShowApplicationRoleRequest() *ShowApplicationRoleRequest {
 	return &ShowApplicationRoleRequest{}
 }
@@ -16,14 +61,4 @@ func (s *ShowApplicationRoleRequest) WithApplicationName(ApplicationName Account
 func (s *ShowApplicationRoleRequest) WithLimit(Limit *LimitFrom) *ShowApplicationRoleRequest {
 	s.Limit = Limit
 	return s
-}
-
-func NewShowByIDApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-	ApplicationName AccountObjectIdentifier,
-) *ShowByIDApplicationRoleRequest {
-	s := ShowByIDApplicationRoleRequest{}
-	s.name = name
-	s.ApplicationName = ApplicationName
-	return &s
 }

@@ -1752,8 +1752,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 func TestInt_ShowGrants(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
+
 	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
+
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),
 	}, shareTest.ID())
@@ -1764,10 +1766,12 @@ func TestInt_ShowGrants(t *testing.T) {
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
+
 	t.Run("without options", func(t *testing.T) {
 		_, err := client.Grants.Show(ctx, nil)
 		require.NoError(t, err)
 	})
+
 	t.Run("with options", func(t *testing.T) {
 		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			On: &sdk.ShowGrantsOn{
@@ -1779,6 +1783,41 @@ func TestInt_ShowGrants(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(grants))
+	})
+
+	t.Run("handles unquoted granted object names", func(t *testing.T) {
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		}
+		// This name is returned as unquoted from Snowflake
+		name := "G6TM2"
+		table, tableCleanup := testClientHelper().Table.CreateTableWithColumns(t, testClientHelper().Ids.SchemaId(), name, columns)
+		t.Cleanup(tableCleanup)
+
+		role, roleCleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(roleCleanup)
+
+		privileges := &sdk.AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
+		}
+		on := &sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       table.ID(),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: role.ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, table.ID().FullyQualifiedName(), grants[0].Name.FullyQualifiedName())
 	})
 }
 

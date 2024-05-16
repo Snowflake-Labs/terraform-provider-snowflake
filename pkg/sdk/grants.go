@@ -263,6 +263,13 @@ func (row grantRow) convert() *Grant {
 		grantOn = ObjectTypeExternalVolume
 	}
 
+	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
+	name, err := ParseObjectIdentifier(row.Name)
+	if err != nil {
+		log.Printf("Failed to parse identifier: %s", err)
+		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)
+	}
+
 	return &Grant{
 		CreatedOn:   row.CreatedOn,
 		Privilege:   row.Privilege,
@@ -270,7 +277,7 @@ func (row grantRow) convert() *Grant {
 		GrantOn:     grantOn,
 		GrantedTo:   grantedTo,
 		GrantTo:     grantTo,
-		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
+		Name:        name,
 		GranteeName: granteeName,
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),

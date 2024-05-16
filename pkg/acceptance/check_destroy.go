@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -362,4 +363,35 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 		}
 		return nil
 	}
+}
+
+func TestAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {
+	client := TestAccProvider.Meta().(*provider.Context).Client
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_grant_application_role" {
+			continue
+		}
+		ctx := context.Background()
+		id := rs.Primary.ID
+		ids := strings.Split(id, "|")
+		applicationRoleName := ids[0]
+		objectType := ids[1]
+		parentRoleName := ids[2]
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			Of: &sdk.ShowGrantsOf{
+				ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRoleName),
+			},
+		})
+		if err != nil {
+			continue
+		}
+		for _, grant := range grants {
+			if grant.GrantedTo == sdk.ObjectType(objectType) {
+				if grant.GranteeName.FullyQualifiedName() == parentRoleName {
+					return fmt.Errorf("application role grant %v still exists", grant)
+				}
+			}
+		}
+	}
+	return nil
 }
