@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"encoding/csv"
 	"fmt"
 	"strings"
 )
@@ -12,6 +13,31 @@ type Identifier interface {
 type ObjectIdentifier interface {
 	Identifier
 	FullyQualifiedName() string
+}
+
+func ParseObjectIdentifier(identifier string) (ObjectIdentifier, error) {
+	reader := csv.NewReader(strings.NewReader(identifier))
+	reader.Comma = '.'
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
+	}
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	parts := lines[0]
+	switch len(parts) {
+	case 1:
+		return NewAccountObjectIdentifier(parts[0]), nil
+	case 2:
+		return NewDatabaseObjectIdentifier(parts[0], parts[1]), nil
+	case 3:
+		return NewSchemaObjectIdentifier(parts[0], parts[1], parts[2]), nil
+	case 4:
+		return NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
+	default:
+		return nil, fmt.Errorf("unable to classify identifier: %s", identifier)
+	}
 }
 
 func NewObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) ObjectIdentifier {
