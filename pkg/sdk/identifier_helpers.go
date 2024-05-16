@@ -15,6 +15,8 @@ type ObjectIdentifier interface {
 	FullyQualifiedName() string
 }
 
+// TODO(SNOW-999049): This function will be tested/improved/used more wiedely during the identifiers rework.
+// Right now, the implementation is just a copy of DecodeSnowflakeParameterID used in resources.
 func ParseObjectIdentifier(identifier string) (ObjectIdentifier, error) {
 	reader := csv.NewReader(strings.NewReader(identifier))
 	reader.Comma = '.'
