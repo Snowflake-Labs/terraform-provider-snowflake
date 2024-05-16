@@ -465,6 +465,8 @@ const (
 	ObjectParameterTraceLevel                          ObjectParameter = "TRACE_LEVEL"
 	ObjectParameterUserTaskManagedInitialWarehouseSize ObjectParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
 	ObjectParameterUserTaskTimeoutMs                   ObjectParameter = "USER_TASK_TIMEOUT_MS"
+	ObjectParameterCatalog                             ObjectParameter = "CATALOG"
+	ObjectParameterExternalVolume                      ObjectParameter = "EXTERNAL_VOLUME"
 
 	// User Parameters
 	ObjectParameterEnableUnredactedQuerySyntaxError ObjectParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"

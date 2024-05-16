@@ -22,15 +22,12 @@ var (
 	_ validatable = new(describeDatabaseOptions)
 )
 
+// TODO: What should I do with clone
 // TODO: Test new values (unit and int)
 // Modified:
-// - Create
-// - Alter
-// - Drop
-// TODO: todo - doc-discuss
-// - Create
-// - create from share - everything minus Transient and Data_retention option
-// - create as replica of - everything as in Create
+// - [ ] Create
+// 	- Create from share - everything minus Transient and Data_retention option
+// 	- Create as replica of - everything as in Create
 
 type Databases interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
@@ -44,7 +41,6 @@ type Databases interface {
 	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
-	Use(ctx context.Context, id AccountObjectIdentifier) error
 }
 
 var _ Databases = (*databases)(nil)
@@ -158,8 +154,11 @@ type CreateDatabaseOptions struct {
 	Clone                      *Clone                   `ddl:"-"`
 	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier `ddl:"parameter" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier `ddl:"parameter" sql:"CATALOG"`
+	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
+	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Tag                        []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
 }
@@ -180,11 +179,9 @@ func (opts *CreateDatabaseOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDatabaseOptions", "OrReplace", "IfNotExists"))
 	}
-	// TODO: Test
 	if opts.ExternalVolume != nil && !ValidObjectIdentifier(opts.ExternalVolume) {
 		errs = append(errs, errInvalidIdentifier("CreateDatabaseOptions", "ExternalVolume"))
 	}
-	// TODO: Test
 	if opts.Catalog != nil && !ValidObjectIdentifier(opts.Catalog) {
 		errs = append(errs, errInvalidIdentifier("CreateDatabaseOptions", "Catalog"))
 	}
@@ -209,11 +206,21 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 
 // CreateSharedDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSharedDatabaseOptions struct {
-	create    bool                     `ddl:"static" sql:"CREATE"`
-	database  bool                     `ddl:"static" sql:"DATABASE"`
-	name      AccountObjectIdentifier  `ddl:"identifier"`
-	fromShare ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
-	Comment   *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create      bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace   *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	database    bool                     `ddl:"static" sql:"DATABASE"`
+	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier  `ddl:"identifier"`
+	fromShare   ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
+	// TODO: Can be used but is not returned in the `show parameters for database` and can't be altered
+	// MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
+	DefaultDDLCollation *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel            *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel          *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag                 []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
@@ -223,6 +230,15 @@ func (opts *CreateSharedDatabaseOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateSharedDatabaseOptions", "OrReplace", "IfNotExists"))
+	}
+	if opts.ExternalVolume != nil && !ValidObjectIdentifier(opts.ExternalVolume) {
+		errs = append(errs, errInvalidIdentifier("CreateSharedDatabaseOptions", "ExternalVolume"))
+	}
+	if opts.Catalog != nil && !ValidObjectIdentifier(opts.Catalog) {
+		errs = append(errs, errInvalidIdentifier("CreateSharedDatabaseOptions", "Catalog"))
 	}
 	if !ValidObjectIdentifier(opts.fromShare) {
 		errs = append(errs, errInvalidIdentifier("CreateSharedDatabaseOptions", "fromShare"))
@@ -251,11 +267,21 @@ func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier
 
 // CreateSecondaryDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSecondaryDatabaseOptions struct {
-	create                  bool                     `ddl:"static" sql:"CREATE"`
-	database                bool                     `ddl:"static" sql:"DATABASE"`
-	name                    AccountObjectIdentifier  `ddl:"identifier"`
-	primaryDatabase         ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
-	DataRetentionTimeInDays *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	create                     bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient                  *bool                    `ddl:"keyword" sql:"TRANSIENT"`
+	database                   bool                     `ddl:"static" sql:"DATABASE"`
+	IfNotExists                *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier  `ddl:"identifier"`
+	primaryDatabase            ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
+	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
+	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
@@ -268,6 +294,15 @@ func (opts *CreateSecondaryDatabaseOptions) validate() error {
 	}
 	if !ValidObjectIdentifier(opts.primaryDatabase) {
 		errs = append(errs, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "primaryDatabase"))
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateSecondaryDatabaseOptions", "OrReplace", "IfNotExists"))
+	}
+	if opts.ExternalVolume != nil && !ValidObjectIdentifier(opts.ExternalVolume) {
+		errs = append(errs, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "ExternalVolume"))
+	}
+	if opts.Catalog != nil && !ValidObjectIdentifier(opts.Catalog) {
+		errs = append(errs, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "Catalog"))
 	}
 	return errors.Join(errs...)
 }
@@ -291,16 +326,16 @@ func (v *databases) CreateSecondary(ctx context.Context, id AccountObjectIdentif
 
 // AlterDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database.
 type AlterDatabaseOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"`
-	database bool                    `ddl:"static" sql:"DATABASE"`
-	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name     AccountObjectIdentifier `ddl:"identifier"`
-	NewName  AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith AccountObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
-	Set      *DatabaseSet            `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *DatabaseUnset          `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTag   []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTag []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
+	alter    bool                     `ddl:"static" sql:"ALTER"`
+	database bool                     `ddl:"static" sql:"DATABASE"`
+	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier  `ddl:"identifier"`
+	NewName  *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith *AccountObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
+	Set      *DatabaseSet             `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *DatabaseUnset           `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterDatabaseOptions) validate() error {
@@ -310,6 +345,12 @@ func (opts *AlterDatabaseOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
+		errs = append(errs, errInvalidIdentifier("AlterDatabaseOptions", "NewName"))
+	}
+	if opts.SwapWith != nil && !ValidObjectIdentifier(opts.SwapWith) {
+		errs = append(errs, errInvalidIdentifier("AlterDatabaseOptions", "SwapWith"))
 	}
 	if !exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset, opts.SwapWith, opts.SetTag, opts.UnsetTag) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseOptions", "NewName", "Set", "Unset", "SwapWith", "SetTag", "UnsetTag"))
@@ -330,8 +371,8 @@ func (opts *AlterDatabaseOptions) validate() error {
 type DatabaseSet struct {
 	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier `ddl:"parameter" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier `ddl:"parameter" sql:"CATALOG"`
+	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
 	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
 	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
 	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
@@ -350,14 +391,14 @@ func (v *DatabaseSet) validate() error {
 }
 
 type DatabaseUnset struct {
-	DataRetentionTimeInDays    *bool       `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *bool       `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *bool       `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *bool       `ddl:"keyword" sql:"CATALOG"`
-	DefaultDDLCollation        *bool       `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
-	LogLevel                   *LogLevel   `ddl:"keyword" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel `ddl:"keyword" sql:"TRACE_LEVEL"`
-	Comment                    *bool       `ddl:"keyword" sql:"COMMENT"`
+	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume             *bool `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *bool `ddl:"keyword" sql:"CATALOG"`
+	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	LogLevel                   *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	TraceLevel                 *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *DatabaseUnset) validate() error {
@@ -401,16 +442,6 @@ func (opts *AlterDatabaseReplicationOptions) validate() error {
 	if !exactlyOneValueSet(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseReplicationOptions", "EnableReplication", "DisableReplication", "Refresh"))
 	}
-	if valueSet(opts.EnableReplication) {
-		if err := opts.EnableReplication.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if valueSet(opts.DisableReplication) {
-		if err := opts.DisableReplication.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
 	return errors.Join(errs...)
 }
 
@@ -419,16 +450,8 @@ type EnableReplication struct {
 	IgnoreEditionCheck *bool               `ddl:"keyword" sql:"IGNORE EDITION CHECK"`
 }
 
-func (v *EnableReplication) validate() error {
-	return nil
-}
-
 type DisableReplication struct {
 	ToAccounts []AccountIdentifier `ddl:"keyword,no_parentheses" sql:"TO ACCOUNTS"`
-}
-
-func (v *DisableReplication) validate() error {
-	return nil
 }
 
 func (v *databases) AlterReplication(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseReplicationOptions) error {
@@ -468,16 +491,6 @@ func (opts *AlterDatabaseFailoverOptions) validate() error {
 	if !exactlyOneValueSet(opts.EnableFailover, opts.DisableFailover, opts.Primary) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseFailoverOptions", "EnableFailover", "DisableFailover", "Primary"))
 	}
-	if valueSet(opts.EnableFailover) {
-		if err := opts.EnableFailover.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if valueSet(opts.DisableFailover) {
-		if err := opts.DisableFailover.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
 	return errors.Join(errs...)
 }
 
@@ -485,16 +498,8 @@ type EnableFailover struct {
 	ToAccounts []AccountIdentifier `ddl:"keyword,no_parentheses" sql:"TO ACCOUNTS"`
 }
 
-func (v *EnableFailover) validate() error {
-	return nil
-}
-
 type DisableFailover struct {
 	ToAccounts []AccountIdentifier `ddl:"keyword,no_parentheses" sql:"TO ACCOUNTS"`
-}
-
-func (v *DisableFailover) validate() error {
-	return nil
 }
 
 func (v *databases) AlterFailover(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseFailoverOptions) error {
@@ -677,10 +682,4 @@ func (v *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 		Rows: rows,
 	}
 	return &details, err
-}
-
-// Use is based on https://docs.snowflake.com/en/sql-reference/sql/use-database.
-func (v *databases) Use(ctx context.Context, id AccountObjectIdentifier) error {
-	// proxy to sessions
-	return v.client.Sessions.UseDatabase(ctx, id)
 }
