@@ -1,0 +1,1 @@
+terraform import snowflake_network_rule.example rulename
