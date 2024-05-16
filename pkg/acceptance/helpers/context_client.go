@@ -32,14 +32,14 @@ func (c *ContextClient) CurrentAccount(t *testing.T) string {
 	return currentAccount
 }
 
-func (c *ContextClient) CurrentRole(t *testing.T) string {
+func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
 
 	currentRole, err := c.client().CurrentRole(ctx)
 	require.NoError(t, err)
 
-	return currentRole
+	return sdk.NewAccountObjectIdentifier(currentRole)
 }
 
 func (c *ContextClient) CurrentRegion(t *testing.T) string {

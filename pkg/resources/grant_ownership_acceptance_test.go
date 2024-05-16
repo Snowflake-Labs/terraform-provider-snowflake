@@ -617,12 +617,8 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					grantOwnershipToTheCurrentRole(t, sdk.OwnershipGrantOn{
-						Object: &sdk.Object{
-							ObjectType: sdk.ObjectTypeDatabase,
-							Name:       databaseId,
-						},
-					})
+					currentRole := acc.TestClient().Context.CurrentRole(t)
+					acc.TestClient().Role.GrantOwnershipOnAccountObject(t, currentRole, databaseId, sdk.ObjectTypeDatabase)
 					cleanupDatabase()
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
@@ -1206,22 +1202,4 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 
 		return nil
 	}
-}
-
-func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
-	t.Helper()
-	client := acc.Client(t)
-
-	ctx := context.Background()
-	currentRole := acc.TestClient().Context.CurrentRole(t)
-
-	err := client.Grants.GrantOwnership(
-		ctx,
-		on,
-		sdk.OwnershipGrantTo{
-			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
-		},
-		new(sdk.GrantOwnershipOptions),
-	)
-	assert.NoError(t, err)
 }

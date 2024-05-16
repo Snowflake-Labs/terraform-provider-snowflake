@@ -22,6 +22,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// TODO [SNOW-1431726]: Move to helpers
 	createApp := func(t *testing.T) *sdk.Application {
 		t.Helper()
 

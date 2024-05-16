@@ -826,7 +826,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
 
-	checkOwnershipOnObjectToRole := func(t *testing.T, on sdk.OwnershipGrantOn, role string) {
+	checkOwnershipOnObjectToRole := func(t *testing.T, on sdk.OwnershipGrantOn, role sdk.AccountObjectIdentifier) {
 		t.Helper()
 		if on.Object == nil {
 			t.Error("only on.Object check is supported")
@@ -838,12 +838,12 @@ func TestInt_GrantOwnership(t *testing.T) {
 		})
 		require.NoError(t, err)
 		_, err = collections.FindOne(grants, func(grant sdk.Grant) bool {
-			return grant.Privilege == "OWNERSHIP" && grant.GranteeName.Name() == role
+			return grant.Privilege == "OWNERSHIP" && grant.GranteeName.Name() == role.Name()
 		})
 		require.NoError(t, err)
 	}
 
-	grantOwnershipToRole := func(t *testing.T, roleName string, on sdk.OwnershipGrantOn, outboundOpts *sdk.OwnershipCurrentGrantsOutboundPrivileges) {
+	grantOwnershipToRole := func(t *testing.T, roleName sdk.AccountObjectIdentifier, on sdk.OwnershipGrantOn, outboundOpts *sdk.OwnershipCurrentGrantsOutboundPrivileges) {
 		t.Helper()
 
 		var opts *sdk.GrantOwnershipOptions
@@ -859,7 +859,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			ctx,
 			on,
 			sdk.OwnershipGrantTo{
-				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(roleName)),
+				AccountRoleName: sdk.Pointer(roleName),
 			},
 			opts,
 		)
@@ -976,7 +976,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	makeAccountRoleOperableOnPipe := func(t *testing.T, grantingRole string, pipe *sdk.Pipe) {
+	makeAccountRoleOperableOnPipe := func(t *testing.T, grantingRole sdk.AccountObjectIdentifier, pipe *sdk.Pipe) {
 		t.Helper()
 
 		err := client.Grants.GrantPrivilegesToAccountRole(
@@ -992,7 +992,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			sdk.NewAccountObjectIdentifier(grantingRole),
+			grantingRole,
 			new(sdk.GrantPrivilegesToAccountRoleOptions),
 		)
 		require.NoError(t, err)
@@ -1146,7 +1146,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID())
 
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
@@ -1211,7 +1211,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID())
 
 		usePreviousRole()
 
@@ -1273,7 +1273,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID())
 
 		usePreviousRole()
 
@@ -1372,7 +1372,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.Name)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID())
 	})
 
 	t.Run("on all pipes", func(t *testing.T) {
@@ -1409,8 +1409,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(secondPipe), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(secondPipe), role.ID())
 
 		currentRole := testClientHelper().Context.CurrentRole(t)
 		grantOwnershipToRole(t, currentRole, onAllPipesInSchema, nil)
@@ -1449,7 +1449,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID())
 
 		task, err = client.Tasks.ShowByID(ctx, task.ID())
 		require.NoError(t, err)
@@ -1513,7 +1513,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantTaskRole(t, taskRole.ID())
 
 		currentRole := testClientHelper().Context.CurrentRole(t)
-		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
+		grantTaskRole(t, currentRole)
 
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
@@ -1534,7 +1534,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			sdk.NewAccountObjectIdentifier(currentRole),
+			currentRole,
 			new(sdk.GrantPrivilegesToAccountRoleOptions),
 		)
 		require.NoError(t, err)
@@ -1566,7 +1566,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 		)
 		require.NoError(t, err)
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID())
 
 		currentTask, err = client.Tasks.ShowByID(ctx, task.ID())
 		require.NoError(t, err)
@@ -1613,8 +1613,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID())
 
 		currentTask, err = client.Tasks.ShowByID(ctx, task.ID())
 		require.NoError(t, err)
@@ -1641,7 +1641,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
 		grantTaskRole(t, role.ID())
-		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
+		grantTaskRole(t, currentRole)
 
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
@@ -1665,7 +1665,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			sdk.NewAccountObjectIdentifier(currentRole),
+			currentRole,
 			new(sdk.GrantPrivilegesToAccountRoleOptions),
 		)
 		require.NoError(t, err)
@@ -1683,7 +1683,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			sdk.NewAccountObjectIdentifier(currentRole),
+			currentRole,
 			new(sdk.GrantPrivilegesToAccountRoleOptions),
 		)
 		require.NoError(t, err)
@@ -1734,8 +1734,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
-		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID())
 
 		usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 		currentTask, err = client.Tasks.ShowByID(ctx, task.ID())
