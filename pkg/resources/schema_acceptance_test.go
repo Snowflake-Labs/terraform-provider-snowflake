@@ -383,15 +383,15 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 	})
 }
 
-func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
+func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		schema, err := acc.TestClient().Schema.Show(t, id)
+		schema, err := acc.TestClient().Schema.Show(t, schemaId)
 		if err != nil {
 			return err
 		}
 
-		database, err := acc.TestClient().Database.Show(t, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+		database, err := acc.TestClient().Database.Show(t, schemaId.DatabaseId())
 		if err != nil {
 			return err
 		}

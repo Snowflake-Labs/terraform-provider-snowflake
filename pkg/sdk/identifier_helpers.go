@@ -201,6 +201,10 @@ func (i DatabaseObjectIdentifier) DatabaseName() string {
 	return i.databaseName
 }
 
+func (i DatabaseObjectIdentifier) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
+}
+
 func (i DatabaseObjectIdentifier) Name() string {
 	return i.name
 }
