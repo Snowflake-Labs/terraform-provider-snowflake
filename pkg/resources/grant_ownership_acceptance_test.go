@@ -54,7 +54,7 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseFullyQualifiedName),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseFullyQualifiedName),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeSchema, accountRoleName, fmt.Sprintf("%s.%s", databaseName, schemaName)),
+					}, sdk.ObjectTypeSchema, accountRoleName, schemaFullyQualifiedName),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							DatabaseRole: sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName),
 						},
-					}, sdk.ObjectTypeSchema, databaseRoleName, fmt.Sprintf("%s.%s", databaseName, schemaName)),
+					}, sdk.ObjectTypeSchema, databaseRoleName, schemaFullyQualifiedName),
 				),
 			},
 			{
@@ -253,7 +253,7 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("%s.%s.%s", databaseName, schemaName, tableName)),
+					}, sdk.ObjectTypeTable, accountRoleName, tableFullyQualifiedName),
 				),
 			},
 			{
@@ -303,7 +303,7 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							DatabaseRole: sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName),
 						},
-					}, sdk.ObjectTypeTable, databaseRoleName, fmt.Sprintf("%s.%s.%s", databaseName, schemaName, tableName)),
+					}, sdk.ObjectTypeTable, databaseRoleName, tableFullyQualifiedName),
 				),
 			},
 			{
@@ -329,6 +329,8 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 	schemaName := acc.TestClient().Ids.Alpha()
 	tableName := acc.TestClient().Ids.Alpha()
 	secondTableName := acc.TestClient().Ids.Alpha()
+	tableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName).FullyQualifiedName()
+	secondTableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, secondTableName).FullyQualifiedName()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
@@ -358,7 +360,7 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("%s.%s.%s", databaseName, schemaName, tableName), fmt.Sprintf("%s.%s.%s", databaseName, schemaName, secondTableName)),
+					}, sdk.ObjectTypeTable, accountRoleName, tableFullyQualifiedName, secondTableFullyQualifiedName),
 				),
 			},
 			{
@@ -379,6 +381,8 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 
 	tableName := acc.TestClient().Ids.Alpha()
 	secondTableName := acc.TestClient().Ids.Alpha()
+	tableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName).FullyQualifiedName()
+	secondTableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, secondTableName).FullyQualifiedName()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
@@ -412,7 +416,7 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("%s.%s.%s", databaseName, schemaName, tableName), fmt.Sprintf("%s.%s.%s", databaseName, schemaName, secondTableName)),
+					}, sdk.ObjectTypeTable, accountRoleName, tableFullyQualifiedName, secondTableFullyQualifiedName),
 				),
 			},
 			{
@@ -461,7 +465,7 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 						In: &sdk.ShowGrantsIn{
 							Database: sdk.Pointer(databaseId),
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("%s.<TABLE>", databaseName)),
+					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("\"%s\".\"<TABLE>\"", databaseName)),
 				),
 			},
 			{
@@ -511,7 +515,7 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 						In: &sdk.ShowGrantsIn{
 							Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)),
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("%s.%s.<TABLE>", databaseName, schemaName)),
+					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("\"%s\".\"%s\".\"<TABLE>\"", databaseName, schemaName)),
 				),
 			},
 			{
@@ -608,7 +612,7 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseFullyQualifiedName),
 				),
 			},
 			{
@@ -667,7 +671,7 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseFullyQualifiedName),
 				),
 			},
 			{
@@ -723,7 +727,7 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeMaterializedView, accountRoleName, fmt.Sprintf("%s.%s.%s", databaseName, schemaName, materializedViewName)),
+					}, sdk.ObjectTypeMaterializedView, accountRoleName, materializedViewFullyQualifiedName),
 				),
 			},
 			{
@@ -870,7 +874,7 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 								Name:       databaseId,
 							},
 						},
-					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseFullyQualifiedName),
 				),
 			},
 		},
@@ -964,8 +968,7 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(pipeFullyQualifiedName),
 							},
 						},
-						// TODO(SNOW-999049): Fix this identifier
-					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName)),
+					}, sdk.ObjectTypePipe, accountRoleName, pipeFullyQualifiedName),
 				),
 			},
 		},
@@ -977,6 +980,8 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 	tableName := acc.TestClient().Ids.Alpha()
 	pipeName := acc.TestClient().Ids.Alpha()
 	secondPipeName := acc.TestClient().Ids.Alpha()
+	pipeFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, pipeName).FullyQualifiedName()
+	secondPipeFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, secondPipeName).FullyQualifiedName()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
@@ -1011,8 +1016,7 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-						// TODO(SNOW-999049): Fix this identifier
-					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName), fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, secondPipeName)),
+					}, sdk.ObjectTypePipe, accountRoleName, pipeFullyQualifiedName, secondPipeFullyQualifiedName),
 				),
 			},
 		},
@@ -1058,8 +1062,7 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(taskFullyQualifiedName),
 							},
 						},
-						// TODO(SNOW-999049): Fix this identifier
-					}, sdk.ObjectTypeTask, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, taskName)),
+					}, sdk.ObjectTypeTask, accountRoleName, taskFullyQualifiedName),
 				),
 			},
 		},
@@ -1073,6 +1076,8 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 	accountRoleName := accountRoleId.Name()
 	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
 	schemaFullyQualifiedName := acc.TestClient().Ids.SchemaId().FullyQualifiedName()
+	taskFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, taskName).FullyQualifiedName()
+	secondTaskFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, secondTaskName).FullyQualifiedName()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
@@ -1101,11 +1106,7 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 							Role: accountRoleId,
 						},
 					},
-						sdk.ObjectTypeTask, accountRoleName,
-						// TODO(SNOW-999049): Fix this identifier
-						fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, taskName),
-						fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, secondTaskName),
-					),
+						sdk.ObjectTypeTask, accountRoleName, taskFullyQualifiedName, secondTaskFullyQualifiedName),
 				),
 			},
 		},
@@ -1151,7 +1152,7 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 								Name:       sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleFullyQualifiedName),
 							},
 						},
-					}, sdk.ObjectTypeRole, accountRoleName, fmt.Sprintf("%s.%s", databaseName, databaseRoleName)),
+					}, sdk.ObjectTypeRole, accountRoleName, databaseRoleFullyQualifiedName),
 				),
 			},
 		},
@@ -1194,8 +1195,8 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 			if grant.Privilege == "OWNERSHIP" &&
 				(grant.GrantedOn == grantOn || grant.GrantOn == grantOn) &&
 				grant.GranteeName.Name() == roleName &&
-				slices.Contains(objectNames, grant.Name.Name()) {
-				found = append(found, grant.Name.Name())
+				slices.Contains(objectNames, grant.Name.FullyQualifiedName()) {
+				found = append(found, grant.Name.FullyQualifiedName())
 			}
 		}
 
