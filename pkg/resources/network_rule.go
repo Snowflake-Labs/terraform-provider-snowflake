@@ -2,13 +2,13 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -122,10 +122,23 @@ func ReadContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta in
 
 	networkRule, err := client.NetworkRules.ShowByID(ctx, id)
 	if networkRule == nil || err != nil {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] network rule (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve network rule. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to retrieve network rule",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+			},
+		}
 	}
 
 	networkRuleDescriptions, err := client.NetworkRules.Describe(ctx, id)
@@ -210,7 +223,7 @@ func DeleteContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta 
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(name).(sdk.SchemaObjectIdentifier)
 
-	if err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id)); err != nil {
+	if err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id).WithIfExists(sdk.Bool(true))); err != nil {
 		diag.FromErr(err)
 	}
 

@@ -3,9 +3,9 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -132,10 +132,23 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
 	if networkPolicy == nil || err != nil {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve network policy. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to retrieve network policy",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+			},
+		}
 	}
 
 	if err = d.Set("name", networkPolicy.Name); err != nil {
@@ -279,7 +292,7 @@ func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	name := d.Id()
 	client := meta.(*provider.Context).Client
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)))
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)).WithIfExists(sdk.Bool(true)))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
