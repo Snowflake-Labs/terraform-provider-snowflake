@@ -29,3 +29,6 @@ dist/
 
 # Test environment variables
 test.env
+
+# deps
+vendor/
