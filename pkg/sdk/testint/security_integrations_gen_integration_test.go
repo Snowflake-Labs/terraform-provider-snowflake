@@ -59,12 +59,12 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	cert := strings.TrimPrefix(certPEM.String(), "-----BEGIN CERTIFICATE-----\n")
 	cert = strings.TrimSuffix(cert, "-----END CERTIFICATE-----\n")
 
-	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) {
+	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) {
 		t.Helper()
 		_, err := client.ExecForTests(ctx, "ALTER ACCOUNT SET ENABLE_IDENTIFIER_FIRST_LOGIN = true")
 		require.NoError(t, err)
 
-		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(siID, false, "test", "https://example.com", "Custom", cert)
+		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(siID, false, issuer, "https://example.com", "Custom", cert)
 		if with != nil {
 			with(saml2Req)
 		}
@@ -73,9 +73,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		cleanupSecurityIntegration(t, siID)
 	}
 
-	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateScimSecurityIntegrationRequest)) {
+	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateScimSecurityIntegrationRequest)) *sdk.SecurityIntegration {
 		t.Helper()
-		role, roleCleanup := testClientHelper().Role.CreateRoleWithName(t, "GENERIC_SCIM_PROVISIONER")
+		role, roleCleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier("GENERIC_SCIM_PROVISIONER")).WithOrReplace(true))
 		t.Cleanup(roleCleanup)
 		testClientHelper().Role.GrantRoleToCurrentRole(t, role.ID())
 
@@ -86,6 +86,10 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		err = client.SecurityIntegrations.CreateScim(ctx, scimReq)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		require.NoError(t, err)
+
+		return integration
 	}
 
 	assertSecurityIntegration := func(t *testing.T, si *sdk.SecurityIntegration, id sdk.AccountObjectIdentifier, siType string, enabled bool, comment string) {
@@ -144,7 +148,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	t.Run("CreateSaml2", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSAML2Integration(t, id, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
+		issuer := testClientHelper().Ids.Alpha()
+
+		createSAML2Integration(t, id, issuer, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
 			r.WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 				WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}).
 				WithComment(sdk.Pointer("a")).
@@ -166,7 +172,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
 			ssoURL:                    "https://example.com",
-			issuer:                    "test",
+			issuer:                    issuer,
 			requestedNameIDFormat:     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
 			forceAuthn:                "true",
 			postLogoutRedirectUrl:     "http://example.com/logout",
@@ -205,13 +211,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSAML2Integration(t, id, nil)
+		issuer := testClientHelper().Ids.Alpha()
+		createSAML2Integration(t, id, issuer, nil)
 
 		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).
 			WithSet(
 				sdk.NewSaml2IntegrationSetRequest().
 					WithEnabled(sdk.Pointer(true)).
-					WithSaml2Issuer(sdk.Pointer("issuer")).
+					WithSaml2Issuer(sdk.Pointer(issuer)).
 					WithSaml2SsoUrl(sdk.Pointer("http://example.com")).
 					WithSaml2Provider(sdk.Pointer("OKTA")).
 					WithSaml2X509Cert(sdk.Pointer(cert)).
@@ -239,7 +246,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
 			ssoURL:                    "http://example.com",
-			issuer:                    "issuer",
+			issuer:                    issuer,
 			requestedNameIDFormat:     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
 			forceAuthn:                "true",
 			postLogoutRedirectUrl:     "http://example.com/logout",
@@ -270,7 +277,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	t.Run("AlterSAML2Integration - REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSAML2Integration(t, id, nil)
+		issuer := testClientHelper().Ids.Alpha()
+		createSAML2Integration(t, id, issuer, nil)
 
 		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(sdk.Pointer(true))
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
@@ -282,7 +290,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		t.Cleanup(tagCleanup)
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSAML2Integration(t, id, nil)
+		issuer := testClientHelper().Ids.Alpha()
+		createSAML2Integration(t, id, issuer, nil)
 
 		tagValue := "abc"
 		tags := []sdk.TagAssociation{
@@ -427,5 +436,19 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
+	})
+
+	t.Run("Show", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si1 := createSCIMIntegration(t, id, nil)
+		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si2 := createSCIMIntegration(t, id2, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
+			Pattern: sdk.Pointer(id.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
 	})
 }

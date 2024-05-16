@@ -155,7 +155,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 			return qs.OptionalQueryStructField(
 				"Set",
 				saml2IntegrationSetDef,
-				g.KeywordOptions().SQL("SET"),
+				g.ListOptions().NoParentheses().SQL("SET"),
 			).OptionalQueryStructField(
 				"Unset",
 				saml2IntegrationUnsetDef,
@@ -171,7 +171,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 			return qs.OptionalQueryStructField(
 				"Set",
 				scimIntegrationSetDef,
-				g.KeywordOptions().SQL("SET"),
+				g.ListOptions().NoParentheses().SQL("SET"),
 			).OptionalQueryStructField(
 				"Unset",
 				scimIntegrationUnsetDef,

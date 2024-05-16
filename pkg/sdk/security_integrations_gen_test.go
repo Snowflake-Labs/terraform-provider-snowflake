@@ -175,9 +175,9 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 			Saml2SnowflakeAcsUrl:           Pointer("acs"),
 			Comment:                        Pointer("a"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'"+
-			" ALLOWED_USER_DOMAINS = ('domain') ALLOWED_EMAIL_PATTERNS = ('pattern') SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label' SAML2_ENABLE_SP_INITIATED = true SAML2_SNOWFLAKE_X509_CERT = 'cert' SAML2_SIGN_REQUEST = true"+
-			" SAML2_REQUESTED_NAMEID_FORMAT = 'format' SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect' SAML2_FORCE_AUTHN = true SAML2_SNOWFLAKE_ISSUER_URL = 'issuer' SAML2_SNOWFLAKE_ACS_URL = 'acs'"+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, SAML2_ISSUER = 'issuer', SAML2_SSO_URL = 'url', SAML2_PROVIDER = 'provider', SAML2_X509_CERT = 'cert',"+
+			" ALLOWED_USER_DOMAINS = ('domain'), ALLOWED_EMAIL_PATTERNS = ('pattern'), SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label', SAML2_ENABLE_SP_INITIATED = true, SAML2_SNOWFLAKE_X509_CERT = 'cert', SAML2_SIGN_REQUEST = true,"+
+			" SAML2_REQUESTED_NAMEID_FORMAT = 'format', SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect', SAML2_FORCE_AUTHN = true, SAML2_SNOWFLAKE_ISSUER_URL = 'issuer', SAML2_SNOWFLAKE_ACS_URL = 'acs',"+
 			" COMMENT = 'a'", id.FullyQualifiedName())
 	})
 
@@ -281,7 +281,7 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 			SyncPassword:  Pointer(true),
 			Comment:       Pointer("test"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true NETWORK_POLICY = %s SYNC_PASSWORD = true COMMENT = 'test'",
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, NETWORK_POLICY = %s, SYNC_PASSWORD = true, COMMENT = 'test'",
 			id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
 	})
 

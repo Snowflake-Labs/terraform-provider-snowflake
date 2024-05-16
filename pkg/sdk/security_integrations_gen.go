@@ -76,7 +76,7 @@ type AlterSaml2SecurityIntegrationOptions struct {
 	name                            AccountObjectIdentifier `ddl:"identifier"`
 	SetTags                         []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags                       []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Set                             *Saml2IntegrationSet    `ddl:"keyword" sql:"SET"`
+	Set                             *Saml2IntegrationSet    `ddl:"list,no_parentheses" sql:"SET"`
 	Unset                           *Saml2IntegrationUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	RefreshSaml2SnowflakePrivateKey *bool                   `ddl:"keyword" sql:"REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY"`
 }
@@ -117,7 +117,7 @@ type AlterScimSecurityIntegrationOptions struct {
 	name                AccountObjectIdentifier `ddl:"identifier"`
 	SetTags             []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *ScimIntegrationSet     `ddl:"keyword" sql:"SET"`
+	Set                 *ScimIntegrationSet     `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ScimIntegrationUnset   `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
