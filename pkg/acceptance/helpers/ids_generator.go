@@ -33,7 +33,7 @@ func (c *IdsGenerator) AccountIdentifierWithLocator() sdk.AccountIdentifier {
 	return sdk.NewAccountIdentifierFromAccountLocator(c.context.client.GetAccountLocator())
 }
 
-func (c *IdsGenerator) newSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
+func (c *IdsGenerator) NewSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
 	return sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, name)
 }
 
@@ -50,7 +50,7 @@ func (c *IdsGenerator) RandomAccountObjectIdentifierContaining(part string) sdk.
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
-	return c.newSchemaObjectIdentifier(c.Alpha())
+	return c.NewSchemaObjectIdentifier(c.Alpha())
 }
 
 func (c *IdsGenerator) Alpha() string {

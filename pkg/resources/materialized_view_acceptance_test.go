@@ -1,22 +1,20 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_MaterializedView(t *testing.T) {
 	tableName := acc.TestClient().Ids.Alpha()
-	viewName := acc.TestClient().Ids.Alpha()
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewName := viewId.Name()
 
 	queryEscaped := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\"", tableName)
 	query := fmt.Sprintf(`SELECT ID, DATA FROM "%s"`, tableName)
@@ -72,7 +70,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 			// change statement externally
 			{
 				PreConfig: func() {
-					alterMaterializedViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName), query, acc.TestWarehouseName)
+					acc.TestClient().MaterializedView.CreateMaterializedViewWithName(t, viewId, query, true)
 				},
 				Config: materializedViewConfig(acc.TestWarehouseName, tableName, viewName, otherQueryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -252,17 +250,4 @@ resource "snowflake_materialized_view" "test" {
 	]
 }
 `, tableName, databaseName, schemaName, viewName, warehouseName, q, tag, tag1Name, tag2Name)
-}
-
-func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string, warehouse string) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouse))
-	require.NoError(t, err)
-
-	err = client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
-	require.NoError(t, err)
 }
