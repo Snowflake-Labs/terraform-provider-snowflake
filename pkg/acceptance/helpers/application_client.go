@@ -26,13 +26,8 @@ func (c *ApplicationClient) client() sdk.Applications {
 
 func (c *ApplicationClient) CreateApplication(t *testing.T, packageId sdk.AccountObjectIdentifier, version string) (*sdk.Application, func()) {
 	t.Helper()
-	return c.CreateApplicationWithID(t, c.ids.RandomAccountObjectIdentifier(), packageId, version)
-}
-
-func (c *ApplicationClient) CreateApplicationWithID(t *testing.T, id sdk.AccountObjectIdentifier, packageId sdk.AccountObjectIdentifier, version string) (*sdk.Application, func()) {
-	t.Helper()
 	ctx := context.Background()
-
+	id := c.ids.RandomAccountObjectIdentifier()
 	err := c.client().Create(ctx, sdk.NewCreateApplicationRequest(id, packageId).WithVersion(sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, nil))))
 	require.NoError(t, err)
 

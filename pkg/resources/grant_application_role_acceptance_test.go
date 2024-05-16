@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func createApp(t *testing.T, name string) *sdk.Application {
+// TODO [SNOW-1431726]: Move to helpers
+func createApp(t *testing.T) *sdk.Application {
 	t.Helper()
 
 	stage, cleanupStage := acc.TestClient().Stage.CreateStage(t)
@@ -26,29 +27,27 @@ func createApp(t *testing.T, name string) *sdk.Application {
 
 	acc.TestClient().ApplicationPackage.AddApplicationPackageVersion(t, applicationPackage.ID(), stage.ID(), "v1")
 
-	application, cleanupApplication := acc.TestClient().Application.CreateApplicationWithID(t, sdk.NewAccountObjectIdentifier(name), applicationPackage.ID(), "v1")
+	application, cleanupApplication := acc.TestClient().Application.CreateApplication(t, applicationPackage.ID(), "v1")
 	t.Cleanup(cleanupApplication)
 	return application
 }
 
 func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
-	applicationName := acc.TestClient().Ids.Alpha()
-	parentAccountRoleName := acc.TestClient().Ids.Alpha()
+	parentRole, cleanupParentRole := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(cleanupParentRole)
 	resourceName := "snowflake_grant_application_role.g"
 	applicationRoleName := "app_role_1"
-	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", applicationName, applicationRoleName)
 
+	acc.TestAccPreCheck(t)
+	app := createApp(t)
+	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", app.Name, applicationRoleName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"parent_account_role_name": config.StringVariable(parentAccountRoleName),
-			"application_name":         config.StringVariable(applicationName),
+			"parent_account_role_name": config.StringVariable(parentRole.Name),
+			"application_name":         config.StringVariable(app.Name),
 		}
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acc.TestAccPreCheck(t)
-			createApp(t, applicationName)
-		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -60,8 +59,8 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 				ConfigVariables:          m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", fmt.Sprintf("\"%s\"", parentAccountRoleName)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|ACCOUNT_ROLE|"%v"`, applicationName, applicationRoleName, parentAccountRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", fmt.Sprintf("\"%s\"", parentRole.Name)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|ACCOUNT_ROLE|"%v"`, app.Name, applicationRoleName, parentRole.Name)),
 				),
 			},
 			// test import
@@ -78,24 +77,21 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 }
 
 func TestAcc_GrantApplicationRole_application(t *testing.T) {
-	applicationName := acc.TestClient().Ids.Alpha()
-	applicationName2 := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_grant_application_role.g"
 	applicationRoleName := "app_role_1"
-	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", applicationName, applicationRoleName)
+
+	acc.TestAccPreCheck(t)
+	app := createApp(t)
+	app2 := createApp(t)
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"application_name":  config.StringVariable(applicationName),
-			"application_name2": config.StringVariable(applicationName2),
+			"application_name":  config.StringVariable(app.Name),
+			"application_name2": config.StringVariable(app2.Name),
 		}
 	}
+	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", app.Name, applicationRoleName)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acc.TestAccPreCheck(t)
-			createApp(t, applicationName)
-			createApp(t, applicationName2)
-		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -107,8 +103,8 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 				ConfigVariables:          m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "application_name", fmt.Sprintf("\"%s\"", applicationName2)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|APPLICATION|"%v"`, applicationName, applicationRoleName, applicationName2)),
+					resource.TestCheckResourceAttr(resourceName, "application_name", fmt.Sprintf("\"%s\"", app2.Name)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|APPLICATION|"%v"`, app.Name, applicationRoleName, app2.Name)),
 				),
 			},
 			// test import
