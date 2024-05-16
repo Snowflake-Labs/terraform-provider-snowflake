@@ -22,9 +22,11 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	idLowerCase := strings.ToLower(acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name())
-	idLowerCaseEscaped := fmt.Sprintf(`"%s"`, idLowerCase)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
+	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	nameLowerCase := strings.ToLower(secondId.Name())
+	nameLowerCaseEscaped := fmt.Sprintf(`"%s"`, nameLowerCase)
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 
@@ -46,13 +48,13 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(id),
+				ConfigVariables: createConfigVariables(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(name)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(name)),
 					resource.TestCheckNoResourceAttr(resourceName, "query"),
 					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -68,21 +70,21 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseExistence(t, idLowerCase, false),
+		CheckDestroy: testAccCheckDatabaseExistence(t, secondId, false),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(idLowerCaseEscaped),
+				ConfigVariables: createConfigVariables(nameLowerCaseEscaped),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(idLowerCaseEscaped)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(idLowerCaseEscaped)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(nameLowerCaseEscaped)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(nameLowerCaseEscaped)),
 					resource.TestCheckNoResourceAttr(resourceName, "query"),
 					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					testAccCheckDatabaseExistence(t, idLowerCase, true),
+					testAccCheckDatabaseExistence(t, secondId, true),
 				),
 			},
 		},
@@ -90,7 +92,8 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_withRead(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -114,18 +117,18 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
-				ConfigVariables: createConfigVariables(id),
+				ConfigVariables: createConfigVariables(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
-					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(name)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(name)),
+					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(name)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
-					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", name),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.0.created_on"),
 					resource.TestCheckResourceAttr(resourceName, "query_results.0.budget", ""),
 					resource.TestCheckResourceAttr(resourceName, "query_results.0.comment", ""),
@@ -136,7 +139,8 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -153,23 +157,23 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
-					"revert":  config.StringVariable(dropDatabaseStatement(id)),
-					"query":   config.StringVariable(showDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
+					"revert":  config.StringVariable(dropDatabaseStatement(name)),
+					"query":   config.StringVariable(showDatabaseStatement(name)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(name)),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
-					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
+					"revert":  config.StringVariable(dropDatabaseStatement(name)),
 					"query":   config.StringVariable(""),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -185,7 +189,8 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
@@ -202,16 +207,16 @@ func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
-					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
+					"revert":  config.StringVariable(dropDatabaseStatement(name)),
 					"query":   config.StringVariable("bad query"),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(name)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(name)),
 					resource.TestCheckResourceAttr(resourceName, "query", "bad query"),
 					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					testAccCheckDatabaseExistence(t, id, true),
@@ -220,17 +225,17 @@ func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
-					"revert":  config.StringVariable(dropDatabaseStatement(id)),
-					"query":   config.StringVariable(showDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
+					"revert":  config.StringVariable(dropDatabaseStatement(name)),
+					"query":   config.StringVariable(showDatabaseStatement(name)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(name)),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
-					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", name),
 					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
@@ -269,8 +274,10 @@ func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
+	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	updatedName := updatedId.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	invalidDropStatement := "drop database"
@@ -298,14 +305,14 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(invalidDropStatement),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(name)),
 					resource.TestCheckResourceAttr(resourceName, "revert", invalidDropStatement),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
@@ -314,7 +321,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(updatedId)),
+					"execute": config.StringVariable(createDatabaseStatement(updatedName)),
 					"revert":  config.StringVariable(invalidDropStatement),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -325,15 +332,15 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(id)),
-					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+					"execute": config.StringVariable(createDatabaseStatement(name)),
+					"revert":  config.StringVariable(dropDatabaseStatement(name)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(name)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(name)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
 					testAccCheckDatabaseExistence(t, updatedId, false),
@@ -342,15 +349,15 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
-					"execute": config.StringVariable(createDatabaseStatement(updatedId)),
-					"revert":  config.StringVariable(dropDatabaseStatement(updatedId)),
+					"execute": config.StringVariable(createDatabaseStatement(updatedName)),
+					"revert":  config.StringVariable(dropDatabaseStatement(updatedName)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(updatedName)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(updatedName)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, false),
 					testAccCheckDatabaseExistence(t, updatedId, true),
@@ -361,9 +368,10 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	execute := fmt.Sprintf("create database %s", id)
-	revert := fmt.Sprintf("drop database %s", id)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
+	execute := fmt.Sprintf("create database %s", name)
+	revert := fmt.Sprintf("drop database %s", name)
 	notMatchingRevert := "select 1"
 	var savedId string
 
@@ -424,13 +432,15 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	execute := fmt.Sprintf("create database %s", id)
-	revert := fmt.Sprintf("drop database %s", id)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	name := id.Name()
+	execute := fmt.Sprintf("create database %s", name)
+	revert := fmt.Sprintf("drop database %s", name)
 
-	newId := fmt.Sprintf("%s_2", id)
-	newExecute := fmt.Sprintf("create database %s", newId)
-	newRevert := fmt.Sprintf("drop database %s", newId)
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	newName := newId.Name()
+	newExecute := fmt.Sprintf("create database %s", newName)
+	newRevert := fmt.Sprintf("drop database %s", newName)
 
 	var savedId string
 
