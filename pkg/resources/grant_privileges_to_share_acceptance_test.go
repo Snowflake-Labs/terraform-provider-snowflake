@@ -1,18 +1,14 @@
 package resources_test
 
 import (
-	"context"
-	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -61,7 +57,7 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -114,7 +110,7 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnSchema_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -171,7 +167,7 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -224,7 +220,7 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -281,7 +277,7 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnView_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -336,7 +332,7 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTag_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -407,7 +403,7 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
 				ConfigVariables: configVariables(false, []sdk.ObjectPrivilege{}),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -458,7 +454,7 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
 				ConfigVariables: configVariables(false),
-				Check:           testAccCheckSharePrivilegesRevoked(),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})
@@ -557,36 +553,4 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
-	return func(state *terraform.State) error {
-		for _, rs := range state.RootModule().Resources {
-			if rs.Type != "snowflake_grant_privileges_to_share" {
-				continue
-			}
-			client := acc.TestAccProvider.Meta().(*provider.Context).Client
-			ctx := context.Background()
-
-			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					Share: &sdk.ShowGrantsToShare{
-						Name: sdk.NewAccountObjectIdentifier(id.Name()),
-					},
-				},
-			})
-			if err != nil {
-				return err
-			}
-			var grantedPrivileges []string
-			for _, grant := range grants {
-				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
-			}
-			if len(grantedPrivileges) > 0 {
-				return fmt.Errorf("share (%s) is still granted with privileges: %v", id.FullyQualifiedName(), grantedPrivileges)
-			}
-		}
-		return nil
-	}
 }
