@@ -241,7 +241,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		newName := d.Get("name").(string)
 		opts := &sdk.AlterDatabaseOptions{
-			NewName: sdk.NewAccountObjectIdentifier(newName),
+			NewName: sdk.Pointer(sdk.NewAccountObjectIdentifier(newName)),
 		}
 		err := client.Databases.Alter(ctx, id, opts)
 		if err != nil {

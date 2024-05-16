@@ -22,13 +22,6 @@ var (
 	_ validatable = new(describeDatabaseOptions)
 )
 
-// TODO: What should I do with clone
-// TODO: Test new values (unit and int)
-// Modified:
-// - [ ] Create
-// 	- Create from share - everything minus Transient and Data_retention option
-// 	- Create as replica of - everything as in Create
-
 type Databases interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
 	CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier, opts *CreateSharedDatabaseOptions) error
@@ -206,14 +199,12 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 
 // CreateSharedDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSharedDatabaseOptions struct {
-	create      bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace   *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	database    bool                     `ddl:"static" sql:"DATABASE"`
-	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        AccountObjectIdentifier  `ddl:"identifier"`
-	fromShare   ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
-	// TODO: Can be used but is not returned in the `show parameters for database` and can't be altered
-	// MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	create              bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	database            bool                     `ddl:"static" sql:"DATABASE"`
+	IfNotExists         *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                AccountObjectIdentifier  `ddl:"identifier"`
+	fromShare           ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
 	ExternalVolume      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
 	Catalog             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
 	DefaultDDLCollation *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`

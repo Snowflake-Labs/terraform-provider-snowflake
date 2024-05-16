@@ -2,8 +2,9 @@ package testint
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -301,7 +302,6 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
 }
 
-// TODO: Other database types
 func TestInt_DatabasesAlter(t *testing.T) {
 	client := testClient(t)
 	secondaryClient := testSecondaryClient(t)
@@ -412,10 +412,15 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, newName))
 
 			database, err := client.Databases.ShowByID(ctx, newName)
+			require.NoError(t, err)
 			assert.Equal(t, newName.Name(), database.Name)
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - setting and unsetting log_level and trace_level", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "From Share" {
+				t.Skipf("Skipping database test because from share is not supported")
+			}
+
 			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
 			t.Cleanup(databaseTestCleanup)
 
@@ -443,6 +448,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - setting and unsetting external volume and catalog", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "From Share" {
+				t.Skipf("Skipping database test because from share is not supported")
+			}
+
 			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
 			t.Cleanup(databaseTestCleanup)
 
@@ -473,14 +482,17 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			require.Empty(t, queryParameterValueForDatabase(t, databaseTest.ID(), sdk.ObjectParameterCatalog))
 		})
 
-		t.Run(fmt.Sprintf("Database: %s - setting and unsetting retention time + comment", testCase.DatabaseType), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Database: %s - setting and unsetting retention time", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "From Share" {
+				t.Skipf("Skipping database test because from share is not supported")
+			}
+
 			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
 			t.Cleanup(databaseTestCleanup)
 
 			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 				Set: &sdk.DatabaseSet{
 					DataRetentionTimeInDays: sdk.Int(42),
-					Comment:                 sdk.String("test comment"),
 				},
 			})
 			require.NoError(t, err)
@@ -488,12 +500,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			database, err := client.Databases.ShowByID(ctx, databaseTest.ID())
 			require.NoError(t, err)
 			assert.Equal(t, 42, database.RetentionTime)
-			assert.Equal(t, "test comment", database.Comment)
 
 			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 				Unset: &sdk.DatabaseUnset{
 					DataRetentionTimeInDays: sdk.Bool(true),
-					Comment:                 sdk.Bool(true),
 				},
 			})
 			require.NoError(t, err)
@@ -501,23 +511,49 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			database, err = client.Databases.ShowByID(ctx, databaseTest.ID())
 			require.NoError(t, err)
 			assert.NotEqual(t, 42, database.RetentionTime)
+		})
+
+		t.Run(fmt.Sprintf("Database: %s - setting and unsetting comment", testCase.DatabaseType), func(t *testing.T) {
+			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
+			t.Cleanup(databaseTestCleanup)
+
+			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				Set: &sdk.DatabaseSet{
+					Comment: sdk.String("test comment"),
+				},
+			})
+			require.NoError(t, err)
+
+			database, err := client.Databases.ShowByID(ctx, databaseTest.ID())
+			require.NoError(t, err)
+
+			assert.Equal(t, "test comment", database.Comment)
+
+			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				Unset: &sdk.DatabaseUnset{
+					Comment: sdk.Bool(true),
+				},
+			})
+			require.NoError(t, err)
+
+			database, err = client.Databases.ShowByID(ctx, databaseTest.ID())
+			require.NoError(t, err)
 			assert.Equal(t, "", database.Comment)
 		})
-	}
 
-	t.Run("swap with another database", func(t *testing.T) {
-		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
-		t.Cleanup(databaseCleanup)
+		t.Run(fmt.Sprintf("Database: %s - swap with another database", testCase.DatabaseType), func(t *testing.T) {
+			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
+			t.Cleanup(databaseTestCleanup)
 
-		databaseTest2, databaseCleanup2 := testClientHelper().Database.CreateDatabase(t)
-		t.Cleanup(databaseCleanup2)
+			databaseTest2, databaseCleanup2 := testClientHelper().Database.CreateDatabase(t)
+			t.Cleanup(databaseCleanup2)
 
-		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
-			SwapWith: sdk.Pointer(databaseTest2.ID()),
+			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				SwapWith: sdk.Pointer(databaseTest2.ID()),
+			})
+			require.NoError(t, err)
 		})
-		require.NoError(t, err)
-	})
-
+	}
 }
 
 func TestInt_DatabasesAlterReplication(t *testing.T) {
@@ -548,12 +584,6 @@ func TestInt_DatabasesAlterReplication(t *testing.T) {
 	})
 
 	t.Run("refresh replicated database", func(t *testing.T) {
-		// TODO(SNOW-1348346): implement once ReplicationGroups are supported.
-		//err := testClient(t).Databases.AlterReplication(ctx, database.ID(), &sdk.AlterDatabaseReplicationOptions{
-		//	Refresh: sdk.Bool(true),
-		//})
-		//require.NoError(t, err)
-
 		client := testClient(t)
 		secondaryClient := testSecondaryClient(t)
 		ctx := testContext(t)
@@ -658,7 +688,6 @@ func TestInt_DatabasesAlterFailover(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-
 	})
 
 	t.Run("promote to primary", func(t *testing.T) {
@@ -698,7 +727,9 @@ func TestInt_DatabasesDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("drop with nil options", func(t *testing.T) {
-		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
+		databaseTest, databaseTestCleanup := testClientHelper().Database.CreateDatabase(t)
+		t.Cleanup(databaseTestCleanup)
+
 		err := client.Databases.Drop(ctx, databaseTest.ID(), nil)
 		require.NoError(t, err)
 	})
@@ -712,7 +743,9 @@ func TestInt_DatabasesDrop(t *testing.T) {
 	})
 
 	t.Run("drop with cascade", func(t *testing.T) {
-		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
+		databaseTest, databaseTestCleanup := testClientHelper().Database.CreateDatabase(t)
+		t.Cleanup(databaseTestCleanup)
+
 		err := client.Databases.Drop(ctx, databaseTest.ID(), &sdk.DropDatabaseOptions{
 			IfExists: sdk.Bool(true),
 			Cascade:  sdk.Bool(true),
@@ -721,7 +754,9 @@ func TestInt_DatabasesDrop(t *testing.T) {
 	})
 
 	t.Run("drop with restrict", func(t *testing.T) {
-		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
+		databaseTest, databaseTestCleanup := testClientHelper().Database.CreateDatabase(t)
+		t.Cleanup(databaseTestCleanup)
+
 		err := client.Databases.Drop(ctx, databaseTest.ID(), &sdk.DropDatabaseOptions{
 			IfExists: sdk.Bool(true),
 			Restrict: sdk.Bool(true),
