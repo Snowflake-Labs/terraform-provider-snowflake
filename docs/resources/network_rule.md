@@ -49,5 +49,5 @@ resource "snowflake_network_rule" "rule" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_network_rule.example rulename
+terraform import snowflake_network_rule.example 'databaseName|schemaName|networkRuleName'
 ```

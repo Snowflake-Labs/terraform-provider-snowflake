@@ -1,1 +1,1 @@
-terraform import snowflake_network_rule.example rulename
+terraform import snowflake_network_rule.example 'databaseName|schemaName|networkRuleName'
