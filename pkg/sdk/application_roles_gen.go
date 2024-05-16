@@ -12,8 +12,32 @@ import (
 // by applying debug_mode parameter to the application, but it's a hacky solution and even with that you're limited with GRANT and REVOKE options.
 // That's why we're only exposing SHOW operations, because only they are the only allowed operations to be called from the program context.
 type ApplicationRoles interface {
+	Grant(ctx context.Context, request *GrantApplicationRoleRequest) error
+	Revoke(ctx context.Context, request *RevokeApplicationRoleRequest) error
 	Show(ctx context.Context, request *ShowApplicationRoleRequest) ([]ApplicationRole, error)
-	ShowByID(ctx context.Context, request *ShowByIDApplicationRoleRequest) (*ApplicationRole, error)
+	ShowByID(ctx context.Context, applicationName AccountObjectIdentifier, id DatabaseObjectIdentifier) (*ApplicationRole, error)
+}
+
+// GrantApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-application-role.
+type GrantApplicationRoleOptions struct {
+	grant           bool                     `ddl:"static" sql:"GRANT"`
+	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
+	name            DatabaseObjectIdentifier `ddl:"identifier"`
+	To              KindOfRole               `ddl:"keyword" sql:"TO"`
+}
+
+type KindOfRole struct {
+	RoleName            *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	ApplicationRoleName *DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
+	ApplicationName     *AccountObjectIdentifier  `ddl:"identifier" sql:"APPLICATION"`
+}
+
+// RevokeApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-application-role.
+type RevokeApplicationRoleOptions struct {
+	revoke          bool                     `ddl:"static" sql:"REVOKE"`
+	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
+	name            DatabaseObjectIdentifier `ddl:"identifier"`
+	From            KindOfRole               `ddl:"keyword" sql:"FROM"`
 }
 
 // ShowApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-application-roles.
