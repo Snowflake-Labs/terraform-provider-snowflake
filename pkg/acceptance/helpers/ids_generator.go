@@ -34,7 +34,7 @@ func (c *IdsGenerator) AccountIdentifierWithLocator() sdk.AccountIdentifier {
 }
 
 func (c *IdsGenerator) NewSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifier(c.context.database, c.context.schema, name)
+	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), name)
 }
 
 func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
@@ -49,8 +49,16 @@ func (c *IdsGenerator) RandomAccountObjectIdentifierContaining(part string) sdk.
 	return sdk.NewAccountObjectIdentifier(c.AlphaContaining(part))
 }
 
+func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), c.Alpha())
+}
+
 func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
-	return c.NewSchemaObjectIdentifier(c.Alpha())
+	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierInSchema(schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierInSchema(schemaId, c.Alpha())
 }
 
 func (c *IdsGenerator) Alpha() string {

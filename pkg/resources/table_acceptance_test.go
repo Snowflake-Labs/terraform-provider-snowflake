@@ -1445,7 +1445,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
 				),
 			},
 			// this step proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2186
@@ -1453,7 +1453,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
 				),
 			},
 		},

@@ -253,7 +253,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	if d.HasChange("name") {
-		newID := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
+		newID := sdk.NewSchemaObjectIdentifierInSchema(id.SchemaId(), d.Get("name").(string))
 
 		err := client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
 			NewName: &newID,

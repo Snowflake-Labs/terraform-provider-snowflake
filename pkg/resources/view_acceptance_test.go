@@ -19,7 +19,8 @@ import (
 )
 
 func TestAcc_View(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	accName := viewId.Name()
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	otherQuery := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
 
@@ -96,7 +97,7 @@ func TestAcc_View(t *testing.T) {
 			// change statement externally
 			{
 				PreConfig: func() {
-					alterViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, accName), query)
+					alterViewQueryExternally(t, viewId, query)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
 				ConfigVariables: m3,
@@ -419,7 +420,8 @@ func TestAcc_View_copyGrants(t *testing.T) {
 }
 
 func TestAcc_View_Issue2640(t *testing.T) {
-	viewName := acc.TestClient().Ids.Alpha()
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewName := viewId.Name()
 	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	roleName := acc.TestClient().Ids.Alpha()
@@ -446,7 +448,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 				PreConfig: func() {
 					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
 					t.Cleanup(roleCleanup)
-					alterViewOwnershipExternally(t, viewName, roleName)
+					alterViewOwnershipExternally(t, viewId, roleName)
 				},
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
@@ -455,7 +457,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// import with the proper role
 			{
 				PreConfig: func() {
-					alterViewOwnershipExternally(t, viewName, "ACCOUNTADMIN")
+					alterViewOwnershipExternally(t, viewId, "ACCOUNTADMIN")
 				},
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,
@@ -577,10 +579,9 @@ func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query
 	require.NoError(t, err)
 }
 
-func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string) {
+func alterViewOwnershipExternally(t *testing.T, viewId sdk.SchemaObjectIdentifier, roleName string) {
 	t.Helper()
 
-	viewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName)
 	roleId := sdk.NewAccountObjectIdentifier(roleName)
 
 	client := acc.Client(t)

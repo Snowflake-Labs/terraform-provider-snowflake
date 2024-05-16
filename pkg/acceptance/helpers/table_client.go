@@ -46,7 +46,7 @@ func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObj
 func (c *TableClient) CreateTableWithColumns(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
 	t.Helper()
 
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
 	ctx := context.Background()
 
 	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)

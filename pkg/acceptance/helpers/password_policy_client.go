@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -44,8 +43,7 @@ func (c *PasswordPolicyClient) CreatePasswordPolicyInSchemaWithOptions(t *testin
 	t.Helper()
 	ctx := context.Background()
 
-	name := random.AlphanumericN(12)
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	err := c.client().Create(ctx, id, options)
 	require.NoError(t, err)

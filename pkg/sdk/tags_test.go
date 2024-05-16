@@ -184,8 +184,8 @@ func TestTagAlter(t *testing.T) {
 			},
 		}
 	}
-	mp1ID := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), "policy1")
-	mp2ID := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), "policy2")
+	mp1ID := NewSchemaObjectIdentifierInSchema(id.SchemaId(), "policy1")
+	mp2ID := NewSchemaObjectIdentifierInSchema(id.SchemaId(), "policy2")
 	defaultMaskingPolicies := func() []TagMaskingPolicy {
 		return []TagMaskingPolicy{
 			{
@@ -199,7 +199,7 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("alter with rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))}
+		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifierInSchema(id.SchemaId(), random.StringN(12))}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
 	})
 

@@ -485,7 +485,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		toRemove := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range oldAfter {
 			if !slices.Contains(newAfter, dep) {
-				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
+				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
 			}
 		}
 		if len(toRemove) > 0 {
@@ -498,7 +498,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		toAdd := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range newAfter {
 			if !slices.Contains(oldAfter, dep) {
-				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
+				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
 			}
 		}
 		if len(toAdd) > 0 {

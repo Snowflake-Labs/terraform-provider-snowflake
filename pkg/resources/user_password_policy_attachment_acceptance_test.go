@@ -15,8 +15,10 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	t.Skipf("Skip because error %s; will be fixed in SNOW-1423486", "Error: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.")
 	userName := acc.TestClient().Ids.Alpha()
 	NewUserName := acc.TestClient().Ids.Alpha()
-	passwordPolicyName := acc.TestClient().Ids.Alpha()
-	newPasswordPolicyName := acc.TestClient().Ids.Alpha()
+	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	passwordPolicyName := passwordPolicyId.Name()
+	newPasswordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newPasswordPolicyName := newPasswordPolicyId.Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,8 +30,8 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 				Config: userPasswordPolicyAttachmentConfig(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName).FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(userName).FullyQualifiedName(), sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName).FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", passwordPolicyId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(userName).FullyQualifiedName(), passwordPolicyId.FullyQualifiedName())),
 				),
 			},
 			// UPDATE
@@ -37,8 +39,8 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 				Config: userPasswordPolicyAttachmentConfig(NewUserName, acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", NewUserName),
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName).FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(NewUserName).FullyQualifiedName(), sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName).FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", newPasswordPolicyId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(NewUserName).FullyQualifiedName(), newPasswordPolicyId.FullyQualifiedName())),
 				),
 			},
 			// IMPORT

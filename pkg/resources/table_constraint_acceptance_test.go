@@ -89,7 +89,8 @@ resource "snowflake_table_constraint" "fk" {
 // It is connected with https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2629.
 // Provider defaults will be reworked during resources redesign.
 func TestAcc_TableConstraint_pk(t *testing.T) {
-	tableName := acc.TestClient().Ids.Alpha()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
 	constraintName := fmt.Sprintf("%s_pk", tableName)
 
 	resource.Test(t, resource.TestCase{
@@ -105,7 +106,7 @@ func TestAcc_TableConstraint_pk(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.pk", "type", "PRIMARY KEY"),
 					resource.TestCheckResourceAttr("snowflake_table_constraint.pk", "comment", "hello pk"),
-					checkPrimaryKeyExists(sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName), constraintName),
+					checkPrimaryKeyExists(tableId, constraintName),
 				),
 			},
 		},

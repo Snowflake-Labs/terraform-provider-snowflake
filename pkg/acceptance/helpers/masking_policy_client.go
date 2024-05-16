@@ -64,8 +64,7 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, schem
 	t.Helper()
 	ctx := context.Background()
 
-	name := random.String()
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	err := c.client().Create(ctx, id, signature, returns, expression, options)
 	require.NoError(t, err)
