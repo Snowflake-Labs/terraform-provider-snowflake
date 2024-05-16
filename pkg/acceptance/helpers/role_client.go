@@ -93,6 +93,19 @@ func (c *RoleClient) GrantRoleToCurrentUser(t *testing.T, id sdk.AccountObjectId
 	require.NoError(t, err)
 }
 
+func (c *RoleClient) GrantRoleToCurrentRole(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	currentRole, err := c.context.client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+
+	err = c.client().Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
+		Role: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+	}))
+	require.NoError(t, err)
+}
+
 // TODO: move later to grants client
 func (c *RoleClient) GrantOwnershipOnAccountObject(t *testing.T, roleId sdk.AccountObjectIdentifier, objectId sdk.AccountObjectIdentifier, objectType sdk.ObjectType) {
 	t.Helper()

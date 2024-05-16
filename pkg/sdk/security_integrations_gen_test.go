@@ -97,8 +97,9 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 		opts.IfNotExists = Pointer(true)
 		opts.NetworkPolicy = Pointer(networkPolicyID)
 		opts.SyncPassword = Pointer(true)
+		opts.Comment = Pointer("a")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'"+
-			" NETWORK_POLICY = %s SYNC_PASSWORD = true", id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
+			" NETWORK_POLICY = %s SYNC_PASSWORD = true COMMENT = 'a'", id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
 	})
 }
 
