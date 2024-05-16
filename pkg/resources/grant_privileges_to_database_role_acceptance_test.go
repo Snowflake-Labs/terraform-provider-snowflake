@@ -918,8 +918,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	})
 }
 
-// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
-// TODO [SNOW-1270457]: This seems to be a Snowflake error, we are waiting for the confirmation. Alter the test when the behavior is fixed. Update the resource documentation (section known issues).
+// proved https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
 func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
@@ -962,10 +961,9 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", databaseRoleName, schemaName)),
 				),
-				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 			},
