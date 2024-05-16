@@ -145,65 +145,65 @@ resource "snowflake_network_policy" "test" {
 func networkPolicyConfigNetworkRules(name string, nameRule1 string, nameRule2 string, database string, schema string) string {
 	return fmt.Sprintf(`
 resource "snowflake_network_rule" "test1" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	name            = "%[2]v"
+	database        = "%[4]v"
+	schema          = "%[5]v"
+	comment         = "%[6]v"
     type            = "IPV4"
     mode			= "INGRESS"
 	value_list      = ["192.168.0.100/24", "29.254.123.20"]
 }
 
 resource "snowflake_network_rule" "test2" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	name            = "%[3]v"
+	database        = "%[4]v"
+	schema          = "%[5]v"
+	comment         = "%[6]v"
     type            = "HOST_PORT"
     mode			= "EGRESS"
 	value_list      = ["example.com", "company.com:443"]
 }
 
 resource "snowflake_network_policy" "test" {
-	name            = "%v"
-	comment         = "%v"
+	name            = "%[1]v"
+	comment         = "%[6]v"
 	allowed_network_rule_list = [snowflake_network_rule.test1.qualified_name]
 	blocked_network_rule_list = [snowflake_network_rule.test2.qualified_name]
 }
-`, nameRule1, database, schema, networkPolicyComment, nameRule2, database, schema, networkPolicyComment, name, networkPolicyComment)
+`, name, nameRule1, nameRule2, database, schema, networkPolicyComment)
 }
 
 func networkPolicyConfigIPsAndRules(name string, nameRule1 string, nameRule2 string, database string, schema string) string {
 	return fmt.Sprintf(`
 resource "snowflake_network_rule" "test1" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	name            = "%[2]v"
+	database        = "%[4]v"
+	schema          = "%[5]v"
+	comment         = "%[6]v"
     type            = "IPV4"
     mode			= "INGRESS"
 	value_list      = ["192.168.0.100/24", "29.254.123.20"]
 }
 
 resource "snowflake_network_rule" "test2" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	name            = "%[3]v"
+	database        = "%[4]v"
+	schema          = "%[5]v"
+	comment         = "%[6]v"
     type            = "HOST_PORT"
     mode			= "EGRESS"
 	value_list      = ["example.com", "company.com:443"]
 }
 
 resource "snowflake_network_policy" "test" {
-	name            = "%v"
-	comment         = "%v"
+	name            = "%[1]v"
+	comment         = "%[6]v"
 	allowed_ip_list = ["192.168.0.100/24"]
 	blocked_ip_list = ["192.168.0.101"]
 	allowed_network_rule_list = [snowflake_network_rule.test1.qualified_name]
 	blocked_network_rule_list = [snowflake_network_rule.test2.qualified_name]
 }
-`, nameRule1, database, schema, networkPolicyComment, nameRule2, database, schema, networkPolicyComment, name, networkPolicyComment)
+`, name, nameRule1, nameRule2, database, schema, networkPolicyComment)
 }
 
 func networkPolicyConfigAllEmpty(name string) string {
