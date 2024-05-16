@@ -465,7 +465,7 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 						In: &sdk.ShowGrantsIn{
 							Database: sdk.Pointer(databaseId),
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("\"%s\".\"<TABLE>\"", databaseName)),
+					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf(`"%s"."<TABLE>"`, databaseName)),
 				),
 			},
 			{
@@ -515,7 +515,7 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 						In: &sdk.ShowGrantsIn{
 							Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)),
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf("\"%s\".\"%s\".\"<TABLE>\"", databaseName, schemaName)),
+					}, sdk.ObjectTypeTable, accountRoleName, fmt.Sprintf(`"%s"."%s"."<TABLE>"`, databaseName, schemaName)),
 				),
 			},
 			{
