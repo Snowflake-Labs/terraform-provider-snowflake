@@ -263,6 +263,7 @@ func (row grantRow) convert() *Grant {
 		grantOn = ObjectTypeExternalVolume
 	}
 
+	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
 	name, err := ParseObjectIdentifier(row.Name)
 	if err != nil {
 		log.Printf("Failed to parse identifier: %s", err)
