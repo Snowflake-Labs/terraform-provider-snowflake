@@ -219,96 +219,46 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("allowed_network_rule_list") {
-		oldList, newList := d.GetChange("allowed_network_rule_list")
-		addedNetworkRuleIdentifiers, removedNetworkRuleIdentifiers := getAddedAndRemovedIdentifiers(oldList, newList)
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		networkRuleIdentifiers := parseNetworkRulesList(d.Get("allowed_network_rule_list"))
+		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(networkRuleIdentifiers))
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 
-		if len(addedNetworkRuleIdentifiers) > 0 {
-			baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
-			addReq := sdk.NewAddNetworkRuleRequest().WithAllowedNetworkRuleList(addedNetworkRuleIdentifiers)
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithAdd(addReq))
-
-			if err != nil {
-				return getUpdateContextDiag("adding to ALLOWED_NETWORK_RULE_LIST", name, err)
-			}
-		}
-		if len(removedNetworkRuleIdentifiers) > 0 {
-			baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
-			removeReq := sdk.NewRemoveNetworkRuleRequest().WithAllowedNetworkRuleList(removedNetworkRuleIdentifiers)
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithRemove(removeReq))
-			if err != nil {
-				return getUpdateContextDiag("removing from ALLOWED_NETWORK_RULE_LIST", name, err)
-			}
+		if err != nil {
+			return getUpdateContextDiag("updating ALLOWED_NETWORK_RULE_LIST", name, err)
 		}
 	}
 
 	if d.HasChange("blocked_network_rule_list") {
-		oldList, newList := d.GetChange("blocked_network_rule_list")
-		addedNetworkRuleIdentifiers, removedNetworkRuleIdentifiers := getAddedAndRemovedIdentifiers(oldList, newList)
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		networkRuleIdentifiers := parseNetworkRulesList(d.Get("blocked_network_rule_list"))
+		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(networkRuleIdentifiers))
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 
-		if len(addedNetworkRuleIdentifiers) > 0 {
-			baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
-			addReq := sdk.NewAddNetworkRuleRequest().WithBlockedNetworkRuleList(addedNetworkRuleIdentifiers)
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithAdd(addReq))
-
-			if err != nil {
-				return getUpdateContextDiag("adding to BLOCKED_NETWORK_RULE_LIST", name, err)
-			}
-		}
-		if len(removedNetworkRuleIdentifiers) > 0 {
-			baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
-			removeReq := sdk.NewRemoveNetworkRuleRequest().WithBlockedNetworkRuleList(removedNetworkRuleIdentifiers)
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithRemove(removeReq))
-			if err != nil {
-				return getUpdateContextDiag("removing from BLOCKED_NETWORK_RULE_LIST", name, err)
-			}
+		if err != nil {
+			return getUpdateContextDiag("updating BLOCKED_NETWORK_RULE_LIST", name, err)
 		}
 	}
 
 	if d.HasChange("allowed_ip_list") {
 		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 		ipRequests := parseIPList(d.Get("allowed_ip_list"))
-
-		var err error
-		if len(ipRequests) == 0 {
-			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithAllowedIpList(sdk.Bool(true))
-			err = client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
-		} else {
-			setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
-			err = client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		}
+		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 
 		if err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Error updating network policy",
-					Detail:   fmt.Sprintf("error updating ALLOWED_IP_LIST for network policy %v err = %v", name, err),
-				},
-			}
+			return getUpdateContextDiag("updating ALLOWED_IP_LIST", name, err)
 		}
 	}
 
 	if d.HasChange("blocked_ip_list") {
 		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 		ipRequests := parseIPList(d.Get("blocked_ip_list"))
-
-		var err error
-		if len(ipRequests) == 0 {
-			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithBlockedIpList(sdk.Bool(true))
-			err = client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
-		} else {
-			setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
-			err = client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		}
+		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 
 		if err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Error updating network policy",
-					Detail:   fmt.Sprintf("error updating BLOCKED_IP_LIST for network policy %v err = %v", name, err),
-				},
-			}
+			return getUpdateContextDiag("updating BLOCKED_IP_LIST", name, err)
 		}
 	}
 
@@ -362,36 +312,4 @@ func parseNetworkRulesList(v interface{}) []sdk.SchemaObjectIdentifier {
 		networkRuleIdentifiers[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v)
 	}
 	return networkRuleIdentifiers
-}
-
-// getAddedAndRemovedIdentifiers returns the identifiers that were added and removed from the old and new network rule lists.
-func getAddedAndRemovedIdentifiers(oldList interface{}, newList interface{}) ([]sdk.SchemaObjectIdentifier, []sdk.SchemaObjectIdentifier) {
-	oldNetworkRuleIdentifiers := parseNetworkRulesList(oldList)
-	newNetworkRuleIdentifiers := parseNetworkRulesList(newList)
-
-	var addedNetworkRuleIdentifiers []sdk.SchemaObjectIdentifier
-	var removedNetworkRuleIdentifiers []sdk.SchemaObjectIdentifier
-
-	for _, identifier := range oldNetworkRuleIdentifiers {
-		if !contains(newNetworkRuleIdentifiers, identifier) {
-			removedNetworkRuleIdentifiers = append(removedNetworkRuleIdentifiers, identifier)
-		}
-	}
-	log.Printf("removedNetworkRuleIdentifiers: %v", removedNetworkRuleIdentifiers)
-	for _, identifier := range newNetworkRuleIdentifiers {
-		if !contains(oldNetworkRuleIdentifiers, identifier) {
-			addedNetworkRuleIdentifiers = append(addedNetworkRuleIdentifiers, identifier)
-		}
-	}
-	return addedNetworkRuleIdentifiers, removedNetworkRuleIdentifiers
-}
-
-// contains checks if a given identifier is in a list of identifiers.
-func contains(identifierList []sdk.SchemaObjectIdentifier, identifier sdk.SchemaObjectIdentifier) bool {
-	for _, objectIdentifier := range identifierList {
-		if objectIdentifier.FullyQualifiedName() == identifier.FullyQualifiedName() {
-			return true
-		}
-	}
-	return false
 }
