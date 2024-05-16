@@ -10,7 +10,7 @@ type SecurityIntegrations interface {
 	CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error
 	CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error
 	AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error
-	AlterScimIntegration(ctx context.Context, request *AlterScimIntegrationSecurityIntegrationRequest) error
+	AlterScim(ctx context.Context, request *AlterScimSecurityIntegrationRequest) error
 	Drop(ctx context.Context, request *DropSecurityIntegrationRequest) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error)
 	Show(ctx context.Context, request *ShowSecurityIntegrationRequest) ([]SecurityIntegration, error)
@@ -109,8 +109,8 @@ type Saml2IntegrationUnset struct {
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// AlterScimIntegrationSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim.
-type AlterScimIntegrationSecurityIntegrationOptions struct {
+// AlterScimSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-scim.
+type AlterScimSecurityIntegrationOptions struct {
 	alter               bool                    `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                   `ddl:"keyword" sql:"IF EXISTS"`

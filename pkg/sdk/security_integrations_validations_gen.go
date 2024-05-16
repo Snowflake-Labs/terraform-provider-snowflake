@@ -4,7 +4,7 @@ var (
 	_ validatable = new(CreateSaml2SecurityIntegrationOptions)
 	_ validatable = new(CreateScimSecurityIntegrationOptions)
 	_ validatable = new(AlterSaml2SecurityIntegrationOptions)
-	_ validatable = new(AlterScimIntegrationSecurityIntegrationOptions)
+	_ validatable = new(AlterScimSecurityIntegrationOptions)
 	_ validatable = new(DropSecurityIntegrationOptions)
 	_ validatable = new(DescribeSecurityIntegrationOptions)
 	_ validatable = new(ShowSecurityIntegrationOptions)
@@ -62,7 +62,7 @@ func (opts *AlterSaml2SecurityIntegrationOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterScimIntegrationSecurityIntegrationOptions) validate() error {
+func (opts *AlterScimSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -71,16 +71,16 @@ func (opts *AlterScimIntegrationSecurityIntegrationOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterScimIntegrationSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterScimSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.NetworkPolicy, opts.Set.SyncPassword, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.SyncPassword, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)

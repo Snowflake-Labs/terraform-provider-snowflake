@@ -3,13 +3,13 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]          = new(CreateSaml2SecurityIntegrationRequest)
-	_ optionsProvider[CreateScimSecurityIntegrationOptions]           = new(CreateScimSecurityIntegrationRequest)
-	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]           = new(AlterSaml2SecurityIntegrationRequest)
-	_ optionsProvider[AlterScimIntegrationSecurityIntegrationOptions] = new(AlterScimIntegrationSecurityIntegrationRequest)
-	_ optionsProvider[DropSecurityIntegrationOptions]                 = new(DropSecurityIntegrationRequest)
-	_ optionsProvider[DescribeSecurityIntegrationOptions]             = new(DescribeSecurityIntegrationRequest)
-	_ optionsProvider[ShowSecurityIntegrationOptions]                 = new(ShowSecurityIntegrationRequest)
+	_ optionsProvider[CreateSaml2SecurityIntegrationOptions] = new(CreateSaml2SecurityIntegrationRequest)
+	_ optionsProvider[CreateScimSecurityIntegrationOptions]  = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]  = new(AlterSaml2SecurityIntegrationRequest)
+	_ optionsProvider[AlterScimSecurityIntegrationOptions]   = new(AlterScimSecurityIntegrationRequest)
+	_ optionsProvider[DropSecurityIntegrationOptions]        = new(DropSecurityIntegrationRequest)
+	_ optionsProvider[DescribeSecurityIntegrationOptions]    = new(DescribeSecurityIntegrationRequest)
+	_ optionsProvider[ShowSecurityIntegrationOptions]        = new(ShowSecurityIntegrationRequest)
 )
 
 type CreateSaml2SecurityIntegrationRequest struct {
@@ -93,7 +93,7 @@ type Saml2IntegrationUnsetRequest struct {
 	Comment                    *bool
 }
 
-type AlterScimIntegrationSecurityIntegrationRequest struct {
+type AlterScimSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation

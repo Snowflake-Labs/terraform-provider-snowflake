@@ -33,11 +33,13 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'", id.FullyQualifiedName())
+		opts.OrReplace = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
 		opts.AllowedEmailPatterns = []EmailPattern{{Pattern: "pattern"}}
 		opts.AllowedUserDomains = []UserDomain{{Domain: "domain"}}
 		opts.Comment = Pointer("a")
@@ -49,9 +51,10 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 		opts.Saml2SnowflakeAcsUrl = Pointer("acs")
 		opts.Saml2SnowflakeIssuerUrl = Pointer("issuer")
 		opts.Saml2SpInitiatedLoginPageLabel = Pointer("label")
+		opts.Saml2SnowflakeX509Cert = Pointer("cert")
 
-		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'"+
-			" ALLOWED_USER_DOMAINS = ('domain') ALLOWED_EMAIL_PATTERNS = ('pattern') SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label' SAML2_ENABLE_SP_INITIATED = true SAML2_SIGN_REQUEST = true"+
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'"+
+			" ALLOWED_USER_DOMAINS = ('domain') ALLOWED_EMAIL_PATTERNS = ('pattern') SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label' SAML2_ENABLE_SP_INITIATED = true SAML2_SNOWFLAKE_X509_CERT = 'cert' SAML2_SIGN_REQUEST = true"+
 			" SAML2_REQUESTED_NAMEID_FORMAT = 'format' SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect' SAML2_FORCE_AUTHN = true SAML2_SNOWFLAKE_ISSUER_URL = 'issuer' SAML2_SNOWFLAKE_ACS_URL = 'acs'"+
 			" COMMENT = 'a'", id.FullyQualifiedName())
 	})
@@ -84,20 +87,22 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
+		opts.OrReplace = Pointer(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		networkPolicyID := randomAccountObjectIdentifier()
+		opts.IfNotExists = Pointer(true)
 		opts.NetworkPolicy = Pointer(networkPolicyID)
 		opts.SyncPassword = Pointer(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'"+
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'"+
 			" NETWORK_POLICY = %s SYNC_PASSWORD = true", id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
 	})
 }
 
-func TestSecurityIntegrations_AlterSaml2Integration(t *testing.T) {
+func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterSaml2IntegrationSecurityIntegrationOptions
@@ -121,10 +126,15 @@ func TestSecurityIntegrations_AlterSaml2Integration(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSaml2SecurityIntegrationOptions", "Set", "Unset", "RefreshSaml2SnowflakePrivateKey", "SetTags", "UnsetTags"))
+	})
+
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &Saml2IntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2IntegrationSecurityIntegrationOptions.Set", "Enabled", "Saml2Issuer", "Saml2SsoUrl", "Saml2Provider",
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2SecurityIntegrationOptions.Set", "Enabled", "Saml2Issuer", "Saml2SsoUrl", "Saml2Provider",
 			"Saml2X509Cert", "AllowedUserDomains", "AllowedEmailPatterns", "Saml2SpInitiatedLoginPageLabel", "Saml2EnableSpInitiated", "Saml2SnowflakeX509Cert", "Saml2SignRequest",
 			"Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Saml2ForceAuthn", "Saml2SnowflakeIssuerUrl", "Saml2SnowflakeAcsUrl", "Comment"))
 	})
@@ -132,8 +142,15 @@ func TestSecurityIntegrations_AlterSaml2Integration(t *testing.T) {
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &Saml2IntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2IntegrationSecurityIntegrationOptions.Unset",
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2SecurityIntegrationOptions.Unset",
 			"Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &Saml2IntegrationSet{}
+		opts.Unset = &Saml2IntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSaml2SecurityIntegrationOptions", "Set", "Unset", "RefreshSaml2SnowflakePrivateKey", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
@@ -180,20 +197,44 @@ func TestSecurityIntegrations_AlterSaml2Integration(t *testing.T) {
 		opts.RefreshSaml2SnowflakePrivateKey = Pointer(true)
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY", id.FullyQualifiedName())
 	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
+	})
 }
 
-func TestSecurityIntegrations_AlterScimIntegration(t *testing.T) {
+func TestSecurityIntegrations_AlterScim(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterScimIntegrationSecurityIntegrationOptions
-	defaultOpts := func() *AlterScimIntegrationSecurityIntegrationOptions {
-		return &AlterScimIntegrationSecurityIntegrationOptions{
+	// Minimal valid AlterScimSecurityIntegrationOptions
+	defaultOpts := func() *AlterScimSecurityIntegrationOptions {
+		return &AlterScimSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterScimIntegrationSecurityIntegrationOptions = nil
+		var opts *AlterScimSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -206,16 +247,28 @@ func TestSecurityIntegrations_AlterScimIntegration(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterScimSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ScimIntegrationSet{}
+		opts.Unset = &ScimIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterScimSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ScimIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Set", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &ScimIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimIntegrationSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
@@ -240,6 +293,30 @@ func TestSecurityIntegrations_AlterScimIntegration(t *testing.T) {
 			Comment:       Pointer(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
 

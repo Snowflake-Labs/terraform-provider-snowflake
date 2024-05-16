@@ -27,7 +27,7 @@ func (v *securityIntegrations) AlterSaml2(ctx context.Context, request *AlterSam
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterScimIntegration(ctx context.Context, request *AlterScimIntegrationSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterScim(ctx context.Context, request *AlterScimSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -151,8 +151,8 @@ func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityInteg
 	return opts
 }
 
-func (r *AlterScimIntegrationSecurityIntegrationRequest) toOpts() *AlterScimIntegrationSecurityIntegrationOptions {
-	opts := &AlterScimIntegrationSecurityIntegrationOptions{
+func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegrationOptions {
+	opts := &AlterScimSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,

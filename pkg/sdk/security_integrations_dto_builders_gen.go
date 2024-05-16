@@ -287,35 +287,35 @@ func (s *Saml2IntegrationUnsetRequest) WithComment(Comment *bool) *Saml2Integrat
 	return s
 }
 
-func NewAlterScimIntegrationSecurityIntegrationRequest(
+func NewAlterScimSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterScimIntegrationSecurityIntegrationRequest {
-	s := AlterScimIntegrationSecurityIntegrationRequest{}
+) *AlterScimSecurityIntegrationRequest {
+	s := AlterScimSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterScimIntegrationSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterScimIntegrationSecurityIntegrationRequest {
+func (s *AlterScimSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterScimSecurityIntegrationRequest {
 	s.IfExists = IfExists
 	return s
 }
 
-func (s *AlterScimIntegrationSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterScimIntegrationSecurityIntegrationRequest {
+func (s *AlterScimSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterScimSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterScimIntegrationSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterScimIntegrationSecurityIntegrationRequest {
+func (s *AlterScimSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterScimSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterScimIntegrationSecurityIntegrationRequest) WithSet(Set *ScimIntegrationSetRequest) *AlterScimIntegrationSecurityIntegrationRequest {
+func (s *AlterScimSecurityIntegrationRequest) WithSet(Set *ScimIntegrationSetRequest) *AlterScimSecurityIntegrationRequest {
 	s.Set = Set
 	return s
 }
 
-func (s *AlterScimIntegrationSecurityIntegrationRequest) WithUnset(Unset *ScimIntegrationUnsetRequest) *AlterScimIntegrationSecurityIntegrationRequest {
+func (s *AlterScimSecurityIntegrationRequest) WithUnset(Unset *ScimIntegrationUnsetRequest) *AlterScimSecurityIntegrationRequest {
 	s.Unset = Unset
 	return s
 }

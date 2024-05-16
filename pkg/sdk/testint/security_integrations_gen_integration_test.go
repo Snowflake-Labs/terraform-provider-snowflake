@@ -310,7 +310,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 		t.Cleanup(networkPolicyCleanup)
 
-		setRequest := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).
+		setRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
 				sdk.NewScimIntegrationSetRequest().
 					WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
@@ -318,7 +318,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSyncPassword(sdk.Bool(false)).
 					WithComment(sdk.String("altered")),
 			)
-		err := client.SecurityIntegrations.AlterScimIntegration(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterScim(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -326,13 +326,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		assertSCIMDescribe(details, "true", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
 
-		unsetRequest := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithUnset(
 				sdk.NewScimIntegrationUnsetRequest().
 					WithNetworkPolicy(sdk.Bool(true)).
 					WithSyncPassword(sdk.Bool(true)),
 			)
-		err = client.SecurityIntegrations.AlterScimIntegration(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterScim(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -355,9 +355,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterScimSecurityIntegrationRequest(id).WithSetTags(tags)
 
-		err := client.SecurityIntegrations.AlterScimIntegration(ctx, alterRequestSetTags)
+		err := client.SecurityIntegrations.AlterScim(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
@@ -368,9 +368,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := sdk.NewAlterScimIntegrationSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterScimSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
 
-		err = client.SecurityIntegrations.AlterScimIntegration(ctx, alterRequestUnsetTags)
+		err = client.SecurityIntegrations.AlterScim(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
