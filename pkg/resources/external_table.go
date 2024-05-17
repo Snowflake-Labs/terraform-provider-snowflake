@@ -184,20 +184,9 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		partitionBy = expandStringList(v.([]any))
 	}
 
-	var pattern string
-	if v, ok := d.GetOk("pattern"); ok {
-		pattern = v.(string)
-	}
-
-	var awsSnsTopic string
-	if v, ok := d.GetOk("aws_sns_topic"); ok {
-		awsSnsTopic = v.(string)
-	}
-
-	var comment string
-	if v, ok := d.GetOk("comment"); ok {
-		comment = v.(string)
-	}
+	pattern := d.Get("pattern").(string)
+	awsSnsTopic := d.Get("aws_sns_topic").(string)
+	comment := d.Get("comment").(string)
 
 	var tagAssociationRequests []*sdk.TagAssociationRequest
 	if _, ok := d.GetOk("tag"); ok {
