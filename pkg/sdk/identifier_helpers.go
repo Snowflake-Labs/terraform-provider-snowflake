@@ -290,6 +290,10 @@ func (i SchemaObjectIdentifier) SchemaId() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
 }
 
+func (i SchemaObjectIdentifier) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
+}
+
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""

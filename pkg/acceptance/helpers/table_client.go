@@ -75,6 +75,14 @@ func (c *TableClient) DropTableFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 	}
 }
 
+func (c *TableClient) SetDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days int) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
+	require.NoError(t, err)
+}
+
 // GetTableColumnsFor is based on https://docs.snowflake.com/en/sql-reference/info-schema/columns.
 // TODO: extract getting table columns as resource (like getting tag in system functions)
 func (c *TableClient) GetTableColumnsFor(t *testing.T, tableId sdk.SchemaObjectIdentifier) []InformationSchemaColumns {
