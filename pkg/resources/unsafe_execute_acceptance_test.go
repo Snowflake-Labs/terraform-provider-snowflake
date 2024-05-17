@@ -2,15 +2,14 @@ package resources_test
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/big"
 	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -512,11 +511,11 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	roleId := generateUnsafeExecuteTestRoleName(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
 	privilege := sdk.AccountObjectPrivilegeCreateSchema
-	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId)
-	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id, roleId)
+	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId.Name())
+	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id, roleId.Name())
 
 	resourceName := "snowflake_unsafe_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
@@ -570,10 +569,10 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
 
-	dbId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	dbId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_").Name()
-	roleId1 := generateUnsafeExecuteTestRoleName(t)
-	roleId2 := generateUnsafeExecuteTestRoleName(t)
+	dbId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	dbId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	roleId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
+	roleId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
 	privilege1 := sdk.AccountObjectPrivilegeCreateSchema
 	privilege2 := sdk.AccountObjectPrivilegeModify
 	privilege3 := sdk.AccountObjectPrivilegeUsage
@@ -583,12 +582,12 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"database_grants": config.ListVariable(config.ObjectVariable(map[string]config.Variable{
-				"database_name": config.StringVariable(dbId1),
-				"role_id":       config.StringVariable(roleId1),
+				"database_name": config.StringVariable(dbId1.Name()),
+				"role_id":       config.StringVariable(roleId1.Name()),
 				"privileges":    config.ListVariable(config.StringVariable(privilege1.String()), config.StringVariable(privilege2.String())),
 			}), config.ObjectVariable(map[string]config.Variable{
-				"database_name": config.StringVariable(dbId2),
-				"role_id":       config.StringVariable(roleId2),
+				"database_name": config.StringVariable(dbId2.Name()),
+				"role_id":       config.StringVariable(roleId2.Name()),
 				"privileges":    config.ListVariable(config.StringVariable(privilege2.String()), config.StringVariable(privilege3.String())),
 			})),
 		}
@@ -703,62 +702,43 @@ output "unsafe" {
 `, queryNumber)
 }
 
-// generateUnsafeExecuteTestRoleName returns capitalized name on purpose.
-// Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
-func generateUnsafeExecuteTestRoleName(t *testing.T) string {
-	t.Helper()
-	id, err := rand.Int(rand.Reader, big.NewInt(10000))
-	if err != nil {
-		t.Fatalf("Failed to generate role id: %v", err)
-	}
-	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_ROLE_%d", id)
-}
-
-func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId string, roleId string) {
+func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier) {
 	t.Helper()
 
 	client := acc.Client(t)
 	ctx := context.Background()
 
-	err := client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.CreateDatabaseOptions{})
+	err := client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{})
 	require.NoError(t, err)
 
-	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
+	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId))
 	require.NoError(t, err)
 }
 
-func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId string, roleId string) {
+func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier) {
 	t.Helper()
 
 	client := acc.Client(t)
 	ctx := context.Background()
 
-	err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.DropDatabaseOptions{})
+	err := client.Databases.Drop(ctx, dbId, &sdk.DropDatabaseOptions{})
 	assert.NoError(t, err)
 
-	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
+	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId))
 	assert.NoError(t, err)
 }
 
-func verifyGrantExists(t *testing.T, roleId string, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
+func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client := acc.Client(t)
-		ctx := context.Background()
-
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: sdk.NewAccountObjectIdentifier(roleId),
-			},
-		})
-		require.NoError(t, err)
+		grants := acc.TestClient().Role.ShowGrantsTo(t, roleId)
 
 		if shouldExist {
 			require.Equal(t, 1, len(grants))
 			assert.Equal(t, privilege.String(), grants[0].Privilege)
 			assert.Equal(t, sdk.ObjectTypeDatabase, grants[0].GrantedOn)
 			assert.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
-			assert.Equal(t, sdk.NewAccountObjectIdentifier(roleId).FullyQualifiedName(), grants[0].GranteeName.FullyQualifiedName())
+			assert.Equal(t, roleId.FullyQualifiedName(), grants[0].GranteeName.FullyQualifiedName())
 		} else {
 			require.Equal(t, 0, len(grants))
 		}
