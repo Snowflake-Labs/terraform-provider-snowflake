@@ -14,13 +14,13 @@ func NewCreateExternalTableRequest(
 	return &s
 }
 
-func (s *CreateExternalTableRequest) WithOrReplace(orReplace *bool) *CreateExternalTableRequest {
-	s.orReplace = orReplace
+func (s *CreateExternalTableRequest) WithOrReplace(orReplace bool) *CreateExternalTableRequest {
+	s.orReplace = &orReplace
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithIfNotExists(ifNotExists *bool) *CreateExternalTableRequest {
-	s.ifNotExists = ifNotExists
+func (s *CreateExternalTableRequest) WithIfNotExists(ifNotExists bool) *CreateExternalTableRequest {
+	s.ifNotExists = &ifNotExists
 	return s
 }
 
@@ -29,8 +29,8 @@ func (s *CreateExternalTableRequest) WithColumns(columns []*ExternalTableColumnR
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithCloudProviderParams(cloudProviderParams *CloudProviderParamsRequest) *CreateExternalTableRequest {
-	s.cloudProviderParams = cloudProviderParams
+func (s *CreateExternalTableRequest) WithCloudProviderParams(cloudProviderParams CloudProviderParamsRequest) *CreateExternalTableRequest {
+	s.cloudProviderParams = &cloudProviderParams
 	return s
 }
 
@@ -39,48 +39,56 @@ func (s *CreateExternalTableRequest) WithPartitionBy(partitionBy []string) *Crea
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateExternalTableRequest {
-	s.refreshOnCreate = refreshOnCreate
+func (s *CreateExternalTableRequest) WithRefreshOnCreate(refreshOnCreate bool) *CreateExternalTableRequest {
+	s.refreshOnCreate = &refreshOnCreate
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *CreateExternalTableRequest {
-	s.autoRefresh = autoRefresh
+func (s *CreateExternalTableRequest) WithAutoRefresh(autoRefresh bool) *CreateExternalTableRequest {
+	s.autoRefresh = &autoRefresh
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithPattern(pattern *string) *CreateExternalTableRequest {
-	s.pattern = pattern
+func (s *CreateExternalTableRequest) WithPattern(pattern string) *CreateExternalTableRequest {
+	if len(pattern) > 0 {
+		s.pattern = &pattern
+	}
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableRequest {
-	s.rawFileFormat = rawFileFormat
+func (s *CreateExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateExternalTableRequest {
+	if len(rawFileFormat) > 0 {
+		s.rawFileFormat = &rawFileFormat
+	}
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableRequest {
-	s.fileFormat = fileFormat
+func (s *CreateExternalTableRequest) WithFileFormat(fileFormat ExternalTableFileFormatRequest) *CreateExternalTableRequest {
+	s.fileFormat = &fileFormat
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithAwsSnsTopic(awsSnsTopic *string) *CreateExternalTableRequest {
-	s.awsSnsTopic = awsSnsTopic
+func (s *CreateExternalTableRequest) WithAwsSnsTopic(awsSnsTopic string) *CreateExternalTableRequest {
+	if len(awsSnsTopic) > 0 {
+		s.awsSnsTopic = &awsSnsTopic
+	}
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateExternalTableRequest {
-	s.copyGrants = copyGrants
+func (s *CreateExternalTableRequest) WithCopyGrants(copyGrants bool) *CreateExternalTableRequest {
+	s.copyGrants = &copyGrants
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithComment(comment *string) *CreateExternalTableRequest {
-	s.comment = comment
+func (s *CreateExternalTableRequest) WithComment(comment string) *CreateExternalTableRequest {
+	if len(comment) > 0 {
+		s.comment = &comment
+	}
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateExternalTableRequest {
-	s.rowAccessPolicy = rowAccessPolicy
+func (s *CreateExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy RowAccessPolicyRequest) *CreateExternalTableRequest {
+	s.rowAccessPolicy = &rowAccessPolicy
 	return s
 }
 
@@ -101,13 +109,13 @@ func NewExternalTableColumnRequest(
 	return &s
 }
 
-func (s *ExternalTableColumnRequest) WithNotNull(notNull *bool) *ExternalTableColumnRequest {
-	s.notNull = notNull
+func (s *ExternalTableColumnRequest) WithNotNull(notNull bool) *ExternalTableColumnRequest {
+	s.notNull = &notNull
 	return s
 }
 
-func (s *ExternalTableColumnRequest) WithInlineConstraint(inlineConstraint *ColumnInlineConstraintRequest) *ExternalTableColumnRequest {
-	s.inlineConstraint = inlineConstraint
+func (s *ExternalTableColumnRequest) WithInlineConstraint(inlineConstraint ColumnInlineConstraintRequest) *ExternalTableColumnRequest {
+	s.inlineConstraint = &inlineConstraint
 	return s
 }
 
@@ -115,13 +123,17 @@ func NewCloudProviderParamsRequest() *CloudProviderParamsRequest {
 	return &CloudProviderParamsRequest{}
 }
 
-func (s *CloudProviderParamsRequest) WithGoogleCloudStorageIntegration(googleCloudStorageIntegration *string) *CloudProviderParamsRequest {
-	s.googleCloudStorageIntegration = googleCloudStorageIntegration
+func (s *CloudProviderParamsRequest) WithGoogleCloudStorageIntegration(googleCloudStorageIntegration string) *CloudProviderParamsRequest {
+	if len(googleCloudStorageIntegration) > 0 {
+		s.googleCloudStorageIntegration = &googleCloudStorageIntegration
+	}
 	return s
 }
 
-func (s *CloudProviderParamsRequest) WithMicrosoftAzureIntegration(microsoftAzureIntegration *string) *CloudProviderParamsRequest {
-	s.microsoftAzureIntegration = microsoftAzureIntegration
+func (s *CloudProviderParamsRequest) WithMicrosoftAzureIntegration(microsoftAzureIntegration string) *CloudProviderParamsRequest {
+	if len(microsoftAzureIntegration) > 0 {
+		s.microsoftAzureIntegration = &microsoftAzureIntegration
+	}
 	return s
 }
 
@@ -129,18 +141,20 @@ func NewExternalTableFileFormatRequest() *ExternalTableFileFormatRequest {
 	return &ExternalTableFileFormatRequest{}
 }
 
-func (s *ExternalTableFileFormatRequest) WithName(name *string) *ExternalTableFileFormatRequest {
-	s.name = name
+func (s *ExternalTableFileFormatRequest) WithName(name string) *ExternalTableFileFormatRequest {
+	if len(name) > 0 {
+		s.name = &name
+	}
 	return s
 }
 
-func (s *ExternalTableFileFormatRequest) WithFileFormatType(fileFormatType *ExternalTableFileFormatType) *ExternalTableFileFormatRequest {
-	s.fileFormatType = fileFormatType
+func (s *ExternalTableFileFormatRequest) WithFileFormatType(fileFormatType ExternalTableFileFormatType) *ExternalTableFileFormatRequest {
+	s.fileFormatType = &fileFormatType
 	return s
 }
 
-func (s *ExternalTableFileFormatRequest) WithOptions(options *ExternalTableFileFormatTypeOptionsRequest) *ExternalTableFileFormatRequest {
-	s.options = options
+func (s *ExternalTableFileFormatRequest) WithOptions(options ExternalTableFileFormatTypeOptionsRequest) *ExternalTableFileFormatRequest {
+	s.options = &options
 	return s
 }
 
@@ -148,123 +162,131 @@ func NewExternalTableFileFormatTypeOptionsRequest() *ExternalTableFileFormatType
 	return &ExternalTableFileFormatTypeOptionsRequest{}
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvCompression(csvCompression *ExternalTableCsvCompression) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvCompression = csvCompression
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvCompression(csvCompression ExternalTableCsvCompression) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvCompression = &csvCompression
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvRecordDelimiter(csvRecordDelimiter *string) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvRecordDelimiter = csvRecordDelimiter
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvRecordDelimiter(csvRecordDelimiter string) *ExternalTableFileFormatTypeOptionsRequest {
+	if len(csvRecordDelimiter) > 0 {
+		s.csvRecordDelimiter = &csvRecordDelimiter
+	}
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldDelimiter(csvFieldDelimiter *string) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvFieldDelimiter = csvFieldDelimiter
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldDelimiter(csvFieldDelimiter string) *ExternalTableFileFormatTypeOptionsRequest {
+	if len(csvFieldDelimiter) > 0 {
+		s.csvFieldDelimiter = &csvFieldDelimiter
+	}
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvSkipHeader(csvSkipHeader *int) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvSkipHeader = csvSkipHeader
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvSkipHeader(csvSkipHeader int) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvSkipHeader = &csvSkipHeader
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvSkipBlankLines(csvSkipBlankLines *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvSkipBlankLines = csvSkipBlankLines
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvSkipBlankLines(csvSkipBlankLines bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvSkipBlankLines = &csvSkipBlankLines
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEscapeUnenclosedField(csvEscapeUnenclosedField *string) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvEscapeUnenclosedField = csvEscapeUnenclosedField
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEscapeUnenclosedField(csvEscapeUnenclosedField string) *ExternalTableFileFormatTypeOptionsRequest {
+	if len(csvEscapeUnenclosedField) > 0 {
+		s.csvEscapeUnenclosedField = &csvEscapeUnenclosedField
+	}
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvTrimSpace(csvTrimSpace *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvTrimSpace = csvTrimSpace
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvTrimSpace(csvTrimSpace bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvTrimSpace = &csvTrimSpace
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldOptionallyEnclosedBy(csvFieldOptionallyEnclosedBy *string) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvFieldOptionallyEnclosedBy = csvFieldOptionallyEnclosedBy
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldOptionallyEnclosedBy(csvFieldOptionallyEnclosedBy string) *ExternalTableFileFormatTypeOptionsRequest {
+	if len(csvFieldOptionallyEnclosedBy) > 0 {
+		s.csvFieldOptionallyEnclosedBy = &csvFieldOptionallyEnclosedBy
+	}
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvNullIf(csvNullIf *[]NullStringRequest) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvNullIf = csvNullIf
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvNullIf(csvNullIf []NullStringRequest) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvNullIf = &csvNullIf
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEmptyFieldAsNull(csvEmptyFieldAsNull *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvEmptyFieldAsNull = csvEmptyFieldAsNull
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEmptyFieldAsNull(csvEmptyFieldAsNull bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvEmptyFieldAsNull = &csvEmptyFieldAsNull
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEncoding(csvEncoding *CSVEncoding) *ExternalTableFileFormatTypeOptionsRequest {
-	s.csvEncoding = csvEncoding
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEncoding(csvEncoding CSVEncoding) *ExternalTableFileFormatTypeOptionsRequest {
+	s.csvEncoding = &csvEncoding
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonCompression(jsonCompression *ExternalTableJsonCompression) *ExternalTableFileFormatTypeOptionsRequest {
-	s.jsonCompression = jsonCompression
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonCompression(jsonCompression ExternalTableJsonCompression) *ExternalTableFileFormatTypeOptionsRequest {
+	s.jsonCompression = &jsonCompression
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonAllowDuplicate(jsonAllowDuplicate *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.jsonAllowDuplicate = jsonAllowDuplicate
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonAllowDuplicate(jsonAllowDuplicate bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.jsonAllowDuplicate = &jsonAllowDuplicate
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonStripOuterArray(jsonStripOuterArray *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.jsonStripOuterArray = jsonStripOuterArray
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonStripOuterArray(jsonStripOuterArray bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.jsonStripOuterArray = &jsonStripOuterArray
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonStripNullValues(jsonStripNullValues *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.jsonStripNullValues = jsonStripNullValues
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonStripNullValues(jsonStripNullValues bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.jsonStripNullValues = &jsonStripNullValues
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonReplaceInvalidCharacters(jsonReplaceInvalidCharacters *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.jsonReplaceInvalidCharacters = jsonReplaceInvalidCharacters
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithJsonReplaceInvalidCharacters(jsonReplaceInvalidCharacters bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.jsonReplaceInvalidCharacters = &jsonReplaceInvalidCharacters
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithAvroCompression(avroCompression *ExternalTableAvroCompression) *ExternalTableFileFormatTypeOptionsRequest {
-	s.avroCompression = avroCompression
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithAvroCompression(avroCompression ExternalTableAvroCompression) *ExternalTableFileFormatTypeOptionsRequest {
+	s.avroCompression = &avroCompression
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithAvroReplaceInvalidCharacters(avroReplaceInvalidCharacters *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.avroReplaceInvalidCharacters = avroReplaceInvalidCharacters
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithAvroReplaceInvalidCharacters(avroReplaceInvalidCharacters bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.avroReplaceInvalidCharacters = &avroReplaceInvalidCharacters
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcTrimSpace(orcTrimSpace *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.orcTrimSpace = orcTrimSpace
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcTrimSpace(orcTrimSpace bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.orcTrimSpace = &orcTrimSpace
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcReplaceInvalidCharacters(orcReplaceInvalidCharacters *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.orcReplaceInvalidCharacters = orcReplaceInvalidCharacters
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcReplaceInvalidCharacters(orcReplaceInvalidCharacters bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.orcReplaceInvalidCharacters = &orcReplaceInvalidCharacters
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcNullIf(orcNullIf *[]NullStringRequest) *ExternalTableFileFormatTypeOptionsRequest {
-	s.orcNullIf = orcNullIf
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithOrcNullIf(orcNullIf []NullStringRequest) *ExternalTableFileFormatTypeOptionsRequest {
+	s.orcNullIf = &orcNullIf
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetCompression(parquetCompression *ExternalTableParquetCompression) *ExternalTableFileFormatTypeOptionsRequest {
-	s.parquetCompression = parquetCompression
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetCompression(parquetCompression ExternalTableParquetCompression) *ExternalTableFileFormatTypeOptionsRequest {
+	s.parquetCompression = &parquetCompression
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetBinaryAsText(parquetBinaryAsText *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.parquetBinaryAsText = parquetBinaryAsText
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetBinaryAsText(parquetBinaryAsText bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.parquetBinaryAsText = &parquetBinaryAsText
 	return s
 }
 
-func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetReplaceInvalidCharacters(parquetReplaceInvalidCharacters *bool) *ExternalTableFileFormatTypeOptionsRequest {
-	s.parquetReplaceInvalidCharacters = parquetReplaceInvalidCharacters
+func (s *ExternalTableFileFormatTypeOptionsRequest) WithParquetReplaceInvalidCharacters(parquetReplaceInvalidCharacters bool) *ExternalTableFileFormatTypeOptionsRequest {
+	s.parquetReplaceInvalidCharacters = &parquetReplaceInvalidCharacters
 	return s
 }
 
@@ -287,13 +309,13 @@ func NewCreateWithManualPartitioningExternalTableRequest(
 	return &s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithOrReplace(orReplace *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.orReplace = orReplace
+func (s *CreateWithManualPartitioningExternalTableRequest) WithOrReplace(orReplace bool) *CreateWithManualPartitioningExternalTableRequest {
+	s.orReplace = &orReplace
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithIfNotExists(ifNotExists *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.ifNotExists = ifNotExists
+func (s *CreateWithManualPartitioningExternalTableRequest) WithIfNotExists(ifNotExists bool) *CreateWithManualPartitioningExternalTableRequest {
+	s.ifNotExists = &ifNotExists
 	return s
 }
 
@@ -302,8 +324,8 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithColumns(columns [
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithCloudProviderParams(cloudProviderParams *CloudProviderParamsRequest) *CreateWithManualPartitioningExternalTableRequest {
-	s.cloudProviderParams = cloudProviderParams
+func (s *CreateWithManualPartitioningExternalTableRequest) WithCloudProviderParams(cloudProviderParams CloudProviderParamsRequest) *CreateWithManualPartitioningExternalTableRequest {
+	s.cloudProviderParams = &cloudProviderParams
 	return s
 }
 
@@ -312,28 +334,32 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(parti
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateWithManualPartitioningExternalTableRequest {
-	s.rawFileFormat = rawFileFormat
+func (s *CreateWithManualPartitioningExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateWithManualPartitioningExternalTableRequest {
+	if len(rawFileFormat) > 0 {
+		s.rawFileFormat = &rawFileFormat
+	}
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateWithManualPartitioningExternalTableRequest {
-	s.fileFormat = fileFormat
+func (s *CreateWithManualPartitioningExternalTableRequest) WithFileFormat(fileFormat ExternalTableFileFormatRequest) *CreateWithManualPartitioningExternalTableRequest {
+	s.fileFormat = &fileFormat
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.copyGrants = copyGrants
+func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGrants bool) *CreateWithManualPartitioningExternalTableRequest {
+	s.copyGrants = &copyGrants
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithComment(comment *string) *CreateWithManualPartitioningExternalTableRequest {
-	s.comment = comment
+func (s *CreateWithManualPartitioningExternalTableRequest) WithComment(comment string) *CreateWithManualPartitioningExternalTableRequest {
+	if len(comment) > 0 {
+		s.comment = &comment
+	}
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateWithManualPartitioningExternalTableRequest {
-	s.rowAccessPolicy = rowAccessPolicy
+func (s *CreateWithManualPartitioningExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy RowAccessPolicyRequest) *CreateWithManualPartitioningExternalTableRequest {
+	s.rowAccessPolicy = &rowAccessPolicy
 	return s
 }
 
@@ -352,13 +378,13 @@ func NewCreateDeltaLakeExternalTableRequest(
 	return &s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithOrReplace(orReplace *bool) *CreateDeltaLakeExternalTableRequest {
-	s.orReplace = orReplace
+func (s *CreateDeltaLakeExternalTableRequest) WithOrReplace(orReplace bool) *CreateDeltaLakeExternalTableRequest {
+	s.orReplace = &orReplace
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithIfNotExists(ifNotExists *bool) *CreateDeltaLakeExternalTableRequest {
-	s.ifNotExists = ifNotExists
+func (s *CreateDeltaLakeExternalTableRequest) WithIfNotExists(ifNotExists bool) *CreateDeltaLakeExternalTableRequest {
+	s.ifNotExists = &ifNotExists
 	return s
 }
 
@@ -367,8 +393,8 @@ func (s *CreateDeltaLakeExternalTableRequest) WithColumns(columns []*ExternalTab
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithCloudProviderParams(cloudProviderParams *CloudProviderParamsRequest) *CreateDeltaLakeExternalTableRequest {
-	s.cloudProviderParams = cloudProviderParams
+func (s *CreateDeltaLakeExternalTableRequest) WithCloudProviderParams(cloudProviderParams CloudProviderParamsRequest) *CreateDeltaLakeExternalTableRequest {
+	s.cloudProviderParams = &cloudProviderParams
 	return s
 }
 
@@ -377,38 +403,42 @@ func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []stri
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateDeltaLakeExternalTableRequest {
-	s.refreshOnCreate = refreshOnCreate
+func (s *CreateDeltaLakeExternalTableRequest) WithRefreshOnCreate(refreshOnCreate bool) *CreateDeltaLakeExternalTableRequest {
+	s.refreshOnCreate = &refreshOnCreate
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *CreateDeltaLakeExternalTableRequest {
-	s.autoRefresh = autoRefresh
+func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh bool) *CreateDeltaLakeExternalTableRequest {
+	s.autoRefresh = &autoRefresh
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateDeltaLakeExternalTableRequest {
-	s.rawFileFormat = rawFileFormat
+func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateDeltaLakeExternalTableRequest {
+	if len(rawFileFormat) > 0 {
+		s.rawFileFormat = &rawFileFormat
+	}
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
-	s.fileFormat = fileFormat
+func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
+	s.fileFormat = &fileFormat
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateDeltaLakeExternalTableRequest {
-	s.copyGrants = copyGrants
+func (s *CreateDeltaLakeExternalTableRequest) WithCopyGrants(copyGrants bool) *CreateDeltaLakeExternalTableRequest {
+	s.copyGrants = &copyGrants
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithComment(comment *string) *CreateDeltaLakeExternalTableRequest {
-	s.comment = comment
+func (s *CreateDeltaLakeExternalTableRequest) WithComment(comment string) *CreateDeltaLakeExternalTableRequest {
+	if len(comment) > 0 {
+		s.comment = &comment
+	}
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateDeltaLakeExternalTableRequest {
-	s.rowAccessPolicy = rowAccessPolicy
+func (s *CreateDeltaLakeExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy RowAccessPolicyRequest) *CreateDeltaLakeExternalTableRequest {
+	s.rowAccessPolicy = &rowAccessPolicy
 	return s
 }
 
@@ -427,13 +457,13 @@ func NewCreateExternalTableUsingTemplateRequest(
 	return &s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithOrReplace(orReplace *bool) *CreateExternalTableUsingTemplateRequest {
-	s.orReplace = orReplace
+func (s *CreateExternalTableUsingTemplateRequest) WithOrReplace(orReplace bool) *CreateExternalTableUsingTemplateRequest {
+	s.orReplace = &orReplace
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithCopyGrants(copyGrants *bool) *CreateExternalTableUsingTemplateRequest {
-	s.copyGrants = copyGrants
+func (s *CreateExternalTableUsingTemplateRequest) WithCopyGrants(copyGrants bool) *CreateExternalTableUsingTemplateRequest {
+	s.copyGrants = &copyGrants
 	return s
 }
 
@@ -442,8 +472,8 @@ func (s *CreateExternalTableUsingTemplateRequest) WithQuery(query string) *Creat
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithCloudProviderParams(cloudProviderParams *CloudProviderParamsRequest) *CreateExternalTableUsingTemplateRequest {
-	s.cloudProviderParams = cloudProviderParams
+func (s *CreateExternalTableUsingTemplateRequest) WithCloudProviderParams(cloudProviderParams CloudProviderParamsRequest) *CreateExternalTableUsingTemplateRequest {
+	s.cloudProviderParams = &cloudProviderParams
 	return s
 }
 
@@ -452,43 +482,51 @@ func (s *CreateExternalTableUsingTemplateRequest) WithPartitionBy(partitionBy []
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateExternalTableUsingTemplateRequest {
-	s.refreshOnCreate = refreshOnCreate
+func (s *CreateExternalTableUsingTemplateRequest) WithRefreshOnCreate(refreshOnCreate bool) *CreateExternalTableUsingTemplateRequest {
+	s.refreshOnCreate = &refreshOnCreate
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithAutoRefresh(autoRefresh *bool) *CreateExternalTableUsingTemplateRequest {
-	s.autoRefresh = autoRefresh
+func (s *CreateExternalTableUsingTemplateRequest) WithAutoRefresh(autoRefresh bool) *CreateExternalTableUsingTemplateRequest {
+	s.autoRefresh = &autoRefresh
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithPattern(pattern *string) *CreateExternalTableUsingTemplateRequest {
-	s.pattern = pattern
+func (s *CreateExternalTableUsingTemplateRequest) WithPattern(pattern string) *CreateExternalTableUsingTemplateRequest {
+	if len(pattern) > 0 {
+		s.pattern = &pattern
+	}
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableUsingTemplateRequest {
-	s.rawFileFormat = rawFileFormat
+func (s *CreateExternalTableUsingTemplateRequest) WithRawFileFormat(rawFileFormat string) *CreateExternalTableUsingTemplateRequest {
+	if len(rawFileFormat) > 0 {
+		s.rawFileFormat = &rawFileFormat
+	}
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableUsingTemplateRequest {
-	s.fileFormat = fileFormat
+func (s *CreateExternalTableUsingTemplateRequest) WithFileFormat(fileFormat ExternalTableFileFormatRequest) *CreateExternalTableUsingTemplateRequest {
+	s.fileFormat = &fileFormat
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithAwsSnsTopic(awsSnsTopic *string) *CreateExternalTableUsingTemplateRequest {
-	s.awsSnsTopic = awsSnsTopic
+func (s *CreateExternalTableUsingTemplateRequest) WithAwsSnsTopic(awsSnsTopic string) *CreateExternalTableUsingTemplateRequest {
+	if len(awsSnsTopic) > 0 {
+		s.awsSnsTopic = &awsSnsTopic
+	}
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithComment(comment *string) *CreateExternalTableUsingTemplateRequest {
-	s.comment = comment
+func (s *CreateExternalTableUsingTemplateRequest) WithComment(comment string) *CreateExternalTableUsingTemplateRequest {
+	if len(comment) > 0 {
+		s.comment = &comment
+	}
 	return s
 }
 
-func (s *CreateExternalTableUsingTemplateRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateExternalTableUsingTemplateRequest {
-	s.rowAccessPolicy = rowAccessPolicy
+func (s *CreateExternalTableUsingTemplateRequest) WithRowAccessPolicy(rowAccessPolicy RowAccessPolicyRequest) *CreateExternalTableUsingTemplateRequest {
+	s.rowAccessPolicy = &rowAccessPolicy
 	return s
 }
 
@@ -505,13 +543,13 @@ func NewAlterExternalTableRequest(
 	return &s
 }
 
-func (s *AlterExternalTableRequest) WithIfExists(ifExists *bool) *AlterExternalTableRequest {
-	s.ifExists = ifExists
+func (s *AlterExternalTableRequest) WithIfExists(ifExists bool) *AlterExternalTableRequest {
+	s.ifExists = &ifExists
 	return s
 }
 
-func (s *AlterExternalTableRequest) WithRefresh(refresh *RefreshExternalTableRequest) *AlterExternalTableRequest {
-	s.refresh = refresh
+func (s *AlterExternalTableRequest) WithRefresh(refresh RefreshExternalTableRequest) *AlterExternalTableRequest {
+	s.refresh = &refresh
 	return s
 }
 
@@ -525,8 +563,8 @@ func (s *AlterExternalTableRequest) WithRemoveFiles(removeFiles []*ExternalTable
 	return s
 }
 
-func (s *AlterExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *AlterExternalTableRequest {
-	s.autoRefresh = autoRefresh
+func (s *AlterExternalTableRequest) WithAutoRefresh(autoRefresh bool) *AlterExternalTableRequest {
+	s.autoRefresh = &autoRefresh
 	return s
 }
 
@@ -564,8 +602,8 @@ func NewAlterExternalTablePartitionRequest(
 	return &s
 }
 
-func (s *AlterExternalTablePartitionRequest) WithIfExists(ifExists *bool) *AlterExternalTablePartitionRequest {
-	s.ifExists = ifExists
+func (s *AlterExternalTablePartitionRequest) WithIfExists(ifExists bool) *AlterExternalTablePartitionRequest {
+	s.ifExists = &ifExists
 	return s
 }
 
@@ -574,8 +612,8 @@ func (s *AlterExternalTablePartitionRequest) WithAddPartitions(addPartitions []*
 	return s
 }
 
-func (s *AlterExternalTablePartitionRequest) WithDropPartition(dropPartition *bool) *AlterExternalTablePartitionRequest {
-	s.dropPartition = dropPartition
+func (s *AlterExternalTablePartitionRequest) WithDropPartition(dropPartition bool) *AlterExternalTablePartitionRequest {
+	s.dropPartition = &dropPartition
 	return s
 }
 
@@ -602,13 +640,13 @@ func NewDropExternalTableRequest(
 	return &s
 }
 
-func (s *DropExternalTableRequest) WithIfExists(ifExists *bool) *DropExternalTableRequest {
-	s.ifExists = ifExists
+func (s *DropExternalTableRequest) WithIfExists(ifExists bool) *DropExternalTableRequest {
+	s.ifExists = &ifExists
 	return s
 }
 
-func (s *DropExternalTableRequest) WithDropOption(dropOption *ExternalTableDropOptionRequest) *DropExternalTableRequest {
-	s.dropOption = dropOption
+func (s *DropExternalTableRequest) WithDropOption(dropOption ExternalTableDropOptionRequest) *DropExternalTableRequest {
+	s.dropOption = &dropOption
 	return s
 }
 
@@ -616,13 +654,13 @@ func NewExternalTableDropOptionRequest() *ExternalTableDropOptionRequest {
 	return &ExternalTableDropOptionRequest{}
 }
 
-func (s *ExternalTableDropOptionRequest) WithRestrict(restrict *bool) *ExternalTableDropOptionRequest {
-	s.restrict = restrict
+func (s *ExternalTableDropOptionRequest) WithRestrict(restrict bool) *ExternalTableDropOptionRequest {
+	s.restrict = &restrict
 	return s
 }
 
-func (s *ExternalTableDropOptionRequest) WithCascade(cascade *bool) *ExternalTableDropOptionRequest {
-	s.cascade = cascade
+func (s *ExternalTableDropOptionRequest) WithCascade(cascade bool) *ExternalTableDropOptionRequest {
+	s.cascade = &cascade
 	return s
 }
 
@@ -630,28 +668,32 @@ func NewShowExternalTableRequest() *ShowExternalTableRequest {
 	return &ShowExternalTableRequest{}
 }
 
-func (s *ShowExternalTableRequest) WithTerse(terse *bool) *ShowExternalTableRequest {
-	s.terse = terse
+func (s *ShowExternalTableRequest) WithTerse(terse bool) *ShowExternalTableRequest {
+	s.terse = &terse
 	return s
 }
 
-func (s *ShowExternalTableRequest) WithLike(like *string) *ShowExternalTableRequest {
-	s.like = like
+func (s *ShowExternalTableRequest) WithLike(like string) *ShowExternalTableRequest {
+	if len(like) > 0 {
+		s.like = &like
+	}
 	return s
 }
 
-func (s *ShowExternalTableRequest) WithIn(in *ShowExternalTableInRequest) *ShowExternalTableRequest {
-	s.in = in
+func (s *ShowExternalTableRequest) WithIn(in ShowExternalTableInRequest) *ShowExternalTableRequest {
+	s.in = &in
 	return s
 }
 
-func (s *ShowExternalTableRequest) WithStartsWith(startsWith *string) *ShowExternalTableRequest {
-	s.startsWith = startsWith
+func (s *ShowExternalTableRequest) WithStartsWith(startsWith string) *ShowExternalTableRequest {
+	if len(startsWith) > 0 {
+		s.startsWith = &startsWith
+	}
 	return s
 }
 
-func (s *ShowExternalTableRequest) WithLimitFrom(limitFrom *LimitFromRequest) *ShowExternalTableRequest {
-	s.limitFrom = limitFrom
+func (s *ShowExternalTableRequest) WithLimitFrom(limitFrom LimitFromRequest) *ShowExternalTableRequest {
+	s.limitFrom = &limitFrom
 	return s
 }
 
@@ -659,8 +701,8 @@ func NewShowExternalTableInRequest() *ShowExternalTableInRequest {
 	return &ShowExternalTableInRequest{}
 }
 
-func (s *ShowExternalTableInRequest) WithAccount(account *bool) *ShowExternalTableInRequest {
-	s.account = account
+func (s *ShowExternalTableInRequest) WithAccount(account bool) *ShowExternalTableInRequest {
+	s.account = &account
 	return s
 }
 

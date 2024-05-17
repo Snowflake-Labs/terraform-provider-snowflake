@@ -175,28 +175,28 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 			columnDef["as"],
 		)
 	}
-	autoRefresh := sdk.Bool(d.Get("auto_refresh").(bool))
-	refreshOnCreate := sdk.Bool(d.Get("refresh_on_create").(bool))
-	copyGrants := sdk.Bool(d.Get("copy_grants").(bool))
+	autoRefresh := d.Get("auto_refresh").(bool)
+	refreshOnCreate := d.Get("refresh_on_create").(bool)
+	copyGrants := d.Get("copy_grants").(bool)
 
 	var partitionBy []string
 	if v, ok := d.GetOk("partition_by"); ok {
 		partitionBy = expandStringList(v.([]any))
 	}
 
-	var pattern *string
+	var pattern string
 	if v, ok := d.GetOk("pattern"); ok {
-		pattern = sdk.String(v.(string))
+		pattern = v.(string)
 	}
 
-	var awsSnsTopic *string
+	var awsSnsTopic string
 	if v, ok := d.GetOk("aws_sns_topic"); ok {
-		awsSnsTopic = sdk.String(v.(string))
+		awsSnsTopic = v.(string)
 	}
 
-	var comment *string
+	var comment string
 	if v, ok := d.GetOk("comment"); ok {
-		comment = sdk.String(v.(string))
+		comment = v.(string)
 	}
 
 	var tagAssociationRequests []*sdk.TagAssociationRequest
@@ -217,7 +217,7 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 				WithPartitionBy(partitionBy).
 				WithRefreshOnCreate(refreshOnCreate).
 				WithAutoRefresh(autoRefresh).
-				WithRawFileFormat(&fileFormat).
+				WithRawFileFormat(fileFormat).
 				WithCopyGrants(copyGrants).
 				WithComment(comment).
 				WithTag(tagAssociationRequests),
@@ -234,7 +234,7 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 				WithRefreshOnCreate(refreshOnCreate).
 				WithAutoRefresh(autoRefresh).
 				WithPattern(pattern).
-				WithRawFileFormat(&fileFormat).
+				WithRawFileFormat(fileFormat).
 				WithAwsSnsTopic(awsSnsTopic).
 				WithCopyGrants(copyGrants).
 				WithComment(comment).
