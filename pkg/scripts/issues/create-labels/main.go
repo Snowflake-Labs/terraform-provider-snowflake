@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 	"io"
 	"log"
 	"net/http"
@@ -12,8 +13,6 @@ import (
 	"slices"
 	"strings"
 	"time"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
 func main() {
@@ -73,6 +72,7 @@ func loadRepoLabels(accessToken string) []ReadLabel {
 type CreateLabelRequestBody struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Color       string `json:"color"`
 }
 
 func createLabelsIfNotPresent(accessToken string, repoLabels []ReadLabel, labels []string) (successful []string, failed []string) {
@@ -86,9 +86,6 @@ func createLabelsIfNotPresent(accessToken string, repoLabels []ReadLabel, labels
 			continue
 		}
 
-		time.Sleep(3 * time.Second)
-		log.Println("Processing:", label)
-
 		var requestBody []byte
 		var err error
 		parts := strings.Split(label, ":")
@@ -97,10 +94,17 @@ func createLabelsIfNotPresent(accessToken string, repoLabels []ReadLabel, labels
 
 		switch labelType {
 		// Categories will be created by hand
-		case "resource", "data_source":
+		case "resource":
 			requestBody, err = json.Marshal(&CreateLabelRequestBody{
 				Name:        label,
 				Description: fmt.Sprintf("Issue connected to the snowflake_%s resource", labelValue),
+				Color:       "1D76DB",
+			})
+		case "data_source":
+			requestBody, err = json.Marshal(&CreateLabelRequestBody{
+				Name:        label,
+				Description: fmt.Sprintf("Issue connected to the snowflake_%s data source", labelValue),
+				Color:       "6321BE",
 			})
 		default:
 			log.Println("Unknown label type:", labelType)
@@ -113,6 +117,10 @@ func createLabelsIfNotPresent(accessToken string, repoLabels []ReadLabel, labels
 			continue
 		}
 
+		time.Sleep(1 * time.Second)
+		log.Println("Processing:", label)
+
+		// based on https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28#create-a-label
 		req, err := http.NewRequest(http.MethodPost, "https://api.github.com/repos/Snowflake-Labs/terraform-provider-snowflake/labels", bytes.NewReader(requestBody))
 		if err != nil {
 			log.Println("failed to create label request:", err)
@@ -131,7 +139,8 @@ func createLabelsIfNotPresent(accessToken string, repoLabels []ReadLabel, labels
 		}
 
 		if resp.StatusCode != http.StatusCreated {
-			log.Println("incorrect status code, expected 201, and got:", resp.StatusCode)
+			responseBody, _ := io.ReadAll(resp.Body)
+			log.Println("incorrect status code, expected 201, and got:", resp.StatusCode, string(responseBody))
 			failed = append(failed, label)
 			continue
 		}

@@ -62,7 +62,7 @@ type Issue struct {
 }
 
 func readGitHubIssuesBucket() []Issue {
-	f, err := os.Open("GitHubIssuesBucket.csv")
+	f, err := os.Open("/Users/jcieslak/Documents/terraform-provider-snowflake/pkg/scripts/issues/assign-labels/GitHubIssuesBucket.csv")
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +88,7 @@ func readGitHubIssuesBucket() []Issue {
 }
 
 func assignLabelsToIssues(accessToken string, issues []Issue) (successful []AssignResult, failed []AssignResult) {
-	for _, issue := range issues {
+	for i, issue := range issues {
 		addLabelsRequestBody := createAddLabelsRequestBody(issue)
 		if addLabelsRequestBody == nil {
 			log.Println("couldn't create add label request body from issue", issue)
@@ -140,6 +140,10 @@ func assignLabelsToIssues(accessToken string, issues []Issue) (successful []Assi
 			continue
 		}
 
+		if i > 3 {
+			break
+		}
+
 		successful = append(successful, AssignResult{
 			IssueId: issue.ID,
 			Labels:  addLabelsRequestBody.Labels,
@@ -155,6 +159,7 @@ type AddLabelsRequestBody struct {
 
 func createAddLabelsRequestBody(issue Issue) *AddLabelsRequestBody {
 	if categoryLabel, ok := lookupTable[issue.Category]; ok {
+		// TODO: Split those into two
 		if issue.Category == "RESOURCE" || issue.Category == "DATA_SOURCE" {
 			if resourceName, ok := lookupTable[issue.Object]; ok {
 				return &AddLabelsRequestBody{
