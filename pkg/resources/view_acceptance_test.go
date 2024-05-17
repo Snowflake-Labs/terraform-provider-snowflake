@@ -1,8 +1,8 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"regexp"
 	"testing"
 
@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_View(t *testing.T) {
@@ -97,7 +96,7 @@ func TestAcc_View(t *testing.T) {
 			// change statement externally
 			{
 				PreConfig: func() {
-					alterViewQueryExternally(t, viewId, query)
+					acc.TestClient().View.RecreateView(t, viewId, query)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
 				ConfigVariables: m3,
@@ -446,9 +445,9 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					role, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
 					t.Cleanup(roleCleanup)
-					alterViewOwnershipExternally(t, viewId, roleName)
+					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, role.ID(), viewId, sdk.ObjectTypeView)
 				},
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
@@ -457,7 +456,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// import with the proper role
 			{
 				PreConfig: func() {
-					alterViewOwnershipExternally(t, viewId, "ACCOUNTADMIN")
+					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, ids.AccountadminRole, viewId, sdk.ObjectTypeView)
 				},
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,
@@ -567,38 +566,4 @@ SQL
   is_secure = true
 }
 	`, databaseName, schemaName, name, part1, part2)
-}
-
-func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
-	require.NoError(t, err)
-}
-
-func alterViewOwnershipExternally(t *testing.T, viewId sdk.SchemaObjectIdentifier, roleName string) {
-	t.Helper()
-
-	roleId := sdk.NewAccountObjectIdentifier(roleName)
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	on := sdk.OwnershipGrantOn{
-		Object: &sdk.Object{
-			ObjectType: sdk.ObjectTypeView,
-			Name:       viewId,
-		},
-	}
-	to := sdk.OwnershipGrantTo{
-		AccountRoleName: &roleId,
-	}
-	currentGrants := sdk.OwnershipCurrentGrants{
-		OutboundPrivileges: sdk.Revoke,
-	}
-	err := client.Grants.GrantOwnership(ctx, on, to, &sdk.GrantOwnershipOptions{CurrentGrants: &currentGrants})
-	require.NoError(t, err)
 }

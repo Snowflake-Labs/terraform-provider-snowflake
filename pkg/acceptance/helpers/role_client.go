@@ -115,6 +115,31 @@ func (c *RoleClient) GrantOwnershipOnAccountObject(t *testing.T, roleId sdk.Acco
 }
 
 // TODO: move later to grants client
+func (c *RoleClient) RevokeCurrentGrantsFromSchemaObject(t *testing.T, roleId sdk.AccountObjectIdentifier, objectId sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.context.client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: objectType,
+				Name:       objectId,
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(roleId),
+		},
+		&sdk.GrantOwnershipOptions{
+			CurrentGrants: &sdk.OwnershipCurrentGrants{
+				OutboundPrivileges: sdk.Revoke,
+			},
+		},
+	)
+	require.NoError(t, err)
+}
+
+// TODO: move later to grants client
 func (c *RoleClient) GrantPrivilegeOnDatabaseToShare(t *testing.T, databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
