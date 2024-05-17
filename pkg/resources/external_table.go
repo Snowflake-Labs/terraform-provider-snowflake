@@ -184,9 +184,9 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		partitionBy = expandStringList(v.([]any))
 	}
 
-	pattern := d.Get("pattern").(string)
-	awsSnsTopic := d.Get("aws_sns_topic").(string)
-	comment := d.Get("comment").(string)
+	pattern, hasPattern := d.GetOk("pattern")
+	awsSnsTopic, hasAwsSnsTopic := d.GetOk("aws_sns_topic")
+	comment, hasComment := d.GetOk("comment")
 
 	var tagAssociationRequests []*sdk.TagAssociationRequest
 	if _, ok := d.GetOk("tag"); ok {
@@ -199,36 +199,40 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 
 	switch {
 	case d.Get("table_format").(string) == "delta":
-		err := client.ExternalTables.CreateDeltaLake(
-			ctx,
-			sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
-				WithColumns(columnRequests).
-				WithPartitionBy(partitionBy).
-				WithRefreshOnCreate(refreshOnCreate).
-				WithAutoRefresh(autoRefresh).
-				WithRawFileFormat(fileFormat).
-				WithCopyGrants(copyGrants).
-				WithComment(comment).
-				WithTag(tagAssociationRequests),
-		)
+		req := sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
+			WithColumns(columnRequests).
+			WithPartitionBy(partitionBy).
+			WithRefreshOnCreate(refreshOnCreate).
+			WithAutoRefresh(autoRefresh).
+			WithRawFileFormat(fileFormat).
+			WithCopyGrants(copyGrants).
+			WithTag(tagAssociationRequests)
+		if hasComment {
+			req = req.WithComment(comment.(string))
+		}
+		err := client.ExternalTables.CreateDeltaLake(ctx, req)
 		if err != nil {
 			return err
 		}
 	default:
-		err := client.ExternalTables.Create(
-			ctx,
-			sdk.NewCreateExternalTableRequest(id, location).
-				WithColumns(columnRequests).
-				WithPartitionBy(partitionBy).
-				WithRefreshOnCreate(refreshOnCreate).
-				WithAutoRefresh(autoRefresh).
-				WithPattern(pattern).
-				WithRawFileFormat(fileFormat).
-				WithAwsSnsTopic(awsSnsTopic).
-				WithCopyGrants(copyGrants).
-				WithComment(comment).
-				WithTag(tagAssociationRequests),
-		)
+		req := sdk.NewCreateExternalTableRequest(id, location).
+			WithColumns(columnRequests).
+			WithPartitionBy(partitionBy).
+			WithRefreshOnCreate(refreshOnCreate).
+			WithAutoRefresh(autoRefresh).
+			WithRawFileFormat(fileFormat).
+			WithCopyGrants(copyGrants).
+			WithTag(tagAssociationRequests)
+		if hasPattern {
+			req = req.WithPattern(pattern.(string))
+		}
+		if hasAwsSnsTopic {
+			req = req.WithAwsSnsTopic(awsSnsTopic.(string))
+		}
+		if hasComment {
+			req = req.WithComment(comment.(string))
+		}
+		err := client.ExternalTables.Create(ctx, req)
 		if err != nil {
 			return err
 		}

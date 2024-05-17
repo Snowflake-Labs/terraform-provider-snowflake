@@ -207,11 +207,6 @@ func (gen *Generator) generateBuilderMethods(d *structDef) {
 		gen.printf("func (s *%s) With%s(%s %s) *%s {\n", d.name, toTitle(field.name), field.name, strings.TrimLeft(field.typeString, "*"), d.name)
 
 		switch {
-		case field.typeString == "*string":
-			// When the expected type is optional string (*string), we want to avoid assigning empty strings, because:
-			// 1. It's a rare (or non-existent) case to set something to an empty string in Snowflake (most of the cases are resolved by explicit UNSET commands).
-			// 2. Empty strings are treated as non-set values in Terraform, so no value set and empty string would have the same effect.
-			gen.printf("if len(%[1]s) > 0 {\ns.%[1]s = &%[1]s\n}\n", field.name)
 		case strings.HasPrefix(field.typeString, "*"):
 			// If the target field is a pointer, assign the address of input field because right now we always pass them by value
 			gen.printf("s.%s = &%s\n", field.name, field.name)

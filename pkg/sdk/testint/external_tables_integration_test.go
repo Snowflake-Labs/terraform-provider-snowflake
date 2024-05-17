@@ -74,9 +74,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	t.Run("Create: with raw file format", func(t *testing.T) {
 		name := random.AlphanumericN(32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name).
-			WithRawFileFormat("TYPE = JSON"),
-		)
+		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name), stageLocation).WithRawFileFormat("TYPE = JSON"))
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)

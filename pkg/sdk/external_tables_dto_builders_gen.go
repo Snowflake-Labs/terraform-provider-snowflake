@@ -50,16 +50,12 @@ func (s *CreateExternalTableRequest) WithAutoRefresh(autoRefresh bool) *CreateEx
 }
 
 func (s *CreateExternalTableRequest) WithPattern(pattern string) *CreateExternalTableRequest {
-	if len(pattern) > 0 {
-		s.pattern = &pattern
-	}
+	s.pattern = &pattern
 	return s
 }
 
 func (s *CreateExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateExternalTableRequest {
-	if len(rawFileFormat) > 0 {
-		s.rawFileFormat = &rawFileFormat
-	}
+	s.rawFileFormat = &rawFileFormat
 	return s
 }
 
@@ -69,9 +65,7 @@ func (s *CreateExternalTableRequest) WithFileFormat(fileFormat ExternalTableFile
 }
 
 func (s *CreateExternalTableRequest) WithAwsSnsTopic(awsSnsTopic string) *CreateExternalTableRequest {
-	if len(awsSnsTopic) > 0 {
-		s.awsSnsTopic = &awsSnsTopic
-	}
+	s.awsSnsTopic = &awsSnsTopic
 	return s
 }
 
@@ -81,9 +75,7 @@ func (s *CreateExternalTableRequest) WithCopyGrants(copyGrants bool) *CreateExte
 }
 
 func (s *CreateExternalTableRequest) WithComment(comment string) *CreateExternalTableRequest {
-	if len(comment) > 0 {
-		s.comment = &comment
-	}
+	s.comment = &comment
 	return s
 }
 
@@ -124,16 +116,12 @@ func NewCloudProviderParamsRequest() *CloudProviderParamsRequest {
 }
 
 func (s *CloudProviderParamsRequest) WithGoogleCloudStorageIntegration(googleCloudStorageIntegration string) *CloudProviderParamsRequest {
-	if len(googleCloudStorageIntegration) > 0 {
-		s.googleCloudStorageIntegration = &googleCloudStorageIntegration
-	}
+	s.googleCloudStorageIntegration = &googleCloudStorageIntegration
 	return s
 }
 
 func (s *CloudProviderParamsRequest) WithMicrosoftAzureIntegration(microsoftAzureIntegration string) *CloudProviderParamsRequest {
-	if len(microsoftAzureIntegration) > 0 {
-		s.microsoftAzureIntegration = &microsoftAzureIntegration
-	}
+	s.microsoftAzureIntegration = &microsoftAzureIntegration
 	return s
 }
 
@@ -142,9 +130,7 @@ func NewExternalTableFileFormatRequest() *ExternalTableFileFormatRequest {
 }
 
 func (s *ExternalTableFileFormatRequest) WithName(name string) *ExternalTableFileFormatRequest {
-	if len(name) > 0 {
-		s.name = &name
-	}
+	s.name = &name
 	return s
 }
 
@@ -168,16 +154,12 @@ func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvCompression(csvCompre
 }
 
 func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvRecordDelimiter(csvRecordDelimiter string) *ExternalTableFileFormatTypeOptionsRequest {
-	if len(csvRecordDelimiter) > 0 {
-		s.csvRecordDelimiter = &csvRecordDelimiter
-	}
+	s.csvRecordDelimiter = &csvRecordDelimiter
 	return s
 }
 
 func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldDelimiter(csvFieldDelimiter string) *ExternalTableFileFormatTypeOptionsRequest {
-	if len(csvFieldDelimiter) > 0 {
-		s.csvFieldDelimiter = &csvFieldDelimiter
-	}
+	s.csvFieldDelimiter = &csvFieldDelimiter
 	return s
 }
 
@@ -192,9 +174,7 @@ func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvSkipBlankLines(csvSki
 }
 
 func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvEscapeUnenclosedField(csvEscapeUnenclosedField string) *ExternalTableFileFormatTypeOptionsRequest {
-	if len(csvEscapeUnenclosedField) > 0 {
-		s.csvEscapeUnenclosedField = &csvEscapeUnenclosedField
-	}
+	s.csvEscapeUnenclosedField = &csvEscapeUnenclosedField
 	return s
 }
 
@@ -204,9 +184,7 @@ func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvTrimSpace(csvTrimSpac
 }
 
 func (s *ExternalTableFileFormatTypeOptionsRequest) WithCsvFieldOptionallyEnclosedBy(csvFieldOptionallyEnclosedBy string) *ExternalTableFileFormatTypeOptionsRequest {
-	if len(csvFieldOptionallyEnclosedBy) > 0 {
-		s.csvFieldOptionallyEnclosedBy = &csvFieldOptionallyEnclosedBy
-	}
+	s.csvFieldOptionallyEnclosedBy = &csvFieldOptionallyEnclosedBy
 	return s
 }
 
@@ -335,9 +313,7 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(parti
 }
 
 func (s *CreateWithManualPartitioningExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateWithManualPartitioningExternalTableRequest {
-	if len(rawFileFormat) > 0 {
-		s.rawFileFormat = &rawFileFormat
-	}
+	s.rawFileFormat = &rawFileFormat
 	return s
 }
 
@@ -352,9 +328,7 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGr
 }
 
 func (s *CreateWithManualPartitioningExternalTableRequest) WithComment(comment string) *CreateWithManualPartitioningExternalTableRequest {
-	if len(comment) > 0 {
-		s.comment = &comment
-	}
+	s.comment = &comment
 	return s
 }
 
@@ -414,9 +388,7 @@ func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh bool) 
 }
 
 func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat string) *CreateDeltaLakeExternalTableRequest {
-	if len(rawFileFormat) > 0 {
-		s.rawFileFormat = &rawFileFormat
-	}
+	s.rawFileFormat = &rawFileFormat
 	return s
 }
 
@@ -431,9 +403,7 @@ func (s *CreateDeltaLakeExternalTableRequest) WithCopyGrants(copyGrants bool) *C
 }
 
 func (s *CreateDeltaLakeExternalTableRequest) WithComment(comment string) *CreateDeltaLakeExternalTableRequest {
-	if len(comment) > 0 {
-		s.comment = &comment
-	}
+	s.comment = &comment
 	return s
 }
 
@@ -493,16 +463,12 @@ func (s *CreateExternalTableUsingTemplateRequest) WithAutoRefresh(autoRefresh bo
 }
 
 func (s *CreateExternalTableUsingTemplateRequest) WithPattern(pattern string) *CreateExternalTableUsingTemplateRequest {
-	if len(pattern) > 0 {
-		s.pattern = &pattern
-	}
+	s.pattern = &pattern
 	return s
 }
 
 func (s *CreateExternalTableUsingTemplateRequest) WithRawFileFormat(rawFileFormat string) *CreateExternalTableUsingTemplateRequest {
-	if len(rawFileFormat) > 0 {
-		s.rawFileFormat = &rawFileFormat
-	}
+	s.rawFileFormat = &rawFileFormat
 	return s
 }
 
@@ -512,16 +478,12 @@ func (s *CreateExternalTableUsingTemplateRequest) WithFileFormat(fileFormat Exte
 }
 
 func (s *CreateExternalTableUsingTemplateRequest) WithAwsSnsTopic(awsSnsTopic string) *CreateExternalTableUsingTemplateRequest {
-	if len(awsSnsTopic) > 0 {
-		s.awsSnsTopic = &awsSnsTopic
-	}
+	s.awsSnsTopic = &awsSnsTopic
 	return s
 }
 
 func (s *CreateExternalTableUsingTemplateRequest) WithComment(comment string) *CreateExternalTableUsingTemplateRequest {
-	if len(comment) > 0 {
-		s.comment = &comment
-	}
+	s.comment = &comment
 	return s
 }
 
@@ -674,9 +636,7 @@ func (s *ShowExternalTableRequest) WithTerse(terse bool) *ShowExternalTableReque
 }
 
 func (s *ShowExternalTableRequest) WithLike(like string) *ShowExternalTableRequest {
-	if len(like) > 0 {
-		s.like = &like
-	}
+	s.like = &like
 	return s
 }
 
@@ -686,9 +646,7 @@ func (s *ShowExternalTableRequest) WithIn(in ShowExternalTableInRequest) *ShowEx
 }
 
 func (s *ShowExternalTableRequest) WithStartsWith(startsWith string) *ShowExternalTableRequest {
-	if len(startsWith) > 0 {
-		s.startsWith = &startsWith
-	}
+	s.startsWith = &startsWith
 	return s
 }
 
