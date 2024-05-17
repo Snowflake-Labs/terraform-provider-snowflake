@@ -286,7 +286,7 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, e.Name, detail.Name)
 		require.Equal(t, e.UrlId, detail.UrlId)
 		require.Equal(t, mainFile, detail.MainFile)
-		require.Equal(t, stage.Location(), detail.RootLocation)
+		require.Equal(t, stage.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(detail.RootLocation[1:]).FullyQualifiedName())
 		require.Empty(t, detail.Title)
 		require.Empty(t, detail.QueryWarehouse)
 	})
