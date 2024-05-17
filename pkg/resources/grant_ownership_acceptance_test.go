@@ -743,7 +743,7 @@ func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	accountRoleName := acc.TestClient().Ids.Alpha()
 	databaseName := acc.TestClient().Ids.Alpha()
 	schemaName := acc.TestClient().Ids.Alpha()
-	userName := acc.TestClient().Context.CurrentUser(t)
+	userId := acc.TestClient().Context.CurrentUser(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -756,10 +756,10 @@ func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 			// that are needed to grant the role to the current user before it can be used.
 			// Additionally, only the Config field can specify a configuration with custom provider blocks.
 			{
-				Config: roleBasedAccessControlUseCaseConfig(accountRoleName, databaseName, userName, schemaName, false),
+				Config: roleBasedAccessControlUseCaseConfig(accountRoleName, databaseName, userId.Name(), schemaName, false),
 			},
 			{
-				Config: roleBasedAccessControlUseCaseConfig(accountRoleName, databaseName, userName, schemaName, true),
+				Config: roleBasedAccessControlUseCaseConfig(accountRoleName, databaseName, userId.Name(), schemaName, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),

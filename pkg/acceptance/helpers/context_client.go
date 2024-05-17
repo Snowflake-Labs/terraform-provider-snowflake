@@ -52,14 +52,14 @@ func (c *ContextClient) CurrentRegion(t *testing.T) string {
 	return currentRegion
 }
 
-func (c *ContextClient) CurrentUser(t *testing.T) string {
+func (c *ContextClient) CurrentUser(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
 
 	currentUser, err := c.client().CurrentUser(ctx)
 	require.NoError(t, err)
 
-	return currentUser
+	return sdk.NewAccountObjectIdentifier(currentUser)
 }
 
 func (c *ContextClient) IsRoleInSession(t *testing.T, id sdk.AccountObjectIdentifier) bool {
