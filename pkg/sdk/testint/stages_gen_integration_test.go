@@ -3,6 +3,7 @@ package testint
 import (
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -23,11 +24,11 @@ func TestInt_Stages(t *testing.T) {
 	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
 	azureSasToken := testenvs.GetOrSkipTest(t, testenvs.AzureExternalSasToken)
 
-	s3StorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("S3_STORAGE_INTEGRATION"))
+	s3StorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, ids.PrecreatedS3StorageIntegration)
 	require.NoError(t, err)
-	gcpStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("GCP_STORAGE_INTEGRATION"))
+	gcpStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, ids.PrecreatedGcpStorageIntegration)
 	require.NoError(t, err)
-	azureStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("AZURE_STORAGE_INTEGRATION"))
+	azureStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, ids.PrecreatedAzureStorageIntegration)
 	require.NoError(t, err)
 
 	cleanupStage := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
