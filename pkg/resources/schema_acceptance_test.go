@@ -310,7 +310,8 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 }
 
 func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
-	schemaName := acc.TestClient().Ids.Alpha()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaName := schemaId.Name()
 	configVariables := map[string]config.Variable{
 		"schema_name":   config.StringVariable(schemaName),
 		"database_name": config.StringVariable(acc.TestDatabaseName),
@@ -330,7 +331,7 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().Schema.DropSchemaFunc(t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, schemaName))()
+					acc.TestClient().Schema.DropSchemaFunc(t, schemaId)()
 				},
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
