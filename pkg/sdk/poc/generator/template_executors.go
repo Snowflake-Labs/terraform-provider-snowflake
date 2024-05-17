@@ -25,7 +25,7 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {
-	printTo(writer, OptionsTemplate, operation)
+	printTo(writer, OperationStructTemplate, operation)
 
 	for _, f := range operation.HelperStructs {
 		if !slices.Contains(generatedStructs, f.KindNoPtr()) {
@@ -84,12 +84,12 @@ func GenerateImplementation(writer io.Writer, def *Interface) {
 
 func GenerateUnitTests(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, TestFuncTemplate, def)
+	printTo(writer, UnitTestsTemplate, def)
 }
 
 func GenerateValidations(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, ValidationsImplTemplate, def)
+	printTo(writer, ValidationsTemplate, def)
 }
 
 func GenerateIntegrationTests(writer io.Writer, def *Interface) {
