@@ -2,18 +2,17 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -456,7 +455,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// import with the proper role
 			{
 				PreConfig: func() {
-					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, ids.AccountadminRole, viewId, sdk.ObjectTypeView)
+					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, snowflakeroles.Accountadmin, viewId, sdk.ObjectTypeView)
 				},
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,

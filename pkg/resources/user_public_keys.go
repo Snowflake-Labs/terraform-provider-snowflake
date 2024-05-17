@@ -8,8 +8,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,14 +63,13 @@ func UserPublicKeys() *schema.Resource {
 	}
 }
 
-func checkUserExists(db *sql.DB, name string) (bool, error) {
+func checkUserExists(client *sdk.Client, userId sdk.AccountObjectIdentifier) (bool, error) {
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	// First check if user exists
-	_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(name))
+	_, err := client.Users.Describe(ctx, userId)
 	if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-		log.Printf("[DEBUG] user (%s) not found", name)
+		log.Printf("[DEBUG] user (%s) not found", userId.Name())
 		return false, nil
 	}
 	if err != nil {
@@ -82,10 +81,9 @@ func checkUserExists(db *sql.DB, name string) (bool, error) {
 
 func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
-	id := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	exists, err := checkUserExists(db, id)
+	exists, err := checkUserExists(client, id)
 	if err != nil {
 		return err
 	}
