@@ -39,7 +39,7 @@ func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	currentRole, err := c.client().CurrentRole(ctx)
 	require.NoError(t, err)
 
-	return sdk.NewAccountObjectIdentifier(currentRole)
+	return currentRole
 }
 
 func (c *ContextClient) CurrentRegion(t *testing.T) string {
@@ -59,7 +59,7 @@ func (c *ContextClient) CurrentUser(t *testing.T) sdk.AccountObjectIdentifier {
 	currentUser, err := c.client().CurrentUser(ctx)
 	require.NoError(t, err)
 
-	return sdk.NewAccountObjectIdentifier(currentUser)
+	return currentUser
 }
 
 func (c *ContextClient) IsRoleInSession(t *testing.T, id sdk.AccountObjectIdentifier) bool {

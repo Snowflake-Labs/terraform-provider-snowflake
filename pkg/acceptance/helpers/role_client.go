@@ -28,7 +28,6 @@ func (c *RoleClient) UseRole(t *testing.T, roleId sdk.AccountObjectIdentifier) f
 	t.Helper()
 	ctx := context.Background()
 
-	// TODO: use context client instead
 	currentRole, err := c.context.client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
@@ -36,7 +35,7 @@ func (c *RoleClient) UseRole(t *testing.T, roleId sdk.AccountObjectIdentifier) f
 	require.NoError(t, err)
 
 	return func() {
-		err = c.context.client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+		err = c.context.client.Sessions.UseRole(ctx, currentRole)
 		require.NoError(t, err)
 	}
 }
@@ -58,11 +57,10 @@ func (c *RoleClient) CreateRoleGrantedToCurrentUser(t *testing.T) (*sdk.Role, fu
 
 	role, roleCleanup := c.CreateRole(t)
 
-	// TODO: use context client instead
 	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 
-	c.GrantRoleToUser(t, role.ID(), sdk.NewAccountObjectIdentifier(currentUser))
+	c.GrantRoleToUser(t, role.ID(), currentUser)
 	return role, roleCleanup
 }
 

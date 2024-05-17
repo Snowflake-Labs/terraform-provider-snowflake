@@ -10,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -1051,7 +1052,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 		err = client.Grants.GrantPrivilegesToAccountRole(ctx,
 			&sdk.AccountRoleGrantPrivileges{SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeEvolveSchema}},
 			&sdk.AccountRoleGrantOn{SchemaObject: &sdk.GrantOnSchemaObject{SchemaObject: &sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: sdk.NewObjectIdentifierFromFullyQualifiedName(table.ID().FullyQualifiedName())}}},
-			sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"),
+			snowflakeroles.Accountadmin,
 			nil)
 		require.NoError(t, err)
 

@@ -103,7 +103,7 @@ func TestInt_ManagedAccounts(t *testing.T) {
 	})
 
 	t.Run("drop managed account: non-existing", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 
 		err := client.ManagedAccounts.Drop(ctx, sdk.NewDropManagedAccountRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)

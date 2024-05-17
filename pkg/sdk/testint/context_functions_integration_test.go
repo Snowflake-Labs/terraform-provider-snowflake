@@ -22,7 +22,7 @@ func TestInt_CurrentRole(t *testing.T) {
 	ctx := testContext(t)
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
-	assert.NotEmpty(t, role)
+	assert.NotEmpty(t, role.Name())
 }
 
 func TestInt_CurrentRegion(t *testing.T) {
@@ -46,7 +46,7 @@ func TestInt_CurrentUser(t *testing.T) {
 	ctx := testContext(t)
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
-	assert.NotEmpty(t, user)
+	assert.NotEmpty(t, user.Name())
 }
 
 func TestInt_CurrentSessionDetails(t *testing.T) {
@@ -110,7 +110,7 @@ func TestInt_IsRoleInSession(t *testing.T) {
 	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
-	role, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+	role, err := client.ContextFunctions.IsRoleInSession(ctx, currentRole)
 	require.NoError(t, err)
 	assert.True(t, role)
 }
@@ -119,14 +119,13 @@ func TestInt_RolesUse(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
 	require.NoError(t, err)
 
 	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
-	require.NotEqual(t, currentRole, role.Name)
+	require.NotEqual(t, currentRole.Name(), role.Name)
 
-	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{Role: &currentRoleID}))
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{Role: &currentRole}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())
@@ -135,9 +134,9 @@ func TestInt_RolesUse(t *testing.T) {
 	activeRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
-	assert.Equal(t, activeRole, role.Name)
+	assert.Equal(t, activeRole.Name(), role.Name)
 
-	err = client.Sessions.UseRole(ctx, currentRoleID)
+	err = client.Sessions.UseRole(ctx, currentRole)
 	require.NoError(t, err)
 }
 
@@ -149,13 +148,12 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 
 	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
-	require.NotEqual(t, currentRole, role.Name)
+	require.NotEqual(t, currentRole.Name(), role.Name)
 
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
-	userID := sdk.NewAccountObjectIdentifier(user)
 
-	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{User: &userID}))
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{User: &user}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())
@@ -172,7 +170,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 		names[i] = v.Name()
 	}
 	assert.Equal(t, sdk.SecondaryRolesAll, r.Value)
-	assert.Contains(t, names, currentRole)
+	assert.Contains(t, names, currentRole.Name())
 
 	err = client.Sessions.UseSecondaryRoles(ctx, sdk.SecondaryRolesNone)
 	require.NoError(t, err)
@@ -184,7 +182,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	assert.Equal(t, 0, len(secondaryRolesAfter.Roles))
 
 	t.Cleanup(func() {
-		err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+		err = client.Sessions.UseRole(ctx, currentRole)
 		require.NoError(t, err)
 	})
 }

@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -36,15 +37,16 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 	parentRole, cleanupParentRole := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(cleanupParentRole)
 	resourceName := "snowflake_grant_application_role.g"
-	applicationRoleName := "app_role_1"
+	applicationRoleName := testvars.ApplicationRole1
 
 	acc.TestAccPreCheck(t)
 	app := createApp(t)
-	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", app.Name, applicationRoleName)
+	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"parent_account_role_name": config.StringVariable(parentRole.Name),
 			"application_name":         config.StringVariable(app.Name),
+			"application_role_name":    config.StringVariable(applicationRoleName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -78,7 +80,7 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 
 func TestAcc_GrantApplicationRole_application(t *testing.T) {
 	resourceName := "snowflake_grant_application_role.g"
-	applicationRoleName := "app_role_1"
+	applicationRoleName := testvars.ApplicationRole1
 
 	acc.TestAccPreCheck(t)
 	app := createApp(t)
@@ -86,11 +88,12 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"application_name":  config.StringVariable(app.Name),
-			"application_name2": config.StringVariable(app2.Name),
+			"application_name":      config.StringVariable(app.Name),
+			"application_name2":     config.StringVariable(app2.Name),
+			"application_role_name": config.StringVariable(applicationRoleName),
 		}
 	}
-	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", app.Name, applicationRoleName)
+	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),

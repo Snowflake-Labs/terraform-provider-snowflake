@@ -57,7 +57,7 @@ func TestInt_Stages(t *testing.T) {
 		err := client.Stages.CreateOnGCS(ctx, sdk.NewCreateOnGCSStageRequest(stageId).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
 			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))))
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedGcpStorageIntegration))))
 		require.NoError(t, err)
 		cleanupStage(t, stageId)
 	}
@@ -142,7 +142,7 @@ func TestInt_Stages(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
 
 		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
-			WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(s3StorageIntegration.Name)))
+			WithStorageIntegration(sdk.Pointer(ids.PrecreatedS3StorageIntegration))
 		err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
 			WithTemporary(sdk.Bool(true)).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
@@ -162,7 +162,7 @@ func TestInt_Stages(t *testing.T) {
 		err := client.Stages.CreateOnGCS(ctx, sdk.NewCreateOnGCSStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
 			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))).
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedGcpStorageIntegration))).
 			WithComment(sdk.String("some comment")))
 		require.NoError(t, err)
 		cleanupStage(t, id)
@@ -178,7 +178,7 @@ func TestInt_Stages(t *testing.T) {
 		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
 			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(azureStorageIntegration.Name)))).
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedAzureStorageIntegration))).
 			WithComment(sdk.String("some comment")))
 		require.NoError(t, err)
 		cleanupStage(t, id)
@@ -341,7 +341,7 @@ func TestInt_Stages(t *testing.T) {
 
 		err := client.Stages.AlterExternalS3Stage(ctx, sdk.NewAlterExternalS3StageStageRequest(id).
 			WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(s3StorageIntegration.Name)))).
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedS3StorageIntegration))).
 			WithComment(sdk.String("Updated comment")))
 		require.NoError(t, err)
 
@@ -361,7 +361,7 @@ func TestInt_Stages(t *testing.T) {
 
 		err := client.Stages.AlterExternalGCSStage(ctx, sdk.NewAlterExternalGCSStageStageRequest(id).
 			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))).
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedGcpStorageIntegration))).
 			WithComment(sdk.String("Updated comment")))
 		require.NoError(t, err)
 
@@ -376,7 +376,7 @@ func TestInt_Stages(t *testing.T) {
 
 		err := client.Stages.AlterExternalAzureStage(ctx, sdk.NewAlterExternalAzureStageStageRequest(id).
 			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
-				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(azureStorageIntegration.Name)))).
+				WithStorageIntegration(sdk.Pointer(ids.PrecreatedAzureStorageIntegration))).
 			WithComment(sdk.String("Updated comment")))
 		require.NoError(t, err)
 
