@@ -115,6 +115,11 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").
 		return &{{ .To.KindNoPtr }}{}
 	}
 {{ end }}
+{{ define "SHOWBYID_REQ" }}
+	{{- range $k, $v := .Values -}}
+	.With{{$k}}(&{{$k}}{ {{range $v}} {{.Field}}: {{.Pattern}}, {{end}}})
+	{{- end}}
+{{ end }}
 import (
 "context"
 
@@ -140,8 +145,14 @@ type {{ $impl }} struct {
 		}
 	{{ else if eq .Name "ShowByID" }}
 		func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
+			req := NewShow{{ .ObjectInterface.NameSingular }}Request(
+			)
+			{{- if not .Config -}}
 			// TODO: adjust request if e.g. LIKE is supported for the resource
-			{{ $impl }}, err := v.Show(ctx, NewShow{{ .ObjectInterface.NameSingular }}Request())
+			{{- else -}}
+			{{ template "SHOWBYID_REQ" .Config }}
+			{{- end -}}
+			{{ $impl }}, err := v.Show(ctx, req)
 			if err != nil {
 				return nil, err
 			}

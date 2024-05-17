@@ -201,7 +201,11 @@ var ViewsDef = g.NewInterface(
 			OptionalStartsWith().
 			OptionalLimit(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperation(
+		*g.NewConfig().
+			WithIn([]g.Pattern{{Field: "Schema", Pattern: "NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())"}}).
+			WithLike([]g.Pattern{{Field: "Pattern", Pattern: "String(id.Name())"}}),
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-view",
