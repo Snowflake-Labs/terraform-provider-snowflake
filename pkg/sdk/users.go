@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/snowflakesql"
 )
 
 var (
@@ -60,32 +62,32 @@ type User struct {
 	HasRsaPublicKey       bool
 }
 type userDBRow struct {
-	Name                  string         `db:"name"`
-	CreatedOn             time.Time      `db:"created_on"`
-	LoginName             sql.NullString `db:"login_name"`
-	DisplayName           sql.NullString `db:"display_name"`
-	FirstName             sql.NullString `db:"first_name"`
-	LastName              sql.NullString `db:"last_name"`
-	Email                 sql.NullString `db:"email"`
-	MinsToUnlock          sql.NullString `db:"mins_to_unlock"`
-	DaysToExpiry          sql.NullString `db:"days_to_expiry"`
-	Comment               sql.NullString `db:"comment"`
-	Disabled              sql.NullBool   `db:"disabled"`
-	MustChangePassword    sql.NullBool   `db:"must_change_password"`
-	SnowflakeLock         sql.NullBool   `db:"snowflake_lock"`
-	DefaultWarehouse      sql.NullString `db:"default_warehouse"`
-	DefaultNamespace      sql.NullString `db:"default_namespace"`
-	DefaultRole           sql.NullString `db:"default_role"`
-	DefaultSecondaryRoles sql.NullString `db:"default_secondary_roles"`
-	ExtAuthnDuo           sql.NullBool   `db:"ext_authn_duo"`
-	ExtAuthnUid           sql.NullString `db:"ext_authn_uid"`
-	MinsToBypassMfa       sql.NullString `db:"mins_to_bypass_mfa"`
-	Owner                 sql.NullString `db:"owner"`
-	LastSuccessLogin      sql.NullTime   `db:"last_success_login"`
-	ExpiresAtTime         sql.NullTime   `db:"expires_at_time"`
-	LockedUntilTime       sql.NullTime   `db:"locked_until_time"`
-	HasPassword           sql.NullBool   `db:"has_password"`
-	HasRsaPublicKey       sql.NullBool   `db:"has_rsa_public_key"`
+	Name                  string                `db:"name"`
+	CreatedOn             time.Time             `db:"created_on"`
+	LoginName             sql.NullString        `db:"login_name"`
+	DisplayName           sql.NullString        `db:"display_name"`
+	FirstName             sql.NullString        `db:"first_name"`
+	LastName              sql.NullString        `db:"last_name"`
+	Email                 sql.NullString        `db:"email"`
+	MinsToUnlock          sql.NullString        `db:"mins_to_unlock"`
+	DaysToExpiry          sql.NullString        `db:"days_to_expiry"`
+	Comment               sql.NullString        `db:"comment"`
+	Disabled              snowflakesql.NullBool `db:"disabled"`
+	MustChangePassword    snowflakesql.NullBool `db:"must_change_password"`
+	SnowflakeLock         snowflakesql.NullBool `db:"snowflake_lock"`
+	DefaultWarehouse      sql.NullString        `db:"default_warehouse"`
+	DefaultNamespace      sql.NullString        `db:"default_namespace"`
+	DefaultRole           sql.NullString        `db:"default_role"`
+	DefaultSecondaryRoles sql.NullString        `db:"default_secondary_roles"`
+	ExtAuthnDuo           snowflakesql.NullBool `db:"ext_authn_duo"`
+	ExtAuthnUid           sql.NullString        `db:"ext_authn_uid"`
+	MinsToBypassMfa       sql.NullString        `db:"mins_to_bypass_mfa"`
+	Owner                 sql.NullString        `db:"owner"`
+	LastSuccessLogin      sql.NullTime          `db:"last_success_login"`
+	ExpiresAtTime         sql.NullTime          `db:"expires_at_time"`
+	LockedUntilTime       sql.NullTime          `db:"locked_until_time"`
+	HasPassword           snowflakesql.NullBool `db:"has_password"`
+	HasRsaPublicKey       snowflakesql.NullBool `db:"has_rsa_public_key"`
 }
 
 func (row userDBRow) convert() *User {
