@@ -64,7 +64,7 @@ type User struct {
 type userDBRow struct {
 	Name                  string                `db:"name"`
 	CreatedOn             time.Time             `db:"created_on"`
-	LoginName             sql.NullString        `db:"login_name"`
+	LoginName             string                `db:"login_name"`
 	DisplayName           sql.NullString        `db:"display_name"`
 	FirstName             sql.NullString        `db:"first_name"`
 	LastName              sql.NullString        `db:"last_name"`
@@ -76,13 +76,13 @@ type userDBRow struct {
 	MustChangePassword    snowflakesql.NullBool `db:"must_change_password"`
 	SnowflakeLock         snowflakesql.NullBool `db:"snowflake_lock"`
 	DefaultWarehouse      sql.NullString        `db:"default_warehouse"`
-	DefaultNamespace      sql.NullString        `db:"default_namespace"`
-	DefaultRole           sql.NullString        `db:"default_role"`
-	DefaultSecondaryRoles sql.NullString        `db:"default_secondary_roles"`
+	DefaultNamespace      string                `db:"default_namespace"`
+	DefaultRole           string                `db:"default_role"`
+	DefaultSecondaryRoles string                `db:"default_secondary_roles"`
 	ExtAuthnDuo           snowflakesql.NullBool `db:"ext_authn_duo"`
-	ExtAuthnUid           sql.NullString        `db:"ext_authn_uid"`
-	MinsToBypassMfa       sql.NullString        `db:"mins_to_bypass_mfa"`
-	Owner                 sql.NullString        `db:"owner"`
+	ExtAuthnUid           string                `db:"ext_authn_uid"`
+	MinsToBypassMfa       string                `db:"mins_to_bypass_mfa"`
+	Owner                 string                `db:"owner"`
 	LastSuccessLogin      sql.NullTime          `db:"last_success_login"`
 	ExpiresAtTime         sql.NullTime          `db:"expires_at_time"`
 	LockedUntilTime       sql.NullTime          `db:"locked_until_time"`
@@ -92,11 +92,15 @@ type userDBRow struct {
 
 func (row userDBRow) convert() *User {
 	user := &User{
-		Name:      row.Name,
-		CreatedOn: row.CreatedOn,
-	}
-	if row.LoginName.Valid {
-		user.LoginName = row.LoginName.String
+		Name:                  row.Name,
+		CreatedOn:             row.CreatedOn,
+		LoginName:             row.LoginName,
+		DefaultNamespace:      row.DefaultNamespace,
+		DefaultRole:           row.DefaultRole,
+		DefaultSecondaryRoles: row.DefaultSecondaryRoles,
+		ExtAuthnUid:           row.ExtAuthnUid,
+		MinsToBypassMfa:       row.MinsToBypassMfa,
+		Owner:                 row.Owner,
 	}
 	if row.DisplayName.Valid {
 		user.DisplayName = row.DisplayName.String
@@ -131,26 +135,8 @@ func (row userDBRow) convert() *User {
 	if row.DefaultWarehouse.Valid {
 		user.DefaultWarehouse = row.DefaultWarehouse.String
 	}
-	if row.DefaultNamespace.Valid {
-		user.DefaultNamespace = row.DefaultNamespace.String
-	}
-	if row.DefaultRole.Valid {
-		user.DefaultRole = row.DefaultRole.String
-	}
-	if row.DefaultSecondaryRoles.Valid {
-		user.DefaultSecondaryRoles = row.DefaultSecondaryRoles.String
-	}
 	if row.ExtAuthnDuo.Valid {
 		user.ExtAuthnDuo = row.ExtAuthnDuo.Bool
-	}
-	if row.ExtAuthnUid.Valid {
-		user.ExtAuthnUid = row.ExtAuthnUid.String
-	}
-	if row.MinsToBypassMfa.Valid {
-		user.MinsToBypassMfa = row.MinsToBypassMfa.String
-	}
-	if row.Owner.Valid {
-		user.Owner = row.Owner.String
 	}
 	if row.LastSuccessLogin.Valid {
 		user.LastSuccessLogin = row.LastSuccessLogin.Time
