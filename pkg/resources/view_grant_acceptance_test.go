@@ -183,7 +183,7 @@ func viewGrantConfig(name string, grantType grantType, privilege string, databas
 	var viewNameConfig string
 	switch grantType {
 	case normal:
-		viewNameConfig = "view_name = snowflake_view.test.name"
+		viewNameConfig = "view_name = \"${snowflake_view.test.name}\""
 	case onFuture:
 		viewNameConfig = "on_future = true"
 	case onAll:

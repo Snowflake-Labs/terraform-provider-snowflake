@@ -74,7 +74,7 @@ func (c *IdsGenerator) AlphaContaining(part string) string {
 }
 
 func (c *IdsGenerator) AlphaWithPrefix(prefix string) string {
-	return c.withTestObjectSuffix(prefix + c.Alpha())
+	return prefix + c.Alpha()
 }
 
 func (c *IdsGenerator) withTestObjectSuffix(text string) string {

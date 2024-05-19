@@ -25,6 +25,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	name := id.Name()
 	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
 	nameLowerCase := strings.ToLower(secondId.Name())
+	secondIdLowerCased := sdk.NewAccountObjectIdentifier(nameLowerCase)
 	nameLowerCaseEscaped := fmt.Sprintf(`"%s"`, nameLowerCase)
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
@@ -69,7 +70,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDatabaseExistence(t, secondId, false),
+		CheckDestroy: testAccCheckDatabaseExistence(t, secondIdLowerCased, false),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
@@ -83,7 +84,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "query"),
 					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					testAccCheckDatabaseExistence(t, secondId, true),
+					testAccCheckDatabaseExistence(t, secondIdLowerCased, true),
 				),
 			},
 		},
@@ -514,8 +515,8 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
 	privilege := sdk.AccountObjectPrivilegeCreateSchema
-	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId.Name())
-	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id, roleId.Name())
+	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id.Name(), roleId.Name())
+	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id.Name(), roleId.Name())
 
 	resourceName := "snowflake_unsafe_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
