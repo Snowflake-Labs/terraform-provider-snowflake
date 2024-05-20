@@ -38,6 +38,8 @@ type Operation struct {
 	DescribeKind *DescriptionMappingKind
 	// DescribeMapping is a definition of mapping needed by Operation kind of OperationKindDescribe
 	DescribeMapping *Mapping
+	// Config is used to configure an operation
+	Config *Config
 }
 
 type Mapping struct {
@@ -77,6 +79,11 @@ func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	return s
 }
 
+func (s *Operation) withConfig(config *Config) *Operation {
+	s.Config = config
+	return s
+}
+
 func addShowMapping(op *Operation, from, to *Field) {
 	op.ShowMapping = newMapping("convert", from, to)
 }
@@ -85,9 +92,12 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newNoSqlOperation(kind string) *Interface {
+func (i *Interface) newNoSqlOperation(kind string, config ...Config) *Interface {
 	operation := newOperation(kind, "placeholder").
 		withOptionsStruct(nil)
+	if len(config) > 0 {
+		operation = operation.withConfig(&config[0])
+	}
 	i.Operations = append(i.Operations, operation)
 	return i
 }
@@ -160,8 +170,8 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 	return i
 }
 
-func (i *Interface) ShowByIdOperation() *Interface {
-	return i.newNoSqlOperation(string(OperationKindShowByID))
+func (i *Interface) ShowByIdOperation(config ...Config) *Interface {
+	return i.newNoSqlOperation(string(OperationKindShowByID), config...)
 }
 
 func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {

@@ -53,6 +53,10 @@ func (v *plainStruct) OptionalNumber(dbName string) *plainStruct {
 	return v.Field(dbName, "*int")
 }
 
+func (v *plainStruct) PlainStructField(name string, plainStruct *plainStruct) *plainStruct {
+	return v.Field(name, plainStruct.IntoField().Kind)
+}
+
 func (v *plainStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {
