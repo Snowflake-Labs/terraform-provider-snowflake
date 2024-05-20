@@ -162,6 +162,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithSaml2SnowflakeAcsUrl(&acsURL).
 				WithSaml2SnowflakeIssuerUrl(&issuerURL).
 				WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label"))
+			// TODO: fix after format clarification
 			// WithSaml2SnowflakeX509Cert(sdk.Pointer(x509))
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -231,9 +232,10 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSaml2SnowflakeAcsUrl(&acsURL).
 					WithSaml2SnowflakeIssuerUrl(&issuerURL).
 					WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label")).
-					// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
+				// TODO: fix after format clarification
+				// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
 			)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
@@ -263,7 +265,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				sdk.NewSaml2IntegrationUnsetRequest().
 					WithSaml2ForceAuthn(sdk.Pointer(true)).
 					WithSaml2RequestedNameidFormat(sdk.Pointer(true)).
-					WithSaml2PostLogoutRedirectUrl(sdk.Pointer(true)),
+					WithSaml2PostLogoutRedirectUrl(sdk.Pointer(true)).
+					WithComment(sdk.Pointer(true)),
 			)
 		err = client.SecurityIntegrations.AlterSaml2(ctx, unsetRequest)
 		require.NoError(t, err)
@@ -273,6 +276,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_FORCE_AUTHN", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress", Default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_POST_LOGOUT_REDIRECT_URL", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("AlterSAML2Integration - REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {

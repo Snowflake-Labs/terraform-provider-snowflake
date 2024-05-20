@@ -55,8 +55,8 @@ func (opts *AlterSaml2SecurityIntegrationOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Enabled, opts.Unset.Saml2ForceAuthn, opts.Unset.Saml2RequestedNameidFormat, opts.Unset.Saml2PostLogoutRedirectUrl, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterSaml2SecurityIntegrationOptions.Unset", "Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
+		if !anyValueSet(opts.Unset.Saml2ForceAuthn, opts.Unset.Saml2RequestedNameidFormat, opts.Unset.Saml2PostLogoutRedirectUrl, opts.Unset.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterSaml2SecurityIntegrationOptions.Unset", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)

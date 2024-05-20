@@ -86,7 +86,6 @@ type Saml2IntegrationSetRequest struct {
 }
 
 type Saml2IntegrationUnsetRequest struct {
-	Enabled                    *bool
 	Saml2ForceAuthn            *bool
 	Saml2RequestedNameidFormat *bool
 	Saml2PostLogoutRedirectUrl *bool

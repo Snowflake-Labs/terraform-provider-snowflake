@@ -141,7 +141,6 @@ func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityInteg
 	}
 	if r.Unset != nil {
 		opts.Unset = &Saml2IntegrationUnset{
-			Enabled:                    r.Unset.Enabled,
 			Saml2ForceAuthn:            r.Unset.Saml2ForceAuthn,
 			Saml2RequestedNameidFormat: r.Unset.Saml2RequestedNameidFormat,
 			Saml2PostLogoutRedirectUrl: r.Unset.Saml2PostLogoutRedirectUrl,

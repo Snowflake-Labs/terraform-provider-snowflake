@@ -102,7 +102,6 @@ type Saml2IntegrationSet struct {
 }
 
 type Saml2IntegrationUnset struct {
-	Enabled                    *bool `ddl:"keyword" sql:"ENABLED"`
 	Saml2ForceAuthn            *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`
 	Saml2RequestedNameidFormat *bool `ddl:"keyword" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
 	Saml2PostLogoutRedirectUrl *bool `ddl:"keyword" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`

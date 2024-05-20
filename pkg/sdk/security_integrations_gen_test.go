@@ -144,7 +144,7 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &Saml2IntegrationUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSaml2SecurityIntegrationOptions.Unset",
-			"Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
+			"Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
@@ -184,13 +184,12 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &Saml2IntegrationUnset{
-			Enabled:                    Pointer(true),
 			Saml2ForceAuthn:            Pointer(true),
 			Saml2RequestedNameidFormat: Pointer(true),
 			Saml2PostLogoutRedirectUrl: Pointer(true),
 			Comment:                    Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, SAML2_FORCE_AUTHN, SAML2_REQUESTED_NAMEID_FORMAT, SAML2_POST_LOGOUT_REDIRECT_URL, COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET SAML2_FORCE_AUTHN, SAML2_REQUESTED_NAMEID_FORMAT, SAML2_POST_LOGOUT_REDIRECT_URL, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("refresh SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {

@@ -262,11 +262,6 @@ func NewSaml2IntegrationUnsetRequest() *Saml2IntegrationUnsetRequest {
 	return &Saml2IntegrationUnsetRequest{}
 }
 
-func (s *Saml2IntegrationUnsetRequest) WithEnabled(Enabled *bool) *Saml2IntegrationUnsetRequest {
-	s.Enabled = Enabled
-	return s
-}
-
 func (s *Saml2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *Saml2IntegrationUnsetRequest {
 	s.Saml2ForceAuthn = Saml2ForceAuthn
 	return s

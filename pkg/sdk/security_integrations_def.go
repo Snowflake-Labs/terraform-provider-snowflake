@@ -75,12 +75,11 @@ var saml2IntegrationSetDef = g.NewQueryStruct("Saml2IntegrationSet").
 		"Saml2ForceAuthn", "Saml2SnowflakeIssuerUrl", "Saml2SnowflakeAcsUrl", "Comment")
 
 var saml2IntegrationUnsetDef = g.NewQueryStruct("Saml2IntegrationUnset").
-	OptionalSQL("ENABLED").
 	OptionalSQL("SAML2_FORCE_AUTHN").
 	OptionalSQL("SAML2_REQUESTED_NAMEID_FORMAT").
 	OptionalSQL("SAML2_POST_LOGOUT_REDIRECT_URL").
 	OptionalSQL("COMMENT").
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment")
+	WithValidation(g.AtLeastOneValueSet, "Saml2ForceAuthn", "Saml2RequestedNameidFormat", "Saml2PostLogoutRedirectUrl", "Comment")
 
 var scimIntegrationSetDef = g.NewQueryStruct("ScimIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
