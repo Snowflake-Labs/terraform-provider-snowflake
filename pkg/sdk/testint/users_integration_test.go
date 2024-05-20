@@ -12,6 +12,7 @@ import (
 
 func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
+	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
 	userTest, userCleanup := testClientHelper().User.CreateUserWithName(t, "USER_FOO")
@@ -73,6 +74,14 @@ func TestInt_UsersShow(t *testing.T) {
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(users))
+	})
+
+	t.Run("with like options", func(t *testing.T) {
+		users, err := secondaryClient.Users.Show(ctx, nil)
+		require.NoError(t, err)
+		assert.Contains(t, users, *userTest)
+		assert.Contains(t, users, *userTest2)
+		assert.Equal(t, 2, len(users))
 	})
 }
 
