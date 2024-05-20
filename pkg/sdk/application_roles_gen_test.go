@@ -126,7 +126,7 @@ func TestApplicationRoles_Show(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.ApplicationName]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ApplicationName = NewAccountObjectIdentifier("")
+		opts.ApplicationName = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

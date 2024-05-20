@@ -30,7 +30,7 @@ func TestRolesCreate(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := &CreateRoleOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: emptyAccountObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -63,7 +63,7 @@ func TestRolesDrop(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := &DropRoleOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: emptyAccountObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -125,7 +125,7 @@ func TestRolesAlter(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name:         NewAccountObjectIdentifier(""),
+			name:         emptyAccountObjectIdentifier,
 			UnsetComment: Bool(true),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -180,7 +180,7 @@ func TestRolesShow(t *testing.T) {
 	})
 
 	t.Run("validation: invalid class name", func(t *testing.T) {
-		class := NewAccountObjectIdentifier("")
+		class := emptyAccountObjectIdentifier
 		opts := &ShowRoleOptions{
 			InClass: &RolesInClass{
 				Class: &class,
@@ -213,13 +213,13 @@ func TestRolesGrant(t *testing.T) {
 
 	t.Run("validation: invalid object identifier and no grant option", func(t *testing.T) {
 		opts := &GrantRoleOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: emptyAccountObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("GrantRoleOptions.Grant", "Role", "User"))
 	})
 
 	t.Run("validation: invalid object identifier for granted role", func(t *testing.T) {
-		id := NewAccountObjectIdentifier("")
+		id := emptyAccountObjectIdentifier
 		opts := &GrantRoleOptions{
 			name: randomAccountObjectIdentifier(),
 			Grant: GrantRole{
@@ -230,7 +230,7 @@ func TestRolesGrant(t *testing.T) {
 	})
 
 	t.Run("validation: invalid object identifier for granted user", func(t *testing.T) {
-		id := NewAccountObjectIdentifier("")
+		id := emptyAccountObjectIdentifier
 		opts := &GrantRoleOptions{
 			name: randomAccountObjectIdentifier(),
 			Grant: GrantRole{
@@ -264,7 +264,7 @@ func TestRolesRevoke(t *testing.T) {
 
 	t.Run("validation: invalid object identifier and no option set", func(t *testing.T) {
 		opts := &RevokeRoleOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: emptyAccountObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("RevokeRoleOptions.Revoke", "Role", "User"))
 	})

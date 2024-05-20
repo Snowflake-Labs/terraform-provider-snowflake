@@ -302,7 +302,7 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 			ctx,
 			*grantOn,
 			sdk.OwnershipGrantTo{
-				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)),
+				AccountRoleName: sdk.Pointer(accountRoleName),
 			},
 			getOwnershipGrantOpts(id),
 		)

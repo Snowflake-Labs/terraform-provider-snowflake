@@ -203,7 +203,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Database = NewAccountObjectIdentifier("")
+		opts.Database = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -349,7 +349,7 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 
 	t.Run("validation: invalid share identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Share = NewAccountObjectIdentifier("")
+		opts.Share = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -384,7 +384,7 @@ func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
 
 	t.Run("validation: invalid share identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.Share = NewAccountObjectIdentifier("")
+		opts.Share = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

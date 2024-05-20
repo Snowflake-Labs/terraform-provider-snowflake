@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ import (
 func TestInt_AccountShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
+	ok := testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
@@ -35,18 +36,18 @@ func TestInt_AccountShow(t *testing.T) {
 func TestInt_AccountShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
+	ok := testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
-	_, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
+	_, err := client.Accounts.ShowByID(ctx, NonExistingAccountObjectIdentifier)
 	require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 }
 
 func TestInt_AccountCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
+	ok := testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
@@ -155,7 +156,7 @@ func TestInt_AccountCreate(t *testing.T) {
 func TestInt_AccountAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
+	ok := testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Accountadmin)
 	if !ok {
 		t.Skip("ACCOUNTADMIN role is not in current session")
 	}

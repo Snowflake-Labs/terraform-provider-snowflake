@@ -107,7 +107,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
-	database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+	database, err := client.Databases.ShowByID(ctx, id.DatabaseId())
 	if err != nil {
 		d.SetId("")
 	}

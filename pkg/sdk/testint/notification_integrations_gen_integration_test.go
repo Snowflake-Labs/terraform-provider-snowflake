@@ -409,7 +409,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("drop notification integration: non-existing", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 
 		err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -446,7 +446,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("describe notification integration: non-existing", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 
 		_, err := client.NotificationIntegrations.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)

@@ -7,6 +7,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -60,7 +61,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	copyOptionsWithQuotes := "ON_ERROR = 'CONTINUE'"
 
 	changedUrl := awsBucketUrl + "/some-path"
-	changedStorageIntegration := "S3_STORAGE_INTEGRATION"
+	changedStorageIntegration := ids.PrecreatedS3StorageIntegration
 	changedEncryption := "TYPE = 'AWS_SSE_S3'"
 	changedFileFormat := "TYPE = JSON NULL_IF = []"
 	changedComment := random.Comment()
@@ -111,12 +112,12 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration.Name(), credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
 					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormat),
@@ -130,7 +131,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration.Name(), credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
 				Destroy:         true,
 			},
 			{

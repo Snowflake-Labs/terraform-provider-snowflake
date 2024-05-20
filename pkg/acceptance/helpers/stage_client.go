@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -58,7 +57,7 @@ func (c *StageClient) CreateStage(t *testing.T) (*sdk.Stage, func()) {
 
 func (c *StageClient) CreateStageInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Stage, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), random.AlphaN(8))
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	return c.CreateStageWithRequest(t, sdk.NewCreateInternalStageRequest(id))
 }
 

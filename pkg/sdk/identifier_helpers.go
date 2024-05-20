@@ -201,6 +201,10 @@ func (i DatabaseObjectIdentifier) DatabaseName() string {
 	return i.databaseName
 }
 
+func (i DatabaseObjectIdentifier) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
+}
+
 func (i DatabaseObjectIdentifier) Name() string {
 	return i.name
 }
@@ -217,6 +221,10 @@ type SchemaObjectIdentifier struct {
 	schemaName   string
 	name         string
 	arguments    []DataType
+}
+
+func NewSchemaObjectIdentifierInSchema(schemaId DatabaseObjectIdentifier, name string) SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
 }
 
 func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObjectIdentifier {
@@ -278,8 +286,12 @@ func (i SchemaObjectIdentifier) Arguments() []DataType {
 	return i.arguments
 }
 
-func (i SchemaObjectIdentifier) SchemaIdentifier() DatabaseObjectIdentifier {
+func (i SchemaObjectIdentifier) SchemaId() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
+}
+
+func (i SchemaObjectIdentifier) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
 }
 
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {

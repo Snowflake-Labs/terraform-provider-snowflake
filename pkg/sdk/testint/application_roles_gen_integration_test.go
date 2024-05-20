@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -22,6 +23,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// TODO [SNOW-1431726]: Move to helpers
 	createApp := func(t *testing.T) *sdk.Application {
 		t.Helper()
 
@@ -70,11 +72,11 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		name := "app_role_1"
+		name := testvars.ApplicationRole1
 		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
-		appRole, err := client.ApplicationRoles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(application.Name), id)
+		appRole, err := client.ApplicationRoles.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assertApplicationRole(t, appRole, name, "some comment")
@@ -89,15 +91,15 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		appRoles, err := client.ApplicationRoles.Show(ctx, req)
 		require.NoError(t, err)
 
-		assertApplicationRoles(t, appRoles, "app_role_1", "some comment")
-		assertApplicationRoles(t, appRoles, "app_role_2", "some comment2")
+		assertApplicationRoles(t, appRoles, testvars.ApplicationRole1, "some comment")
+		assertApplicationRoles(t, appRoles, testvars.ApplicationRole2, "some comment2")
 	})
 
 	t.Run("show grants to application - grant to role", func(t *testing.T) {
 		role, cleanupRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupRole)
 
-		id := sdk.NewDatabaseObjectIdentifier(application.Name, "app_role_1")
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, testvars.ApplicationRole1)
 		// grant the application role to the role
 		kindOfRole := sdk.NewKindOfRoleRequest().WithRoleName(sdk.Pointer(role.ID()))
 		gr := sdk.NewGrantApplicationRoleRequest(id).WithTo(*kindOfRole)
@@ -121,7 +123,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	t.Run("show grants to application - grant to application", func(t *testing.T) {
 		application2 := createApp(t)
 
-		id := sdk.NewDatabaseObjectIdentifier(application.Name, "app_role_1")
+		id := sdk.NewDatabaseObjectIdentifier(application.Name, testvars.ApplicationRole1)
 		// grant the application role to the application
 		kindOfRole := sdk.NewKindOfRoleRequest().WithApplicationName(sdk.Pointer(application2.ID()))
 		gr := sdk.NewGrantApplicationRoleRequest(id).WithTo(*kindOfRole)
@@ -143,7 +145,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	})
 
 	t.Run("show grants to application role", func(t *testing.T) {
-		name := "app_role_1"
+		name := testvars.ApplicationRole1
 		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
@@ -157,7 +159,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	})
 
 	t.Run("show grants of application role", func(t *testing.T) {
-		name := "app_role_1"
+		name := testvars.ApplicationRole1
 		id := sdk.NewDatabaseObjectIdentifier(application.Name, name)
 		ctx := context.Background()
 
