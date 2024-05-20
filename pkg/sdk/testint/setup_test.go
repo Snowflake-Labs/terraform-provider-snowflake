@@ -21,6 +21,8 @@ var (
 	TestWarehouseName = "int_test_wh_" + random.IntegrationTestsSuffix
 	TestDatabaseName  = "int_test_db_" + random.IntegrationTestsSuffix
 	TestSchemaName    = "int_test_sc_" + random.IntegrationTestsSuffix
+
+	NonExistingAccountObjectIdentifier = sdk.NewAccountObjectIdentifier("does_not_exist")
 )
 
 var itc integrationTestContext

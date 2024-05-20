@@ -158,7 +158,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
 	dynamicTableName := acc.TestClient().Ids.Alpha()
 	tableName := dynamicTableName + "_table"
-	tableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	tableId := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
 	otherSchema := acc.TestClient().Ids.Alpha()
 	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)

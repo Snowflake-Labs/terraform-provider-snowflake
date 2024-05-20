@@ -188,9 +188,9 @@ func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_User(t *testing.T) {
-	user := acc.TestClient().Context.CurrentUser(t)
+	userId := acc.TestClient().Context.CurrentUser(t)
 	configVariables := config.Variables{
-		"user": config.StringVariable(user),
+		"user": config.StringVariable(userId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{

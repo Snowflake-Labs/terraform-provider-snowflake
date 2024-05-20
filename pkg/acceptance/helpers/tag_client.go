@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +33,7 @@ func (c *TagClient) CreateTagInSchema(t *testing.T, schemaId sdk.DatabaseObjectI
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), random.AlphanumericN(12))
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	err := c.client().Create(ctx, sdk.NewCreateTagRequest(id))
 	require.NoError(t, err)

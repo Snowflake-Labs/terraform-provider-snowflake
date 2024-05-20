@@ -400,11 +400,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	tblName := "test_database_role_table_name"
-	tableName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tblName).FullyQualifiedName()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	configVariables := config.Variables{
 		"name":       config.StringVariable(roleFullyQualifiedName),
-		"table_name": config.StringVariable(tblName),
+		"table_name": config.StringVariable(tableId.Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -437,9 +436,9 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeTable)),
-					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", tableName),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", tableId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnObject|TABLE|%s", roleFullyQualifiedName, tableName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnObject|TABLE|%s", roleFullyQualifiedName, tableId.FullyQualifiedName())),
 				),
 			},
 			{
@@ -1259,7 +1258,8 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	tableName := acc.TestClient().Ids.Alpha()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
 
 	configVariables := config.Variables{
 		"name":       config.StringVariable(roleFullyQualifiedName),
@@ -1298,7 +1298,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 					revokeAndGrantPrivilegesOnTableToAccountRole(
 						t,
 						roleId,
-						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
+						tableId,
 						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
 						false,
 					)
@@ -1320,7 +1320,8 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	tableName := acc.TestClient().Ids.Alpha()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
 
 	configVariables := config.Variables{
 		"name":       config.StringVariable(roleFullyQualifiedName),
@@ -1359,7 +1360,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 					revokeAndGrantPrivilegesOnTableToAccountRole(
 						t,
 						roleId,
-						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
+						tableId,
 						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
 						true,
 					)

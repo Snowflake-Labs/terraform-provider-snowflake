@@ -32,7 +32,7 @@ func TestExternalFunctions_Create(t *testing.T) {
 
 		opts = defaultOpts()
 		opts.As = "as"
-		integration := NewAccountObjectIdentifier("")
+		integration := emptyAccountObjectIdentifier
 		opts.ApiIntegration = &integration
 		rt := NewSchemaObjectIdentifier("", "", "")
 		opts.RequestTranslator = &rt

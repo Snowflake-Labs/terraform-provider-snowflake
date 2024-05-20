@@ -805,6 +805,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 
 	t.Run("create and call procedure for Java: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#omitting-return-column-names-and-types
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("filter_by_role")
 
 		definition := `
@@ -835,6 +836,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 
 	t.Run("create and call procedure for Scala: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#omitting-return-column-names-and-types
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("filter_by_role")
 
 		definition := `
@@ -867,6 +869,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 
 	t.Run("create and call procedure for Javascript", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("stproc1")
 
 		definition := `
@@ -891,6 +894,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 
 	t.Run("create and call procedure for Javascript: no arguments", func(t *testing.T) {
 		// https://docs.snowflake.com/en/sql-reference/sql/create-procedure#examples
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("sp_pi")
 
 		definition := `return 3.1415926;`
@@ -918,6 +922,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 
 	t.Run("create and call procedure for Python: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#omitting-return-column-names-and-types
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("filterByRole")
 		definition := `
 from snowflake.snowpark.functions import col
@@ -940,6 +945,7 @@ def filter_by_role(session, name, role):
 
 	t.Run("create and call procedure for Java: returns table and with clause", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#omitting-return-column-names-and-types
+		// TODO [SNOW-1348106]: make random with procedures rework
 		name := sdk.NewAccountObjectIdentifier("filter_by_role")
 		definition := `
 		import com.snowflake.snowpark_java.*;
@@ -960,6 +966,7 @@ def filter_by_role(session, name, role):
 		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
 
 		ca := []string{fmt.Sprintf(`'%s'`, tid.FullyQualifiedName()), "'dev'"}
+		// TODO [SNOW-1348106]: make random with procedures rework
 		cte := sdk.NewAccountObjectIdentifier("records")
 		statement := fmt.Sprintf(`(SELECT name, role FROM %s WHERE name = 'Bob')`, tid.FullyQualifiedName())
 		clause := sdk.NewProcedureWithClauseRequest(cte, statement).WithCteColumns([]string{"name", "role"})

@@ -6,10 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -97,19 +96,19 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ReadNetworkPolicy implements schema.ReadFunc.
 func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	policyName := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
-	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
+	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, id)
 	if networkPolicy == nil || err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
+		log.Printf("[DEBUG] network policy (%s) not found", id.Name())
 		d.SetId("")
 		return nil
 	}
 
-	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, sdk.NewAccountObjectIdentifier(policyName))
+	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -140,10 +139,10 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateNetworkPolicy implements schema.UpdateFunc.
 func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	name := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+	baseReq := sdk.NewAlterNetworkPolicyRequest(id)
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
@@ -152,13 +151,13 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
 			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
 			if err != nil {
-				return fmt.Errorf("error unsetting comment for network policy %v err = %w", name, err)
+				return fmt.Errorf("error unsetting comment for network policy %v err = %w", id.Name(), err)
 			}
 		} else {
 			setReq := sdk.NewNetworkPolicySetRequest().WithComment(sdk.String(comment.(string)))
 			err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 			if err != nil {
-				return fmt.Errorf("error updating comment for network policy %v err = %w", name, err)
+				return fmt.Errorf("error updating comment for network policy %v err = %w", id.Name(), err)
 			}
 		}
 	}
@@ -172,7 +171,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return fmt.Errorf("error updating ALLOWED_IP_LIST for network policy %v err = %w", name, err)
+			return fmt.Errorf("error updating ALLOWED_IP_LIST for network policy %v err = %w", id.Name(), err)
 		}
 	}
 
@@ -185,7 +184,7 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return fmt.Errorf("error updating BLOCKED_IP_LIST for network policy %v err = %w", name, err)
+			return fmt.Errorf("error updating BLOCKED_IP_LIST for network policy %v err = %w", id.Name(), err)
 		}
 	}
 
@@ -194,13 +193,13 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteNetworkPolicy implements schema.DeleteFunc.
 func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	name := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)))
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(id))
 	if err != nil {
-		return fmt.Errorf("error deleting network policy %v err = %w", name, err)
+		return fmt.Errorf("error deleting network policy %v err = %w", id.Name(), err)
 	}
 
 	d.SetId("")
