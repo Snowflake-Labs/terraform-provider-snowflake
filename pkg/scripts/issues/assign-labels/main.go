@@ -6,16 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
-var lookupTable = make(map[string]string)
+var (
+	categoryLookupTable   = make(map[string]string)
+	resourceLookupTable   = make(map[string]string)
+	dataSourceLookupTable = make(map[string]string)
+)
 
 func init() {
 	for _, label := range issues.RepositoryLabels {
@@ -29,9 +32,11 @@ func init() {
 
 		switch labelType {
 		case "category":
-			lookupTable[strings.ToUpper(labelValue)] = label
-		case "resource", "data_source":
-			lookupTable[fmt.Sprintf("snowflake_%s", labelValue)] = label
+			categoryLookupTable[strings.ToUpper(labelValue)] = label
+		case "resource":
+			resourceLookupTable[fmt.Sprintf("snowflake_%s", labelValue)] = label
+		case "data_source":
+			dataSourceLookupTable[fmt.Sprintf("snowflake_%s", labelValue)] = label
 		}
 	}
 }
@@ -88,7 +93,7 @@ func readGitHubIssuesBucket() []Issue {
 }
 
 func assignLabelsToIssues(accessToken string, issues []Issue) (successful []AssignResult, failed []AssignResult) {
-	for i, issue := range issues {
+	for _, issue := range issues {
 		addLabelsRequestBody := createAddLabelsRequestBody(issue)
 		if addLabelsRequestBody == nil {
 			log.Println("couldn't create add label request body from issue", issue)
@@ -97,6 +102,8 @@ func assignLabelsToIssues(accessToken string, issues []Issue) (successful []Assi
 			})
 			continue
 		}
+
+		log.Printf("Assigning labels: %v to issue: %d", addLabelsRequestBody.Labels, issue.ID)
 
 		addLabelsRequestBodyBytes, err := json.Marshal(addLabelsRequestBody)
 		if err != nil {
@@ -140,10 +147,6 @@ func assignLabelsToIssues(accessToken string, issues []Issue) (successful []Assi
 			continue
 		}
 
-		if i > 3 {
-			break
-		}
-
 		successful = append(successful, AssignResult{
 			IssueId: issue.ID,
 			Labels:  addLabelsRequestBody.Labels,
@@ -158,12 +161,18 @@ type AddLabelsRequestBody struct {
 }
 
 func createAddLabelsRequestBody(issue Issue) *AddLabelsRequestBody {
-	if categoryLabel, ok := lookupTable[issue.Category]; ok {
-		// TODO: Split those into two
-		if issue.Category == "RESOURCE" || issue.Category == "DATA_SOURCE" {
-			if resourceName, ok := lookupTable[issue.Object]; ok {
+	if categoryLabel, ok := categoryLookupTable[issue.Category]; ok {
+		switch issue.Category {
+		case "RESOURCE":
+			if resourceName, ok := resourceLookupTable[issue.Object]; ok {
 				return &AddLabelsRequestBody{
 					Labels: []string{categoryLabel, resourceName},
+				}
+			}
+		case "DATA_SOURCE":
+			if dataSourceName, ok := dataSourceLookupTable[issue.Object]; ok {
+				return &AddLabelsRequestBody{
+					Labels: []string{categoryLabel, dataSourceName},
 				}
 			}
 		}
