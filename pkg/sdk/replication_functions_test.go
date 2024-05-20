@@ -17,7 +17,7 @@ func TestReplicationFunctions_ShowReplicationDatabases(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.WithPrimary]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.WithPrimary = Pointer(NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(""), NewAccountObjectIdentifier("")))
+		opts.WithPrimary = Pointer(NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(""), emptyAccountObjectIdentifier))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

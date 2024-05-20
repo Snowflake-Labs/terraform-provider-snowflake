@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +33,7 @@ func (c *PipeClient) CreatePipeInSchema(t *testing.T, schemaId sdk.DatabaseObjec
 	t.Helper()
 	ctx := context.Background()
 
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), random.AlphaN(20))
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	err := c.client().Create(ctx, id, copyStatement, &sdk.CreatePipeOptions{})
 	require.NoError(t, err)

@@ -310,7 +310,8 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 }
 
 func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
-	schemaName := acc.TestClient().Ids.Alpha()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaName := schemaId.Name()
 	configVariables := map[string]config.Variable{
 		"schema_name":   config.StringVariable(schemaName),
 		"database_name": config.StringVariable(acc.TestDatabaseName),
@@ -330,7 +331,7 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().Schema.DropSchemaFunc(t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, schemaName))()
+					acc.TestClient().Schema.DropSchemaFunc(t, schemaId)()
 				},
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
@@ -383,15 +384,15 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 	})
 }
 
-func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
+func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		schema, err := acc.TestClient().Schema.Show(t, id)
+		schema, err := acc.TestClient().Schema.Show(t, schemaId)
 		if err != nil {
 			return err
 		}
 
-		database, err := acc.TestClient().Database.Show(t, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+		database, err := acc.TestClient().Database.Show(t, schemaId.DatabaseId())
 		if err != nil {
 			return err
 		}

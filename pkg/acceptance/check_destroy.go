@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -337,6 +338,41 @@ func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) err
 	}
 }
 
+// CheckSharePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckSharePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(state *terraform.State) error {
+		for _, rs := range state.RootModule().Resources {
+			if rs.Type != "snowflake_grant_privileges_to_share" {
+				continue
+			}
+			ctx := context.Background()
+
+			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				To: &sdk.ShowGrantsTo{
+					Share: &sdk.ShowGrantsToShare{
+						Name: sdk.NewAccountObjectIdentifier(id.Name()),
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+			var grantedPrivileges []string
+			for _, grant := range grants {
+				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+			}
+			if len(grantedPrivileges) > 0 {
+				return fmt.Errorf("share (%s) is still granted with privileges: %v", id.FullyQualifiedName(), grantedPrivileges)
+			}
+		}
+		return nil
+	}
+}
+
 // CheckUserPasswordPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
@@ -365,4 +401,35 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 		}
 		return nil
 	}
+}
+
+func TestAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {
+	client := TestAccProvider.Meta().(*provider.Context).Client
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_grant_application_role" {
+			continue
+		}
+		ctx := context.Background()
+		id := rs.Primary.ID
+		ids := strings.Split(id, "|")
+		applicationRoleName := ids[0]
+		objectType := ids[1]
+		parentRoleName := ids[2]
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			Of: &sdk.ShowGrantsOf{
+				ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRoleName),
+			},
+		})
+		if err != nil {
+			continue
+		}
+		for _, grant := range grants {
+			if grant.GrantedTo == sdk.ObjectType(objectType) {
+				if grant.GranteeName.FullyQualifiedName() == parentRoleName {
+					return fmt.Errorf("application role grant %v still exists", grant)
+				}
+			}
+		}
+	}
+	return nil
 }

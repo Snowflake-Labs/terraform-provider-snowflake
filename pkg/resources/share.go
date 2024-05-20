@@ -7,12 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var shareSchema = map[string]*schema.Schema{
@@ -157,7 +156,7 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 // ReadShare implements schema.ReadFunc.
 func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	id := sdk.NewAccountObjectIdentifier(d.Id())
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	ctx := context.Background()
 
 	share, err := client.Shares.ShowByID(ctx, id)
@@ -202,6 +201,7 @@ func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {
 
 // UpdateShare implements schema.UpdateFunc.
 func UpdateShare(d *schema.ResourceData, meta interface{}) error {
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	if d.HasChange("accounts") {
@@ -210,7 +210,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 		newAccounts := expandStringList(n.([]interface{}))
 		if len(newAccounts) == 0 {
 			accountIdentifiers := accountIdentifiersFromSlice(oldAccounts)
-			err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.AlterShareOptions{
+			err := client.Shares.Alter(ctx, id, &sdk.AlterShareOptions{
 				Remove: &sdk.ShareRemove{
 					Accounts: accountIdentifiers,
 				},
@@ -220,7 +220,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else {
 			accountIdentifiers := accountIdentifiersFromSlice(newAccounts)
-			err := setShareAccounts(ctx, client, sdk.NewAccountObjectIdentifier(d.Id()), accountIdentifiers)
+			err := setShareAccounts(ctx, client, id, accountIdentifiers)
 			if err != nil {
 				return err
 			}
@@ -228,7 +228,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
-		err := client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.AlterShareOptions{
+		err := client.Shares.Alter(ctx, id, &sdk.AlterShareOptions{
 			Set: &sdk.ShareSet{
 				Comment: sdk.String(comment),
 			},
@@ -243,9 +243,10 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()), &sdk.DropShareOptions{IfExists: sdk.Bool(true)})
+	err := client.Shares.Drop(ctx, id, &sdk.DropShareOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
 		return fmt.Errorf("error deleting share (%v) err = %w", d.Id(), err)
 	}

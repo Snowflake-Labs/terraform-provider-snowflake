@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -128,10 +127,10 @@ type NetworkRulesSnowflakeDTO struct {
 
 func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
-	policyName := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
-	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
+	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, id)
 	if networkPolicy == nil || err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
@@ -147,7 +146,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to retrieve network policy",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.Name(), err),
 			},
 		}
 	}
@@ -160,7 +159,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, sdk.NewAccountObjectIdentifier(policyName))
+	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -209,7 +208,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	name := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
 	if d.HasChange("comment") {
@@ -220,13 +219,13 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
 			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
 			if err != nil {
-				return getUpdateContextDiag("unsetting comment", name, err)
+				return getUpdateContextDiag("unsetting comment", id.Name(), err)
 			}
 		} else {
 			setReq := sdk.NewNetworkPolicySetRequest().WithComment(sdk.String(comment))
 			err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 			if err != nil {
-				return getUpdateContextDiag("updating comment", name, err)
+				return getUpdateContextDiag("updating comment", id.Name(), err)
 			}
 		}
 	}
@@ -257,7 +256,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return getUpdateContextDiag("updating ALLOWED_IP_LIST", name, err)
+			return getUpdateContextDiag("updating ALLOWED_IP_LIST", id.Name(), err)
 		}
 	}
 
@@ -267,7 +266,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return getUpdateContextDiag("updating BLOCKED_IP_LIST", name, err)
+			return getUpdateContextDiag("updating BLOCKED_IP_LIST", id.Name(), err)
 		}
 	}
 
@@ -285,16 +284,16 @@ func getUpdateContextDiag(action string, name string, err error) diag.Diagnostic
 }
 
 func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	name := d.Id()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)).WithIfExists(sdk.Bool(true)))
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id)).WithIfExists(sdk.Bool(true)))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error deleting network policy",
-				Detail:   fmt.Sprintf("error deleting network policy %v err = %v", name, err),
+				Detail:   fmt.Sprintf("error deleting network policy %v err = %v", id.Name(), err),
 			},
 		}
 	}

@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -35,8 +35,8 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.SetId(role)
-	err = d.Set("name", role)
+	d.SetId(helpers.EncodeSnowflakeID(role))
+	err = d.Set("name", role.Name())
 	if err != nil {
 		return err
 	}

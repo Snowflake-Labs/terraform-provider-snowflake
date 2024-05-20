@@ -12,11 +12,11 @@ import (
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
-	CurrentRole(ctx context.Context) (string, error)
+	CurrentRole(ctx context.Context) (AccountObjectIdentifier, error)
 	CurrentSecondaryRoles(ctx context.Context) (*CurrentSecondaryRoles, error)
 	CurrentRegion(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
-	CurrentUser(ctx context.Context) (string, error)
+	CurrentUser(ctx context.Context) (AccountObjectIdentifier, error)
 	CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error)
 
 	// Session Object functions.
@@ -70,15 +70,15 @@ func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {
 	return s.CurrentAccount, nil
 }
 
-func (c *contextFunctions) CurrentRole(ctx context.Context) (string, error) {
+func (c *contextFunctions) CurrentRole(ctx context.Context) (AccountObjectIdentifier, error) {
 	s := &struct {
 		CurrentRole string `db:"CURRENT_ROLE"`
 	}{}
 	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ROLE() as CURRENT_ROLE")
 	if err != nil {
-		return "", err
+		return NewAccountObjectIdentifier(""), err
 	}
-	return s.CurrentRole, nil
+	return NewAccountObjectIdentifier(s.CurrentRole), nil
 }
 
 type CurrentSecondaryRoles struct {
@@ -148,15 +148,15 @@ func (c *contextFunctions) CurrentSession(ctx context.Context) (string, error) {
 	return s.CurrentSession, nil
 }
 
-func (c *contextFunctions) CurrentUser(ctx context.Context) (string, error) {
+func (c *contextFunctions) CurrentUser(ctx context.Context) (AccountObjectIdentifier, error) {
 	s := &struct {
 		CurrentUser string `db:"CURRENT_USER"`
 	}{}
 	err := c.client.queryOne(ctx, s, "SELECT CURRENT_USER() as CURRENT_USER")
 	if err != nil {
-		return "", err
+		return NewAccountObjectIdentifier(""), err
 	}
-	return s.CurrentUser, nil
+	return NewAccountObjectIdentifier(s.CurrentUser), nil
 }
 
 func (c *contextFunctions) CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error) {

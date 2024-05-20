@@ -39,6 +39,19 @@ func (c *ViewClient) CreateView(t *testing.T, query string) (*sdk.View, func()) 
 	return view, c.DropViewFunc(t, id)
 }
 
+func (c *ViewClient) RecreateView(t *testing.T, id sdk.SchemaObjectIdentifier, query string) *sdk.View {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	require.NoError(t, err)
+
+	view, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return view
+}
+
 func (c *ViewClient) DropViewFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

@@ -48,7 +48,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: id.SchemaIdentifier(),
+			Schema: id.SchemaId(),
 		},
 	})
 	if err != nil {

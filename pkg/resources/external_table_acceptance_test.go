@@ -28,7 +28,8 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 	t.Skipf("Skip because error %s; will be fixed in SNOW-1423486", "Error: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.")
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -74,7 +75,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					publishExternalTablesTestData(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name), data)
+					publishExternalTablesTestData(t, id, data)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: configVariables,
@@ -248,7 +249,8 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -297,7 +299,6 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 					func(state *terraform.State) error {
 						client := acc.TestAccProvider.Meta().(*provider.Context).Client
 						ctx := context.Background()
-						id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name)
 						result, err := client.ExternalTables.ShowByID(ctx, id)
 						if err != nil {
 							return err
@@ -325,7 +326,7 @@ func externalTableContainsData(name string, contains func(rows []map[string]*any
 	return func(state *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name)
+		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(name)
 		rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("select * from %s", id.FullyQualifiedName()))
 		if err != nil {
 			return err
@@ -360,7 +361,7 @@ func expectTableToHaveColumnDataTypes(tableName string, expectedDataTypes []sdk.
 	return func(s *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
+		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 		columnsDesc, err := client.ExternalTables.DescribeColumns(ctx, sdk.NewDescribeExternalTableColumnsRequest(id))
 		if err != nil {
 			return err
@@ -390,7 +391,7 @@ func expectTableDDLContains(tableName string, substr string) func(s *terraform.S
 	return func(s *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
+		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 
 		rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("select get_ddl('table', '%s')", id.FullyQualifiedName()))
 		if err != nil {

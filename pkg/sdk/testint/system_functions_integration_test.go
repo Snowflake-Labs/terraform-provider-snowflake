@@ -151,7 +151,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 			},
 		},
 		sdk.OwnershipGrantTo{
-			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+			AccountRoleName: sdk.Pointer(currentRole),
 		},
 		new(sdk.GrantOwnershipOptions),
 	)
