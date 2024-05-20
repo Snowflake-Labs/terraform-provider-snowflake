@@ -91,3 +91,8 @@ func (n Bool) Value() (driver.Value, error) {
 	}
 	return n.Bool, nil
 }
+
+// BoolValue returns either the default bool (false) if the Bool.Valid != true, of the underlying Bool.Value.
+func (n Bool) BoolValue() bool {
+	return n.Valid && n.Bool
+}

@@ -95,12 +95,18 @@ func (row userDBRow) convert() *User {
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
 		LoginName:             row.LoginName,
+		Disabled:              row.Disabled.BoolValue(),
+		MustChangePassword:    row.MustChangePassword.BoolValue(),
+		SnowflakeLock:         row.SnowflakeLock.BoolValue(),
 		DefaultNamespace:      row.DefaultNamespace,
 		DefaultRole:           row.DefaultRole,
 		DefaultSecondaryRoles: row.DefaultSecondaryRoles,
+		ExtAuthnDuo:           row.ExtAuthnDuo.BoolValue(),
 		ExtAuthnUid:           row.ExtAuthnUid,
 		MinsToBypassMfa:       row.MinsToBypassMfa,
 		Owner:                 row.Owner,
+		HasPassword:           row.HasPassword.BoolValue(),
+		HasRsaPublicKey:       row.HasRsaPublicKey.BoolValue(),
 	}
 	if row.DisplayName.Valid {
 		user.DisplayName = row.DisplayName.String
@@ -123,20 +129,8 @@ func (row userDBRow) convert() *User {
 	if row.Comment.Valid {
 		user.Comment = row.Comment.String
 	}
-	if row.Disabled.Valid {
-		user.Disabled = row.Disabled.Bool
-	}
-	if row.MustChangePassword.Valid {
-		user.MustChangePassword = row.MustChangePassword.Bool
-	}
-	if row.SnowflakeLock.Valid {
-		user.SnowflakeLock = row.SnowflakeLock.Bool
-	}
 	if row.DefaultWarehouse.Valid {
 		user.DefaultWarehouse = row.DefaultWarehouse.String
-	}
-	if row.ExtAuthnDuo.Valid {
-		user.ExtAuthnDuo = row.ExtAuthnDuo.Bool
 	}
 	if row.LastSuccessLogin.Valid {
 		user.LastSuccessLogin = row.LastSuccessLogin.Time
@@ -146,12 +140,6 @@ func (row userDBRow) convert() *User {
 	}
 	if row.LockedUntilTime.Valid {
 		user.LockedUntilTime = row.LockedUntilTime.Time
-	}
-	if row.HasPassword.Valid {
-		user.HasPassword = row.HasPassword.Bool
-	}
-	if row.HasRsaPublicKey.Valid {
-		user.HasRsaPublicKey = row.HasRsaPublicKey.Bool
 	}
 	return user
 }
