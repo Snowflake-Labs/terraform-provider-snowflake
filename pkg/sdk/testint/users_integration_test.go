@@ -79,8 +79,14 @@ func TestInt_UsersShow(t *testing.T) {
 	t.Run("with like options", func(t *testing.T) {
 		users, err := secondaryClient.Users.Show(ctx, nil)
 		require.NoError(t, err)
-		assert.Contains(t, users, *userTest)
-		assert.Contains(t, users, *userTest2)
+		found := 0
+		// we can't compare via assert.Contains as not all the fields will be filled int
+		for _, u := range users {
+			if u.Name == userTest.Name || u.Name == userTest2.Name {
+				found++
+			}
+		}
+		assert.Equal(t, 2, found)
 		assert.Equal(t, 2, len(users))
 	})
 }
