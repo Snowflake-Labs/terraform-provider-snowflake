@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -122,7 +123,7 @@ func ReadContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta in
 
 	networkRule, err := client.NetworkRules.ShowByID(ctx, id)
 	if networkRule == nil || err != nil {
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{

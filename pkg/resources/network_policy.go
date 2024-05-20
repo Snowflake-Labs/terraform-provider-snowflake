@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -132,7 +133,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
 	if networkPolicy == nil || err != nil {
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
@@ -200,7 +201,6 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 			if err = d.Set("blocked_network_rule_list", networkRulesFullyQualified); err != nil {
 				return diag.FromErr(err)
-
 			}
 		}
 	}
@@ -236,7 +236,6 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		networkRuleIdentifiers := parseNetworkRulesList(d.Get("allowed_network_rule_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(networkRuleIdentifiers))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-
 		if err != nil {
 			return getUpdateContextDiag("updating ALLOWED_NETWORK_RULE_LIST", name, err)
 		}
@@ -247,7 +246,6 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		networkRuleIdentifiers := parseNetworkRulesList(d.Get("blocked_network_rule_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(networkRuleIdentifiers))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-
 		if err != nil {
 			return getUpdateContextDiag("updating BLOCKED_NETWORK_RULE_LIST", name, err)
 		}
@@ -258,7 +256,6 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		ipRequests := parseIPList(d.Get("allowed_ip_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-
 		if err != nil {
 			return getUpdateContextDiag("updating ALLOWED_IP_LIST", name, err)
 		}
@@ -269,7 +266,6 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		ipRequests := parseIPList(d.Get("blocked_ip_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-
 		if err != nil {
 			return getUpdateContextDiag("updating BLOCKED_IP_LIST", name, err)
 		}
