@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.91.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.90.0...v0.91.0) (2024-05-16)
+
+
+### 🎉 **What's new:**
+
+* add snowflake_grant_application_role resource ([#2690](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2690)) ([838d241](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/838d241ddde33fba8d4e85ff3b2cd52d8c256aaa))
+* datasource database role ([#2731](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2731)) ([319ddc3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/319ddc3df2f0a73c1f6258632de0e42c04532551))
+
+
+### 🔧 **Misc**
+
+* Add few documentation adjustments ([#2789](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2789)) ([6db8bf3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6db8bf38d3a03b05bdbf53162697da66c8c22b77))
+* Bump dependencies ([#2802](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2802)) ([54ea6bc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/54ea6bcb42487db8a15782cd4b53fc5fba3223d2))
+* Replace parsing function for saving granted object names ([#2813](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2813)) ([175cfc7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/175cfc746a8c9070234e8a0ee2a8d0b04c1f97cc))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix sweepers ([#2800](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2800)) ([a01115e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a01115ea54fc54c4600a83b877765f3643856080))
+* Invoke SetId immediately after alert creation ([#2786](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2786)) ([181b4d0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/181b4d0b45699b5076f31a194d36c29735fd3bf7))
+* Update the tests after snowflake bugfix ([#2806](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2806)) ([6843c1a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6843c1a35f201a16c5932faaff390e62bd7dc611))
+
 ## [0.90.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.89.0...v0.90.0) (2024-05-08)
 
 
