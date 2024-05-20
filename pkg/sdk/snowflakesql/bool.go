@@ -1,44 +1,80 @@
 package snowflakesql
 
-import "database/sql/driver"
+import (
+	"database/sql/driver"
+	"fmt"
+	"reflect"
+)
 
-// NullBool is inspired by sql.NullBool, but it will handle `"null"` passed as value, too
-type NullBool struct {
+// Bool is inspired by sql.NullBool, but it will handle `"null"` passed as value, too
+type Bool struct {
 	Bool  bool
 	Valid bool // Valid is true if Bool is not NULL
 }
 
 // Scan implements the [Scanner] interface.
-func (n *NullBool) Scan(value any) error {
+func (n *Bool) Scan(value any) error {
 	switch value := value.(type) {
 	case nil: // untyped nil
 		n.Bool, n.Valid = false, false
 		return nil
+	case bool:
+		return n.fromBool(&value)
+	case *bool:
+		return n.fromBool(value)
 	case string:
-		return n.fromString(value)
+		return n.fromString(&value)
 	case *string:
-		if value == nil {
-			n.Bool, n.Valid = false, false
-			return nil
-		}
-		return n.fromString(*value)
+		return n.fromString(value)
+	default:
+		return n.convertAny(value)
 	}
-
-	return n.convertAny(value)
 }
 
-func (n *NullBool) fromString(value string) error {
-	if value == "null" {
+func (n *Bool) fromBool(value *bool) error {
+	if n.Valid = value != nil; n.Valid {
+		n.Bool = *value
+	} else {
+		n.Bool = false
+	}
+	return nil
+}
+
+func (n *Bool) fromString(value *string) error {
+	if value == nil {
+		n.Bool, n.Valid = false, false
+		return nil
+	}
+
+	str := *value
+	if str == "null" {
 		// Sadly, we have to do this, as Snowflake can return `"null"` for boolean fields.
 		// E.g., `disabled` field in `SHOW USERS` output.
 		n.Bool, n.Valid = false, false
 		return nil
 	}
-	return n.convertAny(value)
+
+	return n.convertAny(str)
 }
 
-func (n *NullBool) convertAny(value any) error {
-	res, err := driver.Bool.ConvertValue(value)
+func (n *Bool) convertAny(value any) error {
+	v := reflect.ValueOf(value)
+	for v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			// nil pointer to some value
+			n.Bool, n.Valid = false, false
+			return nil
+		}
+		v = v.Elem()
+	}
+
+	if !v.CanInterface() {
+		// shouldn't be here, but fail without panic
+		n.Bool, n.Valid = false, false
+		return fmt.Errorf("can't convert %v (%T) into bool", value, value)
+	}
+
+	res, err := driver.Bool.ConvertValue(v.Interface())
 	if err != nil {
 		n.Bool, n.Valid = false, false
 		return err
@@ -49,7 +85,7 @@ func (n *NullBool) convertAny(value any) error {
 }
 
 // Value implements the [driver.Valuer] interface.
-func (n NullBool) Value() (driver.Value, error) {
+func (n Bool) Value() (driver.Value, error) {
 	if !n.Valid {
 		return nil, nil
 	}
