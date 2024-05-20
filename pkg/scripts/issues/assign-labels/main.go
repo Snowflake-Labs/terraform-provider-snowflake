@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
 var (
@@ -67,7 +68,7 @@ type Issue struct {
 }
 
 func readGitHubIssuesBucket() []Issue {
-	f, err := os.Open("/Users/jcieslak/Documents/terraform-provider-snowflake/pkg/scripts/issues/assign-labels/GitHubIssuesBucket.csv")
+	f, err := os.Open("GitHubIssuesBucket.csv")
 	if err != nil {
 		panic(err)
 	}
@@ -79,14 +80,14 @@ func readGitHubIssuesBucket() []Issue {
 	}
 	issues := make([]Issue, 0)
 	for _, record := range records[1:] { // Skip header
-		id, err := strconv.Atoi(record[14])
+		id, err := strconv.Atoi(record[0][1:])
 		if err != nil {
 			panic(err)
 		}
 		issues = append(issues, Issue{
 			ID:       id,
-			Category: record[15],
-			Object:   record[16],
+			Category: record[1],
+			Object:   record[2],
 		})
 	}
 	return issues
