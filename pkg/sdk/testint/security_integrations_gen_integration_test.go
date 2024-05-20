@@ -1,18 +1,10 @@
 package testint
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
 	"fmt"
-	"math/big"
-	"strings"
 	"testing"
-	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,33 +24,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-
-	ca := &x509.Certificate{
-		SerialNumber: big.NewInt(1658),
-		Subject: pkix.Name{
-			Organization: []string{"Company, INC."},
-		},
-		NotAfter:    time.Now().AddDate(10, 0, 0),
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		KeyUsage:    x509.KeyUsageDigitalSignature,
-	}
-
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-
-	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
-	require.NoError(t, err)
-
-	certPEM := new(bytes.Buffer)
-	err = pem.Encode(certPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
-	require.NoError(t, err)
-
-	cert := strings.TrimPrefix(certPEM.String(), "-----BEGIN CERTIFICATE-----\n")
-	cert = strings.TrimSuffix(cert, "-----END CERTIFICATE-----\n")
-
+	cert := random.GenerateX509(t)
 	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) {
 		t.Helper()
 		_, err := client.ExecForTests(ctx, "ALTER ACCOUNT SET ENABLE_IDENTIFIER_FIRST_LOGIN = true")
@@ -83,7 +49,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		if with != nil {
 			with(scimReq)
 		}
-		err = client.SecurityIntegrations.CreateScim(ctx, scimReq)
+		err := client.SecurityIntegrations.CreateScim(ctx, scimReq)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
