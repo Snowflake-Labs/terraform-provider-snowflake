@@ -335,6 +335,41 @@ func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) err
 	}
 }
 
+// CheckSharePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckSharePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(state *terraform.State) error {
+		for _, rs := range state.RootModule().Resources {
+			if rs.Type != "snowflake_grant_privileges_to_share" {
+				continue
+			}
+			ctx := context.Background()
+
+			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				To: &sdk.ShowGrantsTo{
+					Share: &sdk.ShowGrantsToShare{
+						Name: sdk.NewAccountObjectIdentifier(id.Name()),
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+			var grantedPrivileges []string
+			for _, grant := range grants {
+				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+			}
+			if len(grantedPrivileges) > 0 {
+				return fmt.Errorf("share (%s) is still granted with privileges: %v", id.FullyQualifiedName(), grantedPrivileges)
+			}
+		}
+		return nil
+	}
+}
+
 // CheckUserPasswordPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()

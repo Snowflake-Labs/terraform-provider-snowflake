@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -266,8 +266,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
 	if err != nil {
 		return err
@@ -393,8 +392,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	// alter failover group <name> set ...
 	opts := &sdk.AlterSourceFailoverGroupOptions{
@@ -503,7 +501,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err)
 			}
 		}
 
@@ -521,7 +519,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err)
 			}
 		}
 	}
@@ -552,7 +550,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err)
 			}
 		}
 
@@ -570,7 +568,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err)
 			}
 		}
 	}
@@ -609,7 +607,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err)
 			}
 		}
 
@@ -627,7 +625,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", name, err)
+				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err)
 			}
 		}
 	}
@@ -638,12 +636,11 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 // DeleteFailoverGroup implements schema.DeleteFunc.
 func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	ctx := context.Background()
 	err := client.FailoverGroups.Drop(ctx, id, &sdk.DropFailoverGroupOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
-		return fmt.Errorf("error deleting failover group %v err = %w", name, err)
+		return fmt.Errorf("error deleting failover group %v err = %w", id.Name(), err)
 	}
 
 	d.SetId("")

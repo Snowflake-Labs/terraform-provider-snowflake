@@ -267,7 +267,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
-		newId := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), d.Get("name").(string))
+		newId := sdk.NewSchemaObjectIdentifierInSchema(objectIdentifier.SchemaId(), d.Get("name").(string))
 
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, &sdk.AlterPasswordPolicyOptions{
 			NewName: &newId,

@@ -46,7 +46,7 @@ func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObj
 func (c *TableClient) CreateTableWithColumns(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
 	t.Helper()
 
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
 	ctx := context.Background()
 
 	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
@@ -73,6 +73,14 @@ func (c *TableClient) DropTableFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 		dropErr := c.client().Drop(ctx, sdk.NewDropTableRequest(id).WithIfExists(sdk.Bool(true)))
 		require.NoError(t, dropErr)
 	}
+}
+
+func (c *TableClient) SetDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days int) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
+	require.NoError(t, err)
 }
 
 // GetTableColumnsFor is based on https://docs.snowflake.com/en/sql-reference/info-schema/columns.

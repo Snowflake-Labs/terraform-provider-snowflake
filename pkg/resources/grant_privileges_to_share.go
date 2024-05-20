@@ -164,7 +164,7 @@ func CreateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 	id := createGrantPrivilegesToShareIdFromSchema(d)
 	log.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
-	err := client.Grants.GrantPrivilegeToShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), sdk.NewAccountObjectIdentifier(id.ShareName.Name()))
+	err := client.Grants.GrantPrivilegeToShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), id.ShareName)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -220,7 +220,7 @@ func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 				ctx,
 				privilegesToAdd,
 				grantOn,
-				sdk.NewAccountObjectIdentifier(id.ShareName.Name()),
+				id.ShareName,
 			)
 			if err != nil {
 				return diag.Diagnostics{
@@ -238,7 +238,7 @@ func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 				ctx,
 				privilegesToRemove,
 				grantOn,
-				sdk.NewAccountObjectIdentifier(id.ShareName.Name()),
+				id.ShareName,
 			)
 			if err != nil {
 				return diag.Diagnostics{
@@ -272,7 +272,7 @@ func DeleteGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	err = client.Grants.RevokePrivilegeFromShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), sdk.NewAccountObjectIdentifier(id.ShareName.Name()))
+	err = client.Grants.RevokePrivilegeFromShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), id.ShareName)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

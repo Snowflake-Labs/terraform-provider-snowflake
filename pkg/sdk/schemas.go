@@ -391,7 +391,7 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 	schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
 		In: &SchemaIn{
 			Database: Bool(true),
-			Name:     NewAccountObjectIdentifier(id.DatabaseName()),
+			Name:     id.DatabaseId(),
 		},
 		Like: &Like{
 			Pattern: String(id.Name()),

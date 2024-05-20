@@ -62,7 +62,7 @@ func (c *DatabaseRoleClient) CleanupDatabaseRoleFunc(t *testing.T, id sdk.Databa
 
 	return func() {
 		// to prevent error when db was removed before the role
-		_, err := c.context.client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+		_, err := c.context.client.Databases.ShowByID(ctx, id.DatabaseId())
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 			return
 		}

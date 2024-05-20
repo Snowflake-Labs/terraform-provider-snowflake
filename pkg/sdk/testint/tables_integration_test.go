@@ -10,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -545,7 +546,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, 2, len(tableDetails))
-		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), *tableDetails[0].PolicyName)
+		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*tableDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().WithUnsetMaskingPolicy(sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest("COLUMN_1")))
@@ -1051,7 +1052,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 		err = client.Grants.GrantPrivilegesToAccountRole(ctx,
 			&sdk.AccountRoleGrantPrivileges{SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeEvolveSchema}},
 			&sdk.AccountRoleGrantOn{SchemaObject: &sdk.GrantOnSchemaObject{SchemaObject: &sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: sdk.NewObjectIdentifierFromFullyQualifiedName(table.ID().FullyQualifiedName())}}},
-			sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"),
+			snowflakeroles.Accountadmin,
 			nil)
 		require.NoError(t, err)
 

@@ -24,18 +24,18 @@ func (c *RoleClient) client() sdk.Roles {
 	return c.context.client.Roles
 }
 
-func (c *RoleClient) UseRole(t *testing.T, roleName string) func() {
+func (c *RoleClient) UseRole(t *testing.T, roleId sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 
 	currentRole, err := c.context.client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
-	err = c.context.client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(roleName))
+	err = c.context.client.Sessions.UseRole(ctx, roleId)
 	require.NoError(t, err)
 
 	return func() {
-		err = c.context.client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+		err = c.context.client.Sessions.UseRole(ctx, currentRole)
 		require.NoError(t, err)
 	}
 }
@@ -53,9 +53,14 @@ func (c *RoleClient) CreateRoleWithName(t *testing.T, name string) (*sdk.Role, f
 
 func (c *RoleClient) CreateRoleGrantedToCurrentUser(t *testing.T) (*sdk.Role, func()) {
 	t.Helper()
+	ctx := context.Background()
 
 	role, roleCleanup := c.CreateRole(t)
-	c.GrantRoleToCurrentUser(t, role.ID())
+
+	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+
+	c.GrantRoleToUser(t, role.ID(), currentUser)
 	return role, roleCleanup
 }
 
@@ -80,15 +85,12 @@ func (c *RoleClient) DropRoleFunc(t *testing.T, id sdk.AccountObjectIdentifier) 
 	}
 }
 
-func (c *RoleClient) GrantRoleToCurrentUser(t *testing.T, id sdk.AccountObjectIdentifier) {
+func (c *RoleClient) GrantRoleToUser(t *testing.T, id sdk.AccountObjectIdentifier, userId sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
 
-	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
-	require.NoError(t, err)
-
-	err = c.client().Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
-		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
+	err := c.client().Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
+		User: sdk.Pointer(userId),
 	}))
 	require.NoError(t, err)
 }
@@ -128,10 +130,50 @@ func (c *RoleClient) GrantOwnershipOnAccountObject(t *testing.T, roleId sdk.Acco
 }
 
 // TODO: move later to grants client
+func (c *RoleClient) GrantOwnershipOnSchemaObject(t *testing.T, roleId sdk.AccountObjectIdentifier, objectId sdk.SchemaObjectIdentifier, objectType sdk.ObjectType, outboundPrivileges sdk.OwnershipCurrentGrantsOutboundPrivileges) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.context.client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: objectType,
+				Name:       objectId,
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(roleId),
+		},
+		&sdk.GrantOwnershipOptions{
+			CurrentGrants: &sdk.OwnershipCurrentGrants{
+				OutboundPrivileges: outboundPrivileges,
+			},
+		},
+	)
+	require.NoError(t, err)
+}
+
+// TODO: move later to grants client
 func (c *RoleClient) GrantPrivilegeOnDatabaseToShare(t *testing.T, databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
 
 	err := c.context.client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: databaseId}, shareId)
 	require.NoError(t, err)
+}
+
+// TODO: move later to grants client
+func (c *RoleClient) ShowGrantsTo(t *testing.T, roleId sdk.AccountObjectIdentifier) []sdk.Grant {
+	t.Helper()
+	ctx := context.Background()
+
+	grants, err := c.context.client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+		To: &sdk.ShowGrantsTo{
+			Role: roleId,
+		},
+	})
+	require.NoError(t, err)
+
+	return grants
 }

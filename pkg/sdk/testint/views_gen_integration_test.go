@@ -334,7 +334,7 @@ func TestInt_Views(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(alteredViewDetails))
-		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), *alteredViewDetails[0].PolicyName)
+		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*alteredViewDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
 			sdk.NewViewUnsetColumnMaskingPolicyRequest("id"),

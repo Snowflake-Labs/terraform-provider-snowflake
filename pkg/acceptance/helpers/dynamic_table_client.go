@@ -33,7 +33,7 @@ func (c *DynamicTableClient) CreateDynamicTable(t *testing.T, tableId sdk.Schema
 
 func (c *DynamicTableClient) CreateDynamicTableWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, warehouseId sdk.AccountObjectIdentifier, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(schemaId.DatabaseName(), schemaId.Name(), name)
+	id := sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
 	targetLag := sdk.TargetLag{
 		MaximumDuration: sdk.String("2 minutes"),
 	}

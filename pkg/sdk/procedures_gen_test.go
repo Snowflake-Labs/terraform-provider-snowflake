@@ -649,7 +649,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Name = NewAccountObjectIdentifier("")
+		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -770,7 +770,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Name = NewAccountObjectIdentifier("")
+		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -893,7 +893,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Name = NewAccountObjectIdentifier("")
+		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -1015,7 +1015,7 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Name = NewAccountObjectIdentifier("")
+		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -1077,7 +1077,7 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Name = NewAccountObjectIdentifier("")
+		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
