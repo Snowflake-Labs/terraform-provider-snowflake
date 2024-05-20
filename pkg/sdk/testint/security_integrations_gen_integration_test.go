@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,9 +15,12 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// TODO: move URL to helpers
 	acsURL := fmt.Sprintf("https://%s.snowflakecomputing.com/fed/login", testClientHelper().Context.CurrentAccount(t))
 	issuerURL := fmt.Sprintf("https://%s.snowflakecomputing.com", testClientHelper().Context.CurrentAccount(t))
 	cert := random.GenerateX509(t)
+	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
+	t.Cleanup(revertParameter)
 
 	cleanupSecurityIntegration := func(t *testing.T, id sdk.AccountObjectIdentifier) {
 		t.Helper()
@@ -25,10 +29,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) {
+	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) *sdk.SecurityIntegration {
 		t.Helper()
-		revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
-		t.Cleanup(revertParameter)
 
 		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(siID, false, issuer, "https://example.com", "Custom", cert)
 		if with != nil {
@@ -37,11 +39,15 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		err := client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, siID)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		require.NoError(t, err)
+
+		return integration
 	}
 
 	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateScimSecurityIntegrationRequest)) *sdk.SecurityIntegration {
 		t.Helper()
-		role, roleCleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier("GENERIC_SCIM_PROVISIONER")).WithOrReplace(true))
+		role, roleCleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
 		t.Cleanup(roleCleanup)
 		testClientHelper().Role.GrantRoleToCurrentRole(t, role.ID())
 
@@ -408,7 +414,21 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
 	})
 
-	t.Run("Show", func(t *testing.T) {
+	t.Run("Show SAML2", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si1 := createSAML2Integration(t, id, testClientHelper().Ids.Alpha(), nil)
+		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si2 := createSAML2Integration(t, id2, testClientHelper().Ids.Alpha(), nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
+			Pattern: sdk.Pointer(id.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
+	})
+
+	t.Run("Show SCIM", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		si1 := createSCIMIntegration(t, id, nil)
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()

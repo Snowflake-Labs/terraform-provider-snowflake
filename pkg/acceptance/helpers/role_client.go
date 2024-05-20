@@ -103,7 +103,7 @@ func (c *RoleClient) GrantRoleToCurrentRole(t *testing.T, id sdk.AccountObjectId
 	require.NoError(t, err)
 
 	err = c.client().Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
-		Role: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+		Role: sdk.Pointer(currentRole),
 	}))
 	require.NoError(t, err)
 }
