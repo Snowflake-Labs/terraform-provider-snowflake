@@ -446,7 +446,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 				PreConfig: func() {
 					role, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
 					t.Cleanup(roleCleanup)
-					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, role.ID(), viewId, sdk.ObjectTypeView)
+					acc.TestClient().Role.GrantOwnershipOnSchemaObject(t, role.ID(), viewId, sdk.ObjectTypeView, sdk.Revoke)
 				},
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
@@ -455,7 +455,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// import with the proper role
 			{
 				PreConfig: func() {
-					acc.TestClient().Role.RevokeCurrentGrantsFromSchemaObject(t, snowflakeroles.Accountadmin, viewId, sdk.ObjectTypeView)
+					acc.TestClient().Role.GrantOwnershipOnSchemaObject(t, snowflakeroles.Accountadmin, viewId, sdk.ObjectTypeView, sdk.Revoke)
 				},
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,

@@ -117,7 +117,7 @@ func (c *RoleClient) GrantOwnershipOnAccountObject(t *testing.T, roleId sdk.Acco
 }
 
 // TODO: move later to grants client
-func (c *RoleClient) RevokeCurrentGrantsFromSchemaObject(t *testing.T, roleId sdk.AccountObjectIdentifier, objectId sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) {
+func (c *RoleClient) GrantOwnershipOnSchemaObject(t *testing.T, roleId sdk.AccountObjectIdentifier, objectId sdk.SchemaObjectIdentifier, objectType sdk.ObjectType, outboundPrivileges sdk.OwnershipCurrentGrantsOutboundPrivileges) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -134,7 +134,7 @@ func (c *RoleClient) RevokeCurrentGrantsFromSchemaObject(t *testing.T, roleId sd
 		},
 		&sdk.GrantOwnershipOptions{
 			CurrentGrants: &sdk.OwnershipCurrentGrants{
-				OutboundPrivileges: sdk.Revoke,
+				OutboundPrivileges: outboundPrivileges,
 			},
 		},
 	)

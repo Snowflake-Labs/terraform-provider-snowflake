@@ -153,7 +153,7 @@ panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier
 - AccountObjectIdentifier - `<name>`
 - DatabaseObjectIdentifier - `<database>.<name>`
 - SchemaObjectIdentifier - `<database>.<schema>.<name>`
-- NewTableColumnIdentifier - `<database>.<schema>.<table>.<name>`
+- TableColumnIdentifier - `<database>.<schema>.<table>.<name>`
 
 ### Incorrect account identifier (snowflake_database.from_share)
 **Problem:** From 0.87.0 version, we are quoting incoming external account identifier correctly, which may break configurations that specified account identifier as `<org_name>.<acc_name>` that worked previously by accident.
