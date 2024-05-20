@@ -213,7 +213,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
 
 		if comment == "" {
 			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
@@ -231,27 +231,27 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("allowed_network_rule_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
 		networkRuleIdentifiers := parseNetworkRulesList(d.Get("allowed_network_rule_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(networkRuleIdentifiers))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return getUpdateContextDiag("updating ALLOWED_NETWORK_RULE_LIST", name, err)
+			return getUpdateContextDiag("updating ALLOWED_NETWORK_RULE_LIST", id.Name(), err)
 		}
 	}
 
 	if d.HasChange("blocked_network_rule_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
 		networkRuleIdentifiers := parseNetworkRulesList(d.Get("blocked_network_rule_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(networkRuleIdentifiers))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return getUpdateContextDiag("updating BLOCKED_NETWORK_RULE_LIST", name, err)
+			return getUpdateContextDiag("updating BLOCKED_NETWORK_RULE_LIST", id.Name(), err)
 		}
 	}
 
 	if d.HasChange("allowed_ip_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
 		ipRequests := parseIPList(d.Get("allowed_ip_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
@@ -261,7 +261,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("blocked_ip_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
 		ipRequests := parseIPList(d.Get("blocked_ip_list"))
 		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
 		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
@@ -287,7 +287,7 @@ func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id)).WithIfExists(sdk.Bool(true)))
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(sdk.Bool(true)))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
