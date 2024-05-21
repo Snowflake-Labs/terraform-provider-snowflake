@@ -27,6 +27,7 @@ func (c *CatalogIntegrationClient) exec(sql string) error {
 	return err
 }
 
+// TODO(SNOW-999142): Use SDK implementation for Catalog once it's available
 func (c *CatalogIntegrationClient) Create(t *testing.T) (sdk.AccountObjectIdentifier, func()) {
 	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()

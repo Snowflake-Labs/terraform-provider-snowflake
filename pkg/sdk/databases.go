@@ -201,6 +201,7 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 type CreateSharedDatabaseOptions struct {
 	create              bool                     `ddl:"static" sql:"CREATE"`
 	OrReplace           *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient           *bool                    `ddl:"keyword" sql:"TRANSIENT"`
 	database            bool                     `ddl:"static" sql:"DATABASE"`
 	IfNotExists         *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                AccountObjectIdentifier  `ddl:"identifier"`
@@ -378,6 +379,9 @@ func (v *DatabaseSet) validate() error {
 	if v.Catalog != nil && !ValidObjectIdentifier(v.Catalog) {
 		errs = append(errs, errInvalidIdentifier("DatabaseSet", "Catalog"))
 	}
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.DefaultDDLCollation, v.LogLevel, v.TraceLevel, v.Comment) {
+		errs = append(errs, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+	}
 	return errors.Join(errs...)
 }
 
@@ -393,7 +397,11 @@ type DatabaseUnset struct {
 }
 
 func (v *DatabaseUnset) validate() error {
-	return nil
+	var errs []error
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.DefaultDDLCollation, v.LogLevel, v.TraceLevel, v.Comment) {
+		errs = append(errs, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+	}
+	return errors.Join(errs...)
 }
 
 func (v *databases) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseOptions) error {

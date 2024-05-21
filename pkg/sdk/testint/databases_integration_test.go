@@ -104,23 +104,23 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		assert.Equal(t, comment, database.Comment)
 		assert.Equal(t, 1, database.RetentionTime)
 
-		param, err := client.Parameters.ShowObjectParameter(ctx, "MAX_DATA_EXTENSION_TIME_IN_DAYS", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, "1", param.Value)
 
-		externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, "EXTERNAL_VOLUME", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-		catalogParam, err := client.Parameters.ShowObjectParameter(ctx, "CATALOG", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-		logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "LOG_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, string(sdk.LogLevelInfo), logLevelParam.Value)
 
-		traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "TRACE_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, string(sdk.TraceLevelOnEvent), traceLevelParam.Value)
 
@@ -184,6 +184,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 
 	comment := random.Comment()
 	err = client.Databases.CreateShared(ctx, sharedDatabase.ID(), shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{
+		Transient:           sdk.Bool(true),
 		IfNotExists:         sdk.Bool(true),
 		ExternalVolume:      &externalVolume,
 		Catalog:             &catalog,
@@ -210,19 +211,19 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	assert.Equal(t, sharedDatabase.ID().Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, "EXTERNAL_VOLUME", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, "CATALOG", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "LOG_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "TRACE_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
 
@@ -281,23 +282,23 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	assert.Equal(t, 1, database.RetentionTime)
 	assert.Equal(t, comment, database.Comment)
 
-	param, err := client.Parameters.ShowObjectParameter(ctx, "MAX_DATA_EXTENSION_TIME_IN_DAYS", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, "10", param.Value)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, "EXTERNAL_VOLUME", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, "CATALOG", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "LOG_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, "TRACE_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
 }
@@ -621,10 +622,7 @@ func TestInt_DatabasesAlterReplication(t *testing.T) {
 			Comment:                    sdk.String(comment),
 		})
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Databases.Drop(ctx, sharedDatabase.ID(), nil)
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID()))
 
 		err = secondaryClient.Databases.Alter(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseOptions{
 			Set: &sdk.DatabaseSet{
@@ -878,21 +876,18 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
-	t.Cleanup(databaseCleanup)
+	assertContainsSchema := func(details *sdk.DatabaseDetails, schemaName string) {
+		_, err := collections.FindOne(details.Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Kind == "SCHEMA" && row.Name == schemaName })
+		assert.NoError(t, err)
+	}
 
-	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())
+	databaseDetails, err := client.Databases.Describe(ctx, schemaTest.ID().DatabaseId())
 	require.NoError(t, err)
 
-	rows := databaseDetails.Rows
-	found := false
-	for _, row := range rows {
-		if row.Name == schemaTest.ID().Name() && row.Kind == "SCHEMA" {
-			found = true
-		}
-	}
-	assert.True(t, found)
+	assertContainsSchema(databaseDetails, schemaTest.ID().Name())
+	assertContainsSchema(databaseDetails, "INFORMATION_SCHEMA")
+	assertContainsSchema(databaseDetails, "PUBLIC")
 }

@@ -239,7 +239,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		newName := d.Get("name").(string)
 		newId := sdk.NewAccountObjectIdentifier(newName)
 		opts := &sdk.AlterDatabaseOptions{
-			NewName: newId,
+			NewName: &newId,
 		}
 		err := client.Databases.Alter(ctx, id, opts)
 		if err != nil {

@@ -15,11 +15,11 @@ type TestClient struct {
 	Application         *ApplicationClient
 	ApplicationPackage  *ApplicationPackageClient
 	Context             *ContextClient
-	CatalogIntegration *CatalogIntegrationClient
+	CatalogIntegration  *CatalogIntegrationClient
 	Database            *DatabaseClient
 	DatabaseRole        *DatabaseRoleClient
 	DynamicTable        *DynamicTableClient
-	ExternalVolume     *ExternalVolumeClient
+	ExternalVolume      *ExternalVolumeClient
 	FailoverGroup       *FailoverGroupClient
 	FileFormat          *FileFormatClient
 	MaskingPolicy       *MaskingPolicyClient
@@ -64,11 +64,11 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Application:         NewApplicationClient(context, idsGenerator),
 		ApplicationPackage:  NewApplicationPackageClient(context, idsGenerator),
 		Context:             NewContextClient(context),
-		CatalogIntegration: NewCatalogIntegrationClient(context, idsGenerator),
+		CatalogIntegration:  NewCatalogIntegrationClient(context, idsGenerator),
 		Database:            NewDatabaseClient(context, idsGenerator),
 		DatabaseRole:        NewDatabaseRoleClient(context, idsGenerator),
 		DynamicTable:        NewDynamicTableClient(context, idsGenerator),
-		ExternalVolume:     NewExternalVolumeClient(context, idsGenerator),
+		ExternalVolume:      NewExternalVolumeClient(context, idsGenerator),
 		FailoverGroup:       NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:          NewFileFormatClient(context, idsGenerator),
 		MaskingPolicy:       NewMaskingPolicyClient(context, idsGenerator),

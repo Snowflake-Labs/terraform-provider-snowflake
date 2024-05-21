@@ -129,8 +129,9 @@ func TestDatabasesCreateShared(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Transient = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE IF NOT EXISTS %s FROM SHARE %s`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s FROM SHARE %s`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName())
 	})
 
 	t.Run("complete", func(t *testing.T) {
@@ -249,6 +250,18 @@ func TestDatabasesAlter(t *testing.T) {
 		opts.Set = &DatabaseSet{}
 		opts.Unset = &DatabaseUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterDatabaseOptions", "NewName", "Set", "Unset", "SwapWith", "SetTag", "UnsetTag"))
+	})
+
+	t.Run("validation: at least one set option", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &DatabaseSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+	})
+
+	t.Run("validation: at least one unset option", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &DatabaseUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
 	})
 
 	t.Run("validation: invalid external volume identifier", func(t *testing.T) {

@@ -27,6 +27,7 @@ func (c *ExternalVolumeClient) exec(sql string) error {
 	return err
 }
 
+// TODO(SNOW-999142): Use SDK implementation for External Volume once it's available
 func (c *ExternalVolumeClient) Create(t *testing.T) (sdk.AccountObjectIdentifier, func()) {
 	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
