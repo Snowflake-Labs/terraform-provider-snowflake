@@ -4,9 +4,31 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type OauthSecurityIntegrationUseSecondaryRolesOption string
+
+const (
+	OauthSecurityIntegrationUseSecondaryRolesImplicit OauthSecurityIntegrationUseSecondaryRolesOption = "IMPLICIT"
+	OauthSecurityIntegrationUseSecondaryRolesNone     OauthSecurityIntegrationUseSecondaryRolesOption = "NONE"
+)
+
+type OauthSecurityIntegrationClientTypeOption string
+
+const (
+	OauthSecurityIntegrationClientTypePublic       OauthSecurityIntegrationClientTypeOption = "PUBLIC"
+	OauthSecurityIntegrationClientTypeConfidential OauthSecurityIntegrationClientTypeOption = "CONFIDENTIAL"
+)
+
+type OauthSecurityIntegrationClientOption string
+
+const (
+	OauthSecurityIntegrationClientLooker         OauthSecurityIntegrationClientOption = "LOOKER"
+	OauthSecurityIntegrationClientTableauDesktop OauthSecurityIntegrationClientOption = "TABLEAU_DESKTOP"
+	OauthSecurityIntegrationClientTableauServer  OauthSecurityIntegrationClientOption = "TABLEAU_SERVER"
+)
+
 type ScimSecurityIntegrationScimClientOption string
 
-var (
+const (
 	ScimSecurityIntegrationScimClientOkta    ScimSecurityIntegrationScimClientOption = "OKTA"
 	ScimSecurityIntegrationScimClientAzure   ScimSecurityIntegrationScimClientOption = "AZURE"
 	ScimSecurityIntegrationScimClientGeneric ScimSecurityIntegrationScimClientOption = "GENERIC"
@@ -14,15 +36,19 @@ var (
 
 type ScimSecurityIntegrationRunAsRoleOption string
 
-var (
+const (
 	ScimSecurityIntegrationRunAsRoleOktaProvisioner        ScimSecurityIntegrationRunAsRoleOption = "OKTA_PROVISIONER"
 	ScimSecurityIntegrationRunAsRoleAadProvisioner         ScimSecurityIntegrationRunAsRoleOption = "AAD_PROVISIONER"
 	ScimSecurityIntegrationRunAsRoleGenericScimProvisioner ScimSecurityIntegrationRunAsRoleOption = "GENERIC_SCIM_PROVISIONER"
 )
 
 var (
-	userDomainDef   = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
-	emailPatternDef = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
+	userDomainDef             = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
+	emailPatternDef           = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
+	preAuthorizedRolesListDef = g.NewQueryStruct("PreAuthorizedRolesList").
+					List("PreAuthorizedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
+	blockedRolesListDef = g.NewQueryStruct("BlockedRolesList").
+				List("BlockedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
 )
 
 func createSecurityIntegrationOperation(structName string, apply func(qs *g.QueryStruct) *g.QueryStruct) *g.QueryStruct {
@@ -51,6 +77,56 @@ func alterSecurityIntegrationOperation(structName string, apply func(qs *g.Query
 	qs = apply(qs)
 	return qs
 }
+
+var snowflakeOauthPartnerIntegrationSetDef = g.NewQueryStruct("SnowflakeOauthPartnerIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().SingleQuotes()).
+	OptionalBooleanAssignment("OAUTH_ISSUE_REFRESH_TOKENS", g.ParameterOptions()).
+	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalAssignment(
+		"OAUTH_USE_SECONDARY_ROLES",
+		g.KindOfT[OauthSecurityIntegrationUseSecondaryRolesOption](),
+		g.ParameterOptions(),
+	).
+	OptionalQueryStructField("BlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("BLOCKED_ROLES_LIST").Parentheses()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthRedirectUri", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles",
+		"BlockedRolesList", "Comment")
+
+var snowflakeOauthPartnerIntegrationUnsetDef = g.NewQueryStruct("SnowflakeOauthPartnerIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("OAUTH_USE_SECONDARY_ROLES").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthUseSecondaryRoles")
+
+var snowflakeOauthCustomIntegrationSetDef = g.NewQueryStruct("SnowflakeOauthCustomIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().SingleQuotes()).
+	OptionalBooleanAssignment("OAUTH_ALLOW_NON_TLS_REDIRECT_URI", g.ParameterOptions()).
+	OptionalBooleanAssignment("OAUTH_ENFORCE_PKCE", g.ParameterOptions()).
+	OptionalAssignment(
+		"OAUTH_USE_SECONDARY_ROLES",
+		g.KindOfT[OauthSecurityIntegrationUseSecondaryRolesOption](),
+		g.ParameterOptions(),
+	).
+	OptionalQueryStructField("PreAuthorizedRolesList", preAuthorizedRolesListDef, g.ParameterOptions().SQL("PRE_AUTHORIZED_ROLES_LIST").Parentheses()).
+	OptionalQueryStructField("BlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("BLOCKED_ROLES_LIST").Parentheses()).
+	OptionalBooleanAssignment("OAUTH_ISSUE_REFRESH_TOKENS", g.ParameterOptions()).
+	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
+	OptionalTextAssignment("OAUTH_CLIENT_RSA_PUBLIC_KEY", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_CLIENT_RSA_PUBLIC_KEY_2", g.ParameterOptions().SingleQuotes()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri", "OauthEnforcePkce", "PreAuthorizedRolesList",
+		"BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey",
+		"OauthClientRsaPublicKey2", "Comment")
+
+var snowflakeOauthCustomIntegrationUnsetDef = g.NewQueryStruct("SnowflakeOauthCustomIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("OAUTH_USE_SECONDARY_ROLES").
+	OptionalSQL("NETWORK_POLICY").
+	OptionalSQL("OAUTH_CLIENT_RSA_PUBLIC_KEY").
+	OptionalSQL("OAUTH_CLIENT_RSA_PUBLIC_KEY_2").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2")
 
 var saml2IntegrationSetDef = g.NewQueryStruct("Saml2IntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
@@ -101,6 +177,61 @@ var SecurityIntegrationsDef = g.NewInterface(
 	g.KindOfT[AccountObjectIdentifier](),
 ).
 	CustomOperation(
+		"CreateSnowflakeOauthPartner",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake",
+		createSecurityIntegrationOperation("CreateSnowflakeOauthPartner", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = OAUTH")).
+				Assignment(
+					"OAUTH_CLIENT",
+					g.KindOfT[OauthSecurityIntegrationClientOption](),
+					g.ParameterOptions().Required(),
+				).
+				OptionalTextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().SingleQuotes()).
+				OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+				OptionalBooleanAssignment("OAUTH_ISSUE_REFRESH_TOKENS", g.ParameterOptions()).
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+				OptionalAssignment(
+					"OAUTH_USE_SECONDARY_ROLES",
+					g.KindOfT[OauthSecurityIntegrationUseSecondaryRolesOption](),
+					g.ParameterOptions(),
+				).
+				OptionalQueryStructField("BlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("BLOCKED_ROLES_LIST").Parentheses())
+		}),
+		preAuthorizedRolesListDef,
+		blockedRolesListDef,
+	).
+	CustomOperation(
+		"CreateSnowflakeOauthCustom",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake",
+		createSecurityIntegrationOperation("CreateSnowflakeOauthCustom", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = OAUTH")).
+				PredefinedQueryStructField("oauthClient", "string", g.StaticOptions().SQL("OAUTH_CLIENT = CUSTOM")).
+				Assignment(
+					"OAUTH_CLIENT_TYPE",
+					g.KindOfT[OauthSecurityIntegrationClientTypeOption](),
+					g.ParameterOptions().Required().SingleQuotes(),
+				).
+				TextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+				OptionalBooleanAssignment("OAUTH_ALLOW_NON_TLS_REDIRECT_URI", g.ParameterOptions()).
+				OptionalBooleanAssignment("OAUTH_ENFORCE_PKCE", g.ParameterOptions()).
+				OptionalAssignment(
+					"OAUTH_USE_SECONDARY_ROLES",
+					g.KindOfT[OauthSecurityIntegrationUseSecondaryRolesOption](),
+					g.ParameterOptions(),
+				).
+				OptionalQueryStructField("PreAuthorizedRolesList", preAuthorizedRolesListDef, g.ParameterOptions().SQL("PRE_AUTHORIZED_ROLES_LIST").Parentheses()).
+				OptionalQueryStructField("BlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("BLOCKED_ROLES_LIST").Parentheses()).
+				OptionalBooleanAssignment("OAUTH_ISSUE_REFRESH_TOKENS", g.ParameterOptions()).
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
+				OptionalTextAssignment("OAUTH_CLIENT_RSA_PUBLIC_KEY", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("OAUTH_CLIENT_RSA_PUBLIC_KEY_2", g.ParameterOptions().SingleQuotes())
+		}),
+	).
+	CustomOperation(
 		"CreateSaml2",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2",
 		createSecurityIntegrationOperation("CreateSaml2", func(qs *g.QueryStruct) *g.QueryStruct {
@@ -145,6 +276,36 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 				OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions())
+		}),
+	).
+	CustomOperation(
+		"AlterSnowflakeOauthPartner",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake",
+		alterSecurityIntegrationOperation("AlterSnowflakeOauthPartner", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				snowflakeOauthPartnerIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				snowflakeOauthPartnerIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
+		}),
+	).
+	CustomOperation(
+		"AlterSnowflakeOauthCustom",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake",
+		alterSecurityIntegrationOperation("AlterSnowflakeOauthCustom", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				snowflakeOauthCustomIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				snowflakeOauthCustomIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),
 	).
 	CustomOperation(

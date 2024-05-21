@@ -1,12 +1,13 @@
 package testint
 
 import (
-	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,10 +16,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	// TODO: move URL to helpers
-	acsURL := fmt.Sprintf("https://%s.snowflakecomputing.com/fed/login", testClientHelper().Context.CurrentAccount(t))
-	issuerURL := fmt.Sprintf("https://%s.snowflakecomputing.com", testClientHelper().Context.CurrentAccount(t))
+	acsURL := testClientHelper().Context.ACSURL(t)
+	issuerURL := testClientHelper().Context.IssuerURL(t)
 	cert := random.GenerateX509(t)
+	rsaKey := random.GenerateRSAPublicKey(t)
+
 	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
 	t.Cleanup(revertParameter)
 
@@ -28,6 +30,36 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(sdk.Pointer(true)))
 			assert.NoError(t, err)
 		})
+	}
+	createSnowflakeOauthCustom := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSnowflakeOauthCustomSecurityIntegrationRequest)) *sdk.SecurityIntegration {
+		t.Helper()
+
+		req := sdk.NewCreateSnowflakeOauthCustomSecurityIntegrationRequest(siID, sdk.OauthSecurityIntegrationClientTypePublic, "https://example.com")
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateSnowflakeOauthCustom(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, siID)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		require.NoError(t, err)
+
+		return integration
+	}
+	createSnowflakeOauthPartner := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateSnowflakeOauthPartnerSecurityIntegrationRequest)) *sdk.SecurityIntegration {
+		t.Helper()
+
+		req := sdk.NewCreateSnowflakeOauthPartnerSecurityIntegrationRequest(siID, sdk.OauthSecurityIntegrationClientLooker)
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateSnowflakeOauthPartner(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, siID)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		require.NoError(t, err)
+
+		return integration
 	}
 	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) *sdk.SecurityIntegration {
 		t.Helper()
@@ -73,6 +105,48 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Equal(t, "SECURITY", si.Category)
 	}
 
+	type snowflakeOauthPartnerDetails struct {
+		enabled                 string
+		oauthIssueRefreshTokens string
+		refreshTokenValidity    string
+		useSecondaryRoles       string
+		preAuthorizedRolesList  string
+		blockedRolesList        string
+		networkPolicy           string
+		comment                 string
+	}
+
+	assertSnowflakeOauthPartner := func(details []sdk.SecurityIntegrationProperty, d snowflakeOauthPartnerDetails) {
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: d.enabled, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ISSUE_REFRESH_TOKENS", Type: "Boolean", Value: d.oauthIssueRefreshTokens, Default: "true"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_REFRESH_TOKEN_VALIDITY", Type: "Integer", Value: d.refreshTokenValidity, Default: "7776000"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: d.useSecondaryRoles, Default: "NONE"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "PRE_AUTHORIZED_ROLES_LIST", Type: "List", Value: d.preAuthorizedRolesList, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: d.networkPolicy, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
+		// Chech one-by-one because snowflake returns a few extra roles
+		found, err := collections.FindOne(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == "BLOCKED_ROLES_LIST" })
+		assert.NoError(t, err)
+		roles := strings.Split(found.Value, ",")
+		for _, exp := range strings.Split(d.blockedRolesList, ",") {
+			assert.Contains(t, roles, exp)
+		}
+	}
+
+	assertSnowflakeOauthCustom := func(details []sdk.SecurityIntegrationProperty, d snowflakeOauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
+		assertSnowflakeOauthPartner(details, d)
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ALLOW_NON_TLS_REDIRECT_URI", Type: "Boolean", Value: allowNonTlsRedirectUri, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_TYPE", Type: "String", Value: clientType, Default: "CONFIDENTIAL"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ENFORCE_PKCE", Type: "Boolean", Value: enforcePkce, Default: "false"})
+		// Keys are hashed in snowflake, so we check only if these fields are present
+		keys := make(map[string]struct{})
+		for _, detail := range details {
+			keys[detail.Name] = struct{}{}
+		}
+		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP")
+		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP")
+	}
+
 	assertSCIMDescribe := func(details []sdk.SecurityIntegrationProperty, enabled, networkPolicy, runAsRole, syncPassword, comment string) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: enabled, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: networkPolicy, Default: ""})
@@ -81,7 +155,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: comment, Default: ""})
 	}
 
-	type saml2details struct {
+	type saml2Details struct {
 		provider                  string
 		enableSPInitiated         string
 		spInitiatedLoginPageLabel string
@@ -98,7 +172,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		allowedEmailPatterns      string
 	}
 
-	assertSAML2Describe := func(details []sdk.SecurityIntegrationProperty, d saml2details) {
+	assertSAML2Describe := func(details []sdk.SecurityIntegrationProperty, d saml2Details) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_X509_CERT", Type: "String", Value: cert, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_PROVIDER", Type: "String", Value: d.provider, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_ENABLE_SP_INITIATED", Type: "Boolean", Value: d.enableSPInitiated, Default: "false"})
@@ -117,6 +191,75 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_USER_DOMAINS", Type: "List", Value: d.allowedUserDomains, Default: "[]"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
+
+	t.Run("CreateSnowflakeOauthPartner", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+
+		integration := createSnowflakeOauthPartner(t, id, func(r *sdk.CreateSnowflakeOauthPartnerSecurityIntegrationRequest) {
+			r.WithBlockedRolesList(&sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithComment(sdk.Pointer("a")).
+				WithEnabled(sdk.Pointer(true)).
+				WithOauthIssueRefreshTokens(sdk.Pointer(true)).
+				WithOauthRedirectUri(sdk.Pointer("http://example.com")).
+				WithOauthRefreshTokenValidity(sdk.Pointer(12345)).
+				WithOauthUseSecondaryRoles(sdk.Pointer(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertSnowflakeOauthPartner(details, snowflakeOauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "12345",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			blockedRolesList:        role1.Name,
+			comment:                 "a",
+		})
+
+		assertSecurityIntegration(t, integration, id, "OAUTH - LOOKER", true, "a")
+	})
+
+	t.Run("CreateSnowflakeOauthCustom", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		t.Cleanup(networkPolicyCleanup)
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		role2, role2Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role2Cleanup)
+
+		integration := createSnowflakeOauthCustom(t, id, func(r *sdk.CreateSnowflakeOauthCustomSecurityIntegrationRequest) {
+			r.WithBlockedRolesList(&sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithComment(sdk.Pointer("a")).
+				WithEnabled(sdk.Pointer(true)).
+				WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
+				WithOauthAllowNonTlsRedirectUri(sdk.Pointer(true)).
+				WithOauthClientRsaPublicKey(sdk.Pointer(rsaKey)).
+				WithOauthClientRsaPublicKey2(sdk.Pointer(rsaKey)).
+				WithOauthEnforcePkce(sdk.Pointer(true)).
+				WithOauthIssueRefreshTokens(sdk.Pointer(true)).
+				WithOauthRefreshTokenValidity(sdk.Pointer(12345)).
+				WithOauthUseSecondaryRoles(sdk.Pointer(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)).
+				WithPreAuthorizedRolesList(&sdk.PreAuthorizedRolesListRequest{PreAuthorizedRolesList: []sdk.AccountObjectIdentifier{role2.ID()}})
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertSnowflakeOauthCustom(details, snowflakeOauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "12345",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  role2.Name,
+			blockedRolesList:        role1.Name,
+			networkPolicy:           networkPolicy.Name,
+			comment:                 "a",
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+
+		assertSecurityIntegration(t, integration, id, "OAUTH - CUSTOM", true, "a")
+	})
 
 	t.Run("CreateSaml2", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -140,7 +283,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSAML2Describe(details, saml2details{
+		assertSAML2Describe(details, saml2Details{
 			provider:                  "Custom",
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
@@ -182,6 +325,194 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
 	})
 
+	t.Run("AlterSnowflakeOauthPartner", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSnowflakeOauthPartner(t, id, func(r *sdk.CreateSnowflakeOauthPartnerSecurityIntegrationRequest) {
+			r.WithOauthRedirectUri(sdk.Pointer("http://example.com"))
+		})
+
+		setRequest := sdk.NewAlterSnowflakeOauthPartnerSecurityIntegrationRequest(id).
+			WithSet(
+				sdk.NewSnowflakeOauthPartnerIntegrationSetRequest().
+					WithBlockedRolesList(sdk.NewBlockedRolesListRequest()).
+					WithComment(sdk.Pointer("a")).
+					WithEnabled(sdk.Pointer(true)).
+					WithOauthIssueRefreshTokens(sdk.Pointer(true)).
+					WithOauthRedirectUri(sdk.Pointer("http://example2.com")).
+					WithOauthRefreshTokenValidity(sdk.Pointer(22222)).
+					WithOauthUseSecondaryRoles(sdk.Pointer(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+			)
+		err := client.SecurityIntegrations.AlterSnowflakeOauthPartner(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertSnowflakeOauthPartner(details, snowflakeOauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "22222",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  "",
+			blockedRolesList:        "ACCOUNTADMIN,SECURITYADMIN",
+			networkPolicy:           "",
+			comment:                 "a",
+		})
+
+		unsetRequest := sdk.NewAlterSnowflakeOauthPartnerSecurityIntegrationRequest(id).
+			WithUnset(
+				sdk.NewSnowflakeOauthPartnerIntegrationUnsetRequest().
+					WithEnabled(sdk.Pointer(true)).
+					WithOauthUseSecondaryRoles(sdk.Pointer(true)),
+			)
+		err = client.SecurityIntegrations.AlterSnowflakeOauthPartner(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: "NONE", Default: "NONE"})
+	})
+
+	t.Run("AlterSnowflakeOauthPartner - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSnowflakeOauthPartner(t, id, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterSnowflakeOauthPartnerSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterSnowflakeOauthPartner(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterSnowflakeOauthPartnerSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterSnowflakeOauthPartner(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
+	t.Run("AlterSnowflakeOauthCustom", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSnowflakeOauthCustom(t, id, nil)
+
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		t.Cleanup(networkPolicyCleanup)
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		role2, role2Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role2Cleanup)
+
+		setRequest := sdk.NewAlterSnowflakeOauthCustomSecurityIntegrationRequest(id).
+			WithSet(
+				sdk.NewSnowflakeOauthCustomIntegrationSetRequest().
+					WithEnabled(sdk.Pointer(true)).
+					WithBlockedRolesList(&sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+					WithComment(sdk.Pointer("a")).
+					WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
+					WithOauthAllowNonTlsRedirectUri(sdk.Pointer(true)).
+					WithOauthClientRsaPublicKey(sdk.Pointer(rsaKey)).
+					WithOauthClientRsaPublicKey2(sdk.Pointer(rsaKey)).
+					WithOauthEnforcePkce(sdk.Pointer(true)).
+					WithOauthIssueRefreshTokens(sdk.Pointer(true)).
+					WithOauthRedirectUri(sdk.Pointer("http://example2.com")).
+					WithOauthRefreshTokenValidity(sdk.Pointer(22222)).
+					WithOauthUseSecondaryRoles(sdk.Pointer(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)).
+					WithPreAuthorizedRolesList(&sdk.PreAuthorizedRolesListRequest{PreAuthorizedRolesList: []sdk.AccountObjectIdentifier{role2.ID()}}),
+			)
+		err := client.SecurityIntegrations.AlterSnowflakeOauthCustom(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertSnowflakeOauthCustom(details, snowflakeOauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "22222",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  role2.Name,
+			blockedRolesList:        role1.Name,
+			networkPolicy:           networkPolicy.Name,
+			comment:                 "a",
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+
+		unsetRequest := sdk.NewAlterSnowflakeOauthCustomSecurityIntegrationRequest(id).
+			WithUnset(
+				sdk.NewSnowflakeOauthCustomIntegrationUnsetRequest().
+					WithEnabled(sdk.Bool(true)).
+					WithOauthUseSecondaryRoles(sdk.Bool(true)).
+					WithNetworkPolicy(sdk.Bool(true)).
+					WithOauthClientRsaPublicKey(sdk.Bool(true)).
+					WithOauthClientRsaPublicKey2(sdk.Bool(true)),
+			)
+		err = client.SecurityIntegrations.AlterSnowflakeOauthCustom(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: "NONE", Default: "NONE"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("AlterSnowflakeOauthCustom - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		createSnowflakeOauthCustom(t, id, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterSnowflakeOauthCustomSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterSnowflakeOauthCustom(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterSnowflakeOauthCustomSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterSnowflakeOauthCustom(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		issuer := testClientHelper().Ids.Alpha()
@@ -215,7 +546,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSAML2Describe(details, saml2details{
+		assertSAML2Describe(details, saml2Details{
 			provider:                  "OKTA",
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
@@ -412,6 +743,34 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
+	})
+
+	t.Run("Show SnowflakeOauthPartner", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si1 := createSnowflakeOauthPartner(t, id, nil)
+		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si2 := createSnowflakeOauthPartner(t, id2, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
+			Pattern: sdk.Pointer(id.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
+	})
+
+	t.Run("Show SnowflakeOauthCustom", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si1 := createSnowflakeOauthCustom(t, id, nil)
+		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		si2 := createSnowflakeOauthCustom(t, id2, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
+			Pattern: sdk.Pointer(id.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
 	})
 
 	t.Run("Show SAML2", func(t *testing.T) {

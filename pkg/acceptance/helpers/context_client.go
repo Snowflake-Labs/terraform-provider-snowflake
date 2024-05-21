@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -70,4 +71,16 @@ func (c *ContextClient) IsRoleInSession(t *testing.T, id sdk.AccountObjectIdenti
 	require.NoError(t, err)
 
 	return isInSession
+}
+
+// ACSURL returns Snowflake Assertion Consumer Service URL
+func (c *ContextClient) ACSURL(t *testing.T) string {
+	t.Helper()
+	return fmt.Sprintf("https://%s.snowflakecomputing.com/fed/login", c.CurrentAccount(t))
+}
+
+// IssuerURL returns a URL containing the EntityID / Issuer for the Snowflake service provider
+func (c *ContextClient) IssuerURL(t *testing.T) string {
+	t.Helper()
+	return fmt.Sprintf("https://%s.snowflakecomputing.com", c.CurrentAccount(t))
 }

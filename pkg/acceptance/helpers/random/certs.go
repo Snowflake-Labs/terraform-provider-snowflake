@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -34,14 +35,32 @@ func GenerateX509(t *testing.T) string {
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
 	require.NoError(t, err)
 
-	certPEM := new(bytes.Buffer)
-	err = pem.Encode(certPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
+	return encode(t, "CERTIFICATE", caBytes)
+}
+
+// GenerateRSA returns an RSA public key without BEGIN and END markers.
+func GenerateRSAPublicKey(t *testing.T) string {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
-	cert := strings.TrimPrefix(certPEM.String(), "-----BEGIN CERTIFICATE-----\n")
-	cert = strings.TrimSuffix(cert, "-----END CERTIFICATE-----\n")
+	pub := key.Public()
+	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
+	require.NoError(t, err)
+	return encode(t, "RSA PUBLIC KEY", b)
+}
+
+func encode(t *testing.T, pemType string, b []byte) string {
+	t.Helper()
+	buffer := new(bytes.Buffer)
+	err := pem.Encode(buffer,
+		&pem.Block{
+			Type:  pemType,
+			Bytes: b,
+		},
+	)
+	require.NoError(t, err)
+	cert := strings.TrimPrefix(buffer.String(), fmt.Sprintf("-----BEGIN %s-----\n", pemType))
+	cert = strings.TrimSuffix(cert, fmt.Sprintf("-----END %s-----\n", pemType))
 	return cert
 }
