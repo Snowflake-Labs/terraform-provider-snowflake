@@ -177,7 +177,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 	})
 
 	t.Run("when warehouse does not exist", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 		_, err := client.Warehouses.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
@@ -524,7 +524,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	})
 
 	t.Run("when warehouse does not exist", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 		err := client.Warehouses.Drop(ctx, id, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})

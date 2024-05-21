@@ -38,7 +38,7 @@ func TestValidObjectIdentifier(t *testing.T) {
 	})
 
 	t.Run("with invalid object identifier", func(t *testing.T) {
-		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(""))
+		ok := ValidObjectIdentifier(emptyAccountObjectIdentifier)
 		assert.Equal(t, ok, false)
 	})
 
@@ -158,7 +158,7 @@ func TestValueSet(t *testing.T) {
 	})
 
 	t.Run("with invalid identifier", func(t *testing.T) {
-		ok := valueSet(NewAccountObjectIdentifier(""))
+		ok := valueSet(emptyAccountObjectIdentifier)
 		assert.Equal(t, ok, false)
 	})
 

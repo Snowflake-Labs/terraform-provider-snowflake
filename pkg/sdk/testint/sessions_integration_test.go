@@ -88,9 +88,8 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 func TestInt_ShowUserParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	user := testClientHelper().Context.CurrentUser(t)
-	userID := sdk.NewAccountObjectIdentifier(user)
-	parameter, err := client.Parameters.ShowUserParameter(ctx, sdk.UserParameterAutocommit, userID)
+	userId := testClientHelper().Context.CurrentUser(t)
+	parameter, err := client.Parameters.ShowUserParameter(ctx, sdk.UserParameterAutocommit, userId)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }

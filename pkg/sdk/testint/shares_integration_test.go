@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -113,7 +114,7 @@ func TestInt_SharesDrop(t *testing.T) {
 	})
 
 	t.Run("when share does not exist", func(t *testing.T) {
-		err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier("does_not_exist"), &sdk.DropShareOptions{})
+		err := client.Shares.Drop(ctx, NonExistingAccountObjectIdentifier, &sdk.DropShareOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -400,6 +401,6 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		assert.Equal(t, 1, len(shareDetails.SharedObjects))
 		sharedObject := shareDetails.SharedObjects[0]
 		assert.Equal(t, sdk.ObjectTypeDatabase, sharedObject.Kind)
-		assert.Equal(t, sdk.NewAccountObjectIdentifier("<DB>"), sharedObject.Name)
+		assert.Equal(t, ids.DatabasePlaceholder, sharedObject.Name)
 	})
 }

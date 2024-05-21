@@ -32,7 +32,7 @@ func (c *ContextClient) CurrentAccount(t *testing.T) string {
 	return currentAccount
 }
 
-func (c *ContextClient) CurrentRole(t *testing.T) string {
+func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
 
@@ -52,7 +52,7 @@ func (c *ContextClient) CurrentRegion(t *testing.T) string {
 	return currentRegion
 }
 
-func (c *ContextClient) CurrentUser(t *testing.T) string {
+func (c *ContextClient) CurrentUser(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
 

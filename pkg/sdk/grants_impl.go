@@ -282,7 +282,6 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 	if err != nil {
 		return err
 	}
-	currentRoleName := NewAccountObjectIdentifier(currentRole)
 
 	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
 		On: &ShowGrantsOn{
@@ -298,7 +297,7 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 
 	isGrantedWithPrivilege := func(privilege string) bool {
 		return slices.ContainsFunc(currentGrants, func(grant Grant) bool {
-			return grant.GranteeName == currentRoleName &&
+			return grant.GranteeName == currentRole &&
 				grant.GrantedOn == ObjectTypePipe &&
 				grant.Privilege == privilege
 		})
@@ -377,7 +376,6 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 	if err != nil {
 		return err
 	}
-	currentRoleName := NewAccountObjectIdentifier(currentRole)
 
 	currentTask, err := v.client.Tasks.ShowByID(ctx, taskId)
 	if err != nil {
@@ -398,7 +396,7 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 
 	isGrantedWithPrivilege := func(collection []Grant, grantedOn ObjectType, privilege string) bool {
 		return slices.ContainsFunc(collection, func(grant Grant) bool {
-			return grant.GranteeName == currentRoleName &&
+			return grant.GranteeName == currentRole &&
 				grant.GrantedOn == grantedOn &&
 				grant.Privilege == privilege
 		})
@@ -407,7 +405,7 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 	isGrantedWithWarehouseUsage := isGrantedWithPrivilege(currentGrantsOnTaskWarehouse, ObjectTypeWarehouse, AccountObjectPrivilegeUsage.String())
 	canSuspendTask := canOperateOnTask || isGrantedWithPrivilege(currentGrantsOnObject, ObjectTypeTask, "OWNERSHIP")
 	canResumeTask := isGrantedWithWarehouseUsage && canOperateOnTask && isGrantedWithPrivilege(currentGrantsOnAccount, ObjectTypeAccount, GlobalPrivilegeExecuteTask.String())
-	canResumeTaskAfterOwnershipTransfer := canResumeTask && ((opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy) || (opts.To.AccountRoleName != nil && opts.To.AccountRoleName.Name() == currentRoleName.Name()))
+	canResumeTaskAfterOwnershipTransfer := canResumeTask && ((opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy) || (opts.To.AccountRoleName != nil && opts.To.AccountRoleName.Name() == currentRole.Name()))
 
 	var tasksToResume []SchemaObjectIdentifier
 	if canSuspendTask {

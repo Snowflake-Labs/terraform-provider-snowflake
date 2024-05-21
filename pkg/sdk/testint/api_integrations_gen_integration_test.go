@@ -398,7 +398,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("drop api integration: non-existing", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 
 		err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -478,7 +478,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("describe api integration: non-existing", func(t *testing.T) {
-		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+		id := NonExistingAccountObjectIdentifier
 
 		_, err := client.ApiIntegrations.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)

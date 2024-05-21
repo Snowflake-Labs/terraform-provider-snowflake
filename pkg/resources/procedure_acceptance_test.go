@@ -198,7 +198,8 @@ func TestAcc_Procedure_complex(t *testing.T) {
 }
 
 func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
 	resource.Test(t, resource.TestCase{
@@ -231,7 +232,7 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),

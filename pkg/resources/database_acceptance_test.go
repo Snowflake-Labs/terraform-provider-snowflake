@@ -128,7 +128,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, name, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, name, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 		},
@@ -372,10 +372,10 @@ resource "snowflake_database" "db" {
 }
 
 // TODO [SNOW-936093]: this is used mostly as check for unsafe execute, not as normal check destroy in other resources. Handle with the helpers cleanup.
-func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
+func testAccCheckDatabaseExistence(t *testing.T, id sdk.AccountObjectIdentifier, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		_, err := acc.TestClient().Database.Show(t, sdk.NewAccountObjectIdentifier(id))
+		_, err := acc.TestClient().Database.Show(t, id)
 		if shouldExist {
 			if err != nil {
 				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)

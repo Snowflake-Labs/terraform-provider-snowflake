@@ -1,5 +1,5 @@
 locals {
-  application_role_identifier = "\"${var.application_name}\".\"app_role_1\""
+  application_role_identifier = "\"${var.application_name}\".\"${var.application_role_name}\""
 }
 
 resource "snowflake_grant_application_role" "g" {

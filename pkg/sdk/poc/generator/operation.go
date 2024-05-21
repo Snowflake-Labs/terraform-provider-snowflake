@@ -170,6 +170,6 @@ func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc s
 	return i
 }
 
-func (i *Interface) CustomOperation(kind string, doc string, queryStruct *QueryStruct) *Interface {
-	return i.newSimpleOperation(kind, doc, queryStruct)
+func (i *Interface) CustomOperation(kind string, doc string, queryStruct *QueryStruct, helperStructs ...IntoField) *Interface {
+	return i.newSimpleOperation(kind, doc, queryStruct, helperStructs...)
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
@@ -1445,7 +1444,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
 				),
 			},
 			// this step proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2186
@@ -1453,7 +1452,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
 				),
 			},
 		},
@@ -1604,7 +1603,9 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 				),
 			},
 			{
-				PreConfig:       setTableDataRetentionTime(t, id, 20),
+				PreConfig: func() {
+					acc.TestClient().Table.SetDataRetentionTime(t, id, 20)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
 				ConfigVariables: configWithDatabaseDataRetentionSet(5),
 				Check: resource.ComposeTestCheckFunc(
@@ -1860,7 +1861,7 @@ func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier,
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 
-		database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+		database, err := client.Databases.ShowByID(ctx, id.DatabaseId())
 		if err != nil {
 			return err
 		}
@@ -1869,7 +1870,7 @@ func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier,
 			return fmt.Errorf("invalid database retention time, expected: %d, got: %d", expectedDatabaseRetentionDays, database.RetentionTime)
 		}
 
-		s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
+		s, err := client.Schemas.ShowByID(ctx, id.SchemaId())
 		if err != nil {
 			return err
 		}
@@ -1902,18 +1903,6 @@ func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier,
 		}
 
 		return nil
-	}
-}
-
-func setTableDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days int) func() {
-	t.Helper()
-
-	return func() {
-		client := acc.Client(t)
-		ctx := context.Background()
-
-		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
-		require.NoError(t, err)
 	}
 }
 

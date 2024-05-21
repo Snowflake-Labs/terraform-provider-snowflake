@@ -39,6 +39,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"external_functions_def.go":        sdk.ExternalFunctionsDef,
 	"streamlits_def.go":                sdk.StreamlitsDef,
 	"network_rule_def.go":              sdk.NetworkRuleDef,
+	"security_integrations_def.go":     sdk.SecurityIntegrationsDef,
 }
 
 func main() {

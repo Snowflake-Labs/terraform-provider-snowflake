@@ -173,16 +173,15 @@ func TestAlertShow(t *testing.T) {
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
-		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 		opts := &ShowAlertOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
 			In: &In{
-				Database: databaseIdentifier,
+				Database: id.DatabaseId(),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s' IN DATABASE %s", id.Name(), id.DatabaseId().FullyQualifiedName())
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {

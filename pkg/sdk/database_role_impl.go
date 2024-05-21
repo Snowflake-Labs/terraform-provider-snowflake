@@ -40,7 +40,7 @@ func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleReque
 }
 
 func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
-	request := NewShowDatabaseRoleRequest(NewAccountObjectIdentifier(id.DatabaseName())).WithLike(id.Name())
+	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(id.Name())
 	databaseRoles, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

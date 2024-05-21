@@ -7,12 +7,11 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -193,13 +192,12 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
 		d.SetId("")
-		log.Printf("Database %s not found, err = %s", name, err)
+		log.Printf("Database %s not found, err = %s", id.Name(), err)
 		return nil
 	}
 
@@ -233,22 +231,22 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	if d.HasChange("name") {
 		newName := d.Get("name").(string)
+		newId := sdk.NewAccountObjectIdentifier(newName)
 		opts := &sdk.AlterDatabaseOptions{
-			NewName: sdk.Pointer(sdk.NewAccountObjectIdentifier(newName)),
+			NewName: newId,
 		}
 		err := client.Databases.Alter(ctx, id, opts)
 		if err != nil {
 			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
 		}
-		d.SetId(newName)
-		id = sdk.NewAccountObjectIdentifier(newName)
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {
@@ -360,8 +358,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	name := d.Id()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})

@@ -146,14 +146,14 @@ func TestAcc_TagAssociationIssue1202(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1909(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tagName := tagId.Name()
 	tableName := acc.TestClient().Ids.Alpha()
 	tableName2 := acc.TestClient().Ids.Alpha()
 	columnName := "test.column"
 	resourceName := "snowflake_tag_association.test"
 	objectID := sdk.NewTableColumnIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName, columnName)
 	objectID2 := sdk.NewTableColumnIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName2, columnName)
-	tagID := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tagName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"tag_name":    config.StringVariable(tagName),
@@ -179,8 +179,8 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
 					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-					testAccCheckTableColumnTagAssociation(tagID, objectID, "v1"),
-					testAccCheckTableColumnTagAssociation(tagID, objectID2, "v1"),
+					testAccCheckTableColumnTagAssociation(tagId, objectID, "v1"),
+					testAccCheckTableColumnTagAssociation(tagId, objectID2, "v1"),
 				),
 			},
 		},
