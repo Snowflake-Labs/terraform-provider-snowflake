@@ -511,6 +511,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		// Expecting two grants because database role has usage on database by default
+		require.LessOrEqual(t, 2, len(returnedGrants))
 		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)

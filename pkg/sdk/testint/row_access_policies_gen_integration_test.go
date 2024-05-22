@@ -241,7 +241,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		showRequest := sdk.NewShowRowAccessPolicyRequest()
 		returnedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, showRequest)
 		require.NoError(t, err)
-
+		require.LessOrEqual(t, 2, len(returnedRowAccessPolicies))
 		assert.Contains(t, returnedRowAccessPolicies, *rowAccessPolicy1)
 		assert.Contains(t, returnedRowAccessPolicies, *rowAccessPolicy2)
 	})
