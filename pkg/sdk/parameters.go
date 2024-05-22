@@ -472,6 +472,8 @@ const (
 	ObjectParameterTraceLevel                          ObjectParameter = "TRACE_LEVEL"
 	ObjectParameterUserTaskManagedInitialWarehouseSize ObjectParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
 	ObjectParameterUserTaskTimeoutMs                   ObjectParameter = "USER_TASK_TIMEOUT_MS"
+	ObjectParameterCatalog                             ObjectParameter = "CATALOG"
+	ObjectParameterExternalVolume                      ObjectParameter = "EXTERNAL_VOLUME"
 
 	// User Parameters
 	ObjectParameterEnableUnredactedQuerySyntaxError ObjectParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
@@ -759,26 +761,6 @@ func (v *SessionParametersUnset) validate() error {
 	}
 	return nil
 }
-
-type LogLevel string
-
-const (
-	LogLevelTrace LogLevel = "TRACE"
-	LogLevelDebug LogLevel = "DEBUG"
-	LogLevelInfo  LogLevel = "INFO"
-	LogLevelWarn  LogLevel = "WARN"
-	LogLevelError LogLevel = "ERROR"
-	LogLevelFatal LogLevel = "FATAL"
-	LogLevelOff   LogLevel = "OFF"
-)
-
-type TraceLevel string
-
-const (
-	TraceLevelAlways  TraceLevel = "ALWAYS"
-	TraceLevelOnEvent TraceLevel = "ON_EVENT"
-	TraceLevelOff     TraceLevel = "OFF"
-)
 
 // ObjectParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#object-parameters.
 type ObjectParameters struct {
