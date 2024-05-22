@@ -242,7 +242,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("show external function: no matches", func(t *testing.T) {
-		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String(random.String())}))
+		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(es))
 	})

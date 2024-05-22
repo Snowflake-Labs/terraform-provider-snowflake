@@ -174,8 +174,7 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	// TODO: test error integration, aws sns topic and integration when we have them in project
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		comment := random.Comment()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
@@ -189,12 +188,11 @@ func TestInt_PipeCreate(t *testing.T) {
 		pipe, err := itc.client.Pipes.Describe(itc.ctx, id)
 
 		require.NoError(t, err)
-		assertPipe(t, pipe, name, comment)
+		assertPipe(t, pipe, id.Name(), comment)
 	})
 
 	t.Run("test if not exists and or replace are incompatible", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
 			OrReplace:   sdk.Bool(true),
@@ -204,8 +202,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, nil)
 		require.NoError(t, err)
@@ -213,7 +210,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		pipe, err := itc.client.Pipes.Describe(itc.ctx, id)
 
 		require.NoError(t, err)
-		assertPipe(t, pipe, name, "")
+		assertPipe(t, pipe, id.Name(), "")
 	})
 }
 

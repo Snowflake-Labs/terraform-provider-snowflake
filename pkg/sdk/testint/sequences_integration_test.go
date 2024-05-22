@@ -149,12 +149,11 @@ func TestInt_Sequences(t *testing.T) {
 	})
 
 	t.Run("alter sequence: rename", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Sequences.Create(ctx, sdk.NewCreateSequenceRequest(id))
 		require.NoError(t, err)
-		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err = client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithRenameTo(&nid))
 		if err != nil {
 			t.Cleanup(cleanupSequenceHandle(t, id))

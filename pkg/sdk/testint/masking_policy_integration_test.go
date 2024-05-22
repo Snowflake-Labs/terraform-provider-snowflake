@@ -87,8 +87,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		name := id.Name()
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -132,8 +132,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		name := id.Name()
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -176,8 +176,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		name := id.Name()
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -210,8 +210,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test multiline expression", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		name := id.Name()
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "val",
@@ -312,8 +312,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
-		newName := random.String()
-		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			NewName: &newID,
 		}
@@ -321,8 +320,8 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, newID)
 		require.NoError(t, err)
-		assert.Equal(t, newName, maskingPolicyDetails.Name)
-		// rename back to original name so it can be cleaned up
+		assert.Equal(t, newID.Name(), maskingPolicyDetails.Name)
+		// rename back to original name, so it can be cleaned up
 		alterOptions = &sdk.AlterMaskingPolicyOptions{
 			NewName: &oldID,
 		}
@@ -408,7 +407,7 @@ func TestInt_MaskingPoliciesShowByID(t *testing.T) {
 
 		signature := []sdk.TableColumnSignature{
 			{
-				Name: random.String(),
+				Name: testClientHelper().Ids.Alpha(),
 				Type: sdk.DataTypeVARCHAR,
 			},
 		}

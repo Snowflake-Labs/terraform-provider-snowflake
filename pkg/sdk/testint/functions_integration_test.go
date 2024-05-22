@@ -24,8 +24,6 @@ func TestInt_CreateFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
 		return func() {
 			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
@@ -38,7 +36,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 	t.Run("create function for Java", func(t *testing.T) {
 		name := "echo_varchar"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
 
 		definition := `
 		class TestFunc {
@@ -68,7 +66,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 	t.Run("create function for Javascript", func(t *testing.T) {
 		name := "js_factorial"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
 
 		definition := `
 		if (D <= 0) {
@@ -99,8 +97,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	})
 
 	t.Run("create function for Python", func(t *testing.T) {
-		name := random.StringN(8)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		definition := `
 def dump(i):
@@ -124,7 +121,7 @@ def dump(i):
 
 	t.Run("create function for Scala", func(t *testing.T) {
 		name := "echo_varchar"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
 
 		definition := `
 		class Echo {
@@ -150,8 +147,7 @@ def dump(i):
 	})
 
 	t.Run("create function for SQL", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		definition := "3.141592654::FLOAT"
 
@@ -173,8 +169,7 @@ def dump(i):
 	})
 
 	t.Run("create function for SQL with no arguments", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		definition := "3.141592654::FLOAT"
 
@@ -420,7 +415,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	})
 
 	t.Run("show function for SQL: no matches", func(t *testing.T) {
-		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String(random.String())}))
+		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(functions))
 	})

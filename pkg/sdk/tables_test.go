@@ -371,8 +371,8 @@ func TestTableCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		columnComment := random.String()
-		tableComment := random.String()
+		columnComment := random.Comment()
+		tableComment := random.Comment()
 		collation := "de"
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
@@ -1315,7 +1315,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("set: with complete options", func(t *testing.T) {
-		comment := random.String()
+		comment := random.Comment()
 		opts := &alterTableOptions{
 			name: id,
 			Set: &TableSet{

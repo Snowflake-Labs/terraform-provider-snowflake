@@ -3,7 +3,6 @@ package testint
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -12,12 +11,12 @@ func TestInt_PolicyReferences(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	passwordPolicyName := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
-	err := client.PasswordPolicies.Create(ctx, passwordPolicyName, &sdk.CreatePasswordPolicyOptions{})
+	passwordPolicyId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+	err := client.PasswordPolicies.Create(ctx, passwordPolicyId, &sdk.CreatePasswordPolicyOptions{})
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err := client.PasswordPolicies.Drop(ctx, passwordPolicyName, &sdk.DropPasswordPolicyOptions{IfExists: sdk.Bool(true)})
+		err := client.PasswordPolicies.Drop(ctx, passwordPolicyId, &sdk.DropPasswordPolicyOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 	})
 
@@ -27,7 +26,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 
 		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
 			Set: &sdk.UserSet{
-				PasswordPolicy: &passwordPolicyName,
+				PasswordPolicy: &passwordPolicyId,
 			},
 		})
 		require.NoError(t, err)
@@ -35,7 +34,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(user.ID(), sdk.PolicyEntityDomainUser))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(policyReferences))
-		require.Equal(t, passwordPolicyName.Name(), policyReferences[0].PolicyName)
+		require.Equal(t, passwordPolicyId.Name(), policyReferences[0].PolicyName)
 		require.Equal(t, "PASSWORD_POLICY", policyReferences[0].PolicyKind)
 	})
 

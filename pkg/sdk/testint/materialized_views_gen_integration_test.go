@@ -79,9 +79,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	createMaterializedViewBasicRequest := func(t *testing.T) *sdk.CreateMaterializedViewRequest {
 		t.Helper()
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
-
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		return sdk.NewCreateMaterializedViewRequest(id, sql)
 	}
 
@@ -176,8 +174,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		err := client.MaterializedViews.Create(ctx, createRequest)
 		require.NoError(t, err)
 
-		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithRenameTo(&newId)
 
 		err = client.MaterializedViews.Alter(ctx, alterRequest)

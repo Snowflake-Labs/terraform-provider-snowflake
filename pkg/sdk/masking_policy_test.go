@@ -58,7 +58,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		comment := random.String()
+		comment := random.Comment()
 
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
@@ -92,7 +92,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := random.String()
+		newComment := random.Comment()
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{

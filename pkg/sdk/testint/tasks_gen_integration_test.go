@@ -107,8 +107,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		return sdk.NewCreateTaskRequest(id, sql)
 	}
@@ -171,8 +170,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
-		otherName := random.String()
-		otherId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, otherName)
+		otherId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
 
@@ -187,24 +185,21 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create dag of tasks", func(t *testing.T) {
-		rootName := random.String()
-		rootId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, rootName)
+		rootId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request := sdk.NewCreateTaskRequest(rootId, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root := createTaskWithRequest(t, request)
 
 		require.Empty(t, root.Predecessors)
 
-		t1Name := random.String()
-		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+		t1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootId})
 		t1 := createTaskWithRequest(t, request)
 
 		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.Predecessors)
 
-		t2Name := random.String()
-		t2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t2Name)
+		t2Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request = sdk.NewCreateTaskRequest(t2Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t1Id, rootId})
 		t2 := createTaskWithRequest(t, request)
@@ -213,8 +208,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.Contains(t, t2.Predecessors, t1Id)
 		require.Len(t, t2.Predecessors, 2)
 
-		t3Name := random.String()
-		t3Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t3Name)
+		t3Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request = sdk.NewCreateTaskRequest(t3Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t2Id, t1Id})
 		t3 := createTaskWithRequest(t, request)
@@ -271,24 +265,21 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create dag of tasks - multiple roots", func(t *testing.T) {
-		root1Name := random.String()
-		root1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root1Name)
+		root1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request := sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root1 := createTaskWithRequest(t, request)
 
 		require.Empty(t, root1.Predecessors)
 
-		root2Name := random.String()
-		root2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root2Name)
+		root2Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request = sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root2 := createTaskWithRequest(t, request)
 
 		require.Empty(t, root2.Predecessors)
 
-		t1Name := random.String()
-		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+		t1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{root1Id, root2Id})
 		t1 := createTaskWithRequest(t, request)
@@ -350,8 +341,7 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("clone task: default", func(t *testing.T) {
 		sourceTask := createTask(t)
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())
 
@@ -595,10 +585,10 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("temporarily suspend root tasks", func(t *testing.T) {
-		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
 
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 
 		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
@@ -622,13 +612,13 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("resume root tasks within a graph containing more than one root task", func(t *testing.T) {
-		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
 
-		secondRootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		secondRootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		secondRootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(secondRootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
 
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		_ = createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID(), secondRootTask.ID()}))
 
 		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))), "The graph has more than one root task (one without predecessors)")
@@ -636,13 +626,13 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("suspend root tasks temporarily with three sequentially connected tasks - last in DAG", func(t *testing.T) {
-		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
 
-		middleTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		middleTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
 
 		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithResume(sdk.Bool(true))))
@@ -680,13 +670,13 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("suspend root tasks temporarily with three sequentially connected tasks - middle in DAG", func(t *testing.T) {
-		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
 
-		middleTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		middleTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 
-		childTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		childTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		childTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(childTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
 
 		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithResume(sdk.Bool(true))))

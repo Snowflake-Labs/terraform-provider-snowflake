@@ -169,13 +169,12 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("alter event table: rename", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
 		require.NoError(t, err)
 
-		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithRenameTo(&nid))
 		if err != nil {
 			t.Cleanup(cleanupTableHandle(t, id))

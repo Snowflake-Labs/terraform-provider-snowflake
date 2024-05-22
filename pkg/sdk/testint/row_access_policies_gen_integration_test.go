@@ -49,8 +49,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 	createRowAccessPolicyRequest := func(t *testing.T, args []sdk.CreateRowAccessPolicyArgsRequest, body string) *sdk.CreateRowAccessPolicyRequest {
 		t.Helper()
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		return sdk.NewCreateRowAccessPolicyRequest(id, args, body)
 	}
@@ -131,8 +130,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		err := client.RowAccessPolicies.Create(ctx, createRequest)
 		require.NoError(t, err)
 
-		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithRenameTo(&newId)
 
 		err = client.RowAccessPolicies.Alter(ctx, alterRequest)

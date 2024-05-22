@@ -148,7 +148,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewAccountObjectIdentifier(random.String())
+		newID := randomAccountObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:    id,
 			NewName: newID,
