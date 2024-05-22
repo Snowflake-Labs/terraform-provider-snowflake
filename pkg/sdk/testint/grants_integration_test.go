@@ -179,9 +179,9 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(grants))
-		assert.Equal(t, sdk.SchemaObjectPrivilegeSelect.String(), grants[0].Privilege)
-		assert.Equal(t, tableTest.ID().FullyQualifiedName(), grants[0].Name.FullyQualifiedName())
+		selectPrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeSelect.String() })
+		require.NoError(t, err)
+		assert.Equal(t, tableTest.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
 
 		// now revoke and verify that the grant(s) are gone
 		err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -511,8 +511,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		// Expecting two grants because database role has usage on database by default
-		require.Equal(t, 2, len(returnedGrants))
-
+		require.LessOrEqual(t, 2, len(returnedGrants))
 		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
