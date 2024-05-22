@@ -200,10 +200,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = client.Databases.Drop(ctx, sharedDatabase.ID(), nil)
-		require.NoError(t, err)
-	})
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID()))
 
 	database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
 	require.NoError(t, err)
@@ -270,10 +267,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 		Comment:                    sdk.String(comment),
 	})
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = client.Databases.Drop(ctx, sharedDatabase.ID(), nil)
-		require.NoError(t, err)
-	})
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID()))
 
 	database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
 	require.NoError(t, err)
