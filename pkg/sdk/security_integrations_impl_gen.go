@@ -12,12 +12,12 @@ type securityIntegrations struct {
 	client *Client
 }
 
-func (v *securityIntegrations) CreateSnowflakeOauthPartner(ctx context.Context, request *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateOauthPartner(ctx context.Context, request *CreateOauthPartnerSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) CreateSnowflakeOauthCustom(ctx context.Context, request *CreateSnowflakeOauthCustomSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateOauthCustom(ctx context.Context, request *CreateOauthCustomSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -32,12 +32,12 @@ func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateSc
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterSnowflakeOauthPartner(ctx context.Context, request *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterOauthPartner(ctx context.Context, request *AlterOauthPartnerSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterSnowflakeOauthCustom(ctx context.Context, request *AlterSnowflakeOauthCustomSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterOauthCustom(ctx context.Context, request *AlterOauthCustomSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -88,8 +88,8 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) toOpts() *CreateSnowflakeOauthPartnerSecurityIntegrationOptions {
-	opts := &CreateSnowflakeOauthPartnerSecurityIntegrationOptions{
+func (r *CreateOauthPartnerSecurityIntegrationRequest) toOpts() *CreateOauthPartnerSecurityIntegrationOptions {
+	opts := &CreateOauthPartnerSecurityIntegrationOptions{
 		OrReplace:                 r.OrReplace,
 		IfNotExists:               r.IfNotExists,
 		name:                      r.name,
@@ -110,8 +110,8 @@ func (r *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) toOpts() *Create
 	return opts
 }
 
-func (r *CreateSnowflakeOauthCustomSecurityIntegrationRequest) toOpts() *CreateSnowflakeOauthCustomSecurityIntegrationOptions {
-	opts := &CreateSnowflakeOauthCustomSecurityIntegrationOptions{
+func (r *CreateOauthCustomSecurityIntegrationRequest) toOpts() *CreateOauthCustomSecurityIntegrationOptions {
+	opts := &CreateOauthCustomSecurityIntegrationOptions{
 		OrReplace:                   r.OrReplace,
 		IfNotExists:                 r.IfNotExists,
 		name:                        r.name,
@@ -183,15 +183,15 @@ func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityInteg
 	return opts
 }
 
-func (r *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) toOpts() *AlterSnowflakeOauthPartnerSecurityIntegrationOptions {
-	opts := &AlterSnowflakeOauthPartnerSecurityIntegrationOptions{
+func (r *AlterOauthPartnerSecurityIntegrationRequest) toOpts() *AlterOauthPartnerSecurityIntegrationOptions {
+	opts := &AlterOauthPartnerSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{
+		opts.Set = &OauthPartnerIntegrationSet{
 			Enabled:                   r.Set.Enabled,
 			OauthRedirectUri:          r.Set.OauthRedirectUri,
 			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
@@ -207,7 +207,7 @@ func (r *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) toOpts() *AlterSn
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &SnowflakeOauthPartnerIntegrationUnset{
+		opts.Unset = &OauthPartnerIntegrationUnset{
 			Enabled:                r.Unset.Enabled,
 			OauthUseSecondaryRoles: r.Unset.OauthUseSecondaryRoles,
 		}
@@ -215,15 +215,15 @@ func (r *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) toOpts() *AlterSn
 	return opts
 }
 
-func (r *AlterSnowflakeOauthCustomSecurityIntegrationRequest) toOpts() *AlterSnowflakeOauthCustomSecurityIntegrationOptions {
-	opts := &AlterSnowflakeOauthCustomSecurityIntegrationOptions{
+func (r *AlterOauthCustomSecurityIntegrationRequest) toOpts() *AlterOauthCustomSecurityIntegrationOptions {
+	opts := &AlterOauthCustomSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{
+		opts.Set = &OauthCustomIntegrationSet{
 			Enabled:                     r.Set.Enabled,
 			OauthRedirectUri:            r.Set.OauthRedirectUri,
 			OauthAllowNonTlsRedirectUri: r.Set.OauthAllowNonTlsRedirectUri,
@@ -249,7 +249,7 @@ func (r *AlterSnowflakeOauthCustomSecurityIntegrationRequest) toOpts() *AlterSno
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &SnowflakeOauthCustomIntegrationUnset{
+		opts.Unset = &OauthCustomIntegrationUnset{
 			Enabled:                  r.Unset.Enabled,
 			OauthUseSecondaryRoles:   r.Unset.OauthUseSecondaryRoles,
 			NetworkPolicy:            r.Unset.NetworkPolicy,

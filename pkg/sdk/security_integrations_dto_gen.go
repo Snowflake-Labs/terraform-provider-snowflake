@@ -3,12 +3,12 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateSnowflakeOauthPartnerSecurityIntegrationOptions] = new(CreateSnowflakeOauthPartnerSecurityIntegrationRequest)
-	_ optionsProvider[CreateSnowflakeOauthCustomSecurityIntegrationOptions]  = new(CreateSnowflakeOauthCustomSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthPartnerSecurityIntegrationOptions] = new(CreateOauthPartnerSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthCustomSecurityIntegrationOptions]  = new(CreateOauthCustomSecurityIntegrationRequest)
 	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                 = new(CreateSaml2SecurityIntegrationRequest)
 	_ optionsProvider[CreateScimSecurityIntegrationOptions]                  = new(CreateScimSecurityIntegrationRequest)
-	_ optionsProvider[AlterSnowflakeOauthPartnerSecurityIntegrationOptions]  = new(AlterSnowflakeOauthPartnerSecurityIntegrationRequest)
-	_ optionsProvider[AlterSnowflakeOauthCustomSecurityIntegrationOptions]   = new(AlterSnowflakeOauthCustomSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthPartnerSecurityIntegrationOptions]  = new(AlterOauthPartnerSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthCustomSecurityIntegrationOptions]   = new(AlterOauthCustomSecurityIntegrationRequest)
 	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                  = new(AlterSaml2SecurityIntegrationRequest)
 	_ optionsProvider[AlterScimSecurityIntegrationOptions]                   = new(AlterScimSecurityIntegrationRequest)
 	_ optionsProvider[DropSecurityIntegrationOptions]                        = new(DropSecurityIntegrationRequest)
@@ -16,7 +16,7 @@ var (
 	_ optionsProvider[ShowSecurityIntegrationOptions]                        = new(ShowSecurityIntegrationRequest)
 )
 
-type CreateSnowflakeOauthPartnerSecurityIntegrationRequest struct {
+type CreateOauthPartnerSecurityIntegrationRequest struct {
 	OrReplace                 *bool
 	IfNotExists               *bool
 	name                      AccountObjectIdentifier              // required
@@ -30,7 +30,7 @@ type CreateSnowflakeOauthPartnerSecurityIntegrationRequest struct {
 	Comment                   *string
 }
 
-func (r *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+func (r *CreateOauthPartnerSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
 }
 
@@ -38,7 +38,7 @@ type BlockedRolesListRequest struct {
 	BlockedRolesList []AccountObjectIdentifier
 }
 
-type CreateSnowflakeOauthCustomSecurityIntegrationRequest struct {
+type CreateOauthCustomSecurityIntegrationRequest struct {
 	OrReplace                   *bool
 	IfNotExists                 *bool
 	name                        AccountObjectIdentifier                  // required
@@ -58,7 +58,7 @@ type CreateSnowflakeOauthCustomSecurityIntegrationRequest struct {
 	Comment                     *string
 }
 
-func (r *CreateSnowflakeOauthCustomSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+func (r *CreateOauthCustomSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
 }
 
@@ -109,16 +109,16 @@ func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier
 	return r.name
 }
 
-type AlterSnowflakeOauthPartnerSecurityIntegrationRequest struct {
+type AlterOauthPartnerSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
-	Set       *SnowflakeOauthPartnerIntegrationSetRequest
-	Unset     *SnowflakeOauthPartnerIntegrationUnsetRequest
+	Set       *OauthPartnerIntegrationSetRequest
+	Unset     *OauthPartnerIntegrationUnsetRequest
 }
 
-type SnowflakeOauthPartnerIntegrationSetRequest struct {
+type OauthPartnerIntegrationSetRequest struct {
 	Enabled                   *bool
 	OauthRedirectUri          *string
 	OauthIssueRefreshTokens   *bool
@@ -128,21 +128,21 @@ type SnowflakeOauthPartnerIntegrationSetRequest struct {
 	Comment                   *string
 }
 
-type SnowflakeOauthPartnerIntegrationUnsetRequest struct {
+type OauthPartnerIntegrationUnsetRequest struct {
 	Enabled                *bool
 	OauthUseSecondaryRoles *bool
 }
 
-type AlterSnowflakeOauthCustomSecurityIntegrationRequest struct {
+type AlterOauthCustomSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
-	Set       *SnowflakeOauthCustomIntegrationSetRequest
-	Unset     *SnowflakeOauthCustomIntegrationUnsetRequest
+	Set       *OauthCustomIntegrationSetRequest
+	Unset     *OauthCustomIntegrationUnsetRequest
 }
 
-type SnowflakeOauthCustomIntegrationSetRequest struct {
+type OauthCustomIntegrationSetRequest struct {
 	Enabled                     *bool
 	OauthRedirectUri            *string
 	OauthAllowNonTlsRedirectUri *bool
@@ -158,7 +158,7 @@ type SnowflakeOauthCustomIntegrationSetRequest struct {
 	Comment                     *string
 }
 
-type SnowflakeOauthCustomIntegrationUnsetRequest struct {
+type OauthCustomIntegrationUnsetRequest struct {
 	Enabled                  *bool
 	OauthUseSecondaryRoles   *bool
 	NetworkPolicy            *bool

@@ -7,12 +7,12 @@ import (
 )
 
 type SecurityIntegrations interface {
-	CreateSnowflakeOauthPartner(ctx context.Context, request *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) error
-	CreateSnowflakeOauthCustom(ctx context.Context, request *CreateSnowflakeOauthCustomSecurityIntegrationRequest) error
+	CreateOauthPartner(ctx context.Context, request *CreateOauthPartnerSecurityIntegrationRequest) error
+	CreateOauthCustom(ctx context.Context, request *CreateOauthCustomSecurityIntegrationRequest) error
 	CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error
 	CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error
-	AlterSnowflakeOauthPartner(ctx context.Context, request *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) error
-	AlterSnowflakeOauthCustom(ctx context.Context, request *AlterSnowflakeOauthCustomSecurityIntegrationRequest) error
+	AlterOauthPartner(ctx context.Context, request *AlterOauthPartnerSecurityIntegrationRequest) error
+	AlterOauthCustom(ctx context.Context, request *AlterOauthCustomSecurityIntegrationRequest) error
 	AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error
 	AlterScim(ctx context.Context, request *AlterScimSecurityIntegrationRequest) error
 	Drop(ctx context.Context, request *DropSecurityIntegrationRequest) error
@@ -21,8 +21,8 @@ type SecurityIntegrations interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
 }
 
-// CreateSnowflakeOauthPartnerSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
-type CreateSnowflakeOauthPartnerSecurityIntegrationOptions struct {
+// CreateOauthPartnerSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
+type CreateOauthPartnerSecurityIntegrationOptions struct {
 	create                    bool                                             `ddl:"static" sql:"CREATE"`
 	OrReplace                 *bool                                            `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration       bool                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -47,8 +47,8 @@ type BlockedRolesList struct {
 	BlockedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
 
-// CreateSnowflakeOauthCustomSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
-type CreateSnowflakeOauthCustomSecurityIntegrationOptions struct {
+// CreateOauthCustomSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
+type CreateOauthCustomSecurityIntegrationOptions struct {
 	create                      bool                                             `ddl:"static" sql:"CREATE"`
 	OrReplace                   *bool                                            `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration         bool                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -123,19 +123,19 @@ type CreateScimSecurityIntegrationOptions struct {
 	Comment             *string                                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// AlterSnowflakeOauthPartnerSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
-type AlterSnowflakeOauthPartnerSecurityIntegrationOptions struct {
+// AlterOauthPartnerSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
+type AlterOauthPartnerSecurityIntegrationOptions struct {
 	alter               bool                                   `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                                   `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                                  `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier                `ddl:"identifier"`
 	SetTags             []TagAssociation                       `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier                     `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *SnowflakeOauthPartnerIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset               *SnowflakeOauthPartnerIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *OauthPartnerIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *OauthPartnerIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type SnowflakeOauthPartnerIntegrationSet struct {
+type OauthPartnerIntegrationSet struct {
 	Enabled                   *bool                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthRedirectUri          *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
 	OauthIssueRefreshTokens   *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
@@ -145,24 +145,24 @@ type SnowflakeOauthPartnerIntegrationSet struct {
 	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type SnowflakeOauthPartnerIntegrationUnset struct {
+type OauthPartnerIntegrationUnset struct {
 	Enabled                *bool `ddl:"keyword" sql:"ENABLED"`
 	OauthUseSecondaryRoles *bool `ddl:"keyword" sql:"OAUTH_USE_SECONDARY_ROLES"`
 }
 
-// AlterSnowflakeOauthCustomSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
-type AlterSnowflakeOauthCustomSecurityIntegrationOptions struct {
+// AlterOauthCustomSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
+type AlterOauthCustomSecurityIntegrationOptions struct {
 	alter               bool                                  `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                                  `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                                 `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier               `ddl:"identifier"`
 	SetTags             []TagAssociation                      `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier                    `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *SnowflakeOauthCustomIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset               *SnowflakeOauthCustomIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *OauthCustomIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *OauthCustomIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type SnowflakeOauthCustomIntegrationSet struct {
+type OauthCustomIntegrationSet struct {
 	Enabled                     *bool                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthRedirectUri            *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
 	OauthAllowNonTlsRedirectUri *bool                                            `ddl:"parameter" sql:"OAUTH_ALLOW_NON_TLS_REDIRECT_URI"`
@@ -178,7 +178,7 @@ type SnowflakeOauthCustomIntegrationSet struct {
 	Comment                     *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type SnowflakeOauthCustomIntegrationUnset struct {
+type OauthCustomIntegrationUnset struct {
 	Enabled                  *bool `ddl:"keyword" sql:"ENABLED"`
 	OauthUseSecondaryRoles   *bool `ddl:"keyword" sql:"OAUTH_USE_SECONDARY_ROLES"`
 	NetworkPolicy            *bool `ddl:"keyword" sql:"NETWORK_POLICY"`

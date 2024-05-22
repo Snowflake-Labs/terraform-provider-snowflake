@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestSecurityIntegrations_CreateSnowflakeOauthCustom(t *testing.T) {
+func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateSnowflakeOauthCustomSecurityIntegrationOptions
-	defaultOpts := func() *CreateSnowflakeOauthCustomSecurityIntegrationOptions {
-		return &CreateSnowflakeOauthCustomSecurityIntegrationOptions{
+	// Minimal valid CreateOauthCustomSecurityIntegrationOptions
+	defaultOpts := func() *CreateOauthCustomSecurityIntegrationOptions {
+		return &CreateOauthCustomSecurityIntegrationOptions{
 			name:             id,
 			OauthClientType:  OauthSecurityIntegrationClientTypePublic,
 			OauthRedirectUri: "uri",
@@ -17,7 +17,7 @@ func TestSecurityIntegrations_CreateSnowflakeOauthCustom(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateSnowflakeOauthPartnerSecurityIntegrationOptions = nil
+		var opts *CreateOauthPartnerSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -25,7 +25,7 @@ func TestSecurityIntegrations_CreateSnowflakeOauthCustom(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSnowflakeOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -59,19 +59,19 @@ func TestSecurityIntegrations_CreateSnowflakeOauthCustom(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_CreateSnowflakeOauthPartner(t *testing.T) {
+func TestSecurityIntegrations_CreateOauthPartner(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateSnowflakeOauthPartnerSecurityIntegrationOptions
-	defaultOpts := func() *CreateSnowflakeOauthPartnerSecurityIntegrationOptions {
-		return &CreateSnowflakeOauthPartnerSecurityIntegrationOptions{
+	// Minimal valid CreateOauthPartnerSecurityIntegrationOptions
+	defaultOpts := func() *CreateOauthPartnerSecurityIntegrationOptions {
+		return &CreateOauthPartnerSecurityIntegrationOptions{
 			name:        id,
 			OauthClient: "LOOKER",
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateSnowflakeOauthPartnerSecurityIntegrationOptions = nil
+		var opts *CreateOauthPartnerSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -79,7 +79,7 @@ func TestSecurityIntegrations_CreateSnowflakeOauthPartner(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSnowflakeOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -204,24 +204,24 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterSnowflakeOauthPartner(t *testing.T) {
+func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterSnowflakeOauthPartnerSecurityIntegrationOptions
-	defaultOpts := func() *AlterSnowflakeOauthPartnerSecurityIntegrationOptions {
-		return &AlterSnowflakeOauthPartnerSecurityIntegrationOptions{
+	// Minimal valid AlterOauthPartnerSecurityIntegrationOptions
+	defaultOpts := func() *AlterOauthPartnerSecurityIntegrationOptions {
+		return &AlterOauthPartnerSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterSnowflakeOauthPartnerSecurityIntegrationOptions = nil
+		var opts *AlterOauthPartnerSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{
+		opts.Set = &OauthPartnerIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -230,33 +230,33 @@ func TestSecurityIntegrations_AlterSnowflakeOauthPartner(t *testing.T) {
 
 	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri",
+		opts.Set = &OauthPartnerIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri",
 			"OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SnowflakeOauthPartnerIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions.Unset",
+		opts.Unset = &OauthPartnerIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Unset",
 			"Enabled", "OauthUseSecondaryRoles"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{}
-		opts.Unset = &SnowflakeOauthPartnerIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		opts.Set = &OauthPartnerIntegrationSet{}
+		opts.Unset = &OauthPartnerIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("empty roles lists", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{
+		opts.Set = &OauthPartnerIntegrationSet{
 			BlockedRolesList: &BlockedRolesList{},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET BLOCKED_ROLES_LIST = ()", id.FullyQualifiedName())
@@ -265,7 +265,7 @@ func TestSecurityIntegrations_AlterSnowflakeOauthPartner(t *testing.T) {
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		roleID := randomAccountObjectIdentifier()
-		opts.Set = &SnowflakeOauthPartnerIntegrationSet{
+		opts.Set = &OauthPartnerIntegrationSet{
 			Enabled:                   Pointer(true),
 			OauthRedirectUri:          Pointer("uri"),
 			OauthIssueRefreshTokens:   Pointer(true),
@@ -280,7 +280,7 @@ func TestSecurityIntegrations_AlterSnowflakeOauthPartner(t *testing.T) {
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SnowflakeOauthPartnerIntegrationUnset{
+		opts.Unset = &OauthPartnerIntegrationUnset{
 			Enabled:                Pointer(true),
 			OauthUseSecondaryRoles: Pointer(true),
 		}
@@ -312,24 +312,24 @@ func TestSecurityIntegrations_AlterSnowflakeOauthPartner(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterSnowflakeOauthCustom(t *testing.T) {
+func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterSnowflakeOauthCustomSecurityIntegrationOptions
-	defaultOpts := func() *AlterSnowflakeOauthCustomSecurityIntegrationOptions {
-		return &AlterSnowflakeOauthCustomSecurityIntegrationOptions{
+	// Minimal valid AlterOauthCustomSecurityIntegrationOptions
+	defaultOpts := func() *AlterOauthCustomSecurityIntegrationOptions {
+		return &AlterOauthCustomSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterSnowflakeOauthCustomSecurityIntegrationOptions = nil
+		var opts *AlterOauthCustomSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{
+		opts.Set = &OauthCustomIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -338,34 +338,34 @@ func TestSecurityIntegrations_AlterSnowflakeOauthCustom(t *testing.T) {
 
 	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri",
+		opts.Set = &OauthCustomIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri",
 			"OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles",
 			"NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SnowflakeOauthCustomIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions.Unset",
+		opts.Unset = &OauthCustomIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Unset",
 			"Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{}
-		opts.Unset = &SnowflakeOauthCustomIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		opts.Set = &OauthCustomIntegrationSet{}
+		opts.Unset = &OauthCustomIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("empty roles lists", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{
+		opts.Set = &OauthCustomIntegrationSet{
 			PreAuthorizedRolesList: &PreAuthorizedRolesList{},
 			BlockedRolesList:       &BlockedRolesList{},
 		}
@@ -375,7 +375,7 @@ func TestSecurityIntegrations_AlterSnowflakeOauthCustom(t *testing.T) {
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		roleID, role2ID, npID := randomAccountObjectIdentifier(), randomAccountObjectIdentifier(), randomAccountObjectIdentifier()
-		opts.Set = &SnowflakeOauthCustomIntegrationSet{
+		opts.Set = &OauthCustomIntegrationSet{
 			Enabled:                     Pointer(true),
 			OauthRedirectUri:            Pointer("uri"),
 			OauthAllowNonTlsRedirectUri: Pointer(true),
@@ -397,7 +397,7 @@ func TestSecurityIntegrations_AlterSnowflakeOauthCustom(t *testing.T) {
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &SnowflakeOauthCustomIntegrationUnset{
+		opts.Unset = &OauthCustomIntegrationUnset{
 			Enabled:                  Pointer(true),
 			OauthUseSecondaryRoles:   Pointer(true),
 			NetworkPolicy:            Pointer(true),

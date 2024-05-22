@@ -1,12 +1,12 @@
 package sdk
 
 var (
-	_ validatable = new(CreateSnowflakeOauthPartnerSecurityIntegrationOptions)
-	_ validatable = new(CreateSnowflakeOauthCustomSecurityIntegrationOptions)
+	_ validatable = new(CreateOauthPartnerSecurityIntegrationOptions)
+	_ validatable = new(CreateOauthCustomSecurityIntegrationOptions)
 	_ validatable = new(CreateSaml2SecurityIntegrationOptions)
 	_ validatable = new(CreateScimSecurityIntegrationOptions)
-	_ validatable = new(AlterSnowflakeOauthPartnerSecurityIntegrationOptions)
-	_ validatable = new(AlterSnowflakeOauthCustomSecurityIntegrationOptions)
+	_ validatable = new(AlterOauthPartnerSecurityIntegrationOptions)
+	_ validatable = new(AlterOauthCustomSecurityIntegrationOptions)
 	_ validatable = new(AlterSaml2SecurityIntegrationOptions)
 	_ validatable = new(AlterScimSecurityIntegrationOptions)
 	_ validatable = new(DropSecurityIntegrationOptions)
@@ -14,7 +14,7 @@ var (
 	_ validatable = new(ShowSecurityIntegrationOptions)
 )
 
-func (opts *CreateSnowflakeOauthPartnerSecurityIntegrationOptions) validate() error {
+func (opts *CreateOauthPartnerSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -23,12 +23,12 @@ func (opts *CreateSnowflakeOauthPartnerSecurityIntegrationOptions) validate() er
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateSnowflakeOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateSnowflakeOauthCustomSecurityIntegrationOptions) validate() error {
+func (opts *CreateOauthCustomSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -37,7 +37,7 @@ func (opts *CreateSnowflakeOauthCustomSecurityIntegrationOptions) validate() err
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateSnowflakeOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
@@ -70,7 +70,7 @@ func (opts *CreateScimSecurityIntegrationOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterSnowflakeOauthPartnerSecurityIntegrationOptions) validate() error {
+func (opts *AlterOauthPartnerSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -79,22 +79,22 @@ func (opts *AlterSnowflakeOauthPartnerSecurityIntegrationOptions) validate() err
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthRedirectUri, opts.Set.OauthIssueRefreshTokens, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthUseSecondaryRoles, opts.Set.BlockedRolesList, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.OauthUseSecondaryRoles) {
-			errs = append(errs, errAtLeastOneOf("AlterSnowflakeOauthPartnerSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles"))
 		}
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterSnowflakeOauthCustomSecurityIntegrationOptions) validate() error {
+func (opts *AlterOauthCustomSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -103,16 +103,16 @@ func (opts *AlterSnowflakeOauthCustomSecurityIntegrationOptions) validate() erro
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthRedirectUri, opts.Set.OauthAllowNonTlsRedirectUri, opts.Set.OauthEnforcePkce, opts.Set.PreAuthorizedRolesList, opts.Set.BlockedRolesList, opts.Set.OauthIssueRefreshTokens, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthUseSecondaryRoles, opts.Set.NetworkPolicy, opts.Set.OauthClientRsaPublicKey, opts.Set.OauthClientRsaPublicKey2, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri", "OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri", "OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.OauthUseSecondaryRoles, opts.Unset.NetworkPolicy, opts.Unset.OauthClientRsaPublicKey, opts.Unset.OauthClientRsaPublicKey2) {
-			errs = append(errs, errAtLeastOneOf("AlterSnowflakeOauthCustomSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
 		}
 	}
 	return JoinErrors(errs...)

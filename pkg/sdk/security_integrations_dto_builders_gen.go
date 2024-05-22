@@ -4,57 +4,57 @@ package sdk
 
 import ()
 
-func NewCreateSnowflakeOauthPartnerSecurityIntegrationRequest(
+func NewCreateOauthPartnerSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClient OauthSecurityIntegrationClientOption,
-) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
-	s := CreateSnowflakeOauthPartnerSecurityIntegrationRequest{}
+) *CreateOauthPartnerSecurityIntegrationRequest {
+	s := CreateOauthPartnerSecurityIntegrationRequest{}
 	s.name = name
 	s.OauthClient = OauthClient
 	return &s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithOauthRedirectUri(OauthRedirectUri *string) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthRedirectUri(OauthRedirectUri *string) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.OauthRedirectUri = OauthRedirectUri
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.BlockedRolesList = BlockedRolesList
 	return s
 }
 
-func (s *CreateSnowflakeOauthPartnerSecurityIntegrationRequest) WithComment(Comment *string) *CreateSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *CreateOauthPartnerSecurityIntegrationRequest) WithComment(Comment *string) *CreateOauthPartnerSecurityIntegrationRequest {
 	s.Comment = Comment
 	return s
 }
@@ -68,84 +68,84 @@ func (s *BlockedRolesListRequest) WithBlockedRolesList(BlockedRolesList []Accoun
 	return s
 }
 
-func NewCreateSnowflakeOauthCustomSecurityIntegrationRequest(
+func NewCreateOauthCustomSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClientType OauthSecurityIntegrationClientTypeOption,
 	OauthRedirectUri string,
-) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
-	s := CreateSnowflakeOauthCustomSecurityIntegrationRequest{}
+) *CreateOauthCustomSecurityIntegrationRequest {
+	s := CreateOauthCustomSecurityIntegrationRequest{}
 	s.name = name
 	s.OauthClientType = OauthClientType
 	s.OauthRedirectUri = OauthRedirectUri
 	return &s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthAllowNonTlsRedirectUri = OauthAllowNonTlsRedirectUri
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthEnforcePkce = OauthEnforcePkce
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *CreateOauthCustomSecurityIntegrationRequest {
 	s.PreAuthorizedRolesList = PreAuthorizedRolesList
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateOauthCustomSecurityIntegrationRequest {
 	s.BlockedRolesList = BlockedRolesList
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateOauthCustomSecurityIntegrationRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *CreateOauthCustomSecurityIntegrationRequest {
 	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
 	return s
 }
 
-func (s *CreateSnowflakeOauthCustomSecurityIntegrationRequest) WithComment(Comment *string) *CreateSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *CreateOauthCustomSecurityIntegrationRequest) WithComment(Comment *string) *CreateOauthCustomSecurityIntegrationRequest {
 	s.Comment = Comment
 	return s
 }
@@ -286,219 +286,219 @@ func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment *string) *Cre
 	return s
 }
 
-func NewAlterSnowflakeOauthPartnerSecurityIntegrationRequest(
+func NewAlterOauthPartnerSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
-	s := AlterSnowflakeOauthPartnerSecurityIntegrationRequest{}
+) *AlterOauthPartnerSecurityIntegrationRequest {
+	s := AlterOauthPartnerSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthPartnerSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterOauthPartnerSecurityIntegrationRequest {
 	s.IfExists = IfExists
 	return s
 }
 
-func (s *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthPartnerSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthPartnerSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthPartnerSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthPartnerSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) WithSet(Set *SnowflakeOauthPartnerIntegrationSetRequest) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthPartnerSecurityIntegrationRequest) WithSet(Set *OauthPartnerIntegrationSetRequest) *AlterOauthPartnerSecurityIntegrationRequest {
 	s.Set = Set
 	return s
 }
 
-func (s *AlterSnowflakeOauthPartnerSecurityIntegrationRequest) WithUnset(Unset *SnowflakeOauthPartnerIntegrationUnsetRequest) *AlterSnowflakeOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthPartnerSecurityIntegrationRequest) WithUnset(Unset *OauthPartnerIntegrationUnsetRequest) *AlterOauthPartnerSecurityIntegrationRequest {
 	s.Unset = Unset
 	return s
 }
 
-func NewSnowflakeOauthPartnerIntegrationSetRequest() *SnowflakeOauthPartnerIntegrationSetRequest {
-	return &SnowflakeOauthPartnerIntegrationSetRequest{}
+func NewOauthPartnerIntegrationSetRequest() *OauthPartnerIntegrationSetRequest {
+	return &OauthPartnerIntegrationSetRequest{}
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithEnabled(Enabled *bool) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithEnabled(Enabled *bool) *OauthPartnerIntegrationSetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *OauthPartnerIntegrationSetRequest {
 	s.OauthRedirectUri = OauthRedirectUri
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *OauthPartnerIntegrationSetRequest {
 	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *OauthPartnerIntegrationSetRequest {
 	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *OauthPartnerIntegrationSetRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *OauthPartnerIntegrationSetRequest {
 	s.BlockedRolesList = BlockedRolesList
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationSetRequest) WithComment(Comment *string) *SnowflakeOauthPartnerIntegrationSetRequest {
+func (s *OauthPartnerIntegrationSetRequest) WithComment(Comment *string) *OauthPartnerIntegrationSetRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewSnowflakeOauthPartnerIntegrationUnsetRequest() *SnowflakeOauthPartnerIntegrationUnsetRequest {
-	return &SnowflakeOauthPartnerIntegrationUnsetRequest{}
+func NewOauthPartnerIntegrationUnsetRequest() *OauthPartnerIntegrationUnsetRequest {
+	return &OauthPartnerIntegrationUnsetRequest{}
 }
 
-func (s *SnowflakeOauthPartnerIntegrationUnsetRequest) WithEnabled(Enabled *bool) *SnowflakeOauthPartnerIntegrationUnsetRequest {
+func (s *OauthPartnerIntegrationUnsetRequest) WithEnabled(Enabled *bool) *OauthPartnerIntegrationUnsetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SnowflakeOauthPartnerIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *SnowflakeOauthPartnerIntegrationUnsetRequest {
+func (s *OauthPartnerIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *OauthPartnerIntegrationUnsetRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func NewAlterSnowflakeOauthCustomSecurityIntegrationRequest(
+func NewAlterOauthCustomSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
-	s := AlterSnowflakeOauthCustomSecurityIntegrationRequest{}
+) *AlterOauthCustomSecurityIntegrationRequest {
+	s := AlterOauthCustomSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterSnowflakeOauthCustomSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthCustomSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterOauthCustomSecurityIntegrationRequest {
 	s.IfExists = IfExists
 	return s
 }
 
-func (s *AlterSnowflakeOauthCustomSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthCustomSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthCustomSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterSnowflakeOauthCustomSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthCustomSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthCustomSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterSnowflakeOauthCustomSecurityIntegrationRequest) WithSet(Set *SnowflakeOauthCustomIntegrationSetRequest) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthCustomSecurityIntegrationRequest) WithSet(Set *OauthCustomIntegrationSetRequest) *AlterOauthCustomSecurityIntegrationRequest {
 	s.Set = Set
 	return s
 }
 
-func (s *AlterSnowflakeOauthCustomSecurityIntegrationRequest) WithUnset(Unset *SnowflakeOauthCustomIntegrationUnsetRequest) *AlterSnowflakeOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthCustomSecurityIntegrationRequest) WithUnset(Unset *OauthCustomIntegrationUnsetRequest) *AlterOauthCustomSecurityIntegrationRequest {
 	s.Unset = Unset
 	return s
 }
 
-func NewSnowflakeOauthCustomIntegrationSetRequest() *SnowflakeOauthCustomIntegrationSetRequest {
-	return &SnowflakeOauthCustomIntegrationSetRequest{}
+func NewOauthCustomIntegrationSetRequest() *OauthCustomIntegrationSetRequest {
+	return &OauthCustomIntegrationSetRequest{}
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithEnabled(Enabled *bool) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithEnabled(Enabled *bool) *OauthCustomIntegrationSetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *OauthCustomIntegrationSetRequest {
 	s.OauthRedirectUri = OauthRedirectUri
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *OauthCustomIntegrationSetRequest {
 	s.OauthAllowNonTlsRedirectUri = OauthAllowNonTlsRedirectUri
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *OauthCustomIntegrationSetRequest {
 	s.OauthEnforcePkce = OauthEnforcePkce
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *OauthCustomIntegrationSetRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *OauthCustomIntegrationSetRequest {
 	s.PreAuthorizedRolesList = PreAuthorizedRolesList
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *OauthCustomIntegrationSetRequest {
 	s.BlockedRolesList = BlockedRolesList
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *OauthCustomIntegrationSetRequest {
 	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *OauthCustomIntegrationSetRequest {
 	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *OauthCustomIntegrationSetRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *OauthCustomIntegrationSetRequest {
 	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *OauthCustomIntegrationSetRequest {
 	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationSetRequest) WithComment(Comment *string) *SnowflakeOauthCustomIntegrationSetRequest {
+func (s *OauthCustomIntegrationSetRequest) WithComment(Comment *string) *OauthCustomIntegrationSetRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewSnowflakeOauthCustomIntegrationUnsetRequest() *SnowflakeOauthCustomIntegrationUnsetRequest {
-	return &SnowflakeOauthCustomIntegrationUnsetRequest{}
+func NewOauthCustomIntegrationUnsetRequest() *OauthCustomIntegrationUnsetRequest {
+	return &OauthCustomIntegrationUnsetRequest{}
 }
 
-func (s *SnowflakeOauthCustomIntegrationUnsetRequest) WithEnabled(Enabled *bool) *SnowflakeOauthCustomIntegrationUnsetRequest {
+func (s *OauthCustomIntegrationUnsetRequest) WithEnabled(Enabled *bool) *OauthCustomIntegrationUnsetRequest {
 	s.Enabled = Enabled
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *SnowflakeOauthCustomIntegrationUnsetRequest {
+func (s *OauthCustomIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *OauthCustomIntegrationUnsetRequest {
 	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *SnowflakeOauthCustomIntegrationUnsetRequest {
+func (s *OauthCustomIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *OauthCustomIntegrationUnsetRequest {
 	s.NetworkPolicy = NetworkPolicy
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *bool) *SnowflakeOauthCustomIntegrationUnsetRequest {
+func (s *OauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *bool) *OauthCustomIntegrationUnsetRequest {
 	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
 	return s
 }
 
-func (s *SnowflakeOauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *bool) *SnowflakeOauthCustomIntegrationUnsetRequest {
+func (s *OauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *bool) *OauthCustomIntegrationUnsetRequest {
 	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
 	return s
 }
