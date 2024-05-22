@@ -30,6 +30,7 @@ const (
 	Schema                       resource = "snowflake_schema"
 	Sequence                     resource = "snowflake_sequence"
 	Share                        resource = "snowflake_share"
+	SharedDatabase               resource = "snowflake_shared_database"
 	Stage                        resource = "snowflake_stage"
 	StorageIntegration           resource = "snowflake_storage_integration"
 	Stream                       resource = "snowflake_stream"

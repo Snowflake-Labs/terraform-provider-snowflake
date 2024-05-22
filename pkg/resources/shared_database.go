@@ -17,6 +17,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
+	// TODO: Should it be imported (set in Read)?
 	"from_share": {
 		Type:        schema.TypeString,
 		Required:    true,
