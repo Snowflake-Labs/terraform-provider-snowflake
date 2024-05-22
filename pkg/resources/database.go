@@ -62,32 +62,6 @@ var databaseSchema = map[string]*schema.Schema{
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share", "from_database"},
 	},
-	// TODO: Add accounts for replication (it will promote local database to serve as a primary database for replication).
-	// "accounts for replication": {
-	//	Type:     schema.TypeList,
-	//	Required: true,
-	//	MinItems: 1,
-	//	Elem: &schema.Schema{
-	//		Type: schema.TypeString,
-	//		// TODO(ticket-number): Validate account identifiers.
-	//	},
-	//	// TODO: Desc
-	// },
-	// "accounts for failover": {
-	//	Type:     schema.TypeList,
-	//	Required: true,
-	//	MinItems: 1,
-	//	Elem: &schema.Schema{
-	//		Type: schema.TypeString,
-	//		// TODO(ticket-number): Validate account identifiers.
-	//	},
-	//	// TODO: Desc
-	// },
-	// "ignore_edition_check": {
-	//	Type: schema.TypeBool,
-	//	// TODO: Desc
-	//	Optional: true,
-	// },
 	"replication_configuration": {
 		Type:        schema.TypeList,
 		Description: "When set, specifies the configurations for database replication.",
@@ -114,10 +88,11 @@ var databaseSchema = map[string]*schema.Schema{
 // Database returns a pointer to the resource representing a database.
 func Database() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateDatabase,
-		Read:   ReadDatabase,
-		Delete: DeleteDatabase,
-		Update: UpdateDatabase,
+		Create:             CreateDatabase,
+		Read:               ReadDatabase,
+		Delete:             DeleteDatabase,
+		Update:             UpdateDatabase,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_standard_database or snowflake_shared_database or snowflake_secondary_database instead.",
 
 		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{

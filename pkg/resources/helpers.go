@@ -162,6 +162,17 @@ func GetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, property
 	return &typedNestedValue, nil
 }
 
+// SetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
+// schema.TypeList with MaxItems set to one and inner schema with single value. To easily set
+// the inner value, you can specify top-level property with propertyKey, nested value with nestedValueKey and value at the end.
+func SetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string, value T) error {
+	return d.Set(propertyKey, []any{
+		map[string]any{
+			nestedValueKey: value,
+		},
+	})
+}
+
 type tags []tag
 
 func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
@@ -254,19 +265,35 @@ func getTags(from interface{}) (to tags) {
 }
 
 func nestedProperty(innerType schema.ValueType, fieldDescription string) *schema.Schema {
-	return &schema.Schema{
+	return nestedPropertyWithModifiers(innerType, fieldDescription, nil, nil)
+}
+
+func nestedPropertyWithInnerModifier(innerType schema.ValueType, fieldDescription string, modifyInner func(inner *schema.Schema)) *schema.Schema {
+	return nestedPropertyWithModifiers(innerType, fieldDescription, nil, modifyInner)
+}
+
+func nestedPropertyWithModifiers(innerType schema.ValueType, fieldDescription string, modifyOuter func(outer *schema.Schema), modifyInner func(inner *schema.Schema)) *schema.Schema {
+	innerSchema := &schema.Schema{
+		Type:     innerType,
+		Required: true,
+	}
+	outerSchema := &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     innerType,
-					Required: true,
-				},
+				"value": innerSchema,
 			},
 		},
 		Computed:    true,
 		Optional:    true,
 		Description: fieldDescription,
 	}
+	if modifyOuter != nil {
+		modifyOuter(outerSchema)
+	}
+	if modifyInner != nil {
+		modifyInner(innerSchema)
+	}
+	return outerSchema
 }

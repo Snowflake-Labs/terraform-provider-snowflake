@@ -19,11 +19,12 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
+	// TODO: Should it be imported (set in Read)?
 	"from_share": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<provider_account>\".\"<share_name>\"`.",
+		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
 	},
 	// TODO(SNOW-1325381): Add it as an item to discuss and either remove or uncomment (and implement) it
 	// "is_transient": {
@@ -167,15 +168,15 @@ func UpdateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
-		newName := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
-			NewName: &newName,
+			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newName))
-		id = newName
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {

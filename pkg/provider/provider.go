@@ -457,6 +457,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_alert":                                   resources.Alert(),
 		"snowflake_api_integration":                         resources.APIIntegration(),
 		"snowflake_database":                                resources.Database(),
+		"snowflake_standard_database":                       resources.StandardDatabase(),
 		"snowflake_database_role":                           resources.DatabaseRole(),
 		"snowflake_dynamic_table":                           resources.DynamicTable(),
 		"snowflake_email_notification_integration":          resources.EmailNotificationIntegration(),

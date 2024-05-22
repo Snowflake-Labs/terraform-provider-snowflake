@@ -33,6 +33,7 @@ const (
 	Share                        resource = "snowflake_share"
 	SharedDatabase               resource = "snowflake_shared_database"
 	Stage                        resource = "snowflake_stage"
+	StandardDatabase             resource = "snowflake_standard_database"
 	StorageIntegration           resource = "snowflake_storage_integration"
 	Stream                       resource = "snowflake_stream"
 	Table                        resource = "snowflake_table"

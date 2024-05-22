@@ -17,6 +17,24 @@ func TestInt_CurrentAccount(t *testing.T) {
 	assert.NotEmpty(t, account)
 }
 
+func TestInt_CurrentAccountName(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	accountName, err := client.ContextFunctions.CurrentAccountName(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, accountName)
+}
+
+func TestInt_CurrentOrganizationName(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	organizationName, err := client.ContextFunctions.CurrentOrganizationName(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, organizationName)
+}
+
 func TestInt_CurrentRole(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
