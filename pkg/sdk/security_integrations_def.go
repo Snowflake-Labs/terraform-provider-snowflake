@@ -78,7 +78,7 @@ func alterSecurityIntegrationOperation(structName string, apply func(qs *g.Query
 	return qs
 }
 
-var snowflakeOauthPartnerIntegrationSetDef = g.NewQueryStruct("OauthPartnerIntegrationSet").
+var oauthPartnerIntegrationSetDef = g.NewQueryStruct("OauthPartnerIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().SingleQuotes()).
 	OptionalBooleanAssignment("OAUTH_ISSUE_REFRESH_TOKENS", g.ParameterOptions()).
@@ -93,12 +93,12 @@ var snowflakeOauthPartnerIntegrationSetDef = g.NewQueryStruct("OauthPartnerInteg
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthRedirectUri", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles",
 		"BlockedRolesList", "Comment")
 
-var snowflakeOauthPartnerIntegrationUnsetDef = g.NewQueryStruct("OauthPartnerIntegrationUnset").
+var oauthPartnerIntegrationUnsetDef = g.NewQueryStruct("OauthPartnerIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("OAUTH_USE_SECONDARY_ROLES").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthUseSecondaryRoles")
 
-var snowflakeOauthCustomIntegrationSetDef = g.NewQueryStruct("OauthCustomIntegrationSet").
+var oauthCustomIntegrationSetDef = g.NewQueryStruct("OauthCustomIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("OAUTH_REDIRECT_URI", g.ParameterOptions().SingleQuotes()).
 	OptionalBooleanAssignment("OAUTH_ALLOW_NON_TLS_REDIRECT_URI", g.ParameterOptions()).
@@ -120,7 +120,7 @@ var snowflakeOauthCustomIntegrationSetDef = g.NewQueryStruct("OauthCustomIntegra
 		"BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey",
 		"OauthClientRsaPublicKey2", "Comment")
 
-var snowflakeOauthCustomIntegrationUnsetDef = g.NewQueryStruct("OauthCustomIntegrationUnset").
+var oauthCustomIntegrationUnsetDef = g.NewQueryStruct("OauthCustomIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("OAUTH_USE_SECONDARY_ROLES").
 	OptionalSQL("NETWORK_POLICY").
@@ -284,11 +284,11 @@ var SecurityIntegrationsDef = g.NewInterface(
 		alterSecurityIntegrationOperation("AlterOauthPartner", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
-				snowflakeOauthPartnerIntegrationSetDef,
+				oauthPartnerIntegrationSetDef,
 				g.ListOptions().NoParentheses().SQL("SET"),
 			).OptionalQueryStructField(
 				"Unset",
-				snowflakeOauthPartnerIntegrationUnsetDef,
+				oauthPartnerIntegrationUnsetDef,
 				g.ListOptions().NoParentheses().SQL("UNSET"),
 			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),
@@ -299,11 +299,11 @@ var SecurityIntegrationsDef = g.NewInterface(
 		alterSecurityIntegrationOperation("AlterOauthCustom", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
-				snowflakeOauthCustomIntegrationSetDef,
+				oauthCustomIntegrationSetDef,
 				g.ListOptions().NoParentheses().SQL("SET"),
 			).OptionalQueryStructField(
 				"Unset",
-				snowflakeOauthCustomIntegrationUnsetDef,
+				oauthCustomIntegrationUnsetDef,
 				g.ListOptions().NoParentheses().SQL("UNSET"),
 			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),

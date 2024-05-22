@@ -125,12 +125,12 @@ type CreateScimSecurityIntegrationOptions struct {
 
 // AlterOauthPartnerSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
 type AlterOauthPartnerSecurityIntegrationOptions struct {
-	alter               bool                                   `ddl:"static" sql:"ALTER"`
-	securityIntegration bool                                   `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfExists            *bool                                  `ddl:"keyword" sql:"IF EXISTS"`
-	name                AccountObjectIdentifier                `ddl:"identifier"`
-	SetTags             []TagAssociation                       `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags           []ObjectIdentifier                     `ddl:"keyword" sql:"UNSET TAG"`
+	alter               bool                          `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                          `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                         `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier       `ddl:"identifier"`
+	SetTags             []TagAssociation              `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier            `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *OauthPartnerIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *OauthPartnerIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
@@ -152,12 +152,12 @@ type OauthPartnerIntegrationUnset struct {
 
 // AlterOauthCustomSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
 type AlterOauthCustomSecurityIntegrationOptions struct {
-	alter               bool                                  `ddl:"static" sql:"ALTER"`
-	securityIntegration bool                                  `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfExists            *bool                                 `ddl:"keyword" sql:"IF EXISTS"`
-	name                AccountObjectIdentifier               `ddl:"identifier"`
-	SetTags             []TagAssociation                      `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags           []ObjectIdentifier                    `ddl:"keyword" sql:"UNSET TAG"`
+	alter               bool                         `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                         `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                        `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier      `ddl:"identifier"`
+	SetTags             []TagAssociation             `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier           `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *OauthCustomIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *OauthCustomIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }

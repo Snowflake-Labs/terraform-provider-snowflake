@@ -5,15 +5,15 @@ package sdk
 var (
 	_ optionsProvider[CreateOauthPartnerSecurityIntegrationOptions] = new(CreateOauthPartnerSecurityIntegrationRequest)
 	_ optionsProvider[CreateOauthCustomSecurityIntegrationOptions]  = new(CreateOauthCustomSecurityIntegrationRequest)
-	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                 = new(CreateSaml2SecurityIntegrationRequest)
-	_ optionsProvider[CreateScimSecurityIntegrationOptions]                  = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]        = new(CreateSaml2SecurityIntegrationRequest)
+	_ optionsProvider[CreateScimSecurityIntegrationOptions]         = new(CreateScimSecurityIntegrationRequest)
 	_ optionsProvider[AlterOauthPartnerSecurityIntegrationOptions]  = new(AlterOauthPartnerSecurityIntegrationRequest)
 	_ optionsProvider[AlterOauthCustomSecurityIntegrationOptions]   = new(AlterOauthCustomSecurityIntegrationRequest)
-	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                  = new(AlterSaml2SecurityIntegrationRequest)
-	_ optionsProvider[AlterScimSecurityIntegrationOptions]                   = new(AlterScimSecurityIntegrationRequest)
-	_ optionsProvider[DropSecurityIntegrationOptions]                        = new(DropSecurityIntegrationRequest)
-	_ optionsProvider[DescribeSecurityIntegrationOptions]                    = new(DescribeSecurityIntegrationRequest)
-	_ optionsProvider[ShowSecurityIntegrationOptions]                        = new(ShowSecurityIntegrationRequest)
+	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]         = new(AlterSaml2SecurityIntegrationRequest)
+	_ optionsProvider[AlterScimSecurityIntegrationOptions]          = new(AlterScimSecurityIntegrationRequest)
+	_ optionsProvider[DropSecurityIntegrationOptions]               = new(DropSecurityIntegrationRequest)
+	_ optionsProvider[DescribeSecurityIntegrationOptions]           = new(DescribeSecurityIntegrationRequest)
+	_ optionsProvider[ShowSecurityIntegrationOptions]               = new(ShowSecurityIntegrationRequest)
 )
 
 type CreateOauthPartnerSecurityIntegrationRequest struct {

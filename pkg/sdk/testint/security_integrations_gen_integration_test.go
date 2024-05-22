@@ -107,7 +107,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Equal(t, "SECURITY", si.Category)
 	}
 
-	type snowflakeOauthPartnerDetails struct {
+	type oauthPartnerDetails struct {
 		enabled                 string
 		oauthIssueRefreshTokens string
 		refreshTokenValidity    string
@@ -118,7 +118,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		comment                 string
 	}
 
-	assertOauthPartner := func(details []sdk.SecurityIntegrationProperty, d snowflakeOauthPartnerDetails) {
+	assertOauthPartner := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: d.enabled, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ISSUE_REFRESH_TOKENS", Type: "Boolean", Value: d.oauthIssueRefreshTokens, Default: "true"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_REFRESH_TOKEN_VALIDITY", Type: "Integer", Value: d.refreshTokenValidity, Default: "7776000"})
@@ -135,7 +135,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		}
 	}
 
-	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d snowflakeOauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
+	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
 		assertOauthPartner(details, d)
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ALLOW_NON_TLS_REDIRECT_URI", Type: "Boolean", Value: allowNonTlsRedirectUri, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_TYPE", Type: "String", Value: clientType, Default: "CONFIDENTIAL"})
@@ -210,7 +210,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertOauthPartner(details, snowflakeOauthPartnerDetails{
+		assertOauthPartner(details, oauthPartnerDetails{
 			enabled:                 "true",
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "12345",
@@ -248,7 +248,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertOauthCustom(details, snowflakeOauthPartnerDetails{
+		assertOauthCustom(details, oauthPartnerDetails{
 			enabled:                 "true",
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "12345",
@@ -349,7 +349,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertOauthPartner(details, snowflakeOauthPartnerDetails{
+		assertOauthPartner(details, oauthPartnerDetails{
 			enabled:                 "true",
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "22222",
@@ -446,7 +446,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertOauthCustom(details, snowflakeOauthPartnerDetails{
+		assertOauthCustom(details, oauthPartnerDetails{
 			enabled:                 "true",
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "22222",
