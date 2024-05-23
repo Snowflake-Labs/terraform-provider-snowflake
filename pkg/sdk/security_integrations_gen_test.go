@@ -7,9 +7,9 @@ import (
 func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateOauthCustomSecurityIntegrationOptions
-	defaultOpts := func() *CreateOauthCustomSecurityIntegrationOptions {
-		return &CreateOauthCustomSecurityIntegrationOptions{
+	// Minimal valid CreateOauthForCustomClientsSecurityIntegrationOptions
+	defaultOpts := func() *CreateOauthForCustomClientsSecurityIntegrationOptions {
+		return &CreateOauthForCustomClientsSecurityIntegrationOptions{
 			name:             id,
 			OauthClientType:  OauthSecurityIntegrationClientTypePublic,
 			OauthRedirectUri: "uri",
@@ -17,7 +17,7 @@ func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateOauthPartnerSecurityIntegrationOptions = nil
+		var opts *CreateOauthForCustomClientsSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -25,7 +25,7 @@ func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthForCustomClientsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -62,16 +62,16 @@ func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 func TestSecurityIntegrations_CreateOauthPartner(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateOauthPartnerSecurityIntegrationOptions
-	defaultOpts := func() *CreateOauthPartnerSecurityIntegrationOptions {
-		return &CreateOauthPartnerSecurityIntegrationOptions{
+	// Minimal valid CreateOauthForPartnerApplicationsSecurityIntegrationOptions
+	defaultOpts := func() *CreateOauthForPartnerApplicationsSecurityIntegrationOptions {
+		return &CreateOauthForPartnerApplicationsSecurityIntegrationOptions{
 			name:        id,
-			OauthClient: "LOOKER",
+			OauthClient: OauthSecurityIntegrationClientTableauDesktop,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateOauthPartnerSecurityIntegrationOptions = nil
+		var opts *CreateOauthForPartnerApplicationsSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -79,20 +79,28 @@ func TestSecurityIntegrations_CreateOauthPartner(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOauthForPartnerApplicationsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	})
+
+	t.Run("validation: OAUTH_REDIRECT_URI is required when OAUTH_CLIENT=LOOKER", func(t *testing.T) {
+		opts := &CreateOauthForPartnerApplicationsSecurityIntegrationOptions{
+			name:        id,
+			OauthClient: OauthSecurityIntegrationClientLooker,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, NewError("OauthRedirectUri is required when OauthClient is LOOKER"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = OAUTH OAUTH_CLIENT = LOOKER", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = OAUTH OAUTH_CLIENT = TABLEAU_DESKTOP", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		blockedRoleID := randomAccountObjectIdentifier()
 		opts.IfNotExists = Bool(true)
-		opts.OauthClient = "LOOKER"
+		opts.OauthClient = OauthSecurityIntegrationClientLooker
 		opts.OauthRedirectUri = Pointer("uri")
 		opts.Enabled = Pointer(true)
 		opts.OauthIssueRefreshTokens = Pointer(true)
@@ -207,21 +215,21 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterOauthPartnerSecurityIntegrationOptions
-	defaultOpts := func() *AlterOauthPartnerSecurityIntegrationOptions {
-		return &AlterOauthPartnerSecurityIntegrationOptions{
+	// Minimal valid AlterOauthForPartnerApplicationsSecurityIntegrationOptions
+	defaultOpts := func() *AlterOauthForPartnerApplicationsSecurityIntegrationOptions {
+		return &AlterOauthForPartnerApplicationsSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterOauthPartnerSecurityIntegrationOptions = nil
+		var opts *AlterOauthForPartnerApplicationsSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthPartnerIntegrationSet{
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -230,33 +238,33 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 
 	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthPartnerIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri",
-			"OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions.Set", "Enabled", "OauthIssueRefreshTokens",
+			"OauthRedirectUri", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &OauthPartnerIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Unset",
+		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions.Unset",
 			"Enabled", "OauthUseSecondaryRoles"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthPartnerIntegrationSet{}
-		opts.Unset = &OauthPartnerIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{}
+		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("empty roles lists", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthPartnerIntegrationSet{
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			BlockedRolesList: &BlockedRolesList{},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET BLOCKED_ROLES_LIST = ()", id.FullyQualifiedName())
@@ -265,7 +273,7 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		roleID := randomAccountObjectIdentifier()
-		opts.Set = &OauthPartnerIntegrationSet{
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled:                   Pointer(true),
 			OauthRedirectUri:          Pointer("uri"),
 			OauthIssueRefreshTokens:   Pointer(true),
@@ -274,13 +282,13 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 			BlockedRolesList:          &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
 			Comment:                   Pointer("a"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
 			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = 'a'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &OauthPartnerIntegrationUnset{
+		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{
 			Enabled:                Pointer(true),
 			OauthUseSecondaryRoles: Pointer(true),
 		}
@@ -315,21 +323,21 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterOauthCustomSecurityIntegrationOptions
-	defaultOpts := func() *AlterOauthCustomSecurityIntegrationOptions {
-		return &AlterOauthCustomSecurityIntegrationOptions{
+	// Minimal valid AlterOauthForCustomClientsSecurityIntegrationOptions
+	defaultOpts := func() *AlterOauthForCustomClientsSecurityIntegrationOptions {
+		return &AlterOauthForCustomClientsSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterOauthCustomSecurityIntegrationOptions = nil
+		var opts *AlterOauthForCustomClientsSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthCustomIntegrationSet{
+		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -338,34 +346,34 @@ func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 
 	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthCustomIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri",
+		opts.Set = &OauthForCustomClientsIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri",
 			"OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles",
 			"NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &OauthCustomIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Unset",
-			"Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
+		opts.Unset = &OauthForCustomClientsIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions.Unset",
+			"Enabled", "NetworkPolicy", "OauthUseSecondaryRoles", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthCustomIntegrationSet{}
-		opts.Unset = &OauthCustomIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		opts.Set = &OauthForCustomClientsIntegrationSet{}
+		opts.Unset = &OauthForCustomClientsIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("empty roles lists", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &OauthCustomIntegrationSet{
+		opts.Set = &OauthForCustomClientsIntegrationSet{
 			PreAuthorizedRolesList: &PreAuthorizedRolesList{},
 			BlockedRolesList:       &BlockedRolesList{},
 		}
@@ -375,7 +383,7 @@ func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		roleID, role2ID, npID := randomAccountObjectIdentifier(), randomAccountObjectIdentifier(), randomAccountObjectIdentifier()
-		opts.Set = &OauthCustomIntegrationSet{
+		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled:                     Pointer(true),
 			OauthRedirectUri:            Pointer("uri"),
 			OauthAllowNonTlsRedirectUri: Pointer(true),
@@ -391,20 +399,20 @@ func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 			Comment:                     Pointer("a"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_ALLOW_NON_TLS_REDIRECT_URI = true, OAUTH_ENFORCE_PKCE = true,"+
-			" OAUTH_USE_SECONDARY_ROLES = NONE, PRE_AUTHORIZED_ROLES_LIST = (%s), BLOCKED_ROLES_LIST = (%s), OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
+			" PRE_AUTHORIZED_ROLES_LIST = (%s), BLOCKED_ROLES_LIST = (%s), OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REFRESH_TOKEN_VALIDITY = 42, OAUTH_USE_SECONDARY_ROLES = NONE,"+
 			" NETWORK_POLICY = %s, OAUTH_CLIENT_RSA_PUBLIC_KEY = 'key', OAUTH_CLIENT_RSA_PUBLIC_KEY_2 = 'key2', COMMENT = 'a'", id.FullyQualifiedName(), roleID.FullyQualifiedName(), role2ID.FullyQualifiedName(), npID.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &OauthCustomIntegrationUnset{
+		opts.Unset = &OauthForCustomClientsIntegrationUnset{
 			Enabled:                  Pointer(true),
 			OauthUseSecondaryRoles:   Pointer(true),
 			NetworkPolicy:            Pointer(true),
 			OauthClientRsaPublicKey:  Pointer(true),
 			OauthClientRsaPublicKey2: Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, OAUTH_USE_SECONDARY_ROLES, NETWORK_POLICY, OAUTH_CLIENT_RSA_PUBLIC_KEY, OAUTH_CLIENT_RSA_PUBLIC_KEY_2", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, OAUTH_CLIENT_RSA_PUBLIC_KEY, OAUTH_CLIENT_RSA_PUBLIC_KEY_2, OAUTH_USE_SECONDARY_ROLES", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {

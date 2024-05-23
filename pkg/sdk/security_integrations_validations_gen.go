@@ -1,12 +1,12 @@
 package sdk
 
 var (
-	_ validatable = new(CreateOauthPartnerSecurityIntegrationOptions)
-	_ validatable = new(CreateOauthCustomSecurityIntegrationOptions)
+	_ validatable = new(CreateOauthForPartnerApplicationsSecurityIntegrationOptions)
+	_ validatable = new(CreateOauthForCustomClientsSecurityIntegrationOptions)
 	_ validatable = new(CreateSaml2SecurityIntegrationOptions)
 	_ validatable = new(CreateScimSecurityIntegrationOptions)
-	_ validatable = new(AlterOauthPartnerSecurityIntegrationOptions)
-	_ validatable = new(AlterOauthCustomSecurityIntegrationOptions)
+	_ validatable = new(AlterOauthForPartnerApplicationsSecurityIntegrationOptions)
+	_ validatable = new(AlterOauthForCustomClientsSecurityIntegrationOptions)
 	_ validatable = new(AlterSaml2SecurityIntegrationOptions)
 	_ validatable = new(AlterScimSecurityIntegrationOptions)
 	_ validatable = new(DropSecurityIntegrationOptions)
@@ -14,7 +14,7 @@ var (
 	_ validatable = new(ShowSecurityIntegrationOptions)
 )
 
-func (opts *CreateOauthPartnerSecurityIntegrationOptions) validate() error {
+func (opts *CreateOauthForPartnerApplicationsSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -23,12 +23,15 @@ func (opts *CreateOauthPartnerSecurityIntegrationOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateOauthPartnerSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateOauthForPartnerApplicationsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	}
+	if opts.OauthClient == OauthSecurityIntegrationClientLooker && opts.OauthRedirectUri == nil {
+		errs = append(errs, NewError("OauthRedirectUri is required when OauthClient is LOOKER"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateOauthCustomSecurityIntegrationOptions) validate() error {
+func (opts *CreateOauthForCustomClientsSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -37,7 +40,7 @@ func (opts *CreateOauthCustomSecurityIntegrationOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateOauthCustomSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateOauthForCustomClientsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
@@ -70,7 +73,7 @@ func (opts *CreateScimSecurityIntegrationOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterOauthPartnerSecurityIntegrationOptions) validate() error {
+func (opts *AlterOauthForPartnerApplicationsSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -79,22 +82,22 @@ func (opts *AlterOauthPartnerSecurityIntegrationOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterOauthPartnerSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
-		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthRedirectUri, opts.Set.OauthIssueRefreshTokens, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthUseSecondaryRoles, opts.Set.BlockedRolesList, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
+		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthIssueRefreshTokens, opts.Set.OauthRedirectUri, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthUseSecondaryRoles, opts.Set.BlockedRolesList, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions.Set", "Enabled", "OauthIssueRefreshTokens", "OauthRedirectUri", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "BlockedRolesList", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.OauthUseSecondaryRoles) {
-			errs = append(errs, errAtLeastOneOf("AlterOauthPartnerSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthForPartnerApplicationsSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles"))
 		}
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterOauthCustomSecurityIntegrationOptions) validate() error {
+func (opts *AlterOauthForCustomClientsSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -103,16 +106,16 @@ func (opts *AlterOauthCustomSecurityIntegrationOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterOauthCustomSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthRedirectUri, opts.Set.OauthAllowNonTlsRedirectUri, opts.Set.OauthEnforcePkce, opts.Set.PreAuthorizedRolesList, opts.Set.BlockedRolesList, opts.Set.OauthIssueRefreshTokens, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthUseSecondaryRoles, opts.Set.NetworkPolicy, opts.Set.OauthClientRsaPublicKey, opts.Set.OauthClientRsaPublicKey2, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri", "OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions.Set", "Enabled", "OauthRedirectUri", "OauthAllowNonTlsRedirectUri", "OauthEnforcePkce", "PreAuthorizedRolesList", "BlockedRolesList", "OauthIssueRefreshTokens", "OauthRefreshTokenValidity", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Enabled, opts.Unset.OauthUseSecondaryRoles, opts.Unset.NetworkPolicy, opts.Unset.OauthClientRsaPublicKey, opts.Unset.OauthClientRsaPublicKey2) {
-			errs = append(errs, errAtLeastOneOf("AlterOauthCustomSecurityIntegrationOptions.Unset", "Enabled", "OauthUseSecondaryRoles", "NetworkPolicy", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
+		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.OauthUseSecondaryRoles, opts.Unset.OauthClientRsaPublicKey, opts.Unset.OauthClientRsaPublicKey2) {
+			errs = append(errs, errAtLeastOneOf("AlterOauthForCustomClientsSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "OauthUseSecondaryRoles", "OauthClientRsaPublicKey", "OauthClientRsaPublicKey2"))
 		}
 	}
 	return JoinErrors(errs...)

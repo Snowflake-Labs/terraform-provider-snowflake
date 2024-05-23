@@ -3,20 +3,20 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateOauthPartnerSecurityIntegrationOptions] = new(CreateOauthPartnerSecurityIntegrationRequest)
-	_ optionsProvider[CreateOauthCustomSecurityIntegrationOptions]  = new(CreateOauthCustomSecurityIntegrationRequest)
-	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]        = new(CreateSaml2SecurityIntegrationRequest)
-	_ optionsProvider[CreateScimSecurityIntegrationOptions]         = new(CreateScimSecurityIntegrationRequest)
-	_ optionsProvider[AlterOauthPartnerSecurityIntegrationOptions]  = new(AlterOauthPartnerSecurityIntegrationRequest)
-	_ optionsProvider[AlterOauthCustomSecurityIntegrationOptions]   = new(AlterOauthCustomSecurityIntegrationRequest)
-	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]         = new(AlterSaml2SecurityIntegrationRequest)
-	_ optionsProvider[AlterScimSecurityIntegrationOptions]          = new(AlterScimSecurityIntegrationRequest)
-	_ optionsProvider[DropSecurityIntegrationOptions]               = new(DropSecurityIntegrationRequest)
-	_ optionsProvider[DescribeSecurityIntegrationOptions]           = new(DescribeSecurityIntegrationRequest)
-	_ optionsProvider[ShowSecurityIntegrationOptions]               = new(ShowSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthForPartnerApplicationsSecurityIntegrationOptions] = new(CreateOauthForPartnerApplicationsSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthForCustomClientsSecurityIntegrationOptions]       = new(CreateOauthForCustomClientsSecurityIntegrationRequest)
+	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                       = new(CreateSaml2SecurityIntegrationRequest)
+	_ optionsProvider[CreateScimSecurityIntegrationOptions]                        = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthForPartnerApplicationsSecurityIntegrationOptions]  = new(AlterOauthForPartnerApplicationsSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthForCustomClientsSecurityIntegrationOptions]        = new(AlterOauthForCustomClientsSecurityIntegrationRequest)
+	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                        = new(AlterSaml2SecurityIntegrationRequest)
+	_ optionsProvider[AlterScimSecurityIntegrationOptions]                         = new(AlterScimSecurityIntegrationRequest)
+	_ optionsProvider[DropSecurityIntegrationOptions]                              = new(DropSecurityIntegrationRequest)
+	_ optionsProvider[DescribeSecurityIntegrationOptions]                          = new(DescribeSecurityIntegrationRequest)
+	_ optionsProvider[ShowSecurityIntegrationOptions]                              = new(ShowSecurityIntegrationRequest)
 )
 
-type CreateOauthPartnerSecurityIntegrationRequest struct {
+type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	OrReplace                 *bool
 	IfNotExists               *bool
 	name                      AccountObjectIdentifier              // required
@@ -30,7 +30,7 @@ type CreateOauthPartnerSecurityIntegrationRequest struct {
 	Comment                   *string
 }
 
-func (r *CreateOauthPartnerSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
 }
 
@@ -38,7 +38,7 @@ type BlockedRolesListRequest struct {
 	BlockedRolesList []AccountObjectIdentifier
 }
 
-type CreateOauthCustomSecurityIntegrationRequest struct {
+type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	OrReplace                   *bool
 	IfNotExists                 *bool
 	name                        AccountObjectIdentifier                  // required
@@ -58,7 +58,7 @@ type CreateOauthCustomSecurityIntegrationRequest struct {
 	Comment                     *string
 }
 
-func (r *CreateOauthCustomSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
 }
 
@@ -109,59 +109,59 @@ func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier
 	return r.name
 }
 
-type AlterOauthPartnerSecurityIntegrationRequest struct {
+type AlterOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
-	Set       *OauthPartnerIntegrationSetRequest
-	Unset     *OauthPartnerIntegrationUnsetRequest
+	Set       *OauthForPartnerApplicationsIntegrationSetRequest
+	Unset     *OauthForPartnerApplicationsIntegrationUnsetRequest
 }
 
-type OauthPartnerIntegrationSetRequest struct {
+type OauthForPartnerApplicationsIntegrationSetRequest struct {
 	Enabled                   *bool
-	OauthRedirectUri          *string
 	OauthIssueRefreshTokens   *bool
+	OauthRedirectUri          *string
 	OauthRefreshTokenValidity *int
 	OauthUseSecondaryRoles    *OauthSecurityIntegrationUseSecondaryRolesOption
 	BlockedRolesList          *BlockedRolesListRequest
 	Comment                   *string
 }
 
-type OauthPartnerIntegrationUnsetRequest struct {
+type OauthForPartnerApplicationsIntegrationUnsetRequest struct {
 	Enabled                *bool
 	OauthUseSecondaryRoles *bool
 }
 
-type AlterOauthCustomSecurityIntegrationRequest struct {
+type AlterOauthForCustomClientsSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
-	Set       *OauthCustomIntegrationSetRequest
-	Unset     *OauthCustomIntegrationUnsetRequest
+	Set       *OauthForCustomClientsIntegrationSetRequest
+	Unset     *OauthForCustomClientsIntegrationUnsetRequest
 }
 
-type OauthCustomIntegrationSetRequest struct {
+type OauthForCustomClientsIntegrationSetRequest struct {
 	Enabled                     *bool
 	OauthRedirectUri            *string
 	OauthAllowNonTlsRedirectUri *bool
 	OauthEnforcePkce            *bool
-	OauthUseSecondaryRoles      *OauthSecurityIntegrationUseSecondaryRolesOption
 	PreAuthorizedRolesList      *PreAuthorizedRolesListRequest
 	BlockedRolesList            *BlockedRolesListRequest
 	OauthIssueRefreshTokens     *bool
 	OauthRefreshTokenValidity   *int
+	OauthUseSecondaryRoles      *OauthSecurityIntegrationUseSecondaryRolesOption
 	NetworkPolicy               *AccountObjectIdentifier
 	OauthClientRsaPublicKey     *string
 	OauthClientRsaPublicKey2    *string
 	Comment                     *string
 }
 
-type OauthCustomIntegrationUnsetRequest struct {
+type OauthForCustomClientsIntegrationUnsetRequest struct {
 	Enabled                  *bool
-	OauthUseSecondaryRoles   *bool
 	NetworkPolicy            *bool
+	OauthUseSecondaryRoles   *bool
 	OauthClientRsaPublicKey  *bool
 	OauthClientRsaPublicKey2 *bool
 }

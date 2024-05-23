@@ -12,12 +12,12 @@ type securityIntegrations struct {
 	client *Client
 }
 
-func (v *securityIntegrations) CreateOauthPartner(ctx context.Context, request *CreateOauthPartnerSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateOauthForPartnerApplications(ctx context.Context, request *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) CreateOauthCustom(ctx context.Context, request *CreateOauthCustomSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateOauthForCustomClients(ctx context.Context, request *CreateOauthForCustomClientsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -32,12 +32,12 @@ func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateSc
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterOauthPartner(ctx context.Context, request *AlterOauthPartnerSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterOauthForPartnerApplications(ctx context.Context, request *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterOauthCustom(ctx context.Context, request *AlterOauthCustomSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterOauthForCustomClients(ctx context.Context, request *AlterOauthForCustomClientsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -79,7 +79,7 @@ func (v *securityIntegrations) Show(ctx context.Context, request *ShowSecurityIn
 }
 
 func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
-	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(&Like{
+	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(Like{
 		Pattern: String(id.Name()),
 	}))
 	if err != nil {
@@ -88,8 +88,8 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateOauthPartnerSecurityIntegrationRequest) toOpts() *CreateOauthPartnerSecurityIntegrationOptions {
-	opts := &CreateOauthPartnerSecurityIntegrationOptions{
+func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *CreateOauthForPartnerApplicationsSecurityIntegrationOptions {
+	opts := &CreateOauthForPartnerApplicationsSecurityIntegrationOptions{
 		OrReplace:                 r.OrReplace,
 		IfNotExists:               r.IfNotExists,
 		name:                      r.name,
@@ -110,8 +110,8 @@ func (r *CreateOauthPartnerSecurityIntegrationRequest) toOpts() *CreateOauthPart
 	return opts
 }
 
-func (r *CreateOauthCustomSecurityIntegrationRequest) toOpts() *CreateOauthCustomSecurityIntegrationOptions {
-	opts := &CreateOauthCustomSecurityIntegrationOptions{
+func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) toOpts() *CreateOauthForCustomClientsSecurityIntegrationOptions {
+	opts := &CreateOauthForCustomClientsSecurityIntegrationOptions{
 		OrReplace:                   r.OrReplace,
 		IfNotExists:                 r.IfNotExists,
 		name:                        r.name,
@@ -183,18 +183,18 @@ func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityInteg
 	return opts
 }
 
-func (r *AlterOauthPartnerSecurityIntegrationRequest) toOpts() *AlterOauthPartnerSecurityIntegrationOptions {
-	opts := &AlterOauthPartnerSecurityIntegrationOptions{
+func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *AlterOauthForPartnerApplicationsSecurityIntegrationOptions {
+	opts := &AlterOauthForPartnerApplicationsSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &OauthPartnerIntegrationSet{
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled:                   r.Set.Enabled,
-			OauthRedirectUri:          r.Set.OauthRedirectUri,
 			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
+			OauthRedirectUri:          r.Set.OauthRedirectUri,
 			OauthRefreshTokenValidity: r.Set.OauthRefreshTokenValidity,
 			OauthUseSecondaryRoles:    r.Set.OauthUseSecondaryRoles,
 
@@ -207,7 +207,7 @@ func (r *AlterOauthPartnerSecurityIntegrationRequest) toOpts() *AlterOauthPartne
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &OauthPartnerIntegrationUnset{
+		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{
 			Enabled:                r.Unset.Enabled,
 			OauthUseSecondaryRoles: r.Unset.OauthUseSecondaryRoles,
 		}
@@ -215,23 +215,23 @@ func (r *AlterOauthPartnerSecurityIntegrationRequest) toOpts() *AlterOauthPartne
 	return opts
 }
 
-func (r *AlterOauthCustomSecurityIntegrationRequest) toOpts() *AlterOauthCustomSecurityIntegrationOptions {
-	opts := &AlterOauthCustomSecurityIntegrationOptions{
+func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOauthForCustomClientsSecurityIntegrationOptions {
+	opts := &AlterOauthForCustomClientsSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &OauthCustomIntegrationSet{
+		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled:                     r.Set.Enabled,
 			OauthRedirectUri:            r.Set.OauthRedirectUri,
 			OauthAllowNonTlsRedirectUri: r.Set.OauthAllowNonTlsRedirectUri,
 			OauthEnforcePkce:            r.Set.OauthEnforcePkce,
-			OauthUseSecondaryRoles:      r.Set.OauthUseSecondaryRoles,
 
 			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
 			OauthRefreshTokenValidity: r.Set.OauthRefreshTokenValidity,
+			OauthUseSecondaryRoles:    r.Set.OauthUseSecondaryRoles,
 			NetworkPolicy:             r.Set.NetworkPolicy,
 			OauthClientRsaPublicKey:   r.Set.OauthClientRsaPublicKey,
 			OauthClientRsaPublicKey2:  r.Set.OauthClientRsaPublicKey2,
@@ -249,12 +249,12 @@ func (r *AlterOauthCustomSecurityIntegrationRequest) toOpts() *AlterOauthCustomS
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &OauthCustomIntegrationUnset{
+		opts.Unset = &OauthForCustomClientsIntegrationUnset{
 			Enabled:                  r.Unset.Enabled,
-			OauthUseSecondaryRoles:   r.Unset.OauthUseSecondaryRoles,
 			NetworkPolicy:            r.Unset.NetworkPolicy,
 			OauthClientRsaPublicKey:  r.Unset.OauthClientRsaPublicKey,
 			OauthClientRsaPublicKey2: r.Unset.OauthClientRsaPublicKey2,
+			OauthUseSecondaryRoles:   r.Unset.OauthUseSecondaryRoles,
 		}
 	}
 	return opts

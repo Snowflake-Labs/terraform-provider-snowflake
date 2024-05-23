@@ -4,58 +4,58 @@ package sdk
 
 import ()
 
-func NewCreateOauthPartnerSecurityIntegrationRequest(
+func NewCreateOauthForPartnerApplicationsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClient OauthSecurityIntegrationClientOption,
-) *CreateOauthPartnerSecurityIntegrationRequest {
-	s := CreateOauthPartnerSecurityIntegrationRequest{}
+) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s := CreateOauthForPartnerApplicationsSecurityIntegrationRequest{}
 	s.name = name
 	s.OauthClient = OauthClient
 	return &s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthRedirectUri(OauthRedirectUri *string) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.OauthRedirectUri = OauthRedirectUri
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithOauthRedirectUri(OauthRedirectUri string) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.OauthRedirectUri = &OauthRedirectUri
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.Enabled = Enabled
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithEnabled(Enabled bool) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens bool) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.OauthIssueRefreshTokens = &OauthIssueRefreshTokens
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.BlockedRolesList = BlockedRolesList
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList BlockedRolesListRequest) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.BlockedRolesList = &BlockedRolesList
 	return s
 }
 
-func (s *CreateOauthPartnerSecurityIntegrationRequest) WithComment(Comment *string) *CreateOauthPartnerSecurityIntegrationRequest {
-	s.Comment = Comment
+func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithComment(Comment string) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -68,85 +68,85 @@ func (s *BlockedRolesListRequest) WithBlockedRolesList(BlockedRolesList []Accoun
 	return s
 }
 
-func NewCreateOauthCustomSecurityIntegrationRequest(
+func NewCreateOauthForCustomClientsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClientType OauthSecurityIntegrationClientTypeOption,
 	OauthRedirectUri string,
-) *CreateOauthCustomSecurityIntegrationRequest {
-	s := CreateOauthCustomSecurityIntegrationRequest{}
+) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s := CreateOauthForCustomClientsSecurityIntegrationRequest{}
 	s.name = name
 	s.OauthClientType = OauthClientType
 	s.OauthRedirectUri = OauthRedirectUri
 	return &s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithEnabled(Enabled *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.Enabled = Enabled
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithEnabled(Enabled bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthAllowNonTlsRedirectUri = OauthAllowNonTlsRedirectUri
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthAllowNonTlsRedirectUri = &OauthAllowNonTlsRedirectUri
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthEnforcePkce = OauthEnforcePkce
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthEnforcePkce(OauthEnforcePkce bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthEnforcePkce = &OauthEnforcePkce
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles OauthSecurityIntegrationUseSecondaryRolesOption) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *CreateOauthCustomSecurityIntegrationRequest {
-	s.PreAuthorizedRolesList = PreAuthorizedRolesList
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList PreAuthorizedRolesListRequest) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.PreAuthorizedRolesList = &PreAuthorizedRolesList
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *CreateOauthCustomSecurityIntegrationRequest {
-	s.BlockedRolesList = BlockedRolesList
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithBlockedRolesList(BlockedRolesList BlockedRolesListRequest) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.BlockedRolesList = &BlockedRolesList
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthIssueRefreshTokens = &OauthIssueRefreshTokens
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateOauthCustomSecurityIntegrationRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy AccountObjectIdentifier) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey string) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthClientRsaPublicKey = &OauthClientRsaPublicKey
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *CreateOauthCustomSecurityIntegrationRequest {
-	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 string) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.OauthClientRsaPublicKey2 = &OauthClientRsaPublicKey2
 	return s
 }
 
-func (s *CreateOauthCustomSecurityIntegrationRequest) WithComment(Comment *string) *CreateOauthCustomSecurityIntegrationRequest {
-	s.Comment = Comment
+func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithComment(Comment string) *CreateOauthForCustomClientsSecurityIntegrationRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -177,13 +177,13 @@ func NewCreateSaml2SecurityIntegrationRequest(
 	return &s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateSaml2SecurityIntegrationRequest {
-	s.OrReplace = OrReplace
+func (s *CreateSaml2SecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateSaml2SecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateSaml2SecurityIntegrationRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateSaml2SecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateSaml2SecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
@@ -197,53 +197,53 @@ func (s *CreateSaml2SecurityIntegrationRequest) WithAllowedEmailPatterns(Allowed
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2SpInitiatedLoginPageLabel = Saml2SpInitiatedLoginPageLabel
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2SpInitiatedLoginPageLabel = &Saml2SpInitiatedLoginPageLabel
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2EnableSpInitiated = Saml2EnableSpInitiated
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated bool) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2EnableSpInitiated = &Saml2EnableSpInitiated
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2SnowflakeX509Cert = Saml2SnowflakeX509Cert
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2SnowflakeX509Cert = &Saml2SnowflakeX509Cert
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2SignRequest = Saml2SignRequest
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SignRequest(Saml2SignRequest bool) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2SignRequest = &Saml2SignRequest
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2RequestedNameidFormat = &Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2PostLogoutRedirectUrl = &Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2ForceAuthn = Saml2ForceAuthn
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2ForceAuthn(Saml2ForceAuthn bool) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2ForceAuthn = &Saml2ForceAuthn
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2SnowflakeIssuerUrl = Saml2SnowflakeIssuerUrl
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2SnowflakeIssuerUrl = &Saml2SnowflakeIssuerUrl
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Saml2SnowflakeAcsUrl = Saml2SnowflakeAcsUrl
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl string) *CreateSaml2SecurityIntegrationRequest {
+	s.Saml2SnowflakeAcsUrl = &Saml2SnowflakeAcsUrl
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithComment(Comment *string) *CreateSaml2SecurityIntegrationRequest {
-	s.Comment = Comment
+func (s *CreateSaml2SecurityIntegrationRequest) WithComment(Comment string) *CreateSaml2SecurityIntegrationRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -261,245 +261,245 @@ func NewCreateScimSecurityIntegrationRequest(
 	return &s
 }
 
-func (s *CreateScimSecurityIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateScimSecurityIntegrationRequest {
-	s.OrReplace = OrReplace
+func (s *CreateScimSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateScimSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateScimSecurityIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateScimSecurityIntegrationRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateScimSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateScimSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateScimSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *CreateScimSecurityIntegrationRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *CreateScimSecurityIntegrationRequest) WithNetworkPolicy(NetworkPolicy AccountObjectIdentifier) *CreateScimSecurityIntegrationRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *CreateScimSecurityIntegrationRequest) WithSyncPassword(SyncPassword *bool) *CreateScimSecurityIntegrationRequest {
-	s.SyncPassword = SyncPassword
+func (s *CreateScimSecurityIntegrationRequest) WithSyncPassword(SyncPassword bool) *CreateScimSecurityIntegrationRequest {
+	s.SyncPassword = &SyncPassword
 	return s
 }
 
-func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment *string) *CreateScimSecurityIntegrationRequest {
-	s.Comment = Comment
+func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment string) *CreateScimSecurityIntegrationRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func NewAlterOauthPartnerSecurityIntegrationRequest(
+func NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterOauthPartnerSecurityIntegrationRequest {
-	s := AlterOauthPartnerSecurityIntegrationRequest{}
+) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s := AlterOauthForPartnerApplicationsSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterOauthPartnerSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterOauthPartnerSecurityIntegrationRequest {
-	s.IfExists = IfExists
+func (s *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterOauthPartnerSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterOauthPartnerSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthPartnerSecurityIntegrationRequest {
+func (s *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterOauthPartnerSecurityIntegrationRequest) WithSet(Set *OauthPartnerIntegrationSetRequest) *AlterOauthPartnerSecurityIntegrationRequest {
-	s.Set = Set
+func (s *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) WithSet(Set OauthForPartnerApplicationsIntegrationSetRequest) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterOauthPartnerSecurityIntegrationRequest) WithUnset(Unset *OauthPartnerIntegrationUnsetRequest) *AlterOauthPartnerSecurityIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) WithUnset(Unset OauthForPartnerApplicationsIntegrationUnsetRequest) *AlterOauthForPartnerApplicationsSecurityIntegrationRequest {
+	s.Unset = &Unset
 	return s
 }
 
-func NewOauthPartnerIntegrationSetRequest() *OauthPartnerIntegrationSetRequest {
-	return &OauthPartnerIntegrationSetRequest{}
+func NewOauthForPartnerApplicationsIntegrationSetRequest() *OauthForPartnerApplicationsIntegrationSetRequest {
+	return &OauthForPartnerApplicationsIntegrationSetRequest{}
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithEnabled(Enabled *bool) *OauthPartnerIntegrationSetRequest {
-	s.Enabled = Enabled
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithEnabled(Enabled bool) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *OauthPartnerIntegrationSetRequest {
-	s.OauthRedirectUri = OauthRedirectUri
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens bool) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.OauthIssueRefreshTokens = &OauthIssueRefreshTokens
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *OauthPartnerIntegrationSetRequest {
-	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri string) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.OauthRedirectUri = &OauthRedirectUri
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *OauthPartnerIntegrationSetRequest {
-	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *OauthPartnerIntegrationSetRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles OauthSecurityIntegrationUseSecondaryRolesOption) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *OauthPartnerIntegrationSetRequest {
-	s.BlockedRolesList = BlockedRolesList
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList BlockedRolesListRequest) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.BlockedRolesList = &BlockedRolesList
 	return s
 }
 
-func (s *OauthPartnerIntegrationSetRequest) WithComment(Comment *string) *OauthPartnerIntegrationSetRequest {
-	s.Comment = Comment
+func (s *OauthForPartnerApplicationsIntegrationSetRequest) WithComment(Comment string) *OauthForPartnerApplicationsIntegrationSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func NewOauthPartnerIntegrationUnsetRequest() *OauthPartnerIntegrationUnsetRequest {
-	return &OauthPartnerIntegrationUnsetRequest{}
+func NewOauthForPartnerApplicationsIntegrationUnsetRequest() *OauthForPartnerApplicationsIntegrationUnsetRequest {
+	return &OauthForPartnerApplicationsIntegrationUnsetRequest{}
 }
 
-func (s *OauthPartnerIntegrationUnsetRequest) WithEnabled(Enabled *bool) *OauthPartnerIntegrationUnsetRequest {
-	s.Enabled = Enabled
+func (s *OauthForPartnerApplicationsIntegrationUnsetRequest) WithEnabled(Enabled bool) *OauthForPartnerApplicationsIntegrationUnsetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *OauthPartnerIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *OauthPartnerIntegrationUnsetRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *OauthForPartnerApplicationsIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles bool) *OauthForPartnerApplicationsIntegrationUnsetRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
-func NewAlterOauthCustomSecurityIntegrationRequest(
+func NewAlterOauthForCustomClientsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-) *AlterOauthCustomSecurityIntegrationRequest {
-	s := AlterOauthCustomSecurityIntegrationRequest{}
+) *AlterOauthForCustomClientsSecurityIntegrationRequest {
+	s := AlterOauthForCustomClientsSecurityIntegrationRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterOauthCustomSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterOauthCustomSecurityIntegrationRequest {
-	s.IfExists = IfExists
+func (s *AlterOauthForCustomClientsSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterOauthForCustomClientsSecurityIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterOauthCustomSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthForCustomClientsSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterOauthForCustomClientsSecurityIntegrationRequest {
 	s.SetTags = SetTags
 	return s
 }
 
-func (s *AlterOauthCustomSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthCustomSecurityIntegrationRequest {
+func (s *AlterOauthForCustomClientsSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterOauthForCustomClientsSecurityIntegrationRequest {
 	s.UnsetTags = UnsetTags
 	return s
 }
 
-func (s *AlterOauthCustomSecurityIntegrationRequest) WithSet(Set *OauthCustomIntegrationSetRequest) *AlterOauthCustomSecurityIntegrationRequest {
-	s.Set = Set
+func (s *AlterOauthForCustomClientsSecurityIntegrationRequest) WithSet(Set OauthForCustomClientsIntegrationSetRequest) *AlterOauthForCustomClientsSecurityIntegrationRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterOauthCustomSecurityIntegrationRequest) WithUnset(Unset *OauthCustomIntegrationUnsetRequest) *AlterOauthCustomSecurityIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterOauthForCustomClientsSecurityIntegrationRequest) WithUnset(Unset OauthForCustomClientsIntegrationUnsetRequest) *AlterOauthForCustomClientsSecurityIntegrationRequest {
+	s.Unset = &Unset
 	return s
 }
 
-func NewOauthCustomIntegrationSetRequest() *OauthCustomIntegrationSetRequest {
-	return &OauthCustomIntegrationSetRequest{}
+func NewOauthForCustomClientsIntegrationSetRequest() *OauthForCustomClientsIntegrationSetRequest {
+	return &OauthForCustomClientsIntegrationSetRequest{}
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithEnabled(Enabled *bool) *OauthCustomIntegrationSetRequest {
-	s.Enabled = Enabled
+func (s *OauthForCustomClientsIntegrationSetRequest) WithEnabled(Enabled bool) *OauthForCustomClientsIntegrationSetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri *string) *OauthCustomIntegrationSetRequest {
-	s.OauthRedirectUri = OauthRedirectUri
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthRedirectUri(OauthRedirectUri string) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthRedirectUri = &OauthRedirectUri
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri *bool) *OauthCustomIntegrationSetRequest {
-	s.OauthAllowNonTlsRedirectUri = OauthAllowNonTlsRedirectUri
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthAllowNonTlsRedirectUri(OauthAllowNonTlsRedirectUri bool) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthAllowNonTlsRedirectUri = &OauthAllowNonTlsRedirectUri
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthEnforcePkce(OauthEnforcePkce *bool) *OauthCustomIntegrationSetRequest {
-	s.OauthEnforcePkce = OauthEnforcePkce
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthEnforcePkce(OauthEnforcePkce bool) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthEnforcePkce = &OauthEnforcePkce
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *OauthSecurityIntegrationUseSecondaryRolesOption) *OauthCustomIntegrationSetRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *OauthForCustomClientsIntegrationSetRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList PreAuthorizedRolesListRequest) *OauthForCustomClientsIntegrationSetRequest {
+	s.PreAuthorizedRolesList = &PreAuthorizedRolesList
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithPreAuthorizedRolesList(PreAuthorizedRolesList *PreAuthorizedRolesListRequest) *OauthCustomIntegrationSetRequest {
-	s.PreAuthorizedRolesList = PreAuthorizedRolesList
+func (s *OauthForCustomClientsIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList BlockedRolesListRequest) *OauthForCustomClientsIntegrationSetRequest {
+	s.BlockedRolesList = &BlockedRolesList
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithBlockedRolesList(BlockedRolesList *BlockedRolesListRequest) *OauthCustomIntegrationSetRequest {
-	s.BlockedRolesList = BlockedRolesList
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens bool) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthIssueRefreshTokens = &OauthIssueRefreshTokens
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthIssueRefreshTokens(OauthIssueRefreshTokens *bool) *OauthCustomIntegrationSetRequest {
-	s.OauthIssueRefreshTokens = OauthIssueRefreshTokens
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity *int) *OauthCustomIntegrationSetRequest {
-	s.OauthRefreshTokenValidity = OauthRefreshTokenValidity
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles OauthSecurityIntegrationUseSecondaryRolesOption) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *OauthCustomIntegrationSetRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *OauthForCustomClientsIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy AccountObjectIdentifier) *OauthForCustomClientsIntegrationSetRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *string) *OauthCustomIntegrationSetRequest {
-	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey string) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthClientRsaPublicKey = &OauthClientRsaPublicKey
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *string) *OauthCustomIntegrationSetRequest {
-	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
+func (s *OauthForCustomClientsIntegrationSetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 string) *OauthForCustomClientsIntegrationSetRequest {
+	s.OauthClientRsaPublicKey2 = &OauthClientRsaPublicKey2
 	return s
 }
 
-func (s *OauthCustomIntegrationSetRequest) WithComment(Comment *string) *OauthCustomIntegrationSetRequest {
-	s.Comment = Comment
+func (s *OauthForCustomClientsIntegrationSetRequest) WithComment(Comment string) *OauthForCustomClientsIntegrationSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func NewOauthCustomIntegrationUnsetRequest() *OauthCustomIntegrationUnsetRequest {
-	return &OauthCustomIntegrationUnsetRequest{}
+func NewOauthForCustomClientsIntegrationUnsetRequest() *OauthForCustomClientsIntegrationUnsetRequest {
+	return &OauthForCustomClientsIntegrationUnsetRequest{}
 }
 
-func (s *OauthCustomIntegrationUnsetRequest) WithEnabled(Enabled *bool) *OauthCustomIntegrationUnsetRequest {
-	s.Enabled = Enabled
+func (s *OauthForCustomClientsIntegrationUnsetRequest) WithEnabled(Enabled bool) *OauthForCustomClientsIntegrationUnsetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *OauthCustomIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles *bool) *OauthCustomIntegrationUnsetRequest {
-	s.OauthUseSecondaryRoles = OauthUseSecondaryRoles
+func (s *OauthForCustomClientsIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy bool) *OauthForCustomClientsIntegrationUnsetRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *OauthCustomIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *OauthCustomIntegrationUnsetRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *OauthForCustomClientsIntegrationUnsetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey bool) *OauthForCustomClientsIntegrationUnsetRequest {
+	s.OauthClientRsaPublicKey = &OauthClientRsaPublicKey
 	return s
 }
 
-func (s *OauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey(OauthClientRsaPublicKey *bool) *OauthCustomIntegrationUnsetRequest {
-	s.OauthClientRsaPublicKey = OauthClientRsaPublicKey
+func (s *OauthForCustomClientsIntegrationUnsetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 bool) *OauthForCustomClientsIntegrationUnsetRequest {
+	s.OauthClientRsaPublicKey2 = &OauthClientRsaPublicKey2
 	return s
 }
 
-func (s *OauthCustomIntegrationUnsetRequest) WithOauthClientRsaPublicKey2(OauthClientRsaPublicKey2 *bool) *OauthCustomIntegrationUnsetRequest {
-	s.OauthClientRsaPublicKey2 = OauthClientRsaPublicKey2
+func (s *OauthForCustomClientsIntegrationUnsetRequest) WithOauthUseSecondaryRoles(OauthUseSecondaryRoles bool) *OauthForCustomClientsIntegrationUnsetRequest {
+	s.OauthUseSecondaryRoles = &OauthUseSecondaryRoles
 	return s
 }
 
@@ -511,8 +511,8 @@ func NewAlterSaml2SecurityIntegrationRequest(
 	return &s
 }
 
-func (s *AlterSaml2SecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterSaml2SecurityIntegrationRequest {
-	s.IfExists = IfExists
+func (s *AlterSaml2SecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterSaml2SecurityIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -526,18 +526,18 @@ func (s *AlterSaml2SecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectI
 	return s
 }
 
-func (s *AlterSaml2SecurityIntegrationRequest) WithSet(Set *Saml2IntegrationSetRequest) *AlterSaml2SecurityIntegrationRequest {
-	s.Set = Set
+func (s *AlterSaml2SecurityIntegrationRequest) WithSet(Set Saml2IntegrationSetRequest) *AlterSaml2SecurityIntegrationRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterSaml2SecurityIntegrationRequest) WithUnset(Unset *Saml2IntegrationUnsetRequest) *AlterSaml2SecurityIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterSaml2SecurityIntegrationRequest) WithUnset(Unset Saml2IntegrationUnsetRequest) *AlterSaml2SecurityIntegrationRequest {
+	s.Unset = &Unset
 	return s
 }
 
-func (s *AlterSaml2SecurityIntegrationRequest) WithRefreshSaml2SnowflakePrivateKey(RefreshSaml2SnowflakePrivateKey *bool) *AlterSaml2SecurityIntegrationRequest {
-	s.RefreshSaml2SnowflakePrivateKey = RefreshSaml2SnowflakePrivateKey
+func (s *AlterSaml2SecurityIntegrationRequest) WithRefreshSaml2SnowflakePrivateKey(RefreshSaml2SnowflakePrivateKey bool) *AlterSaml2SecurityIntegrationRequest {
+	s.RefreshSaml2SnowflakePrivateKey = &RefreshSaml2SnowflakePrivateKey
 	return s
 }
 
@@ -545,28 +545,28 @@ func NewSaml2IntegrationSetRequest() *Saml2IntegrationSetRequest {
 	return &Saml2IntegrationSetRequest{}
 }
 
-func (s *Saml2IntegrationSetRequest) WithEnabled(Enabled *bool) *Saml2IntegrationSetRequest {
-	s.Enabled = Enabled
+func (s *Saml2IntegrationSetRequest) WithEnabled(Enabled bool) *Saml2IntegrationSetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2Issuer(Saml2Issuer *string) *Saml2IntegrationSetRequest {
-	s.Saml2Issuer = Saml2Issuer
+func (s *Saml2IntegrationSetRequest) WithSaml2Issuer(Saml2Issuer string) *Saml2IntegrationSetRequest {
+	s.Saml2Issuer = &Saml2Issuer
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SsoUrl(Saml2SsoUrl *string) *Saml2IntegrationSetRequest {
-	s.Saml2SsoUrl = Saml2SsoUrl
+func (s *Saml2IntegrationSetRequest) WithSaml2SsoUrl(Saml2SsoUrl string) *Saml2IntegrationSetRequest {
+	s.Saml2SsoUrl = &Saml2SsoUrl
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2Provider(Saml2Provider *string) *Saml2IntegrationSetRequest {
-	s.Saml2Provider = Saml2Provider
+func (s *Saml2IntegrationSetRequest) WithSaml2Provider(Saml2Provider string) *Saml2IntegrationSetRequest {
+	s.Saml2Provider = &Saml2Provider
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2X509Cert(Saml2X509Cert *string) *Saml2IntegrationSetRequest {
-	s.Saml2X509Cert = Saml2X509Cert
+func (s *Saml2IntegrationSetRequest) WithSaml2X509Cert(Saml2X509Cert string) *Saml2IntegrationSetRequest {
+	s.Saml2X509Cert = &Saml2X509Cert
 	return s
 }
 
@@ -580,53 +580,53 @@ func (s *Saml2IntegrationSetRequest) WithAllowedEmailPatterns(AllowedEmailPatter
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel *string) *Saml2IntegrationSetRequest {
-	s.Saml2SpInitiatedLoginPageLabel = Saml2SpInitiatedLoginPageLabel
+func (s *Saml2IntegrationSetRequest) WithSaml2SpInitiatedLoginPageLabel(Saml2SpInitiatedLoginPageLabel string) *Saml2IntegrationSetRequest {
+	s.Saml2SpInitiatedLoginPageLabel = &Saml2SpInitiatedLoginPageLabel
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated *bool) *Saml2IntegrationSetRequest {
-	s.Saml2EnableSpInitiated = Saml2EnableSpInitiated
+func (s *Saml2IntegrationSetRequest) WithSaml2EnableSpInitiated(Saml2EnableSpInitiated bool) *Saml2IntegrationSetRequest {
+	s.Saml2EnableSpInitiated = &Saml2EnableSpInitiated
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert *string) *Saml2IntegrationSetRequest {
-	s.Saml2SnowflakeX509Cert = Saml2SnowflakeX509Cert
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeX509Cert(Saml2SnowflakeX509Cert string) *Saml2IntegrationSetRequest {
+	s.Saml2SnowflakeX509Cert = &Saml2SnowflakeX509Cert
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SignRequest(Saml2SignRequest *bool) *Saml2IntegrationSetRequest {
-	s.Saml2SignRequest = Saml2SignRequest
+func (s *Saml2IntegrationSetRequest) WithSaml2SignRequest(Saml2SignRequest bool) *Saml2IntegrationSetRequest {
+	s.Saml2SignRequest = &Saml2SignRequest
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *string) *Saml2IntegrationSetRequest {
-	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
+func (s *Saml2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat string) *Saml2IntegrationSetRequest {
+	s.Saml2RequestedNameidFormat = &Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *string) *Saml2IntegrationSetRequest {
-	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
+func (s *Saml2IntegrationSetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl string) *Saml2IntegrationSetRequest {
+	s.Saml2PostLogoutRedirectUrl = &Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *Saml2IntegrationSetRequest {
-	s.Saml2ForceAuthn = Saml2ForceAuthn
+func (s *Saml2IntegrationSetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn bool) *Saml2IntegrationSetRequest {
+	s.Saml2ForceAuthn = &Saml2ForceAuthn
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl *string) *Saml2IntegrationSetRequest {
-	s.Saml2SnowflakeIssuerUrl = Saml2SnowflakeIssuerUrl
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeIssuerUrl(Saml2SnowflakeIssuerUrl string) *Saml2IntegrationSetRequest {
+	s.Saml2SnowflakeIssuerUrl = &Saml2SnowflakeIssuerUrl
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl *string) *Saml2IntegrationSetRequest {
-	s.Saml2SnowflakeAcsUrl = Saml2SnowflakeAcsUrl
+func (s *Saml2IntegrationSetRequest) WithSaml2SnowflakeAcsUrl(Saml2SnowflakeAcsUrl string) *Saml2IntegrationSetRequest {
+	s.Saml2SnowflakeAcsUrl = &Saml2SnowflakeAcsUrl
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithComment(Comment *string) *Saml2IntegrationSetRequest {
-	s.Comment = Comment
+func (s *Saml2IntegrationSetRequest) WithComment(Comment string) *Saml2IntegrationSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -634,23 +634,23 @@ func NewSaml2IntegrationUnsetRequest() *Saml2IntegrationUnsetRequest {
 	return &Saml2IntegrationUnsetRequest{}
 }
 
-func (s *Saml2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn *bool) *Saml2IntegrationUnsetRequest {
-	s.Saml2ForceAuthn = Saml2ForceAuthn
+func (s *Saml2IntegrationUnsetRequest) WithSaml2ForceAuthn(Saml2ForceAuthn bool) *Saml2IntegrationUnsetRequest {
+	s.Saml2ForceAuthn = &Saml2ForceAuthn
 	return s
 }
 
-func (s *Saml2IntegrationUnsetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat *bool) *Saml2IntegrationUnsetRequest {
-	s.Saml2RequestedNameidFormat = Saml2RequestedNameidFormat
+func (s *Saml2IntegrationUnsetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat bool) *Saml2IntegrationUnsetRequest {
+	s.Saml2RequestedNameidFormat = &Saml2RequestedNameidFormat
 	return s
 }
 
-func (s *Saml2IntegrationUnsetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl *bool) *Saml2IntegrationUnsetRequest {
-	s.Saml2PostLogoutRedirectUrl = Saml2PostLogoutRedirectUrl
+func (s *Saml2IntegrationUnsetRequest) WithSaml2PostLogoutRedirectUrl(Saml2PostLogoutRedirectUrl bool) *Saml2IntegrationUnsetRequest {
+	s.Saml2PostLogoutRedirectUrl = &Saml2PostLogoutRedirectUrl
 	return s
 }
 
-func (s *Saml2IntegrationUnsetRequest) WithComment(Comment *bool) *Saml2IntegrationUnsetRequest {
-	s.Comment = Comment
+func (s *Saml2IntegrationUnsetRequest) WithComment(Comment bool) *Saml2IntegrationUnsetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -662,8 +662,8 @@ func NewAlterScimSecurityIntegrationRequest(
 	return &s
 }
 
-func (s *AlterScimSecurityIntegrationRequest) WithIfExists(IfExists *bool) *AlterScimSecurityIntegrationRequest {
-	s.IfExists = IfExists
+func (s *AlterScimSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterScimSecurityIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -677,13 +677,13 @@ func (s *AlterScimSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectId
 	return s
 }
 
-func (s *AlterScimSecurityIntegrationRequest) WithSet(Set *ScimIntegrationSetRequest) *AlterScimSecurityIntegrationRequest {
-	s.Set = Set
+func (s *AlterScimSecurityIntegrationRequest) WithSet(Set ScimIntegrationSetRequest) *AlterScimSecurityIntegrationRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterScimSecurityIntegrationRequest) WithUnset(Unset *ScimIntegrationUnsetRequest) *AlterScimSecurityIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterScimSecurityIntegrationRequest) WithUnset(Unset ScimIntegrationUnsetRequest) *AlterScimSecurityIntegrationRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -691,23 +691,23 @@ func NewScimIntegrationSetRequest() *ScimIntegrationSetRequest {
 	return &ScimIntegrationSetRequest{}
 }
 
-func (s *ScimIntegrationSetRequest) WithEnabled(Enabled *bool) *ScimIntegrationSetRequest {
-	s.Enabled = Enabled
+func (s *ScimIntegrationSetRequest) WithEnabled(Enabled bool) *ScimIntegrationSetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *ScimIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy *AccountObjectIdentifier) *ScimIntegrationSetRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *ScimIntegrationSetRequest) WithNetworkPolicy(NetworkPolicy AccountObjectIdentifier) *ScimIntegrationSetRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *ScimIntegrationSetRequest) WithSyncPassword(SyncPassword *bool) *ScimIntegrationSetRequest {
-	s.SyncPassword = SyncPassword
+func (s *ScimIntegrationSetRequest) WithSyncPassword(SyncPassword bool) *ScimIntegrationSetRequest {
+	s.SyncPassword = &SyncPassword
 	return s
 }
 
-func (s *ScimIntegrationSetRequest) WithComment(Comment *string) *ScimIntegrationSetRequest {
-	s.Comment = Comment
+func (s *ScimIntegrationSetRequest) WithComment(Comment string) *ScimIntegrationSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -715,23 +715,23 @@ func NewScimIntegrationUnsetRequest() *ScimIntegrationUnsetRequest {
 	return &ScimIntegrationUnsetRequest{}
 }
 
-func (s *ScimIntegrationUnsetRequest) WithEnabled(Enabled *bool) *ScimIntegrationUnsetRequest {
-	s.Enabled = Enabled
+func (s *ScimIntegrationUnsetRequest) WithEnabled(Enabled bool) *ScimIntegrationUnsetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *ScimIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy *bool) *ScimIntegrationUnsetRequest {
-	s.NetworkPolicy = NetworkPolicy
+func (s *ScimIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy bool) *ScimIntegrationUnsetRequest {
+	s.NetworkPolicy = &NetworkPolicy
 	return s
 }
 
-func (s *ScimIntegrationUnsetRequest) WithSyncPassword(SyncPassword *bool) *ScimIntegrationUnsetRequest {
-	s.SyncPassword = SyncPassword
+func (s *ScimIntegrationUnsetRequest) WithSyncPassword(SyncPassword bool) *ScimIntegrationUnsetRequest {
+	s.SyncPassword = &SyncPassword
 	return s
 }
 
-func (s *ScimIntegrationUnsetRequest) WithComment(Comment *bool) *ScimIntegrationUnsetRequest {
-	s.Comment = Comment
+func (s *ScimIntegrationUnsetRequest) WithComment(Comment bool) *ScimIntegrationUnsetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -743,8 +743,8 @@ func NewDropSecurityIntegrationRequest(
 	return &s
 }
 
-func (s *DropSecurityIntegrationRequest) WithIfExists(IfExists *bool) *DropSecurityIntegrationRequest {
-	s.IfExists = IfExists
+func (s *DropSecurityIntegrationRequest) WithIfExists(IfExists bool) *DropSecurityIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -760,7 +760,7 @@ func NewShowSecurityIntegrationRequest() *ShowSecurityIntegrationRequest {
 	return &ShowSecurityIntegrationRequest{}
 }
 
-func (s *ShowSecurityIntegrationRequest) WithLike(Like *Like) *ShowSecurityIntegrationRequest {
-	s.Like = Like
+func (s *ShowSecurityIntegrationRequest) WithLike(Like Like) *ShowSecurityIntegrationRequest {
+	s.Like = &Like
 	return s
 }
