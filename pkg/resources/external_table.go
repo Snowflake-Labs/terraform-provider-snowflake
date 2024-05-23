@@ -175,29 +175,18 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 			columnDef["as"],
 		)
 	}
-	autoRefresh := sdk.Bool(d.Get("auto_refresh").(bool))
-	refreshOnCreate := sdk.Bool(d.Get("refresh_on_create").(bool))
-	copyGrants := sdk.Bool(d.Get("copy_grants").(bool))
+	autoRefresh := d.Get("auto_refresh").(bool)
+	refreshOnCreate := d.Get("refresh_on_create").(bool)
+	copyGrants := d.Get("copy_grants").(bool)
 
 	var partitionBy []string
 	if v, ok := d.GetOk("partition_by"); ok {
 		partitionBy = expandStringList(v.([]any))
 	}
 
-	var pattern *string
-	if v, ok := d.GetOk("pattern"); ok {
-		pattern = sdk.String(v.(string))
-	}
-
-	var awsSnsTopic *string
-	if v, ok := d.GetOk("aws_sns_topic"); ok {
-		awsSnsTopic = sdk.String(v.(string))
-	}
-
-	var comment *string
-	if v, ok := d.GetOk("comment"); ok {
-		comment = sdk.String(v.(string))
-	}
+	pattern, hasPattern := d.GetOk("pattern")
+	awsSnsTopic, hasAwsSnsTopic := d.GetOk("aws_sns_topic")
+	comment, hasComment := d.GetOk("comment")
 
 	var tagAssociationRequests []*sdk.TagAssociationRequest
 	if _, ok := d.GetOk("tag"); ok {
@@ -210,36 +199,40 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 
 	switch {
 	case d.Get("table_format").(string) == "delta":
-		err := client.ExternalTables.CreateDeltaLake(
-			ctx,
-			sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
-				WithColumns(columnRequests).
-				WithPartitionBy(partitionBy).
-				WithRefreshOnCreate(refreshOnCreate).
-				WithAutoRefresh(autoRefresh).
-				WithRawFileFormat(&fileFormat).
-				WithCopyGrants(copyGrants).
-				WithComment(comment).
-				WithTag(tagAssociationRequests),
-		)
+		req := sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
+			WithColumns(columnRequests).
+			WithPartitionBy(partitionBy).
+			WithRefreshOnCreate(refreshOnCreate).
+			WithAutoRefresh(autoRefresh).
+			WithRawFileFormat(fileFormat).
+			WithCopyGrants(copyGrants).
+			WithTag(tagAssociationRequests)
+		if hasComment {
+			req = req.WithComment(comment.(string))
+		}
+		err := client.ExternalTables.CreateDeltaLake(ctx, req)
 		if err != nil {
 			return err
 		}
 	default:
-		err := client.ExternalTables.Create(
-			ctx,
-			sdk.NewCreateExternalTableRequest(id, location).
-				WithColumns(columnRequests).
-				WithPartitionBy(partitionBy).
-				WithRefreshOnCreate(refreshOnCreate).
-				WithAutoRefresh(autoRefresh).
-				WithPattern(pattern).
-				WithRawFileFormat(&fileFormat).
-				WithAwsSnsTopic(awsSnsTopic).
-				WithCopyGrants(copyGrants).
-				WithComment(comment).
-				WithTag(tagAssociationRequests),
-		)
+		req := sdk.NewCreateExternalTableRequest(id, location).
+			WithColumns(columnRequests).
+			WithPartitionBy(partitionBy).
+			WithRefreshOnCreate(refreshOnCreate).
+			WithAutoRefresh(autoRefresh).
+			WithRawFileFormat(fileFormat).
+			WithCopyGrants(copyGrants).
+			WithTag(tagAssociationRequests)
+		if hasPattern {
+			req = req.WithPattern(pattern.(string))
+		}
+		if hasAwsSnsTopic {
+			req = req.WithAwsSnsTopic(awsSnsTopic.(string))
+		}
+		if hasComment {
+			req = req.WithComment(comment.(string))
+		}
+		err := client.ExternalTables.Create(ctx, req)
 		if err != nil {
 			return err
 		}

@@ -31,16 +31,17 @@ type Clone struct {
 }
 
 func (v *Clone) validate() error {
+	var errs []error
 	if everyValueSet(v.At, v.Before) {
-		return errors.New("only one of AT or BEFORE can be set")
+		errs = append(errs, errors.New("only one of AT or BEFORE can be set"))
 	}
 	if valueSet(v.At) {
-		return v.At.validate()
+		errs = append(errs, v.At.validate())
 	}
 	if valueSet(v.Before) {
-		return v.Before.validate()
+		errs = append(errs, v.Before.validate())
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type LimitFrom struct {
@@ -220,3 +221,23 @@ var (
 func DistributionPointer(v Distribution) *Distribution {
 	return &v
 }
+
+type LogLevel string
+
+const (
+	LogLevelTrace LogLevel = "TRACE"
+	LogLevelDebug LogLevel = "DEBUG"
+	LogLevelInfo  LogLevel = "INFO"
+	LogLevelWarn  LogLevel = "WARN"
+	LogLevelError LogLevel = "ERROR"
+	LogLevelFatal LogLevel = "FATAL"
+	LogLevelOff   LogLevel = "OFF"
+)
+
+type TraceLevel string
+
+const (
+	TraceLevelAlways  TraceLevel = "ALWAYS"
+	TraceLevelOnEvent TraceLevel = "ON_EVENT"
+	TraceLevelOff     TraceLevel = "OFF"
+)
