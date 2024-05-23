@@ -14,10 +14,10 @@ func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	userTest, userCleanup := testClientHelper().User.CreateUserWithName(t, "USER_FOO")
+	userTest, userCleanup := testClientHelper().User.CreateUser(t)
 	t.Cleanup(userCleanup)
 
-	userTest2, user2Cleanup := testClientHelper().User.CreateUserWithName(t, "USER_BAR")
+	userTest2, user2Cleanup := testClientHelper().User.CreateUser(t)
 	t.Cleanup(user2Cleanup)
 
 	t.Run("with like options", func(t *testing.T) {
