@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -720,8 +719,6 @@ func TestInt_TasksShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupTaskHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
@@ -744,9 +741,8 @@ func TestInt_TasksShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createTaskHandle(t, id1)
 		createTaskHandle(t, id2)

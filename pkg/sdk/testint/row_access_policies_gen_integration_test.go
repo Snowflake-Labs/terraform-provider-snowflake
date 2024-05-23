@@ -316,7 +316,6 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
@@ -340,9 +339,8 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createRowAccessPolicyHandle(t, id1)
 		createRowAccessPolicyHandle(t, id2)

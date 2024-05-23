@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -19,11 +18,10 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	blockedIP := sdk.NewIPRequest("125.0.0.1")
 	blockedIP2 := sdk.NewIPRequest("124.0.0.1")
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	createNetworkRuleHandle := func(t *testing.T, client *sdk.Client) sdk.SchemaObjectIdentifier {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(4))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress))
 		require.NoError(t, err)
 		t.Cleanup(func() {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -419,8 +418,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
+	stage := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage)
 	t.Cleanup(stageCleanup)
 
@@ -449,9 +447,8 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createExternalTableHandle(t, id1)
 		createExternalTableHandle(t, id2)

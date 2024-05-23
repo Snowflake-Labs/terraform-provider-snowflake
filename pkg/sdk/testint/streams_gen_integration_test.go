@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -52,8 +51,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
-		stageName := random.AlphaN(10)
-		stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName)
+		stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
 		_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
 		t.Cleanup(stageCleanup)
@@ -425,7 +423,6 @@ func TestInt_StreamsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	table, cleanupTable := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(cleanupTable)
 
@@ -451,9 +448,8 @@ func TestInt_StreamsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createStreamHandle(t, id1)
 		createStreamHandle(t, id2)

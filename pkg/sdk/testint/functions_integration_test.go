@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -458,8 +457,6 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
 		return func() {
 			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
@@ -489,9 +486,8 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createFunctionForSQLHandle(t, id1)
 		createFunctionForSQLHandle(t, id2)

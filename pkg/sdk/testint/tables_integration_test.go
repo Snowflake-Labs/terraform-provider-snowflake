@@ -960,8 +960,6 @@ func TestInt_TablesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupTableHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
@@ -986,9 +984,8 @@ func TestInt_TablesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createTableHandle(t, id1)
 		createTableHandle(t, id2)
@@ -1003,8 +1000,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 	})
 
 	t.Run("show by id: check schema evolution record", func(t *testing.T) {
-		name := random.AlphaN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
@@ -1023,7 +1019,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 			nil)
 		require.NoError(t, err)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		testClientHelper().Stage.PutOnStage(t, stage.ID(), "schema_evolution_record.json")

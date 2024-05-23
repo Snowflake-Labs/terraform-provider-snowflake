@@ -384,7 +384,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest, warehouseTest := testDb(t), testSchema(t), testWarehouse(t)
+	warehouseTest := testWarehouse(t)
 	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -409,9 +409,8 @@ func TestInt_AlertsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createAlertHandle(t, id1)
 		createAlertHandle(t, id2)
@@ -426,11 +425,10 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	})
 
 	t.Run("show by id: check fields", func(t *testing.T) {
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		createAlertHandle(t, id1)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		createAlertHandle(t, id)
 
-		alert, err := client.Alerts.ShowByID(ctx, id1)
+		alert, err := client.Alerts.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "ROLE", alert.OwnerRoleType)
 	})
