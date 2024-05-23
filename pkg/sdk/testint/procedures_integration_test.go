@@ -409,7 +409,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: rename", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, false)
 
-		id := testClientHelper().Ids.NewSchemaObjectIdentifier(f.Name)
+		id := f.ID()
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithRenameTo(&nid))
 		if err != nil {
