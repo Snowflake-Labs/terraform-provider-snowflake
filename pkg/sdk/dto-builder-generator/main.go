@@ -204,8 +204,15 @@ func (gen *Generator) generateBuilderMethods(d *structDef) {
 	}
 
 	for _, field := range optionalFields {
-		gen.printf("func (s *%s) With%s(%s %s) *%s {\n", d.name, toTitle(field.name), field.name, field.typeString, d.name)
-		gen.printf("s.%s = %s\n", field.name, field.name)
+		gen.printf("func (s *%s) With%s(%s %s) *%s {\n", d.name, toTitle(field.name), field.name, strings.TrimLeft(field.typeString, "*"), d.name)
+
+		switch {
+		case strings.HasPrefix(field.typeString, "*"):
+			// If the target field is a pointer, assign the address of input field because right now we always pass them by value
+			gen.printf("s.%s = &%s\n", field.name, field.name)
+		default:
+			gen.printf("s.%s = %s\n", field.name, field.name)
+		}
 		gen.printf("return s\n")
 		gen.printf("}\n\n")
 	}
