@@ -346,7 +346,8 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 }
 
 func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
 	schemaName := acc.TestClient().Ids.Alpha()
 	configVariables := map[string]config.Variable{
 		"schema_name":   config.StringVariable(schemaName),
@@ -365,7 +366,7 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(cleanupDatabase)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),

@@ -422,7 +422,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 	viewName := viewId.Name()
 	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	roleName := acc.TestClient().Ids.Alpha()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -444,7 +444,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
 				PreConfig: func() {
-					role, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					role, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 					acc.TestClient().Role.GrantOwnershipOnSchemaObject(t, role.ID(), viewId, sdk.ObjectTypeView, sdk.Revoke)
 				},

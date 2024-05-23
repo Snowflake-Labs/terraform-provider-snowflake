@@ -518,7 +518,8 @@ func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := shareId.Name()
 
 	configVariables := config.Variables{
 		"to_share": config.StringVariable(shareName),
@@ -538,7 +539,7 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, shareCleanup = acc.TestClient().Share.CreateShareWithName(t, shareName)
+					_, shareCleanup = acc.TestClient().Share.CreateShareWithIdentifier(t, shareId)
 					t.Cleanup(shareCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
