@@ -19,6 +19,7 @@ const (
 	MaskingPolicy                resource = "snowflake_masking_policy"
 	MaterializedView             resource = "snowflake_materialized_view"
 	NetworkPolicy                resource = "snowflake_network_policy"
+	NetworkRule                  resource = "snowflake_network_rule"
 	NotificationIntegration      resource = "snowflake_notification_integration"
 	PasswordPolicy               resource = "snowflake_password_policy"
 	Pipe                         resource = "snowflake_pipe"
