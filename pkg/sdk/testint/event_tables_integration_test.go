@@ -15,7 +15,6 @@ func TestInt_EventTables(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	tagTest, tagCleaup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleaup)
 
@@ -38,7 +37,7 @@ func TestInt_EventTables(t *testing.T) {
 	createEventTableHandle := func(t *testing.T) *sdk.EventTable {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableHandle(t, id))
@@ -49,8 +48,7 @@ func TestInt_EventTables(t *testing.T) {
 	}
 
 	t.Run("create event tables: all options", func(t *testing.T) {
-		name := random.StringN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		request := sdk.NewCreateEventTableRequest(id).
 			WithChangeTracking(sdk.Bool(true)).
@@ -107,9 +105,8 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("describe event table", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
-		details, err := client.EventTables.Describe(ctx, id)
+		details, err := client.EventTables.Describe(ctx, dt.ID())
 		require.NoError(t, err)
 		assert.Equal(t, "TIMESTAMP", details.Name)
 		assert.NotEmpty(t, details.Kind)
@@ -117,7 +114,7 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("alter event table: set and unset comment", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+		id := dt.ID()
 
 		comment := random.Comment()
 		set := sdk.NewEventTableSetRequest().WithComment(&comment)
@@ -139,7 +136,7 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("alter event table: set and unset change tacking", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+		id := dt.ID()
 
 		set := sdk.NewEventTableSetRequest().WithChangeTracking(sdk.Bool(true))
 		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
@@ -152,7 +149,7 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("alter event table: set and unset tag", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+		id := dt.ID()
 
 		set := []sdk.TagAssociation{
 			{
@@ -192,7 +189,7 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("alter event table: clustering action with drop", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+		id := dt.ID()
 
 		action := sdk.NewEventTableClusteringActionRequest().WithDropClusteringKey(sdk.Bool(true))
 		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithClusteringAction(action))
@@ -201,7 +198,7 @@ func TestInt_EventTables(t *testing.T) {
 
 	t.Run("alter event table: search optimization action", func(t *testing.T) {
 		dt := createEventTableHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+		id := dt.ID()
 
 		action := sdk.NewEventTableSearchOptimizationActionRequest().WithAdd(sdk.NewSearchOptimizationRequest().WithOn([]string{"SUBSTRING(*)"}))
 		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSearchOptimizationAction(action))

@@ -343,7 +343,6 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
@@ -432,7 +431,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: set log level", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(sdk.String("DEBUG")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
@@ -441,7 +440,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: set trace level", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(sdk.String("ALWAYS")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
@@ -450,7 +449,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: set comment", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetComment(sdk.String("comment")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
@@ -459,7 +458,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: unset comment", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
@@ -468,7 +467,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: set execute as", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
@@ -477,7 +476,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	t.Run("alter procedure: set and unset tags", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 		setTags := []sdk.TagAssociation{
 			{
 				Name:  tagTest.ID(),
@@ -528,7 +527,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 
 	t.Run("describe function for SQL", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		id := f.ID()
 
 		request := sdk.NewDescribeProcedureRequest(id, []sdk.DataType{sdk.DataTypeString})
 		details, err := client.Procedures.Describe(ctx, request)
@@ -603,7 +602,7 @@ func TestInt_CallProcedure(t *testing.T) {
 		BEGIN
 			RETURN message;
 		END;`
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(dt).WithNotNull(sdk.Bool(true))
 		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)

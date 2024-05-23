@@ -19,8 +19,6 @@ func TestInt_Sequences(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupSequenceHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -35,7 +33,7 @@ func TestInt_Sequences(t *testing.T) {
 	createSequenceHandle := func(t *testing.T) *sdk.Sequence {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		sr := sdk.NewCreateSequenceRequest(id).WithStart(sdk.Int(1)).WithIncrement(sdk.Int(1))
 		err := client.Sequences.Create(ctx, sr)
 		require.NoError(t, err)
@@ -64,10 +62,9 @@ func TestInt_Sequences(t *testing.T) {
 	}
 
 	t.Run("create sequence", func(t *testing.T) {
-		name := random.StringN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		comment := random.StringN(4)
+		comment := random.Comment()
 		request := sdk.NewCreateSequenceRequest(id).
 			WithStart(sdk.Int(1)).
 			WithIncrement(sdk.Int(1)).
@@ -110,7 +107,7 @@ func TestInt_Sequences(t *testing.T) {
 
 	t.Run("describe sequence", func(t *testing.T) {
 		e := createSequenceHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := e.ID()
 
 		details, err := client.Sequences.Describe(ctx, id)
 		require.NoError(t, err)
@@ -128,9 +125,9 @@ func TestInt_Sequences(t *testing.T) {
 
 	t.Run("alter sequence: set options", func(t *testing.T) {
 		e := createSequenceHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := e.ID()
 
-		comment := random.StringN(4)
+		comment := random.Comment()
 		set := sdk.NewSequenceSetRequest().WithComment(&comment).WithValuesBehavior(sdk.ValuesBehaviorPointer(sdk.ValuesBehaviorNoOrder))
 		err := client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithSet(set))
 		require.NoError(t, err)
@@ -140,7 +137,7 @@ func TestInt_Sequences(t *testing.T) {
 
 	t.Run("alter sequence: set increment", func(t *testing.T) {
 		e := createSequenceHandle(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := e.ID()
 
 		increment := 2
 		err := client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithSetIncrement(&increment))

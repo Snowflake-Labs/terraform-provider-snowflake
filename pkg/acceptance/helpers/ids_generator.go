@@ -65,6 +65,10 @@ func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier
 	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
 }
 
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments []sdk.DataType) sdk.SchemaObjectIdentifier {
+	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
+}
+
 func (c *IdsGenerator) RandomSchemaObjectIdentifierInSchema(schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {
 	return sdk.NewSchemaObjectIdentifierInSchema(schemaId, c.Alpha())
 }

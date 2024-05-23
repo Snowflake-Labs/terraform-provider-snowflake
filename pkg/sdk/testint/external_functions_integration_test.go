@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +29,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	createExternalFunction := func(t *testing.T) *sdk.ExternalFunction {
 		t.Helper()
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), defaultDataTypes)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(defaultDataTypes)
 		argument := sdk.NewExternalFunctionArgumentRequest("x", defaultDataTypes[0])
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, sdk.Pointer(integration.ID()), as).
@@ -79,7 +78,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	}
 
 	t.Run("create external function", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), defaultDataTypes)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(defaultDataTypes)
 		argument := sdk.NewExternalFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
 		headers := []sdk.ExternalFunctionHeaderRequest{
 			{
@@ -113,7 +112,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("create external function without arguments", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(nil)
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, sdk.Pointer(integration.ID()), as)
 		err := client.ExternalFunctions.Create(ctx, request)
@@ -125,6 +124,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	t.Run("alter external function: set api integration", func(t *testing.T) {
 		e := createExternalFunction(t)
+		e.ID()
 		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		set := sdk.NewExternalFunctionSetRequest().
 			WithApiIntegration(sdk.Pointer(integration.ID()))
@@ -225,7 +225,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 		e1 := createExternalFunction(t)
 
-		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseTest.Name, schemaTest.Name)}))
+		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: e1.ID().SchemaId()}))
 		require.NoError(t, err)
 
 		require.Contains(t, es, *e1)
@@ -261,7 +261,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	t.Run("describe external function", func(t *testing.T) {
 		e := createExternalFunction(t)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := e.ID()
 
 		request := sdk.NewDescribeExternalFunctionRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR})
 		details, err := client.ExternalFunctions.Describe(ctx, request)

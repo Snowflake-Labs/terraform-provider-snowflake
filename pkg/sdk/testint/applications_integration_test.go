@@ -113,7 +113,7 @@ func TestInt_Applications(t *testing.T) {
 		_, applicationPackage := createApplicationPackageHandle(t, version, patch, true)
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		comment := random.StringN(4)
+		comment := random.Comment()
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
 			WithComment(&comment).
 			WithTag([]sdk.TagAssociation{
@@ -143,7 +143,7 @@ func TestInt_Applications(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
-		comment := random.StringN(4)
+		comment := random.Comment()
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
 			WithDebugMode(sdk.Bool(true)).
 			WithComment(&comment).
@@ -161,7 +161,7 @@ func TestInt_Applications(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		vr := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
-		comment := random.StringN(4)
+		comment := random.Comment()
 		request := sdk.NewCreateApplicationRequest(id, applicationPackage.ID()).
 			WithDebugMode(sdk.Bool(true)).
 			WithComment(&comment).
@@ -193,7 +193,7 @@ func TestInt_Applications(t *testing.T) {
 		_, e, _ := createApplicationHandle(t, version, patch, false, true, false)
 		id := e.ID()
 
-		comment, mode := random.StringN(4), true
+		comment, mode := random.Comment(), true
 		set := sdk.NewApplicationSetRequest().
 			WithComment(&comment).
 			WithDebugMode(&mode)

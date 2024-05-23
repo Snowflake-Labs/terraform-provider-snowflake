@@ -14,6 +14,10 @@ func Comment() string {
 	return gofakeit.Sentence(10)
 }
 
+func Password() string {
+	return StringN(12)
+}
+
 func Bool() bool {
 	return gofakeit.Bool()
 }
