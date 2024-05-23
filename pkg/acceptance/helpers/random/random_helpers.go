@@ -18,6 +18,13 @@ func Password() string {
 	return StringN(12)
 }
 
+// AdminName returns admin name acceptable by Snowflake:
+// 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
+// 090089 (22000): ADMIN_NAME must start with a letter.
+func AdminName() string {
+	return AlphaN(1) + AlphanumericN(11)
+}
+
 func Bool() bool {
 	return gofakeit.Bool()
 }

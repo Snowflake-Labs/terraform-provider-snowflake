@@ -91,7 +91,7 @@ func TestInt_Stages(t *testing.T) {
 	}
 
 	t.Run("CreateInternal", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
@@ -105,7 +105,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateInternal - temporary", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
 			WithTemporary(sdk.Bool(true)).
@@ -120,7 +120,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateOnS3 - IAM User", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
 			WithCredentials(sdk.NewExternalStageS3CredentialsRequest().
@@ -139,7 +139,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateOnS3 - temporary - Storage Integration", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
 			WithStorageIntegration(sdk.Pointer(ids.PrecreatedS3StorageIntegration))
@@ -157,7 +157,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateOnGCS", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateOnGCS(ctx, sdk.NewCreateOnGCSStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
@@ -173,7 +173,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateOnAzure - Storage Integration", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
@@ -189,7 +189,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("CreateOnAzure - Shared Access Signature", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(id).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
@@ -209,8 +209,8 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Alter - rename", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
-		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		renamed := false
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
@@ -237,7 +237,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Alter - set unset tags", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
 
@@ -273,7 +273,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterInternalStage", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
 			WithCopyOptions(sdk.NewStageCopyOptionsRequest().WithSizeLimit(sdk.Int(100))).
@@ -336,7 +336,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterExternalS3Stage", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicS3Stage(t, id)
 
 		err := client.Stages.AlterExternalS3Stage(ctx, sdk.NewAlterExternalS3StageStageRequest(id).
@@ -356,7 +356,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterExternalGCSStage", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicGcsStage(t, id)
 
 		err := client.Stages.AlterExternalGCSStage(ctx, sdk.NewAlterExternalGCSStageStageRequest(id).
@@ -371,7 +371,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterExternalAzureStage", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicAzureStage(t, id)
 
 		err := client.Stages.AlterExternalAzureStage(ctx, sdk.NewAlterExternalAzureStageStageRequest(id).
@@ -386,7 +386,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterDirectoryTable", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicS3Stage(t, id)
 
 		stageProperties, err := client.Stages.Describe(ctx, id)
@@ -419,7 +419,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
 		require.NoError(t, err)
@@ -437,7 +437,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Describe internal", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
 		require.NoError(t, err)
@@ -466,7 +466,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Describe external s3", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicS3Stage(t, id)
 
 		stageProperties, err := client.Stages.Describe(ctx, id)
@@ -489,7 +489,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Describe external gcs", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicGcsStage(t, id)
 
 		stageProperties, err := client.Stages.Describe(ctx, id)
@@ -505,7 +505,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Describe external azure", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createBasicAzureStage(t, id)
 
 		stageProperties, err := client.Stages.Describe(ctx, id)
@@ -528,7 +528,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Show internal", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
 			WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true))).

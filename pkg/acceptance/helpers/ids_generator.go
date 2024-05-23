@@ -65,8 +65,12 @@ func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier
 	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
 }
 
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithPrefix(prefix string) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), c.AlphaWithPrefix(prefix))
+}
+
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments []sdk.DataType) sdk.SchemaObjectIdentifier {
-	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments)
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierInSchema(schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {
