@@ -245,8 +245,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTableName := random.StringRange(8, 28)
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, testSchema(t).ID(), sourceTableName, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -277,8 +276,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTableName := random.StringRange(8, 28)
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, testSchema(t).ID(), sourceTableName, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()

@@ -45,12 +45,20 @@ func (c *IdsGenerator) RandomAccountObjectIdentifierContaining(part string) sdk.
 	return sdk.NewAccountObjectIdentifier(c.AlphaContaining(part))
 }
 
+func (c *IdsGenerator) NewDatabaseObjectIdentifier(name string) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), name)
+}
+
 func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
 	return c.RandomDatabaseObjectIdentifierInDatabase(c.DatabaseId())
 }
 
 func (c *IdsGenerator) RandomDatabaseObjectIdentifierInDatabase(databaseId sdk.AccountObjectIdentifier) sdk.DatabaseObjectIdentifier {
 	return sdk.NewDatabaseObjectIdentifier(databaseId.Name(), c.Alpha())
+}
+
+func (c *IdsGenerator) RandomDatabaseObjectIdentifierWithPrefix(prefix string) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), c.AlphaWithPrefix(prefix))
 }
 
 func (c *IdsGenerator) NewSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {

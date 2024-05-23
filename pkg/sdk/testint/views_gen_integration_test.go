@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -489,8 +488,8 @@ func TestInt_Views(t *testing.T) {
 	// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2506
 	t.Run("show view by id: same name in different schemas", func(t *testing.T) {
 		// we assume that SF returns views alphabetically
-		schemaName := "aaaa" + random.StringRange(8, 28)
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaName)
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierWithPrefix("aaaa")
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, schemaId)
 		t.Cleanup(schemaCleanup)
 
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()

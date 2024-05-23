@@ -44,11 +44,3 @@ func AlphanumericN(num int) string {
 func AlphaN(num int) string {
 	return gofakeit.Password(true, true, false, false, false, num)
 }
-
-func StringRange(min, max int) string {
-	return gofakeit.Password(true, true, true, true, false, IntRange(min, max))
-}
-
-func IntRange(min, max int) int {
-	return gofakeit.IntRange(min, max)
-}
