@@ -893,7 +893,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
+		newID := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts := &alterTableOptions{
 			name:    id,
 			NewName: &newID,
@@ -902,7 +902,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("swap with", func(t *testing.T) {
-		targetTableId := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
+		targetTableId := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts := &alterTableOptions{
 			name:     id,
 			SwapWith: &targetTableId,

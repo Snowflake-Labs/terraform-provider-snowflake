@@ -113,7 +113,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
+		newID := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts := &AlterMaskingPolicyOptions{
 			name:    id,
 			NewName: &newID,
