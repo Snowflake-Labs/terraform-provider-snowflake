@@ -92,7 +92,7 @@ func TestInt_UserCreate(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		password := random.String()
+		password := random.Password()
 		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{
@@ -138,7 +138,7 @@ func TestInt_UserCreate(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		password := random.String()
+		password := random.Password()
 		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{

@@ -21,7 +21,7 @@ func TestUserCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		password := random.String()
+		password := random.Password()
 		loginName := random.String()
 
 		opts := &CreateUserOptions{
@@ -92,7 +92,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with setting properties and parameters", func(t *testing.T) {
-		password := random.String()
+		password := random.Password()
 		objectProperties := UserObjectProperties{
 			Password:             &password,
 			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},

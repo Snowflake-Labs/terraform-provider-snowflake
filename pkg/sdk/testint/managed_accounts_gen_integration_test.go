@@ -46,7 +46,7 @@ func TestInt_ManagedAccounts(t *testing.T) {
 		// 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
 		// 090089 (22000): ADMIN_NAME must start with a letter.
 		adminName := random.AlphaN(1) + random.AlphanumericN(12)
-		adminPassword := random.String()
+		adminPassword := random.Password()
 		params := sdk.NewCreateManagedAccountParamsRequest(adminName, adminPassword)
 
 		return sdk.NewCreateManagedAccountRequest(id, *params)
