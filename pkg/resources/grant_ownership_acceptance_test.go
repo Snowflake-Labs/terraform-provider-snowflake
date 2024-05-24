@@ -327,25 +327,17 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 
 func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseName := databaseId.Name()
-	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
-
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	accountRoleName := accountRoleId.Name()
-	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
-
-	schemaName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
-	secondTableName := acc.TestClient().Ids.Alpha()
-	tableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName).FullyQualifiedName()
-	secondTableFullyQualifiedName := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, secondTableName).FullyQualifiedName()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	secondTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(accountRoleName),
-		"database_name":     config.StringVariable(databaseName),
-		"schema_name":       config.StringVariable(schemaName),
-		"table_name":        config.StringVariable(tableName),
-		"second_table_name": config.StringVariable(secondTableName),
+		"account_role_name": config.StringVariable(accountRoleId.Name()),
+		"database_name":     config.StringVariable(databaseId.Name()),
+		"schema_name":       config.StringVariable(schemaId.Name()),
+		"table_name":        config.StringVariable(tableId.Name()),
+		"second_table_name": config.StringVariable(secondTableId.Name()),
 	}
 	resourceName := "snowflake_grant_ownership.test"
 
@@ -360,15 +352,15 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnAll_InDatabase_ToAccountRole"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "on.0.all.0.object_type_plural", "TABLES"),
-					resource.TestCheckResourceAttr(resourceName, "on.0.all.0.in_database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnAll|TABLES|InDatabase|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+					resource.TestCheckResourceAttr(resourceName, "on.0.all.0.in_database", databaseId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnAll|TABLES|InDatabase|%s", accountRoleId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
 					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
 						To: &sdk.ShowGrantsTo{
 							Role: accountRoleId,
 						},
-					}, sdk.ObjectTypeTable, accountRoleName, tableFullyQualifiedName, secondTableFullyQualifiedName),
+					}, sdk.ObjectTypeTable, accountRoleId.Name(), tableId.FullyQualifiedName(), secondTableId.FullyQualifiedName()),
 				),
 			},
 			{
