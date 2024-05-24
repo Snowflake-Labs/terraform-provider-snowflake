@@ -24,8 +24,8 @@ func (opts *CreateExternalOauthSecurityIntegrationOptions) validate() error {
 	if everyValueSet(opts.ExternalOauthBlockedRolesList, opts.ExternalOauthAllowedRolesList) {
 		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList"))
 	}
-	if everyValueSet(opts.ExternalOauthJwsKeysUrl, opts.ExternalOauthRsaPublicKey) {
-		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+	if !exactlyOneValueSet(opts.ExternalOauthJwsKeysUrl, opts.ExternalOauthRsaPublicKey) {
+		errs = append(errs, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
 	}
 	if everyValueSet(opts.ExternalOauthJwsKeysUrl, opts.ExternalOauthRsaPublicKey2) {
 		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))

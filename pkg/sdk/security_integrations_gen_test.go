@@ -31,11 +31,12 @@ func TestSecurityIntegrations_CreateExternalOauth(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey]", func(t *testing.T) {
+	t.Run("validation: exactly one fields in [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey]", func(t *testing.T) {
 		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
 		opts.ExternalOauthJwsKeysUrl = []JwsKeysUrl{{JwsKeyUrl: "foo"}}
 		opts.ExternalOauthRsaPublicKey = Pointer("key")
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
 	})
 	t.Run("validation: conflicting fields for [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey2]", func(t *testing.T) {
 		opts := defaultOpts()

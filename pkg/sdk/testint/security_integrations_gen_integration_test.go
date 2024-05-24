@@ -512,7 +512,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		_, id, _ := createExternalOauth(t, nil)
+		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
 
 		tagValue := "abc"
 		tags := []sdk.TagAssociation{
@@ -948,6 +950,22 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
+	})
+
+	t.Run("Show ExternalOauth", func(t *testing.T) {
+		si1, id1, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
+		si2, _, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example2.com"}})
+		})
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
 	})
 
 	t.Run("Show OauthPartner", func(t *testing.T) {
