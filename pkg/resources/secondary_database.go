@@ -110,6 +110,7 @@ func SecondaryDatabase() *schema.Resource {
 		UpdateContext: UpdateSecondaryDatabase,
 		ReadContext:   ReadSecondaryDatabase,
 		DeleteContext: DeleteSecondaryDatabase,
+		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
 		CustomizeDiff: customdiff.All(
 			NestedIntValueAccountObjectComputedIf("data_retention_time_in_days", sdk.AccountParameterDataRetentionTimeInDays),
@@ -347,16 +348,11 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	var replicationPrimaryDatabase *sdk.ReplicationDatabase
 	for _, replicationDatabase := range replicationDatabases {
 		replicationDatabase := replicationDatabase
 		if !replicationDatabase.IsPrimary &&
-			replicationDatabase.AccountLocator == currentAccountLocator &&
+			replicationDatabase.AccountLocator == client.GetAccountLocator() &&
 			replicationDatabase.Name == secondaryDatabaseId.Name() {
 			replicationPrimaryDatabase = &replicationDatabase
 		}

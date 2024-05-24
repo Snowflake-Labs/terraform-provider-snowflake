@@ -213,23 +213,7 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
-	comment := random.Comment()
 	externalPrimaryId := createPrimaryDatabase(t)
-
-	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
-	t.Cleanup(externalVolumeCleanup)
-
-	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
-	t.Cleanup(catalogCleanup)
-
-	newName := acc.TestClient().Ids.Alpha()
-	newComment := random.Comment()
-
-	newExternalVolumeId, newExternalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
-	t.Cleanup(newExternalVolumeCleanup)
-
-	newCatalogId, newCatalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
-	t.Cleanup(newCatalogCleanup)
 
 	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
 	require.NoError(t, err)
@@ -237,32 +221,22 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	configVariables := func(
 		name string,
 		primaryDatabaseName sdk.ExternalObjectIdentifier,
-		transient bool,
 		dataRetentionTimeInDays *int,
-		maxDataExtensionTimeInDays *int,
-		externalVolume string,
-		catalog string,
-		defaultDdlCollation string,
-		logLevel string,
-		traceLevel string,
-		comment string,
 	) config.Variables {
 		variables := config.Variables{
 			"name":                  config.StringVariable(name),
 			"as_replica_of":         config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"transient":             config.BoolVariable(transient),
-			"external_volume":       config.StringVariable(externalVolume),
-			"catalog":               config.StringVariable(catalog),
-			"default_ddl_collation": config.StringVariable(defaultDdlCollation),
-			"log_level":             config.StringVariable(logLevel),
-			"trace_level":           config.StringVariable(traceLevel),
-			"comment":               config.StringVariable(comment),
+			"transient":             config.BoolVariable(false),
+			"external_volume":       config.StringVariable(""),
+			"catalog":               config.StringVariable(""),
+			"default_ddl_collation": config.StringVariable(""),
+			"log_level":             config.StringVariable("OFF"),
+			"trace_level":           config.StringVariable("OFF"),
+			"comment":               config.StringVariable(""),
 		}
 		if dataRetentionTimeInDays != nil {
 			variables["data_retention_time_in_days"] = config.IntegerVariable(*dataRetentionTimeInDays)
-		}
-		if maxDataExtensionTimeInDays != nil {
-			variables["max_data_extension_time_in_days"] = config.IntegerVariable(*maxDataExtensionTimeInDays)
+			variables["max_data_extension_time_in_days"] = config.IntegerVariable(10)
 		}
 		return variables
 	}
@@ -278,21 +252,21 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: configVariables(name, externalPrimaryId, false, sdk.Int(2), sdk.Int(5), externalVolumeId.Name(), catalogId.Name(), "en_US", string(sdk.LogLevelInfo), string(sdk.TraceLevelOnEvent), comment),
+				ConfigVariables: configVariables(name, externalPrimaryId, sdk.Int(2)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "2"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(name, externalPrimaryId, false, sdk.Int(1), sdk.Int(5), externalVolumeId.Name(), catalogId.Name(), "en_US", string(sdk.LogLevelInfo), string(sdk.TraceLevelOnEvent), comment),
+				ConfigVariables: configVariables(name, externalPrimaryId, sdk.Int(1)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "1"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(newName, externalPrimaryId, false, nil, nil, newExternalVolumeId.Name(), newCatalogId.Name(), "en_GB", string(sdk.LogLevelDebug), string(sdk.TraceLevelAlways), newComment),
+				ConfigVariables: configVariables(name, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
@@ -303,7 +277,7 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 					revertAccountParameterChange = acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "3")
 					t.Cleanup(revertAccountParameterChange)
 				},
-				ConfigVariables: configVariables(name, externalPrimaryId, false, nil, nil, externalVolumeId.Name(), catalogId.Name(), "en_US", string(sdk.LogLevelInfo), string(sdk.TraceLevelOnEvent), comment),
+				ConfigVariables: configVariables(name, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "3"),
@@ -313,21 +287,21 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				PreConfig: func() {
 					revertAccountParameterChange()
 				},
-				ConfigVariables: configVariables(name, externalPrimaryId, false, nil, nil, externalVolumeId.Name(), catalogId.Name(), "en_US", string(sdk.LogLevelInfo), string(sdk.TraceLevelOnEvent), comment),
+				ConfigVariables: configVariables(name, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
 				),
 			},
 			{
-				ConfigVariables: configVariables(name, externalPrimaryId, false, sdk.Int(3), sdk.Int(5), externalVolumeId.Name(), catalogId.Name(), "en_US", string(sdk.LogLevelInfo), string(sdk.TraceLevelOnEvent), comment),
+				ConfigVariables: configVariables(name, externalPrimaryId, sdk.Int(3)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "3"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(newName, externalPrimaryId, false, nil, nil, newExternalVolumeId.Name(), newCatalogId.Name(), "en_GB", string(sdk.LogLevelDebug), string(sdk.TraceLevelAlways), newComment),
+				ConfigVariables: configVariables(name, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
