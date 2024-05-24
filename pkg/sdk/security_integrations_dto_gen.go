@@ -3,10 +3,12 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
+	_ optionsProvider[CreateExternalOauthSecurityIntegrationOptions]               = new(CreateExternalOauthSecurityIntegrationRequest)
 	_ optionsProvider[CreateOauthForPartnerApplicationsSecurityIntegrationOptions] = new(CreateOauthForPartnerApplicationsSecurityIntegrationRequest)
 	_ optionsProvider[CreateOauthForCustomClientsSecurityIntegrationOptions]       = new(CreateOauthForCustomClientsSecurityIntegrationRequest)
 	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                       = new(CreateSaml2SecurityIntegrationRequest)
 	_ optionsProvider[CreateScimSecurityIntegrationOptions]                        = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[AlterExternalOauthSecurityIntegrationOptions]                = new(AlterExternalOauthSecurityIntegrationRequest)
 	_ optionsProvider[AlterOauthForPartnerApplicationsSecurityIntegrationOptions]  = new(AlterOauthForPartnerApplicationsSecurityIntegrationRequest)
 	_ optionsProvider[AlterOauthForCustomClientsSecurityIntegrationOptions]        = new(AlterOauthForCustomClientsSecurityIntegrationRequest)
 	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                        = new(AlterSaml2SecurityIntegrationRequest)
@@ -15,6 +17,39 @@ var (
 	_ optionsProvider[DescribeSecurityIntegrationOptions]                          = new(DescribeSecurityIntegrationRequest)
 	_ optionsProvider[ShowSecurityIntegrationOptions]                              = new(ShowSecurityIntegrationRequest)
 )
+
+type CreateExternalOauthSecurityIntegrationRequest struct {
+	OrReplace                                  *bool
+	IfNotExists                                *bool
+	name                                       AccountObjectIdentifier                                             // required
+	Enabled                                    bool                                                                // required
+	ExternalOauthType                          ExternalOauthSecurityIntegrationTypeOption                          // required
+	ExternalOauthIssuer                        string                                                              // required
+	ExternalOauthTokenUserMappingClaim         []TokenUserMappingClaim                                             // required
+	ExternalOauthSnowflakeUserMappingAttribute ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption // required
+	ExternalOauthJwsKeysUrl                    []JwsKeysUrl
+	ExternalOauthBlockedRolesList              *BlockedRolesListRequest
+	ExternalOauthAllowedRolesList              *AllowedRolesListRequest
+	ExternalOauthRsaPublicKey                  *string
+	ExternalOauthRsaPublicKey2                 *string
+	ExternalOauthAudienceList                  *AudienceListRequest
+	ExternalOauthAnyRoleMode                   *ExternalOauthSecurityIntegrationAnyRoleModeOption
+	ExternalOauthScopeDelimiter                *string
+	ExternalOauthScopeMappingAttribute         *string
+	Comment                                    *string
+}
+
+type BlockedRolesListRequest struct {
+	BlockedRolesList []AccountObjectIdentifier
+}
+
+type AllowedRolesListRequest struct {
+	AllowedRolesList []AccountObjectIdentifier
+}
+
+type AudienceListRequest struct {
+	AudienceList []AudienceListItem
+}
 
 type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	OrReplace                 *bool
@@ -32,10 +67,6 @@ type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 
 func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
-}
-
-type BlockedRolesListRequest struct {
-	BlockedRolesList []AccountObjectIdentifier
 }
 
 type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
@@ -109,6 +140,37 @@ func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier
 	return r.name
 }
 
+type AlterExternalOauthSecurityIntegrationRequest struct {
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Set       *ExternalOauthIntegrationSetRequest
+	Unset     *ExternalOauthIntegrationUnsetRequest
+}
+
+type ExternalOauthIntegrationSetRequest struct {
+	Enabled                                    *bool
+	ExternalOauthType                          *ExternalOauthSecurityIntegrationTypeOption
+	ExternalOauthIssuer                        *string
+	ExternalOauthTokenUserMappingClaim         []TokenUserMappingClaim
+	ExternalOauthSnowflakeUserMappingAttribute *ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption
+	ExternalOauthJwsKeysUrl                    []JwsKeysUrl
+	ExternalOauthBlockedRolesList              *BlockedRolesListRequest
+	ExternalOauthAllowedRolesList              *AllowedRolesListRequest
+	ExternalOauthRsaPublicKey                  *string
+	ExternalOauthRsaPublicKey2                 *string
+	ExternalOauthAudienceList                  *AudienceListRequest
+	ExternalOauthAnyRoleMode                   *ExternalOauthSecurityIntegrationAnyRoleModeOption
+	ExternalOauthScopeDelimiter                *string
+	Comment                                    *string
+}
+
+type ExternalOauthIntegrationUnsetRequest struct {
+	Enabled                   *bool
+	ExternalOauthAudienceList *bool
+}
+
 type AlterOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	IfExists  *bool
 	name      AccountObjectIdentifier // required
@@ -161,9 +223,9 @@ type OauthForCustomClientsIntegrationSetRequest struct {
 type OauthForCustomClientsIntegrationUnsetRequest struct {
 	Enabled                  *bool
 	NetworkPolicy            *bool
-	OauthUseSecondaryRoles   *bool
 	OauthClientRsaPublicKey  *bool
 	OauthClientRsaPublicKey2 *bool
+	OauthUseSecondaryRoles   *bool
 }
 
 type AlterSaml2SecurityIntegrationRequest struct {
