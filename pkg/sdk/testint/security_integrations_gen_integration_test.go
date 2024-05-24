@@ -428,7 +428,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
 	})
-	t.Run("AlterExternalOauth", func(t *testing.T) {
+	t.Run("AlterExternalOauth with allowed list and jws keys url", func(t *testing.T) {
 		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
 			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
 		})
@@ -449,7 +449,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: "http://test.com", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name, Default: "[]"})
 	})
-	t.Run("AlterExternalOauth", func(t *testing.T) {
+	t.Run("AlterExternalOauth with other options", func(t *testing.T) {
 		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
 			r.WithExternalOauthRsaPublicKey(rsaKey).
 				WithExternalOauthRsaPublicKey2(rsaKey)
