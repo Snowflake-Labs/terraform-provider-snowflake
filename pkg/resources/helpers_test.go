@@ -98,3 +98,73 @@ func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.
 		return nil
 	}
 }
+
+func TestGetFirstNestedObjectByKey(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"int_property": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"value": {
+						Type: schema.TypeInt,
+					},
+				},
+			},
+		},
+		"string_property": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"value": {
+						Type: schema.TypeString,
+					},
+				},
+			},
+		},
+		"list_property": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"value": {
+						Type: schema.TypeList,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
+		"not_property": {
+			Type: schema.TypeString,
+		},
+	}, map[string]any{
+		"int_property": []any{
+			map[string]any{
+				"value": 123,
+			},
+		},
+		"string_property": []any{
+			map[string]any{
+				"value": "some string",
+			},
+		},
+		"list_property": []any{
+			map[string]any{
+				"value": []any{"one", "two", "three"},
+			},
+		},
+		"not_property": "not a property",
+	})
+
+	assert.Equal(t, 123, *resources.GetFirstNestedObjectByKey[int](d, "int_property", "value"))
+	assert.Equal(t, "some string", *resources.GetFirstNestedObjectByKey[string](d, "string_property", "value"))
+	assert.Equal(t, []any{"one", "two", "three"}, *resources.GetFirstNestedObjectByKey[[]any](d, "list_property", "value"))
+
+	assert.Nil(t, resources.GetFirstNestedObjectByKey[int](d, "string_property", "value"))
+	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "not_property", "value"))
+	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "int_property", "non_existing_value_key"))
+	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "non_existing_property_key", "non_existing_value_key"))
+}

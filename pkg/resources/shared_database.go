@@ -17,7 +17,6 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
-	// TODO: Should it be imported (set in Read)?
 	"from_share": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -33,31 +32,42 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 	"external_volume": {
 		Type:             schema.TypeString,
 		Optional:         true,
+		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Description:      "The database parameter that specifies the default external volume to use for Iceberg tables.",
 	},
 	"catalog": {
 		Type:             schema.TypeString,
 		Optional:         true,
+		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Description:      "The database parameter that specifies the default catalog to use for Iceberg tables.",
 	},
 	"default_ddl_collation": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).",
 	},
 	"log_level": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: StringInSlice([]string{}, true),                                                                                                                                                                                                                                                                                                                                // TODO: enum
-		Description:      fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", []string{}), // TODO:
+		ForceNew:         true,
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true),
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return d.Get(k).(string) == "OFF" && newValue == ""
+		},
+		Description: fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 	},
 	"trace_level": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: StringInSlice([]string{}, true),                                                                                                                                                                                                                // TODO: enum
-		Description:      fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", []string{}), // TODO:
+		ForceNew:         true,
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true),
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return d.Get(k).(string) == "OFF" && newValue == ""
+		},
+		Description: fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -86,24 +96,38 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	externalShareId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("from_share").(string))
 
+	var externalVolume *sdk.AccountObjectIdentifier
+	if v, ok := d.GetOk("external_volume"); ok {
+		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
+	}
+
+	var catalog *sdk.AccountObjectIdentifier
+	if v, ok := d.GetOk("catalog"); ok {
+		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
+	}
+
+	var logLevel *sdk.LogLevel
+	if v, ok := d.GetOk("log_level"); ok {
+		logLevel = sdk.Pointer(sdk.LogLevel(v.(string)))
+	}
+
+	var traceLevel *sdk.TraceLevel
+	if v, ok := d.GetOk("trace_level"); ok {
+		traceLevel = sdk.Pointer(sdk.TraceLevel(v.(string)))
+	}
+
 	err := client.Databases.CreateShared(ctx, id, externalShareId, &sdk.CreateSharedDatabaseOptions{
-		Comment: nil,
+		Transient:           GetPropertyAsPointer[bool](d, "is_transient"),
+		ExternalVolume:      externalVolume,
+		Catalog:             catalog,
+		DefaultDDLCollation: GetPropertyAsPointer[string](d, "default_ddl_collation"),
+		LogLevel:            logLevel,
+		TraceLevel:          traceLevel,
+		Comment:             GetPropertyAsPointer[string](d, "comment"),
 	})
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	/*
-		"name"
-		"from_share"
-		"is_transient"
-		"external_volume"
-		"catalog"
-		"default_ddl_collation"
-		"log_level"
-		"trace_level"
-		"comment"
-	*/
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
@@ -117,13 +141,36 @@ func UpdateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	if d.HasChange("name") {
 		newName := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
-			NewName: newName,
+			NewName: &newName,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		d.SetId(helpers.EncodeSnowflakeID(newName))
 		id = newName
+	}
+
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		if len(comment) > 0 {
+			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+				Set: &sdk.DatabaseSet{
+					Comment: &comment,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+				Unset: &sdk.DatabaseUnset{
+					Comment: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	return ReadSharedDatabase(ctx, d, meta)
@@ -157,17 +204,13 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	/*
-		"name"
-		"from_share"
-		"is_transient"
-		"external_volume"
-		"catalog"
-		"default_ddl_collation"
-		"log_level"
-		"trace_level"
-		"comment"
-	*/
+	if err := d.Set("name", database.Name); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("from_share", sdk.NewExternalObjectIdentifierFromFullyQualifiedName(database.Origin).FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := d.Set("is_transient", database.Transient); err != nil {
 		return diag.FromErr(err)

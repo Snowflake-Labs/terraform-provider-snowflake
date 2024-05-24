@@ -234,6 +234,16 @@ const (
 	LogLevelOff   LogLevel = "OFF"
 )
 
+var AllLogLevels = []LogLevel{
+	LogLevelTrace,
+	LogLevelDebug,
+	LogLevelInfo,
+	LogLevelWarn,
+	LogLevelError,
+	LogLevelFatal,
+	LogLevelOff,
+}
+
 type TraceLevel string
 
 const (
@@ -241,3 +251,9 @@ const (
 	TraceLevelOnEvent TraceLevel = "ON_EVENT"
 	TraceLevelOff     TraceLevel = "OFF"
 )
+
+var AllTraceLevels = []TraceLevel{
+	TraceLevelAlways,
+	TraceLevelOnEvent,
+	TraceLevelOff,
+}

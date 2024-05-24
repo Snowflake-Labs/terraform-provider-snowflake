@@ -28,6 +28,7 @@ const (
 	Role                         resource = "snowflake_role"
 	RowAccessPolicy              resource = "snowflake_row_access_policy"
 	Schema                       resource = "snowflake_schema"
+	SecondaryDatabase            resource = "snowflake_secondary_database"
 	Sequence                     resource = "snowflake_sequence"
 	Share                        resource = "snowflake_share"
 	SharedDatabase               resource = "snowflake_shared_database"

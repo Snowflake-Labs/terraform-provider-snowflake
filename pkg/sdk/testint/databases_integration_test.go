@@ -139,10 +139,10 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
-	t.Cleanup(databaseCleanup)
+	// Database name will be shared between two accounts
+	databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
 	testTag, testTagCleanup := testClientHelper().Tag.CreateTagInSchema(t, schemaTest.ID())
@@ -158,7 +158,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
+	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
 	t.Cleanup(sharedDatabaseCleanup)
 
 	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -183,7 +183,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	require.NoError(t, err)
 
 	comment := random.Comment()
-	err = client.Databases.CreateShared(ctx, sharedDatabase.ID(), shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{
+	err = client.Databases.CreateShared(ctx, databaseName, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{
 		Transient:           sdk.Bool(true),
 		IfNotExists:         sdk.Bool(true),
 		ExternalVolume:      &externalVolume,
@@ -200,27 +200,27 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID()))
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseName))
 
-	database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
+	database, err := client.Databases.ShowByID(ctx, databaseName)
 	require.NoError(t, err)
 
-	assert.Equal(t, sharedDatabase.ID().Name(), database.Name)
+	assert.Equal(t, databaseName.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
 
@@ -234,7 +234,10 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
+	// Database name will be shared between two accounts
+	databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
 	t.Cleanup(sharedDatabaseCleanup)
 
 	err := secondaryClient.Databases.AlterReplication(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
@@ -255,7 +258,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 
 	externalDatabaseId := sdk.NewExternalObjectIdentifier(secondaryTestClientHelper().Ids.AccountIdentifierWithLocator(), sharedDatabase.ID())
 	comment := random.Comment()
-	err = client.Databases.CreateSecondary(ctx, sharedDatabase.ID(), externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
+	err = client.Databases.CreateSecondary(ctx, databaseName, externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
 		IfNotExists:                sdk.Bool(true),
 		DataRetentionTimeInDays:    sdk.Int(1),
 		MaxDataExtensionTimeInDays: sdk.Int(10),
@@ -267,32 +270,32 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 		Comment:                    sdk.String(comment),
 	})
 	require.NoError(t, err)
-	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID()))
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseName))
 
-	database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
+	database, err := client.Databases.ShowByID(ctx, databaseName)
 	require.NoError(t, err)
 
-	assert.Equal(t, sharedDatabase.ID().Name(), database.Name)
+	assert.Equal(t, databaseName.Name(), database.Name)
 	assert.Equal(t, 1, database.RetentionTime)
 	assert.Equal(t, comment, database.Comment)
 
-	param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, "10", param.Value)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: sharedDatabase.ID()})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
 }
@@ -331,7 +334,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 				t.Cleanup(shareCleanup)
 
-				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
+				// Database name will be shared between two accounts
+				databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
 				t.Cleanup(sharedDatabaseCleanup)
 
 				err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -355,13 +361,13 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				err = client.Databases.CreateShared(ctx, sharedDatabase.ID(), shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
+				err = client.Databases.CreateShared(ctx, databaseName, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
 				require.NoError(t, err)
 
-				database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
+				database, err := client.Databases.ShowByID(ctx, databaseName)
 				require.NoError(t, err)
 
-				return database, testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID())
+				return database, testClientHelper().Database.DropDatabaseFunc(t, database.ID())
 			},
 		},
 		{

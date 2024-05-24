@@ -130,6 +130,35 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
+func GetFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string) *T {
+	value, ok := d.GetOk(propertyKey)
+	if !ok {
+		return nil
+	}
+
+	typedValue, ok := value.([]any)
+	if !ok || len(typedValue) != 1 {
+		return nil
+	}
+
+	typedNestedValue, ok := typedValue[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	_, ok = typedNestedValue[nestedValueKey]
+	if !ok {
+		return nil
+	}
+
+	_, ok = typedNestedValue[nestedValueKey].(T)
+	if !ok {
+		return nil
+	}
+
+	return sdk.Pointer(typedNestedValue[nestedValueKey].(T))
+}
+
 type tags []tag
 
 func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
