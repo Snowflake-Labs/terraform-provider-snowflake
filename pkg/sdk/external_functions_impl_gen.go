@@ -36,7 +36,7 @@ func (v *externalFunctions) Show(ctx context.Context, request *ShowExternalFunct
 func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error) {
 	arguments := id.Arguments()
 	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().
-		WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).
+		WithIn(&In{Schema: id.SchemaId()}).
 		WithLike(&Like{Pattern: String(id.Name())}))
 	if err != nil {
 		return nil, err

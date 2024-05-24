@@ -241,30 +241,31 @@ func TestFileFormatsShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
+		id := randomDatabaseObjectIdentifier()
 		opts := &ShowFileFormatsOptions{
 			Like: &Like{
 				Pattern: String("test"),
 			},
 			In: &In{
-				Schema: NewDatabaseObjectIdentifier("db", "schema"),
+				Schema: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW FILE FORMATS LIKE 'test' IN SCHEMA "db"."schema"`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW FILE FORMATS LIKE 'test' IN SCHEMA %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestFileFormatsShowById(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier("db", "schema", "ff")
+		id := randomSchemaObjectIdentifier()
 		opts := &ShowFileFormatsOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
 			In: &In{
-				Schema: NewDatabaseObjectIdentifier(id.databaseName, id.schemaName),
+				Schema: id.SchemaId(),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW FILE FORMATS LIKE 'ff' IN SCHEMA "db"."schema"`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW FILE FORMATS LIKE '%s'' IN SCHEMA %s`, id.Name(), id.SchemaId())
 	})
 }
 

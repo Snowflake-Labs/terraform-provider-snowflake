@@ -99,7 +99,7 @@ func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stag
 			Pattern: String(id.Name()),
 		}).
 		WithIn(&In{
-			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: id.SchemaId(),
 		}))
 	if err != nil {
 		return nil, err

@@ -7,6 +7,10 @@ import (
 var (
 	invalidAccountObjectIdentifier = NewAccountObjectIdentifier(random.StringN(256))
 	invalidSchemaObjectIdentifier  = NewSchemaObjectIdentifier(random.StringN(255), random.StringN(255), random.StringN(255))
+
+	// TODO: Add to the generator
+	emptyAccountObjectIdentifier = NewAccountObjectIdentifier("")
+	emptySchemaObjectIdentifier  = NewDatabaseObjectIdentifier("", "")
 )
 
 func randomSchemaObjectIdentifier() SchemaObjectIdentifier {

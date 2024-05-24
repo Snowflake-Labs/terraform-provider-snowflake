@@ -38,7 +38,7 @@ func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([
 }
 
 func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
-	request := NewShowStreamlitRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
+	request := NewShowStreamlitRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
 	streamlits, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

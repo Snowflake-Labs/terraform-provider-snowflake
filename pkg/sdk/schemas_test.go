@@ -44,27 +44,30 @@ func TestSchemasCreate(t *testing.T) {
 }
 
 func TestSchemasAlter(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
+	newSchemaId := randomDatabaseObjectIdentifierInDatabase(schemaId.DatabaseId())
+
 	t.Run("rename to", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:     schemaId,
 			IfExists: Bool(true),
-			NewName:  NewDatabaseObjectIdentifier("database_name", "new_schema_name"),
+			NewName:  newSchemaId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA IF EXISTS "database_name"."schema_name" RENAME TO "database_name"."new_schema_name"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA IF EXISTS %s RENAME TO %s`, schemaId.FullyQualifiedName(), newSchemaId.FullyQualifiedName())
 	})
 
 	t.Run("swap with", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:     schemaId,
 			IfExists: Bool(false),
-			SwapWith: NewDatabaseObjectIdentifier("database_name", "target_schema_name"),
+			SwapWith: newSchemaId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SWAP WITH "database_name"."target_schema_name"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s SWAP WITH %s`, schemaId.FullyQualifiedName(), newSchemaId.FullyQualifiedName())
 	})
 
 	t.Run("set options", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name: schemaId,
 			Set: &SchemaSet{
 				DataRetentionTimeInDays:    Int(3),
 				MaxDataExtensionTimeInDays: Int(2),
@@ -72,12 +75,12 @@ func TestSchemasAlter(t *testing.T) {
 				Comment:                    String("comment"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SET DATA_RETENTION_TIME_IN_DAYS = 3, MAX_DATA_EXTENSION_TIME_IN_DAYS = 2, DEFAULT_DDL_COLLATION = 'en_US-trim', COMMENT = 'comment'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s SET DATA_RETENTION_TIME_IN_DAYS = 3, MAX_DATA_EXTENSION_TIME_IN_DAYS = 2, DEFAULT_DDL_COLLATION = 'en_US-trim', COMMENT = 'comment'`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name: schemaId,
 			SetTag: []TagAssociation{
 				{
 					Name:  NewAccountObjectIdentifier("tag1"),
@@ -89,23 +92,23 @@ func TestSchemasAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SET TAG "tag1" = 'value1', "tag2" = 'value2'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s SET TAG "tag1" = 'value1', "tag2" = 'value2'`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name: schemaId,
 			UnsetTag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag1"),
 				NewAccountObjectIdentifier("tag2"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" UNSET TAG "tag1", "tag2"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s UNSET TAG "tag1", "tag2"`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("unset options", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name: schemaId,
 			Unset: &SchemaUnset{
 				DataRetentionTimeInDays:    Bool(true),
 				MaxDataExtensionTimeInDays: Bool(true),
@@ -113,57 +116,63 @@ func TestSchemasAlter(t *testing.T) {
 				Comment:                    Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, DEFAULT_DDL_COLLATION, COMMENT`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, DEFAULT_DDL_COLLATION, COMMENT`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("enable managed access", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:                NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:                schemaId,
 			EnableManagedAccess: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" ENABLE MANAGED ACCESS`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s ENABLE MANAGED ACCESS`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("disable managed access", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
-			name:                 NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:                 schemaId,
 			DisableManagedAccess: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" DISABLE MANAGED ACCESS`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA %s DISABLE MANAGED ACCESS`, schemaId.FullyQualifiedName())
 	})
 }
 
 func TestSchemasDrop(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
+
 	t.Run("cascade", func(t *testing.T) {
 		opts := &DropSchemaOptions{
 			IfExists: Bool(true),
-			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:     schemaId,
 			Cascade:  Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA IF EXISTS "database_name"."schema_name" CASCADE`)
+		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA IF EXISTS %s CASCADE`, schemaId.FullyQualifiedName())
 	})
 
 	t.Run("restrict", func(t *testing.T) {
 		opts := &DropSchemaOptions{
-			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
+			name:     schemaId,
 			Restrict: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA "database_name"."schema_name" RESTRICT`)
+		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA %s RESTRICT`, schemaId.FullyQualifiedName())
 	})
 }
 
 func TestSchemasUndrop(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
+
 	opts := &undropSchemaOptions{
-		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+		name: schemaId,
 	}
-	assertOptsValidAndSQLEquals(t, opts, `UNDROP SCHEMA "database_name"."schema_name"`)
+	assertOptsValidAndSQLEquals(t, opts, `UNDROP SCHEMA %s`, schemaId.FullyQualifiedName())
 }
 
 func TestSchemasDescribe(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
+
 	opts := &describeSchemaOptions{
-		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+		name: schemaId,
 	}
-	assertOptsValidAndSQLEquals(t, opts, `DESCRIBE SCHEMA "database_name"."schema_name"`)
+	assertOptsValidAndSQLEquals(t, opts, `DESCRIBE SCHEMA %s`, schemaId.FullyQualifiedName())
 }
 
 func TestSchemasShow(t *testing.T) {

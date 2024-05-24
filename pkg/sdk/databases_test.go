@@ -15,14 +15,14 @@ func TestDatabasesCreate(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid clone", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Clone = &Clone{
-			SourceObject: NewAccountObjectIdentifier(""),
+			SourceObject: emptyAccountObjectIdentifier,
 			At: &TimeTravel{
 				Timestamp: Pointer(time.Now()),
 				Offset:    Int(123),
@@ -44,8 +44,8 @@ func TestDatabasesCreate(t *testing.T) {
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateDatabaseOptions", "Catalog"),
@@ -98,13 +98,13 @@ func TestDatabasesCreateShared(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid from share name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.fromShare = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewAccountObjectIdentifier(""))
+		opts.fromShare = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateSharedDatabaseOptions", "fromShare"))
 	})
 
@@ -119,8 +119,8 @@ func TestDatabasesCreateShared(t *testing.T) {
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("db")
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateSharedDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateSharedDatabaseOptions", "Catalog"),
@@ -165,13 +165,13 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid primary database", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.primaryDatabase = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewAccountObjectIdentifier(""))
+		opts.primaryDatabase = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "primaryDatabase"))
 	})
 
@@ -184,8 +184,8 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateSecondaryDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateSecondaryDatabaseOptions", "Catalog"),
@@ -227,15 +227,15 @@ func TestDatabasesAlter(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
-			Catalog:        Pointer(NewAccountObjectIdentifier("")),
+			ExternalVolume: Pointer(emptyAccountObjectIdentifier),
+			Catalog:        Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "ExternalVolume"), errInvalidIdentifier("DatabaseSet", "Catalog"))
 	})
@@ -267,7 +267,7 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: invalid external volume identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
+			ExternalVolume: Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "ExternalVolume"))
 	})
@@ -275,20 +275,20 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: invalid catalog integration identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			Catalog: Pointer(NewAccountObjectIdentifier("")),
+			Catalog: Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "Catalog"))
 	})
 
 	t.Run("validation: invalid NewName identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.NewName = Pointer(NewAccountObjectIdentifier(""))
+		opts.NewName = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("AlterDatabaseOptions", "NewName"))
 	})
 
 	t.Run("validation: invalid SwapWith identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SwapWith = Pointer(NewAccountObjectIdentifier(""))
+		opts.SwapWith = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("AlterDatabaseOptions", "SwapWith"))
 	})
 
@@ -370,7 +370,7 @@ func TestDatabasesAlterReplication(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -423,7 +423,7 @@ func TestDatabasesAlterFailover(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -475,7 +475,7 @@ func TestDatabasesDrop(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -515,7 +515,7 @@ func TestDatabasesUndrop(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -579,7 +579,7 @@ func TestDatabasesDescribe(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

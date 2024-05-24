@@ -58,7 +58,7 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 }
 
 func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Function, error) {
-	request := NewShowFunctionRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
+	request := NewShowFunctionRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
 	functions, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

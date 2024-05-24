@@ -19,7 +19,7 @@ func init() {
 			}
 			ctx := context.Background()
 			dynamicTables, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithIn(&sdk.In{
-				Schema: sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName),
+				Schema: acc.TestClient().Ids.SchemaId(),
 			}))
 			if err != nil {
 				return fmt.Errorf("error getting dynamic tables during sweep: %w", err)

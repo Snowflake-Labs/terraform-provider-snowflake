@@ -34,7 +34,7 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 
 func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
 	request := NewShowTagRequest().WithIn(&In{
-		Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+		Schema: id.SchemaId(),
 	}).WithLike(id.Name())
 
 	tags, err := v.Show(ctx, request)

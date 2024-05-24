@@ -360,7 +360,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	t.Run("show materialized view: no existing view", func(t *testing.T) {
 		showRequest := sdk.NewShowMaterializedViewRequest().
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()})
 		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -369,7 +369,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	t.Run("show materialized view: schema not existing", func(t *testing.T) {
 		showRequest := sdk.NewShowMaterializedViewRequest().
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "made-up-name")})
+			WithIn(&sdk.In{Schema: NonExistingDatabaseObjectIdentifier})
 		_, err := client.MaterializedViews.Show(ctx, showRequest)
 		require.Error(t, err)
 	})
@@ -380,7 +380,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 		showRequest := sdk.NewShowMaterializedViewRequest().
 			WithLike(&sdk.Like{Pattern: &view1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()})
 		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
 
 		require.NoError(t, err)

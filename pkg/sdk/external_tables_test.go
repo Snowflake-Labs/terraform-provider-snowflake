@@ -620,13 +620,14 @@ func TestExternalTablesShow(t *testing.T) {
 	})
 
 	t.Run("in schema", func(t *testing.T) {
+		id := randomDatabaseObjectIdentifier()
 		opts := &ShowExternalTableOptions{
 			Terse: Bool(true),
 			In: &In{
-				Schema: NewDatabaseObjectIdentifier("database_name", "schema_name"),
+				Schema: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE EXTERNAL TABLES IN SCHEMA "database_name"."schema_name"`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE EXTERNAL TABLES IN SCHEMA %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("invalid options", func(t *testing.T) {

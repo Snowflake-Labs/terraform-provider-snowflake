@@ -729,6 +729,7 @@ func TestStages_Describe(t *testing.T) {
 }
 
 func TestStages_Show(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
 	// Minimal valid ShowStageOptions
 	defaultOpts := func() *ShowStageOptions {
 		return &ShowStageOptions{}
@@ -750,8 +751,8 @@ func TestStages_Show(t *testing.T) {
 			Pattern: String("some pattern"),
 		}
 		opts.In = &In{
-			Schema: NewDatabaseObjectIdentifier("db", "schema"),
+			Schema: schemaId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW STAGES LIKE 'some pattern' IN SCHEMA "db"."schema"`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW STAGES LIKE 'some pattern' IN SCHEMA %s`, schemaId.FullyQualifiedName())
 	})
 }

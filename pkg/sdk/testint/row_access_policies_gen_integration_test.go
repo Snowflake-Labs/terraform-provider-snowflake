@@ -250,7 +250,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 		showRequest := sdk.NewShowRowAccessPolicyRequest().
 			WithLike(&sdk.Like{Pattern: &rowAccessPolicy1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()})
 		returnedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, showRequest)
 
 		require.NoError(t, err)

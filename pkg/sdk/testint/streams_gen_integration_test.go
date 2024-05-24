@@ -291,7 +291,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(sdk.Bool(false)).
 			WithIn(&sdk.In{
-				Schema: sdk.NewDatabaseObjectIdentifier(db.Name, schema.Name),
+				Schema: schema.ID(),
 			}).
 			WithLike(&sdk.Like{
 				Pattern: sdk.String(id.Name()),
@@ -372,7 +372,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(sdk.Bool(false)).
 			WithIn(&sdk.In{
-				Schema: sdk.NewDatabaseObjectIdentifier(db.Name, schema.Name),
+				Schema: schema.ID(),
 			}).
 			WithStartsWith(sdk.String(idPrefix)).
 			WithLimit(&sdk.LimitFrom{

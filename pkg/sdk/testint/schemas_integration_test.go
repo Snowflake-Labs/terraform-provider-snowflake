@@ -49,13 +49,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		clonedSchemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 			Clone: &sdk.Clone{

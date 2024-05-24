@@ -182,16 +182,15 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
-		schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 		opts := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
 			In: &In{
-				Schema: schemaIdentifier,
+				Schema: id.SchemaId(),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "SHOW PASSWORD POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), id.SchemaId().FullyQualifiedName())
 	})
 
 	t.Run("with limit", func(t *testing.T) {

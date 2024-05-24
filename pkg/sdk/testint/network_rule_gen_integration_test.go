@@ -93,7 +93,7 @@ func TestInt_NetworkRules(t *testing.T) {
 		})
 
 		networkRules, err := client.NetworkRules.Show(ctx, sdk.NewShowNetworkRuleRequest().WithIn(&sdk.In{
-			Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: id.SchemaId(),
 		}).WithLike(&sdk.Like{
 			Pattern: sdk.String(id.Name()),
 		}))

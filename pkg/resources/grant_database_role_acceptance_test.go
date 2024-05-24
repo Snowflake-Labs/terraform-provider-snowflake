@@ -6,7 +6,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -128,9 +127,11 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2410 is fixed
 func TestAcc_GrantDatabaseRole_share(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
-	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	databaseRoleName := databaseRoleId.Name()
+	databaseRoleFullyQualifiedName := databaseRoleId.FullyQualifiedName()
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	shareName := shareId.Name()
 	resourceName := "snowflake_grant_database_role.test"
@@ -153,9 +154,9 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
 				ConfigVariables: configVariables(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleFullyQualifiedName),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleFullyQualifiedName, "SHARE", shareId.FullyQualifiedName())),
 				),
 			},
 			// test import

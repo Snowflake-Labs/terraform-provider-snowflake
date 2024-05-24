@@ -22,7 +22,7 @@ func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) s
 // TestInt_CreatePipeWithStrangeSchemaName documented previous bad behavior. It changed with Snowflake 8.3.1 release.
 // We leave the test for future reference.
 func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
-	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
+	schemaIdentifier := testClientHelper().Ids.NewDatabaseObjectIdentifier("tcK1>AJ+")
 
 	// creating a new schema on purpose
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaIdentifier.Name())

@@ -76,7 +76,7 @@ func (c *TableClient) DropTableFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 
 	return func() {
 		// to prevent error when schema was removed before the table
-		_, err := c.context.client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
+		_, err := c.context.client.Schemas.ShowByID(ctx, id.SchemaId())
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 			return
 		}

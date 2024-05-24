@@ -30,7 +30,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -84,7 +85,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -138,8 +140,9 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
+	schemaName := acc.TestClient().Ids.SchemaId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -209,7 +212,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -262,7 +266,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -409,7 +414,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -463,7 +469,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -518,7 +525,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -608,7 +616,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -663,7 +672,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -759,7 +769,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		return configVariables
 	}
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name)
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -780,7 +790,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleName,
+					databaseRoleId,
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
 				),
@@ -789,7 +799,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedPrivilegesToDatabaseRoleContainAtLeast(
-					databaseRoleName,
+					databaseRoleId,
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -804,7 +814,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleName,
+					databaseRoleId,
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				),
@@ -816,7 +826,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaName),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleName,
+					databaseRoleId,
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				),
@@ -837,8 +847,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -862,7 +872,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -870,21 +880,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
-				ConfigVariables: configVariables(true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectNonEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -898,7 +894,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
+				ConfigVariables: configVariables(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -912,7 +922,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -934,8 +944,9 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
-	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
+	schemaName := acc.TestClient().Ids.SchemaId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -974,7 +985,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	name := databaseRoleId.Name()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -1008,7 +1020,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 			{
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
-						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						t, databaseRoleId,
 						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						false,
@@ -1028,7 +1040,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	name := databaseRoleId.Name()
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -1062,7 +1075,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 			{
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
-						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						t, databaseRoleId,
 						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						true,
@@ -1181,7 +1194,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
-	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleName := databaseRoleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{

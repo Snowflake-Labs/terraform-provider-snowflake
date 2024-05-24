@@ -28,7 +28,7 @@ func (v *eventTables) Show(ctx context.Context, request *ShowEventTableRequest) 
 }
 
 func (v *eventTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error) {
-	request := NewShowEventTableRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
+	request := NewShowEventTableRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
 	eventTables, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
