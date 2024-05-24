@@ -1146,7 +1146,7 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 						On: &sdk.ShowGrantsOn{
 							Object: &sdk.Object{
 								ObjectType: sdk.ObjectTypeDatabaseRole,
-								Name:       sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleFullyQualifiedName),
+								Name:       databaseRoleId,
 							},
 						},
 					}, sdk.ObjectTypeRole, accountRoleId.Name(), databaseRoleFullyQualifiedName),
