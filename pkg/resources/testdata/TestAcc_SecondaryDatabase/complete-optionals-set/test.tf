@@ -1,7 +1,7 @@
 resource "snowflake_secondary_database" "test" {
-  name                  = var.name
-  as_replica_of            = var.as_replica_of
-  is_transient          = var.transient
+  name          = var.name
+  as_replica_of = var.as_replica_of
+  is_transient  = var.transient
 
   data_retention_time_in_days {
     value = var.data_retention_time_in_days

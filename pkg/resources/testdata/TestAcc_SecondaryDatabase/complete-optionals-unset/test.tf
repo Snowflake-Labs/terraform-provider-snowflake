@@ -1,6 +1,6 @@
 resource "snowflake_secondary_database" "test" {
   name                  = var.name
-  as_replica_of            = var.as_replica_of
+  as_replica_of         = var.as_replica_of
   is_transient          = var.transient
   external_volume       = var.external_volume
   catalog               = var.catalog

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strconv"
 )
 
 var secondaryDatabaseSchema = map[string]*schema.Schema{
@@ -353,6 +354,7 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 
 	var replicationPrimaryDatabase *sdk.ReplicationDatabase
 	for _, replicationDatabase := range replicationDatabases {
+		replicationDatabase := replicationDatabase
 		if !replicationDatabase.IsPrimary &&
 			replicationDatabase.AccountLocator == currentAccountLocator &&
 			replicationDatabase.Name == secondaryDatabaseId.Name() {

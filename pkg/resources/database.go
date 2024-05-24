@@ -63,7 +63,7 @@ var databaseSchema = map[string]*schema.Schema{
 		ConflictsWith: []string{"from_share", "from_database"},
 	},
 	// TODO: Add accounts for replication (it will promote local database to serve as a primary database for replication).
-	//"accounts for replication": {
+	// "accounts for replication": {
 	//	Type:     schema.TypeList,
 	//	Required: true,
 	//	MinItems: 1,
@@ -72,8 +72,8 @@ var databaseSchema = map[string]*schema.Schema{
 	//		// TODO(ticket-number): Validate account identifiers.
 	//	},
 	//	// TODO: Desc
-	//},
-	//"accounts for failover": {
+	// },
+	// "accounts for failover": {
 	//	Type:     schema.TypeList,
 	//	Required: true,
 	//	MinItems: 1,
@@ -82,12 +82,12 @@ var databaseSchema = map[string]*schema.Schema{
 	//		// TODO(ticket-number): Validate account identifiers.
 	//	},
 	//	// TODO: Desc
-	//},
-	//"ignore_edition_check": {
+	// },
+	// "ignore_edition_check": {
 	//	Type: schema.TypeBool,
 	//	// TODO: Desc
 	//	Optional: true,
-	//},
+	// },
 	"replication_configuration": {
 		Type:        schema.TypeList,
 		Description: "When set, specifies the configurations for database replication.",
