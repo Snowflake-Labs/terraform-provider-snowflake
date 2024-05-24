@@ -7,14 +7,69 @@ import (
 )
 
 type SecurityIntegrations interface {
+	CreateOauthForPartnerApplications(ctx context.Context, request *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) error
+	CreateOauthForCustomClients(ctx context.Context, request *CreateOauthForCustomClientsSecurityIntegrationRequest) error
 	CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error
 	CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error
+	AlterOauthForPartnerApplications(ctx context.Context, request *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) error
+	AlterOauthForCustomClients(ctx context.Context, request *AlterOauthForCustomClientsSecurityIntegrationRequest) error
 	AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error
 	AlterScim(ctx context.Context, request *AlterScimSecurityIntegrationRequest) error
 	Drop(ctx context.Context, request *DropSecurityIntegrationRequest) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error)
 	Show(ctx context.Context, request *ShowSecurityIntegrationRequest) ([]SecurityIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
+}
+
+// CreateOauthForPartnerApplicationsSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
+type CreateOauthForPartnerApplicationsSecurityIntegrationOptions struct {
+	create                    bool                                             `ddl:"static" sql:"CREATE"`
+	OrReplace                 *bool                                            `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration       bool                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists               *bool                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                      AccountObjectIdentifier                          `ddl:"identifier"`
+	integrationType           string                                           `ddl:"static" sql:"TYPE = OAUTH"`
+	OauthClient               OauthSecurityIntegrationClientOption             `ddl:"parameter" sql:"OAUTH_CLIENT"`
+	OauthRedirectUri          *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
+	Enabled                   *bool                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthIssueRefreshTokens   *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
+	OauthRefreshTokenValidity *int                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	OauthUseSecondaryRoles    *OauthSecurityIntegrationUseSecondaryRolesOption `ddl:"parameter" sql:"OAUTH_USE_SECONDARY_ROLES"`
+	BlockedRolesList          *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
+	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type PreAuthorizedRolesList struct {
+	PreAuthorizedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+type BlockedRolesList struct {
+	BlockedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
+}
+
+// CreateOauthForCustomClientsSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
+type CreateOauthForCustomClientsSecurityIntegrationOptions struct {
+	create                      bool                                             `ddl:"static" sql:"CREATE"`
+	OrReplace                   *bool                                            `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration         bool                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists                 *bool                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                        AccountObjectIdentifier                          `ddl:"identifier"`
+	integrationType             string                                           `ddl:"static" sql:"TYPE = OAUTH"`
+	oauthClient                 string                                           `ddl:"static" sql:"OAUTH_CLIENT = CUSTOM"`
+	OauthClientType             OauthSecurityIntegrationClientTypeOption         `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_TYPE"`
+	OauthRedirectUri            string                                           `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
+	Enabled                     *bool                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthAllowNonTlsRedirectUri *bool                                            `ddl:"parameter" sql:"OAUTH_ALLOW_NON_TLS_REDIRECT_URI"`
+	OauthEnforcePkce            *bool                                            `ddl:"parameter" sql:"OAUTH_ENFORCE_PKCE"`
+	OauthUseSecondaryRoles      *OauthSecurityIntegrationUseSecondaryRolesOption `ddl:"parameter" sql:"OAUTH_USE_SECONDARY_ROLES"`
+	PreAuthorizedRolesList      *PreAuthorizedRolesList                          `ddl:"parameter,parentheses" sql:"PRE_AUTHORIZED_ROLES_LIST"`
+	BlockedRolesList            *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
+	OauthIssueRefreshTokens     *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
+	OauthRefreshTokenValidity   *int                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	NetworkPolicy               *AccountObjectIdentifier                         `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
+	OauthClientRsaPublicKey     *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY"`
+	OauthClientRsaPublicKey2    *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY_2"`
+	Comment                     *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // CreateSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
@@ -66,6 +121,69 @@ type CreateScimSecurityIntegrationOptions struct {
 	NetworkPolicy       *AccountObjectIdentifier                `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
 	SyncPassword        *bool                                   `ddl:"parameter" sql:"SYNC_PASSWORD"`
 	Comment             *string                                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+// AlterOauthForPartnerApplicationsSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
+type AlterOauthForPartnerApplicationsSecurityIntegrationOptions struct {
+	alter               bool                                         `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                                         `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                                        `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier                      `ddl:"identifier"`
+	SetTags             []TagAssociation                             `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier                           `ddl:"keyword" sql:"UNSET TAG"`
+	Set                 *OauthForPartnerApplicationsIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *OauthForPartnerApplicationsIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+}
+
+type OauthForPartnerApplicationsIntegrationSet struct {
+	Enabled                   *bool                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthIssueRefreshTokens   *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
+	OauthRedirectUri          *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
+	OauthRefreshTokenValidity *int                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	OauthUseSecondaryRoles    *OauthSecurityIntegrationUseSecondaryRolesOption `ddl:"parameter" sql:"OAUTH_USE_SECONDARY_ROLES"`
+	BlockedRolesList          *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
+	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type OauthForPartnerApplicationsIntegrationUnset struct {
+	Enabled                *bool `ddl:"keyword" sql:"ENABLED"`
+	OauthUseSecondaryRoles *bool `ddl:"keyword" sql:"OAUTH_USE_SECONDARY_ROLES"`
+}
+
+// AlterOauthForCustomClientsSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-snowflake.
+type AlterOauthForCustomClientsSecurityIntegrationOptions struct {
+	alter               bool                                   `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                                   `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                                  `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier                `ddl:"identifier"`
+	SetTags             []TagAssociation                       `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier                     `ddl:"keyword" sql:"UNSET TAG"`
+	Set                 *OauthForCustomClientsIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *OauthForCustomClientsIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+}
+
+type OauthForCustomClientsIntegrationSet struct {
+	Enabled                     *bool                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthRedirectUri            *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
+	OauthAllowNonTlsRedirectUri *bool                                            `ddl:"parameter" sql:"OAUTH_ALLOW_NON_TLS_REDIRECT_URI"`
+	OauthEnforcePkce            *bool                                            `ddl:"parameter" sql:"OAUTH_ENFORCE_PKCE"`
+	PreAuthorizedRolesList      *PreAuthorizedRolesList                          `ddl:"parameter,parentheses" sql:"PRE_AUTHORIZED_ROLES_LIST"`
+	BlockedRolesList            *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
+	OauthIssueRefreshTokens     *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
+	OauthRefreshTokenValidity   *int                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	OauthUseSecondaryRoles      *OauthSecurityIntegrationUseSecondaryRolesOption `ddl:"parameter" sql:"OAUTH_USE_SECONDARY_ROLES"`
+	NetworkPolicy               *AccountObjectIdentifier                         `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
+	OauthClientRsaPublicKey     *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY"`
+	OauthClientRsaPublicKey2    *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY_2"`
+	Comment                     *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type OauthForCustomClientsIntegrationUnset struct {
+	Enabled                  *bool `ddl:"keyword" sql:"ENABLED"`
+	NetworkPolicy            *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
+	OauthClientRsaPublicKey  *bool `ddl:"keyword" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY"`
+	OauthClientRsaPublicKey2 *bool `ddl:"keyword" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY_2"`
+	OauthUseSecondaryRoles   *bool `ddl:"keyword" sql:"OAUTH_USE_SECONDARY_ROLES"`
 }
 
 // AlterSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-saml2.

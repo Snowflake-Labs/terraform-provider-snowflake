@@ -66,7 +66,7 @@ func (c *SecurityIntegrationClient) DropSecurityIntegrationFunc(t *testing.T, id
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(sdk.Bool(true)))
+		err := c.client().Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
 }
