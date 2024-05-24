@@ -16,6 +16,9 @@ func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+	t.Cleanup(schemaCleanup)
+
 	assertTagHandle := func(t *testing.T, tag *sdk.Tag, expectedName string, expectedComment string, expectedAllowedValues []string) {
 		t.Helper()
 		assert.NotEmpty(t, tag.CreatedOn)
@@ -37,7 +40,7 @@ func TestInt_Tags(t *testing.T) {
 	createTagHandle := func(t *testing.T) *sdk.Tag {
 		t.Helper()
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTagHandle(id))
@@ -48,7 +51,7 @@ func TestInt_Tags(t *testing.T) {
 	}
 
 	t.Run("create tag: comment", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		comment := random.Comment()
 
 		request := sdk.NewCreateTagRequest(id).WithComment(&comment)
@@ -62,7 +65,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: allowed values", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		values := []string{"value1", "value2"}
 		request := sdk.NewCreateTagRequest(id).WithAllowedValues(values)
@@ -76,7 +79,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: comment and allowed values", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		comment := random.Comment()
 		values := []string{"value1", "value2"}
@@ -94,7 +97,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTagHandle(id))
@@ -115,7 +118,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("drop tag: non-existing", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -200,7 +203,7 @@ func TestInt_Tags(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
 
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithRename(nid))
 		if err != nil {
 			t.Cleanup(cleanupTagHandle(id))

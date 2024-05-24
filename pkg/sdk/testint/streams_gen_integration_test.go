@@ -46,7 +46,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
+		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "Table", "DEFAULT")
 	})
 
@@ -76,7 +76,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, externalTableId.FullyQualifiedName(), *s.TableName)
+		assert.Equal(t, externalTableId.FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "External Table", "INSERT_ONLY")
 	})
 
@@ -148,7 +148,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 
 		assertStream(t, s, cloneId, "Table", "DEFAULT")
-		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
+		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 	})
 
 	t.Run("Alter tags", func(t *testing.T) {
@@ -351,7 +351,7 @@ func TestInt_Streams(t *testing.T) {
 
 		idPrefix := "stream_show_"
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithPrefix(idPrefix)
 		req := sdk.NewCreateStreamOnTableRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
@@ -413,7 +413,7 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, "some comment", *s.Comment)
-		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
+		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assert.Equal(t, "Table", *s.SourceType)
 		assert.Equal(t, "DEFAULT", *s.Mode)
 	})

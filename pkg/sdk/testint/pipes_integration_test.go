@@ -37,7 +37,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	t.Run("if we have special characters in db or schema name, create pipe succeeds", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			testClientHelper().Ids.RandomSchemaObjectIdentifier(),
+			testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()),
 			createPipeCopyStatement(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -55,7 +55,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			testClientHelper().Ids.RandomSchemaObjectIdentifier(),
+			testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
