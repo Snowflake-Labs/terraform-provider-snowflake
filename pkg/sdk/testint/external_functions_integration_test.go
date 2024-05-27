@@ -124,7 +124,6 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	t.Run("alter external function: set api integration", func(t *testing.T) {
 		e := createExternalFunction(t)
-		e.ID()
 		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		set := sdk.NewExternalFunctionSetRequest().
 			WithApiIntegration(sdk.Pointer(integration.ID()))
