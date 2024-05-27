@@ -40,15 +40,15 @@ type CreateExternalOauthSecurityIntegrationRequest struct {
 }
 
 type BlockedRolesListRequest struct {
-	BlockedRolesList []AccountObjectIdentifier
+	BlockedRolesList []AccountObjectIdentifier // required
 }
 
 type AllowedRolesListRequest struct {
-	AllowedRolesList []AccountObjectIdentifier
+	AllowedRolesList []AccountObjectIdentifier // required
 }
 
 type AudienceListRequest struct {
-	AudienceList []AudienceListItem
+	AudienceList []AudienceListItem // required
 }
 
 type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {

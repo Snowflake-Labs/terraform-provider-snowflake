@@ -82,31 +82,28 @@ func (s *CreateExternalOauthSecurityIntegrationRequest) WithComment(Comment stri
 	return s
 }
 
-func NewBlockedRolesListRequest() *BlockedRolesListRequest {
-	return &BlockedRolesListRequest{}
-}
-
-func (s *BlockedRolesListRequest) WithBlockedRolesList(BlockedRolesList []AccountObjectIdentifier) *BlockedRolesListRequest {
+func NewBlockedRolesListRequest(
+	BlockedRolesList []AccountObjectIdentifier,
+) *BlockedRolesListRequest {
+	s := BlockedRolesListRequest{}
 	s.BlockedRolesList = BlockedRolesList
-	return s
+	return &s
 }
 
-func NewAllowedRolesListRequest() *AllowedRolesListRequest {
-	return &AllowedRolesListRequest{}
-}
-
-func (s *AllowedRolesListRequest) WithAllowedRolesList(AllowedRolesList []AccountObjectIdentifier) *AllowedRolesListRequest {
+func NewAllowedRolesListRequest(
+	AllowedRolesList []AccountObjectIdentifier,
+) *AllowedRolesListRequest {
+	s := AllowedRolesListRequest{}
 	s.AllowedRolesList = AllowedRolesList
-	return s
+	return &s
 }
 
-func NewAudienceListRequest() *AudienceListRequest {
-	return &AudienceListRequest{}
-}
-
-func (s *AudienceListRequest) WithAudienceList(AudienceList []AudienceListItem) *AudienceListRequest {
+func NewAudienceListRequest(
+	AudienceList []AudienceListItem,
+) *AudienceListRequest {
+	s := AudienceListRequest{}
 	s.AudienceList = AudienceList
-	return s
+	return &s
 }
 
 func NewCreateOauthForPartnerApplicationsSecurityIntegrationRequest(

@@ -34,7 +34,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	createExternalOauth := func(t *testing.T, with func(*sdk.CreateExternalOauthSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier, string) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
+		issuer := random.String()
 		req := sdk.NewCreateExternalOauthSecurityIntegrationRequest(id, false, sdk.ExternalOauthSecurityIntegrationTypeCustom,
 			issuer, []sdk.TokenUserMappingClaim{{Claim: "foo"}}, sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName,
 		)
@@ -127,12 +127,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Equal(t, "SECURITY", si.Category)
 	}
 
-	assertFieldContainsList := func(details []sdk.SecurityIntegrationProperty, field, value string) {
+	// TODO(SNOW-1449579): move to helpers
+	assertFieldContainsList := func(details []sdk.SecurityIntegrationProperty, field, value, sep string) {
 		found, err := collections.FindOne(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
 		assert.NoError(t, err)
-		roles := strings.Split(found.Value, ",")
-		for _, exp := range strings.Split(value, ",") {
-			assert.Contains(t, roles, exp)
+		values := strings.Split(found.Value, sep)
+		for _, exp := range strings.Split(value, sep) {
+			assert.Contains(t, values, exp)
 		}
 	}
 
@@ -167,7 +168,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE", Type: "String", Value: d.externalOauthSnowflakeUserMappingAttribute, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_SCOPE_DELIMITER", Type: "String", Value: d.externalOauthScopeDelimiter, Default: ","})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
-		assertFieldContainsList(details, "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST", d.externalOauthBlockedRolesList)
+		assertFieldContainsList(details, "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST", d.externalOauthBlockedRolesList, ",")
 	}
 
 	type oauthPartnerDetails struct {
@@ -189,7 +190,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "PRE_AUTHORIZED_ROLES_LIST", Type: "List", Value: d.preAuthorizedRolesList, Default: "[]"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: d.networkPolicy, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
-		assertFieldContainsList(details, "BLOCKED_ROLES_LIST", d.blockedRolesList)
+		assertFieldContainsList(details, "BLOCKED_ROLES_LIST", d.blockedRolesList, ",")
 	}
 
 	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
@@ -555,7 +556,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		setRequest := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).
 			WithSet(
 				*sdk.NewOauthForPartnerApplicationsIntegrationSetRequest().
-					WithBlockedRolesList(*sdk.NewBlockedRolesListRequest().WithBlockedRolesList([]sdk.AccountObjectIdentifier{role1.ID()})).
+					WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
 					WithComment("a").
 					WithEnabled(true).
 					WithOauthIssueRefreshTokens(true).

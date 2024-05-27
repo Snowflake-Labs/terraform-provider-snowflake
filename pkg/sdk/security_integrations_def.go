@@ -72,13 +72,13 @@ var (
 	preAuthorizedRolesListDef = g.NewQueryStruct("PreAuthorizedRolesList").
 					List("PreAuthorizedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
 	blockedRolesListDef = g.NewQueryStruct("BlockedRolesList").
-				List("BlockedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
+				List("BlockedRolesList", "AccountObjectIdentifier", g.ListOptions().Required().MustParentheses())
 	allowedRolesListDef = g.NewQueryStruct("AllowedRolesList").
-				List("AllowedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
+				List("AllowedRolesList", "AccountObjectIdentifier", g.ListOptions().Required().MustParentheses())
 	jwsKeysUrlDef       = g.NewQueryStruct("JwsKeysUrl").Text("JwsKeyUrl", g.KeywordOptions().SingleQuotes().Required())
 	audienceListItemDef = g.NewQueryStruct("AudienceListItem").Text("Item", g.KeywordOptions().SingleQuotes().Required())
 	audienceListDef     = g.NewQueryStruct("AudienceList").
-				List("AudienceList", "AudienceListItem", g.ListOptions().MustParentheses())
+				List("AudienceList", "AudienceListItem", g.ListOptions().Required().MustParentheses())
 	tokenUserMappingClaimDef = g.NewQueryStruct("TokenUserMappingClaim").Text("Claim", g.KeywordOptions().SingleQuotes().Required())
 )
 
