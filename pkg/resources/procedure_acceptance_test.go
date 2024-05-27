@@ -258,7 +258,8 @@ resource "snowflake_procedure" "p" {
 }
 
 func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber})
+	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
 	resource.Test(t, resource.TestCase{
@@ -277,7 +278,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 				},
 				Config: sqlProcedureConfigArgsPermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -291,7 +292,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -300,7 +301,8 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 
 // TODO [SNOW-1348106]: diff suppression for the return type (the same with functions); finish this test
 func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
 	resource.Test(t, resource.TestCase{
@@ -319,7 +321,7 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 				},
 				Config: sqlProcedureConfigReturnTypePermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -330,7 +332,7 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   sqlProcedureConfigReturnTypePermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 				),
 				// should be empty after SNOW-1348106
 				ExpectNonEmptyPlan: true,
