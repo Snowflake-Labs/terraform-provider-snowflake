@@ -172,8 +172,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		_, err := client.PasswordPolicies.Describe(ctx, id)
+		_, err := client.PasswordPolicies.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -290,8 +289,7 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.PasswordPolicies.Drop(ctx, id, nil)
+		err := client.PasswordPolicies.Drop(ctx, NonExistingSchemaObjectIdentifier, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 

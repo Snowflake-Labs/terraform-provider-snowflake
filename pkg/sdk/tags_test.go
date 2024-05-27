@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -38,7 +37,7 @@ func TestTagCreate(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -59,7 +58,7 @@ func TestTagCreate(t *testing.T) {
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
@@ -81,7 +80,7 @@ func TestTagDrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -111,7 +110,7 @@ func TestTagUndrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -259,7 +258,7 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -282,7 +281,7 @@ func TestTagAlter(t *testing.T) {
 	t.Run("validation: invalid new name", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Rename = &TagRename{
-			Name: NewSchemaObjectIdentifier("", "", ""),
+			Name: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -330,7 +329,7 @@ func TestTagSet(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.objectName = NewSchemaObjectIdentifier("", "", "")
+		opts.objectName = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -346,16 +345,17 @@ func TestTagSet(t *testing.T) {
 	})
 
 	t.Run("set with column", func(t *testing.T) {
-		objectName := NewTableColumnIdentifier("db1", "schema1", "table1", "column1")
-		tableName := NewSchemaObjectIdentifier("db1", "schema1", "table1")
-		request := NewSetTagRequest(ObjectTypeColumn, objectName).WithSetTags([]TagAssociation{
+		objectId := randomTableColumnIdentifier()
+		tableId := randomSchemaObjectIdentifier()
+		tagId := randomSchemaObjectIdentifier()
+		request := NewSetTagRequest(ObjectTypeColumn, objectId).WithSetTags([]TagAssociation{
 			{
-				Name:  NewAccountObjectIdentifier("tag1"),
+				Name:  tagId,
 				Value: "value1",
 			},
 		})
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s MODIFY COLUMN "%s" SET TAG "tag1" = 'value1'`, tableName.FullyQualifiedName(), objectName.columnName)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s MODIFY COLUMN "%s" SET TAG %s = 'value1'`, tableId.FullyQualifiedName(), objectId.columnName, tagId.FullyQualifiedName())
 	})
 }
 
@@ -375,7 +375,7 @@ func TestTagUnset(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.objectName = NewSchemaObjectIdentifier("", "", "")
+		opts.objectName = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -389,17 +389,19 @@ func TestTagUnset(t *testing.T) {
 	})
 
 	t.Run("unset with column", func(t *testing.T) {
-		table, column := NewSchemaObjectIdentifier("db1", "schema1", "table1"), "column1"
-		objectName := NewObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s.%s.%s", table.DatabaseName(), table.SchemaName(), table.Name(), column))
+		tableId := randomSchemaObjectIdentifier()
+		objectId := randomTableColumnIdentifierInSchemaObject(tableId)
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		request := UnsetTagRequest{
 			objectType: ObjectTypeColumn,
-			objectName: objectName,
+			objectName: objectId,
 			UnsetTags: []ObjectIdentifier{
-				NewAccountObjectIdentifier("tag1"),
-				NewAccountObjectIdentifier("tag2"),
+				tagId1,
+				tagId2,
 			},
 		}
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG "tag1", "tag2"`, opts.objectType, table.FullyQualifiedName(), column)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, tableId.FullyQualifiedName(), objectId.Name(), tagId1, tagId2)
 	})
 }

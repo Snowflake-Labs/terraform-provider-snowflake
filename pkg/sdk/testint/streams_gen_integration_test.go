@@ -82,11 +82,10 @@ func TestInt_Streams(t *testing.T) {
 
 	t.Run("CreateOnDirectoryTable", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t)
-		stageId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
 		t.Cleanup(cleanupStage)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		req := sdk.NewCreateStreamOnDirectoryTableRequest(id, stageId).WithComment(sdk.String("some comment"))
+		req := sdk.NewCreateStreamOnDirectoryTableRequest(id, stage.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnDirectoryTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -102,10 +101,9 @@ func TestInt_Streams(t *testing.T) {
 
 	t.Run("CreateOnView", func(t *testing.T) {
 		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
-		tableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
-		view, cleanupView := testClientHelper().View.CreateView(t, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
+		view, cleanupView := testClientHelper().View.CreateView(t, fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName()))
 		t.Cleanup(cleanupView)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()

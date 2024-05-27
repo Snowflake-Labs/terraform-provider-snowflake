@@ -369,3 +369,7 @@ func (i TableColumnIdentifier) FullyQualifiedName() string {
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.databaseName, i.schemaName, i.tableName, i.columnName)
 }
+
+func (i TableColumnIdentifier) SchemaObjectId() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.tableName)
+}

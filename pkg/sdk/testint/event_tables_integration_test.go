@@ -218,10 +218,9 @@ func TestInt_EventTables(t *testing.T) {
 
 		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
-		id := sdk.NewSchemaObjectIdentifier(table.DatabaseName, table.SchemaName, table.Name)
 
 		// add policy
-		alterRequest := sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
+		alterRequest := sdk.NewAlterEventTableRequest(table.ID()).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
 		err := client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -234,7 +233,7 @@ func TestInt_EventTables(t *testing.T) {
 		assert.Equal(t, "ACTIVE", e.PolicyStatus)
 
 		// remove policy
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
+		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -242,7 +241,7 @@ func TestInt_EventTables(t *testing.T) {
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
+		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -251,7 +250,7 @@ func TestInt_EventTables(t *testing.T) {
 		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 
 		// drop and add other policy simultaneously
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewEventTableDropAndAddRowAccessPolicyRequest(
+		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithDropAndAddRowAccessPolicy(sdk.NewEventTableDropAndAddRowAccessPolicyRequest(
 			*sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
 			*sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []string{"id"}),
 		))
@@ -263,7 +262,7 @@ func TestInt_EventTables(t *testing.T) {
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), e.PolicyName)
 
 		// drop all policies
-		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
+		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithDropAllRowAccessPolicies(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 

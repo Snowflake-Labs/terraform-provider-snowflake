@@ -103,21 +103,23 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set password policy", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &AlterAccountOptions{
 			Set: &AccountSet{
-				PasswordPolicy: NewSchemaObjectIdentifier("db", "schema", "passpol"),
+				PasswordPolicy: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET PASSWORD POLICY "db"."schema"."passpol"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET PASSWORD POLICY %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("with set session policy", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &AlterAccountOptions{
 			Set: &AccountSet{
-				SessionPolicy: NewSchemaObjectIdentifier("db", "schema", "sesspol"),
+				SessionPolicy: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET SESSION POLICY "db"."schema"."sesspol"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET SESSION POLICY %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("with unset password policy", func(t *testing.T) {
@@ -139,28 +141,31 @@ func TestAccountAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &AlterAccountOptions{
 			SetTag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+					Name:  tagId1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+					Name:  tagId2,
 					Value: "v2",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET TAG %s = 'v1', %s = 'v2'`, tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &AlterAccountOptions{
 			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET TAG "db"."schema"."tag1"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET TAG %s`, id.FullyQualifiedName())
 	})
 
 	t.Run("rename", func(t *testing.T) {

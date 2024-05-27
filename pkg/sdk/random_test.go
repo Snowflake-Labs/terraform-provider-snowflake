@@ -6,11 +6,12 @@ import (
 
 var (
 	invalidAccountObjectIdentifier = NewAccountObjectIdentifier(random.StringN(256))
-	invalidSchemaObjectIdentifier  = NewSchemaObjectIdentifier(random.StringN(255), random.StringN(255), random.StringN(255))
+	invalidSchemaObjectIdentifier  = NewSchemaObjectIdentifier(random.StringN(256), random.StringN(256), random.StringN(256))
 
 	// TODO: Add to the generator
-	emptyAccountObjectIdentifier = NewAccountObjectIdentifier("")
-	emptySchemaObjectIdentifier  = NewDatabaseObjectIdentifier("", "")
+	emptyAccountObjectIdentifier  = NewAccountObjectIdentifier("")
+	emptyDatabaseObjectIdentifier = NewDatabaseObjectIdentifier("", "")
+	emptySchemaObjectIdentifier   = NewSchemaObjectIdentifier("", "", "")
 )
 
 func randomSchemaObjectIdentifier() SchemaObjectIdentifier {
@@ -35,4 +36,12 @@ func randomDatabaseObjectIdentifierInDatabase(databaseId AccountObjectIdentifier
 
 func randomAccountObjectIdentifier() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(random.StringN(12))
+}
+
+func randomTableColumnIdentifier() TableColumnIdentifier {
+	return NewTableColumnIdentifier(random.StringN(12), random.StringN(12), random.StringN(12), random.StringN(12))
+}
+
+func randomTableColumnIdentifierInSchemaObject(objectId SchemaObjectIdentifier) TableColumnIdentifier {
+	return NewTableColumnIdentifier(objectId.DatabaseName(), objectId.SchemaName(), objectId.Name(), random.StringN(12))
 }

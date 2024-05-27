@@ -183,9 +183,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("drop view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
@@ -520,9 +518,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("describe view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		_, err := client.Views.Describe(ctx, id)
+		_, err := client.Views.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

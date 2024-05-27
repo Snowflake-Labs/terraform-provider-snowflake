@@ -142,6 +142,7 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("on schema object", func(t *testing.T) {
+		tableId := randomSchemaObjectIdentifier()
 		opts := &GrantPrivilegesToAccountRoleOptions{
 			privileges: &AccountRoleGrantPrivileges{
 				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
@@ -150,13 +151,13 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 				SchemaObject: &GrantOnSchemaObject{
 					SchemaObject: &Object{
 						ObjectType: ObjectTypeTable,
-						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+						Name:       tableId,
 					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON TABLE "db1"."schema1"."table1" TO ROLE "role1"`)
+		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON TABLE %s TO ROLE "role1"`, tableId.FullyQualifiedName())
 	})
 
 	t.Run("on future schema object in database", func(t *testing.T) {
@@ -291,6 +292,7 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 	})
 
 	t.Run("on schema object", func(t *testing.T) {
+		tableId := randomSchemaObjectIdentifier()
 		opts := &RevokePrivilegesFromAccountRoleOptions{
 			privileges: &AccountRoleGrantPrivileges{
 				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
@@ -299,13 +301,13 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 				SchemaObject: &GrantOnSchemaObject{
 					SchemaObject: &Object{
 						ObjectType: ObjectTypeTable,
-						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+						Name:       tableId,
 					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `REVOKE SELECT, UPDATE ON TABLE "db1"."schema1"."table1" FROM ROLE "role1"`)
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE SELECT, UPDATE ON TABLE %s FROM ROLE "role1"`, tableId.FullyQualifiedName())
 	})
 
 	t.Run("on future schema object in database", func(t *testing.T) {
@@ -376,7 +378,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			databaseRole: databaseRoleId,
 		}
 	}
-
+	tableId := randomSchemaObjectIdentifier()
 	defaultGrantsForSchemaObject := func() *GrantPrivilegesToDatabaseRoleOptions {
 		return &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
@@ -386,7 +388,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 				SchemaObject: &GrantOnSchemaObject{
 					SchemaObject: &Object{
 						ObjectType: ObjectTypeTable,
-						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+						Name:       tableId,
 					},
 				},
 			},
@@ -508,7 +510,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 
 	t.Run("on schema object", func(t *testing.T) {
 		opts := defaultGrantsForSchemaObject()
-		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON TABLE "db1"."schema1"."table1" TO DATABASE ROLE %s`, databaseRoleId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON TABLE %s TO DATABASE ROLE %s`, tableId.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 
 	t.Run("on future schema object in database", func(t *testing.T) {
@@ -538,7 +540,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 		opts.privileges = &DatabaseRoleGrantPrivileges{
 			AllPrivileges: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON TABLE "db1"."schema1"."table1" TO DATABASE ROLE %s`, databaseRoleId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON TABLE %s TO DATABASE ROLE %s`, tableId.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
 }
 
@@ -867,14 +869,15 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on tag", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeRead},
 			On: &ShareGrantOn{
-				Tag: NewSchemaObjectIdentifier("database-name", "schema-name", "tag-name"),
+				Tag: tagId,
 			},
 			from: id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "REVOKE READ ON TAG \"database-name\".\"schema-name\".\"tag-name\" FROM SHARE %s", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "REVOKE READ ON TAG %s FROM SHARE %s", tagId.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 

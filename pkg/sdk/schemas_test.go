@@ -23,6 +23,7 @@ func TestSchemasCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &CreateSchemaOptions{
 			name:                       id,
 			Transient:                  Bool(true),
@@ -33,13 +34,13 @@ func TestSchemasCreate(t *testing.T) {
 			DefaultDDLCollation:        String("en_US-trim"),
 			Tag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Name:  tagId,
 					Value: "v1",
 				},
 			},
 			Comment: String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT SCHEMA IF NOT EXISTS %s WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG ("db1"."schema1"."tag1" = 'v1') COMMENT = 'comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT SCHEMA IF NOT EXISTS %s WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG (%s = 'v1') COMMENT = 'comment'`, id.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 

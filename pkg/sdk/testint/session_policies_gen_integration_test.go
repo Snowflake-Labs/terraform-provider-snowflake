@@ -110,9 +110,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("drop session_policy: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
+		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 

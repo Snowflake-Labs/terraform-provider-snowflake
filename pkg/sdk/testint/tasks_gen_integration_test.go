@@ -369,9 +369,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
+		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 

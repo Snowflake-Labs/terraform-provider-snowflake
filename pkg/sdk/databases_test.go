@@ -78,13 +78,14 @@ func TestDatabasesCreate(t *testing.T) {
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
+		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				Name:  tagId,
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -145,13 +146,14 @@ func TestDatabasesCreateShared(t *testing.T) {
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
+		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				Name:  tagId,
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -338,26 +340,29 @@ func TestDatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := defaultOpts()
 		opts.SetTag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Name:  tagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+				Name:  tagId2,
 				Value: "v2",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`, opts.name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET TAG %s = 'v1', %s = 'v2'`, opts.name.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.UnsetTag = []ObjectIdentifier{
-			NewSchemaObjectIdentifier("db", "schema", "tag1"),
+			id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET TAG "db"."schema"."tag1"`, opts.name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET TAG %s`, opts.name.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 

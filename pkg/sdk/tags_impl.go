@@ -115,7 +115,7 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {
 			o.objectType = ObjectTypeTable
-			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.objectName = id.SchemaObjectId()
 			o.column = String(id.Name())
 		}
 	}
@@ -132,7 +132,7 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {
 			o.objectType = ObjectTypeTable
-			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.objectName = id.SchemaObjectId()
 			o.column = String(id.Name())
 		}
 	}

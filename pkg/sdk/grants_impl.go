@@ -47,7 +47,7 @@ func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *A
 						SchemaObject: &GrantOnSchemaObject{
 							SchemaObject: &Object{
 								ObjectType: ObjectTypePipe,
-								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+								Name:       pipe.ID(),
 							},
 						},
 					},
@@ -90,7 +90,7 @@ func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges
 						SchemaObject: &GrantOnSchemaObject{
 							SchemaObject: &Object{
 								ObjectType: ObjectTypePipe,
-								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+								Name:       pipe.ID(),
 							},
 						},
 					},
@@ -131,7 +131,7 @@ func (v *grants) GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *
 						SchemaObject: &GrantOnSchemaObject{
 							SchemaObject: &Object{
 								ObjectType: ObjectTypePipe,
-								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+								Name:       pipe.ID(),
 							},
 						},
 					},
@@ -172,7 +172,7 @@ func (v *grants) RevokePrivilegesFromDatabaseRole(ctx context.Context, privilege
 						SchemaObject: &GrantOnSchemaObject{
 							SchemaObject: &Object{
 								ObjectType: ObjectTypePipe,
-								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+								Name:       pipe.ID(),
 							},
 						},
 					},
@@ -234,7 +234,7 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 					OwnershipGrantOn{
 						Object: &Object{
 							ObjectType: ObjectTypePipe,
-							Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+							Name:       pipe.ID(),
 						},
 					},
 					to,

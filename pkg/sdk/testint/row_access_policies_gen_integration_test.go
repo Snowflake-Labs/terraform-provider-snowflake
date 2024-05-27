@@ -117,9 +117,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("drop row access policy: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
+		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
@@ -305,9 +303,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("describe row access policy: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		_, err := client.RowAccessPolicies.Describe(ctx, id)
+		_, err := client.RowAccessPolicies.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
