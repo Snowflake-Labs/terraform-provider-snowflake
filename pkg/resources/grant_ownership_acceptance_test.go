@@ -953,7 +953,7 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 						On: &sdk.ShowGrantsOn{
 							Object: &sdk.Object{
 								ObjectType: sdk.ObjectTypePipe,
-								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(pipeId.FullyQualifiedName()),
+								Name:       pipeId,
 							},
 						},
 					}, sdk.ObjectTypePipe, accountRoleName, pipeId.FullyQualifiedName()),
@@ -1039,7 +1039,7 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 						On: &sdk.ShowGrantsOn{
 							Object: &sdk.Object{
 								ObjectType: sdk.ObjectTypeTask,
-								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(taskId.FullyQualifiedName()),
+								Name:       taskId,
 							},
 						},
 					}, sdk.ObjectTypeTask, accountRoleId.Name(), taskId.FullyQualifiedName()),

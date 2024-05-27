@@ -328,6 +328,7 @@ func TestInt_Views(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(alteredViewDetails))
+		// TODO [SNOW-999049]: make nicer during the identifiers rework
 		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*alteredViewDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
