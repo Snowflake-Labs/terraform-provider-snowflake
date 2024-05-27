@@ -10,7 +10,7 @@ func TestAlertCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("with complete options", func(t *testing.T) {
-		newComment := random.String()
+		newComment := random.Comment()
 		warehouse := AccountObjectIdentifier{"warehouse"}
 		existsCondition := "SELECT 1"
 		condition := AlertCondition{[]string{existsCondition}}
@@ -41,7 +41,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
-		newComment := random.String()
+		newComment := random.Comment()
 		opts := &AlterAlertOptions{
 			name:   id,
 			Action: &AlertActionResume,
@@ -71,7 +71,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := random.String()
+		newComment := random.Comment()
 		opts := &AlterAlertOptions{
 			name: id,
 			Set: &AlertSet{

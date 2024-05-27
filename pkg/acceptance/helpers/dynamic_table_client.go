@@ -28,12 +28,11 @@ func (c *DynamicTableClient) client() sdk.DynamicTables {
 
 func (c *DynamicTableClient) CreateDynamicTable(t *testing.T, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {
 	t.Helper()
-	return c.CreateDynamicTableWithOptions(t, c.ids.SchemaId(), random.AlphaN(12), c.ids.WarehouseId(), tableId)
+	return c.CreateDynamicTableWithOptions(t, c.ids.RandomSchemaObjectIdentifier(), c.ids.WarehouseId(), tableId)
 }
 
-func (c *DynamicTableClient) CreateDynamicTableWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, warehouseId sdk.AccountObjectIdentifier, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {
+func (c *DynamicTableClient) CreateDynamicTableWithOptions(t *testing.T, id sdk.SchemaObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, tableId sdk.SchemaObjectIdentifier) (*sdk.DynamicTable, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
 	targetLag := sdk.TargetLag{
 		MaximumDuration: sdk.String("2 minutes"),
 	}

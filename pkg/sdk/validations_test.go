@@ -3,7 +3,6 @@ package sdk
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,12 +42,12 @@ func TestValidObjectIdentifier(t *testing.T) {
 	})
 
 	t.Run("over 255 characters", func(t *testing.T) {
-		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(random.StringN(256)))
+		ok := ValidObjectIdentifier(invalidAccountObjectIdentifier)
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
-		ok := ValidObjectIdentifier(NewSchemaObjectIdentifier(random.StringN(255), random.StringN(255), random.StringN(255)))
+		ok := ValidObjectIdentifier(invalidSchemaObjectIdentifier)
 		assert.Equal(t, ok, true)
 	})
 }

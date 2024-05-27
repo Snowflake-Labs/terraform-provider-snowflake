@@ -19,7 +19,6 @@ import (
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleFullyQualifiedName),
@@ -41,7 +40,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
@@ -69,7 +68,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleFullyQualifiedName),
@@ -91,7 +89,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
@@ -119,7 +117,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -143,7 +140,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -183,7 +180,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 // This proves that infinite plan is not produced as in snowflake_grant_privileges_to_role.
 // More details can be found in the fix pr https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2364.
 func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -194,12 +191,12 @@ func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *te
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject_InfinitePlan"),
 				ConfigVariables: config.Variables{
-					"name":     config.StringVariable(name),
+					"name":     config.StringVariable(roleId.Name()),
 					"database": config.StringVariable(acc.TestDatabaseName),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -214,7 +211,6 @@ func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *te
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleFullyQualifiedName),
@@ -240,7 +236,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema"),
@@ -268,7 +264,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -279,7 +275,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema_ExactlyOneOf"),
@@ -292,7 +288,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -316,7 +311,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAllSchemasInDatabase"),
@@ -345,7 +340,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -369,7 +363,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnFutureSchemasInDatabase"),
@@ -398,7 +392,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	configVariables := config.Variables{
@@ -424,7 +417,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
@@ -453,7 +446,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	name := roleId.Name()
 	tableName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
@@ -476,7 +470,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
@@ -489,7 +483,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -514,7 +507,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnAll_InDatabase"),
@@ -545,7 +538,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -568,7 +560,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAllPipes"),
@@ -598,7 +590,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -623,7 +614,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
@@ -656,7 +647,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InDatabase(t *testing.T) {
 	t.Skip("Fix after it starts working on Snowflake side, reference: SNOW-1272222")
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -679,7 +669,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InD
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
@@ -692,7 +682,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InD
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InDatabase(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := config.Variables{
@@ -716,7 +705,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InData
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnAll_InDatabase"),
@@ -739,7 +728,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InData
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
@@ -771,7 +759,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/UpdatePrivileges/privileges"),
@@ -832,7 +820,6 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	name := roleId.Name()
 	schemaName := "test_database_role_schema_name"
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
@@ -865,7 +852,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/UpdatePrivileges_SnowflakeChecked/privileges"),
@@ -921,7 +908,6 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 
 func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := func(alwaysApply bool) config.Variables {
@@ -944,7 +930,7 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/AlwaysApply"),
@@ -1014,8 +1000,10 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
-	sharedDatabaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
+	sharedDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	sharedDatabaseName := sharedDatabaseId.Name()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareName := shareId.Name()
 	roleName := acc.TestClient().Ids.Alpha()
 	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
@@ -1038,7 +1026,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName) },
+				PreConfig:       func() { createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseId, shareId) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivileges"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1064,9 +1052,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1998 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleName := roleId.Name()
 	configVariables := config.Variables{
-		"role_name": config.StringVariable(name),
+		"role_name": config.StringVariable(roleName),
 		"privileges": config.ListVariable(
 			config.StringVariable(sdk.AccountObjectPrivilegeImportedPrivileges.String()),
 		),
@@ -1083,7 +1072,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivilegesOnSnowflakeDatabase"),
@@ -1114,12 +1103,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 // TODO(SNOW-1213622): Add test for custom applications using on_account_object.object_type = "DATABASE"
 
 func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) {
-	nameBytes := []byte(acc.TestClient().Ids.Alpha())
-	nameBytes[3] = '.'
-	nameBytes[6] = '.'
-	name := string(nameBytes)
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
+	roleName := roleId.Name()
 	configVariables := config.Variables{
-		"name": config.StringVariable(name),
+		"name": config.StringVariable(roleName),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase)),
 			config.StringVariable(string(sdk.GlobalPrivilegeCreateRole)),
@@ -1138,13 +1125,13 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", name),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 				),
 			},
 		},
@@ -1154,7 +1141,6 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2533 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	externalVolumeName := acc.TestClient().Ids.Alpha()
 	configVariables := config.Variables{
@@ -1177,7 +1163,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 					cleanupExternalVolume := createExternalVolume(t, externalVolumeName)
 					t.Cleanup(cleanupExternalVolume)
@@ -1202,7 +1188,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 // proved https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
 func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleFullyQualifiedName),
@@ -1228,7 +1213,7 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema"),
@@ -1256,7 +1241,6 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := tableId.Name()
@@ -1282,7 +1266,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1318,7 +1302,6 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := tableId.Name()
@@ -1344,7 +1327,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1433,9 +1416,9 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	databaseName := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(roleFullyQualifiedName),
 		"database": config.StringVariable(databaseName),
@@ -1457,8 +1440,8 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -1478,9 +1461,9 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	databaseName := acc.TestClient().Ids.Alpha()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
 	configVariables := config.Variables{
 		"name":     config.StringVariable(roleFullyQualifiedName),
 		"database": config.StringVariable(databaseName),
@@ -1502,9 +1485,9 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(dbCleanup)
-					_, roleCleanup = acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup = acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -1524,7 +1507,6 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2689 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleName := roleId.Name()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
 	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
 	configVariables := func(alwaysApply bool) config.Variables {
@@ -1547,7 +1529,7 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/AlwaysApply"),
@@ -1562,13 +1544,13 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 	})
 }
 
-func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) {
+func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) {
 	t.Helper()
 
-	database, databaseCleanup := acc.SecondaryTestClient().Database.CreateDatabaseWithName(t, databaseName)
+	database, databaseCleanup := acc.SecondaryTestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 	t.Cleanup(databaseCleanup)
 
-	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShareWithName(t, shareName)
+	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShareWithIdentifier(t, shareId)
 	t.Cleanup(shareCleanup)
 
 	acc.SecondaryTestClient().Role.GrantPrivilegeOnDatabaseToShare(t, database.ID(), share.ID())

@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestEventTables_Create(t *testing.T) {
@@ -36,12 +34,12 @@ func TestEventTables_Create(t *testing.T) {
 		opts.DefaultDdlCollation = String("en_US")
 		opts.CopyGrants = Bool(true)
 		opts.Comment = String("test")
-		pn := NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4))
+		pn := randomSchemaObjectIdentifier()
 		opts.RowAccessPolicy = &TableRowAccessPolicy{
 			Name: pn,
 			On:   []string{"c1", "c2"},
 		}
-		tn := NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4))
+		tn := randomSchemaObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
 				Name:  tn,
@@ -155,7 +153,7 @@ func TestEventTables_Alter(t *testing.T) {
 
 	t.Run("alter: rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))
+		target := randomSchemaObjectIdentifier()
 		opts.RenameTo = &target
 		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE IF NOT EXISTS %s RENAME TO %s`, id.FullyQualifiedName(), target.FullyQualifiedName())
 	})

@@ -16,9 +16,7 @@ func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
 	assertTagHandle := func(t *testing.T, tag *sdk.Tag, expectedName string, expectedComment string, expectedAllowedValues []string) {
@@ -42,7 +40,7 @@ func TestInt_Tags(t *testing.T) {
 	createTagHandle := func(t *testing.T) *sdk.Tag {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTagHandle(id))
@@ -53,8 +51,7 @@ func TestInt_Tags(t *testing.T) {
 	}
 
 	t.Run("create tag: comment", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		comment := random.Comment()
 
 		request := sdk.NewCreateTagRequest(id).WithComment(&comment)
@@ -64,12 +61,11 @@ func TestInt_Tags(t *testing.T) {
 
 		tag, err := client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertTagHandle(t, tag, name, comment, nil)
+		assertTagHandle(t, tag, id.Name(), comment, nil)
 	})
 
 	t.Run("create tag: allowed values", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		values := []string{"value1", "value2"}
 		request := sdk.NewCreateTagRequest(id).WithAllowedValues(values)
@@ -79,12 +75,11 @@ func TestInt_Tags(t *testing.T) {
 
 		tag, err := client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertTagHandle(t, tag, name, "", values)
+		assertTagHandle(t, tag, id.Name(), "", values)
 	})
 
 	t.Run("create tag: comment and allowed values", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		comment := random.Comment()
 		values := []string{"value1", "value2"}
@@ -98,19 +93,18 @@ func TestInt_Tags(t *testing.T) {
 
 		tag, err := client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertTagHandle(t, tag, name, comment, values)
+		assertTagHandle(t, tag, id.Name(), comment, values)
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTagHandle(id))
 
 		tag, err := client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertTagHandle(t, tag, name, "", nil)
+		assertTagHandle(t, tag, id.Name(), "", nil)
 	})
 
 	t.Run("drop tag: existing", func(t *testing.T) {
@@ -124,8 +118,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("drop tag: non-existing", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -170,7 +163,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: set and unset masking policies", func(t *testing.T) {
-		policyTest, policyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyInSchema(t, schemaTest.ID())
+		policyTest, policyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(policyCleanup)
 
 		tag := createTagHandle(t)
@@ -210,7 +203,7 @@ func TestInt_Tags(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
 
-		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithRename(nid))
 		if err != nil {
 			t.Cleanup(cleanupTagHandle(id))
@@ -283,8 +276,6 @@ func TestInt_TagsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupTagHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
@@ -306,9 +297,8 @@ func TestInt_TagsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createTagHandle(t, id1)
 		createTagHandle(t, id2)

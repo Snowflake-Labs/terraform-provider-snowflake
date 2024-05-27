@@ -49,8 +49,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 	createRowAccessPolicyRequest := func(t *testing.T, args []sdk.CreateRowAccessPolicyArgsRequest, body string) *sdk.CreateRowAccessPolicyRequest {
 		t.Helper()
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		return sdk.NewCreateRowAccessPolicyRequest(id, args, body)
 	}
@@ -131,8 +130,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		err := client.RowAccessPolicies.Create(ctx, createRequest)
 		require.NoError(t, err)
 
-		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithRenameTo(&newId)
 
 		err = client.RowAccessPolicies.Alter(ctx, alterRequest)
@@ -318,7 +316,6 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
@@ -342,9 +339,8 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createRowAccessPolicyHandle(t, id1)
 		createRowAccessPolicyHandle(t, id2)

@@ -1105,7 +1105,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(databaseCleanup)
 					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
 					t.Cleanup(databaseRoleCleanup)
@@ -1149,7 +1149,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(dbCleanup)
 					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
 					t.Cleanup(databaseRoleCleanup)

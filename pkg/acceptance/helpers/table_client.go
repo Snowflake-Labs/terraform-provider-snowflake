@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -33,20 +32,32 @@ func (c *TableClient) CreateTable(t *testing.T) (*sdk.Table, func()) {
 	return c.CreateTableInSchema(t, c.ids.SchemaId())
 }
 
+func (c *TableClient) CreateTableWithName(t *testing.T, name string) (*sdk.Table, func()) {
+	t.Helper()
+
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+	}
+	return c.CreateTableWithIdAndColumns(t, c.ids.NewSchemaObjectIdentifier(name), columns)
+}
+
 func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {
 	t.Helper()
 
 	columns := []sdk.TableColumnRequest{
 		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
 	}
-	name := random.StringRange(8, 28)
-	return c.CreateTableWithColumns(t, schemaId, name, columns)
+	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifierInSchema(schemaId), columns)
 }
 
-func (c *TableClient) CreateTableWithColumns(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, name string, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+func (c *TableClient) CreateTableWithColumns(t *testing.T, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
 	t.Helper()
 
-	id := sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
+	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifier(), columns)
+}
+
+func (c *TableClient) CreateTableWithIdAndColumns(t *testing.T, id sdk.SchemaObjectIdentifier, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+	t.Helper()
 	ctx := context.Background()
 
 	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)

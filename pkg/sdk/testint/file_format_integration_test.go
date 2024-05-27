@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +15,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("CSV", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -106,7 +105,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 	// Check that field_optionally_enclosed_by can take the value NONE
 	t.Run("CSV", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -125,7 +124,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "NONE", *result.Options.CSVFieldOptionallyEnclosedBy)
 	})
 	t.Run("JSON", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeJSON,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -196,7 +195,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.JSONSkipByteOrderMark)
 	})
 	t.Run("AVRO", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeAvro,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -237,7 +236,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.AvroNullIf)
 	})
 	t.Run("ORC", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeORC,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -275,7 +274,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeParquet,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -319,7 +318,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ParquetNullIf)
 	})
 	t.Run("XML", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeXML,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -378,7 +377,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
-		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), random.String())
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.FileFormats.Alter(ctx, oldId, &sdk.AlterFileFormatOptions{
 			Rename: &sdk.AlterFileFormatRenameOptions{
@@ -531,8 +530,6 @@ func TestInt_FileFormatsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupFileFormatHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -556,9 +553,8 @@ func TestInt_FileFormatsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createFileFormatHandle(t, id1)
 		createFileFormatHandle(t, id2)
