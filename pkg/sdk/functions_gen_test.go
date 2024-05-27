@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestFunctions_CreateForJava(t *testing.T) {
@@ -503,7 +501,7 @@ func TestFunctions_Alter(t *testing.T) {
 
 	t.Run("alter: rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))
+		target := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts.RenameTo = &target
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
 	})

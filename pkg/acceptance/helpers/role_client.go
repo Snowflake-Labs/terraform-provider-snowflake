@@ -45,10 +45,9 @@ func (c *RoleClient) CreateRole(t *testing.T) (*sdk.Role, func()) {
 	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(c.ids.RandomAccountObjectIdentifier()))
 }
 
-// TODO [SNOW-955520]: we have to control the name
-func (c *RoleClient) CreateRoleWithName(t *testing.T, name string) (*sdk.Role, func()) {
+func (c *RoleClient) CreateRoleWithIdentifier(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Role, func()) {
 	t.Helper()
-	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(name)))
+	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id))
 }
 
 func (c *RoleClient) CreateRoleGrantedToCurrentUser(t *testing.T) (*sdk.Role, func()) {

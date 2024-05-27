@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -91,8 +90,7 @@ func TestInt_Views(t *testing.T) {
 
 	createViewBasicRequest := func(t *testing.T) *sdk.CreateViewRequest {
 		t.Helper()
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		return sdk.NewCreateViewRequest(id, sql)
 	}
@@ -126,8 +124,7 @@ func TestInt_Views(t *testing.T) {
 
 	// source https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2085
 	t.Run("create view: no table reference", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateViewRequest(id, "SELECT NULL AS TYPE")
 
 		view := createViewWithRequest(t, request)
@@ -199,8 +196,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Create(ctx, createRequest)
 		require.NoError(t, err)
 
-		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterRequest := sdk.NewAlterViewRequest(id).WithRenameTo(&newId)
 
 		err = client.Views.Alter(ctx, alterRequest)
@@ -492,13 +488,12 @@ func TestInt_Views(t *testing.T) {
 	// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2506
 	t.Run("show view by id: same name in different schemas", func(t *testing.T) {
 		// we assume that SF returns views alphabetically
-		schemaName := "aaaa" + random.StringRange(8, 28)
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaName)
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierWithPrefix("aaaa")
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, schemaId)
 		t.Cleanup(schemaCleanup)
 
-		name := random.String()
-		id1 := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		request1 := sdk.NewCreateViewRequest(id1, sql)
 		request2 := sdk.NewCreateViewRequest(id2, sql)
@@ -536,7 +531,6 @@ func TestInt_ViewsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
@@ -564,9 +558,8 @@ func TestInt_ViewsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createViewHandle(t, id1)
 		createViewHandle(t, id2)

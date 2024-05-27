@@ -14,6 +14,17 @@ func Comment() string {
 	return gofakeit.Sentence(10)
 }
 
+func Password() string {
+	return StringN(12)
+}
+
+// AdminName returns admin name acceptable by Snowflake:
+// 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
+// 090089 (22000): ADMIN_NAME must start with a letter.
+func AdminName() string {
+	return AlphaN(1) + AlphanumericN(11)
+}
+
 func Bool() bool {
 	return gofakeit.Bool()
 }
@@ -32,12 +43,4 @@ func AlphanumericN(num int) string {
 
 func AlphaN(num int) string {
 	return gofakeit.Password(true, true, false, false, false, num)
-}
-
-func StringRange(min, max int) string {
-	return gofakeit.Password(true, true, true, true, false, IntRange(min, max))
-}
-
-func IntRange(min, max int) int {
-	return gofakeit.IntRange(min, max)
 }

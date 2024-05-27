@@ -156,12 +156,14 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2173 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173 issue.
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
-	dynamicTableName := acc.TestClient().Ids.Alpha()
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	dynamicTableName := dynamicTableId.Name()
 	tableName := dynamicTableName + "_table"
 	tableId := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
 	otherSchema := acc.TestClient().Ids.Alpha()
 	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)
+	newDynamicTableId := acc.TestClient().Ids.NewSchemaObjectIdentifierInSchema(dynamicTableName, otherSchemaId)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":         config.StringVariable(dynamicTableName),
@@ -196,7 +198,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, otherSchemaId, dynamicTableName, acc.TestClient().Ids.WarehouseId(), tableId)
+					acc.TestClient().DynamicTable.CreateDynamicTableWithOptions(t, newDynamicTableId, acc.TestClient().Ids.WarehouseId(), tableId)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),

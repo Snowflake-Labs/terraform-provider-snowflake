@@ -37,7 +37,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	t.Run("if we have special characters in db or schema name, create pipe succeeds", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
+			testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()),
 			createPipeCopyStatement(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -55,7 +55,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
+			testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -174,8 +174,7 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	// TODO: test error integration, aws sns topic and integration when we have them in project
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		comment := random.Comment()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
@@ -189,12 +188,11 @@ func TestInt_PipeCreate(t *testing.T) {
 		pipe, err := itc.client.Pipes.Describe(itc.ctx, id)
 
 		require.NoError(t, err)
-		assertPipe(t, pipe, name, comment)
+		assertPipe(t, pipe, id.Name(), comment)
 	})
 
 	t.Run("test if not exists and or replace are incompatible", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
 			OrReplace:   sdk.Bool(true),
@@ -204,8 +202,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, nil)
 		require.NoError(t, err)
@@ -213,7 +210,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		pipe, err := itc.client.Pipes.Describe(itc.ctx, id)
 
 		require.NoError(t, err)
-		assertPipe(t, pipe, name, "")
+		assertPipe(t, pipe, id.Name(), "")
 	})
 }
 
@@ -346,7 +343,6 @@ func TestInt_PipesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -376,9 +372,8 @@ func TestInt_PipesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createPipeHandle(t, id1)
 		createPipeHandle(t, id2)

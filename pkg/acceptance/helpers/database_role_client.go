@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +32,7 @@ func (c *DatabaseRoleClient) CreateDatabaseRole(t *testing.T) (*sdk.DatabaseRole
 
 func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.DatabaseRole, func()) {
 	t.Helper()
-	return c.CreateDatabaseRoleInDatabaseWithName(t, databaseId, random.String())
+	return c.CreateDatabaseRoleInDatabaseWithName(t, databaseId, c.ids.Alpha())
 }
 
 func (c *DatabaseRoleClient) CreateDatabaseRoleWithName(t *testing.T, name string) (*sdk.DatabaseRole, func()) {

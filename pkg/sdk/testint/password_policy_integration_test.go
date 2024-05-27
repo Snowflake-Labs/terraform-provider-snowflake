@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -84,8 +83,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test complete", func(t *testing.T) {
-		name := random.UUID()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
 			OrReplace:                 sdk.Bool(true),
 			PasswordMinLength:         sdk.Int(10),
@@ -104,7 +102,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
+		assert.Equal(t, id.Name(), passwordPolicyDetails.Name.Value)
 		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
 		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
@@ -120,8 +118,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := random.UUID()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
 			OrReplace:                 sdk.Bool(false),
 			IfNotExists:               sdk.Bool(true),
@@ -133,7 +130,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
+		assert.Equal(t, id.Name(), passwordPolicyDetails.Name.Value)
 		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
 		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
 		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
@@ -141,13 +138,12 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.UUID()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.PasswordPolicies.Create(ctx, id, nil)
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
+		assert.Equal(t, id.Name(), passwordPolicyDetails.Name.Value)
 		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
 		assert.Equal(t, *passwordPolicyDetails.PasswordMinLength.Value, *passwordPolicyDetails.PasswordMinLength.DefaultValue)
 		assert.Equal(t, *passwordPolicyDetails.PasswordMaxLength.Value, *passwordPolicyDetails.PasswordMaxLength.DefaultValue)
@@ -210,8 +206,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		oldID := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		newName := random.UUID()
-		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		newID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			NewName: &newID,
 		}
@@ -219,8 +214,8 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, newID)
 		require.NoError(t, err)
-		// rename back to original name so it can be cleaned up
-		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
+		// rename back to original name, so it can be cleaned up
+		assert.Equal(t, newID.Name(), passwordPolicyDetails.Name.Value)
 		alterOptions = &sdk.AlterPasswordPolicyOptions{
 			NewName: &oldID,
 		}
@@ -316,8 +311,6 @@ func TestInt_PasswordPoliciesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupPasswordPolicyHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -341,9 +334,8 @@ func TestInt_PasswordPoliciesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createPasswordPolicyHandle(t, id1)
 		createPasswordPolicyHandle(t, id2)
@@ -358,8 +350,7 @@ func TestInt_PasswordPoliciesShowByID(t *testing.T) {
 	})
 
 	t.Run("show by id: check fields", func(t *testing.T) {
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		createPasswordPolicyHandle(t, id1)
 

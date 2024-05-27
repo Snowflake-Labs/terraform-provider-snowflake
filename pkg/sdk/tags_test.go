@@ -3,8 +3,6 @@ package sdk
 import (
 	"fmt"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestTagCreate(t *testing.T) {
@@ -199,7 +197,7 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("alter with rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifierInSchema(id.SchemaId(), random.StringN(12))}
+		opts.Rename = &TagRename{Name: randomSchemaObjectIdentifierInSchema(id.SchemaId())}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
 	})
 
@@ -290,7 +288,7 @@ func TestTagAlter(t *testing.T) {
 	})
 
 	t.Run("validation: new name from different db", func(t *testing.T) {
-		newId := NewSchemaObjectIdentifier(id.DatabaseName()+random.StringN(1), random.StringN(12), random.StringN(12))
+		newId := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.Rename = &TagRename{

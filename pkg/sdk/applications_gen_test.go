@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestApplications_Create(t *testing.T) {
@@ -47,7 +45,7 @@ func TestApplications_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		tid := NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4))
+		tid := randomSchemaObjectIdentifier()
 
 		opts := defaultOpts()
 		opts.Comment = String("test")

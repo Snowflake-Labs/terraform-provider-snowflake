@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,11 +34,11 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyInSchema(t *testing.T, schemaId
 	t.Helper()
 	signature := []sdk.TableColumnSignature{
 		{
-			Name: random.String(),
+			Name: c.ids.Alpha(),
 			Type: sdk.DataTypeVARCHAR,
 		},
 		{
-			Name: random.String(),
+			Name: c.ids.Alpha(),
 			Type: sdk.DataTypeVARCHAR,
 		},
 	}

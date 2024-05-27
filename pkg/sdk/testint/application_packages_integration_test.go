@@ -80,7 +80,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 
 	t.Run("create application package", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		comment := random.StringN(4)
+		comment := random.Comment()
 		request := sdk.NewCreateApplicationPackageRequest(id).
 			WithComment(&comment).
 			WithTag([]sdk.TagAssociation{
