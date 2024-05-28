@@ -104,7 +104,7 @@ func TestShareAlter(t *testing.T) {
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "tag"),
+				tagId,
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET TAG %s`, tagId.FullyQualifiedName())

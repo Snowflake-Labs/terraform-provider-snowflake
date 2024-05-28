@@ -251,9 +251,9 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("describe external function", func(t *testing.T) {
-		_, id := createExternalFunction(t)
+		e, _ := createExternalFunction(t)
 
-		request := sdk.NewDescribeExternalFunctionRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR})
+		request := sdk.NewDescribeExternalFunctionRequest(e.ID(), []sdk.DataType{sdk.DataTypeVARCHAR})
 		details, err := client.ExternalFunctions.Describe(ctx, request)
 		require.NoError(t, err)
 		pairs := make(map[string]string)

@@ -46,8 +46,8 @@ func TestValidObjectIdentifier(t *testing.T) {
 		assert.Equal(t, ok, false)
 	})
 
-	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
-		ok := ValidObjectIdentifier(invalidSchemaObjectIdentifier)
+	t.Run("with 255 characters in each of db, schema and name", func(t *testing.T) {
+		ok := ValidObjectIdentifier(longSchemaObjectIdentifier)
 		assert.Equal(t, ok, true)
 	})
 }

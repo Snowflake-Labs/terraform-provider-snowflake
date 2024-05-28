@@ -345,8 +345,7 @@ func TestTagSet(t *testing.T) {
 	})
 
 	t.Run("set with column", func(t *testing.T) {
-		objectId := randomTableColumnIdentifier()
-		tableId := randomSchemaObjectIdentifier()
+		objectId := randomTableColumnIdentifierInSchemaObject(id)
 		tagId := randomSchemaObjectIdentifier()
 		request := NewSetTagRequest(ObjectTypeColumn, objectId).WithSetTags([]TagAssociation{
 			{
@@ -355,7 +354,7 @@ func TestTagSet(t *testing.T) {
 			},
 		})
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s MODIFY COLUMN "%s" SET TAG %s = 'value1'`, tableId.FullyQualifiedName(), objectId.columnName, tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s MODIFY COLUMN "%s" SET TAG %s = 'value1'`, id.FullyQualifiedName(), objectId.columnName, tagId.FullyQualifiedName())
 	})
 }
 
@@ -389,8 +388,7 @@ func TestTagUnset(t *testing.T) {
 	})
 
 	t.Run("unset with column", func(t *testing.T) {
-		tableId := randomSchemaObjectIdentifier()
-		objectId := randomTableColumnIdentifierInSchemaObject(tableId)
+		objectId := randomTableColumnIdentifierInSchemaObject(id)
 		tagId1 := randomSchemaObjectIdentifier()
 		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		request := UnsetTagRequest{
@@ -402,6 +400,6 @@ func TestTagUnset(t *testing.T) {
 			},
 		}
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, tableId.FullyQualifiedName(), objectId.Name(), tagId1, tagId2)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, id.FullyQualifiedName(), objectId.Name(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 }
