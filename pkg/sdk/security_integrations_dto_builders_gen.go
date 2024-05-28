@@ -4,6 +4,108 @@ package sdk
 
 import ()
 
+func NewCreateExternalOauthSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+	Enabled bool,
+	ExternalOauthType ExternalOauthSecurityIntegrationTypeOption,
+	ExternalOauthIssuer string,
+	ExternalOauthTokenUserMappingClaim []TokenUserMappingClaim,
+	ExternalOauthSnowflakeUserMappingAttribute ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption,
+) *CreateExternalOauthSecurityIntegrationRequest {
+	s := CreateExternalOauthSecurityIntegrationRequest{}
+	s.name = name
+	s.Enabled = Enabled
+	s.ExternalOauthType = ExternalOauthType
+	s.ExternalOauthIssuer = ExternalOauthIssuer
+	s.ExternalOauthTokenUserMappingClaim = ExternalOauthTokenUserMappingClaim
+	s.ExternalOauthSnowflakeUserMappingAttribute = ExternalOauthSnowflakeUserMappingAttribute
+	return &s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateExternalOauthSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateExternalOauthSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthJwsKeysUrl(ExternalOauthJwsKeysUrl []JwsKeysUrl) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthJwsKeysUrl = ExternalOauthJwsKeysUrl
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthBlockedRolesList(ExternalOauthBlockedRolesList BlockedRolesListRequest) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthBlockedRolesList = &ExternalOauthBlockedRolesList
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthAllowedRolesList(ExternalOauthAllowedRolesList AllowedRolesListRequest) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthAllowedRolesList = &ExternalOauthAllowedRolesList
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthRsaPublicKey(ExternalOauthRsaPublicKey string) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthRsaPublicKey = &ExternalOauthRsaPublicKey
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthRsaPublicKey2(ExternalOauthRsaPublicKey2 string) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthRsaPublicKey2 = &ExternalOauthRsaPublicKey2
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthAudienceList(ExternalOauthAudienceList AudienceListRequest) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthAudienceList = &ExternalOauthAudienceList
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthAnyRoleMode(ExternalOauthAnyRoleMode ExternalOauthSecurityIntegrationAnyRoleModeOption) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthAnyRoleMode = &ExternalOauthAnyRoleMode
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthScopeDelimiter(ExternalOauthScopeDelimiter string) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthScopeDelimiter = &ExternalOauthScopeDelimiter
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithExternalOauthScopeMappingAttribute(ExternalOauthScopeMappingAttribute string) *CreateExternalOauthSecurityIntegrationRequest {
+	s.ExternalOauthScopeMappingAttribute = &ExternalOauthScopeMappingAttribute
+	return s
+}
+
+func (s *CreateExternalOauthSecurityIntegrationRequest) WithComment(Comment string) *CreateExternalOauthSecurityIntegrationRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewBlockedRolesListRequest(
+	BlockedRolesList []AccountObjectIdentifier,
+) *BlockedRolesListRequest {
+	s := BlockedRolesListRequest{}
+	s.BlockedRolesList = BlockedRolesList
+	return &s
+}
+
+func NewAllowedRolesListRequest(
+	AllowedRolesList []AccountObjectIdentifier,
+) *AllowedRolesListRequest {
+	s := AllowedRolesListRequest{}
+	s.AllowedRolesList = AllowedRolesList
+	return &s
+}
+
+func NewAudienceListRequest(
+	AudienceList []AudienceListItem,
+) *AudienceListRequest {
+	s := AudienceListRequest{}
+	s.AudienceList = AudienceList
+	return &s
+}
+
 func NewCreateOauthForPartnerApplicationsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClient OauthSecurityIntegrationClientOption,
@@ -56,15 +158,6 @@ func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithBlocke
 
 func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithComment(Comment string) *CreateOauthForPartnerApplicationsSecurityIntegrationRequest {
 	s.Comment = &Comment
-	return s
-}
-
-func NewBlockedRolesListRequest() *BlockedRolesListRequest {
-	return &BlockedRolesListRequest{}
-}
-
-func (s *BlockedRolesListRequest) WithBlockedRolesList(BlockedRolesList []AccountObjectIdentifier) *BlockedRolesListRequest {
-	s.BlockedRolesList = BlockedRolesList
 	return s
 }
 
@@ -283,6 +376,127 @@ func (s *CreateScimSecurityIntegrationRequest) WithSyncPassword(SyncPassword boo
 
 func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment string) *CreateScimSecurityIntegrationRequest {
 	s.Comment = &Comment
+	return s
+}
+
+func NewAlterExternalOauthSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+) *AlterExternalOauthSecurityIntegrationRequest {
+	s := AlterExternalOauthSecurityIntegrationRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterExternalOauthSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterExternalOauthSecurityIntegrationRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func (s *AlterExternalOauthSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterExternalOauthSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterExternalOauthSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterExternalOauthSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterExternalOauthSecurityIntegrationRequest) WithSet(Set ExternalOauthIntegrationSetRequest) *AlterExternalOauthSecurityIntegrationRequest {
+	s.Set = &Set
+	return s
+}
+
+func (s *AlterExternalOauthSecurityIntegrationRequest) WithUnset(Unset ExternalOauthIntegrationUnsetRequest) *AlterExternalOauthSecurityIntegrationRequest {
+	s.Unset = &Unset
+	return s
+}
+
+func NewExternalOauthIntegrationSetRequest() *ExternalOauthIntegrationSetRequest {
+	return &ExternalOauthIntegrationSetRequest{}
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithEnabled(Enabled bool) *ExternalOauthIntegrationSetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthType(ExternalOauthType ExternalOauthSecurityIntegrationTypeOption) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthType = &ExternalOauthType
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthIssuer(ExternalOauthIssuer string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthIssuer = &ExternalOauthIssuer
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthTokenUserMappingClaim(ExternalOauthTokenUserMappingClaim []TokenUserMappingClaim) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthTokenUserMappingClaim = ExternalOauthTokenUserMappingClaim
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthSnowflakeUserMappingAttribute(ExternalOauthSnowflakeUserMappingAttribute ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthSnowflakeUserMappingAttribute = &ExternalOauthSnowflakeUserMappingAttribute
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthJwsKeysUrl(ExternalOauthJwsKeysUrl []JwsKeysUrl) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthJwsKeysUrl = ExternalOauthJwsKeysUrl
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthBlockedRolesList(ExternalOauthBlockedRolesList BlockedRolesListRequest) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthBlockedRolesList = &ExternalOauthBlockedRolesList
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthAllowedRolesList(ExternalOauthAllowedRolesList AllowedRolesListRequest) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthAllowedRolesList = &ExternalOauthAllowedRolesList
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthRsaPublicKey(ExternalOauthRsaPublicKey string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthRsaPublicKey = &ExternalOauthRsaPublicKey
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthRsaPublicKey2(ExternalOauthRsaPublicKey2 string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthRsaPublicKey2 = &ExternalOauthRsaPublicKey2
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthAudienceList(ExternalOauthAudienceList AudienceListRequest) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthAudienceList = &ExternalOauthAudienceList
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthAnyRoleMode(ExternalOauthAnyRoleMode ExternalOauthSecurityIntegrationAnyRoleModeOption) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthAnyRoleMode = &ExternalOauthAnyRoleMode
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthScopeDelimiter(ExternalOauthScopeDelimiter string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthScopeDelimiter = &ExternalOauthScopeDelimiter
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithComment(Comment string) *ExternalOauthIntegrationSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewExternalOauthIntegrationUnsetRequest() *ExternalOauthIntegrationUnsetRequest {
+	return &ExternalOauthIntegrationUnsetRequest{}
+}
+
+func (s *ExternalOauthIntegrationUnsetRequest) WithEnabled(Enabled bool) *ExternalOauthIntegrationUnsetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ExternalOauthIntegrationUnsetRequest) WithExternalOauthAudienceList(ExternalOauthAudienceList bool) *ExternalOauthIntegrationUnsetRequest {
+	s.ExternalOauthAudienceList = &ExternalOauthAudienceList
 	return s
 }
 

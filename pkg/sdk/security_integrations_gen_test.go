@@ -4,6 +4,82 @@ import (
 	"testing"
 )
 
+func TestSecurityIntegrations_CreateExternalOauth(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid CreateExternalOauthSecurityIntegrationOptions
+	defaultOpts := func() *CreateExternalOauthSecurityIntegrationOptions {
+		return &CreateExternalOauthSecurityIntegrationOptions{
+			name:                               id,
+			Enabled:                            false,
+			ExternalOauthType:                  ExternalOauthSecurityIntegrationTypeCustom,
+			ExternalOauthIssuer:                "foo",
+			ExternalOauthTokenUserMappingClaim: []TokenUserMappingClaim{{Claim: "foo"}},
+			ExternalOauthSnowflakeUserMappingAttribute: ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CreateExternalOauthSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	})
+
+	t.Run("validation: exactly one fields in [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey]", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+		opts.ExternalOauthJwsKeysUrl = []JwsKeysUrl{{JwsKeyUrl: "foo"}}
+		opts.ExternalOauthRsaPublicKey = Pointer("key")
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+	})
+	t.Run("validation: conflicting fields for [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey2]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ExternalOauthJwsKeysUrl = []JwsKeysUrl{{JwsKeyUrl: "foo"}}
+		opts.ExternalOauthRsaPublicKey2 = Pointer("key")
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))
+	})
+	t.Run("validation: conflicting fields for [opts.ExternalOauthAllowedRolesList opts.ExternalOauthBlockedRolesList]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ExternalOauthAllowedRolesList = &AllowedRolesList{}
+		opts.ExternalOauthBlockedRolesList = &BlockedRolesList{}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList"))
+	})
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		roleID := randomAccountObjectIdentifier()
+		opts.OrReplace = Bool(true)
+		opts.ExternalOauthJwsKeysUrl = []JwsKeysUrl{{JwsKeyUrl: "foo"}}
+		opts.ExternalOauthBlockedRolesList = &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = EXTERNAL_OAUTH ENABLED = false EXTERNAL_OAUTH_TYPE = CUSTOM EXTERNAL_OAUTH_ISSUER = 'foo'"+
+			" EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('foo') EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'EMAIL_ADDRESS' EXTERNAL_OAUTH_JWS_KEYS_URL = ('foo')"+
+			" EXTERNAL_OAUTH_BLOCKED_ROLES_LIST = (%s)", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		roleID := randomAccountObjectIdentifier()
+		opts.IfNotExists = Bool(true)
+		opts.ExternalOauthAllowedRolesList = &AllowedRolesList{AllowedRolesList: []AccountObjectIdentifier{roleID}}
+		opts.ExternalOauthRsaPublicKey = Pointer("foo")
+		opts.ExternalOauthRsaPublicKey2 = Pointer("foo")
+		opts.ExternalOauthAudienceList = &AudienceList{AudienceList: []AudienceListItem{{Item: "foo"}}}
+		opts.ExternalOauthAnyRoleMode = Pointer(ExternalOauthSecurityIntegrationAnyRoleModeDisable)
+		opts.ExternalOauthScopeDelimiter = Pointer(" ")
+		opts.ExternalOauthScopeMappingAttribute = Pointer("foo")
+		opts.Comment = Pointer("foo")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = EXTERNAL_OAUTH ENABLED = false EXTERNAL_OAUTH_TYPE = CUSTOM EXTERNAL_OAUTH_ISSUER = 'foo'"+
+			" EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('foo') EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'EMAIL_ADDRESS' EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = (%s)"+
+			" EXTERNAL_OAUTH_RSA_PUBLIC_KEY = 'foo' EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2 = 'foo' EXTERNAL_OAUTH_AUDIENCE_LIST = ('foo') EXTERNAL_OAUTH_ANY_ROLE_MODE = DISABLE"+
+			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ' EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE = 'foo' COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+	})
+}
+
 func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
@@ -209,6 +285,157 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 		opts.Comment = Pointer("a")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'"+
 			" NETWORK_POLICY = %s SYNC_PASSWORD = true COMMENT = 'a'", id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid AlterExternalOauthSecurityIntegrationOptions
+	defaultOpts := func() *AlterExternalOauthSecurityIntegrationOptions {
+		return &AlterExternalOauthSecurityIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *AlterExternalOauthSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			Enabled: Pointer(true),
+		}
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalOauthSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType",
+			"ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl",
+			"ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList",
+			"ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ExternalOauthIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Unset",
+			"Enabled", "ExternalOauthAudienceList"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{}
+		opts.Unset = &ExternalOauthIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalOauthSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: conflicting fields for [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthJwsKeysUrl:   []JwsKeysUrl{{JwsKeyUrl: "foo"}},
+			ExternalOauthRsaPublicKey: Pointer("key"),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+	})
+	t.Run("validation: conflicting fields for [opts.ExternalOauthJwsKeysUrl opts.ExternalOauthRsaPublicKey2]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthJwsKeysUrl:    []JwsKeysUrl{{JwsKeyUrl: "foo"}},
+			ExternalOauthRsaPublicKey2: Pointer("key"),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))
+	})
+	t.Run("validation: conflicting fields for [opts.ExternalOauthAllowedRolesList opts.ExternalOauthBlockedRolesList]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthAllowedRolesList: &AllowedRolesList{},
+			ExternalOauthBlockedRolesList: &BlockedRolesList{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList"))
+	})
+	t.Run("empty lists", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthBlockedRolesList: &BlockedRolesList{},
+			ExternalOauthAudienceList:     &AudienceList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET EXTERNAL_OAUTH_BLOCKED_ROLES_LIST = (), EXTERNAL_OAUTH_AUDIENCE_LIST = ()", id.FullyQualifiedName())
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthAllowedRolesList: &AllowedRolesList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = ()", id.FullyQualifiedName())
+	})
+
+	t.Run("all options - set", func(t *testing.T) {
+		opts := defaultOpts()
+		roleID := randomAccountObjectIdentifier()
+		opts.Set = &ExternalOauthIntegrationSet{
+			Enabled:                            Pointer(true),
+			ExternalOauthType:                  Pointer(ExternalOauthSecurityIntegrationTypeCustom),
+			ExternalOauthIssuer:                Pointer("foo"),
+			ExternalOauthTokenUserMappingClaim: []TokenUserMappingClaim{{Claim: "foo"}},
+			ExternalOauthSnowflakeUserMappingAttribute: Pointer(ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress),
+			ExternalOauthAllowedRolesList:              &AllowedRolesList{AllowedRolesList: []AccountObjectIdentifier{roleID}},
+			ExternalOauthRsaPublicKey:                  Pointer("foo"),
+			ExternalOauthRsaPublicKey2:                 Pointer("foo"),
+			ExternalOauthAudienceList:                  &AudienceList{AudienceList: []AudienceListItem{{Item: "foo"}}},
+			ExternalOauthAnyRoleMode:                   Pointer(ExternalOauthSecurityIntegrationAnyRoleModeDisable),
+			ExternalOauthScopeDelimiter:                Pointer(" "),
+			Comment:                                    Pointer("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, EXTERNAL_OAUTH_TYPE = CUSTOM, EXTERNAL_OAUTH_ISSUER = 'foo',"+
+			" EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('foo'), EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'EMAIL_ADDRESS', EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = (%s),"+
+			" EXTERNAL_OAUTH_RSA_PUBLIC_KEY = 'foo', EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2 = 'foo', EXTERNAL_OAUTH_AUDIENCE_LIST = ('foo'), EXTERNAL_OAUTH_ANY_ROLE_MODE = DISABLE,"+
+			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ', COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+		opts.Set = &ExternalOauthIntegrationSet{
+			ExternalOauthBlockedRolesList: &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
+			ExternalOauthJwsKeysUrl:       []JwsKeysUrl{{JwsKeyUrl: "foo"}},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET EXTERNAL_OAUTH_JWS_KEYS_URL = ('foo'), EXTERNAL_OAUTH_BLOCKED_ROLES_LIST = (%s)", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+	})
+
+	t.Run("all options - unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ExternalOauthIntegrationUnset{
+			Enabled:                   Pointer(true),
+			ExternalOauthAudienceList: Pointer(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, EXTERNAL_OAUTH_AUDIENCE_LIST", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
 

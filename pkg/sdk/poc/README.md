@@ -55,7 +55,7 @@ but if we add one case, or modify more cases this becomes more challenging)
   - in some cases we could need more filters -> see alerts.go (but we can implement it later)
 - handle arrays
 - handle more validation types
-- write new `valueSet` function (see validations.go) that will have better defaults or more parameters that will determine 
+- write new `valueSet` function (see validations.go) that will have better defaults or more parameters that will determine
 checking behaviour which should get rid of edge cases that may cause bugs in the future
    - right now, we have `valueSet` function that doesn't take into consideration edge cases, e.g. with slice where sometimes
    we would like to do something like `alter x set y = ()` (set empty array to unset `y`). Those edge cases have cause on our
@@ -66,7 +66,7 @@ checking behaviour which should get rid of edge cases that may cause bugs in the
   - example implementation - https://go.dev/play/p/Cgt0sISlzwK
   - divide implementation templates for Show, Describe and others
 - check if SelfIdentifier implementation is correct (mostly type, because it's derived from interface obj) by checking
-if there's a resource with different types of identifiers across queries (e.g. Create <AccountObjectIdentifier>, Alter <SchemaObjectIdentifier>) 
+if there's a resource with different types of identifiers across queries (e.g. Create <AccountObjectIdentifier>, Alter <SchemaObjectIdentifier>)
 - we should specify prefix / postfix standard for top-level items in _def.go files to avoid any conflicts in the package
 - remove name argument from QueryStruct in the Operation, because Opt structs in the Operation will have name from op name + interface field and not query struct itself
 - Derive field name from QueryStruct, e.g. see network_policies_def where we can remove "Set" field, but we have to make a convention of creating nested struct with
@@ -101,10 +101,13 @@ find a better solution to solve the issue (add more logic to the templates ?)
 - struct_to_builder is not supporting templated-like values. See stages_def.go where in SQL there could be value, where 'n' can be replaced with any number
   - `SKIP_FILE_n` - this looks more like keyword without a space between SQL prefix and int
   - `SKIP_FILE_n%` (e.g. `SKIP_FILE_123%`) - this is more template-like behaviour, notice that 'n' is inside the value (we cannot reproduce that right now with struct_to_builder capabilities)
-- fix builder generation 
+- fix builder generation
   - we can add `flatten` option in cases where some sql structs had to be nested to create correct sql representation
     - for example encryption options in `stages_def.go` (instead of calling `.WithEncryption(NewEncryptionRequest(encryption))` we could call `.WithEncryption(encryption)`)
   - operation names (or their sql struct names) should dictate more how constructors are made
+- better handling of list of strings/identifiers
+  - there should be no need to define custom types every time
+  - more clear definition of lists that can be empty vs cannot be empty
 
 ##### Known issues
 - generating two converts when Show and Desc use the same data structure

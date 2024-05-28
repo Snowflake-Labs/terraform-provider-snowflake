@@ -1,10 +1,12 @@
 package sdk
 
 var (
+	_ validatable = new(CreateExternalOauthSecurityIntegrationOptions)
 	_ validatable = new(CreateOauthForPartnerApplicationsSecurityIntegrationOptions)
 	_ validatable = new(CreateOauthForCustomClientsSecurityIntegrationOptions)
 	_ validatable = new(CreateSaml2SecurityIntegrationOptions)
 	_ validatable = new(CreateScimSecurityIntegrationOptions)
+	_ validatable = new(AlterExternalOauthSecurityIntegrationOptions)
 	_ validatable = new(AlterOauthForPartnerApplicationsSecurityIntegrationOptions)
 	_ validatable = new(AlterOauthForCustomClientsSecurityIntegrationOptions)
 	_ validatable = new(AlterSaml2SecurityIntegrationOptions)
@@ -13,6 +15,29 @@ var (
 	_ validatable = new(DescribeSecurityIntegrationOptions)
 	_ validatable = new(ShowSecurityIntegrationOptions)
 )
+
+func (opts *CreateExternalOauthSecurityIntegrationOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if everyValueSet(opts.ExternalOauthBlockedRolesList, opts.ExternalOauthAllowedRolesList) {
+		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList"))
+	}
+	if !exactlyOneValueSet(opts.ExternalOauthJwsKeysUrl, opts.ExternalOauthRsaPublicKey) {
+		errs = append(errs, errExactlyOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+	}
+	if everyValueSet(opts.ExternalOauthJwsKeysUrl, opts.ExternalOauthRsaPublicKey2) {
+		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateExternalOauthSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	}
+	return JoinErrors(errs...)
+}
 
 func (opts *CreateOauthForPartnerApplicationsSecurityIntegrationOptions) validate() error {
 	if opts == nil {
@@ -69,6 +94,39 @@ func (opts *CreateScimSecurityIntegrationOptions) validate() error {
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateScimSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *AlterExternalOauthSecurityIntegrationOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterExternalOauthSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	}
+	if valueSet(opts.Set) {
+		if everyValueSet(opts.Set.ExternalOauthBlockedRolesList, opts.Set.ExternalOauthAllowedRolesList) {
+			errs = append(errs, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList"))
+		}
+		if everyValueSet(opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthRsaPublicKey) {
+			errs = append(errs, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey"))
+		}
+		if everyValueSet(opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthRsaPublicKey2) {
+			errs = append(errs, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))
+		}
+		if !anyValueSet(opts.Set.Enabled, opts.Set.ExternalOauthType, opts.Set.ExternalOauthIssuer, opts.Set.ExternalOauthTokenUserMappingClaim, opts.Set.ExternalOauthSnowflakeUserMappingAttribute, opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthBlockedRolesList, opts.Set.ExternalOauthAllowedRolesList, opts.Set.ExternalOauthRsaPublicKey, opts.Set.ExternalOauthRsaPublicKey2, opts.Set.ExternalOauthAudienceList, opts.Set.ExternalOauthAnyRoleMode, opts.Set.ExternalOauthScopeDelimiter, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment"))
+		}
+	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.Enabled, opts.Unset.ExternalOauthAudienceList) {
+			errs = append(errs, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Unset", "Enabled", "ExternalOauthAudienceList"))
+		}
 	}
 	return JoinErrors(errs...)
 }

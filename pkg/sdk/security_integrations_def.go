@@ -4,6 +4,30 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type ExternalOauthSecurityIntegrationTypeOption string
+
+const (
+	ExternalOauthSecurityIntegrationTypeOkta         ExternalOauthSecurityIntegrationTypeOption = "OKTA"
+	ExternalOauthSecurityIntegrationTypeAzure        ExternalOauthSecurityIntegrationTypeOption = "AZURE"
+	ExternalOauthSecurityIntegrationTypePingFederate ExternalOauthSecurityIntegrationTypeOption = "PING_FEDERATE"
+	ExternalOauthSecurityIntegrationTypeCustom       ExternalOauthSecurityIntegrationTypeOption = "CUSTOM"
+)
+
+type ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption string
+
+const (
+	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName    ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption = "LOGIN_NAME"
+	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption = "EMAIL_ADDRESS"
+)
+
+type ExternalOauthSecurityIntegrationAnyRoleModeOption string
+
+const (
+	ExternalOauthSecurityIntegrationAnyRoleModeDisable            ExternalOauthSecurityIntegrationAnyRoleModeOption = "DISABLE"
+	ExternalOauthSecurityIntegrationAnyRoleModeEnable             ExternalOauthSecurityIntegrationAnyRoleModeOption = "ENABLE"
+	ExternalOauthSecurityIntegrationAnyRoleModeEnableForPrivilege ExternalOauthSecurityIntegrationAnyRoleModeOption = "ENABLE_FOR_PRIVILEGE"
+)
+
 type OauthSecurityIntegrationUseSecondaryRolesOption string
 
 const (
@@ -48,7 +72,14 @@ var (
 	preAuthorizedRolesListDef = g.NewQueryStruct("PreAuthorizedRolesList").
 					List("PreAuthorizedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
 	blockedRolesListDef = g.NewQueryStruct("BlockedRolesList").
-				List("BlockedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
+				List("BlockedRolesList", "AccountObjectIdentifier", g.ListOptions().Required().MustParentheses())
+	allowedRolesListDef = g.NewQueryStruct("AllowedRolesList").
+				List("AllowedRolesList", "AccountObjectIdentifier", g.ListOptions().Required().MustParentheses())
+	jwsKeysUrlDef       = g.NewQueryStruct("JwsKeysUrl").Text("JwsKeyUrl", g.KeywordOptions().SingleQuotes().Required())
+	audienceListItemDef = g.NewQueryStruct("AudienceListItem").Text("Item", g.KeywordOptions().SingleQuotes().Required())
+	audienceListDef     = g.NewQueryStruct("AudienceList").
+				List("AudienceList", "AudienceListItem", g.ListOptions().Required().MustParentheses())
+	tokenUserMappingClaimDef = g.NewQueryStruct("TokenUserMappingClaim").Text("Claim", g.KeywordOptions().SingleQuotes().Required())
 )
 
 func createSecurityIntegrationOperation(structName string, opts func(qs *g.QueryStruct) *g.QueryStruct) *g.QueryStruct {
@@ -77,6 +108,45 @@ func alterSecurityIntegrationOperation(structName string, opts func(qs *g.QueryS
 	qs = opts(qs)
 	return qs
 }
+
+var externalOauthIntegrationSetDef = g.NewQueryStruct("ExternalOauthIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalAssignment(
+		"EXTERNAL_OAUTH_TYPE",
+		g.KindOfT[ExternalOauthSecurityIntegrationTypeOption](),
+		g.ParameterOptions(),
+	).
+	OptionalTextAssignment("EXTERNAL_OAUTH_ISSUER", g.ParameterOptions().SingleQuotes()).
+	ListAssignment("EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM", "TokenUserMappingClaim", g.ParameterOptions().Parentheses()).
+	OptionalAssignment(
+		"EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE",
+		g.KindOfT[ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption](),
+		g.ParameterOptions().SingleQuotes(),
+	).
+	ListAssignment("EXTERNAL_OAUTH_JWS_KEYS_URL", "JwsKeysUrl", g.ParameterOptions().Parentheses()).
+	OptionalQueryStructField("ExternalOauthBlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_BLOCKED_ROLES_LIST").Parentheses()).
+	OptionalQueryStructField("ExternalOauthAllowedRolesList", allowedRolesListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_ALLOWED_ROLES_LIST").Parentheses()).
+	OptionalTextAssignment("EXTERNAL_OAUTH_RSA_PUBLIC_KEY", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2", g.ParameterOptions().SingleQuotes()).
+	OptionalQueryStructField("ExternalOauthAudienceList", audienceListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_AUDIENCE_LIST").Parentheses()).
+	OptionalAssignment(
+		"EXTERNAL_OAUTH_ANY_ROLE_MODE",
+		g.KindOfT[ExternalOauthSecurityIntegrationAnyRoleModeOption](),
+		g.ParameterOptions(),
+	).
+	OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_DELIMITER", g.ParameterOptions().SingleQuotes()).
+	OptionalComment().
+	WithValidation(g.ConflictingFields, "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList").
+	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey").
+	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute",
+		"ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2",
+		"ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment")
+
+var externalOauthIntegrationUnsetDef = g.NewQueryStruct("ExternalOauthIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("EXTERNAL_OAUTH_AUDIENCE_LIST").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "ExternalOauthAudienceList")
 
 var oauthForPartnerApplicationsIntegrationSetDef = g.NewQueryStruct("OauthForPartnerApplicationsIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
@@ -177,6 +247,49 @@ var SecurityIntegrationsDef = g.NewInterface(
 	g.KindOfT[AccountObjectIdentifier](),
 ).
 	CustomOperation(
+		"CreateExternalOauth",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external",
+		createSecurityIntegrationOperation("CreateExternalOauth", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = EXTERNAL_OAUTH")).
+				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				Assignment(
+					"EXTERNAL_OAUTH_TYPE",
+					g.KindOfT[ExternalOauthSecurityIntegrationTypeOption](),
+					g.ParameterOptions().Required(),
+				).
+				TextAssignment("EXTERNAL_OAUTH_ISSUER", g.ParameterOptions().Required().SingleQuotes()).
+				ListAssignment("EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM", "TokenUserMappingClaim", g.ParameterOptions().Required().Parentheses()).
+				Assignment(
+					"EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE",
+					g.KindOfT[ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption](),
+					g.ParameterOptions().SingleQuotes().Required(),
+				).
+				ListAssignment("EXTERNAL_OAUTH_JWS_KEYS_URL", "JwsKeysUrl", g.ParameterOptions().Parentheses()).
+				OptionalQueryStructField("ExternalOauthBlockedRolesList", blockedRolesListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_BLOCKED_ROLES_LIST").Parentheses()).
+				OptionalQueryStructField("ExternalOauthAllowedRolesList", allowedRolesListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_ALLOWED_ROLES_LIST").Parentheses()).
+				OptionalTextAssignment("EXTERNAL_OAUTH_RSA_PUBLIC_KEY", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2", g.ParameterOptions().SingleQuotes()).
+				OptionalQueryStructField("ExternalOauthAudienceList", audienceListDef, g.ParameterOptions().SQL("EXTERNAL_OAUTH_AUDIENCE_LIST").Parentheses()).
+				OptionalAssignment(
+					"EXTERNAL_OAUTH_ANY_ROLE_MODE",
+					g.KindOfT[ExternalOauthSecurityIntegrationAnyRoleModeOption](),
+					g.ParameterOptions(),
+				).
+				OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_DELIMITER", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE", g.ParameterOptions().SingleQuotes()).
+				WithValidation(g.ConflictingFields, "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList").
+				WithValidation(g.ExactlyOneValueSet, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey").
+				WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2")
+		}),
+		allowedRolesListDef,
+		blockedRolesListDef,
+		jwsKeysUrlDef,
+		audienceListDef,
+		audienceListItemDef,
+		tokenUserMappingClaimDef,
+	).
+	CustomOperation(
 		"CreateOauthForPartnerApplications",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake",
 		createSecurityIntegrationOperation("CreateOauthForPartnerApplications", func(qs *g.QueryStruct) *g.QueryStruct {
@@ -276,6 +389,21 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 				OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions())
+		}),
+	).
+	CustomOperation(
+		"AlterExternalOauth",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-external",
+		alterSecurityIntegrationOperation("AlterExternalOauth", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				externalOauthIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				externalOauthIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),
 	).
 	CustomOperation(

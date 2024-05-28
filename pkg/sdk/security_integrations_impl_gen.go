@@ -12,6 +12,11 @@ type securityIntegrations struct {
 	client *Client
 }
 
+func (v *securityIntegrations) CreateExternalOauth(ctx context.Context, request *CreateExternalOauthSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *securityIntegrations) CreateOauthForPartnerApplications(ctx context.Context, request *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -28,6 +33,11 @@ func (v *securityIntegrations) CreateSaml2(ctx context.Context, request *CreateS
 }
 
 func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) AlterExternalOauth(ctx context.Context, request *AlterExternalOauthSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -86,6 +96,44 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 		return nil, err
 	}
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+}
+
+func (r *CreateExternalOauthSecurityIntegrationRequest) toOpts() *CreateExternalOauthSecurityIntegrationOptions {
+	opts := &CreateExternalOauthSecurityIntegrationOptions{
+		OrReplace:                          r.OrReplace,
+		IfNotExists:                        r.IfNotExists,
+		name:                               r.name,
+		Enabled:                            r.Enabled,
+		ExternalOauthType:                  r.ExternalOauthType,
+		ExternalOauthIssuer:                r.ExternalOauthIssuer,
+		ExternalOauthTokenUserMappingClaim: r.ExternalOauthTokenUserMappingClaim,
+		ExternalOauthSnowflakeUserMappingAttribute: r.ExternalOauthSnowflakeUserMappingAttribute,
+		ExternalOauthJwsKeysUrl:                    r.ExternalOauthJwsKeysUrl,
+
+		ExternalOauthRsaPublicKey:  r.ExternalOauthRsaPublicKey,
+		ExternalOauthRsaPublicKey2: r.ExternalOauthRsaPublicKey2,
+
+		ExternalOauthAnyRoleMode:           r.ExternalOauthAnyRoleMode,
+		ExternalOauthScopeDelimiter:        r.ExternalOauthScopeDelimiter,
+		ExternalOauthScopeMappingAttribute: r.ExternalOauthScopeMappingAttribute,
+		Comment:                            r.Comment,
+	}
+	if r.ExternalOauthBlockedRolesList != nil {
+		opts.ExternalOauthBlockedRolesList = &BlockedRolesList{
+			BlockedRolesList: r.ExternalOauthBlockedRolesList.BlockedRolesList,
+		}
+	}
+	if r.ExternalOauthAllowedRolesList != nil {
+		opts.ExternalOauthAllowedRolesList = &AllowedRolesList{
+			AllowedRolesList: r.ExternalOauthAllowedRolesList.AllowedRolesList,
+		}
+	}
+	if r.ExternalOauthAudienceList != nil {
+		opts.ExternalOauthAudienceList = &AudienceList{
+			AudienceList: r.ExternalOauthAudienceList.AudienceList,
+		}
+	}
+	return opts
 }
 
 func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *CreateOauthForPartnerApplicationsSecurityIntegrationOptions {
@@ -179,6 +227,54 @@ func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityInteg
 		NetworkPolicy: r.NetworkPolicy,
 		SyncPassword:  r.SyncPassword,
 		Comment:       r.Comment,
+	}
+	return opts
+}
+
+func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOauthSecurityIntegrationOptions {
+	opts := &AlterExternalOauthSecurityIntegrationOptions{
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &ExternalOauthIntegrationSet{
+			Enabled:                            r.Set.Enabled,
+			ExternalOauthType:                  r.Set.ExternalOauthType,
+			ExternalOauthIssuer:                r.Set.ExternalOauthIssuer,
+			ExternalOauthTokenUserMappingClaim: r.Set.ExternalOauthTokenUserMappingClaim,
+			ExternalOauthSnowflakeUserMappingAttribute: r.Set.ExternalOauthSnowflakeUserMappingAttribute,
+			ExternalOauthJwsKeysUrl:                    r.Set.ExternalOauthJwsKeysUrl,
+
+			ExternalOauthRsaPublicKey:  r.Set.ExternalOauthRsaPublicKey,
+			ExternalOauthRsaPublicKey2: r.Set.ExternalOauthRsaPublicKey2,
+
+			ExternalOauthAnyRoleMode:    r.Set.ExternalOauthAnyRoleMode,
+			ExternalOauthScopeDelimiter: r.Set.ExternalOauthScopeDelimiter,
+			Comment:                     r.Set.Comment,
+		}
+		if r.Set.ExternalOauthBlockedRolesList != nil {
+			opts.Set.ExternalOauthBlockedRolesList = &BlockedRolesList{
+				BlockedRolesList: r.Set.ExternalOauthBlockedRolesList.BlockedRolesList,
+			}
+		}
+		if r.Set.ExternalOauthAllowedRolesList != nil {
+			opts.Set.ExternalOauthAllowedRolesList = &AllowedRolesList{
+				AllowedRolesList: r.Set.ExternalOauthAllowedRolesList.AllowedRolesList,
+			}
+		}
+		if r.Set.ExternalOauthAudienceList != nil {
+			opts.Set.ExternalOauthAudienceList = &AudienceList{
+				AudienceList: r.Set.ExternalOauthAudienceList.AudienceList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &ExternalOauthIntegrationUnset{
+			Enabled:                   r.Unset.Enabled,
+			ExternalOauthAudienceList: r.Unset.ExternalOauthAudienceList,
+		}
 	}
 	return opts
 }
