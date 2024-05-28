@@ -95,7 +95,10 @@ func TestAcc_Parameters_TransactionAbortOnErrorCanBeSet(t *testing.T) {
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 is fixed
+// done on user, to not interfere with other parallel tests on the same account
 func TestAcc_Parameters_QuotedIdentifiersIgnoreCaseCanBeSet(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -104,13 +107,23 @@ func TestAcc_Parameters_QuotedIdentifiersIgnoreCaseCanBeSet(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `resource "snowflake_account_parameter" "test" {
-				  key   = "QUOTED_IDENTIFIERS_IGNORE_CASE"
-				  value = "true"
-				}`,
+				Config: sessionParameterOnUser(userId.Name()),
 			},
 		},
 	})
+}
+
+func sessionParameterOnUser(userName string) string {
+	return fmt.Sprintf(
+		`
+	resource "snowflake_user" "u" {
+		name = "%s"
+	}
+    resource "snowflake_session_parameter" "test" {
+		key   = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+		value = "true"
+		user  = snowflake_user.u.name
+	}`, userName)
 }
 
 func parametersConfigOnAccount() string {
