@@ -224,7 +224,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
 
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.SchemaId()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -820,7 +820,8 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := "test_database_role_schema_name"
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
 			"name":     config.StringVariable(roleId.FullyQualifiedName()),
@@ -895,7 +896,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 				ConfigVariables: configVariables(false, []string{
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
-				}, schemaName),
+				}, schemaId.Name()),
 				Check: queriedAccountRolePrivilegesEqualTo(
 					roleId,
 					sdk.SchemaPrivilegeCreateTask.String(),
@@ -1201,7 +1202,7 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
 
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.SchemaId()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

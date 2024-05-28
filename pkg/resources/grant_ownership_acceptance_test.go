@@ -120,7 +120,7 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
 
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	schemaFullyQualifiedName := schemaId.FullyQualifiedName()
 
@@ -171,13 +171,13 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	schemaFullyQualifiedName := schemaId.FullyQualifiedName()
 
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	databaseRoleName := databaseRoleId.Name()
-	databaseRoleFullyQualifiedName := databaseId.FullyQualifiedName()
+	databaseRoleFullyQualifiedName := databaseRoleId.FullyQualifiedName()
 
 	configVariables := config.Variables{
 		"database_role_name": config.StringVariable(databaseRoleName),
@@ -222,8 +222,9 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
-	schemaName := acc.TestClient().Ids.Alpha()
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	schemaName := schemaId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
@@ -272,13 +273,13 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	tableName := tableId.Name()
 	tableFullyQualifiedName := tableId.FullyQualifiedName()
 
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	databaseRoleName := databaseRoleId.Name()
 	databaseRoleFullyQualifiedName := databaseRoleId.FullyQualifiedName()
 
@@ -475,7 +476,7 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	schemaFullyQualifiedName := schemaId.FullyQualifiedName()
 
@@ -679,10 +680,13 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
-	materializedViewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	schemaName := schemaId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	tableName := tableId.Name()
+	materializedViewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
@@ -1092,7 +1096,7 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseName := databaseId.Name()
 
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	databaseRoleFullyQualifiedName := databaseRoleId.FullyQualifiedName()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()

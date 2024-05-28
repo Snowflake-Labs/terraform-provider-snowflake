@@ -65,7 +65,7 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
@@ -120,8 +120,8 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
@@ -175,7 +175,7 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
@@ -228,9 +228,9 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
@@ -285,8 +285,8 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
