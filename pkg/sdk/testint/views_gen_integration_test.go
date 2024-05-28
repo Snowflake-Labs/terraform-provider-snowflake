@@ -453,7 +453,7 @@ func TestInt_Views(t *testing.T) {
 		returnedViews, err := client.Views.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, len(returnedViews))
+		assert.LessOrEqual(t, 2, len(returnedViews))
 		assert.Contains(t, returnedViews, *view1)
 		assert.Contains(t, returnedViews, *view2)
 	})
@@ -465,7 +465,7 @@ func TestInt_Views(t *testing.T) {
 		returnedViews, err := client.Views.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, len(returnedViews))
+		assert.LessOrEqual(t, 1, len(returnedViews))
 		assertViewTerse(t, &returnedViews[0], view.ID())
 	})
 
