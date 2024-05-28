@@ -4,6 +4,149 @@ import (
 	"testing"
 )
 
+func TestSecurityIntegrations_CreateApiAuthenticationClientCredentialsFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+			name:              id,
+			Enabled:           true,
+			OauthClientId:     "foo",
+			OauthClientSecret: "bar",
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_CLIENT_ID = 'foo'"+
+			" OAUTH_CLIENT_SECRET = 'bar'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OauthTokenEndpoint = Pointer("foo")
+		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
+		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials)
+		opts.OauthAccessTokenValidity = Pointer(42)
+		opts.OauthRefreshTokenValidity = Pointer(42)
+		opts.OauthAllowedScopes = []AllowedScope{{Scope: "bar"}}
+		opts.Comment = Pointer("foo")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_TOKEN_ENDPOINT = 'foo'"+
+			" OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST OAUTH_CLIENT_ID = 'foo' OAUTH_CLIENT_SECRET = 'bar' OAUTH_GRANT = CLIENT_CREDENTIALS"+
+			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 OAUTH_ALLOWED_SCOPES = ('bar') COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_CreateApiAuthenticationAuthorizationCodeGrantFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions{
+			name:              id,
+			Enabled:           true,
+			OauthClientId:     "foo",
+			OauthClientSecret: "bar",
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	})
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_CLIENT_ID = 'foo'"+
+			" OAUTH_CLIENT_SECRET = 'bar'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OauthAuthorizationEndpoint = Pointer("foo")
+		opts.OauthTokenEndpoint = Pointer("foo")
+		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
+		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantAuthorizationCode)
+		opts.OauthAccessTokenValidity = Pointer(42)
+		opts.OauthRefreshTokenValidity = Pointer(42)
+		opts.Comment = Pointer("foo")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_AUTHORIZATION_ENDPOINT = 'foo'"+
+			" OAUTH_TOKEN_ENDPOINT = 'foo' OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST OAUTH_CLIENT_ID = 'foo' OAUTH_CLIENT_SECRET = 'bar' OAUTH_GRANT = AUTHORIZATION_CODE"+
+			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_CreateApiAuthenticationJwtBearerFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions{
+			name:                 id,
+			Enabled:              true,
+			OauthClientId:        "foo",
+			OauthClientSecret:    "bar",
+			OauthAssertionIssuer: "foo",
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+	})
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_ASSERTION_ISSUER = 'foo' OAUTH_CLIENT_ID = 'foo'"+
+			" OAUTH_CLIENT_SECRET = 'bar'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OauthAuthorizationEndpoint = Pointer("foo")
+		opts.OauthTokenEndpoint = Pointer("foo")
+		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
+		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer)
+		opts.OauthAccessTokenValidity = Pointer(42)
+		opts.OauthRefreshTokenValidity = Pointer(42)
+		opts.Comment = Pointer("foo")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_ASSERTION_ISSUER = 'foo'"+
+			" OAUTH_AUTHORIZATION_ENDPOINT = 'foo' OAUTH_TOKEN_ENDPOINT = 'foo' OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST OAUTH_CLIENT_ID = 'foo' OAUTH_CLIENT_SECRET = 'bar' OAUTH_GRANT = JWT_BEARER"+
+			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+}
+
 func TestSecurityIntegrations_CreateExternalOauth(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
@@ -80,7 +223,7 @@ func TestSecurityIntegrations_CreateExternalOauth(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
+func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateOauthForCustomClientsSecurityIntegrationOptions
@@ -135,7 +278,7 @@ func TestSecurityIntegrations_CreateOauthCustom(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_CreateOauthPartner(t *testing.T) {
+func TestSecurityIntegrations_CreateOauthForPartnerApplications(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateOauthForPartnerApplicationsSecurityIntegrationOptions
@@ -285,6 +428,109 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 		opts.Comment = Pointer("a")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'"+
 			" NETWORK_POLICY = %s SYNC_PASSWORD = true COMMENT = 'a'", id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_AlterApiAuthenticationClientCredentialsFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions
+	defaultOpts := func() *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
+		return &AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{
+			Enabled: Pointer(true),
+		}
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint",
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Unset",
+			"Enabled", "Comment"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{}
+		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("all options - set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{
+			Enabled:                   Pointer(true),
+			OauthTokenEndpoint:        Pointer("foo"),
+			OauthClientAuthMethod:     Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			OauthClientId:             Pointer("foo"),
+			OauthClientSecret:         Pointer("foo"),
+			OauthGrant:                Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
+			OauthAccessTokenValidity:  Pointer(42),
+			OauthRefreshTokenValidity: Pointer(42),
+			OauthAllowedScopes:        []AllowedScope{{Scope: "foo"}},
+			Comment:                   Pointer("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
+			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = CLIENT_CREDENTIALS, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
+			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, OAUTH_ALLOWED_SCOPES = ('foo'), COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options - unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{
+			Enabled: Pointer(true),
+			Comment: Pointer(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
 
@@ -439,7 +685,7 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
+func TestSecurityIntegrations_AlterOauthForPartnerApplications(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterOauthForPartnerApplicationsSecurityIntegrationOptions
@@ -547,7 +793,7 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
+func TestSecurityIntegrations_AlterOauthForCustomClients(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterOauthForCustomClientsSecurityIntegrationOptions

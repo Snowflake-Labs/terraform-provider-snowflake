@@ -4,6 +4,185 @@ package sdk
 
 import ()
 
+func NewCreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+	Enabled bool,
+	OauthClientId string,
+	OauthClientSecret string,
+) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s := CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest{}
+	s.name = name
+	s.Enabled = Enabled
+	s.OauthClientId = OauthClientId
+	s.OauthClientSecret = OauthClientSecret
+	return &s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
+	return s
+}
+
+func (s *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithComment(Comment string) *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewCreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+	Enabled bool,
+	OauthClientId string,
+	OauthClientSecret string,
+) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s := CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest{}
+	s.name = name
+	s.Enabled = Enabled
+	s.OauthClientId = OauthClientId
+	s.OauthClientSecret = OauthClientSecret
+	return &s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthAuthorizationEndpoint(OauthAuthorizationEndpoint string) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthAuthorizationEndpoint = &OauthAuthorizationEndpoint
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithComment(Comment string) *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewCreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+	Enabled bool,
+	OauthAssertionIssuer string,
+	OauthClientId string,
+	OauthClientSecret string,
+) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s := CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest{}
+	s.name = name
+	s.Enabled = Enabled
+	s.OauthAssertionIssuer = OauthAssertionIssuer
+	s.OauthClientId = OauthClientId
+	s.OauthClientSecret = OauthClientSecret
+	return &s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OrReplace = &OrReplace
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthAuthorizationEndpoint(OauthAuthorizationEndpoint string) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthAuthorizationEndpoint = &OauthAuthorizationEndpoint
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithComment(Comment string) *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.Comment = &Comment
+	return s
+}
+
 func NewCreateExternalOauthSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
@@ -375,6 +554,309 @@ func (s *CreateScimSecurityIntegrationRequest) WithSyncPassword(SyncPassword boo
 }
 
 func (s *CreateScimSecurityIntegrationRequest) WithComment(Comment string) *CreateScimSecurityIntegrationRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewAlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s := AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func (s *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithSet(Set ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.Set = &Set
+	return s
+}
+
+func (s *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) WithUnset(Unset ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest) *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest {
+	s.Unset = &Unset
+	return s
+}
+
+func NewApiAuthenticationClientCredentialsFlowIntegrationSetRequest() *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	return &ApiAuthenticationClientCredentialsFlowIntegrationSetRequest{}
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithEnabled(Enabled bool) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthClientId(OauthClientId string) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthClientId = &OauthClientId
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthClientSecret(OauthClientSecret string) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthClientSecret = &OauthClientSecret
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest) WithComment(Comment string) *ApiAuthenticationClientCredentialsFlowIntegrationSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest() *ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest {
+	return &ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest{}
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest) WithEnabled(Enabled bool) *ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest) WithComment(Comment bool) *ApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewAlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s := AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func (s *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithSet(Set ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.Set = &Set
+	return s
+}
+
+func (s *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithUnset(Unset ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest) *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.Unset = &Unset
+	return s
+}
+
+func NewApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest() *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	return &ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest{}
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithEnabled(Enabled bool) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthAuthorizationEndpoint(OauthAuthorizationEndpoint string) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthAuthorizationEndpoint = &OauthAuthorizationEndpoint
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthClientId(OauthClientId string) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthClientId = &OauthClientId
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthClientSecret(OauthClientSecret string) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthClientSecret = &OauthClientSecret
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest) WithComment(Comment string) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest() *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest {
+	return &ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest{}
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest) WithEnabled(Enabled bool) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest) WithComment(Comment bool) *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewAlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(
+	name AccountObjectIdentifier,
+) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s := AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithIfExists(IfExists bool) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func (s *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithSetTags(SetTags []TagAssociation) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithSet(Set ApiAuthenticationJwtBearerFlowIntegrationSetRequest) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.Set = &Set
+	return s
+}
+
+func (s *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) WithUnset(Unset ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest) *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest {
+	s.Unset = &Unset
+	return s
+}
+
+func NewApiAuthenticationJwtBearerFlowIntegrationSetRequest() *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	return &ApiAuthenticationJwtBearerFlowIntegrationSetRequest{}
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithEnabled(Enabled bool) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthAuthorizationEndpoint(OauthAuthorizationEndpoint string) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthAuthorizationEndpoint = &OauthAuthorizationEndpoint
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthTokenEndpoint(OauthTokenEndpoint string) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthTokenEndpoint = &OauthTokenEndpoint
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthClientAuthMethod(OauthClientAuthMethod ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthClientAuthMethod = &OauthClientAuthMethod
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthClientId(OauthClientId string) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthClientId = &OauthClientId
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthClientSecret(OauthClientSecret string) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthClientSecret = &OauthClientSecret
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthGrant = &OauthGrant
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthAccessTokenValidity(OauthAccessTokenValidity int) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthAccessTokenValidity = &OauthAccessTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationSetRequest) WithComment(Comment string) *ApiAuthenticationJwtBearerFlowIntegrationSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewApiAuthenticationJwtBearerFlowIntegrationUnsetRequest() *ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest {
+	return &ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest{}
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest) WithEnabled(Enabled bool) *ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest {
+	s.Enabled = &Enabled
+	return s
+}
+
+func (s *ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest) WithComment(Comment bool) *ApiAuthenticationJwtBearerFlowIntegrationUnsetRequest {
 	s.Comment = &Comment
 	return s
 }
