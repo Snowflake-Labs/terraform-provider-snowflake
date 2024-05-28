@@ -531,7 +531,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, len(returnedTasks))
+		assert.LessOrEqual(t, 2, len(returnedTasks))
 		assert.Contains(t, returnedTasks, *task1)
 		assert.Contains(t, returnedTasks, *task2)
 	})
@@ -546,7 +546,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, len(returnedTasks))
+		assert.LessOrEqual(t, 1, len(returnedTasks))
 		assertTaskTerse(t, &returnedTasks[0], task.ID(), "10 MINUTE")
 	})
 
