@@ -250,11 +250,10 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	// Database name will be shared between two accounts
-	databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseId.Name())
+	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(sharedDatabaseCleanup)
+
+	databaseId := sharedDatabase.ID()
 
 	err := secondaryClient.Databases.AlterReplication(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
 		EnableReplication: &sdk.EnableReplication{
@@ -366,11 +365,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 				t.Cleanup(shareCleanup)
 
-				// Database name will be shared between two accounts
-				databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-
-				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseId.Name())
+				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 				t.Cleanup(sharedDatabaseCleanup)
+
+				databaseId := sharedDatabase.ID()
 
 				err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 					Database: sharedDatabase.ID(),

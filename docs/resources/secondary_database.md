@@ -37,12 +37,14 @@ resource "snowflake_secondary_database" "test" {
     value = 20
   }
 
-  external_volume       = "external_volume_name"
-  catalog               = "catalog_name"
-  default_ddl_collation = "en_US"
-  log_level             = "OFF"
-  trace_level           = "OFF"
-  comment               = "A secondary database"
+  external_volume              = "external_volume_name"
+  catalog                      = "catalog_name"
+  replace_invalid_characters   = false
+  default_ddl_collation        = "en_US"
+  storage_serialization_policy = "OPTIMIZED"
+  log_level                    = "OFF"
+  trace_level                  = "OFF"
+  comment                      = "A secondary database"
 }
 ```
 
