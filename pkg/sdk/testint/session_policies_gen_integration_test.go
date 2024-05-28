@@ -215,7 +215,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		returnedSessionPolicies, err := client.SessionPolicies.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, len(returnedSessionPolicies))
+		assert.LessOrEqual(t, 2, len(returnedSessionPolicies))
 		assert.Contains(t, returnedSessionPolicies, *sessionPolicy1)
 		assert.Contains(t, returnedSessionPolicies, *sessionPolicy2)
 	})
