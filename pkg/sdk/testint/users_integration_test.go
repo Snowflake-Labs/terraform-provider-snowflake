@@ -14,10 +14,12 @@ func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	userTest, userCleanup := testClientHelper().User.CreateUserWithName(t, "USER_FOO")
+	randomPrefix := random.AlphaN(6)
+
+	userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
 	t.Cleanup(userCleanup)
 
-	userTest2, user2Cleanup := testClientHelper().User.CreateUserWithName(t, "USER_BAR")
+	userTest2, user2Cleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix)
 	t.Cleanup(user2Cleanup)
 
 	t.Run("with like options", func(t *testing.T) {
@@ -34,7 +36,7 @@ func TestInt_UsersShow(t *testing.T) {
 
 	t.Run("with starts with options", func(t *testing.T) {
 		showOptions := &sdk.ShowUserOptions{
-			StartsWith: sdk.String("USER"),
+			StartsWith: sdk.String(randomPrefix),
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -42,11 +44,12 @@ func TestInt_UsersShow(t *testing.T) {
 		assert.Contains(t, users, *userTest2)
 		assert.Equal(t, 2, len(users))
 	})
+
 	t.Run("with starts with, limit and from options", func(t *testing.T) {
 		showOptions := &sdk.ShowUserOptions{
 			Limit:      sdk.Int(10),
-			From:       sdk.String("USER_C"),
-			StartsWith: sdk.String("USER"),
+			From:       sdk.String(randomPrefix + "_"),
+			StartsWith: sdk.String(randomPrefix),
 		}
 
 		users, err := client.Users.Show(ctx, showOptions)
@@ -92,7 +95,7 @@ func TestInt_UserCreate(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		password := random.String()
+		password := random.Password()
 		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{
@@ -138,7 +141,7 @@ func TestInt_UserCreate(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		password := random.String()
+		password := random.Password()
 		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{

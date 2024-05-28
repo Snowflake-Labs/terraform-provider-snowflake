@@ -57,7 +57,7 @@ func TestInt_AccountCreate(t *testing.T) {
 
 		opts := &sdk.CreateAccountOptions{
 			AdminName:          "someadmin",
-			AdminPassword:      sdk.String(random.StringN(12)),
+			AdminPassword:      sdk.String(random.Password()),
 			FirstName:          sdk.String("Ad"),
 			LastName:           sdk.String("Min"),
 			Email:              "admin@example.com",

@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestPasswordPolicyCreate(t *testing.T) {
@@ -108,7 +106,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
+		newID := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts := &AlterPasswordPolicyOptions{
 			name:    id,
 			NewName: &newID,

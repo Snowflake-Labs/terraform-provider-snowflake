@@ -26,9 +26,6 @@ func TestInt_Table(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database := testDb(t)
-	schema := testSchema(t)
-
 	cleanupTableProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
@@ -78,8 +75,7 @@ func TestInt_Table(t *testing.T) {
 	}
 
 	t.Run("create table: no optionals", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("FIRST_COLUMN", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
 			*sdk.NewTableColumnRequest("SECOND_COLUMN", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
@@ -100,25 +96,24 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(maskingPolicyCleanup)
 		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(table2Cleanup)
-		name := random.String()
-		comment := random.String()
+		comment := random.Comment()
 
 		columnTags := []sdk.TagAssociation{
 			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
+				Name:  tag1.ID(),
 				Value: "v1",
 			},
 			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
+				Name:  tag2.ID(),
 				Value: "v2",
 			},
 		}
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).
 				WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithExpression(sdk.String("'default'"))).
-				WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, maskingPolicy.Name)).WithUsing([]string{"COLUMN_1", "COLUMN_3"})).
+				WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]string{"COLUMN_1", "COLUMN_3"})).
 				WithTags(columnTags).
 				WithNotNull(sdk.Bool(true)),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
@@ -126,7 +121,7 @@ func TestInt_Table(t *testing.T) {
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).
 			WithName(sdk.String("OUT_OF_LINE_CONSTRAINT")).
 			WithColumns([]string{"COLUMN_1"}).
-			WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, table2.Name), []string{"id"}).
+			WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(table2.ID(), []string{"id"}).
 				WithMatch(sdk.Pointer(sdk.FullMatchType)).
 				WithOn(sdk.NewForeignKeyOnAction().
 					WithOnDelete(sdk.Pointer(sdk.ForeignKeySetNullAction)).WithOnUpdate(sdk.Pointer(sdk.ForeignKeyRestrictAction))))
@@ -181,11 +176,10 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableAsSelectColumnRequest("COLUMN_2").
 				WithType_(sdk.Pointer(sdk.DataTypeVARCHAR)).
 				WithCopyGrants(sdk.Bool(true)).
-				WithOrReplace(sdk.Bool(true)).WithMaskingPolicyName(sdk.Pointer(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, maskingPolicy.Name))),
+				WithOrReplace(sdk.Bool(true)).WithMaskingPolicyName(sdk.Pointer(maskingPolicy.ID())),
 		}
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		query := "SELECT 1, 2, 3"
 		request := sdk.NewCreateTableAsSelectRequest(id, columns, query)
 
@@ -225,8 +219,7 @@ func TestInt_Table(t *testing.T) {
 		err = os.Remove(f.Name())
 		require.NoError(t, err)
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '@%s', FILE_FORMAT=>'%s', ignore_case => true))`, stage.ID().FullyQualifiedName(), fileFormat.ID().FullyQualifiedName())
 		request := sdk.NewCreateTableUsingTemplateRequest(id, query)
 
@@ -252,12 +245,10 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTableName := random.StringRange(8, 28)
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, schema.ID(), sourceTableName, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateTableLikeRequest(id, sourceTable.ID()).WithCopyGrants(sdk.Bool(true))
 
 		err := client.Tables.CreateLike(ctx, request)
@@ -285,12 +276,10 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTableName := random.StringRange(8, 28)
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, schema.ID(), sourceTableName, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateTableCloneRequest(id, sourceTable.ID()).
 			WithCopyGrants(sdk.Bool(true)).WithClonePoint(sdk.NewClonePointRequest().
 			WithAt(*sdk.NewTimeTravelRequest().WithOffset(sdk.Pointer(0))).
@@ -320,10 +309,8 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: rename", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR),
@@ -350,14 +337,12 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: swap with", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
 
-		secondTableName := random.String()
-		secondTableId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName)
+		secondTableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		secondTableColumns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
@@ -386,8 +371,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: cluster by", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -413,8 +397,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: resume recluster", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -439,8 +422,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: drop clustering key", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -464,8 +446,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: add a column", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -497,8 +478,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: rename column", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -531,8 +511,7 @@ func TestInt_Table(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
 		t.Cleanup(maskingPolicyCleanup)
 
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(maskingPolicy.ID())),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -561,8 +540,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: set and unset tags", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -574,11 +552,11 @@ func TestInt_Table(t *testing.T) {
 
 		columnTags := []sdk.TagAssociationRequest{
 			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
+				Name:  tag1.ID(),
 				Value: "v1",
 			},
 			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
+				Name:  tag2.ID(),
 				Value: "v2",
 			},
 		}
@@ -614,8 +592,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter table: drop columns", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -645,14 +622,12 @@ func TestInt_Table(t *testing.T) {
 	// TODO [SNOW-1007542]: check added constraints
 	// Add method similar to getTableColumnsFor based on https://docs.snowflake.com/en/sql-reference/info-schema/table_constraints.
 	t.Run("alter constraint: add", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
 
-		secondTableName := random.String()
-		secondTableId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName)
+		secondTableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		secondTableColumns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR).WithInlineConstraint(sdk.NewColumnInlineConstraintRequest("pkey", sdk.ColumnConstraintTypePrimaryKey)),
 		}
@@ -668,14 +643,13 @@ func TestInt_Table(t *testing.T) {
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().
 				WithAdd(sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).WithName(sdk.String("OUT_OF_LINE_CONSTRAINT")).WithColumns([]string{"COLUMN_1"}).
-					WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName), []string{"COLUMN_3"}))))
+					WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(secondTableId, []string{"COLUMN_3"}))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
 
 	t.Run("add constraint: not null", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
@@ -695,8 +669,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: check renamed constraint
 	t.Run("alter constraint: rename", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -720,8 +693,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: check altered constraint
 	t.Run("alter constraint: alter", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -741,8 +713,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: check dropped constraint
 	t.Run("alter constraint: drop constraint with name", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -761,8 +732,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("alter constraint: drop primary key without constraint name", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
@@ -779,8 +749,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("external table: add column", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -813,8 +782,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("external table: rename", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -842,8 +810,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("external table: drop", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -870,8 +837,7 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: check search optimization - after adding https://docs.snowflake.com/en/sql-reference/sql/desc-search-optimization
 	t.Run("add search optimization", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -890,9 +856,8 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: try to check more sets (ddl collation, max data extension time in days, etc.)
 	t.Run("set: with complete options", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		comment := random.String()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		comment := random.Comment()
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
@@ -993,8 +958,6 @@ func TestInt_TablesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupTableHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
@@ -1019,9 +982,8 @@ func TestInt_TablesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createTableHandle(t, id1)
 		createTableHandle(t, id2)
@@ -1036,8 +998,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 	})
 
 	t.Run("show by id: check schema evolution record", func(t *testing.T) {
-		name := random.AlphaN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
@@ -1056,7 +1017,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 			nil)
 		require.NoError(t, err)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schemaTest.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		testClientHelper().Stage.PutOnStage(t, stage.ID(), "schema_evolution_record.json")

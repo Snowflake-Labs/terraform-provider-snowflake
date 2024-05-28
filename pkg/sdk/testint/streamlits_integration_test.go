@@ -15,8 +15,6 @@ func TestInt_Streamlits(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupStreamlitHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
@@ -27,7 +25,7 @@ func TestInt_Streamlits(t *testing.T) {
 	createStreamlitHandle := func(t *testing.T, stage *sdk.Stage, mainFile string) *sdk.Streamlit {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
@@ -60,8 +58,8 @@ func TestInt_Streamlits(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 
-		comment := random.StringN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		comment := random.Comment()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
 		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
 		err := client.Streamlits.Create(ctx, request)
@@ -79,8 +77,8 @@ func TestInt_Streamlits(t *testing.T) {
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
 
-		comment := random.StringN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		comment := random.Comment()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
 		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
 		err := client.Streamlits.Create(ctx, request)
@@ -147,8 +145,8 @@ func TestInt_Streamlits(t *testing.T) {
 
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
-		comment := random.StringN(4)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		comment := random.Comment()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
 		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
 		err := client.Streamlits.Create(ctx, request)
@@ -210,8 +208,8 @@ func TestInt_Streamlits(t *testing.T) {
 		manifest := "manifest.yml"
 		e := createStreamlitHandle(t, stage, manifest)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
-		comment := random.StringN(4)
+		id := e.ID()
+		comment := random.Comment()
 		set := sdk.NewStreamlitSetRequest(sdk.String(stage.Location()), &manifest).WithComment(&comment)
 		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithSet(set))
 		require.NoError(t, err)
@@ -222,16 +220,13 @@ func TestInt_Streamlits(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
+		id := e.ID()
+		t.Cleanup(cleanupStreamlitHandle(id))
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
-		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(3))
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithRenameTo(&nid))
-		if err != nil {
-			t.Cleanup(cleanupStreamlitHandle(id))
-		} else {
-			t.Cleanup(cleanupStreamlitHandle(nid))
-		}
 		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(nid))
 
 		_, err = client.Streamlits.ShowByID(ctx, id)
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
@@ -279,7 +274,7 @@ func TestInt_Streamlits(t *testing.T) {
 
 		mainFile := "manifest.yml"
 		e := createStreamlitHandle(t, stage, mainFile)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := e.ID()
 
 		detail, err := client.Streamlits.Describe(ctx, id)
 		require.NoError(t, err)
@@ -296,7 +291,6 @@ func TestInt_StreamlitsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
 	cleanupStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -321,9 +315,8 @@ func TestInt_StreamlitsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)

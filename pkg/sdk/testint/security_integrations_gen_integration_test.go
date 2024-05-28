@@ -1,12 +1,13 @@
 package testint
 
 import (
-	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,53 +16,106 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	// TODO: move URL to helpers
-	acsURL := fmt.Sprintf("https://%s.snowflakecomputing.com/fed/login", testClientHelper().Context.CurrentAccount(t))
-	issuerURL := fmt.Sprintf("https://%s.snowflakecomputing.com", testClientHelper().Context.CurrentAccount(t))
+	acsURL := testClientHelper().Context.ACSURL(t)
+	issuerURL := testClientHelper().Context.IssuerURL(t)
 	cert := random.GenerateX509(t)
+	rsaKey := random.GenerateRSAPublicKey(t)
+
 	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
 	t.Cleanup(revertParameter)
 
 	cleanupSecurityIntegration := func(t *testing.T, id sdk.AccountObjectIdentifier) {
 		t.Helper()
 		t.Cleanup(func() {
-			err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(sdk.Pointer(true)))
+			err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 			assert.NoError(t, err)
 		})
 	}
-	createSAML2Integration := func(t *testing.T, siID sdk.AccountObjectIdentifier, issuer string, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) *sdk.SecurityIntegration {
+	createExternalOauth := func(t *testing.T, with func(*sdk.CreateExternalOauthSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier, string) {
 		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		issuer := random.String()
+		req := sdk.NewCreateExternalOauthSecurityIntegrationRequest(id, false, sdk.ExternalOauthSecurityIntegrationTypeCustom,
+			issuer, []sdk.TokenUserMappingClaim{{Claim: "foo"}}, sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName,
+		)
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateExternalOauth(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
 
-		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(siID, false, issuer, "https://example.com", "Custom", cert)
+		return integration, id, issuer
+	}
+	createOauthCustom := func(t *testing.T, with func(*sdk.CreateOauthForCustomClientsSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientTypePublic, "https://example.com")
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateOauthForCustomClients(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return integration, id
+	}
+	createOauthPartner := func(t *testing.T, with func(*sdk.CreateOauthForPartnerApplicationsSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateOauthForPartnerApplicationsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientLooker).
+			WithOauthRedirectUri("http://example.com")
+
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateOauthForPartnerApplications(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return integration, id
+	}
+	createSAML2Integration := func(t *testing.T, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier, string) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		issuer := testClientHelper().Ids.Alpha()
+		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, false, issuer, "https://example.com", "Custom", cert)
 		if with != nil {
 			with(saml2Req)
 		}
 		err := client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
 		require.NoError(t, err)
-		cleanupSecurityIntegration(t, siID)
-		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		return integration
+		return integration, id, issuer
 	}
 
-	createSCIMIntegration := func(t *testing.T, siID sdk.AccountObjectIdentifier, with func(*sdk.CreateScimSecurityIntegrationRequest)) *sdk.SecurityIntegration {
+	createSCIMIntegration := func(t *testing.T, with func(*sdk.CreateScimSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
 		role, roleCleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
 		t.Cleanup(roleCleanup)
 		testClientHelper().Role.GrantRoleToCurrentRole(t, role.ID())
 
-		scimReq := sdk.NewCreateScimSecurityIntegrationRequest(siID, false, sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner)
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		scimReq := sdk.NewCreateScimSecurityIntegrationRequest(id, false, sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner)
 		if with != nil {
 			with(scimReq)
 		}
 		err := client.SecurityIntegrations.CreateScim(ctx, scimReq)
 		require.NoError(t, err)
-		cleanupSecurityIntegration(t, siID)
-		integration, err := client.SecurityIntegrations.ShowByID(ctx, siID)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		return integration
+		return integration, id
 	}
 
 	assertSecurityIntegration := func(t *testing.T, si *sdk.SecurityIntegration, id sdk.AccountObjectIdentifier, siType string, enabled bool, comment string) {
@@ -73,6 +127,86 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Equal(t, "SECURITY", si.Category)
 	}
 
+	// TODO(SNOW-1449579): move to helpers
+	assertFieldContainsList := func(details []sdk.SecurityIntegrationProperty, field, value, sep string) {
+		found, err := collections.FindOne(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
+		assert.NoError(t, err)
+		values := strings.Split(found.Value, sep)
+		for _, exp := range strings.Split(value, sep) {
+			assert.Contains(t, values, exp)
+		}
+	}
+
+	type externalOauthDetails struct {
+		enabled                                    string
+		externalOauthIssuer                        string
+		externalOauthJwsKeysUrl                    string
+		externalOauthAnyRoleMode                   string
+		externalOauthScopeMappingAttribute         string
+		externalOauthRsaPublicKey                  string
+		externalOauthRsaPublicKey2                 string
+		externalOauthBlockedRolesList              string
+		externalOauthAllowedRolesList              string
+		externalOauthAudienceList                  string
+		externalOauthTokenUserMappingClaim         string
+		externalOauthSnowflakeUserMappingAttribute string
+		externalOauthScopeDelimiter                string
+		comment                                    string
+	}
+
+	assertExternalOauth := func(details []sdk.SecurityIntegrationProperty, d externalOauthDetails) {
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: d.enabled, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ISSUER", Type: "String", Value: d.externalOauthIssuer, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: d.externalOauthJwsKeysUrl, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ANY_ROLE_MODE", Type: "String", Value: d.externalOauthAnyRoleMode, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE", Type: "String", Value: d.externalOauthScopeMappingAttribute, Default: "scp"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_RSA_PUBLIC_KEY", Type: "String", Value: d.externalOauthRsaPublicKey, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2", Type: "String", Value: d.externalOauthRsaPublicKey2, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: d.externalOauthAllowedRolesList, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_AUDIENCE_LIST", Type: "List", Value: d.externalOauthAudienceList, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM", Type: "Object", Value: d.externalOauthTokenUserMappingClaim, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE", Type: "String", Value: d.externalOauthSnowflakeUserMappingAttribute, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_SCOPE_DELIMITER", Type: "String", Value: d.externalOauthScopeDelimiter, Default: ","})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
+		assertFieldContainsList(details, "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST", d.externalOauthBlockedRolesList, ",")
+	}
+
+	type oauthPartnerDetails struct {
+		enabled                 string
+		oauthIssueRefreshTokens string
+		refreshTokenValidity    string
+		useSecondaryRoles       string
+		preAuthorizedRolesList  string
+		blockedRolesList        string
+		networkPolicy           string
+		comment                 string
+	}
+
+	assertOauthPartner := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails) {
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: d.enabled, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ISSUE_REFRESH_TOKENS", Type: "Boolean", Value: d.oauthIssueRefreshTokens, Default: "true"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_REFRESH_TOKEN_VALIDITY", Type: "Integer", Value: d.refreshTokenValidity, Default: "7776000"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: d.useSecondaryRoles, Default: "NONE"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "PRE_AUTHORIZED_ROLES_LIST", Type: "List", Value: d.preAuthorizedRolesList, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: d.networkPolicy, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
+		assertFieldContainsList(details, "BLOCKED_ROLES_LIST", d.blockedRolesList, ",")
+	}
+
+	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
+		assertOauthPartner(details, d)
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ALLOW_NON_TLS_REDIRECT_URI", Type: "Boolean", Value: allowNonTlsRedirectUri, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_TYPE", Type: "String", Value: clientType, Default: "CONFIDENTIAL"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ENFORCE_PKCE", Type: "Boolean", Value: enforcePkce, Default: "false"})
+		// Keys are hashed in snowflake, so we check only if these fields are present
+		keys := make(map[string]struct{})
+		for _, detail := range details {
+			keys[detail.Name] = struct{}{}
+		}
+		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP")
+		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP")
+	}
+
 	assertSCIMDescribe := func(details []sdk.SecurityIntegrationProperty, enabled, networkPolicy, runAsRole, syncPassword, comment string) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: enabled, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: networkPolicy, Default: ""})
@@ -81,7 +215,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: comment, Default: ""})
 	}
 
-	type saml2details struct {
+	type saml2Details struct {
 		provider                  string
 		enableSPInitiated         string
 		spInitiatedLoginPageLabel string
@@ -98,7 +232,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		allowedEmailPatterns      string
 	}
 
-	assertSAML2Describe := func(details []sdk.SecurityIntegrationProperty, d saml2details) {
+	assertSAML2Describe := func(details []sdk.SecurityIntegrationProperty, d saml2Details) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_X509_CERT", Type: "String", Value: cert, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_PROVIDER", Type: "String", Value: d.provider, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_ENABLE_SP_INITIATED", Type: "Boolean", Value: d.enableSPInitiated, Default: "false"})
@@ -118,29 +252,144 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
 
-	t.Run("CreateSaml2", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
+	t.Run("CreateExternalOauth with allowed list and jws keys url", func(t *testing.T) {
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
 
-		createSAML2Integration(t, id, issuer, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
+		integration, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: "http://example.com", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name, Default: "[]"})
+
+		assertSecurityIntegration(t, integration, id, "EXTERNAL_OAUTH - CUSTOM", false, "")
+	})
+
+	t.Run("CreateExternalOauth with other options", func(t *testing.T) {
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+
+		integration, id, issuer := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithExternalOauthRsaPublicKey(rsaKey).
+				WithExternalOauthRsaPublicKey2(rsaKey).
+				WithExternalOauthAudienceList(sdk.AudienceListRequest{AudienceList: []sdk.AudienceListItem{{Item: "foo"}}}).
+				WithExternalOauthAnyRoleMode(sdk.ExternalOauthSecurityIntegrationAnyRoleModeEnable).
+				WithExternalOauthScopeDelimiter(" ").
+				WithExternalOauthScopeMappingAttribute("scp").
+				WithComment("foo")
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertExternalOauth(details, externalOauthDetails{
+			enabled:                                    "false",
+			externalOauthIssuer:                        issuer,
+			externalOauthAnyRoleMode:                   string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeEnable),
+			externalOauthScopeMappingAttribute:         "scp",
+			externalOauthRsaPublicKey:                  rsaKey,
+			externalOauthRsaPublicKey2:                 rsaKey,
+			externalOauthBlockedRolesList:              role1.Name,
+			externalOauthAudienceList:                  "foo",
+			externalOauthTokenUserMappingClaim:         "['foo']",
+			externalOauthSnowflakeUserMappingAttribute: string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName),
+			externalOauthScopeDelimiter:                " ",
+			comment:                                    "foo",
+		})
+
+		assertSecurityIntegration(t, integration, id, "EXTERNAL_OAUTH - CUSTOM", false, "foo")
+	})
+
+	t.Run("CreateOauthPartner", func(t *testing.T) {
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+
+		integration, id := createOauthPartner(t, func(r *sdk.CreateOauthForPartnerApplicationsSecurityIntegrationRequest) {
+			r.WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithComment("a").
+				WithEnabled(true).
+				WithOauthIssueRefreshTokens(true).
+				WithOauthRefreshTokenValidity(12345).
+				WithOauthUseSecondaryRoles(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertOauthPartner(details, oauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "12345",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			blockedRolesList:        role1.Name,
+			comment:                 "a",
+		})
+
+		assertSecurityIntegration(t, integration, id, "OAUTH - LOOKER", true, "a")
+	})
+
+	t.Run("CreateOauthCustom", func(t *testing.T) {
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		t.Cleanup(networkPolicyCleanup)
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		role2, role2Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role2Cleanup)
+
+		integration, id := createOauthCustom(t, func(r *sdk.CreateOauthForCustomClientsSecurityIntegrationRequest) {
+			r.WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+				WithComment("a").
+				WithEnabled(true).
+				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithOauthAllowNonTlsRedirectUri(true).
+				WithOauthClientRsaPublicKey(rsaKey).
+				WithOauthClientRsaPublicKey2(rsaKey).
+				WithOauthEnforcePkce(true).
+				WithOauthIssueRefreshTokens(true).
+				WithOauthRefreshTokenValidity(12345).
+				WithOauthUseSecondaryRoles(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit).
+				WithPreAuthorizedRolesList(sdk.PreAuthorizedRolesListRequest{PreAuthorizedRolesList: []sdk.AccountObjectIdentifier{role2.ID()}})
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertOauthCustom(details, oauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "12345",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  role2.Name,
+			blockedRolesList:        role1.Name,
+			networkPolicy:           networkPolicy.Name,
+			comment:                 "a",
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+
+		assertSecurityIntegration(t, integration, id, "OAUTH - CUSTOM", true, "a")
+	})
+
+	t.Run("CreateSaml2", func(t *testing.T) {
+		_, id, issuer := createSAML2Integration(t, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
 			r.WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 				WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}).
-				WithComment(sdk.Pointer("a")).
-				WithSaml2EnableSpInitiated(sdk.Pointer(true)).
-				WithSaml2ForceAuthn(sdk.Pointer(true)).
-				WithSaml2PostLogoutRedirectUrl(sdk.Pointer("http://example.com/logout")).
-				WithSaml2RequestedNameidFormat(sdk.Pointer("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")).
-				WithSaml2SignRequest(sdk.Pointer(true)).
-				WithSaml2SnowflakeAcsUrl(&acsURL).
-				WithSaml2SnowflakeIssuerUrl(&issuerURL).
-				WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label"))
+				WithComment("a").
+				WithSaml2EnableSpInitiated(true).
+				WithSaml2ForceAuthn(true).
+				WithSaml2PostLogoutRedirectUrl("http://example.com/logout").
+				WithSaml2RequestedNameidFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified").
+				WithSaml2SignRequest(true).
+				WithSaml2SnowflakeAcsUrl(acsURL).
+				WithSaml2SnowflakeIssuerUrl(issuerURL).
+				WithSaml2SpInitiatedLoginPageLabel("label")
 			// TODO: fix after format clarification
 			// WithSaml2SnowflakeX509Cert(sdk.Pointer(x509))
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSAML2Describe(details, saml2details{
+		assertSAML2Describe(details, saml2Details{
 			provider:                  "Custom",
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
@@ -166,11 +415,10 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 		t.Cleanup(networkPolicyCleanup)
 
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, func(r *sdk.CreateScimSecurityIntegrationRequest) {
-			r.WithComment(sdk.Pointer("a")).
-				WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
-				WithSyncPassword(sdk.Pointer(false))
+		_, id := createSCIMIntegration(t, func(r *sdk.CreateScimSecurityIntegrationRequest) {
+			r.WithComment("a").
+				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithSyncPassword(false)
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
@@ -181,29 +429,329 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
 	})
+	t.Run("AlterExternalOauth with allowed list and jws keys url", func(t *testing.T) {
+		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		setRequest := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewExternalOauthIntegrationSetRequest().
+					WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://test.com"}}).
+					WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}),
+			)
+		err := client.SecurityIntegrations.AlterExternalOauth(ctx, setRequest)
+		require.NoError(t, err)
 
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: "http://test.com", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name, Default: "[]"})
+	})
+	t.Run("AlterExternalOauth with other options", func(t *testing.T) {
+		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthRsaPublicKey(rsaKey).
+				WithExternalOauthRsaPublicKey2(rsaKey)
+		})
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		newIssuer := testClientHelper().Ids.Alpha()
+		setRequest := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewExternalOauthIntegrationSetRequest().
+					WithEnabled(true).
+					WithExternalOauthIssuer(newIssuer).
+					WithExternalOauthTokenUserMappingClaim([]sdk.TokenUserMappingClaim{{Claim: "bar"}}).
+					WithExternalOauthSnowflakeUserMappingAttribute(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress).
+					WithExternalOauthBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+					WithExternalOauthRsaPublicKey(rsaKey).
+					WithExternalOauthRsaPublicKey2(rsaKey).
+					WithExternalOauthAudienceList(sdk.AudienceListRequest{AudienceList: []sdk.AudienceListItem{{Item: "foo"}}}).
+					WithExternalOauthAnyRoleMode(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable).
+					WithExternalOauthScopeDelimiter(" ").
+					WithComment("foo"),
+			)
+		err := client.SecurityIntegrations.AlterExternalOauth(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertExternalOauth(details, externalOauthDetails{
+			enabled:                                    "true",
+			externalOauthIssuer:                        newIssuer,
+			externalOauthAnyRoleMode:                   string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable),
+			externalOauthRsaPublicKey:                  rsaKey,
+			externalOauthRsaPublicKey2:                 rsaKey,
+			externalOauthBlockedRolesList:              role1.Name,
+			externalOauthAudienceList:                  "foo",
+			externalOauthTokenUserMappingClaim:         "['bar']",
+			externalOauthSnowflakeUserMappingAttribute: string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress),
+			externalOauthScopeDelimiter:                " ",
+			comment:                                    "foo",
+		})
+
+		unsetRequest := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewExternalOauthIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithExternalOauthAudienceList(true),
+			)
+		err = client.SecurityIntegrations.AlterExternalOauth(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_AUDIENCE_LIST", Type: "List", Value: "", Default: "[]"})
+	})
+
+	t.Run("AlterExternalOauth - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterExternalOauth(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterExternalOauth(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
+	t.Run("AlterOauthPartner", func(t *testing.T) {
+		_, id := createOauthPartner(t, func(r *sdk.CreateOauthForPartnerApplicationsSecurityIntegrationRequest) {
+			r.WithOauthRedirectUri("http://example.com")
+		})
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+
+		setRequest := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewOauthForPartnerApplicationsIntegrationSetRequest().
+					WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+					WithComment("a").
+					WithEnabled(true).
+					WithOauthIssueRefreshTokens(true).
+					WithOauthRedirectUri("http://example2.com").
+					WithOauthRefreshTokenValidity(22222).
+					WithOauthUseSecondaryRoles(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			)
+		err := client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertOauthPartner(details, oauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "22222",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  "",
+			blockedRolesList:        "ACCOUNTADMIN,SECURITYADMIN",
+			networkPolicy:           "",
+			comment:                 "a",
+		})
+
+		unsetRequest := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewOauthForPartnerApplicationsIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithOauthUseSecondaryRoles(true),
+			)
+		err = client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: "NONE", Default: "NONE"})
+	})
+
+	t.Run("AlterOauthPartner - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id := createOauthPartner(t, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
+	t.Run("AlterOauthCustom", func(t *testing.T) {
+		_, id := createOauthCustom(t, nil)
+
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		t.Cleanup(networkPolicyCleanup)
+		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role1Cleanup)
+		role2, role2Cleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(role2Cleanup)
+
+		setRequest := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewOauthForCustomClientsIntegrationSetRequest().
+					WithEnabled(true).
+					WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
+					WithComment("a").
+					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithOauthAllowNonTlsRedirectUri(true).
+					WithOauthClientRsaPublicKey(rsaKey).
+					WithOauthClientRsaPublicKey2(rsaKey).
+					WithOauthEnforcePkce(true).
+					WithOauthIssueRefreshTokens(true).
+					WithOauthRedirectUri("http://example2.com").
+					WithOauthRefreshTokenValidity(22222).
+					WithOauthUseSecondaryRoles(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit).
+					WithPreAuthorizedRolesList(sdk.PreAuthorizedRolesListRequest{PreAuthorizedRolesList: []sdk.AccountObjectIdentifier{role2.ID()}}),
+			)
+		err := client.SecurityIntegrations.AlterOauthForCustomClients(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertOauthCustom(details, oauthPartnerDetails{
+			enabled:                 "true",
+			oauthIssueRefreshTokens: "true",
+			refreshTokenValidity:    "22222",
+			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
+			preAuthorizedRolesList:  role2.Name,
+			blockedRolesList:        role1.Name,
+			networkPolicy:           networkPolicy.Name,
+			comment:                 "a",
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+
+		unsetRequest := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewOauthForCustomClientsIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithOauthUseSecondaryRoles(true).
+					WithNetworkPolicy(true).
+					WithOauthClientRsaPublicKey(true).
+					WithOauthClientRsaPublicKey2(true),
+			)
+		err = client.SecurityIntegrations.AlterOauthForCustomClients(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: "NONE", Default: "NONE"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("AlterOauthCustom - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id := createOauthCustom(t, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterOauthForCustomClients(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterOauthForCustomClients(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
-		createSAML2Integration(t, id, issuer, nil)
+		_, id, issuer := createSAML2Integration(t, nil)
 
 		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).
 			WithSet(
-				sdk.NewSaml2IntegrationSetRequest().
-					WithEnabled(sdk.Pointer(true)).
-					WithSaml2Issuer(sdk.Pointer(issuer)).
-					WithSaml2SsoUrl(sdk.Pointer("http://example.com")).
-					WithSaml2Provider(sdk.Pointer("OKTA")).
-					WithSaml2X509Cert(sdk.Pointer(cert)).
-					WithComment(sdk.Pointer("a")).
-					WithSaml2EnableSpInitiated(sdk.Pointer(true)).
-					WithSaml2ForceAuthn(sdk.Pointer(true)).
-					WithSaml2PostLogoutRedirectUrl(sdk.Pointer("http://example.com/logout")).
-					WithSaml2RequestedNameidFormat(sdk.Pointer("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")).
-					WithSaml2SignRequest(sdk.Pointer(true)).
-					WithSaml2SnowflakeAcsUrl(&acsURL).
-					WithSaml2SnowflakeIssuerUrl(&issuerURL).
-					WithSaml2SpInitiatedLoginPageLabel(sdk.Pointer("label")).
+				*sdk.NewSaml2IntegrationSetRequest().
+					WithEnabled(true).
+					WithSaml2Issuer(issuer).
+					WithSaml2SsoUrl("http://example.com").
+					WithSaml2Provider("OKTA").
+					WithSaml2X509Cert(cert).
+					WithComment("a").
+					WithSaml2EnableSpInitiated(true).
+					WithSaml2ForceAuthn(true).
+					WithSaml2PostLogoutRedirectUrl("http://example.com/logout").
+					WithSaml2RequestedNameidFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified").
+					WithSaml2SignRequest(true).
+					WithSaml2SnowflakeAcsUrl(acsURL).
+					WithSaml2SnowflakeIssuerUrl(issuerURL).
+					WithSaml2SpInitiatedLoginPageLabel("label").
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
 				// TODO: fix after format clarification
@@ -215,7 +763,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSAML2Describe(details, saml2details{
+		assertSAML2Describe(details, saml2Details{
 			provider:                  "OKTA",
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
@@ -234,11 +782,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		unsetRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).
 			WithUnset(
-				sdk.NewSaml2IntegrationUnsetRequest().
-					WithSaml2ForceAuthn(sdk.Pointer(true)).
-					WithSaml2RequestedNameidFormat(sdk.Pointer(true)).
-					WithSaml2PostLogoutRedirectUrl(sdk.Pointer(true)).
-					WithComment(sdk.Pointer(true)),
+				*sdk.NewSaml2IntegrationUnsetRequest().
+					WithSaml2ForceAuthn(true).
+					WithSaml2RequestedNameidFormat(true).
+					WithSaml2PostLogoutRedirectUrl(true).
+					WithComment(true),
 			)
 		err = client.SecurityIntegrations.AlterSaml2(ctx, unsetRequest)
 		require.NoError(t, err)
@@ -252,11 +800,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("AlterSAML2Integration - REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
-		createSAML2Integration(t, id, issuer, nil)
+		_, id, _ := createSAML2Integration(t, nil)
 
-		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(sdk.Pointer(true))
+		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(true)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
 	})
@@ -265,9 +811,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
-		createSAML2Integration(t, id, issuer, nil)
+		_, id, _ := createSAML2Integration(t, nil)
 
 		tagValue := "abc"
 		tags := []sdk.TagAssociation{
@@ -299,19 +843,18 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("AlterSCIMIntegration", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, nil)
+		_, id := createSCIMIntegration(t, nil)
 
 		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 		t.Cleanup(networkPolicyCleanup)
 
 		setRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
-				sdk.NewScimIntegrationSetRequest().
-					WithNetworkPolicy(sdk.Pointer(sdk.NewAccountObjectIdentifier(networkPolicy.Name))).
-					WithEnabled(sdk.Bool(true)).
-					WithSyncPassword(sdk.Bool(false)).
-					WithComment(sdk.String("altered")),
+				*sdk.NewScimIntegrationSetRequest().
+					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithEnabled(true).
+					WithSyncPassword(false).
+					WithComment("altered"),
 			)
 		err := client.SecurityIntegrations.AlterScim(ctx, setRequest)
 		require.NoError(t, err)
@@ -323,9 +866,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		unsetRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithUnset(
-				sdk.NewScimIntegrationUnsetRequest().
-					WithNetworkPolicy(sdk.Bool(true)).
-					WithSyncPassword(sdk.Bool(true)),
+				*sdk.NewScimIntegrationUnsetRequest().
+					WithNetworkPolicy(true).
+					WithSyncPassword(true),
 			)
 		err = client.SecurityIntegrations.AlterScim(ctx, unsetRequest)
 		require.NoError(t, err)
@@ -340,8 +883,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, nil)
+		_, id := createSCIMIntegration(t, nil)
 
 		tagValue := "abc"
 		tags := []sdk.TagAssociation{
@@ -373,8 +915,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, nil)
+		_, id := createSCIMIntegration(t, nil)
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NotNil(t, si)
@@ -396,8 +937,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, nil)
+		_, id := createSCIMIntegration(t, nil)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
@@ -406,22 +946,60 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("ShowByID", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		createSCIMIntegration(t, id, nil)
+		_, id := createSCIMIntegration(t, nil)
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
 	})
 
-	t.Run("Show SAML2", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		si1 := createSAML2Integration(t, id, testClientHelper().Ids.Alpha(), nil)
-		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		si2 := createSAML2Integration(t, id2, testClientHelper().Ids.Alpha(), nil)
+	t.Run("Show ExternalOauth", func(t *testing.T) {
+		si1, id1, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+		})
+		si2, _, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
+			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example2.com"}})
+		})
 
-		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
-			Pattern: sdk.Pointer(id.Name()),
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
+	})
+
+	t.Run("Show OauthPartner", func(t *testing.T) {
+		si1, id1 := createOauthPartner(t, nil)
+		// more than one oauth partner integration is not allowed, create a custom one
+		si2, _ := createOauthCustom(t, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
+	})
+
+	t.Run("Show OauthCustom", func(t *testing.T) {
+		si1, id1 := createOauthCustom(t, nil)
+		si2, _ := createOauthCustom(t, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
+		}))
+		require.NoError(t, err)
+		assert.Contains(t, returnedIntegrations, *si1)
+		assert.NotContains(t, returnedIntegrations, *si2)
+	})
+
+	t.Run("Show SAML2", func(t *testing.T) {
+		si1, id1, _ := createSAML2Integration(t, nil)
+		si2, _, _ := createSAML2Integration(t, nil)
+
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
 		}))
 		require.NoError(t, err)
 		assert.Contains(t, returnedIntegrations, *si1)
@@ -429,13 +1007,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("Show SCIM", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		si1 := createSCIMIntegration(t, id, nil)
-		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		si2 := createSCIMIntegration(t, id2, nil)
+		si1, id1 := createSCIMIntegration(t, nil)
+		si2, _ := createSCIMIntegration(t, nil)
 
-		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(&sdk.Like{
-			Pattern: sdk.Pointer(id.Name()),
+		returnedIntegrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{
+			Pattern: sdk.Pointer(id1.Name()),
 		}))
 		require.NoError(t, err)
 		assert.Contains(t, returnedIntegrations, *si1)

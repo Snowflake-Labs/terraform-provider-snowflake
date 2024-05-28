@@ -598,7 +598,7 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(cleanupDatabase)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
@@ -639,7 +639,7 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 	accountRoleName := accountRoleId.Name()
 	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
 
-	_, cleanupAccountRole := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
+	_, cleanupAccountRole := acc.TestClient().Role.CreateRoleWithIdentifier(t, accountRoleId)
 	t.Cleanup(cleanupAccountRole)
 
 	configVariables := config.Variables{
@@ -883,8 +883,8 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	accountRoleName := accountRoleId.Name()
-	newDatabaseOwningAccountRoleName := acc.TestClient().Ids.Alpha()
+	newDatabaseOwningAccountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newDatabaseOwningAccountRoleName := newDatabaseOwningAccountRoleId.Name()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(newDatabaseOwningAccountRoleName),
@@ -901,11 +901,11 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					role, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
+					role, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, accountRoleId)
 					t.Cleanup(roleCleanup)
-					_, newRoleCleanup := acc.TestClient().Role.CreateRoleWithName(t, newDatabaseOwningAccountRoleName)
+					_, newRoleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, newDatabaseOwningAccountRoleId)
 					t.Cleanup(newRoleCleanup)
-					database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(databaseCleanup)
 					acc.TestClient().Role.GrantOwnershipOnAccountObject(t, role.ID(), database.ID(), sdk.ObjectTypeDatabase)
 				},

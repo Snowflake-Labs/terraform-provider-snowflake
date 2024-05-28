@@ -98,7 +98,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationSameAsStepN(2),
 				ConfigVariables: configVariables,
-				Check: externalTableContainsData(name, func(rows []map[string]*any) bool {
+				Check: externalTableContainsData(id, func(rows []map[string]*any) bool {
 					expectedNames := []string{"one", "two", "three"}
 					names := make([]string, 3)
 					for i, row := range rows {
@@ -132,7 +132,8 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -175,7 +176,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column.1.name", "age"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "number(2, 2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.as", "value:age::number"),
-					expectTableToHaveColumnDataTypes(name, []sdk.DataType{
+					expectTableToHaveColumnDataTypes(id, []sdk.DataType{
 						sdk.DataTypeVariant,
 						"VARCHAR(200)",
 						"NUMBER(2,2)",
@@ -190,7 +191,8 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
@@ -238,7 +240,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column.2.name", "age"),
 					resource.TestCheckResourceAttr(resourceName, "column.2.type", "number(2, 2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.2.as", "value:age::number"),
-					expectTableDDLContains(name, "partition by (FILENAME)"),
+					expectTableDDLContains(id, "partition by (FILENAME)"),
 				),
 			},
 		},
@@ -322,11 +324,10 @@ func getExternalTableTestEnvsOrSkipTest(t *testing.T) (string, string, string) {
 	return awsBucketURL, awsKeyId, awsSecretKey
 }
 
-func externalTableContainsData(name string, contains func(rows []map[string]*any) bool) func(state *terraform.State) error {
+func externalTableContainsData(id sdk.SchemaObjectIdentifier, contains func(rows []map[string]*any) bool) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(name)
 		rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("select * from %s", id.FullyQualifiedName()))
 		if err != nil {
 			return err
@@ -357,11 +358,10 @@ func publishExternalTablesTestData(t *testing.T, stageName sdk.SchemaObjectIdent
 	}
 }
 
-func expectTableToHaveColumnDataTypes(tableName string, expectedDataTypes []sdk.DataType) func(s *terraform.State) error {
+func expectTableToHaveColumnDataTypes(id sdk.SchemaObjectIdentifier, expectedDataTypes []sdk.DataType) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 		columnsDesc, err := client.ExternalTables.DescribeColumns(ctx, sdk.NewDescribeExternalTableColumnsRequest(id))
 		if err != nil {
 			return err
@@ -380,18 +380,17 @@ func expectTableToHaveColumnDataTypes(tableName string, expectedDataTypes []sdk.
 		})
 
 		if !slices.Equal(expectedDataTypes, actualTableDataTypes) {
-			return fmt.Errorf("expected table %s to have columns with data types: %v, got: %v", tableName, expectedDataTypes, actualTableDataTypes)
+			return fmt.Errorf("expected table %s to have columns with data types: %v, got: %v", id.FullyQualifiedName(), expectedDataTypes, actualTableDataTypes)
 		}
 
 		return nil
 	}
 }
 
-func expectTableDDLContains(tableName string, substr string) func(s *terraform.State) error {
+func expectTableDDLContains(id sdk.SchemaObjectIdentifier, substr string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		id := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 
 		rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("select get_ddl('table', '%s')", id.FullyQualifiedName()))
 		if err != nil {

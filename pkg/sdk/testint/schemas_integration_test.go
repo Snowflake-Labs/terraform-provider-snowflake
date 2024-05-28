@@ -83,7 +83,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		tagValue := random.String()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
@@ -116,7 +116,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 			err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 			require.NoError(t, err)
 		})
-		newID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.String())
+		newID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			NewName: newID,
 		})
@@ -178,7 +178,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.String())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		comment := random.Comment()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
@@ -203,7 +203,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.String())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaID, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -237,7 +237,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		tagValue := random.String()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{

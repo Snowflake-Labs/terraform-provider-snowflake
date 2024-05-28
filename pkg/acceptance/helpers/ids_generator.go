@@ -33,10 +33,6 @@ func (c *IdsGenerator) AccountIdentifierWithLocator() sdk.AccountIdentifier {
 	return sdk.NewAccountIdentifierFromAccountLocator(c.context.client.GetAccountLocator())
 }
 
-func (c *IdsGenerator) NewSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), name)
-}
-
 func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.Alpha())
 }
@@ -49,12 +45,40 @@ func (c *IdsGenerator) RandomAccountObjectIdentifierContaining(part string) sdk.
 	return sdk.NewAccountObjectIdentifier(c.AlphaContaining(part))
 }
 
+func (c *IdsGenerator) NewDatabaseObjectIdentifier(name string) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), name)
+}
+
 func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
-	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), c.Alpha())
+	return c.RandomDatabaseObjectIdentifierInDatabase(c.DatabaseId())
+}
+
+func (c *IdsGenerator) RandomDatabaseObjectIdentifierInDatabase(databaseId sdk.AccountObjectIdentifier) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(databaseId.Name(), c.Alpha())
+}
+
+func (c *IdsGenerator) RandomDatabaseObjectIdentifierWithPrefix(prefix string) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), c.AlphaWithPrefix(prefix))
+}
+
+func (c *IdsGenerator) NewSchemaObjectIdentifier(name string) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), name)
+}
+
+func (c *IdsGenerator) NewSchemaObjectIdentifierInSchema(name string, schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierInSchema(schemaId, name)
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
 	return c.RandomSchemaObjectIdentifierInSchema(c.SchemaId())
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithPrefix(prefix string) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), c.AlphaWithPrefix(prefix))
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments []sdk.DataType) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments)
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierInSchema(schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {

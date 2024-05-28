@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,7 +26,7 @@ func TestInt_NetworkRules(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress))
 		require.NoError(t, err)
 
@@ -41,7 +40,7 @@ func TestInt_NetworkRules(t *testing.T) {
 	})
 
 	t.Run("Alter: set and unset", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress))
 		require.NoError(t, err)
 
@@ -69,7 +68,7 @@ func TestInt_NetworkRules(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress))
 		require.NoError(t, err)
 
@@ -84,7 +83,7 @@ func TestInt_NetworkRules(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress).WithComment(sdk.String("some comment")))
 		require.NoError(t, err)
 
@@ -114,7 +113,7 @@ func TestInt_NetworkRules(t *testing.T) {
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress).WithComment(sdk.String("some comment")))
 		require.NoError(t, err)
 
@@ -141,8 +140,6 @@ func TestInt_NetworkRulesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
-
 	cleanupNetworkRuleHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -167,9 +164,8 @@ func TestInt_NetworkRulesShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		name := random.AlphaN(4)
-		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
 		createNetworkRuleHandle(t, id1)
 		createNetworkRuleHandle(t, id2)

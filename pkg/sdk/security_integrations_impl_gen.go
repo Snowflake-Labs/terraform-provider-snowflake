@@ -12,12 +12,42 @@ type securityIntegrations struct {
 	client *Client
 }
 
+func (v *securityIntegrations) CreateExternalOauth(ctx context.Context, request *CreateExternalOauthSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) CreateOauthForPartnerApplications(ctx context.Context, request *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) CreateOauthForCustomClients(ctx context.Context, request *CreateOauthForCustomClientsSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *securityIntegrations) CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) AlterExternalOauth(ctx context.Context, request *AlterExternalOauthSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) AlterOauthForPartnerApplications(ctx context.Context, request *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *securityIntegrations) AlterOauthForCustomClients(ctx context.Context, request *AlterOauthForCustomClientsSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -59,13 +89,105 @@ func (v *securityIntegrations) Show(ctx context.Context, request *ShowSecurityIn
 }
 
 func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
-	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(&Like{
+	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(Like{
 		Pattern: String(id.Name()),
 	}))
 	if err != nil {
 		return nil, err
 	}
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+}
+
+func (r *CreateExternalOauthSecurityIntegrationRequest) toOpts() *CreateExternalOauthSecurityIntegrationOptions {
+	opts := &CreateExternalOauthSecurityIntegrationOptions{
+		OrReplace:                          r.OrReplace,
+		IfNotExists:                        r.IfNotExists,
+		name:                               r.name,
+		Enabled:                            r.Enabled,
+		ExternalOauthType:                  r.ExternalOauthType,
+		ExternalOauthIssuer:                r.ExternalOauthIssuer,
+		ExternalOauthTokenUserMappingClaim: r.ExternalOauthTokenUserMappingClaim,
+		ExternalOauthSnowflakeUserMappingAttribute: r.ExternalOauthSnowflakeUserMappingAttribute,
+		ExternalOauthJwsKeysUrl:                    r.ExternalOauthJwsKeysUrl,
+
+		ExternalOauthRsaPublicKey:  r.ExternalOauthRsaPublicKey,
+		ExternalOauthRsaPublicKey2: r.ExternalOauthRsaPublicKey2,
+
+		ExternalOauthAnyRoleMode:           r.ExternalOauthAnyRoleMode,
+		ExternalOauthScopeDelimiter:        r.ExternalOauthScopeDelimiter,
+		ExternalOauthScopeMappingAttribute: r.ExternalOauthScopeMappingAttribute,
+		Comment:                            r.Comment,
+	}
+	if r.ExternalOauthBlockedRolesList != nil {
+		opts.ExternalOauthBlockedRolesList = &BlockedRolesList{
+			BlockedRolesList: r.ExternalOauthBlockedRolesList.BlockedRolesList,
+		}
+	}
+	if r.ExternalOauthAllowedRolesList != nil {
+		opts.ExternalOauthAllowedRolesList = &AllowedRolesList{
+			AllowedRolesList: r.ExternalOauthAllowedRolesList.AllowedRolesList,
+		}
+	}
+	if r.ExternalOauthAudienceList != nil {
+		opts.ExternalOauthAudienceList = &AudienceList{
+			AudienceList: r.ExternalOauthAudienceList.AudienceList,
+		}
+	}
+	return opts
+}
+
+func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *CreateOauthForPartnerApplicationsSecurityIntegrationOptions {
+	opts := &CreateOauthForPartnerApplicationsSecurityIntegrationOptions{
+		OrReplace:                 r.OrReplace,
+		IfNotExists:               r.IfNotExists,
+		name:                      r.name,
+		OauthClient:               r.OauthClient,
+		OauthRedirectUri:          r.OauthRedirectUri,
+		Enabled:                   r.Enabled,
+		OauthIssueRefreshTokens:   r.OauthIssueRefreshTokens,
+		OauthRefreshTokenValidity: r.OauthRefreshTokenValidity,
+		OauthUseSecondaryRoles:    r.OauthUseSecondaryRoles,
+
+		Comment: r.Comment,
+	}
+	if r.BlockedRolesList != nil {
+		opts.BlockedRolesList = &BlockedRolesList{
+			BlockedRolesList: r.BlockedRolesList.BlockedRolesList,
+		}
+	}
+	return opts
+}
+
+func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) toOpts() *CreateOauthForCustomClientsSecurityIntegrationOptions {
+	opts := &CreateOauthForCustomClientsSecurityIntegrationOptions{
+		OrReplace:                   r.OrReplace,
+		IfNotExists:                 r.IfNotExists,
+		name:                        r.name,
+		OauthClientType:             r.OauthClientType,
+		OauthRedirectUri:            r.OauthRedirectUri,
+		Enabled:                     r.Enabled,
+		OauthAllowNonTlsRedirectUri: r.OauthAllowNonTlsRedirectUri,
+		OauthEnforcePkce:            r.OauthEnforcePkce,
+		OauthUseSecondaryRoles:      r.OauthUseSecondaryRoles,
+
+		OauthIssueRefreshTokens:   r.OauthIssueRefreshTokens,
+		OauthRefreshTokenValidity: r.OauthRefreshTokenValidity,
+		NetworkPolicy:             r.NetworkPolicy,
+		OauthClientRsaPublicKey:   r.OauthClientRsaPublicKey,
+		OauthClientRsaPublicKey2:  r.OauthClientRsaPublicKey2,
+		Comment:                   r.Comment,
+	}
+	if r.PreAuthorizedRolesList != nil {
+		opts.PreAuthorizedRolesList = &PreAuthorizedRolesList{
+			PreAuthorizedRolesList: r.PreAuthorizedRolesList.PreAuthorizedRolesList,
+		}
+	}
+	if r.BlockedRolesList != nil {
+		opts.BlockedRolesList = &BlockedRolesList{
+			BlockedRolesList: r.BlockedRolesList.BlockedRolesList,
+		}
+	}
+	return opts
 }
 
 func (r *CreateSaml2SecurityIntegrationRequest) toOpts() *CreateSaml2SecurityIntegrationOptions {
@@ -105,6 +227,131 @@ func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityInteg
 		NetworkPolicy: r.NetworkPolicy,
 		SyncPassword:  r.SyncPassword,
 		Comment:       r.Comment,
+	}
+	return opts
+}
+
+func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOauthSecurityIntegrationOptions {
+	opts := &AlterExternalOauthSecurityIntegrationOptions{
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &ExternalOauthIntegrationSet{
+			Enabled:                            r.Set.Enabled,
+			ExternalOauthType:                  r.Set.ExternalOauthType,
+			ExternalOauthIssuer:                r.Set.ExternalOauthIssuer,
+			ExternalOauthTokenUserMappingClaim: r.Set.ExternalOauthTokenUserMappingClaim,
+			ExternalOauthSnowflakeUserMappingAttribute: r.Set.ExternalOauthSnowflakeUserMappingAttribute,
+			ExternalOauthJwsKeysUrl:                    r.Set.ExternalOauthJwsKeysUrl,
+
+			ExternalOauthRsaPublicKey:  r.Set.ExternalOauthRsaPublicKey,
+			ExternalOauthRsaPublicKey2: r.Set.ExternalOauthRsaPublicKey2,
+
+			ExternalOauthAnyRoleMode:    r.Set.ExternalOauthAnyRoleMode,
+			ExternalOauthScopeDelimiter: r.Set.ExternalOauthScopeDelimiter,
+			Comment:                     r.Set.Comment,
+		}
+		if r.Set.ExternalOauthBlockedRolesList != nil {
+			opts.Set.ExternalOauthBlockedRolesList = &BlockedRolesList{
+				BlockedRolesList: r.Set.ExternalOauthBlockedRolesList.BlockedRolesList,
+			}
+		}
+		if r.Set.ExternalOauthAllowedRolesList != nil {
+			opts.Set.ExternalOauthAllowedRolesList = &AllowedRolesList{
+				AllowedRolesList: r.Set.ExternalOauthAllowedRolesList.AllowedRolesList,
+			}
+		}
+		if r.Set.ExternalOauthAudienceList != nil {
+			opts.Set.ExternalOauthAudienceList = &AudienceList{
+				AudienceList: r.Set.ExternalOauthAudienceList.AudienceList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &ExternalOauthIntegrationUnset{
+			Enabled:                   r.Unset.Enabled,
+			ExternalOauthAudienceList: r.Unset.ExternalOauthAudienceList,
+		}
+	}
+	return opts
+}
+
+func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *AlterOauthForPartnerApplicationsSecurityIntegrationOptions {
+	opts := &AlterOauthForPartnerApplicationsSecurityIntegrationOptions{
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
+			Enabled:                   r.Set.Enabled,
+			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
+			OauthRedirectUri:          r.Set.OauthRedirectUri,
+			OauthRefreshTokenValidity: r.Set.OauthRefreshTokenValidity,
+			OauthUseSecondaryRoles:    r.Set.OauthUseSecondaryRoles,
+
+			Comment: r.Set.Comment,
+		}
+		if r.Set.BlockedRolesList != nil {
+			opts.Set.BlockedRolesList = &BlockedRolesList{
+				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{
+			Enabled:                r.Unset.Enabled,
+			OauthUseSecondaryRoles: r.Unset.OauthUseSecondaryRoles,
+		}
+	}
+	return opts
+}
+
+func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOauthForCustomClientsSecurityIntegrationOptions {
+	opts := &AlterOauthForCustomClientsSecurityIntegrationOptions{
+		IfExists:  r.IfExists,
+		name:      r.name,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &OauthForCustomClientsIntegrationSet{
+			Enabled:                     r.Set.Enabled,
+			OauthRedirectUri:            r.Set.OauthRedirectUri,
+			OauthAllowNonTlsRedirectUri: r.Set.OauthAllowNonTlsRedirectUri,
+			OauthEnforcePkce:            r.Set.OauthEnforcePkce,
+
+			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
+			OauthRefreshTokenValidity: r.Set.OauthRefreshTokenValidity,
+			OauthUseSecondaryRoles:    r.Set.OauthUseSecondaryRoles,
+			NetworkPolicy:             r.Set.NetworkPolicy,
+			OauthClientRsaPublicKey:   r.Set.OauthClientRsaPublicKey,
+			OauthClientRsaPublicKey2:  r.Set.OauthClientRsaPublicKey2,
+			Comment:                   r.Set.Comment,
+		}
+		if r.Set.PreAuthorizedRolesList != nil {
+			opts.Set.PreAuthorizedRolesList = &PreAuthorizedRolesList{
+				PreAuthorizedRolesList: r.Set.PreAuthorizedRolesList.PreAuthorizedRolesList,
+			}
+		}
+		if r.Set.BlockedRolesList != nil {
+			opts.Set.BlockedRolesList = &BlockedRolesList{
+				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &OauthForCustomClientsIntegrationUnset{
+			Enabled:                  r.Unset.Enabled,
+			NetworkPolicy:            r.Unset.NetworkPolicy,
+			OauthClientRsaPublicKey:  r.Unset.OauthClientRsaPublicKey,
+			OauthClientRsaPublicKey2: r.Unset.OauthClientRsaPublicKey2,
+			OauthUseSecondaryRoles:   r.Unset.OauthUseSecondaryRoles,
+		}
 	}
 	return opts
 }

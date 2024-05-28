@@ -54,10 +54,9 @@ func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
-// TODO [SNOW-955520]: we have to control the name
-func (c *DatabaseClient) CreateDatabaseWithName(t *testing.T, name string) (*sdk.Database, func()) {
+func (c *DatabaseClient) CreateDatabaseWithIdentifier(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
-	return c.CreateDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateDatabaseOptions{})
+	return c.CreateDatabaseWithOptions(t, id, &sdk.CreateDatabaseOptions{})
 }
 
 func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -32,23 +31,23 @@ func (c *SchemaClient) CreateSchema(t *testing.T) (*sdk.Schema, func()) {
 
 func (c *SchemaClient) CreateSchemaInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.Schema, func()) {
 	t.Helper()
-	return c.CreateSchemaInDatabaseWithIdentifier(t, databaseId, random.AlphaN(12))
+	return c.CreateSchemaWithIdentifier(t, c.ids.RandomDatabaseObjectIdentifierInDatabase(databaseId))
 }
 
 func (c *SchemaClient) CreateSchemaWithName(t *testing.T, name string) (*sdk.Schema, func()) {
 	t.Helper()
-	return c.CreateSchemaInDatabaseWithIdentifier(t, c.ids.DatabaseId(), name)
+	return c.CreateSchemaWithIdentifier(t, c.ids.NewDatabaseObjectIdentifier(name))
 }
 
-func (c *SchemaClient) CreateSchemaInDatabaseWithIdentifier(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.Schema, func()) {
+func (c *SchemaClient) CreateSchemaWithIdentifier(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, func()) {
 	t.Helper()
 	ctx := context.Background()
-	schemaID := sdk.NewDatabaseObjectIdentifier(databaseId.Name(), name)
-	err := c.client().Create(ctx, schemaID, nil)
+
+	err := c.client().Create(ctx, id, nil)
 	require.NoError(t, err)
-	schema, err := c.client().ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(databaseId.Name(), name))
+	schema, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
-	return schema, c.DropSchemaFunc(t, schemaID)
+	return schema, c.DropSchemaFunc(t, id)
 }
 
 func (c *SchemaClient) DropSchemaFunc(t *testing.T, id sdk.DatabaseObjectIdentifier) func() {

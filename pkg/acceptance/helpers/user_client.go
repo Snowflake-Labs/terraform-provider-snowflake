@@ -29,10 +29,9 @@ func (c *UserClient) CreateUser(t *testing.T) (*sdk.User, func()) {
 	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{})
 }
 
-// TODO [SNOW-955520]: we have to control the name
-func (c *UserClient) CreateUserWithName(t *testing.T, name string) (*sdk.User, func()) {
+func (c *UserClient) CreateUserWithPrefix(t *testing.T, prefix string) (*sdk.User, func()) {
 	t.Helper()
-	return c.CreateUserWithOptions(t, sdk.NewAccountObjectIdentifier(name), &sdk.CreateUserOptions{})
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifierWithPrefix(prefix), &sdk.CreateUserOptions{})
 }
 
 func (c *UserClient) CreateUserWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateUserOptions) (*sdk.User, func()) {

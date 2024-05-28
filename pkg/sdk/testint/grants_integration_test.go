@@ -1785,12 +1785,9 @@ func TestInt_ShowGrants(t *testing.T) {
 	})
 
 	t.Run("handles unquoted granted object names", func(t *testing.T) {
-		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-		}
 		// This name is returned as unquoted from Snowflake
 		name := "G6TM2"
-		table, tableCleanup := testClientHelper().Table.CreateTableWithColumns(t, testClientHelper().Ids.SchemaId(), name, columns)
+		table, tableCleanup := testClientHelper().Table.CreateTableWithName(t, name)
 		t.Cleanup(tableCleanup)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
