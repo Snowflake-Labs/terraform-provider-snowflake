@@ -18,7 +18,15 @@ variable "catalog" {
   type = string
 }
 
+variable "replace_invalid_characters" {
+  type = string
+}
+
 variable "default_ddl_collation" {
+  type = string
+}
+
+variable "storage_serialization_policy" {
   type = string
 }
 

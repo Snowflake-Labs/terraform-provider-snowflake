@@ -25,6 +25,30 @@ func (c *DatabaseClient) client() sdk.Databases {
 	return c.context.client.Databases
 }
 
+func (c *DatabaseClient) CreatePrimaryDatabase(t *testing.T, enableReplicationTo []sdk.AccountIdentifier) (*sdk.Database, sdk.ExternalObjectIdentifier, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	primaryDatabase, primaryDatabaseCleanup := c.CreateDatabase(t)
+
+	err := c.client().AlterReplication(ctx, primaryDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
+		EnableReplication: &sdk.EnableReplication{
+			ToAccounts:         enableReplicationTo,
+			IgnoreEditionCheck: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
+
+	organizationName, err := c.context.client.ContextFunctions.CurrentOrganizationName(ctx)
+	require.NoError(t, err)
+
+	accountName, err := c.context.client.ContextFunctions.CurrentAccountName(ctx)
+	require.NoError(t, err)
+
+	externalPrimaryId := sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier(organizationName, accountName), primaryDatabase.ID())
+	return primaryDatabase, externalPrimaryId, primaryDatabaseCleanup
+}
+
 func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	t.Helper()
 	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})

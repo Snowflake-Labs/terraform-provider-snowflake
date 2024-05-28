@@ -32,36 +32,15 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 	},
-	"data_retention_time_in_days": {
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeInt,
-					Required: true,
-				},
-			},
-		},
-		Computed:    true,
-		Optional:    true,
-		Description: "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
-	},
-	"max_data_extension_time_in_days": {
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeInt,
-					Required: true,
-				},
-			},
-		},
-		Computed:    true,
-		Optional:    true,
-		Description: "Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).",
-	},
+	"data_retention_time_in_days": nestedProperty(
+		schema.TypeInt,
+		"Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
+	),
+	"max_data_extension_time_in_days": nestedProperty(
+		schema.TypeInt,
+		"Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).",
+	),
+	// TODO: Below parameters should be nested properties
 	"external_volume": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -74,17 +53,31 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Description:      "The database parameter that specifies the default catalog to use for Iceberg tables.",
 	},
+	"replace_invalid_characters": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.",
+	},
 	"default_ddl_collation": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).",
+	},
+	"storage_serialization_policy": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true),
+		Description:      fmt.Sprintf("Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == ""
+		},
 	},
 	"log_level": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == "OFF" && newValue == ""
+			return d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 	},
@@ -93,7 +86,7 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == "OFF" && newValue == ""
+			return d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 	},
@@ -130,15 +123,8 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	secondaryDatabaseId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	primaryDatabaseId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("as_replica_of").(string))
 
-	var dataRetentionTimeInDays *int
-	if dataRetention := GetFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value"); dataRetention != nil {
-		dataRetentionTimeInDays = dataRetention
-	}
-
-	var maxDataExtensionTimeInDays *int
-	if dataExtension := GetFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value"); dataExtension != nil {
-		maxDataExtensionTimeInDays = dataExtension
-	}
+	dataRetentionTimeInDays, _ := GetPropertyOfFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value")
+	maxDataExtensionTimeInDays, _ := GetPropertyOfFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value")
 
 	var externalVolume *sdk.AccountObjectIdentifier
 	if v, ok := d.GetOk("external_volume"); ok {
@@ -148,6 +134,11 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	var catalog *sdk.AccountObjectIdentifier
 	if v, ok := d.GetOk("catalog"); ok {
 		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
+	}
+
+	var storageSerializationPolicy *sdk.StorageSerializationPolicy
+	if v, ok := d.GetOk("storage_serialization_policy"); ok {
+		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(v.(string)))
 	}
 
 	var logLevel *sdk.LogLevel
@@ -166,7 +157,9 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 		MaxDataExtensionTimeInDays: maxDataExtensionTimeInDays,
 		ExternalVolume:             externalVolume,
 		Catalog:                    catalog,
+		ReplaceInvalidCharacters:   GetPropertyAsPointer[bool](d, "replace_invalid_characters"),
 		DefaultDDLCollation:        GetPropertyAsPointer[string](d, "default_ddl_collation"),
+		StorageSerializationPolicy: storageSerializationPolicy,
 		LogLevel:                   logLevel,
 		TraceLevel:                 traceLevel,
 		Comment:                    GetPropertyAsPointer[string](d, "comment"),
@@ -185,41 +178,42 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	secondaryDatabaseId := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
-		newName := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
-			NewName: &newName,
+			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newName))
-		secondaryDatabaseId = newName
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		secondaryDatabaseId = newId
 	}
 
-	runSet := false
-	databaseSetRequest := sdk.DatabaseSet{}
-
-	runUnset := false
-	databaseUnsetRequest := sdk.DatabaseUnset{}
+	var databaseSetRequest sdk.DatabaseSet
+	var databaseUnsetRequest sdk.DatabaseUnset
 
 	if d.HasChange("data_retention_time_in_days") {
 		dataRetentionObject, ok := d.GetOk("data_retention_time_in_days")
 		if ok && len(dataRetentionObject.([]any)) > 0 {
-			runSet = true
-			databaseSetRequest.DataRetentionTimeInDays = GetFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value")
+			dataRetentionTimeInDays, err := GetPropertyOfFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value")
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			databaseSetRequest.DataRetentionTimeInDays = dataRetentionTimeInDays
 		} else {
-			runUnset = true
 			databaseUnsetRequest.DataRetentionTimeInDays = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("max_data_extension_time_in_days") {
-		maxDataExtensionTimeInDays, ok := d.GetOk("max_data_extension_time_in_days")
-		if ok && len(maxDataExtensionTimeInDays.([]any)) > 0 {
-			runSet = true
-			databaseSetRequest.MaxDataExtensionTimeInDays = GetFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value")
+		maxDataExtensionTimeInDaysObject, ok := d.GetOk("max_data_extension_time_in_days")
+		if ok && len(maxDataExtensionTimeInDaysObject.([]any)) > 0 {
+			maxDataExtensionTimeInDays, err := GetPropertyOfFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value")
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			databaseSetRequest.MaxDataExtensionTimeInDays = maxDataExtensionTimeInDays
 		} else {
-			runUnset = true
 			databaseUnsetRequest.MaxDataExtensionTimeInDays = sdk.Bool(true)
 		}
 	}
@@ -227,10 +221,8 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	if d.HasChange("external_volume") {
 		externalVolume := d.Get("external_volume").(string)
 		if len(externalVolume) > 0 {
-			runSet = true
 			databaseSetRequest.ExternalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(externalVolume))
 		} else {
-			runUnset = true
 			databaseUnsetRequest.ExternalVolume = sdk.Bool(true)
 		}
 	}
@@ -238,32 +230,43 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	if d.HasChange("catalog") {
 		catalog := d.Get("catalog").(string)
 		if len(catalog) > 0 {
-			runSet = true
 			databaseSetRequest.Catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(catalog))
 		} else {
-			runUnset = true
 			databaseUnsetRequest.Catalog = sdk.Bool(true)
+		}
+	}
+
+	if d.HasChange("replace_invalid_characters") {
+		if d.Get("replace_invalid_characters").(bool) {
+			databaseSetRequest.ReplaceInvalidCharacters = sdk.Bool(true)
+		} else {
+			databaseUnsetRequest.ReplaceInvalidCharacters = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("default_ddl_collation") {
 		defaultDdlCollation := d.Get("default_ddl_collation").(string)
 		if len(defaultDdlCollation) > 0 {
-			runSet = true
 			databaseSetRequest.DefaultDDLCollation = &defaultDdlCollation
 		} else {
-			runUnset = true
 			databaseUnsetRequest.DefaultDDLCollation = sdk.Bool(true)
+		}
+	}
+
+	if d.HasChange("storage_serialization_policy") {
+		storageSerializationPolicy := d.Get("storage_serialization_policy").(string)
+		if len(storageSerializationPolicy) > 0 {
+			databaseSetRequest.StorageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(storageSerializationPolicy))
+		} else {
+			databaseUnsetRequest.StorageSerializationPolicy = sdk.Bool(true)
 		}
 	}
 
 	if d.HasChange("log_level") {
 		logLevel := d.Get("log_level").(string)
 		if len(logLevel) > 0 {
-			runSet = true
 			databaseSetRequest.LogLevel = sdk.Pointer(sdk.LogLevel(logLevel))
 		} else {
-			runUnset = true
 			databaseUnsetRequest.LogLevel = sdk.Bool(true)
 		}
 	}
@@ -271,10 +274,8 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	if d.HasChange("trace_level") {
 		traceLevel := d.Get("trace_level").(string)
 		if len(traceLevel) > 0 {
-			runSet = true
 			databaseSetRequest.TraceLevel = sdk.Pointer(sdk.TraceLevel(traceLevel))
 		} else {
-			runUnset = true
 			databaseUnsetRequest.TraceLevel = sdk.Bool(true)
 		}
 	}
@@ -282,15 +283,13 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
 		if len(comment) > 0 {
-			runSet = true
 			databaseSetRequest.Comment = &comment
 		} else {
-			runUnset = true
 			databaseUnsetRequest.Comment = sdk.Bool(true)
 		}
 	}
 
-	if runSet {
+	if (databaseSetRequest != sdk.DatabaseSet{}) {
 		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
 			Set: &databaseSetRequest,
 		})
@@ -299,7 +298,7 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if runUnset {
+	if (databaseUnsetRequest != sdk.DatabaseUnset{}) {
 		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
 			Unset: &databaseUnsetRequest,
 		})
@@ -409,6 +408,18 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		case "TRACE_LEVEL":
 			if err := d.Set("trace_level", secondaryDatabaseParameter.Value); err != nil {
+				return diag.FromErr(err)
+			}
+		case "REPLACE_INVALID_CHARACTERS":
+			boolValue, err := strconv.ParseBool(secondaryDatabaseParameter.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("replace_invalid_characters", boolValue); err != nil {
+				return diag.FromErr(err)
+			}
+		case "STORAGE_SERIALIZATION_POLICY":
+			if err := d.Set("storage_serialization_policy", secondaryDatabaseParameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		}

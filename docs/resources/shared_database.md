@@ -12,9 +12,31 @@ A shared database creates a database from a share provided by another Snowflake 
 ## Example Usage
 
 ```terraform
+# 1. Preparing database to share
+resource "snowflake_share" "test" {
+  provider = primary_account # notice the provider fields
+  name     = "share_name"
+  accounts = ["<secondary_account_organization_name>.<secondary_account_name>"]
+}
+
+resource "snowflake_database" "test" {
+  provider = primary_account
+  name     = "shared_database"
+}
+
+resource "snowflake_grant_privileges_to_share" "test" {
+  provider    = primary_account
+  to_share    = snowflake_share.test.name
+  privileges  = ["USAGE"]
+  on_database = snowflake_database.test.name
+}
+
+# 2. Creating shared database
 resource "snowflake_shared_database" "test" {
-  name                  = "shared_database"
-  from_share            = "organization_name.account_name.share_name"
+  provider              = secondary_account
+  depends_on            = [snowflake_grant_privileges_to_share.test]
+  name                  = snowflake_database.test.name # shared database should have the same as the "imported" one
+  from_share            = "<primary_account_organization_name>.<primary_account_name>.${snowflake_share.test.name}"
   is_transient          = false
   external_volume       = "external_volume_name"
   catalog               = "catalog_name"
@@ -30,7 +52,7 @@ resource "snowflake_shared_database" "test" {
 
 ### Required
 
-- `from_share` (String) A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `"<organization_name>"."<account_name>"."<share_name>"`.
+- `from_share` (String) A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `"<provider_account>"."<share_name>"`.
 - `name` (String) Specifies the identifier for the database; must be unique for your account.
 
 ### Optional
@@ -39,8 +61,9 @@ resource "snowflake_shared_database" "test" {
 - `comment` (String) Specifies a comment for the database.
 - `default_ddl_collation` (String) Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).
 - `external_volume` (String) The database parameter that specifies the default external volume to use for Iceberg tables.
-- `is_transient` (Boolean) Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `log_level` (String) Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: [TRACE DEBUG INFO WARN ERROR FATAL OFF]. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).
+- `replace_invalid_characters` (Boolean) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.
+- `storage_serialization_policy` (String) Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
 - `trace_level` (String) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).
 
 ### Read-Only

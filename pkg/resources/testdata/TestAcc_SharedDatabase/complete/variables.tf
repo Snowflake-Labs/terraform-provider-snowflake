@@ -6,10 +6,6 @@ variable "from_share" {
   type = string
 }
 
-variable "transient" {
-  type = bool
-}
-
 variable "external_volume" {
   type = string
 }
@@ -18,7 +14,15 @@ variable "catalog" {
   type = string
 }
 
+variable "replace_invalid_characters" {
+  type = bool
+}
+
 variable "default_ddl_collation" {
+  type = string
+}
+
+variable "storage_serialization_policy" {
   type = string
 }
 

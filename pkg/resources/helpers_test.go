@@ -137,6 +137,32 @@ func TestGetFirstNestedObjectByKey(t *testing.T) {
 				},
 			},
 		},
+		"multiple_list_properties": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"value": {
+						Type: schema.TypeList,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
+		"list": {
+			Type: schema.TypeList,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"empty list": {
+			Type: schema.TypeList,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"not_property": {
 			Type: schema.TypeString,
 		},
@@ -151,7 +177,17 @@ func TestGetFirstNestedObjectByKey(t *testing.T) {
 				"value": "some string",
 			},
 		},
+		"list":       []any{"one"},
+		"empty_list": []any{},
 		"list_property": []any{
+			map[string]any{
+				"value": []any{"one", "two", "three"},
+			},
+		},
+		"multiple_list_properties": []any{
+			map[string]any{
+				"value": []any{"one", "two", "three"},
+			},
 			map[string]any{
 				"value": []any{"one", "two", "three"},
 			},
@@ -159,12 +195,36 @@ func TestGetFirstNestedObjectByKey(t *testing.T) {
 		"not_property": "not a property",
 	})
 
-	assert.Equal(t, 123, *resources.GetFirstNestedObjectByKey[int](d, "int_property", "value"))
-	assert.Equal(t, "some string", *resources.GetFirstNestedObjectByKey[string](d, "string_property", "value"))
-	assert.Equal(t, []any{"one", "two", "three"}, *resources.GetFirstNestedObjectByKey[[]any](d, "list_property", "value"))
+	intValue, err := resources.GetPropertyOfFirstNestedObjectByKey[int](d, "int_property", "value")
+	assert.NoError(t, err)
+	assert.Equal(t, 123, *intValue)
 
-	assert.Nil(t, resources.GetFirstNestedObjectByKey[int](d, "string_property", "value"))
-	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "not_property", "value"))
-	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "int_property", "non_existing_value_key"))
-	assert.Nil(t, resources.GetFirstNestedObjectByKey[any](d, "non_existing_property_key", "non_existing_value_key"))
+	stringValue, err := resources.GetPropertyOfFirstNestedObjectByKey[string](d, "string_property", "value")
+	assert.NoError(t, err)
+	assert.Equal(t, "some string", *stringValue)
+
+	listValue, err := resources.GetPropertyOfFirstNestedObjectByKey[[]any](d, "list_property", "value")
+	assert.NoError(t, err)
+	assert.Equal(t, []any{"one", "two", "three"}, *listValue)
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "non_existing_property_key", "non_existing_value_key")
+	assert.ErrorContains(t, err, "nested property non_existing_property_key not found")
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "not_property", "value")
+	assert.ErrorContains(t, err, "nested property not_property is not an array or has incorrect number of values: 0, expected: 1")
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "empty_list", "value")
+	assert.ErrorContains(t, err, "nested property empty_list not found") // Empty list is a default value, so it's treated as "not set"
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "multiple_list_properties", "value")
+	assert.ErrorContains(t, err, "nested property multiple_list_properties is not an array or has incorrect number of values: 2, expected: 1")
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "list", "value")
+	assert.ErrorContains(t, err, "nested property list is not of type map[string]any, got: string")
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[any](d, "int_property", "non_existing_value_key")
+	assert.ErrorContains(t, err, "nested value key non_existing_value_key couldn't be found in the nested property map int_property")
+
+	_, err = resources.GetPropertyOfFirstNestedObjectByKey[int](d, "string_property", "value")
+	assert.ErrorContains(t, err, "nested property string_property.value is not of type int, got: string")
 }

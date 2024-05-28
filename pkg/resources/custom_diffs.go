@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// NestedIntValueAccountObjectComputedIf is NestedValueComputedIf,
+// but dedicated for account level objects with integer-typed properties.
 func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
 	return NestedValueComputedIf(
 		key,
@@ -20,11 +22,13 @@ func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountPara
 	)
 }
 
+// NestedValueComputedIf internally calls schema.ResourceDiff.SetNewComputed whenever the inner function returns true.
+// It's main purpose was to use it with hierarchical values that are marked with Computed and Optional. Such values should
+// be recomputed whenever the value is not in the configuration and the remote value is not equal to the value in state.
 func NestedValueComputedIf(key string, showParam func(client *sdk.Client) (*sdk.Parameter, error), valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-		configValue := d.GetRawConfig().AsValueMap()[key].AsValueSlice()
-
-		if len(configValue) == 1 {
+		configValue, ok := d.GetRawConfig().AsValueMap()[key]
+		if ok && len(configValue.AsValueSlice()) == 1 {
 			return false
 		}
 

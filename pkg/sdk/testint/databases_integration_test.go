@@ -80,7 +80,9 @@ func TestInt_DatabasesCreate(t *testing.T) {
 			MaxDataExtensionTimeInDays: sdk.Int(1),
 			ExternalVolume:             &externalVolume,
 			Catalog:                    &catalog,
+			ReplaceInvalidCharacters:   sdk.Bool(true),
 			DefaultDDLCollation:        sdk.String("en_US"),
+			StorageSerializationPolicy: sdk.Pointer(sdk.StorageSerializationPolicyCompatible),
 			LogLevel:                   sdk.Pointer(sdk.LogLevelInfo),
 			TraceLevel:                 sdk.Pointer(sdk.TraceLevelOnEvent),
 			Comment:                    sdk.String(comment),
@@ -124,6 +126,14 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, string(sdk.TraceLevelOnEvent), traceLevelParam.Value)
 
+		ignoreInvalidCharactersParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterReplaceInvalidCharacters, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		assert.NoError(t, err)
+		assert.Equal(t, "true", ignoreInvalidCharactersParam.Value)
+
+		serializationPolicyParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterStorageSerializationPolicy, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
+		assert.NoError(t, err)
+		assert.Equal(t, string(sdk.StorageSerializationPolicyCompatible), serializationPolicyParam.Value)
+
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)
@@ -139,13 +149,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	// Database name will be shared between two accounts
-	databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
-
-	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(schemaCleanup)
-
-	testTag, testTagCleanup := testClientHelper().Tag.CreateTagInSchema(t, schemaTest.ID())
+	testTag, testTagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(testTagCleanup)
 
 	externalVolume, externalVolumeCleanup := testClientHelper().ExternalVolume.Create(t)
@@ -158,8 +162,10 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
+	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(sharedDatabaseCleanup)
+
+	databaseId := sharedDatabase.ID()
 
 	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: sharedDatabase.ID(),
@@ -183,15 +189,17 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	require.NoError(t, err)
 
 	comment := random.Comment()
-	err = client.Databases.CreateShared(ctx, databaseName, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{
-		Transient:           sdk.Bool(true),
-		IfNotExists:         sdk.Bool(true),
-		ExternalVolume:      &externalVolume,
-		Catalog:             &catalog,
-		DefaultDDLCollation: sdk.String("en_US"),
-		LogLevel:            sdk.Pointer(sdk.LogLevelDebug),
-		TraceLevel:          sdk.Pointer(sdk.TraceLevelAlways),
-		Comment:             sdk.String(comment),
+	err = client.Databases.CreateShared(ctx, databaseId, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{
+		Transient:                  sdk.Bool(true),
+		IfNotExists:                sdk.Bool(true),
+		ExternalVolume:             &externalVolume,
+		Catalog:                    &catalog,
+		ReplaceInvalidCharacters:   sdk.Bool(true),
+		DefaultDDLCollation:        sdk.String("en_US"),
+		StorageSerializationPolicy: sdk.Pointer(sdk.StorageSerializationPolicyOptimized),
+		LogLevel:                   sdk.Pointer(sdk.LogLevelDebug),
+		TraceLevel:                 sdk.Pointer(sdk.TraceLevelAlways),
+		Comment:                    sdk.String(comment),
 		Tag: []sdk.TagAssociation{
 			{
 				Name:  testTag.ID(),
@@ -200,29 +208,37 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseName))
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseId))
 
-	database, err := client.Databases.ShowByID(ctx, databaseName)
+	database, err := client.Databases.ShowByID(ctx, databaseId)
 	require.NoError(t, err)
 
-	assert.Equal(t, databaseName.Name(), database.Name)
+	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
+
+	ignoreInvalidCharactersParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterReplaceInvalidCharacters, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
+	assert.NoError(t, err)
+	assert.Equal(t, "true", ignoreInvalidCharactersParam.Value)
+
+	serializationPolicyParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterStorageSerializationPolicy, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
+	assert.NoError(t, err)
+	assert.Equal(t, string(sdk.StorageSerializationPolicyOptimized), serializationPolicyParam.Value)
 
 	tag1Value, err := client.SystemFunctions.GetTag(ctx, testTag.ID(), database.ID(), sdk.ObjectTypeDatabase)
 	require.NoError(t, err)
@@ -235,9 +251,9 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	ctx := testContext(t)
 
 	// Database name will be shared between two accounts
-	databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
+	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseId.Name())
 	t.Cleanup(sharedDatabaseCleanup)
 
 	err := secondaryClient.Databases.AlterReplication(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
@@ -256,48 +272,59 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	catalog, catalogCleanup := testClientHelper().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
 
-	externalDatabaseId := sdk.NewExternalObjectIdentifier(secondaryTestClientHelper().Ids.AccountIdentifierWithLocator(), sharedDatabase.ID())
+	externalDatabaseId := sdk.NewExternalObjectIdentifier(secondaryTestClientHelper().Account.GetAccountIdentifier(t), sharedDatabase.ID())
+
 	comment := random.Comment()
-	err = client.Databases.CreateSecondary(ctx, databaseName, externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
+	err = client.Databases.CreateSecondary(ctx, databaseId, externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
 		IfNotExists:                sdk.Bool(true),
 		DataRetentionTimeInDays:    sdk.Int(1),
 		MaxDataExtensionTimeInDays: sdk.Int(10),
 		ExternalVolume:             &externalVolume,
 		Catalog:                    &catalog,
+		ReplaceInvalidCharacters:   sdk.Bool(true),
 		DefaultDDLCollation:        sdk.String("en_US"),
+		StorageSerializationPolicy: sdk.Pointer(sdk.StorageSerializationPolicyOptimized),
 		LogLevel:                   sdk.Pointer(sdk.LogLevelDebug),
 		TraceLevel:                 sdk.Pointer(sdk.TraceLevelAlways),
 		Comment:                    sdk.String(comment),
 	})
 	require.NoError(t, err)
-	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseName))
+	t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, databaseId))
 
-	database, err := client.Databases.ShowByID(ctx, databaseName)
+	database, err := client.Databases.ShowByID(ctx, databaseId)
 	require.NoError(t, err)
 
-	assert.Equal(t, databaseName.Name(), database.Name)
+	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, 1, database.RetentionTime)
 	assert.Equal(t, comment, database.Comment)
 
-	param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, "10", param.Value)
 
-	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	externalVolumeParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterExternalVolume, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, externalVolume.Name(), externalVolumeParam.Value)
 
-	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	catalogParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterCatalog, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, catalog.Name(), catalogParam.Value)
 
-	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	logLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.LogLevelDebug), logLevelParam.Value)
 
-	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseName})
+	traceLevelParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterTraceLevel, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
 	assert.NoError(t, err)
 	assert.Equal(t, string(sdk.TraceLevelAlways), traceLevelParam.Value)
+
+	ignoreInvalidCharactersParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterReplaceInvalidCharacters, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
+	assert.NoError(t, err)
+	assert.Equal(t, "true", ignoreInvalidCharactersParam.Value)
+
+	serializationPolicyParam, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterStorageSerializationPolicy, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseId})
+	assert.NoError(t, err)
+	assert.Equal(t, string(sdk.StorageSerializationPolicyOptimized), serializationPolicyParam.Value)
 }
 
 func TestInt_DatabasesAlter(t *testing.T) {
@@ -305,14 +332,19 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	queryParameterValueForDatabase := func(t *testing.T, id sdk.AccountObjectIdentifier, parameter sdk.ObjectParameter) string {
+	queryParameterForDatabase := func(t *testing.T, id sdk.AccountObjectIdentifier, parameter sdk.ObjectParameter) *sdk.Parameter {
 		t.Helper()
 		value, err := client.Parameters.ShowObjectParameter(ctx, parameter, sdk.Object{
 			ObjectType: sdk.ObjectTypeDatabase,
 			Name:       id,
 		})
 		require.NoError(t, err)
-		return value.Value
+		return value
+	}
+
+	queryParameterValueForDatabase := func(t *testing.T, id sdk.AccountObjectIdentifier, parameter sdk.ObjectParameter) string {
+		t.Helper()
+		return queryParameterForDatabase(t, id, parameter).Value
 	}
 
 	testCases := []struct {
@@ -335,9 +367,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				t.Cleanup(shareCleanup)
 
 				// Database name will be shared between two accounts
-				databaseName := testClientHelper().Ids.RandomAccountObjectIdentifier()
+				databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseName.Name())
+				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithName(t, databaseId.Name())
 				t.Cleanup(sharedDatabaseCleanup)
 
 				err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
@@ -361,10 +393,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				err = client.Databases.CreateShared(ctx, databaseName, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
+				err = client.Databases.CreateShared(ctx, databaseId, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
 				require.NoError(t, err)
 
-				database, err := client.Databases.ShowByID(ctx, databaseName)
+				database, err := client.Databases.ShowByID(ctx, databaseId)
 				require.NoError(t, err)
 
 				return database, testClientHelper().Database.DropDatabaseFunc(t, database.ID())
@@ -446,6 +478,40 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 			require.Equal(t, string(sdk.LogLevelOff), queryParameterValueForDatabase(t, databaseTest.ID(), sdk.ObjectParameterLogLevel))
 			require.Equal(t, string(sdk.TraceLevelOff), queryParameterValueForDatabase(t, databaseTest.ID(), sdk.ObjectParameterTraceLevel))
+		})
+
+		t.Run(fmt.Sprintf("Database: %s - setting and unsetting replace_invalid_characters and storage_serialization_policy", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "From Share" {
+				t.Skipf("Skipping database test because from share is not supported")
+			}
+
+			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
+			t.Cleanup(databaseTestCleanup)
+
+			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				Set: &sdk.DatabaseSet{
+					ReplaceInvalidCharacters:   sdk.Bool(true),
+					StorageSerializationPolicy: sdk.Pointer(sdk.StorageSerializationPolicyCompatible),
+				},
+			})
+			require.NoError(t, err)
+
+			require.Equal(t, "true", queryParameterValueForDatabase(t, databaseTest.ID(), sdk.ObjectParameterReplaceInvalidCharacters))
+			require.Equal(t, string(sdk.StorageSerializationPolicyCompatible), queryParameterValueForDatabase(t, databaseTest.ID(), sdk.ObjectParameterStorageSerializationPolicy))
+
+			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				Unset: &sdk.DatabaseUnset{
+					ReplaceInvalidCharacters:   sdk.Bool(true),
+					StorageSerializationPolicy: sdk.Bool(true),
+				},
+			})
+			require.NoError(t, err)
+
+			replaceInvalidCharactersParam := queryParameterForDatabase(t, databaseTest.ID(), sdk.ObjectParameterReplaceInvalidCharacters)
+			storageSerializationPolicyParam := queryParameterForDatabase(t, databaseTest.ID(), sdk.ObjectParameterStorageSerializationPolicy)
+
+			require.Equal(t, replaceInvalidCharactersParam.Default, replaceInvalidCharactersParam.Value)
+			require.Equal(t, storageSerializationPolicyParam.Default, storageSerializationPolicyParam.Value)
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - setting and unsetting external volume and catalog", testCase.DatabaseType), func(t *testing.T) {

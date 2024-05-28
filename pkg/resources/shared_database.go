@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -22,14 +23,15 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
+		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<provider_account>\".\"<share_name>\"`.",
 	},
-	"is_transient": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		ForceNew:    true,
-		Description: "Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
-	},
+	// TODO(SNOW-1325381): Add it as an item to discuss and either remove or uncomment (and implement) it
+	// "is_transient": {
+	//	Type:        schema.TypeBool,
+	//	Optional:    true,
+	//	ForceNew:    true,
+	//	Description: "Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
+	// },
 	"external_volume": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -44,11 +46,27 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Description:      "The database parameter that specifies the default catalog to use for Iceberg tables.",
 	},
+	"replace_invalid_characters": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.",
+	},
 	"default_ddl_collation": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
 		Description: "Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).",
+	},
+	"storage_serialization_policy": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true),
+		Description:      fmt.Sprintf("Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == ""
+		},
 	},
 	"log_level": {
 		Type:             schema.TypeString,
@@ -56,7 +74,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == "OFF" && newValue == ""
+			return d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 	},
@@ -66,7 +84,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == "OFF" && newValue == ""
+			return d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 	},
@@ -108,6 +126,11 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
 	}
 
+	var storageSerializationPolicy *sdk.StorageSerializationPolicy
+	if v, ok := d.GetOk("storage_serialization_policy"); ok {
+		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(v.(string)))
+	}
+
 	var logLevel *sdk.LogLevel
 	if v, ok := d.GetOk("log_level"); ok {
 		logLevel = sdk.Pointer(sdk.LogLevel(v.(string)))
@@ -119,13 +142,16 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	err := client.Databases.CreateShared(ctx, id, externalShareId, &sdk.CreateSharedDatabaseOptions{
-		Transient:           GetPropertyAsPointer[bool](d, "is_transient"),
-		ExternalVolume:      externalVolume,
-		Catalog:             catalog,
-		DefaultDDLCollation: GetPropertyAsPointer[string](d, "default_ddl_collation"),
-		LogLevel:            logLevel,
-		TraceLevel:          traceLevel,
-		Comment:             GetPropertyAsPointer[string](d, "comment"),
+		// TODO(SNOW-1325381)
+		// Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
+		ExternalVolume:             externalVolume,
+		Catalog:                    catalog,
+		ReplaceInvalidCharacters:   GetPropertyAsPointer[bool](d, "replace_invalid_characters"),
+		DefaultDDLCollation:        GetPropertyAsPointer[string](d, "default_ddl_collation"),
+		StorageSerializationPolicy: storageSerializationPolicy,
+		LogLevel:                   logLevel,
+		TraceLevel:                 traceLevel,
+		Comment:                    GetPropertyAsPointer[string](d, "comment"),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -197,7 +223,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	secondaryDatabaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+	parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
 		In: &sdk.ParametersIn{
 			Database: id,
 		},
@@ -214,34 +240,47 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("is_transient", database.Transient); err != nil {
-		return diag.FromErr(err)
-	}
+	// TODO(SNOW-1325381)
+	// if err := d.Set("is_transient", database.Transient); err != nil {
+	//	return diag.FromErr(err)
+	//}
 
 	if err := d.Set("comment", database.Comment); err != nil {
 		return diag.FromErr(err)
 	}
 
-	for _, secondaryDatabaseParameter := range secondaryDatabaseParameters {
-		switch secondaryDatabaseParameter.Key {
+	for _, parameter := range parameters {
+		switch parameter.Key {
 		case "EXTERNAL_VOLUME":
-			if err := d.Set("external_volume", secondaryDatabaseParameter.Value); err != nil {
+			if err := d.Set("external_volume", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "CATALOG":
-			if err := d.Set("catalog", secondaryDatabaseParameter.Value); err != nil {
+			if err := d.Set("catalog", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "DEFAULT_DDL_COLLATION":
-			if err := d.Set("default_ddl_collation", secondaryDatabaseParameter.Value); err != nil {
+			if err := d.Set("default_ddl_collation", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "LOG_LEVEL":
-			if err := d.Set("log_level", secondaryDatabaseParameter.Value); err != nil {
+			if err := d.Set("log_level", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "TRACE_LEVEL":
-			if err := d.Set("trace_level", secondaryDatabaseParameter.Value); err != nil {
+			if err := d.Set("trace_level", parameter.Value); err != nil {
+				return diag.FromErr(err)
+			}
+		case "REPLACE_INVALID_CHARACTERS":
+			boolValue, err := strconv.ParseBool(parameter.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("replace_invalid_characters", boolValue); err != nil {
+				return diag.FromErr(err)
+			}
+		case "STORAGE_SERIALIZATION_POLICY":
+			if err := d.Set("storage_serialization_policy", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		}

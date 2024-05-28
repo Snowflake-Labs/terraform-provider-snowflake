@@ -12,6 +12,8 @@ import (
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
+	CurrentOrganizationName(ctx context.Context) (string, error)
+	CurrentAccountName(ctx context.Context) (string, error)
 	CurrentRole(ctx context.Context) (AccountObjectIdentifier, error)
 	CurrentSecondaryRoles(ctx context.Context) (*CurrentSecondaryRoles, error)
 	CurrentRegion(ctx context.Context) (string, error)
@@ -68,6 +70,28 @@ func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return s.CurrentAccount, nil
+}
+
+func (c *contextFunctions) CurrentOrganizationName(ctx context.Context) (string, error) {
+	s := &struct {
+		CurrentOrganizationName string `db:"CURRENT_ORGANIZATION_NAME"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ORGANIZATION_NAME() as CURRENT_ORGANIZATION_NAME")
+	if err != nil {
+		return "", err
+	}
+	return s.CurrentOrganizationName, nil
+}
+
+func (c *contextFunctions) CurrentAccountName(ctx context.Context) (string, error) {
+	s := &struct {
+		CurrentAccountName string `db:"CURRENT_ACCOUNT_NAME"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT_NAME() as CURRENT_ACCOUNT_NAME")
+	if err != nil {
+		return "", err
+	}
+	return s.CurrentAccountName, nil
 }
 
 func (c *contextFunctions) CurrentRole(ctx context.Context) (AccountObjectIdentifier, error) {

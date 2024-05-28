@@ -123,7 +123,7 @@ func NewAccountIdentifier(organizationName, accountName string) AccountIdentifie
 
 func NewAccountIdentifierFromAccountLocator(accountLocator string) AccountIdentifier {
 	return AccountIdentifier{
-		accountLocator: accountLocator,
+		accountLocator: strings.Trim(accountLocator, `"`),
 	}
 }
 

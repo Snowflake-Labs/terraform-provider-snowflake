@@ -1,6 +1,18 @@
+# 1. Preparing primary database
+resource "snowflake_database" "primary" {
+  provider = primary_account # notice the provider fields
+  name     = "database_name"
+  replication_configuration {
+    accounts             = ["<secondary_account_organization_name>.<secondary_account_name>"]
+    ignore_edition_check = true
+  }
+}
+
+# 2. Creating secondary database
 resource "snowflake_secondary_database" "test" {
-  name          = "database_name"
-  as_replica_of = "organization_name.account_name.primary_database_name"
+  provider      = secondary_account
+  name          = snowflake_database.primary.name # It's recommended to give a secondary database the same name as its primary database
+  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_database.primary.name}"
   is_transient  = false
 
   data_retention_time_in_days {
