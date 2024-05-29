@@ -148,6 +148,14 @@ func TestAccPreCheck(t *testing.T) {
 		if err := atc.secondaryClient.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
 			t.Fatal(err)
 		}
+
+		if err := helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(atc.client, ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(atc.secondaryClient, ctx); err != nil {
+			t.Fatal(err)
+		}
 	})
 }
 
