@@ -181,6 +181,15 @@ func (itc *integrationTestContext) initialize() error {
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
+	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
+	if err != nil {
+		return err
+	}
+	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryClient, itc.secondaryCtx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
