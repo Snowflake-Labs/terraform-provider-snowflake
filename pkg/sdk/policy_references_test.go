@@ -62,7 +62,7 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TABLE'))`, strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TABLE'))`, temporaryReplace(id))
 	})
 
 	t.Run("account domain", func(t *testing.T) {
@@ -99,7 +99,7 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TAG'))`, strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TAG'))`, temporaryReplace(id))
 	})
 
 	t.Run("view domain", func(t *testing.T) {
@@ -112,6 +112,11 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'VIEW'))`, strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'VIEW'))`, temporaryReplace(id))
 	})
+}
+
+// TODO [SNOW-999049]: check during the identifiers rework
+func temporaryReplace(id SchemaObjectIdentifier) string {
+	return strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`)
 }
