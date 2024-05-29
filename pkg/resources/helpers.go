@@ -130,6 +130,38 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
+// GetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
+// schema.TypeList with MaxItems set to one and inner schema with single value. To easily retrieve
+// the inner value, you can specify the top-level property with propertyKey and the nested value with nestedValueKey.
+func GetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string) (*T, error) {
+	value, ok := d.GetOk(propertyKey)
+	if !ok {
+		return nil, fmt.Errorf("nested property %s not found", propertyKey)
+	}
+
+	typedValue, ok := value.([]any)
+	if !ok || len(typedValue) != 1 {
+		return nil, fmt.Errorf("nested property %s is not an array or has incorrect number of values: %d, expected: 1", propertyKey, len(typedValue))
+	}
+
+	typedNestedMap, ok := typedValue[0].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("nested property %s is not of type map[string]any, got: %T", propertyKey, typedValue[0])
+	}
+
+	_, ok = typedNestedMap[nestedValueKey]
+	if !ok {
+		return nil, fmt.Errorf("nested value key %s couldn't be found in the nested property map %s", nestedValueKey, propertyKey)
+	}
+
+	typedNestedValue, ok := typedNestedMap[nestedValueKey].(T)
+	if !ok {
+		return nil, fmt.Errorf("nested property %s.%s is not of type %T, got: %T", propertyKey, nestedValueKey, *new(T), typedNestedMap[nestedValueKey])
+	}
+
+	return &typedNestedValue, nil
+}
+
 type tags []tag
 
 func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
@@ -219,4 +251,22 @@ func getTags(from interface{}) (to tags) {
 		}
 	}
 	return to
+}
+
+func nestedProperty(innerType schema.ValueType, fieldDescription string) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"value": {
+					Type:     innerType,
+					Required: true,
+				},
+			},
+		},
+		Computed:    true,
+		Optional:    true,
+		Description: fieldDescription,
+	}
 }
