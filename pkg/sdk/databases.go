@@ -137,24 +137,38 @@ func (row databaseRow) convert() *Database {
 	return database
 }
 
+type StorageSerializationPolicy string
+
+const (
+	StorageSerializationPolicyCompatible StorageSerializationPolicy = "COMPATIBLE"
+	StorageSerializationPolicyOptimized  StorageSerializationPolicy = "OPTIMIZED"
+)
+
+var AllStorageSerializationPolicies = []StorageSerializationPolicy{
+	StorageSerializationPolicyCompatible,
+	StorageSerializationPolicyOptimized,
+}
+
 // CreateDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateDatabaseOptions struct {
-	create                     bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                    `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                     `ddl:"static" sql:"DATABASE"`
-	IfNotExists                *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier  `ddl:"identifier"`
-	Clone                      *Clone                   `ddl:"-"`
-	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
-	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                        []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
+	create                     bool                        `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
+	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
+	database                   bool                        `ddl:"static" sql:"DATABASE"`
+	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier     `ddl:"identifier"`
+	Clone                      *Clone                      `ddl:"-"`
+	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag                        []TagAssociation            `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateDatabaseOptions) validate() error {
@@ -200,20 +214,22 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 
 // CreateSharedDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSharedDatabaseOptions struct {
-	create              bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	Transient           *bool                    `ddl:"keyword" sql:"TRANSIENT"`
-	database            bool                     `ddl:"static" sql:"DATABASE"`
-	IfNotExists         *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier  `ddl:"identifier"`
-	fromShare           ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
-	ExternalVolume      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
-	DefaultDDLCollation *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	LogLevel            *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel          *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                 []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
+	create                     bool                        `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
+	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
+	database                   bool                        `ddl:"static" sql:"DATABASE"`
+	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier     `ddl:"identifier"`
+	fromShare                  ExternalObjectIdentifier    `ddl:"identifier" sql:"FROM SHARE"`
+	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag                        []TagAssociation            `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
@@ -260,21 +276,23 @@ func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier
 
 // CreateSecondaryDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSecondaryDatabaseOptions struct {
-	create                     bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                    `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                     `ddl:"static" sql:"DATABASE"`
-	IfNotExists                *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier  `ddl:"identifier"`
-	primaryDatabase            ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
-	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
-	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                     bool                        `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
+	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
+	database                   bool                        `ddl:"static" sql:"DATABASE"`
+	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier     `ddl:"identifier"`
+	primaryDatabase            ExternalObjectIdentifier    `ddl:"identifier" sql:"AS REPLICA OF"`
+	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
@@ -362,14 +380,16 @@ func (opts *AlterDatabaseOptions) validate() error {
 }
 
 type DatabaseSet struct {
-	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier `ddl:"identifier,equals" sql:"CATALOG"`
-	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	LogLevel                   *LogLevel                `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel              `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *DatabaseSet) validate() error {
@@ -380,8 +400,8 @@ func (v *DatabaseSet) validate() error {
 	if v.Catalog != nil && !ValidObjectIdentifier(v.Catalog) {
 		errs = append(errs, errInvalidIdentifier("DatabaseSet", "Catalog"))
 	}
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.DefaultDDLCollation, v.LogLevel, v.TraceLevel, v.Comment) {
-		errs = append(errs, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.ReplaceInvalidCharacters, v.DefaultDDLCollation, v.StorageSerializationPolicy, v.LogLevel, v.TraceLevel, v.Comment) {
+		errs = append(errs, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
 	}
 	return errors.Join(errs...)
 }
@@ -391,7 +411,9 @@ type DatabaseUnset struct {
 	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
 	ExternalVolume             *bool `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
 	Catalog                    *bool `ddl:"keyword" sql:"CATALOG"`
+	ReplaceInvalidCharacters   *bool `ddl:"keyword" sql:"REPLACE_INVALID_CHARACTERS"`
 	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy *bool `ddl:"keyword" sql:"STORAGE_SERIALIZATION_POLICY"`
 	LogLevel                   *bool `ddl:"keyword" sql:"LOG_LEVEL"`
 	TraceLevel                 *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
@@ -399,8 +421,8 @@ type DatabaseUnset struct {
 
 func (v *DatabaseUnset) validate() error {
 	var errs []error
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.DefaultDDLCollation, v.LogLevel, v.TraceLevel, v.Comment) {
-		errs = append(errs, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.ReplaceInvalidCharacters, v.DefaultDDLCollation, v.StorageSerializationPolicy, v.LogLevel, v.TraceLevel, v.Comment) {
+		errs = append(errs, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
 	}
 	return errors.Join(errs...)
 }

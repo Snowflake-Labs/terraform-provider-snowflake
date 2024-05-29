@@ -123,6 +123,7 @@ const (
 	SchemaPrivilegeAddSearchOptimization             SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
 	SchemaPrivilegeApplyBudget                       SchemaPrivilege = "APPLYBUDGET"
 	SchemaPrivilegeCreateAlert                       SchemaPrivilege = "CREATE ALERT"
+	SchemaPrivilegeCreateDataset                     SchemaPrivilege = "CREATE DATASET"
 	SchemaPrivilegeCreateFileFormat                  SchemaPrivilege = "CREATE FILE FORMAT"
 	SchemaPrivilegeCreateFunction                    SchemaPrivilege = "CREATE FUNCTION"
 	SchemaPrivilegeCreateGitRepository               SchemaPrivilege = "CREATE GIT REPOSITORY"

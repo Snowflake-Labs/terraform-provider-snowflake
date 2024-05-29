@@ -474,6 +474,8 @@ const (
 	ObjectParameterUserTaskTimeoutMs                   ObjectParameter = "USER_TASK_TIMEOUT_MS"
 	ObjectParameterCatalog                             ObjectParameter = "CATALOG"
 	ObjectParameterExternalVolume                      ObjectParameter = "EXTERNAL_VOLUME"
+	ObjectParameterReplaceInvalidCharacters            ObjectParameter = "REPLACE_INVALID_CHARACTERS"
+	ObjectParameterStorageSerializationPolicy          ObjectParameter = "STORAGE_SERIALIZATION_POLICY"
 
 	// User Parameters
 	ObjectParameterEnableUnredactedQuerySyntaxError ObjectParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"

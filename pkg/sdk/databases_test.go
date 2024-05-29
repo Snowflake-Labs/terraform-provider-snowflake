@@ -74,7 +74,9 @@ func TestDatabasesCreate(t *testing.T) {
 		opts.MaxDataExtensionTimeInDays = Int(1)
 		opts.ExternalVolume = &externalVolumeId
 		opts.Catalog = &catalogId
+		opts.ReplaceInvalidCharacters = Bool(true)
 		opts.DefaultDDLCollation = String("en_US")
+		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyCompatible)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
@@ -85,7 +87,7 @@ func TestDatabasesCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -142,7 +144,9 @@ func TestDatabasesCreateShared(t *testing.T) {
 		opts.OrReplace = Bool(true)
 		opts.ExternalVolume = &externalVolumeId
 		opts.Catalog = &catalogId
+		opts.ReplaceInvalidCharacters = Bool(false)
 		opts.DefaultDDLCollation = String("en_US")
+		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyOptimized)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
@@ -153,7 +157,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = false DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -212,11 +216,13 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 		opts.MaxDataExtensionTimeInDays = Int(10)
 		opts.ExternalVolume = &externalVolumeId
 		opts.Catalog = &catalogId
+		opts.ReplaceInvalidCharacters = Bool(true)
 		opts.DefaultDDLCollation = String("en_US")
+		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyOptimized)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE %s AS REPLICA OF %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 10 EXTERNAL_VOLUME = %s CATALOG = %s DEFAULT_DDL_COLLATION = 'en_US' LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment'`, opts.name.FullyQualifiedName(), primaryDatabaseId.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE %s AS REPLICA OF %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 10 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment'`, opts.name.FullyQualifiedName(), primaryDatabaseId.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
 	})
 }
 
@@ -257,13 +263,13 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: at least one set option", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
 	})
 
 	t.Run("validation: at least one unset option", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &DatabaseUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "DefaultDDLCollation", "LogLevel", "TraceLevel", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
 	})
 
 	t.Run("validation: invalid external volume identifier", func(t *testing.T) {
@@ -316,12 +322,14 @@ func TestDatabasesAlter(t *testing.T) {
 			MaxDataExtensionTimeInDays: Int(1),
 			ExternalVolume:             &externalVolumeId,
 			Catalog:                    &catalogId,
+			ReplaceInvalidCharacters:   Bool(true),
 			DefaultDDLCollation:        String("en_US"),
+			StorageSerializationPolicy: Pointer(StorageSerializationPolicyCompatible),
 			LogLevel:                   Pointer(LogLevelError),
 			TraceLevel:                 Pointer(TraceLevelOnEvent),
 			Comment:                    String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET DATA_RETENTION_TIME_IN_DAYS = 1, MAX_DATA_EXTENSION_TIME_IN_DAYS = 1, EXTERNAL_VOLUME = %s, CATALOG = %s, DEFAULT_DDL_COLLATION = 'en_US', LOG_LEVEL = 'ERROR', TRACE_LEVEL = 'ON_EVENT', COMMENT = 'comment'`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET DATA_RETENTION_TIME_IN_DAYS = 1, MAX_DATA_EXTENSION_TIME_IN_DAYS = 1, EXTERNAL_VOLUME = %s, CATALOG = %s, REPLACE_INVALID_CHARACTERS = true, DEFAULT_DDL_COLLATION = 'en_US', STORAGE_SERIALIZATION_POLICY = COMPATIBLE, LOG_LEVEL = 'ERROR', TRACE_LEVEL = 'ON_EVENT', COMMENT = 'comment'`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
 	})
 
 	t.Run("unset", func(t *testing.T) {
@@ -331,12 +339,14 @@ func TestDatabasesAlter(t *testing.T) {
 			MaxDataExtensionTimeInDays: Bool(true),
 			ExternalVolume:             Bool(true),
 			Catalog:                    Bool(true),
+			ReplaceInvalidCharacters:   Bool(true),
 			DefaultDDLCollation:        Bool(true),
+			StorageSerializationPolicy: Bool(true),
 			LogLevel:                   Bool(true),
 			TraceLevel:                 Bool(true),
 			Comment:                    Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, EXTERNAL_VOLUME, CATALOG, DEFAULT_DDL_COLLATION, LOG_LEVEL, TRACE_LEVEL, COMMENT`, opts.name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, EXTERNAL_VOLUME, CATALOG, REPLACE_INVALID_CHARACTERS, DEFAULT_DDL_COLLATION, STORAGE_SERIALIZATION_POLICY, LOG_LEVEL, TRACE_LEVEL, COMMENT`, opts.name.FullyQualifiedName())
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
