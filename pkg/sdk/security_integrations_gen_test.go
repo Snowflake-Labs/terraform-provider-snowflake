@@ -41,7 +41,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationWithClientCredentialsFlow(t
 		opts.IfNotExists = Bool(true)
 		opts.OauthTokenEndpoint = Pointer("foo")
 		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
-		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials)
+		opts.OauthGrantClientCredentials = Pointer(true)
 		opts.OauthAccessTokenValidity = Pointer(42)
 		opts.OauthRefreshTokenValidity = Pointer(42)
 		opts.OauthAllowedScopes = []AllowedScope{{Scope: "bar"}}
@@ -89,7 +89,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationWithAuthorizationCodeGrantF
 		opts.OauthAuthorizationEndpoint = Pointer("foo")
 		opts.OauthTokenEndpoint = Pointer("foo")
 		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
-		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantAuthorizationCode)
+		opts.OauthGrantAuthorizationCode = Pointer(true)
 		opts.OauthAccessTokenValidity = Pointer(42)
 		opts.OauthRefreshTokenValidity = Pointer(42)
 		opts.Comment = Pointer("foo")
@@ -137,7 +137,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationWithJwtBearerFlow(t *testin
 		opts.OauthAuthorizationEndpoint = Pointer("foo")
 		opts.OauthTokenEndpoint = Pointer("foo")
 		opts.OauthClientAuthMethod = Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)
-		opts.OauthGrant = Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer)
+		opts.OauthGrantJwtBearer = Pointer(true)
 		opts.OauthAccessTokenValidity = Pointer(42)
 		opts.OauthRefreshTokenValidity = Pointer(42)
 		opts.Comment = Pointer("foo")
@@ -464,7 +464,7 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithClientCredentialsFlow(t 
 		opts := defaultOpts()
 		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint",
-			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantClientCredentials", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
@@ -484,16 +484,16 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithClientCredentialsFlow(t 
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{
-			Enabled:                   Pointer(true),
-			OauthTokenEndpoint:        Pointer("foo"),
-			OauthClientAuthMethod:     Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
-			OauthClientId:             Pointer("foo"),
-			OauthClientSecret:         Pointer("foo"),
-			OauthGrant:                Pointer(ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
-			OauthAccessTokenValidity:  Pointer(42),
-			OauthRefreshTokenValidity: Pointer(42),
-			OauthAllowedScopes:        []AllowedScope{{Scope: "foo"}},
-			Comment:                   Pointer("foo"),
+			Enabled:                     Pointer(true),
+			OauthTokenEndpoint:          Pointer("foo"),
+			OauthClientAuthMethod:       Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			OauthClientId:               Pointer("foo"),
+			OauthClientSecret:           Pointer("foo"),
+			OauthGrantClientCredentials: Pointer(true),
+			OauthAccessTokenValidity:    Pointer(42),
+			OauthRefreshTokenValidity:   Pointer(42),
+			OauthAllowedScopes:          []AllowedScope{{Scope: "foo"}},
+			Comment:                     Pointer("foo"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
 			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = CLIENT_CREDENTIALS, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
@@ -503,6 +503,210 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithClientCredentialsFlow(t 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{
+			Enabled: Pointer(true),
+			Comment: Pointer(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions
+	defaultOpts := func() *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions {
+		return &AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{
+			Enabled: Pointer(true),
+		}
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint",
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Unset",
+			"Enabled", "Comment"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{}
+		opts.Unset = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("all options - set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{
+			Enabled:                     Pointer(true),
+			OauthTokenEndpoint:          Pointer("foo"),
+			OauthClientAuthMethod:       Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			OauthClientId:               Pointer("foo"),
+			OauthClientSecret:           Pointer("foo"),
+			OauthGrantAuthorizationCode: Pointer(true),
+			OauthAccessTokenValidity:    Pointer(42),
+			OauthRefreshTokenValidity:   Pointer(42),
+			Comment:                     Pointer("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
+			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = AUTHORIZATION_CODE, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
+			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options - unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset{
+			Enabled: Pointer(true),
+			Comment: Pointer(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SECURITY INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
+	})
+}
+
+func TestSecurityIntegrations_AlterApiAuthenticationWithJwtBearerFlow(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+
+	// Minimal valid AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions
+	defaultOpts := func() *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions {
+		return &AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{
+			Enabled: Pointer(true),
+		}
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint",
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantJwtBearer", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationWithJwtBearerFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions.Unset",
+			"Enabled", "Comment"))
+	})
+
+	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{}
+		opts.Unset = &ApiAuthenticationWithJwtBearerFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("all options - set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{
+			Enabled:                   Pointer(true),
+			OauthTokenEndpoint:        Pointer("foo"),
+			OauthClientAuthMethod:     Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			OauthClientId:             Pointer("foo"),
+			OauthClientSecret:         Pointer("foo"),
+			OauthGrantJwtBearer:       Pointer(true),
+			OauthAccessTokenValidity:  Pointer(42),
+			OauthRefreshTokenValidity: Pointer(42),
+			Comment:                   Pointer("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
+			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = JWT_BEARER, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
+			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, COMMENT = 'foo'", id.FullyQualifiedName())
+	})
+
+	t.Run("all options - unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiAuthenticationWithJwtBearerFlowIntegrationUnset{
 			Enabled: Pointer(true),
 			Comment: Pointer(true),
 		}

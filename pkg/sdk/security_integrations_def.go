@@ -10,14 +10,6 @@ const (
 	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = "CLIENT_SECRET_POST"
 )
 
-type ApiAuthenticationSecurityIntegrationOauthGrantOption string
-
-const (
-	ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials ApiAuthenticationSecurityIntegrationOauthGrantOption = "CLIENT_CREDENTIALS" // nolint: gosec
-	ApiAuthenticationSecurityIntegrationOauthClientGrantAuthorizationCode ApiAuthenticationSecurityIntegrationOauthGrantOption = "AUTHORIZATION_CODE"
-	ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer         ApiAuthenticationSecurityIntegrationOauthGrantOption = "JWT_BEARER"
-)
-
 type ExternalOauthSecurityIntegrationTypeOption string
 
 const (
@@ -134,16 +126,12 @@ var apiAuthClientCredentialsFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthent
 	).
 	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
-	OptionalAssignment(
-		"OAUTH_GRANT",
-		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-		g.ParameterOptions(),
-	).
+	OptionalSQL("OAUTH_GRANT = CLIENT_CREDENTIALS").
 	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
 	ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses()).
 	OptionalComment().
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantClientCredentials",
 		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment")
 
 var apiAuthClientCredentialsFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithClientCredentialsFlowIntegrationUnset").
@@ -162,15 +150,11 @@ var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationW
 	).
 	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
-	OptionalAssignment(
-		"OAUTH_GRANT",
-		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-		g.ParameterOptions(),
-	).
+	OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalComment().
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode",
 		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
 
 var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset").
@@ -189,16 +173,12 @@ var apiAuthJwtBearerFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationW
 	).
 	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
-	OptionalAssignment(
-		"OAUTH_GRANT",
-		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-		g.ParameterOptions(),
-	).
+	OptionalSQL("OAUTH_GRANT = JWT_BEARER").
 	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalComment().
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
-		"OauthAccessTokenValidity", "Comment")
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantJwtBearer",
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
 
 var apiAuthJwtBearerFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithJwtBearerFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
@@ -358,11 +338,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
 				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
-				OptionalAssignment(
-					"OAUTH_GRANT",
-					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-					g.ParameterOptions(),
-				).
+				OptionalSQL("OAUTH_GRANT = CLIENT_CREDENTIALS").
 				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
 				ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses())
@@ -386,11 +362,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
 				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
-				OptionalAssignment(
-					"OAUTH_GRANT",
-					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-					g.ParameterOptions(),
-				).
+				OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
 		}),
@@ -413,11 +385,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
 				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
-				OptionalAssignment(
-					"OAUTH_GRANT",
-					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthGrantOption](),
-					g.ParameterOptions(),
-				).
+				OptionalSQL("OAUTH_GRANT = JWT_BEARER").
 				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
 		}),

@@ -31,23 +31,23 @@ type SecurityIntegrations interface {
 
 // CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
 type CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions struct {
-	create                    bool                                                             `ddl:"static" sql:"CREATE"`
-	OrReplace                 *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration       bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists               *bool                                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                      AccountObjectIdentifier                                          `ddl:"identifier"`
-	integrationType           string                                                           `ddl:"static" sql:"TYPE = API_AUTHENTICATION"`
-	authType                  string                                                           `ddl:"static" sql:"AUTH_TYPE = OAUTH2"`
-	Enabled                   bool                                                             `ddl:"parameter" sql:"ENABLED"`
-	OauthTokenEndpoint        *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
-	OauthClientAuthMethod     *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
-	OauthClientId             string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
-	OauthClientSecret         string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
-	OauthAccessTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
-	OauthRefreshTokenValidity *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
-	OauthAllowedScopes        []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
-	Comment                   *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                      bool                                                             `ddl:"static" sql:"CREATE"`
+	OrReplace                   *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration         bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists                 *bool                                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                        AccountObjectIdentifier                                          `ddl:"identifier"`
+	integrationType             string                                                           `ddl:"static" sql:"TYPE = API_AUTHENTICATION"`
+	authType                    string                                                           `ddl:"static" sql:"AUTH_TYPE = OAUTH2"`
+	Enabled                     bool                                                             `ddl:"parameter" sql:"ENABLED"`
+	OauthTokenEndpoint          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
+	OauthClientId               string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
+	OauthClientSecret           string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
+	OauthGrantClientCredentials *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = CLIENT_CREDENTIALS"`
+	OauthAccessTokenValidity    *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
+	OauthRefreshTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	OauthAllowedScopes          []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
+	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type AllowedScope struct {
@@ -56,23 +56,23 @@ type AllowedScope struct {
 
 // CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
 type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
-	create                     bool                                                             `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration        bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists                *bool                                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier                                          `ddl:"identifier"`
-	integrationType            string                                                           `ddl:"static" sql:"TYPE = API_AUTHENTICATION"`
-	authType                   string                                                           `ddl:"static" sql:"AUTH_TYPE = OAUTH2"`
-	Enabled                    bool                                                             `ddl:"parameter" sql:"ENABLED"`
-	OauthAuthorizationEndpoint *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
-	OauthTokenEndpoint         *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
-	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
-	OauthClientId              string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
-	OauthClientSecret          string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                 *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
-	OauthAccessTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
-	OauthRefreshTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
-	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                      bool                                                             `ddl:"static" sql:"CREATE"`
+	OrReplace                   *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration         bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists                 *bool                                                            `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                        AccountObjectIdentifier                                          `ddl:"identifier"`
+	integrationType             string                                                           `ddl:"static" sql:"TYPE = API_AUTHENTICATION"`
+	authType                    string                                                           `ddl:"static" sql:"AUTH_TYPE = OAUTH2"`
+	Enabled                     bool                                                             `ddl:"parameter" sql:"ENABLED"`
+	OauthAuthorizationEndpoint  *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
+	OauthTokenEndpoint          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
+	OauthClientId               string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
+	OauthClientSecret           string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
+	OauthGrantAuthorizationCode *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = AUTHORIZATION_CODE"`
+	OauthAccessTokenValidity    *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
+	OauthRefreshTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
@@ -91,7 +91,7 @@ type CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions struct {
 	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
 	OauthClientId              string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
 	OauthClientSecret          string                                                           `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                 *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
+	OauthGrantJwtBearer        *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = JWT_BEARER"`
 	OauthAccessTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
 	OauthRefreshTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -246,27 +246,27 @@ type CreateScimSecurityIntegrationOptions struct {
 
 // AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
 type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions struct {
-	alter               bool                                                    `ddl:"static" sql:"ALTER"`
-	securityIntegration bool                                                    `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfExists            *bool                                                   `ddl:"keyword" sql:"IF EXISTS"`
-	name                AccountObjectIdentifier                                 `ddl:"identifier"`
-	SetTags             []TagAssociation                                        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags           []ObjectIdentifier                                      `ddl:"keyword" sql:"UNSET TAG"`
+	alter               bool                                                        `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                                                        `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                                                       `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier                                     `ddl:"identifier"`
+	SetTags             []TagAssociation                                            `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier                                          `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *ApiAuthenticationWithClientCredentialsFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithClientCredentialsFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type ApiAuthenticationWithClientCredentialsFlowIntegrationSet struct {
-	Enabled                   *bool                                                            `ddl:"parameter" sql:"ENABLED"`
-	OauthTokenEndpoint        *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
-	OauthClientAuthMethod     *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
-	OauthClientId             *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
-	OauthClientSecret         *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
-	OauthAccessTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
-	OauthRefreshTokenValidity *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
-	OauthAllowedScopes        []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
-	Comment                   *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Enabled                     *bool                                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthTokenEndpoint          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
+	OauthClientId               *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
+	OauthClientSecret           *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
+	OauthGrantClientCredentials *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = CLIENT_CREDENTIALS"`
+	OauthAccessTokenValidity    *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
+	OauthRefreshTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	OauthAllowedScopes          []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
+	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type ApiAuthenticationWithClientCredentialsFlowIntegrationUnset struct {
@@ -276,27 +276,27 @@ type ApiAuthenticationWithClientCredentialsFlowIntegrationUnset struct {
 
 // AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
 type AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
-	alter               bool                                                         `ddl:"static" sql:"ALTER"`
-	securityIntegration bool                                                         `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfExists            *bool                                                        `ddl:"keyword" sql:"IF EXISTS"`
-	name                AccountObjectIdentifier                                      `ddl:"identifier"`
-	SetTags             []TagAssociation                                             `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags           []ObjectIdentifier                                           `ddl:"keyword" sql:"UNSET TAG"`
+	alter               bool                                                             `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                                                            `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier                                          `ddl:"identifier"`
+	SetTags             []TagAssociation                                                 `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier                                               `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet struct {
-	Enabled                    *bool                                                            `ddl:"parameter" sql:"ENABLED"`
-	OauthAuthorizationEndpoint *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
-	OauthTokenEndpoint         *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
-	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
-	OauthClientId              *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
-	OauthClientSecret          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                 *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
-	OauthAccessTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
-	OauthRefreshTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
-	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Enabled                     *bool                                                            `ddl:"parameter" sql:"ENABLED"`
+	OauthAuthorizationEndpoint  *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
+	OauthTokenEndpoint          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
+	OauthClientId               *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
+	OauthClientSecret           *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
+	OauthGrantAuthorizationCode *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = AUTHORIZATION_CODE"`
+	OauthAccessTokenValidity    *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
+	OauthRefreshTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
+	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset struct {
@@ -306,12 +306,12 @@ type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset struct {
 
 // AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
 type AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions struct {
-	alter               bool                                            `ddl:"static" sql:"ALTER"`
-	securityIntegration bool                                            `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfExists            *bool                                           `ddl:"keyword" sql:"IF EXISTS"`
-	name                AccountObjectIdentifier                         `ddl:"identifier"`
-	SetTags             []TagAssociation                                `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags           []ObjectIdentifier                              `ddl:"keyword" sql:"UNSET TAG"`
+	alter               bool                                                `ddl:"static" sql:"ALTER"`
+	securityIntegration bool                                                `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfExists            *bool                                               `ddl:"keyword" sql:"IF EXISTS"`
+	name                AccountObjectIdentifier                             `ddl:"identifier"`
+	SetTags             []TagAssociation                                    `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags           []ObjectIdentifier                                  `ddl:"keyword" sql:"UNSET TAG"`
 	Set                 *ApiAuthenticationWithJwtBearerFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithJwtBearerFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
@@ -323,7 +323,7 @@ type ApiAuthenticationWithJwtBearerFlowIntegrationSet struct {
 	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
 	OauthClientId              *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_ID"`
 	OauthClientSecret          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_SECRET"`
-	OauthGrant                 *ApiAuthenticationSecurityIntegrationOauthGrantOption            `ddl:"parameter" sql:"OAUTH_GRANT"`
+	OauthGrantJwtBearer        *bool                                                            `ddl:"keyword" sql:"OAUTH_GRANT = JWT_BEARER"`
 	OauthAccessTokenValidity   *int                                                             `ddl:"parameter" sql:"OAUTH_ACCESS_TOKEN_VALIDITY"`
 	OauthRefreshTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`

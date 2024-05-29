@@ -52,6 +52,10 @@ func wrapWith(s string, with string) string {
 func sqlToFieldName(sql string, shouldExport bool) string {
 	sqlWords := splitSQLPattern.Split(sql, -1)
 	for i, s := range sqlWords {
+		if s == "=" {
+			sqlWords[i] = ""
+			continue
+		}
 		if !shouldExport && i == 0 {
 			sqlWords[i] = englishLowerCaser.String(s)
 			continue

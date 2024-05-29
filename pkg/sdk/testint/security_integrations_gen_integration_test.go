@@ -336,7 +336,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithOauthRefreshTokenValidity(31337).
 				WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}}).
 				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
-				WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials).
+				WithOauthGrantClientCredentials(true).
 				WithOauthTokenEndpoint("http://example.com")
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -350,7 +350,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:     string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthTokenEndpoint:        "http://example.com",
 			oauthAllowedScopes:        "[foo]",
-			oauthGrant:                string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
+			oauthGrant:                "CLIENT_CREDENTIALS",
 			authType:                  "OAUTH2",
 			comment:                   "a",
 		})
@@ -364,7 +364,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithOauthAccessTokenValidity(31337).
 				WithOauthAuthorizationEndpoint("http://example.com").
 				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
-				WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantAuthorizationCode).
+				WithOauthGrantAuthorizationCode(true).
 				WithOauthRefreshTokenValidity(31337).
 				WithOauthTokenEndpoint("http://example.com")
 		})
@@ -379,7 +379,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthAuthorizationEndpoint: "http://example.com",
 			oauthTokenEndpoint:         "http://example.com",
-			oauthGrant:                 string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantAuthorizationCode),
+			oauthGrant:                 "AUTHORIZATION_CODE",
 			authType:                   "OAUTH2",
 			comment:                    "a",
 		})
@@ -395,7 +395,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithOauthAccessTokenValidity(31337).
 				WithOauthAuthorizationEndpoint("http://example.com").
 				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
-				WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer).
+				WithOauthGrantJwtBearer(true).
 				WithOauthRefreshTokenValidity(31337).
 				WithOauthTokenEndpoint("http://example.com")
 		})
@@ -410,7 +410,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthAuthorizationEndpoint: "http://example.com",
 			oauthTokenEndpoint:         "http://example.com",
-			oauthGrant:                 string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer),
+			oauthGrant:                 "JWT_BEARER",
 			authType:                   "OAUTH2",
 			oauthAssertionIssuer:       "foo",
 			comment:                    "a",
@@ -610,7 +610,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
 					WithOauthClientId("foo").
 					WithOauthClientSecret("foo").
-					WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials).
+					WithOauthGrantClientCredentials(true).
 					WithOauthTokenEndpoint("http://example.com"),
 			)
 		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, setRequest)
@@ -627,7 +627,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:     string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthTokenEndpoint:        "http://example.com",
 			oauthAllowedScopes:        "[foo]",
-			oauthGrant:                string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
+			oauthGrant:                "CLIENT_CREDENTIALS",
 			authType:                  "OAUTH2",
 			comment:                   "foo",
 		})
@@ -695,7 +695,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
 					WithOauthClientId("foo").
 					WithOauthClientSecret("foo").
-					WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials).
+					WithOauthGrantAuthorizationCode(true).
 					WithOauthAuthorizationEndpoint("http://example.com").
 					WithOauthTokenEndpoint("http://example.com"),
 			)
@@ -713,7 +713,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthAuthorizationEndpoint: "http://example.com",
 			oauthTokenEndpoint:         "http://example.com",
-			oauthGrant:                 string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
+			oauthGrant:                 "AUTHORIZATION_CODE",
 			authType:                   "OAUTH2",
 			comment:                    "foo",
 		})
@@ -784,7 +784,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
 					WithOauthClientId("foo").
 					WithOauthClientSecret("foo").
-					WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantJwtBearer).
+					WithOauthGrantJwtBearer(true).
 					WithOauthRefreshTokenValidity(31337).
 					WithOauthTokenEndpoint("http://example.com"),
 			)
@@ -802,7 +802,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
 			oauthAuthorizationEndpoint: "http://example.com",
 			oauthTokenEndpoint:         "http://example.com",
-			oauthGrant:                 string(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials),
+			oauthGrant:                 "JWT_BEARER",
 			authType:                   "OAUTH2",
 			comment:                    "foo",
 		})

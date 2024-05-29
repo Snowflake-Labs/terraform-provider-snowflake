@@ -38,8 +38,8 @@ func (s *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequ
 	return s
 }
 
-func (s *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest {
-	s.OauthGrant = &OauthGrant
+func (s *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) WithOauthGrantClientCredentials(OauthGrantClientCredentials bool) *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest {
+	s.OauthGrantClientCredentials = &OauthGrantClientCredentials
 	return s
 }
 
@@ -102,8 +102,8 @@ func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegratio
 	return s
 }
 
-func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
-	s.OauthGrant = &OauthGrant
+func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthGrantAuthorizationCode(OauthGrantAuthorizationCode bool) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthGrantAuthorizationCode = &OauthGrantAuthorizationCode
 	return s
 }
 
@@ -163,8 +163,8 @@ func (s *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) Wit
 	return s
 }
 
-func (s *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest {
-	s.OauthGrant = &OauthGrant
+func (s *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) WithOauthGrantJwtBearer(OauthGrantJwtBearer bool) *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest {
+	s.OauthGrantJwtBearer = &OauthGrantJwtBearer
 	return s
 }
 
@@ -620,8 +620,8 @@ func (s *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest) WithOa
 	return s
 }
 
-func (s *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest {
-	s.OauthGrant = &OauthGrant
+func (s *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest) WithOauthGrantClientCredentials(OauthGrantClientCredentials bool) *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest {
+	s.OauthGrantClientCredentials = &OauthGrantClientCredentials
 	return s
 }
 
@@ -726,8 +726,8 @@ func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) W
 	return s
 }
 
-func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
-	s.OauthGrant = &OauthGrant
+func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthGrantAuthorizationCode(OauthGrantAuthorizationCode bool) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthGrantAuthorizationCode = &OauthGrantAuthorizationCode
 	return s
 }
 
@@ -827,8 +827,8 @@ func (s *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest) WithOauthClien
 	return s
 }
 
-func (s *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest) WithOauthGrant(OauthGrant ApiAuthenticationSecurityIntegrationOauthGrantOption) *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest {
-	s.OauthGrant = &OauthGrant
+func (s *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest) WithOauthGrantJwtBearer(OauthGrantJwtBearer bool) *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest {
+	s.OauthGrantJwtBearer = &OauthGrantJwtBearer
 	return s
 }
 
