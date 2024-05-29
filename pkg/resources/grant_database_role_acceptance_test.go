@@ -6,7 +6,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -128,19 +127,18 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2410 is fixed
 func TestAcc_GrantDatabaseRole_share(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
-	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := shareId.Name()
-	resourceName := "snowflake_grant_database_role.test"
+
 	configVariables := func() config.Variables {
 		return config.Variables{
-			"database":           config.StringVariable(databaseName),
-			"database_role_name": config.StringVariable(databaseRoleName),
-			"share_name":         config.StringVariable(shareName),
+			"database":           config.StringVariable(databaseId.Name()),
+			"database_role_name": config.StringVariable(databaseRoleId.Name()),
+			"share_name":         config.StringVariable(shareId.Name()),
 		}
 	}
+	resourceName := "snowflake_grant_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -153,9 +151,9 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
 				ConfigVariables: configVariables(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId.FullyQualifiedName(), "SHARE", shareId.FullyQualifiedName())),
 				),
 			},
 			// test import

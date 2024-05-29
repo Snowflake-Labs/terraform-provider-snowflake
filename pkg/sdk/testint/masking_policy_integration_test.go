@@ -253,8 +253,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		_, err := client.MaskingPolicies.Describe(ctx, id)
+		_, err := client.MaskingPolicies.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -379,8 +378,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.MaskingPolicies.Drop(ctx, id, nil)
+		err := client.MaskingPolicies.Drop(ctx, NonExistingSchemaObjectIdentifier, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

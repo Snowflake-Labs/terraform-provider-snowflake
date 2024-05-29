@@ -15,9 +15,10 @@ func TestUserCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		tags := []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Name:  tagId,
 				Value: "v1",
 			},
 		}
@@ -43,7 +44,7 @@ func TestUserCreate(t *testing.T) {
 			Tags: tags,
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_ROLE = foo ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG ("db"."schema"."tag1" = 'v1')`, id.FullyQualifiedName(), password, loginName)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_ROLE = foo ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, tagId.FullyQualifiedName())
 	})
 }
 
@@ -63,7 +64,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {
-		passwordPolicy := NewSchemaObjectIdentifier("db", "schema", "PASSWORD_POLICY1")
+		passwordPolicy := randomSchemaObjectIdentifier()
 		opts := &AlterUserOptions{
 			name: id,
 			Set: &UserSet{
@@ -74,13 +75,15 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with setting tags", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		tags := []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Name:  tagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+				Name:  tagId2,
 				Value: "v2",
 			},
 		}
@@ -88,7 +91,7 @@ func TestUserAlter(t *testing.T) {
 			name:   id,
 			SetTag: tags,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER USER %s SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER USER %s SET TAG %s = 'v1', %s = 'v2'`, id.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with setting properties and parameters", func(t *testing.T) {
@@ -170,8 +173,8 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with unsetting tags", func(t *testing.T) {
-		tag1 := NewSchemaObjectIdentifier("db", "schema", "USER_TAG1")
-		tag2 := NewSchemaObjectIdentifier("db", "schema", "USER_TAG2")
+		tag1 := randomSchemaObjectIdentifier()
+		tag2 := randomSchemaObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:     id,
 			UnsetTag: []ObjectIdentifier{tag1, tag2},

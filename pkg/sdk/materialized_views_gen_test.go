@@ -21,7 +21,7 @@ func TestMaterializedViews_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -35,7 +35,7 @@ func TestMaterializedViews_Create(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.RowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
-			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+			RowAccessPolicy: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -115,7 +115,7 @@ func TestMaterializedViews_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -249,7 +249,7 @@ func TestMaterializedViews_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -304,7 +304,7 @@ func TestMaterializedViews_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

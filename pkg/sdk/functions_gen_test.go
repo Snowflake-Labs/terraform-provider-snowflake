@@ -20,7 +20,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -135,7 +135,7 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -198,7 +198,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -303,7 +303,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -372,7 +372,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -446,7 +446,7 @@ func TestFunctions_Drop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -483,7 +483,7 @@ func TestFunctions_Alter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -630,7 +630,7 @@ func TestFunctions_Describe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

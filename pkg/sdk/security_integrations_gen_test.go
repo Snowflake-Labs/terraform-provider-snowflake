@@ -459,7 +459,7 @@ func TestSecurityIntegrations_AlterOauthPartner(t *testing.T) {
 		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled: Pointer(true),
 		}
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -567,7 +567,7 @@ func TestSecurityIntegrations_AlterOauthCustom(t *testing.T) {
 		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled: Pointer(true),
 		}
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -687,7 +687,7 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 		opts.Set = &Saml2IntegrationSet{
 			Enabled: Pointer(true),
 		}
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -807,7 +807,7 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 		opts.Set = &ScimIntegrationSet{
 			Enabled: Pointer(true),
 		}
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -901,7 +901,7 @@ func TestSecurityIntegrations_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -929,7 +929,7 @@ func TestSecurityIntegrations_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

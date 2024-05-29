@@ -23,7 +23,7 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -109,13 +109,13 @@ func TestTasks_Clone(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.sourceTask]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.sourceTask = NewSchemaObjectIdentifier("", "", "")
+		opts.sourceTask = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -150,7 +150,7 @@ func TestTasks_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -334,7 +334,7 @@ func TestTasks_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -393,7 +393,7 @@ func TestTasks_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -420,7 +420,7 @@ func TestTasks_Execute(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

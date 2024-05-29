@@ -60,7 +60,7 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
 	streams, err := v.Show(ctx, NewShowStreamRequest().
 		WithIn(&In{
-			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: id.SchemaId(),
 		}).
 		WithLike(&Like{Pattern: String(id.Name())}))
 	if err != nil {

@@ -21,7 +21,7 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -64,7 +64,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -194,7 +194,7 @@ func TestPipesDrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -212,8 +212,6 @@ func TestPipesDrop(t *testing.T) {
 
 func TestPipesShow(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
-	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
-	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
 	defaultOpts := func() *ShowPipeOptions {
 		return &ShowPipeOptions{}
@@ -240,7 +238,7 @@ func TestPipesShow(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{
 			Account:  Bool(true),
-			Database: databaseIdentifier,
+			Database: id.DatabaseId(),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ShowPipeOptions.In", "Account", "Database", "Schema"))
 	})
@@ -269,17 +267,17 @@ func TestPipesShow(t *testing.T) {
 	t.Run("in database", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{
-			Database: databaseIdentifier,
+			Database: id.DatabaseId(),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES IN DATABASE %s`, databaseIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES IN DATABASE %s`, id.DatabaseId().FullyQualifiedName())
 	})
 
 	t.Run("in schema", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{
-			Schema: schemaIdentifier,
+			Schema: id.SchemaId(),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES IN SCHEMA %s`, schemaIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES IN SCHEMA %s`, id.SchemaId().FullyQualifiedName())
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
@@ -299,9 +297,9 @@ func TestPipesShow(t *testing.T) {
 			Pattern: String(id.Name()),
 		}
 		opts.In = &In{
-			Database: databaseIdentifier,
+			Database: id.DatabaseId(),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES LIKE '%s' IN DATABASE %s`, id.Name(), databaseIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES LIKE '%s' IN DATABASE %s`, id.Name(), id.DatabaseId().FullyQualifiedName())
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
@@ -310,9 +308,9 @@ func TestPipesShow(t *testing.T) {
 			Pattern: String(id.Name()),
 		}
 		opts.In = &In{
-			Schema: schemaIdentifier,
+			Schema: id.SchemaId(),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES LIKE '%s' IN SCHEMA %s`, id.Name(), schemaIdentifier.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW PIPES LIKE '%s' IN SCHEMA %s`, id.Name(), id.SchemaId().FullyQualifiedName())
 	})
 }
 
@@ -332,7 +330,7 @@ func TestPipesDescribe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

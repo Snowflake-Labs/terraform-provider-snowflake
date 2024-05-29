@@ -341,7 +341,7 @@ func TestStages_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		newId := NewSchemaObjectIdentifier("", "", "")
+		newId := emptySchemaObjectIdentifier
 		opts.RenameTo = &newId
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -362,7 +362,7 @@ func TestStages_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -417,7 +417,7 @@ func TestStages_AlterInternalStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -461,7 +461,7 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -536,7 +536,7 @@ func TestStages_AlterExternalGCSStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -588,7 +588,7 @@ func TestStages_AlterExternalAzureStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -650,7 +650,7 @@ func TestStages_AlterDirectoryTable(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -690,7 +690,7 @@ func TestStages_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -718,7 +718,7 @@ func TestStages_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -729,6 +729,7 @@ func TestStages_Describe(t *testing.T) {
 }
 
 func TestStages_Show(t *testing.T) {
+	schemaId := randomDatabaseObjectIdentifier()
 	// Minimal valid ShowStageOptions
 	defaultOpts := func() *ShowStageOptions {
 		return &ShowStageOptions{}
@@ -750,8 +751,8 @@ func TestStages_Show(t *testing.T) {
 			Pattern: String("some pattern"),
 		}
 		opts.In = &In{
-			Schema: NewDatabaseObjectIdentifier("db", "schema"),
+			Schema: schemaId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW STAGES LIKE 'some pattern' IN SCHEMA "db"."schema"`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW STAGES LIKE 'some pattern' IN SCHEMA %s`, schemaId.FullyQualifiedName())
 	})
 }

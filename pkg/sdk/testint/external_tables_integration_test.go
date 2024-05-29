@@ -15,7 +15,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
+	stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
 	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
 	t.Cleanup(stageCleanup)
@@ -38,16 +38,16 @@ func TestInt_ExternalTables(t *testing.T) {
 		sdk.NewExternalTableColumnRequest("part_date", sdk.DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
 	}...)
 
-	minimalCreateExternalTableReq := func(name string) *sdk.CreateExternalTableRequest {
+	minimalCreateExternalTableReq := func(id sdk.SchemaObjectIdentifier) *sdk.CreateExternalTableRequest {
 		return sdk.NewCreateExternalTableRequest(
-			sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name),
+			id,
 			stageLocation,
 		).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
 	}
 
-	createExternalTableWithManualPartitioningReq := func(name string) *sdk.CreateWithManualPartitioningExternalTableRequest {
+	createExternalTableWithManualPartitioningReq := func(id sdk.SchemaObjectIdentifier) *sdk.CreateWithManualPartitioningExternalTableRequest {
 		return sdk.NewCreateWithManualPartitioningExternalTableRequest(
-			sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name),
+			id,
 			stageLocation,
 		).
 			WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)).
@@ -61,24 +61,22 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Create: minimal", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
-		assert.Equal(t, name, externalTable.Name)
+		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
 	t.Run("Create: with raw file format", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name), stageLocation).WithRawFileFormat("TYPE = JSON"))
+		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableID, stageLocation).WithRawFileFormat("TYPE = JSON"))
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
-		assert.Equal(t, name, externalTable.Name)
+		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
 	t.Run("Create: complete", func(t *testing.T) {
@@ -135,7 +133,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := externalTableID.Name()
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
@@ -171,8 +169,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: refresh", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Alter(
@@ -186,10 +183,9 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: add files", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
 		err := client.ExternalTables.Create(
 			ctx,
-			minimalCreateExternalTableReq(name).
+			minimalCreateExternalTableReq(externalTableID).
 				WithPattern("weather-nyc/weather_2_3_0.json.gz"),
 		)
 		require.NoError(t, err)
@@ -205,10 +201,9 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: remove files", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
 		err := client.ExternalTables.Create(
 			ctx,
-			minimalCreateExternalTableReq(name).
+			minimalCreateExternalTableReq(externalTableID).
 				WithPattern("weather-nyc/weather_2_3_0.json.gz"),
 		)
 		require.NoError(t, err)
@@ -232,8 +227,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: set auto refresh", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Alter(
@@ -292,8 +286,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: add partitions", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
 		err = client.ExternalTables.AlterPartitions(
@@ -308,8 +301,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: drop partitions", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
 		err = client.ExternalTables.AlterPartitions(
@@ -333,8 +325,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Drop", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Drop(
@@ -352,7 +343,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	t.Run("Show", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		et, err := client.ExternalTables.Show(
@@ -371,8 +362,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Describe: columns", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		req := minimalCreateExternalTableReq(name)
+		req := minimalCreateExternalTableReq(externalTableID)
 		err := client.ExternalTables.Create(ctx, req)
 		require.NoError(t, err)
 
@@ -397,8 +387,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Describe: stage", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		name := externalTableID.Name()
-		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		d, err := client.ExternalTables.DescribeStage(ctx, sdk.NewDescribeExternalTableStageRequest(externalTableID))

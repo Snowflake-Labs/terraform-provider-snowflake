@@ -525,6 +525,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, 2, len(tableDetails))
+		// TODO [SNOW-999049]: make nicer during the identifiers rework
 		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*tableDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest := sdk.NewAlterTableRequest(id).

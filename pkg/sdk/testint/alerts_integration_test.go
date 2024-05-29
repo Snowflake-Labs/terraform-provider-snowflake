@@ -238,8 +238,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		_, err := client.Alerts.Describe(ctx, id)
+		_, err := client.Alerts.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -374,8 +373,7 @@ func TestInt_AlertDrop(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
+		err := client.Alerts.Drop(ctx, NonExistingSchemaObjectIdentifier, &sdk.DropAlertOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

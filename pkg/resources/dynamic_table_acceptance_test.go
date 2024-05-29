@@ -161,8 +161,8 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 	tableName := dynamicTableName + "_table"
 	tableId := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
 	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
-	otherSchema := acc.TestClient().Ids.Alpha()
-	otherSchemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, otherSchema)
+	otherSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	otherSchemaName := otherSchemaId.Name()
 	newDynamicTableId := acc.TestClient().Ids.NewSchemaObjectIdentifierInSchema(dynamicTableName, otherSchemaId)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -173,7 +173,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 			"query":        config.StringVariable(query),
 			"comment":      config.StringVariable("Terraform acceptance test for GH issue 2173"),
 			"table_name":   config.StringVariable(tableName),
-			"other_schema": config.StringVariable(otherSchema),
+			"other_schema": config.StringVariable(otherSchemaName),
 		}
 	}
 
@@ -192,7 +192,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.other_schema", "name", otherSchema),
+					resource.TestCheckResourceAttr("snowflake_schema.other_schema", "name", otherSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.t", "name", tableName),
 				),
 			},

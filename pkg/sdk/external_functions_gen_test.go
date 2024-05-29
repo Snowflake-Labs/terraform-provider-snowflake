@@ -20,7 +20,7 @@ func TestExternalFunctions_Create(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -34,9 +34,9 @@ func TestExternalFunctions_Create(t *testing.T) {
 		opts.As = "as"
 		integration := emptyAccountObjectIdentifier
 		opts.ApiIntegration = &integration
-		rt := NewSchemaObjectIdentifier("", "", "")
+		rt := emptySchemaObjectIdentifier
 		opts.RequestTranslator = &rt
-		st := NewSchemaObjectIdentifier("", "", "")
+		st := emptySchemaObjectIdentifier
 		opts.ResponseTranslator = &st
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateExternalFunctionOptions", "ApiIntegration"))
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateExternalFunctionOptions", "RequestTranslator"))
@@ -84,9 +84,9 @@ func TestExternalFunctions_Create(t *testing.T) {
 		}
 		opts.MaxBatchRows = Int(100)
 		opts.Compression = String("GZIP")
-		rt := NewSchemaObjectIdentifier("db", "schema", "request_translator")
+		rt := randomSchemaObjectIdentifier()
 		opts.RequestTranslator = &rt
-		rs := NewSchemaObjectIdentifier("db", "schema", "response_translator")
+		rs := randomSchemaObjectIdentifier()
 		opts.ResponseTranslator = &rs
 		opts.As = "https://xyz.execute-api.us-west-2.amazonaws.com/prod/remote_echo"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE EXTERNAL FUNCTION %s (id NUMBER, name VARCHAR) RETURNS VARCHAR NOT NULL CALLED ON NULL INPUT IMMUTABLE COMMENT = 'comment' API_INTEGRATION = "api_integration" HEADERS = ('header1' = 'value1', 'header2' = 'value2') CONTEXT_HEADERS = (CURRENT_ACCOUNT, CURRENT_USER) MAX_BATCH_ROWS = 100 COMPRESSION = GZIP REQUEST_TRANSLATOR = %s RESPONSE_TRANSLATOR = %s AS 'https://xyz.execute-api.us-west-2.amazonaws.com/prod/remote_echo'`, id.FullyQualifiedName(), rt.FullyQualifiedName(), rs.FullyQualifiedName())
@@ -111,7 +111,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -307,7 +307,7 @@ func TestExternalFunctions_Describe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

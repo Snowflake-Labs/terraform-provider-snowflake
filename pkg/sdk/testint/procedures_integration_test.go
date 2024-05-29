@@ -622,15 +622,13 @@ func TestInt_CallProcedure(t *testing.T) {
 
 	t.Run("call procedure for SQL: argument positions", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(id).WithCallArguments([]string{"'hi'"}))
+		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(f.ID()).WithCallArguments([]string{"'hi'"}))
 		require.NoError(t, err)
 	})
 
 	t.Run("call procedure for SQL: argument names", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(id).WithCallArguments([]string{"message => 'hi'"}))
+		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(f.ID()).WithCallArguments([]string{"message => 'hi'"}))
 		require.NoError(t, err)
 	})
 

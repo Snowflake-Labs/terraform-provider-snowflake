@@ -6,12 +6,13 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Alerts(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	alertId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -22,33 +23,33 @@ func TestAcc_Alerts(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: alertsResourceConfig(name) + alertsDatasourceConfigNoOptionals(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigNoOptionals(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
 			},
 			{
-				Config: alertsResourceConfig(name) + alertsDatasourceConfigDbOnly(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
 			},
 			{
-				Config: alertsResourceConfig(name) + alertsDatasourceConfigDbAndSchema(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbAndSchema(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
-					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", name),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", alertId.Name()),
 				),
 			},
 			{
-				Config: alertsResourceConfig(name) + alertsDatasourceConfigAllOptionals(name),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigAllOptionals(alertId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
-					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", name),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", alertId.Name()),
 				),
 			},
 			{
-				Config: alertsResourceConfig(name) + alertsDatasourceConfigSchemaOnly(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigSchemaOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
@@ -57,7 +58,7 @@ func TestAcc_Alerts(t *testing.T) {
 	})
 }
 
-func alertsResourceConfig(name string) string {
+func alertsResourceConfig(alertId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_alert" "test_resource_alert" {
 	name     	      = "%s"
@@ -72,7 +73,7 @@ resource "snowflake_alert" "test_resource_alert" {
 		interval = "60"
 	}
 }
-`, name, acc.TestDatabaseName, acc.TestSchemaName, acc.TestWarehouseName)
+`, alertId.Name(), alertId.DatabaseName(), alertId.SchemaName(), acc.TestWarehouseName)
 }
 
 func alertsDatasourceConfigNoOptionals() string {
@@ -98,14 +99,14 @@ data "snowflake_alerts" "test_datasource_alert" {
 `, acc.TestDatabaseName, acc.TestSchemaName)
 }
 
-func alertsDatasourceConfigAllOptionals(name string) string {
+func alertsDatasourceConfigAllOptionals(alertId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 data "snowflake_alerts" "test_datasource_alert" {
 	database  	      = "%s"
 	schema  	      = "%s"
 	pattern  	      = "%s"
 }
-`, acc.TestDatabaseName, acc.TestSchemaName, name)
+`, alertId.DatabaseName(), alertId.SchemaName(), alertId.Name())
 }
 
 func alertsDatasourceConfigSchemaOnly() string {

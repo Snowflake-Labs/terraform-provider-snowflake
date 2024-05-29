@@ -15,14 +15,14 @@ func TestDatabasesCreate(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid clone", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Clone = &Clone{
-			SourceObject: NewAccountObjectIdentifier(""),
+			SourceObject: emptyAccountObjectIdentifier,
 			At: &TimeTravel{
 				Timestamp: Pointer(time.Now()),
 				Offset:    Int(123),
@@ -44,8 +44,8 @@ func TestDatabasesCreate(t *testing.T) {
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateDatabaseOptions", "Catalog"),
@@ -80,13 +80,14 @@ func TestDatabasesCreate(t *testing.T) {
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
+		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				Name:  tagId,
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -100,13 +101,13 @@ func TestDatabasesCreateShared(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid from share name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.fromShare = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewAccountObjectIdentifier(""))
+		opts.fromShare = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateSharedDatabaseOptions", "fromShare"))
 	})
 
@@ -121,8 +122,8 @@ func TestDatabasesCreateShared(t *testing.T) {
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("db")
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateSharedDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateSharedDatabaseOptions", "Catalog"),
@@ -149,13 +150,14 @@ func TestDatabasesCreateShared(t *testing.T) {
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
 		opts.Comment = String("comment")
+		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				Name:  tagId,
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = false DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = false DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -169,13 +171,13 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid primary database", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.primaryDatabase = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewAccountObjectIdentifier(""))
+		opts.primaryDatabase = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "primaryDatabase"))
 	})
 
@@ -188,8 +190,8 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExternalVolume = Pointer(NewAccountObjectIdentifier(""))
-		opts.Catalog = Pointer(NewAccountObjectIdentifier(""))
+		opts.ExternalVolume = Pointer(emptyAccountObjectIdentifier)
+		opts.Catalog = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts,
 			errInvalidIdentifier("CreateSecondaryDatabaseOptions", "ExternalVolume"),
 			errInvalidIdentifier("CreateSecondaryDatabaseOptions", "Catalog"),
@@ -233,15 +235,15 @@ func TestDatabasesAlter(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: invalid external volume and catalog", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
-			Catalog:        Pointer(NewAccountObjectIdentifier("")),
+			ExternalVolume: Pointer(emptyAccountObjectIdentifier),
+			Catalog:        Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "ExternalVolume"), errInvalidIdentifier("DatabaseSet", "Catalog"))
 	})
@@ -273,7 +275,7 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: invalid external volume identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			ExternalVolume: Pointer(NewAccountObjectIdentifier("")),
+			ExternalVolume: Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "ExternalVolume"))
 	})
@@ -281,20 +283,20 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: invalid catalog integration identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{
-			Catalog: Pointer(NewAccountObjectIdentifier("")),
+			Catalog: Pointer(emptyAccountObjectIdentifier),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("DatabaseSet", "Catalog"))
 	})
 
 	t.Run("validation: invalid NewName identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.NewName = Pointer(NewAccountObjectIdentifier(""))
+		opts.NewName = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("AlterDatabaseOptions", "NewName"))
 	})
 
 	t.Run("validation: invalid SwapWith identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SwapWith = Pointer(NewAccountObjectIdentifier(""))
+		opts.SwapWith = Pointer(emptyAccountObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("AlterDatabaseOptions", "SwapWith"))
 	})
 
@@ -348,26 +350,29 @@ func TestDatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := defaultOpts()
 		opts.SetTag = []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				Name:  tagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+				Name:  tagId2,
 				Value: "v2",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`, opts.name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s SET TAG %s = 'v1', %s = 'v2'`, opts.name.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := defaultOpts()
 		opts.UnsetTag = []ObjectIdentifier{
-			NewSchemaObjectIdentifier("db", "schema", "tag1"),
+			id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET TAG "db"."schema"."tag1"`, opts.name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE %s UNSET TAG %s`, opts.name.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -380,7 +385,7 @@ func TestDatabasesAlterReplication(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -433,7 +438,7 @@ func TestDatabasesAlterFailover(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -485,7 +490,7 @@ func TestDatabasesDrop(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -525,7 +530,7 @@ func TestDatabasesUndrop(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -589,7 +594,7 @@ func TestDatabasesDescribe(t *testing.T) {
 
 	t.Run("validation: invalid name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewAccountObjectIdentifier("")
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

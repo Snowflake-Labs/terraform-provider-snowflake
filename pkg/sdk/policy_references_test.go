@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -52,15 +53,16 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 	})
 
 	t.Run("table domain", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &getForEntityPolicyReferenceOptions{
 			parameters: &policyReferenceParameters{
 				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "table")},
+					refEntityName:   []ObjectIdentifier{id},
 					refEntityDomain: Pointer(PolicyEntityDomainTable),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"table\"', REF_ENTITY_DOMAIN => 'TABLE'))`)
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TABLE'))`, temporaryReplace(id))
 	})
 
 	t.Run("account domain", func(t *testing.T) {
@@ -88,26 +90,33 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 	})
 
 	t.Run("tag domain", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &getForEntityPolicyReferenceOptions{
 			parameters: &policyReferenceParameters{
 				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "tag_name")},
+					refEntityName:   []ObjectIdentifier{id},
 					refEntityDomain: Pointer(PolicyEntityDomainTag),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"tag_name\"', REF_ENTITY_DOMAIN => 'TAG'))`)
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'TAG'))`, temporaryReplace(id))
 	})
 
 	t.Run("view domain", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
 		opts := &getForEntityPolicyReferenceOptions{
 			parameters: &policyReferenceParameters{
 				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "view_name")},
+					refEntityName:   []ObjectIdentifier{id},
 					refEntityDomain: Pointer(PolicyEntityDomainView),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"view_name\"', REF_ENTITY_DOMAIN => 'VIEW'))`)
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => 'VIEW'))`, temporaryReplace(id))
 	})
+}
+
+// TODO [SNOW-999049]: check during the identifiers rework
+func temporaryReplace(id SchemaObjectIdentifier) string {
+	return strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`)
 }

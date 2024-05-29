@@ -369,9 +369,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
+		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
@@ -556,7 +554,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		showRequest := sdk.NewShowTaskRequest().
 			WithLike(&sdk.Like{Pattern: &task1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)}).
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
 			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 

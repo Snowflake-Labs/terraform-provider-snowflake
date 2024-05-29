@@ -226,7 +226,8 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR})
+	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -261,7 +262,7 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),

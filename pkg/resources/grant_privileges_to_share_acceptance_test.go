@@ -64,15 +64,15 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-			"schema":   config.StringVariable(schemaName.Name()),
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
 		}
 		if withGrant {
 			variables["privileges"] = config.ListVariable(
@@ -94,10 +94,10 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnSchema"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_schema", schemaName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_schema", schemaId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -119,17 +119,17 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 // TODO(SNOW-1021686): Add on_function test
 
 func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	tableName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-			"schema":   config.StringVariable(schemaName.Name()),
-			"on_table": config.StringVariable(tableName.Name()),
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
+			"on_table": config.StringVariable(tableId.Name()),
 		}
 		if withGrant {
 			variables["privileges"] = config.ListVariable(
@@ -151,10 +151,10 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_table", tableName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_table", tableId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -174,15 +174,15 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-			"schema":   config.StringVariable(schemaName.Name()),
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
 		}
 		if withGrant {
 			variables["privileges"] = config.ListVariable(
@@ -204,10 +204,10 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_all_tables_in_schema", schemaName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_all_tables_in_schema", schemaId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -227,19 +227,19 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	tableName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	viewName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-			"schema":   config.StringVariable(schemaName.Name()),
-			"on_table": config.StringVariable(tableName.Name()),
-			"on_view":  config.StringVariable(viewName.Name()),
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
+			"on_table": config.StringVariable(tableId.Name()),
+			"on_view":  config.StringVariable(viewId.Name()),
 		}
 		if withGrant {
 			variables["privileges"] = config.ListVariable(
@@ -261,10 +261,10 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnView"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_view", viewName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_view", viewId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -284,17 +284,17 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), acc.TestClient().Ids.Alpha())
-	tagName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), acc.TestClient().Ids.Alpha())
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-			"schema":   config.StringVariable(schemaName.Name()),
-			"on_tag":   config.StringVariable(tagName.Name()),
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
+			"on_tag":   config.StringVariable(tagId.Name()),
 		}
 		if withGrant {
 			variables["privileges"] = config.ListVariable(
@@ -316,10 +316,10 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTag"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeRead.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_tag", tagName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_tag", tagId.FullyQualifiedName()),
 				),
 			},
 			{

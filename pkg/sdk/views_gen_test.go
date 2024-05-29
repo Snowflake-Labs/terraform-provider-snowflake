@@ -23,7 +23,7 @@ func TestViews_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -37,7 +37,7 @@ func TestViews_Create(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.RowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &ViewRowAccessPolicy{
-			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+			RowAccessPolicy: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -110,7 +110,7 @@ func TestViews_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -129,7 +129,7 @@ func TestViews_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.DropRowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.DropRowAccessPolicy = &ViewDropRowAccessPolicy{
-			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+			RowAccessPolicy: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -137,7 +137,7 @@ func TestViews_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.AddRowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
-			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+			RowAccessPolicy: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -155,7 +155,7 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
 			Drop: ViewDropRowAccessPolicy{
-				RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+				RowAccessPolicy: emptySchemaObjectIdentifier,
 			},
 			Add: ViewAddRowAccessPolicy{
 				RowAccessPolicy: randomSchemaObjectIdentifier(),
@@ -171,7 +171,7 @@ func TestViews_Alter(t *testing.T) {
 				RowAccessPolicy: randomSchemaObjectIdentifier(),
 			},
 			Add: ViewAddRowAccessPolicy{
-				RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+				RowAccessPolicy: emptySchemaObjectIdentifier,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -372,7 +372,7 @@ func TestViews_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -430,7 +430,7 @@ func TestViews_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

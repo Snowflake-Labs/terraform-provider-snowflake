@@ -55,7 +55,7 @@ func (v *externalTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier
 	}
 
 	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().
-		WithIn(*NewShowExternalTableInRequest().WithSchema(NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))).
+		WithIn(*NewShowExternalTableInRequest().WithSchema(id.SchemaId())).
 		WithLike(id.Name()))
 	if err != nil {
 		return nil, err

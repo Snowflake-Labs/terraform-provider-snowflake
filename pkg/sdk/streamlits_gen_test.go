@@ -18,7 +18,7 @@ func TestStreamlits_Create(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -58,7 +58,7 @@ func TestStreamlits_Alter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -97,7 +97,7 @@ func TestStreamlits_Drop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -167,7 +167,7 @@ func TestStreamlits_Describe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

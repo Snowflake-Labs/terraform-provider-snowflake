@@ -160,9 +160,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("drop view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
+		err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
@@ -360,7 +358,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	t.Run("show materialized view: no existing view", func(t *testing.T) {
 		showRequest := sdk.NewShowMaterializedViewRequest().
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()})
 		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -369,7 +367,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	t.Run("show materialized view: schema not existing", func(t *testing.T) {
 		showRequest := sdk.NewShowMaterializedViewRequest().
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "made-up-name")})
+			WithIn(&sdk.In{Schema: NonExistingDatabaseObjectIdentifier})
 		_, err := client.MaterializedViews.Show(ctx, showRequest)
 		require.Error(t, err)
 	})
@@ -380,7 +378,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 		showRequest := sdk.NewShowMaterializedViewRequest().
 			WithLike(&sdk.Like{Pattern: &view1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()})
 		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -400,9 +398,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("describe materialized view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		_, err := client.MaterializedViews.Describe(ctx, id)
+		_, err := client.MaterializedViews.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
