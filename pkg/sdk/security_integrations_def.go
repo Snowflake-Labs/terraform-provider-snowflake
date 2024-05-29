@@ -4,6 +4,12 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption string
+
+const (
+	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = "CLIENT_SECRET_POST"
+)
+
 type ExternalOauthSecurityIntegrationTypeOption string
 
 const (
@@ -67,6 +73,7 @@ const (
 )
 
 var (
+	allowedScopeDef           = g.NewQueryStruct("AllowedScope").Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 	userDomainDef             = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
 	emailPatternDef           = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
 	preAuthorizedRolesListDef = g.NewQueryStruct("PreAuthorizedRolesList").
@@ -108,6 +115,75 @@ func alterSecurityIntegrationOperation(structName string, opts func(qs *g.QueryS
 	qs = opts(qs)
 	return qs
 }
+
+var apiAuthClientCredentialsFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithClientCredentialsFlowIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+	OptionalAssignment(
+		"OAUTH_CLIENT_AUTH_METHOD",
+		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+		g.ParameterOptions(),
+	).
+	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
+	OptionalSQL("OAUTH_GRANT = CLIENT_CREDENTIALS").
+	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantClientCredentials",
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment")
+
+var apiAuthClientCredentialsFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithClientCredentialsFlowIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("COMMENT").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
+
+var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+	OptionalAssignment(
+		"OAUTH_CLIENT_AUTH_METHOD",
+		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+		g.ParameterOptions(),
+	).
+	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
+	OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
+	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode",
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
+
+var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("COMMENT").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
+
+var apiAuthJwtBearerFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithJwtBearerFlowIntegrationSet").
+	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+	OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+	OptionalAssignment(
+		"OAUTH_CLIENT_AUTH_METHOD",
+		g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+		g.ParameterOptions(),
+	).
+	OptionalTextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().SingleQuotes()).
+	OptionalSQL("OAUTH_GRANT = JWT_BEARER").
+	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantJwtBearer",
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
+
+var apiAuthJwtBearerFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithJwtBearerFlowIntegrationUnset").
+	OptionalSQL("ENABLED").
+	OptionalSQL("COMMENT").
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
 
 var externalOauthIntegrationSetDef = g.NewQueryStruct("ExternalOauthIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
@@ -246,6 +322,74 @@ var SecurityIntegrationsDef = g.NewInterface(
 	"SecurityIntegration",
 	g.KindOfT[AccountObjectIdentifier](),
 ).
+	CustomOperation(
+		"CreateApiAuthenticationWithClientCredentialsFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
+				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
+				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment(
+					"OAUTH_CLIENT_AUTH_METHOD",
+					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+					g.ParameterOptions(),
+				).
+				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalSQL("OAUTH_GRANT = CLIENT_CREDENTIALS").
+				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+				ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses())
+		}),
+		allowedScopeDef,
+	).
+	CustomOperation(
+		"CreateApiAuthenticationWithAuthorizationCodeGrantFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
+				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
+				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment(
+					"OAUTH_CLIENT_AUTH_METHOD",
+					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+					g.ParameterOptions(),
+				).
+				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
+				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
+		}),
+	).
+	CustomOperation(
+		"CreateApiAuthenticationWithJwtBearerFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.
+				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
+				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
+				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				TextAssignment("OAUTH_ASSERTION_ISSUER", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+				OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment(
+					"OAUTH_CLIENT_AUTH_METHOD",
+					g.KindOfT[ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption](),
+					g.ParameterOptions(),
+				).
+				TextAssignment("OAUTH_CLIENT_ID", g.ParameterOptions().Required().SingleQuotes()).
+				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
+				OptionalSQL("OAUTH_GRANT = JWT_BEARER").
+				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
+		}),
+	).
 	CustomOperation(
 		"CreateExternalOauth",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external",
@@ -389,6 +533,51 @@ var SecurityIntegrationsDef = g.NewInterface(
 				).
 				OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 				OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions())
+		}),
+	).
+	CustomOperation(
+		"AlterApiAuthenticationWithClientCredentialsFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				apiAuthClientCredentialsFlowIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				apiAuthClientCredentialsFlowIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
+		}),
+	).
+	CustomOperation(
+		"AlterApiAuthenticationWithAuthorizationCodeGrantFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				apiAuthCodeGrantFlowIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				apiAuthCodeGrantFlowIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
+		}),
+	).
+	CustomOperation(
+		"AlterApiAuthenticationWithJwtBearerFlow",
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+			return qs.OptionalQueryStructField(
+				"Set",
+				apiAuthJwtBearerFlowIntegrationSetDef,
+				g.ListOptions().NoParentheses().SQL("SET"),
+			).OptionalQueryStructField(
+				"Unset",
+				apiAuthJwtBearerFlowIntegrationUnsetDef,
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags")
 		}),
 	).
 	CustomOperation(

@@ -3,20 +3,75 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateExternalOauthSecurityIntegrationOptions]               = new(CreateExternalOauthSecurityIntegrationRequest)
-	_ optionsProvider[CreateOauthForPartnerApplicationsSecurityIntegrationOptions] = new(CreateOauthForPartnerApplicationsSecurityIntegrationRequest)
-	_ optionsProvider[CreateOauthForCustomClientsSecurityIntegrationOptions]       = new(CreateOauthForCustomClientsSecurityIntegrationRequest)
-	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                       = new(CreateSaml2SecurityIntegrationRequest)
-	_ optionsProvider[CreateScimSecurityIntegrationOptions]                        = new(CreateScimSecurityIntegrationRequest)
-	_ optionsProvider[AlterExternalOauthSecurityIntegrationOptions]                = new(AlterExternalOauthSecurityIntegrationRequest)
-	_ optionsProvider[AlterOauthForPartnerApplicationsSecurityIntegrationOptions]  = new(AlterOauthForPartnerApplicationsSecurityIntegrationRequest)
-	_ optionsProvider[AlterOauthForCustomClientsSecurityIntegrationOptions]        = new(AlterOauthForCustomClientsSecurityIntegrationRequest)
-	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                        = new(AlterSaml2SecurityIntegrationRequest)
-	_ optionsProvider[AlterScimSecurityIntegrationOptions]                         = new(AlterScimSecurityIntegrationRequest)
-	_ optionsProvider[DropSecurityIntegrationOptions]                              = new(DropSecurityIntegrationRequest)
-	_ optionsProvider[DescribeSecurityIntegrationOptions]                          = new(DescribeSecurityIntegrationRequest)
-	_ optionsProvider[ShowSecurityIntegrationOptions]                              = new(ShowSecurityIntegrationRequest)
+	_ optionsProvider[CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions]      = new(CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest)
+	_ optionsProvider[CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions] = new(CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest)
+	_ optionsProvider[CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions]              = new(CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest)
+	_ optionsProvider[CreateExternalOauthSecurityIntegrationOptions]                                   = new(CreateExternalOauthSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthForPartnerApplicationsSecurityIntegrationOptions]                     = new(CreateOauthForPartnerApplicationsSecurityIntegrationRequest)
+	_ optionsProvider[CreateOauthForCustomClientsSecurityIntegrationOptions]                           = new(CreateOauthForCustomClientsSecurityIntegrationRequest)
+	_ optionsProvider[CreateSaml2SecurityIntegrationOptions]                                           = new(CreateSaml2SecurityIntegrationRequest)
+	_ optionsProvider[CreateScimSecurityIntegrationOptions]                                            = new(CreateScimSecurityIntegrationRequest)
+	_ optionsProvider[AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions]       = new(AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest)
+	_ optionsProvider[AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions]  = new(AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest)
+	_ optionsProvider[AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions]               = new(AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest)
+	_ optionsProvider[AlterExternalOauthSecurityIntegrationOptions]                                    = new(AlterExternalOauthSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthForPartnerApplicationsSecurityIntegrationOptions]                      = new(AlterOauthForPartnerApplicationsSecurityIntegrationRequest)
+	_ optionsProvider[AlterOauthForCustomClientsSecurityIntegrationOptions]                            = new(AlterOauthForCustomClientsSecurityIntegrationRequest)
+	_ optionsProvider[AlterSaml2SecurityIntegrationOptions]                                            = new(AlterSaml2SecurityIntegrationRequest)
+	_ optionsProvider[AlterScimSecurityIntegrationOptions]                                             = new(AlterScimSecurityIntegrationRequest)
+	_ optionsProvider[DropSecurityIntegrationOptions]                                                  = new(DropSecurityIntegrationRequest)
+	_ optionsProvider[DescribeSecurityIntegrationOptions]                                              = new(DescribeSecurityIntegrationRequest)
+	_ optionsProvider[ShowSecurityIntegrationOptions]                                                  = new(ShowSecurityIntegrationRequest)
 )
+
+type CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest struct {
+	OrReplace                   *bool
+	IfNotExists                 *bool
+	name                        AccountObjectIdentifier // required
+	Enabled                     bool                    // required
+	OauthTokenEndpoint          *string
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId               string // required
+	OauthClientSecret           string // required
+	OauthGrantClientCredentials *bool
+	OauthAccessTokenValidity    *int
+	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
+	Comment                     *string
+}
+
+type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest struct {
+	OrReplace                   *bool
+	IfNotExists                 *bool
+	name                        AccountObjectIdentifier // required
+	Enabled                     bool                    // required
+	OauthAuthorizationEndpoint  *string
+	OauthTokenEndpoint          *string
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId               string // required
+	OauthClientSecret           string // required
+	OauthGrantAuthorizationCode *bool
+	OauthAccessTokenValidity    *int
+	OauthRefreshTokenValidity   *int
+	Comment                     *string
+}
+
+type CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest struct {
+	OrReplace                  *bool
+	IfNotExists                *bool
+	name                       AccountObjectIdentifier // required
+	Enabled                    bool                    // required
+	OauthAssertionIssuer       string                  // required
+	OauthAuthorizationEndpoint *string
+	OauthTokenEndpoint         *string
+	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId              string // required
+	OauthClientSecret          string // required
+	OauthGrantJwtBearer        *bool
+	OauthAccessTokenValidity   *int
+	OauthRefreshTokenValidity  *int
+	Comment                    *string
+}
 
 type CreateExternalOauthSecurityIntegrationRequest struct {
 	OrReplace                                  *bool
@@ -138,6 +193,87 @@ type CreateScimSecurityIntegrationRequest struct {
 
 func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
 	return r.name
+}
+
+type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest struct {
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Set       *ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest
+	Unset     *ApiAuthenticationWithClientCredentialsFlowIntegrationUnsetRequest
+}
+
+type ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest struct {
+	Enabled                     *bool
+	OauthTokenEndpoint          *string
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId               *string
+	OauthClientSecret           *string
+	OauthGrantClientCredentials *bool
+	OauthAccessTokenValidity    *int
+	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
+	Comment                     *string
+}
+
+type ApiAuthenticationWithClientCredentialsFlowIntegrationUnsetRequest struct {
+	Enabled *bool
+	Comment *bool
+}
+
+type AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest struct {
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Set       *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest
+	Unset     *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnsetRequest
+}
+
+type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest struct {
+	Enabled                     *bool
+	OauthAuthorizationEndpoint  *string
+	OauthTokenEndpoint          *string
+	OauthClientAuthMethod       *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId               *string
+	OauthClientSecret           *string
+	OauthGrantAuthorizationCode *bool
+	OauthAccessTokenValidity    *int
+	OauthRefreshTokenValidity   *int
+	Comment                     *string
+}
+
+type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnsetRequest struct {
+	Enabled *bool
+	Comment *bool
+}
+
+type AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest struct {
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Set       *ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest
+	Unset     *ApiAuthenticationWithJwtBearerFlowIntegrationUnsetRequest
+}
+
+type ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest struct {
+	Enabled                    *bool
+	OauthAuthorizationEndpoint *string
+	OauthTokenEndpoint         *string
+	OauthClientAuthMethod      *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption
+	OauthClientId              *string
+	OauthClientSecret          *string
+	OauthGrantJwtBearer        *bool
+	OauthAccessTokenValidity   *int
+	OauthRefreshTokenValidity  *int
+	Comment                    *string
+}
+
+type ApiAuthenticationWithJwtBearerFlowIntegrationUnsetRequest struct {
+	Enabled *bool
+	Comment *bool
 }
 
 type AlterExternalOauthSecurityIntegrationRequest struct {

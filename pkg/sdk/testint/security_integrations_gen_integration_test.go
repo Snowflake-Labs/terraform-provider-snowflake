@@ -31,6 +31,51 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
+	createApiAuthClientCred := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return integration, id
+	}
+	createApiAuthCodeGrant := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return integration, id
+	}
+	createApiAuthJwtBearer := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id, false, "foo", "foo", "foo")
+		if with != nil {
+			with(req)
+		}
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithJwtBearerFlow(ctx, req)
+		require.NoError(t, err)
+		cleanupSecurityIntegration(t, id)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return integration, id
+	}
 	createExternalOauth := func(t *testing.T, with func(*sdk.CreateExternalOauthSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier, string) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -135,6 +180,38 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		for _, exp := range strings.Split(value, sep) {
 			assert.Contains(t, values, exp)
 		}
+	}
+
+	type apiAuthDetails struct {
+		enabled                    string
+		oauthAccessTokenValidity   string
+		oauthRefreshTokenValidity  string
+		oauthClientId              string
+		oauthClientAuthMethod      string
+		oauthAuthorizationEndpoint string
+		oauthTokenEndpoint         string
+		oauthAllowedScopes         string
+		oauthGrant                 string
+		parentIntegration          string
+		authType                   string
+		oauthAssertionIssuer       string
+		comment                    string
+	}
+
+	assertApiAuth := func(details []sdk.SecurityIntegrationProperty, d apiAuthDetails) {
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: d.enabled, Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ACCESS_TOKEN_VALIDITY", Type: "Integer", Value: d.oauthAccessTokenValidity, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_REFRESH_TOKEN_VALIDITY", Type: "Integer", Value: d.oauthRefreshTokenValidity, Default: "7776000"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_ID", Type: "String", Value: d.oauthClientId, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_AUTH_METHOD", Type: "String", Value: d.oauthClientAuthMethod, Default: "CLIENT_SECRET_BASIC"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_AUTHORIZATION_ENDPOINT", Type: "String", Value: d.oauthAuthorizationEndpoint, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_TOKEN_ENDPOINT", Type: "String", Value: d.oauthTokenEndpoint, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ALLOWED_SCOPES", Type: "List", Value: d.oauthAllowedScopes, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_GRANT", Type: "String", Value: d.oauthGrant, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "PARENT_INTEGRATION", Type: "String", Value: d.parentIntegration, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "AUTH_TYPE", Type: "String", Value: d.authType, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ASSERTION_ISSUER", Type: "String", Value: d.oauthAssertionIssuer, Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: d.comment, Default: ""})
 	}
 
 	type externalOauthDetails struct {
@@ -251,6 +328,96 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_USER_DOMAINS", Type: "List", Value: d.allowedUserDomains, Default: "[]"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
+
+	t.Run("CreateApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
+		integration, id := createApiAuthClientCred(t, func(r *sdk.CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) {
+			r.WithComment("a").
+				WithOauthAccessTokenValidity(31337).
+				WithOauthRefreshTokenValidity(31337).
+				WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}}).
+				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+				WithOauthGrantClientCredentials(true).
+				WithOauthTokenEndpoint("http://example.com")
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                   "false",
+			oauthAccessTokenValidity:  "31337",
+			oauthRefreshTokenValidity: "31337",
+			oauthClientId:             "foo",
+			oauthClientAuthMethod:     string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthTokenEndpoint:        "http://example.com",
+			oauthAllowedScopes:        "[foo]",
+			oauthGrant:                "CLIENT_CREDENTIALS",
+			authType:                  "OAUTH2",
+			comment:                   "a",
+		})
+
+		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
+	})
+
+	t.Run("CreateApiAuthenticationWithAuthorizationCodeGrantFlow", func(t *testing.T) {
+		integration, id := createApiAuthCodeGrant(t, func(r *sdk.CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) {
+			r.WithComment("a").
+				WithOauthAccessTokenValidity(31337).
+				WithOauthAuthorizationEndpoint("http://example.com").
+				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+				WithOauthGrantAuthorizationCode(true).
+				WithOauthRefreshTokenValidity(31337).
+				WithOauthTokenEndpoint("http://example.com")
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                    "false",
+			oauthAccessTokenValidity:   "31337",
+			oauthRefreshTokenValidity:  "31337",
+			oauthClientId:              "foo",
+			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthAuthorizationEndpoint: "http://example.com",
+			oauthTokenEndpoint:         "http://example.com",
+			oauthGrant:                 "AUTHORIZATION_CODE",
+			authType:                   "OAUTH2",
+			comment:                    "a",
+		})
+
+		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
+	})
+
+	t.Run("CreateApiAuthenticationWithJwtBearerFlow", func(t *testing.T) {
+		// TODO [SNOW-1452191]: unskip
+		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+		integration, id := createApiAuthJwtBearer(t, func(r *sdk.CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) {
+			r.WithComment("a").
+				WithOauthAccessTokenValidity(31337).
+				WithOauthAuthorizationEndpoint("http://example.com").
+				WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+				WithOauthGrantJwtBearer(true).
+				WithOauthRefreshTokenValidity(31337).
+				WithOauthTokenEndpoint("http://example.com")
+		})
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                    "false",
+			oauthAccessTokenValidity:   "31337",
+			oauthRefreshTokenValidity:  "31337",
+			oauthClientId:              "foo",
+			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthAuthorizationEndpoint: "http://example.com",
+			oauthTokenEndpoint:         "http://example.com",
+			oauthGrant:                 "JWT_BEARER",
+			authType:                   "OAUTH2",
+			oauthAssertionIssuer:       "foo",
+			comment:                    "a",
+		})
+
+		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
+	})
 
 	t.Run("CreateExternalOauth with allowed list and jws keys url", func(t *testing.T) {
 		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
@@ -429,27 +596,271 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
 	})
-	t.Run("AlterExternalOauth with allowed list and jws keys url", func(t *testing.T) {
-		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
-			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
-		})
-		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
-		t.Cleanup(role1Cleanup)
-		setRequest := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).
+
+	t.Run("AlterApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
+		_, id := createApiAuthClientCred(t, nil)
+		setRequest := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).
 			WithSet(
-				*sdk.NewExternalOauthIntegrationSetRequest().
-					WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://test.com"}}).
-					WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}),
+				*sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest().
+					WithComment("foo").
+					WithEnabled(true).
+					WithOauthAccessTokenValidity(31337).
+					WithOauthRefreshTokenValidity(31337).
+					WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}}).
+					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+					WithOauthClientId("foo").
+					WithOauthClientSecret("foo").
+					WithOauthGrantClientCredentials(true).
+					WithOauthTokenEndpoint("http://example.com"),
 			)
-		err := client.SecurityIntegrations.AlterExternalOauth(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: "http://test.com", Default: ""})
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name, Default: "[]"})
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                   "true",
+			oauthAccessTokenValidity:  "31337",
+			oauthRefreshTokenValidity: "31337",
+			oauthClientId:             "foo",
+			oauthClientAuthMethod:     string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthTokenEndpoint:        "http://example.com",
+			oauthAllowedScopes:        "[foo]",
+			oauthGrant:                "CLIENT_CREDENTIALS",
+			authType:                  "OAUTH2",
+			comment:                   "foo",
+		})
+
+		unsetRequest := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithComment(true),
+			)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
+
+	t.Run("AlterApiAuthenticationWithClientCredentialsFlow - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id := createApiAuthClientCred(t, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
+	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow", func(t *testing.T) {
+		_, id := createApiAuthCodeGrant(t, nil)
+		setRequest := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest().
+					WithComment("foo").
+					WithEnabled(true).
+					WithOauthAccessTokenValidity(31337).
+					WithOauthRefreshTokenValidity(31337).
+					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+					WithOauthClientId("foo").
+					WithOauthClientSecret("foo").
+					WithOauthGrantAuthorizationCode(true).
+					WithOauthAuthorizationEndpoint("http://example.com").
+					WithOauthTokenEndpoint("http://example.com"),
+			)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                    "true",
+			oauthAccessTokenValidity:   "31337",
+			oauthRefreshTokenValidity:  "31337",
+			oauthClientId:              "foo",
+			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthAuthorizationEndpoint: "http://example.com",
+			oauthTokenEndpoint:         "http://example.com",
+			oauthGrant:                 "AUTHORIZATION_CODE",
+			authType:                   "OAUTH2",
+			comment:                    "foo",
+		})
+
+		unsetRequest := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithComment(true),
+			)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow - set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id := createApiAuthCodeGrant(t, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
+	t.Run("AlterApiAuthenticationWithJwtBearerFlow", func(t *testing.T) {
+		// TODO [SNOW-1452191]: unskip
+		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+		_, id := createApiAuthJwtBearer(t, nil)
+		setRequest := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewApiAuthenticationWithJwtBearerFlowIntegrationSetRequest().
+					WithComment("a").
+					WithEnabled(true).
+					WithOauthAccessTokenValidity(31337).
+					WithOauthAuthorizationEndpoint("http://example.com").
+					WithOauthClientAuthMethod(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost).
+					WithOauthClientId("foo").
+					WithOauthClientSecret("foo").
+					WithOauthGrantJwtBearer(true).
+					WithOauthRefreshTokenValidity(31337).
+					WithOauthTokenEndpoint("http://example.com"),
+			)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertApiAuth(details, apiAuthDetails{
+			enabled:                    "true",
+			oauthAccessTokenValidity:   "31337",
+			oauthRefreshTokenValidity:  "31337",
+			oauthClientId:              "foo",
+			oauthClientAuthMethod:      string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
+			oauthAuthorizationEndpoint: "http://example.com",
+			oauthTokenEndpoint:         "http://example.com",
+			oauthGrant:                 "JWT_BEARER",
+			authType:                   "OAUTH2",
+			comment:                    "foo",
+		})
+
+		unsetRequest := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).
+			WithUnset(
+				*sdk.NewApiAuthenticationWithJwtBearerFlowIntegrationUnsetRequest().
+					WithEnabled(true).
+					WithComment(true),
+			)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.SecurityIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("AlterApiAuthenticationWithJwtBearerFlow - set and unset tags", func(t *testing.T) {
+		// TODO [SNOW-1452191]: unskip
+		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		_, id := createApiAuthJwtBearer(t, nil)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
+	})
+
 	t.Run("AlterExternalOauth with other options", func(t *testing.T) {
 		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
 			r.WithExternalOauthRsaPublicKey(rsaKey).
@@ -732,6 +1143,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
 		require.Error(t, err)
 	})
+
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
 		_, id, issuer := createSAML2Integration(t, nil)
 
