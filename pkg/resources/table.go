@@ -385,7 +385,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	c := from.(map[string]interface{})
 	_type := c["type"].(string)
 
-	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
+	nameInQuotes := fmt.Sprintf(`"%v"`, c["name"].(string))
 	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
 
 	_default := c["default"].([]interface{})
