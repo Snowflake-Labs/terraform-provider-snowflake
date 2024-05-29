@@ -124,7 +124,7 @@ func alterSecurityIntegrationOperation(structName string, opts func(qs *g.QueryS
 	return qs
 }
 
-var apiAuthClientCredentialsFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationClientCredentialsFlowIntegrationSet").
+var apiAuthClientCredentialsFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithClientCredentialsFlowIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
 	OptionalAssignment(
@@ -146,12 +146,12 @@ var apiAuthClientCredentialsFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthent
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
 		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment")
 
-var apiAuthClientCredentialsFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationClientCredentialsFlowIntegrationUnset").
+var apiAuthClientCredentialsFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithClientCredentialsFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("COMMENT").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
 
-var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSet").
+var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
@@ -173,12 +173,12 @@ var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationA
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
 		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
 
-var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnset").
+var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("COMMENT").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
 
-var apiAuthJwtBearerFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationJwtBearerFlowIntegrationSet").
+var apiAuthJwtBearerFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationWithJwtBearerFlowIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalTextAssignment("OAUTH_AUTHORIZATION_ENDPOINT", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("OAUTH_TOKEN_ENDPOINT", g.ParameterOptions().SingleQuotes()).
@@ -200,7 +200,7 @@ var apiAuthJwtBearerFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationJ
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant",
 		"OauthAccessTokenValidity", "Comment")
 
-var apiAuthJwtBearerFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationJwtBearerFlowIntegrationUnset").
+var apiAuthJwtBearerFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithJwtBearerFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("COMMENT").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "Comment")
@@ -343,9 +343,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 	g.KindOfT[AccountObjectIdentifier](),
 ).
 	CustomOperation(
-		"CreateApiAuthenticationClientCredentialsFlow",
+		"CreateApiAuthenticationWithClientCredentialsFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
-		createSecurityIntegrationOperation("CreateApiAuthenticationClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
 				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
@@ -370,9 +370,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		allowedScopeDef,
 	).
 	CustomOperation(
-		"CreateApiAuthenticationAuthorizationCodeGrantFlow",
+		"CreateApiAuthenticationWithAuthorizationCodeGrantFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
-		createSecurityIntegrationOperation("CreateApiAuthenticationAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
 				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
@@ -396,9 +396,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"CreateApiAuthenticationJwtBearerFlow",
+		"CreateApiAuthenticationWithJwtBearerFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth",
-		createSecurityIntegrationOperation("CreateApiAuthenticationJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		createSecurityIntegrationOperation("CreateApiAuthenticationWithJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = API_AUTHENTICATION")).
 				PredefinedQueryStructField("authType", "string", g.StaticOptions().SQL("AUTH_TYPE = OAUTH2")).
@@ -568,9 +568,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"AlterApiAuthenticationClientCredentialsFlow",
+		"AlterApiAuthenticationWithClientCredentialsFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
-		alterSecurityIntegrationOperation("AlterApiAuthenticationClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithClientCredentialsFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
 				apiAuthClientCredentialsFlowIntegrationSetDef,
@@ -583,9 +583,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"AlterApiAuthenticationAuthorizationCodeGrantFlow",
+		"AlterApiAuthenticationWithAuthorizationCodeGrantFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
-		alterSecurityIntegrationOperation("AlterApiAuthenticationAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithAuthorizationCodeGrantFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
 				apiAuthCodeGrantFlowIntegrationSetDef,
@@ -598,9 +598,9 @@ var SecurityIntegrationsDef = g.NewInterface(
 		}),
 	).
 	CustomOperation(
-		"AlterApiAuthenticationJwtBearerFlow",
+		"AlterApiAuthenticationWithJwtBearerFlow",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth",
-		alterSecurityIntegrationOperation("AlterApiAuthenticationJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
+		alterSecurityIntegrationOperation("AlterApiAuthenticationWithJwtBearerFlow", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.OptionalQueryStructField(
 				"Set",
 				apiAuthJwtBearerFlowIntegrationSetDef,

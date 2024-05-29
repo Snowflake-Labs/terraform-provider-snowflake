@@ -1,17 +1,17 @@
 package sdk
 
 var (
-	_ validatable = new(CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions)
-	_ validatable = new(CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions)
-	_ validatable = new(CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions)
+	_ validatable = new(CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions)
+	_ validatable = new(CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions)
+	_ validatable = new(CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions)
 	_ validatable = new(CreateExternalOauthSecurityIntegrationOptions)
 	_ validatable = new(CreateOauthForPartnerApplicationsSecurityIntegrationOptions)
 	_ validatable = new(CreateOauthForCustomClientsSecurityIntegrationOptions)
 	_ validatable = new(CreateSaml2SecurityIntegrationOptions)
 	_ validatable = new(CreateScimSecurityIntegrationOptions)
-	_ validatable = new(AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions)
-	_ validatable = new(AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions)
-	_ validatable = new(AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions)
+	_ validatable = new(AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions)
+	_ validatable = new(AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions)
+	_ validatable = new(AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions)
 	_ validatable = new(AlterExternalOauthSecurityIntegrationOptions)
 	_ validatable = new(AlterOauthForPartnerApplicationsSecurityIntegrationOptions)
 	_ validatable = new(AlterOauthForCustomClientsSecurityIntegrationOptions)
@@ -22,7 +22,7 @@ var (
 	_ validatable = new(ShowSecurityIntegrationOptions)
 )
 
-func (opts *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions) validate() error {
+func (opts *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -31,12 +31,12 @@ func (opts *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptio
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions) validate() error {
+func (opts *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -45,12 +45,12 @@ func (opts *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegration
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions) validate() error {
+func (opts *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -59,7 +59,7 @@ func (opts *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions) vali
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
 	return JoinErrors(errs...)
 }
@@ -146,7 +146,7 @@ func (opts *CreateScimSecurityIntegrationOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions) validate() error {
+func (opts *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -155,22 +155,22 @@ func (opts *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOption
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrant, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthAllowedScopes, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions) validate() error {
+func (opts *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -179,22 +179,22 @@ func (opts *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationO
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrant, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions) validate() error {
+func (opts *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -203,16 +203,16 @@ func (opts *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions) valid
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrant, opts.Set.OauthAccessTokenValidity, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Enabled, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions.Unset", "Enabled", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)

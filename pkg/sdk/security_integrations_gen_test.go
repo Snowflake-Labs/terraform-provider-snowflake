@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestSecurityIntegrations_CreateApiAuthenticationClientCredentialsFlow(t *testing.T) {
+func TestSecurityIntegrations_CreateApiAuthenticationWithClientCredentialsFlow(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions
-	defaultOpts := func() *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
-		return &CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+	// Minimal valid CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions{
 			name:              id,
 			Enabled:           true,
 			OauthClientId:     "foo",
@@ -18,7 +18,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationClientCredentialsFlow(t *te
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions = nil
+		var opts *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -26,7 +26,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationClientCredentialsFlow(t *te
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -52,12 +52,12 @@ func TestSecurityIntegrations_CreateApiAuthenticationClientCredentialsFlow(t *te
 	})
 }
 
-func TestSecurityIntegrations_CreateApiAuthenticationAuthorizationCodeGrantFlow(t *testing.T) {
+func TestSecurityIntegrations_CreateApiAuthenticationWithAuthorizationCodeGrantFlow(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions
-	defaultOpts := func() *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions {
-		return &CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions{
+	// Minimal valid CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions{
 			name:              id,
 			Enabled:           true,
 			OauthClientId:     "foo",
@@ -66,7 +66,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationAuthorizationCodeGrantFlow(
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions = nil
+		var opts *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -74,7 +74,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationAuthorizationCodeGrantFlow(
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
@@ -99,12 +99,12 @@ func TestSecurityIntegrations_CreateApiAuthenticationAuthorizationCodeGrantFlow(
 	})
 }
 
-func TestSecurityIntegrations_CreateApiAuthenticationJwtBearerFlow(t *testing.T) {
+func TestSecurityIntegrations_CreateApiAuthenticationWithJwtBearerFlow(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions
-	defaultOpts := func() *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions {
-		return &CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions{
+	// Minimal valid CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions
+	defaultOpts := func() *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions {
+		return &CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions{
 			name:                 id,
 			Enabled:              true,
 			OauthClientId:        "foo",
@@ -114,7 +114,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationJwtBearerFlow(t *testing.T)
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions = nil
+		var opts *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -122,7 +122,7 @@ func TestSecurityIntegrations_CreateApiAuthenticationJwtBearerFlow(t *testing.T)
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.IfNotExists = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
@@ -431,24 +431,24 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	})
 }
 
-func TestSecurityIntegrations_AlterApiAuthenticationClientCredentialsFlow(t *testing.T) {
+func TestSecurityIntegrations_AlterApiAuthenticationWithClientCredentialsFlow(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 
-	// Minimal valid AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions
-	defaultOpts := func() *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
-		return &AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+	// Minimal valid AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions
+	defaultOpts := func() *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
+		return &AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions = nil
+		var opts *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{
+		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{
 			Enabled: Pointer(true),
 		}
 		opts.name = NewAccountObjectIdentifier("")
@@ -457,33 +457,33 @@ func TestSecurityIntegrations_AlterApiAuthenticationClientCredentialsFlow(t *tes
 
 	t.Run("validation: exactly of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint",
+		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions.Set", "Enabled", "OauthTokenEndpoint",
 			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrant", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions.Unset",
+		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions.Unset",
 			"Enabled", "Comment"))
 	})
 
 	t.Run("validation: exactly one of the fields [opts.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{}
-		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{}
+		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{
+		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{
 			Enabled:                   Pointer(true),
 			OauthTokenEndpoint:        Pointer("foo"),
 			OauthClientAuthMethod:     Pointer(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost),
@@ -502,7 +502,7 @@ func TestSecurityIntegrations_AlterApiAuthenticationClientCredentialsFlow(t *tes
 
 	t.Run("all options - unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{
+		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{
 			Enabled: Pointer(true),
 			Comment: Pointer(true),
 		}

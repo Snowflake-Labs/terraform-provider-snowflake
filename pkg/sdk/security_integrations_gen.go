@@ -7,17 +7,17 @@ import (
 )
 
 type SecurityIntegrations interface {
-	CreateApiAuthenticationClientCredentialsFlow(ctx context.Context, request *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) error
-	CreateApiAuthenticationAuthorizationCodeGrantFlow(ctx context.Context, request *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) error
-	CreateApiAuthenticationJwtBearerFlow(ctx context.Context, request *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) error
+	CreateApiAuthenticationWithClientCredentialsFlow(ctx context.Context, request *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) error
+	CreateApiAuthenticationWithAuthorizationCodeGrantFlow(ctx context.Context, request *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) error
+	CreateApiAuthenticationWithJwtBearerFlow(ctx context.Context, request *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) error
 	CreateExternalOauth(ctx context.Context, request *CreateExternalOauthSecurityIntegrationRequest) error
 	CreateOauthForPartnerApplications(ctx context.Context, request *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) error
 	CreateOauthForCustomClients(ctx context.Context, request *CreateOauthForCustomClientsSecurityIntegrationRequest) error
 	CreateSaml2(ctx context.Context, request *CreateSaml2SecurityIntegrationRequest) error
 	CreateScim(ctx context.Context, request *CreateScimSecurityIntegrationRequest) error
-	AlterApiAuthenticationClientCredentialsFlow(ctx context.Context, request *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) error
-	AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx context.Context, request *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) error
-	AlterApiAuthenticationJwtBearerFlow(ctx context.Context, request *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) error
+	AlterApiAuthenticationWithClientCredentialsFlow(ctx context.Context, request *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) error
+	AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx context.Context, request *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) error
+	AlterApiAuthenticationWithJwtBearerFlow(ctx context.Context, request *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) error
 	AlterExternalOauth(ctx context.Context, request *AlterExternalOauthSecurityIntegrationRequest) error
 	AlterOauthForPartnerApplications(ctx context.Context, request *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) error
 	AlterOauthForCustomClients(ctx context.Context, request *AlterOauthForCustomClientsSecurityIntegrationRequest) error
@@ -29,8 +29,8 @@ type SecurityIntegrations interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
 }
 
-// CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
-type CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions struct {
+// CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
+type CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions struct {
 	create                    bool                                                             `ddl:"static" sql:"CREATE"`
 	OrReplace                 *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration       bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -54,8 +54,8 @@ type AllowedScope struct {
 	Scope string `ddl:"keyword,single_quotes"`
 }
 
-// CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
-type CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
+// CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
+type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
 	create                     bool                                                             `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration        bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -75,8 +75,8 @@ type CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
-type CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions struct {
+// CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
+type CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions struct {
 	create                     bool                                                             `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                                                            `ddl:"keyword" sql:"OR REPLACE"`
 	securityIntegration        bool                                                             `ddl:"static" sql:"SECURITY INTEGRATION"`
@@ -244,19 +244,19 @@ type CreateScimSecurityIntegrationOptions struct {
 	Comment             *string                                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
-type AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions struct {
+// AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
+type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions struct {
 	alter               bool                                                    `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                                                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                                                   `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier                                 `ddl:"identifier"`
 	SetTags             []TagAssociation                                        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier                                      `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *ApiAuthenticationClientCredentialsFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset               *ApiAuthenticationClientCredentialsFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *ApiAuthenticationWithClientCredentialsFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *ApiAuthenticationWithClientCredentialsFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type ApiAuthenticationClientCredentialsFlowIntegrationSet struct {
+type ApiAuthenticationWithClientCredentialsFlowIntegrationSet struct {
 	Enabled                   *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthTokenEndpoint        *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
 	OauthClientAuthMethod     *ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption `ddl:"parameter" sql:"OAUTH_CLIENT_AUTH_METHOD"`
@@ -269,24 +269,24 @@ type ApiAuthenticationClientCredentialsFlowIntegrationSet struct {
 	Comment                   *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type ApiAuthenticationClientCredentialsFlowIntegrationUnset struct {
+type ApiAuthenticationWithClientCredentialsFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
-type AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
+// AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
+type AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions struct {
 	alter               bool                                                         `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                                                         `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                                                        `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier                                      `ddl:"identifier"`
 	SetTags             []TagAssociation                                             `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier                                           `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset               *ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSet struct {
+type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet struct {
 	Enabled                    *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthAuthorizationEndpoint *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
 	OauthTokenEndpoint         *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
@@ -299,24 +299,24 @@ type ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSet struct {
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnset struct {
+type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
-type AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions struct {
+// AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-api-auth.
+type AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions struct {
 	alter               bool                                            `ddl:"static" sql:"ALTER"`
 	securityIntegration bool                                            `ddl:"static" sql:"SECURITY INTEGRATION"`
 	IfExists            *bool                                           `ddl:"keyword" sql:"IF EXISTS"`
 	name                AccountObjectIdentifier                         `ddl:"identifier"`
 	SetTags             []TagAssociation                                `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags           []ObjectIdentifier                              `ddl:"keyword" sql:"UNSET TAG"`
-	Set                 *ApiAuthenticationJwtBearerFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset               *ApiAuthenticationJwtBearerFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set                 *ApiAuthenticationWithJwtBearerFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset               *ApiAuthenticationWithJwtBearerFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
-type ApiAuthenticationJwtBearerFlowIntegrationSet struct {
+type ApiAuthenticationWithJwtBearerFlowIntegrationSet struct {
 	Enabled                    *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthAuthorizationEndpoint *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
 	OauthTokenEndpoint         *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
@@ -329,7 +329,7 @@ type ApiAuthenticationJwtBearerFlowIntegrationSet struct {
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type ApiAuthenticationJwtBearerFlowIntegrationUnset struct {
+type ApiAuthenticationWithJwtBearerFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }

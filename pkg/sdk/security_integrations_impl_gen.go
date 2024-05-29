@@ -12,17 +12,17 @@ type securityIntegrations struct {
 	client *Client
 }
 
-func (v *securityIntegrations) CreateApiAuthenticationClientCredentialsFlow(ctx context.Context, request *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateApiAuthenticationWithClientCredentialsFlow(ctx context.Context, request *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) CreateApiAuthenticationAuthorizationCodeGrantFlow(ctx context.Context, request *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateApiAuthenticationWithAuthorizationCodeGrantFlow(ctx context.Context, request *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) CreateApiAuthenticationJwtBearerFlow(ctx context.Context, request *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) CreateApiAuthenticationWithJwtBearerFlow(ctx context.Context, request *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -52,17 +52,17 @@ func (v *securityIntegrations) CreateScim(ctx context.Context, request *CreateSc
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterApiAuthenticationClientCredentialsFlow(ctx context.Context, request *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterApiAuthenticationWithClientCredentialsFlow(ctx context.Context, request *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx context.Context, request *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx context.Context, request *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *securityIntegrations) AlterApiAuthenticationJwtBearerFlow(ctx context.Context, request *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) error {
+func (v *securityIntegrations) AlterApiAuthenticationWithJwtBearerFlow(ctx context.Context, request *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -128,8 +128,8 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
-	opts := &CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
+	opts := &CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions{
 		OrReplace:                 r.OrReplace,
 		IfNotExists:               r.IfNotExists,
 		name:                      r.name,
@@ -147,8 +147,8 @@ func (r *CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest)
 	return opts
 }
 
-func (r *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions {
-	opts := &CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions{
+func (r *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions {
+	opts := &CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions{
 		OrReplace:                  r.OrReplace,
 		IfNotExists:                r.IfNotExists,
 		name:                       r.name,
@@ -166,8 +166,8 @@ func (r *CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationReq
 	return opts
 }
 
-func (r *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions {
-	opts := &CreateApiAuthenticationJwtBearerFlowSecurityIntegrationOptions{
+func (r *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions {
+	opts := &CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions{
 		OrReplace:                  r.OrReplace,
 		IfNotExists:                r.IfNotExists,
 		name:                       r.name,
@@ -319,15 +319,15 @@ func (r *CreateScimSecurityIntegrationRequest) toOpts() *CreateScimSecurityInteg
 	return opts
 }
 
-func (r *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions {
-	opts := &AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationOptions{
+func (r *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
+	opts := &AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &ApiAuthenticationClientCredentialsFlowIntegrationSet{
+		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{
 			Enabled:                   r.Set.Enabled,
 			OauthTokenEndpoint:        r.Set.OauthTokenEndpoint,
 			OauthClientAuthMethod:     r.Set.OauthClientAuthMethod,
@@ -341,7 +341,7 @@ func (r *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) 
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &ApiAuthenticationClientCredentialsFlowIntegrationUnset{
+		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}
@@ -349,15 +349,15 @@ func (r *AlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) 
 	return opts
 }
 
-func (r *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions {
-	opts := &AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationOptions{
+func (r *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions {
+	opts := &AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &ApiAuthenticationAuthorizationCodeGrantFlowIntegrationSet{
+		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{
 			Enabled:                    r.Set.Enabled,
 			OauthAuthorizationEndpoint: r.Set.OauthAuthorizationEndpoint,
 			OauthTokenEndpoint:         r.Set.OauthTokenEndpoint,
@@ -371,7 +371,7 @@ func (r *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequ
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &ApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnset{
+		opts.Unset = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}
@@ -379,15 +379,15 @@ func (r *AlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequ
 	return opts
 }
 
-func (r *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions {
-	opts := &AlterApiAuthenticationJwtBearerFlowSecurityIntegrationOptions{
+func (r *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) toOpts() *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions {
+	opts := &AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions{
 		IfExists:  r.IfExists,
 		name:      r.name,
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
 	if r.Set != nil {
-		opts.Set = &ApiAuthenticationJwtBearerFlowIntegrationSet{
+		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{
 			Enabled:                    r.Set.Enabled,
 			OauthAuthorizationEndpoint: r.Set.OauthAuthorizationEndpoint,
 			OauthTokenEndpoint:         r.Set.OauthTokenEndpoint,
@@ -401,7 +401,7 @@ func (r *AlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) toOpts()
 		}
 	}
 	if r.Unset != nil {
-		opts.Unset = &ApiAuthenticationJwtBearerFlowIntegrationUnset{
+		opts.Unset = &ApiAuthenticationWithJwtBearerFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}

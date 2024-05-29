@@ -31,14 +31,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-	createApiAuthClientCred := func(t *testing.T, with func(*sdk.CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+	createApiAuthClientCred := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		req := sdk.NewCreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+		req := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, false, "foo", "foo")
 		if with != nil {
 			with(req)
 		}
-		err := client.SecurityIntegrations.CreateApiAuthenticationClientCredentialsFlow(ctx, req)
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(ctx, req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, id)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
@@ -46,14 +46,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		return integration, id
 	}
-	createApiAuthCodeGrant := func(t *testing.T, with func(*sdk.CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+	createApiAuthCodeGrant := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		req := sdk.NewCreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+		req := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, false, "foo", "foo")
 		if with != nil {
 			with(req)
 		}
-		err := client.SecurityIntegrations.CreateApiAuthenticationAuthorizationCodeGrantFlow(ctx, req)
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, id)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
@@ -61,14 +61,14 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		return integration, id
 	}
-	createApiAuthJwtBearer := func(t *testing.T, with func(*sdk.CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
+	createApiAuthJwtBearer := func(t *testing.T, with func(*sdk.CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		req := sdk.NewCreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(id, false, "foo", "foo", "foo")
+		req := sdk.NewCreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id, false, "foo", "foo", "foo")
 		if with != nil {
 			with(req)
 		}
-		err := client.SecurityIntegrations.CreateApiAuthenticationJwtBearerFlow(ctx, req)
+		err := client.SecurityIntegrations.CreateApiAuthenticationWithJwtBearerFlow(ctx, req)
 		require.NoError(t, err)
 		cleanupSecurityIntegration(t, id)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
@@ -329,8 +329,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
 	}
 
-	t.Run("CreateApiAuthenticationClientCredentialsFlow", func(t *testing.T) {
-		integration, id := createApiAuthClientCred(t, func(r *sdk.CreateApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest) {
+	t.Run("CreateApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
+		integration, id := createApiAuthClientCred(t, func(r *sdk.CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) {
 			r.WithComment("a").
 				WithOauthAccessTokenValidity(31337).
 				WithOauthRefreshTokenValidity(31337).
@@ -358,8 +358,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
 	})
 
-	t.Run("CreateApiAuthenticationAuthorizationCodeGrantFlow", func(t *testing.T) {
-		integration, id := createApiAuthCodeGrant(t, func(r *sdk.CreateApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest) {
+	t.Run("CreateApiAuthenticationWithAuthorizationCodeGrantFlow", func(t *testing.T) {
+		integration, id := createApiAuthCodeGrant(t, func(r *sdk.CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) {
 			r.WithComment("a").
 				WithOauthAccessTokenValidity(31337).
 				WithOauthAuthorizationEndpoint("http://example.com").
@@ -387,10 +387,10 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
 	})
 
-	t.Run("CreateApiAuthenticationJwtBearerFlow", func(t *testing.T) {
+	t.Run("CreateApiAuthenticationWithJwtBearerFlow", func(t *testing.T) {
 		// TODO [SNOW-1452191]: unskip
 		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
-		integration, id := createApiAuthJwtBearer(t, func(r *sdk.CreateApiAuthenticationJwtBearerFlowSecurityIntegrationRequest) {
+		integration, id := createApiAuthJwtBearer(t, func(r *sdk.CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) {
 			r.WithComment("a").
 				WithOauthAccessTokenValidity(31337).
 				WithOauthAuthorizationEndpoint("http://example.com").
@@ -418,6 +418,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		assertSecurityIntegration(t, integration, id, "API_AUTHENTICATION", false, "a")
 	})
+
 	t.Run("CreateExternalOauth with allowed list and jws keys url", func(t *testing.T) {
 		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(role1Cleanup)
@@ -596,11 +597,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
 	})
 
-	t.Run("AlterApiAuthenticationClientCredentialsFlow", func(t *testing.T) {
+	t.Run("AlterApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
 		_, id := createApiAuthClientCred(t, nil)
-		setRequest := sdk.NewAlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(id).
+		setRequest := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).
 			WithSet(
-				*sdk.NewApiAuthenticationClientCredentialsFlowIntegrationSetRequest().
+				*sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest().
 					WithComment("foo").
 					WithEnabled(true).
 					WithOauthAccessTokenValidity(31337).
@@ -612,7 +613,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthGrant(sdk.ApiAuthenticationSecurityIntegrationOauthClientGrantClientCredentials).
 					WithOauthTokenEndpoint("http://example.com"),
 			)
-		err := client.SecurityIntegrations.AlterApiAuthenticationClientCredentialsFlow(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -631,13 +632,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			comment:                   "foo",
 		})
 
-		unsetRequest := sdk.NewAlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).
 			WithUnset(
-				*sdk.NewApiAuthenticationClientCredentialsFlowIntegrationUnsetRequest().
+				*sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationUnsetRequest().
 					WithEnabled(true).
 					WithComment(true),
 			)
-		err = client.SecurityIntegrations.AlterApiAuthenticationClientCredentialsFlow(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -647,7 +648,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	t.Run("AlterApiAuthenticationClientCredentialsFlow - set and unset tags", func(t *testing.T) {
+	t.Run("AlterApiAuthenticationWithClientCredentialsFlow - set and unset tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
@@ -660,9 +661,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithSetTags(tags)
 
-		err := client.SecurityIntegrations.AlterApiAuthenticationClientCredentialsFlow(ctx, alterRequestSetTags)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
@@ -673,19 +674,20 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationClientCredentialsFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
 
-		err = client.SecurityIntegrations.AlterApiAuthenticationClientCredentialsFlow(ctx, alterRequestUnsetTags)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
 		require.Error(t, err)
 	})
-	t.Run("AlterApiAuthenticationAuthorizationCodeGrantFlow", func(t *testing.T) {
+
+	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow", func(t *testing.T) {
 		_, id := createApiAuthCodeGrant(t, nil)
-		setRequest := sdk.NewAlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
+		setRequest := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
 			WithSet(
-				*sdk.NewApiAuthenticationAuthorizationCodeGrantFlowIntegrationSetRequest().
+				*sdk.NewApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest().
 					WithComment("foo").
 					WithEnabled(true).
 					WithOauthAccessTokenValidity(31337).
@@ -697,7 +699,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthAuthorizationEndpoint("http://example.com").
 					WithOauthTokenEndpoint("http://example.com"),
 			)
-		err := client.SecurityIntegrations.AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -716,13 +718,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			comment:                    "foo",
 		})
 
-		unsetRequest := sdk.NewAlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
 			WithUnset(
-				*sdk.NewApiAuthenticationAuthorizationCodeGrantFlowIntegrationUnsetRequest().
+				*sdk.NewApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnsetRequest().
 					WithEnabled(true).
 					WithComment(true),
 			)
-		err = client.SecurityIntegrations.AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -732,7 +734,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	t.Run("AlterApiAuthenticationAuthorizationCodeGrantFlow - set and unset tags", func(t *testing.T) {
+	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow - set and unset tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
@@ -745,9 +747,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithSetTags(tags)
 
-		err := client.SecurityIntegrations.AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx, alterRequestSetTags)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
@@ -758,22 +760,23 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
 
-		err = client.SecurityIntegrations.AlterApiAuthenticationAuthorizationCodeGrantFlow(ctx, alterRequestUnsetTags)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
 		require.Error(t, err)
 	})
-	t.Run("AlterApiAuthenticationJwtBearerFlow", func(t *testing.T) {
+
+	t.Run("AlterApiAuthenticationWithJwtBearerFlow", func(t *testing.T) {
 		// TODO [SNOW-1452191]: unskip
 		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
 
 		_, id := createApiAuthJwtBearer(t, nil)
-		setRequest := sdk.NewAlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(id).
+		setRequest := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).
 			WithSet(
-				*sdk.NewApiAuthenticationJwtBearerFlowIntegrationSetRequest().
+				*sdk.NewApiAuthenticationWithJwtBearerFlowIntegrationSetRequest().
 					WithComment("a").
 					WithEnabled(true).
 					WithOauthAccessTokenValidity(31337).
@@ -785,7 +788,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithOauthRefreshTokenValidity(31337).
 					WithOauthTokenEndpoint("http://example.com"),
 			)
-		err := client.SecurityIntegrations.AlterApiAuthenticationJwtBearerFlow(ctx, setRequest)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, setRequest)
 		require.NoError(t, err)
 
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -804,13 +807,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			comment:                    "foo",
 		})
 
-		unsetRequest := sdk.NewAlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(id).
+		unsetRequest := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).
 			WithUnset(
-				*sdk.NewApiAuthenticationJwtBearerFlowIntegrationUnsetRequest().
+				*sdk.NewApiAuthenticationWithJwtBearerFlowIntegrationUnsetRequest().
 					WithEnabled(true).
 					WithComment(true),
 			)
-		err = client.SecurityIntegrations.AlterApiAuthenticationJwtBearerFlow(ctx, unsetRequest)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
@@ -820,7 +823,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	t.Run("AlterApiAuthenticationJwtBearerFlow - set and unset tags", func(t *testing.T) {
+	t.Run("AlterApiAuthenticationWithJwtBearerFlow - set and unset tags", func(t *testing.T) {
 		// TODO [SNOW-1452191]: unskip
 		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
 
@@ -836,9 +839,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithSetTags(tags)
 
-		err := client.SecurityIntegrations.AlterApiAuthenticationJwtBearerFlow(ctx, alterRequestSetTags)
+		err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
@@ -849,14 +852,15 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationJwtBearerFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
 
-		err = client.SecurityIntegrations.AlterApiAuthenticationJwtBearerFlow(ctx, alterRequestUnsetTags)
+		err = client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
 		require.Error(t, err)
 	})
+
 	t.Run("AlterExternalOauth with other options", func(t *testing.T) {
 		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
 			r.WithExternalOauthRsaPublicKey(rsaKey).
@@ -1139,6 +1143,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
 		require.Error(t, err)
 	})
+
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
 		_, id, issuer := createSAML2Integration(t, nil)
 
