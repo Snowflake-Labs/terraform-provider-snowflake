@@ -18,6 +18,8 @@ func TestWarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &CreateWarehouseOptions{
 			OrReplace:   Bool(true),
 			name:        NewAccountObjectIdentifier("completewarehouse"),
@@ -41,16 +43,16 @@ func TestWarehouseCreate(t *testing.T) {
 			StatementTimeoutInSeconds:       Int(89),
 			Tag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Name:  tagId1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag2"),
+					Name:  tagId2,
 					Value: "v2",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG ("db1"."schema1"."tag1" = 'v1', "db1"."schema1"."tag2" = 'v2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG (%s = 'v1', %s = 'v2')`, tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 }
 
@@ -120,30 +122,33 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			SetTag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+					Name:  tagId1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+					Name:  tagId2,
 					Value: "v2",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG %s = 'v1', %s = 'v2'`, tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "tag1"),
+				tagId,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG %s`, tagId.FullyQualifiedName())
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
@@ -192,31 +197,35 @@ func TestWarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			SetTag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Name:  tagId1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+					Name:  tagId2,
 					Value: "v2",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG "db1"."schema1"."tag1" = 'v1', "db2"."schema2"."tag2" = 'v2'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG %s = 'v1', %s = 'v2'`, tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-				NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+				tagId1,
+				tagId2,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1", "db2"."schema2"."tag2"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG %s, %s`, tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 }
 

@@ -49,13 +49,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testClientHelper().Ids.RandomAccountObjectIdentifier().Name())
+		clonedSchemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 			Clone: &sdk.Clone{
@@ -139,7 +139,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		table, _ := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(func() {
-			newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, swapSchema.Name, table.Name)
+			newId := sdk.NewSchemaObjectIdentifierInSchema(swapSchema.ID(), table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
 			require.NoError(t, err)
 		})

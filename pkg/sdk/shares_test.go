@@ -73,17 +73,18 @@ func TestShareAlter(t *testing.T) {
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			SetTag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "tag"),
+					Name:  tagId,
 					Value: "v1",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET TAG "db"."schema"."tag" = 'v1'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET TAG %s = 'v1'`, tagId.FullyQualifiedName())
 	})
 
 	t.Run("with unset", func(t *testing.T) {
@@ -98,14 +99,15 @@ func TestShareAlter(t *testing.T) {
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
 			UnsetTag: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "tag"),
+				tagId,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET TAG "db"."schema"."tag"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET TAG %s`, tagId.FullyQualifiedName())
 	})
 }
 

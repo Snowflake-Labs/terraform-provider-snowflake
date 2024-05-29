@@ -185,7 +185,8 @@ func TestAcc_Function_complex(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	name := id.Name()
 	comment := random.Comment()
 	resourceName := "snowflake_function.f"
 
@@ -220,7 +221,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),

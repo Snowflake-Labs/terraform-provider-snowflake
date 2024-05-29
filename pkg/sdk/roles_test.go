@@ -14,18 +14,19 @@ func TestRolesCreate(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
+		tagId := randomSchemaObjectIdentifier()
 		opts := &CreateRoleOptions{
 			name:      NewAccountObjectIdentifier("new_role"),
 			OrReplace: Bool(true),
 			Tag: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Name:  tagId,
 					Value: "v1",
 				},
 			},
 			Comment: String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE ROLE "new_role" COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE ROLE "new_role" COMMENT = 'comment' TAG (%s = 'v1')`, tagId.FullyQualifiedName())
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {

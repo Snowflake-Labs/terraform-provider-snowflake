@@ -183,9 +183,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("drop view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
@@ -330,6 +328,7 @@ func TestInt_Views(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(alteredViewDetails))
+		// TODO [SNOW-999049]: make nicer during the identifiers rework
 		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*alteredViewDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
@@ -475,7 +474,7 @@ func TestInt_Views(t *testing.T) {
 
 		showRequest := sdk.NewShowViewRequest().
 			WithLike(&sdk.Like{Pattern: &view1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)}).
+			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
 			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedViews, err := client.Views.Show(ctx, showRequest)
 
@@ -520,9 +519,7 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("describe view: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
-
-		_, err := client.Views.Describe(ctx, id)
+		_, err := client.Views.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

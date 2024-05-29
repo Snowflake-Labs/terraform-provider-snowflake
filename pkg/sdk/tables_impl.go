@@ -78,7 +78,7 @@ func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, 
 }
 
 func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
-	request := NewShowTableRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLikePattern(id.Name())
+	request := NewShowTableRequest().WithIn(&In{Schema: id.SchemaId()}).WithLikePattern(id.Name())
 	returnedTables, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

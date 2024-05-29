@@ -20,7 +20,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -33,7 +33,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
@@ -69,7 +69,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -92,7 +92,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	t.Run("validation: invalid new name", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
-			Name: NewDatabaseObjectIdentifier("", ""),
+			Name: emptyDatabaseObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -169,7 +169,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -243,7 +243,7 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -292,7 +292,7 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -341,7 +341,7 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -376,7 +376,7 @@ func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := setUpOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

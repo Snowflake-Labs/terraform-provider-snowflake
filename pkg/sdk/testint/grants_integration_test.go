@@ -234,12 +234,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema := testSchema(t)
-
-		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
@@ -260,7 +258,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
@@ -280,7 +278,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
@@ -293,12 +291,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema := testSchema(t)
-
-		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		_, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
@@ -319,7 +315,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
@@ -340,7 +336,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
@@ -388,7 +384,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			DatabasePrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
@@ -436,7 +432,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaPrivileges: []sdk.SchemaPrivilege{sdk.SchemaPrivilegeCreateAlert},
@@ -486,7 +482,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
 		table, _ := testClientHelper().Table.CreateTable(t)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
@@ -540,7 +536,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -584,12 +580,10 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema := testSchema(t)
-
-		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
@@ -610,11 +604,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
-			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name),
 			&sdk.GrantPrivilegesToDatabaseRoleOptions{},
 		)
 		require.NoError(t, err)
@@ -630,11 +624,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
-			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name),
 			&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
 		)
 		require.NoError(t, err)
@@ -643,12 +637,10 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema := testSchema(t)
-
-		table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name))
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
 		_, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, createPipeCopyStatement(t, table, stage))
@@ -669,11 +661,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
-			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name),
 			&sdk.GrantPrivilegesToDatabaseRoleOptions{},
 		)
 		require.Error(t, err)
@@ -690,11 +682,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 				SchemaObject: &sdk.GrantOnSchemaObject{
 					All: &sdk.GrantOnSchemaObjectIn{
 						PluralObjectType: sdk.PluralObjectTypePipes,
-						InSchema:         sdk.Pointer(schema.ID()),
+						InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 					},
 				},
 			},
-			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name),
 			&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
 		)
 		require.Error(t, err)
@@ -890,7 +882,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				Schema: &sdk.GrantOnSchema{
-					Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName)),
+					Schema: sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 			roleId,
@@ -1018,7 +1010,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
 		table, _ := testClientHelper().Table.CreateTable(t)
 
 		on := sdk.OwnershipGrantOn{

@@ -88,7 +88,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("drop database_role: non-existing", func(t *testing.T) {
-		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "does_not_exist")
+		id := NonExistingDatabaseObjectIdentifier
 
 		err := client.DatabaseRoles.Drop(ctx, sdk.NewDropDatabaseRoleRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -199,9 +199,9 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to database role", func(t *testing.T) {
 		role1 := createDatabaseRole(t)
-		id1 := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role1.Name)
+		id1 := testClientHelper().Ids.NewDatabaseObjectIdentifier(role1.Name)
 		role2 := createDatabaseRole(t)
-		id2 := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role2.Name)
+		id2 := testClientHelper().Ids.NewDatabaseObjectIdentifier(role2.Name)
 
 		grantRequest := sdk.NewGrantDatabaseRoleRequest(id1).WithDatabaseRole(id2)
 		err := client.DatabaseRoles.Grant(ctx, grantRequest)
@@ -226,7 +226,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to account role", func(t *testing.T) {
 		role := createDatabaseRole(t)
-		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
+		roleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name)
 
 		accountRole, accountRoleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(accountRoleCleanup)
@@ -248,7 +248,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to share", func(t *testing.T) {
 		role := createDatabaseRole(t)
-		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
+		roleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(role.Name)
 
 		share, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)

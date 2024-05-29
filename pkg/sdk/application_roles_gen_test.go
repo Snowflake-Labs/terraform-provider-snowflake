@@ -19,7 +19,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -75,7 +75,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = emptyDatabaseObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

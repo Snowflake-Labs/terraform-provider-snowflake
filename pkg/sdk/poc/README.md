@@ -108,6 +108,7 @@ find a better solution to solve the issue (add more logic to the templates ?)
 - better handling of list of strings/identifiers
   - there should be no need to define custom types every time
   - more clear definition of lists that can be empty vs cannot be empty
+- add empty ids in generated tests (TODO in random_test.go)
 
 ##### Known issues
 - generating two converts when Show and Desc use the same data structure

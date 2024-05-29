@@ -22,7 +22,7 @@ func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) s
 // TestInt_CreatePipeWithStrangeSchemaName documented previous bad behavior. It changed with Snowflake 8.3.1 release.
 // We leave the test for future reference.
 func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
-	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
+	schemaIdentifier := testClientHelper().Ids.NewDatabaseObjectIdentifier("tcK1>AJ+")
 
 	// creating a new schema on purpose
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaIdentifier.Name())
@@ -139,9 +139,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("describe: non-existing pipe", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testDb(t).Name, "does_not_exist")
-
-		_, err := itc.client.Pipes.Describe(itc.ctx, id)
+		_, err := itc.client.Pipes.Describe(itc.ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -233,9 +231,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	})
 
 	t.Run("pipe does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testDb(t).Name, "does_not_exist")
-
-		err := itc.client.Pipes.Drop(itc.ctx, id, &sdk.DropPipeOptions{})
+		err := itc.client.Pipes.Drop(itc.ctx, NonExistingSchemaObjectIdentifier, &sdk.DropPipeOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

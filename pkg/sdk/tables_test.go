@@ -54,7 +54,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableOptions", "name"))
 	})
 
@@ -107,7 +107,7 @@ func TestTableCreate(t *testing.T) {
 			Columns: []TableColumn{{
 				Name: "a",
 				MaskingPolicy: &ColumnMaskingPolicy{
-					Name: NewSchemaObjectIdentifier("", "", ""),
+					Name: emptySchemaObjectIdentifier,
 				},
 			}},
 		}
@@ -122,7 +122,7 @@ func TestTableCreate(t *testing.T) {
 				Name: "a",
 				Tags: []TagAssociation{
 					{
-						Name:  NewSchemaObjectIdentifier("", "", ""),
+						Name:  emptySchemaObjectIdentifier,
 						Value: "v1",
 					},
 				},
@@ -143,7 +143,7 @@ func TestTableCreate(t *testing.T) {
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &TableRowAccessPolicy{
-			Name: NewSchemaObjectIdentifier("", "", ""),
+			Name: emptySchemaObjectIdentifier,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("TableRowAccessPolicy", "Name"))
 	})
@@ -292,7 +292,7 @@ func TestTableCreate(t *testing.T) {
 		outOfLineConstraint := OutOfLineConstraint{
 			Type: ColumnConstraintTypeForeignKey,
 			ForeignKey: &OutOfLineForeignKey{
-				TableName: NewSchemaObjectIdentifier("", "", ""),
+				TableName: emptySchemaObjectIdentifier,
 			},
 		}
 		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
@@ -371,6 +371,10 @@ func TestTableCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
+		columnTagId1 := randomSchemaObjectIdentifier()
+		columnTagId2 := randomSchemaObjectIdentifierInSchema(columnTagId1.SchemaId())
+		tableTagId1 := randomSchemaObjectIdentifierInSchema(columnTagId1.SchemaId())
+		tableTagId2 := randomSchemaObjectIdentifierInSchema(columnTagId1.SchemaId())
 		columnComment := random.Comment()
 		tableComment := random.Comment()
 		collation := "de"
@@ -382,22 +386,22 @@ func TestTableCreate(t *testing.T) {
 		}
 		columnTags := []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "column_tag1"),
+				Name:  columnTagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "column_tag2"),
+				Name:  columnTagId2,
 				Value: "v2",
 			},
 		}
 
 		tableTags := []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "table_tag1"),
+				Name:  tableTagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "table_tag2"),
+				Name:  tableTagId2,
 				Value: "v2",
 			},
 		}
@@ -476,14 +480,18 @@ func TestTableCreate(t *testing.T) {
 			Comment:                    &tableComment,
 		}
 		assertOptsValidAndSQLEquals(t, opts,
-			`CREATE TABLE %s (%s %s CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE (COLUMN_1) ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s (%s %s CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG (%s = 'v1', %s = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE (COLUMN_1) ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG (%s = 'v1', %s = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
 			maskingPolicy.Name.FullyQualifiedName(),
+			columnTagId1.FullyQualifiedName(),
+			columnTagId2.FullyQualifiedName(),
 			columnComment,
 			outOfLineConstraint1.ForeignKey.TableName.FullyQualifiedName(),
 			rowAccessPolicy.Name.FullyQualifiedName(),
+			tableTagId1.FullyQualifiedName(),
+			tableTagId2.FullyQualifiedName(),
 			tableComment,
 		)
 	})
@@ -524,7 +532,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableAsSelectOptions", "name"))
 	})
 
@@ -592,7 +600,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableUsingTemplateOptions", "name"))
 	})
 
@@ -625,13 +633,13 @@ func TestTableCreateLike(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableLikeOptions", "name"))
 	})
 
 	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
+		opts.SourceTable = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableLikeOptions", "SourceTable"))
 	})
 
@@ -671,13 +679,13 @@ func TestTableCreateClone(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableCloneOptions", "name"))
 	})
 
 	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
+		opts.SourceTable = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableCloneOptions", "SourceTable"))
 	})
 
@@ -727,27 +735,27 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "name"))
 	})
 
 	t.Run("validation: both NewName and SwapWith are present ", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.NewName = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
-		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
+		opts.NewName = Pointer(randomSchemaObjectIdentifier())
+		opts.SwapWith = Pointer(randomSchemaObjectIdentifier())
 
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies"))
 	})
 
 	t.Run("validation: NewName's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.NewName = Pointer(NewSchemaObjectIdentifier("", "", ""))
+		opts.NewName = Pointer(emptySchemaObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "NewName"))
 	})
 
 	t.Run("validation: SwapWith incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("", "", ""))
+		opts.SwapWith = Pointer(emptySchemaObjectIdentifier)
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "SwapWith"))
 	})
 
@@ -1078,13 +1086,15 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		columnTags := []TagAssociation{
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "column_tag1"),
+				Name:  tagId1,
 				Value: "v1",
 			},
 			{
-				Name:  NewSchemaObjectIdentifier("db", "schema", "column_tag2"),
+				Name:  tagId2,
 				Value: "v2",
 			},
 		}
@@ -1097,13 +1107,15 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ALTER COLUMN COLUMN_1 SET TAG "db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ALTER COLUMN COLUMN_1 SET TAG %s = 'v1', %s = 'v2'`, id.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset tags", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		columnTags := []ObjectIdentifier{
-			NewSchemaObjectIdentifier("db", "schema", "column_tag1"),
-			NewSchemaObjectIdentifier("db", "schema", "column_tag2"),
+			tagId1,
+			tagId2,
 		}
 		opts := &alterTableOptions{
 			name: id,
@@ -1114,7 +1126,7 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET TAG "db"."schema"."column_tag1", "db"."schema"."column_tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET TAG %s, %s`, id.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("alter: drop columns", func(t *testing.T) {
@@ -1337,31 +1349,35 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &alterTableOptions{
 			name: id,
 			SetTags: []TagAssociation{
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "table_tag1"),
+					Name:  tagId1,
 					Value: "v1",
 				},
 				{
-					Name:  NewSchemaObjectIdentifier("db", "schema", "table_tag2"),
+					Name:  tagId2,
 					Value: "v2",
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s SET TAG "db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s SET TAG %s = 'v1', %s = 'v2'`, id.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
+		tagId1 := randomSchemaObjectIdentifier()
+		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
 		opts := &alterTableOptions{
 			name: id,
 			UnsetTags: []ObjectIdentifier{
-				NewSchemaObjectIdentifier("db", "schema", "table_tag1"),
-				NewSchemaObjectIdentifier("db", "schema", "table_tag2"),
+				tagId1,
+				tagId2,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s UNSET TAG "db"."schema"."table_tag1", "db"."schema"."table_tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s UNSET TAG %s, %s`, id.FullyQualifiedName(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 
 	t.Run("unset: complete options", func(t *testing.T) {
@@ -1448,7 +1464,7 @@ func TestTableDrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("dropTableOptions", "name"))
 	})
 
@@ -1518,7 +1534,7 @@ func TestTableDescribeColumns(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("describeTableColumnsOptions", "name"))
 	})
 
@@ -1595,7 +1611,7 @@ func TestTableDescribeStage(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("describeTableStageOptions", "name"))
 	})
 

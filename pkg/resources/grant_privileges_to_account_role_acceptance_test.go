@@ -224,7 +224,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
 
-	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+	schemaId := acc.TestClient().Ids.SchemaId()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -247,9 +247,9 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnSchema|%s", roleFullyQualifiedName, schemaName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnSchema|%s", roleFullyQualifiedName, schemaId.FullyQualifiedName())),
 				),
 			},
 			{
@@ -820,7 +820,8 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := "test_database_role_schema_name"
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
 			"name":     config.StringVariable(roleId.FullyQualifiedName()),
@@ -895,7 +896,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 				ConfigVariables: configVariables(false, []string{
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
-				}, schemaName),
+				}, schemaId.Name()),
 				Check: queriedAccountRolePrivilegesEqualTo(
 					roleId,
 					sdk.SchemaPrivilegeCreateTask.String(),
@@ -1201,7 +1202,7 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 	}
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
 
-	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+	schemaId := acc.TestClient().Ids.SchemaId()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1224,9 +1225,9 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", roleFullyQualifiedName, schemaName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", roleFullyQualifiedName, schemaId.FullyQualifiedName())),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{

@@ -289,7 +289,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: id.SchemaId(),
 		},
 	})
 	if err != nil {

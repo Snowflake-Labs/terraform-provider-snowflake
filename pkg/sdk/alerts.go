@@ -292,7 +292,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: id.SchemaId(),
 		},
 	})
 	if err != nil {
