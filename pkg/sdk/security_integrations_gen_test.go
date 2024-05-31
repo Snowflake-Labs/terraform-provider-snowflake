@@ -1292,10 +1292,18 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(networkPolicyID),
 			SyncPassword:  Pointer(true),
-			Comment:       Pointer("test"),
+			Comment:       Pointer(StringAllowEmpty{Value: "test"}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, NETWORK_POLICY = %s, SYNC_PASSWORD = true, COMMENT = 'test'",
 			id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
+	})
+
+	t.Run("set empty comment", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ScimIntegrationSet{
+			Comment: Pointer(StringAllowEmpty{Value: ""}),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET COMMENT = ''", id.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
@@ -1304,9 +1312,8 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(true),
 			SyncPassword:  Pointer(true),
-			Comment:       Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD, COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {

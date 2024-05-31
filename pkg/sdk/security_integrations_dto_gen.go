@@ -414,14 +414,17 @@ type ScimIntegrationSetRequest struct {
 	Enabled       *bool
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
-	Comment       *string
+	Comment       *StringAllowEmptyRequest
+}
+
+type StringAllowEmptyRequest struct {
+	Value string // required
 }
 
 type ScimIntegrationUnsetRequest struct {
 	Enabled       *bool
 	NetworkPolicy *bool
 	SyncPassword  *bool
-	Comment       *bool
 }
 
 type DropSecurityIntegrationRequest struct {

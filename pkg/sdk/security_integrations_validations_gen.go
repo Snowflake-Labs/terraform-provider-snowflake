@@ -98,9 +98,6 @@ func (opts *CreateOauthForPartnerApplicationsSecurityIntegrationOptions) validat
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateOauthForPartnerApplicationsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
-	if opts.OauthClient == OauthSecurityIntegrationClientLooker && opts.OauthRedirectUri == nil {
-		errs = append(errs, NewError("OauthRedirectUri is required when OauthClient is LOOKER"))
-	}
 	return JoinErrors(errs...)
 }
 
@@ -340,8 +337,8 @@ func (opts *AlterScimSecurityIntegrationOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.SyncPassword, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.SyncPassword) {
+			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword"))
 		}
 	}
 	return JoinErrors(errs...)

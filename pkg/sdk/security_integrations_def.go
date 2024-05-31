@@ -75,6 +75,7 @@ const (
 var (
 	allowedScopeDef           = g.NewQueryStruct("AllowedScope").Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 	userDomainDef             = g.NewQueryStruct("UserDomain").Text("Domain", g.KeywordOptions().SingleQuotes().Required())
+	stringAllowEmptyDef       = g.NewQueryStruct("StringAllowEmpty").Text("Value", g.KeywordOptions().SingleQuotes().Required())
 	emailPatternDef           = g.NewQueryStruct("EmailPattern").Text("Pattern", g.KeywordOptions().SingleQuotes().Required())
 	preAuthorizedRolesListDef = g.NewQueryStruct("PreAuthorizedRolesList").
 					List("PreAuthorizedRolesList", "AccountObjectIdentifier", g.ListOptions().MustParentheses())
@@ -307,15 +308,14 @@ var scimIntegrationSetDef = g.NewQueryStruct("ScimIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 	OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions()).
-	OptionalComment().
+	OptionalQueryStructField("Comment", stringAllowEmptyDef, g.ParameterOptions().SQL("COMMENT")).
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
 
 var scimIntegrationUnsetDef = g.NewQueryStruct("ScimIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("NETWORK_POLICY").
 	OptionalSQL("SYNC_PASSWORD").
-	OptionalSQL("COMMENT").
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword")
 
 var SecurityIntegrationsDef = g.NewInterface(
 	"SecurityIntegrations",

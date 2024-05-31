@@ -587,7 +587,11 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			Enabled:       r.Set.Enabled,
 			NetworkPolicy: r.Set.NetworkPolicy,
 			SyncPassword:  r.Set.SyncPassword,
-			Comment:       r.Set.Comment,
+		}
+		if r.Set.Comment != nil {
+			opts.Set.Comment = &StringAllowEmpty{
+				Value: r.Set.Comment.Value,
+			}
 		}
 	}
 	if r.Unset != nil {
@@ -595,7 +599,6 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			Enabled:       r.Unset.Enabled,
 			NetworkPolicy: r.Unset.NetworkPolicy,
 			SyncPassword:  r.Unset.SyncPassword,
-			Comment:       r.Unset.Comment,
 		}
 	}
 	return opts

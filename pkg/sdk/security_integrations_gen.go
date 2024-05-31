@@ -487,14 +487,17 @@ type ScimIntegrationSet struct {
 	Enabled       *bool                    `ddl:"parameter" sql:"ENABLED"`
 	NetworkPolicy *AccountObjectIdentifier `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
-	Comment       *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Comment       *StringAllowEmpty        `ddl:"parameter" sql:"COMMENT"`
+}
+
+type StringAllowEmpty struct {
+	Value string `ddl:"keyword,single_quotes"`
 }
 
 type ScimIntegrationUnset struct {
 	Enabled       *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool `ddl:"keyword" sql:"SYNC_PASSWORD"`
-	Comment       *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 // DropSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.

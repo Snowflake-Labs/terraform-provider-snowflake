@@ -1266,7 +1266,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
 					WithEnabled(true).
 					WithSyncPassword(false).
-					WithComment("altered"),
+					WithComment(sdk.StringAllowEmptyRequest{Value: "altered"}),
 			)
 		err := client.SecurityIntegrations.AlterScim(ctx, setRequest)
 		require.NoError(t, err)
@@ -1285,10 +1285,19 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		err = client.SecurityIntegrations.AlterScim(ctx, unsetRequest)
 		require.NoError(t, err)
 
+		// check setting empty comment because of lacking UNSET COMMENT
+		setRequest = sdk.NewAlterScimSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewScimIntegrationSetRequest().
+					WithComment(sdk.StringAllowEmptyRequest{Value: ""}),
+			)
+		err = client.SecurityIntegrations.AlterScim(ctx, setRequest)
+		require.NoError(t, err)
+
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "altered")
+		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "")
 	})
 
 	t.Run("AlterSCIMIntegration - set and unset tags", func(t *testing.T) {
