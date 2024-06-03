@@ -8,7 +8,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	snowflakevalidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -25,10 +24,10 @@ var warehouseSchema = map[string]*schema.Schema{
 		Default:  "",
 	},
 	"warehouse_size": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: snowflakevalidation.ValidateWarehouseSize,
+		Type:             schema.TypeString,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: warehouseSizeValidateDiagFunc,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			oldSize, err := sdk.ToWarehouseSize(old)
 			if err != nil {
