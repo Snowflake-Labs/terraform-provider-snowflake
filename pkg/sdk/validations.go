@@ -9,11 +9,6 @@ func IsValidDataType(v string) bool {
 	return err == nil
 }
 
-func IsValidWarehouseSize(v string) bool {
-	_, err := ToWarehouseSize(v)
-	return err == nil
-}
-
 func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
 	l := len(objectIdentifier.Name())

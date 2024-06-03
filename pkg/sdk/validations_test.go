@@ -18,18 +18,6 @@ func TestIsValidDataType(t *testing.T) {
 	})
 }
 
-func TestIsValidWarehouseSize(t *testing.T) {
-	t.Run("with valid warehouse size", func(t *testing.T) {
-		ok := IsValidWarehouseSize("XSMALL")
-		assert.True(t, ok)
-	})
-
-	t.Run("with invalid warehouse size", func(t *testing.T) {
-		ok := IsValidWarehouseSize("foo")
-		assert.False(t, ok)
-	})
-}
-
 func TestValidObjectIdentifier(t *testing.T) {
 	t.Run("with valid object identifier", func(t *testing.T) {
 		ok := ValidObjectIdentifier(randomAccountObjectIdentifier())

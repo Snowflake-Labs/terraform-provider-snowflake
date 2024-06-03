@@ -27,19 +27,9 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Computed:         true,
-		ValidateDiagFunc: warehouseSizeValidateDiagFunc,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			oldSize, err := sdk.ToWarehouseSize(old)
-			if err != nil {
-				return false
-			}
-			newSize, err := sdk.ToWarehouseSize(new)
-			if err != nil {
-				return false
-			}
-			return oldSize == newSize
-		},
-		Description: fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are: %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
+		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseSize),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
+		Description:      fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are: %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
 	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,

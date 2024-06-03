@@ -135,9 +135,12 @@ func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFun
 	}
 }
 
-func warehouseSizeValidateDiagFunc(val interface{}, _ cty.Path) diag.Diagnostics {
-	if ok := sdk.IsValidWarehouseSize(val.(string)); !ok {
-		return diag.Errorf(`expected a valid warehouse size, got "%s"`, val)
+func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
+	return func(val interface{}, _ cty.Path) diag.Diagnostics {
+		_, err := normalize(val.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
 	}
-	return nil
 }
