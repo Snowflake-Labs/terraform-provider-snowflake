@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -256,6 +257,147 @@ resource "snowflake_warehouse" "w" {
 	name                      = "%s"
     enable_query_acceleration = false
     query_acceleration_max_scale_factor = 8
+}
+`, name)
+}
+
+func TestAcc_Warehouse_Test(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			{
+				Config: wConfigTest(id.Name(), "SMALL"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+				),
+			},
+			{
+				Config: wConfigTest2(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_SizeValidation(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			{
+				Config:      wConfigTest(id.Name(), "SMALLa"),
+				ExpectError: regexp.MustCompile(`expected a valid warehouse size, got "SMALLa"`),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.91.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeX4Large)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "4XLARGE"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   wConfigTest(id.Name(), string(sdk.WarehouseSizeX4Large)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeX4Large)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.91.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: wConfigTest2(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   wConfigTest2(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+				),
+			},
+		},
+	})
+}
+
+func wConfigTest(name string, size string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                      = "%s"
+	warehouse_size = "%s"
+}
+`, name, size)
+}
+
+func wConfigTest2(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                      = "%s"
 }
 `, name)
 }

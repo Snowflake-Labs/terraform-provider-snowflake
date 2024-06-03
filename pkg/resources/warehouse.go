@@ -2,11 +2,11 @@ package resources
 
 import (
 	"context"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -146,6 +146,8 @@ var warehouseSchema = map[string]*schema.Schema{
 // Warehouse returns a pointer to the resource representing a warehouse.
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		Create: CreateWarehouse,
 		Read:   ReadWarehouse,
 		Delete: DeleteWarehouse,
@@ -154,6 +156,15 @@ func Warehouse() *schema.Resource {
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v091WarehouseSizeStateUpgrader,
+			},
 		},
 	}
 }

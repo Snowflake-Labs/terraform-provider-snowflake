@@ -68,15 +68,15 @@ func ToWarehouseSize(s string) (WarehouseSize, error) {
 		return WarehouseSizeLarge, nil
 	case "XLARGE", "X-LARGE":
 		return WarehouseSizeXLarge, nil
-	case "XXLARGE", "X2LARGE", "2X-LARGE", "2XLARGE":
+	case "XXLARGE", "X2LARGE", "2X-LARGE":
 		return WarehouseSizeXXLarge, nil
-	case "XXXLARGE", "X3LARGE", "3X-LARGE", "3XLARGE":
+	case "XXXLARGE", "X3LARGE", "3X-LARGE":
 		return WarehouseSizeXXXLarge, nil
-	case "X4LARGE", "4X-LARGE", "4XLARGE":
+	case "X4LARGE", "4X-LARGE":
 		return WarehouseSizeX4Large, nil
-	case "X5LARGE", "5X-LARGE", "5XLARGE":
+	case "X5LARGE", "5X-LARGE":
 		return WarehouseSizeX5Large, nil
-	case "X6LARGE", "6X-LARGE", "6XLARGE":
+	case "X6LARGE", "6X-LARGE":
 		return WarehouseSizeX6Large, nil
 	default:
 		return "", fmt.Errorf("invalid warehouse size: %s", s)
@@ -417,11 +417,15 @@ type warehouseDBRow struct {
 }
 
 func (row warehouseDBRow) convert() *Warehouse {
+	size, err := ToWarehouseSize(row.Size)
+	if err != nil {
+		size = WarehouseSize(strings.ToUpper(row.Size))
+	}
 	wh := &Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
 		Type:                            WarehouseType(row.Type),
-		Size:                            WarehouseSize(strings.ReplaceAll(strings.ToUpper(row.Size), "-", "")),
+		Size:                            size,
 		MinClusterCount:                 row.MinClusterCount,
 		MaxClusterCount:                 row.MaxClusterCount,
 		StartedClusters:                 row.StartedClusters,
