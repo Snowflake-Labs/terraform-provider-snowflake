@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -19,7 +20,6 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
-	// TODO: Should it be imported (set in Read)?
 	"from_share": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -66,7 +66,8 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true),
 		Description:      fmt.Sprintf("Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == ""
+			return strings.EqualFold(oldValue, newValue) &&
+				d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == ""
 		},
 	},
 	"log_level": {
@@ -75,7 +76,8 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
+			return strings.EqualFold(oldValue, newValue) &&
+				d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 	},
@@ -85,7 +87,8 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == ""
+			return strings.EqualFold(oldValue, newValue) &&
+				d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == ""
 		},
 		Description: fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 	},
@@ -244,7 +247,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 	// TODO(SNOW-1325381)
 	// if err := d.Set("is_transient", database.Transient); err != nil {
 	//	return diag.FromErr(err)
-	//}
+	// }
 
 	if err := d.Set("comment", database.Comment); err != nil {
 		return diag.FromErr(err)

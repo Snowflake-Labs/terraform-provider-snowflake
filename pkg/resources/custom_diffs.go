@@ -11,7 +11,7 @@ import (
 )
 
 // NestedIntValueAccountObjectComputedIf is NestedValueComputedIf,
-// but dedicated for account level objects with integer-typed properties.
+// but dedicated for account level objects with integer properties.
 func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
 	return NestedValueComputedIf(
 		key,
@@ -19,6 +19,34 @@ func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountPara
 			return client.Parameters.ShowAccountParameter(context.Background(), parameter)
 		},
 		func(v any) string { return strconv.Itoa(v.(int)) },
+	)
+}
+
+/// TODO: TEST
+
+// NestedStringValueAccountObjectComputedIf is NestedValueComputedIf,
+// but dedicated for account level objects with string properties.
+func NestedStringValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+	return NestedValueComputedIf(
+		key,
+		func(client *sdk.Client) (*sdk.Parameter, error) {
+			return client.Parameters.ShowAccountParameter(context.Background(), parameter)
+		},
+		func(v any) string { return v.(string) },
+	)
+}
+
+// NestedBoolValueAccountObjectComputedIf is NestedValueComputedIf,
+// but dedicated for account level objects with bool properties.
+func NestedBoolValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+	return NestedValueComputedIf(
+		key,
+		func(client *sdk.Client) (*sdk.Parameter, error) {
+			return client.Parameters.ShowAccountParameter(context.Background(), parameter)
+		},
+		func(v any) string {
+			return strconv.FormatBool(v.(bool))
+		},
 	)
 }
 

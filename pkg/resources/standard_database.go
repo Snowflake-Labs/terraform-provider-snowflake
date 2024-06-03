@@ -8,11 +8,12 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"slices"
 	"strconv"
+	"strings"
 )
-
-// TODO: Add refresh in secondary database in Read
 
 var databaseV1Schema = map[string]*schema.Schema{
 	"name": {
@@ -60,43 +61,58 @@ var databaseV1Schema = map[string]*schema.Schema{
 		schema.TypeString,
 		fmt.Sprintf("Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
 	),
-	"log_level": nestedProperty(
+	"log_level": nestedPropertyWithInnerModifier(
 		schema.TypeString,
 		fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
+		func(inner *schema.Schema) {
+			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return strings.EqualFold(oldValue, newValue) &&
+					d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
+			}
+		},
 	),
 	"trace_level": nestedProperty(
 		schema.TypeString,
 		fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 	),
-	// TODO: failover (should It be integration into "replicate" field or its own)
-	//"replicate": {
-	//	Type:     schema.TypeList,
-	//	MaxItems: 1,
-	//	Elem: &schema.Resource{
-	//		Schema: map[string]*schema.Schema{
-	//			"accounts_enabled_for_replication": {
-	//				Type: schema.TypeList,
-	//				Elem: &schema.Schema{
-	//					Type: schema.TypeString,
-	//				},
-	//				Description: "TODO",
-	//			},
-	//			"accounts_disabled_for_replication": {
-	//				Type: schema.TypeList,
-	//				Elem: &schema.Schema{
-	//					Type: schema.TypeString,
-	//				},
-	//				Description: "TODO",
-	//			},
-	//			"ignore_edition_check": {
-	//				Type: schema.TypeBool,
-	//			},
-	//		},
-	//	},
-	//	Computed:    true,
-	//	Optional:    true,
-	//	Description: "TODO",
-	//},
+	"replication": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Configures replication for a given database. When specified, this database will be promoted to serve as a primary database for replication. A primary database can be replicated in one or more accounts, allowing users in those accounts to query objects in each secondary (i.e. replica) database.",
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enable_for_account": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Entry to enable replication and optionally failover for a given account identifier.",
+					MinItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_identifier": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
+							},
+							"with_failover": {
+								Type:        schema.TypeBool,
+								Optional:    true,
+								Description: "Specifies if failover should be enabled for the specified account identifier",
+							},
+						},
+					},
+				},
+				"ignore_edition_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Description: "Allows replicating data to accounts on lower editions in either of the following scenarios: " +
+						"1. The primary database is in a Business Critical (or higher) account but one or more of the accounts approved for replication are on lower editions. Business Critical Edition is intended for Snowflake accounts with extremely sensitive data. " +
+						"2. The primary database is in a Business Critical (or higher) account and a signed business associate agreement is in place to store PHI data in the account per HIPAA and HITRUST regulations, but no such agreement is in place for one or more of the accounts approved for replication, regardless if they are Business Critical (or higher) accounts. " +
+						"Both scenarios are prohibited by default in an effort to help prevent account administrators for Business Critical (or higher) accounts from inadvertently replicating sensitive data to accounts on lower editions.",
+				},
+			},
+		},
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -110,10 +126,20 @@ func StandardDatabase() *schema.Resource {
 		ReadContext:   ReadStandardDatabase,
 		DeleteContext: DeleteStandardDatabase,
 		UpdateContext: UpdateStandardDatabase,
-		// TODO CustomDiffs
 
-		// TODO: Desc
-		Description: "",
+		CustomizeDiff: customdiff.All(
+			NestedIntValueAccountObjectComputedIf("data_retention_time_in_days", sdk.AccountParameterDataRetentionTimeInDays),
+			NestedIntValueAccountObjectComputedIf("max_data_extension_time_in_days", sdk.AccountParameterMaxDataExtensionTimeInDays),
+			NestedStringValueAccountObjectComputedIf("external_volume", sdk.AccountParameterExternalVolume),
+			NestedStringValueAccountObjectComputedIf("catalog", sdk.AccountParameterCatalog),
+			NestedBoolValueAccountObjectComputedIf("replace_invalid_characters", sdk.AccountParameterReplaceInvalidCharacters),
+			NestedStringValueAccountObjectComputedIf("default_ddl_collation", sdk.AccountParameterDefaultDDLCollation),
+			NestedStringValueAccountObjectComputedIf("storage_serialization_policy", sdk.AccountParameterStorageSerializationPolicy),
+			NestedStringValueAccountObjectComputedIf("log_level", sdk.AccountParameterLogLevel),
+			NestedStringValueAccountObjectComputedIf("trace_level", sdk.AccountParameterTraceLevel),
+		),
+
+		Description: "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 		Schema:      databaseV1Schema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -126,33 +152,33 @@ func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	dataRetentionTimeInDays, _ := GetPropertyOfFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value")
-	maxDataExtensionTimeInDays, _ := GetPropertyOfFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value")
-	replaceInvalidCharacters, _ := GetPropertyOfFirstNestedObjectByKey[bool](d, "replace_invalid_characters", "value")
-	defaultDdlCollation, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "default_ddl_collation", "value")
+	dataRetentionTimeInDays, _ := GetPropertyOfFirstNestedObjectByValueKey[int](d, "data_retention_time_in_days")
+	maxDataExtensionTimeInDays, _ := GetPropertyOfFirstNestedObjectByValueKey[int](d, "max_data_extension_time_in_days")
+	replaceInvalidCharacters, _ := GetPropertyOfFirstNestedObjectByValueKey[bool](d, "replace_invalid_characters")
+	defaultDdlCollation, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "default_ddl_collation")
 
 	var externalVolume *sdk.AccountObjectIdentifier
-	if externalVolumeRaw, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "external_volume", "value"); externalVolumeRaw != nil {
+	if externalVolumeRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "external_volume"); externalVolumeRaw != nil {
 		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(*externalVolumeRaw))
 	}
 
 	var catalog *sdk.AccountObjectIdentifier
-	if catalogRaw, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "catalog", "value"); catalogRaw != nil {
+	if catalogRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "catalog"); catalogRaw != nil {
 		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(*catalogRaw))
 	}
 
 	var storageSerializationPolicy *sdk.StorageSerializationPolicy
-	if storageSerializationPolicyRaw, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "storage_serialization_policy", "value"); storageSerializationPolicyRaw != nil {
+	if storageSerializationPolicyRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
 		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(*storageSerializationPolicyRaw))
 	}
 
 	var logLevel *sdk.LogLevel
-	if logLevelRaw, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "log_level", "value"); logLevelRaw != nil {
+	if logLevelRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "log_level"); logLevelRaw != nil {
 		logLevel = sdk.Pointer(sdk.LogLevel(*logLevelRaw))
 	}
 
 	var traceLevel *sdk.TraceLevel
-	if traceLevelRaw, _ := GetPropertyOfFirstNestedObjectByKey[string](d, "trace_level", "value"); traceLevelRaw != nil {
+	if traceLevelRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "trace_level"); traceLevelRaw != nil {
 		traceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevelRaw))
 	}
 
@@ -175,44 +201,78 @@ func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	// TODO: Alter Replication and failover
-	//err = client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
-	//	EnableReplication:  nil,
-	//	DisableReplication: nil,
-	//	Refresh:            nil,
-	//})
-	//if err != nil {
-	//	// TODO: Return error or warning ?
-	//	return diag.FromErr(err)
-	//}
-	//
-	//err = client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
-	//	EnableFailover:  nil,
-	//	DisableFailover: nil,
-	//	Primary:         nil,
-	//})
-	//if err != nil {
-	//	// TODO: Return error or warning ?
-	//	return diag.FromErr(err)
-	//}
+	var diags diag.Diagnostics
 
-	return ReadStandardDatabase(ctx, d, meta)
+	if v, ok := d.GetOk("replication"); ok {
+		replicationConfiguration := v.([]any)[0].(map[string]any)
+
+		var ignoreEditionCheck *bool
+		if v, ok := replicationConfiguration["ignore_edition_check"]; ok {
+			ignoreEditionCheck = sdk.Pointer(v.(bool))
+		}
+
+		if enableForAccounts, ok := replicationConfiguration["enable_for_account"]; ok {
+			enableForAccountList := enableForAccounts.([]any)
+
+			if len(enableForAccountList) > 0 {
+				replicationForAccounts := make([]sdk.AccountIdentifier, 0)
+				failoverForAccounts := make([]sdk.AccountIdentifier, 0)
+
+				for _, enableForAccount := range enableForAccountList {
+					accountConfig := enableForAccount.(map[string]any)
+					accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(accountConfig["account_identifier"].(string))
+
+					replicationForAccounts = append(replicationForAccounts, accountIdentifier)
+					if v, ok := accountConfig["with_failover"]; ok && v.(bool) {
+						failoverForAccounts = append(failoverForAccounts, accountIdentifier)
+					}
+				}
+
+				err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+					EnableReplication: &sdk.EnableReplication{
+						ToAccounts:         replicationForAccounts,
+						IgnoreEditionCheck: ignoreEditionCheck,
+					},
+				})
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  err.Error(),
+					})
+				}
+
+				err = client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+					EnableFailover: &sdk.EnableFailover{
+						ToAccounts: replicationForAccounts,
+					},
+				})
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  err.Error(),
+					})
+				}
+			}
+		}
+	}
+
+	return append(diags, ReadStandardDatabase(ctx, d, meta)...)
 }
 
 func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	secondaryDatabaseId := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
 		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		d.SetId(helpers.EncodeSnowflakeID(newId))
-		secondaryDatabaseId = newId
+		id = newId
 	}
 
 	var databaseSetRequest sdk.DatabaseSet
@@ -221,7 +281,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("data_retention_time_in_days") {
 		dataRetentionObject, ok := d.GetOk("data_retention_time_in_days")
 		if ok && len(dataRetentionObject.([]any)) > 0 {
-			dataRetentionTimeInDays, err := GetPropertyOfFirstNestedObjectByKey[int](d, "data_retention_time_in_days", "value")
+			dataRetentionTimeInDays, err := GetPropertyOfFirstNestedObjectByValueKey[int](d, "data_retention_time_in_days")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -234,7 +294,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("max_data_extension_time_in_days") {
 		maxDataExtensionTimeInDaysObject, ok := d.GetOk("max_data_extension_time_in_days")
 		if ok && len(maxDataExtensionTimeInDaysObject.([]any)) > 0 {
-			maxDataExtensionTimeInDays, err := GetPropertyOfFirstNestedObjectByKey[int](d, "max_data_extension_time_in_days", "value")
+			maxDataExtensionTimeInDays, err := GetPropertyOfFirstNestedObjectByValueKey[int](d, "max_data_extension_time_in_days")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -247,7 +307,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("external_volume") {
 		externalVolumeObject, ok := d.GetOk("external_volume")
 		if ok && len(externalVolumeObject.([]any)) > 0 {
-			externalVolume, err := GetPropertyOfFirstNestedObjectByKey[string](d, "external_volume", "value")
+			externalVolume, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "external_volume")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -260,7 +320,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("catalog") {
 		catalogObject, ok := d.GetOk("catalog")
 		if ok && len(catalogObject.([]any)) > 0 {
-			catalog, err := GetPropertyOfFirstNestedObjectByKey[string](d, "catalog", "value")
+			catalog, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "catalog")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -273,7 +333,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("replace_invalid_characters") {
 		replaceInvalidCharactersObject, ok := d.GetOk("replace_invalid_characters")
 		if ok && len(replaceInvalidCharactersObject.([]any)) > 0 {
-			replaceInvalidCharacters, err := GetPropertyOfFirstNestedObjectByKey[bool](d, "replace_invalid_characters", "value")
+			replaceInvalidCharacters, err := GetPropertyOfFirstNestedObjectByValueKey[bool](d, "replace_invalid_characters")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -286,7 +346,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("default_ddl_collation") {
 		defaultDdlCollationObject, ok := d.GetOk("default_ddl_collation")
 		if ok && len(defaultDdlCollationObject.([]any)) > 0 {
-			defaultDdlCollation, err := GetPropertyOfFirstNestedObjectByKey[string](d, "default_ddl_collation", "value")
+			defaultDdlCollation, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "default_ddl_collation")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -299,7 +359,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("storage_serialization_policy") {
 		storageSerializationPolicyObject, ok := d.GetOk("storage_serialization_policy")
 		if ok && len(storageSerializationPolicyObject.([]any)) > 0 {
-			storageSerializationPolicy, err := GetPropertyOfFirstNestedObjectByKey[string](d, "storage_serialization_policy", "value")
+			storageSerializationPolicy, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "storage_serialization_policy")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -312,7 +372,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("log_level") {
 		logLevelObject, ok := d.GetOk("log_level")
 		if ok && len(logLevelObject.([]any)) > 0 {
-			logLevel, err := GetPropertyOfFirstNestedObjectByKey[string](d, "log_level", "value")
+			logLevel, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "log_level")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -325,13 +385,114 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("trace_level") {
 		traceLevelObject, ok := d.GetOk("trace_level")
 		if ok && len(traceLevelObject.([]any)) > 0 {
-			traceLevel, err := GetPropertyOfFirstNestedObjectByKey[string](d, "trace_level", "value")
+			traceLevel, err := GetPropertyOfFirstNestedObjectByValueKey[string](d, "trace_level")
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			databaseSetRequest.TraceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevel))
 		} else {
 			databaseUnsetRequest.TraceLevel = sdk.Bool(true)
+		}
+	}
+
+	if d.HasChange("replication") {
+		before, after := d.GetChange("replication")
+
+		var (
+			accountsToEnableReplication  []sdk.AccountIdentifier
+			accountsToDisableReplication []sdk.AccountIdentifier
+			accountsToEnableFailover     []sdk.AccountIdentifier
+			accountsToDisableFailover    []sdk.AccountIdentifier
+
+			// maps represent replication configuration by having sdk.AccountIdentifier
+			// as a key (implicitly enabling replication), and failover as an option value
+			beforeReplicationFailoverConfigurationMap = make(map[sdk.AccountIdentifier]bool)
+			afterReplicationFailoverConfigurationMap  = make(map[sdk.AccountIdentifier]bool)
+		)
+
+		fillReplicationMap := func(replicationConfigs []any, replicationFailoverMap map[sdk.AccountIdentifier]bool) {
+			for _, replicationConfigurationMap := range replicationConfigs {
+				replicationConfiguration := replicationConfigurationMap.(map[string]any)
+				for _, enableForAccountMap := range replicationConfiguration["enable_for_account"].([]any) {
+					enableForAccount := enableForAccountMap.(map[string]any)
+					accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(enableForAccount["account_identifier"].(string))
+					replicationFailoverMap[accountIdentifier] = enableForAccount["with_failover"].(bool)
+				}
+			}
+		}
+		fillReplicationMap(before.([]any), beforeReplicationFailoverConfigurationMap)
+		fillReplicationMap(after.([]any), afterReplicationFailoverConfigurationMap)
+
+		for accountIdentifier, _ := range beforeReplicationFailoverConfigurationMap {
+			if _, ok := afterReplicationFailoverConfigurationMap[accountIdentifier]; !ok {
+				// Entry removed -> only replication needs to be disabled, because failover will be disabled implicitly
+				// (in Snowflake you cannot have failover enabled when replication is disabled).
+				accountsToDisableReplication = append(accountsToDisableReplication, accountIdentifier)
+			}
+		}
+
+		for accountIdentifier, withFailover := range afterReplicationFailoverConfigurationMap {
+			if beforeWithFailover, ok := beforeReplicationFailoverConfigurationMap[accountIdentifier]; !ok {
+				// New entry, enable replication and failover if set to true
+				accountsToEnableReplication = append(accountsToEnableReplication, accountIdentifier)
+				if withFailover {
+					accountsToEnableFailover = append(accountsToEnableFailover, accountIdentifier)
+				}
+			} else {
+				// Existing entry (check for possible failover modifications)
+				if beforeWithFailover != withFailover {
+					if withFailover {
+						accountsToEnableFailover = append(accountsToEnableFailover, accountIdentifier)
+					} else {
+						accountsToDisableFailover = append(accountsToDisableFailover, accountIdentifier)
+					}
+				}
+			}
+		}
+
+		if len(accountsToEnableReplication) > 0 {
+			err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+				EnableReplication: &sdk.EnableReplication{
+					ToAccounts:         accountsToEnableReplication,
+					IgnoreEditionCheck: sdk.Bool(d.Get("replication.0.ignore_edition_check").(bool)),
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(accountsToEnableFailover) > 0 {
+			err := client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+				EnableFailover: &sdk.EnableFailover{
+					ToAccounts: accountsToEnableFailover,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(accountsToDisableReplication) > 0 {
+			err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+				DisableReplication: &sdk.DisableReplication{
+					ToAccounts: accountsToDisableReplication,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(accountsToDisableFailover) > 0 {
+			err := client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+				DisableFailover: &sdk.DisableFailover{
+					ToAccounts: accountsToDisableFailover,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -345,7 +506,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if (databaseSetRequest != sdk.DatabaseSet{}) {
-		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			Set: &databaseSetRequest,
 		})
 		if err != nil {
@@ -354,7 +515,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if (databaseUnsetRequest != sdk.DatabaseUnset{}) {
-		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			Unset: &databaseUnsetRequest,
 		})
 		if err != nil {
@@ -409,15 +570,69 @@ func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
-	//replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
-	//	Like: &sdk.Like{
-	//		Pattern: sdk.String(secondaryDatabaseId.Name()),
-	//	},
-	//})
-	//if err != nil {
-	//	return diag.FromErr(err)
-	//}
-	// TODO: Set enabled/disabled accounts for replication/failover
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+	replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
+		WithPrimary: sdk.Pointer(sdk.NewExternalObjectIdentifier(currentAccountIdentifier, id)),
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if len(replicationDatabases) == 1 {
+		replicationAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+		failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].ReplicationAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			replicationAllowedToAccounts = append(replicationAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].FailoverAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		enableForAccount := make([]map[string]any, 0)
+		for _, allowedAccount := range replicationAllowedToAccounts {
+			enableForAccount = append(enableForAccount, map[string]any{
+				"account_identifier": allowedAccount.FullyQualifiedName(),
+				"with_failover":      slices.Contains(failoverAllowedToAccounts, allowedAccount),
+			})
+		}
+
+		var ignoreEditionCheck *bool
+		if v, ok := d.GetOk("replication.0.ignore_edition_check"); ok {
+			ignoreEditionCheck = sdk.Bool(v.(bool))
+		}
+
+		if len(enableForAccount) == 0 && ignoreEditionCheck == nil {
+			err := d.Set("replication", []any{})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			err := d.Set("replication", []any{
+				map[string]any{
+					"enable_for_account":   enableForAccount,
+					"ignore_edition_check": ignoreEditionCheck,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
 
 	for _, parameter := range parameters {
 		switch parameter.Key {
@@ -426,28 +641,27 @@ func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			// TODO: I think "value" could be assumed and the option for other value names should be opt-in
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "max_data_extension_time_in_days", "value", maxDataExtensionTimeInDays); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "max_data_extension_time_in_days", maxDataExtensionTimeInDays); err != nil {
 				return diag.FromErr(err)
 			}
 		case "EXTERNAL_VOLUME":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "external_volume", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "external_volume", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "CATALOG":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "catalog", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "catalog", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "DEFAULT_DDL_COLLATION":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "default_ddl_collation", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "default_ddl_collation", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "LOG_LEVEL":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "log_level", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "log_level", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "TRACE_LEVEL":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "trace_level", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "trace_level", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "REPLACE_INVALID_CHARACTERS":
@@ -455,11 +669,11 @@ func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "replace_invalid_characters", "value", boolValue); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "replace_invalid_characters", boolValue); err != nil {
 				return diag.FromErr(err)
 			}
 		case "STORAGE_SERIALIZATION_POLICY":
-			if err := SetPropertyOfFirstNestedObjectByKey(d, "storage_serialization_policy", "value", parameter.Value); err != nil {
+			if err := SetPropertyOfFirstNestedObjectByValueKey(d, "storage_serialization_policy", parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		}

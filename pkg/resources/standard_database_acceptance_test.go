@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 	"slices"
+	"strconv"
 	"testing"
 )
 
-func TestAcc_DatabaseV1_Minimal(t *testing.T) {
+func TestAcc_StandardDatabase_Minimal(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -34,7 +35,7 @@ func TestAcc_DatabaseV1_Minimal(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
@@ -52,7 +53,7 @@ func TestAcc_DatabaseV1_Minimal(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "log_level.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "trace_level.#", "1"),
-					// TODO: resource.TestCheckResourceAttr("snowflake_standard_database.test", "replicate.#", "0"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "0"),
 				),
 			},
 			{
@@ -71,14 +72,21 @@ func TestAcc_DatabaseV1_Minimal(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "log_level.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "trace_level.#", "1"),
-					// TODO: resource.TestCheckResourceAttr("snowflake_standard_database.test", "replicate.#", "0"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "0"),
 				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables:   configVariables(newId, newComment),
+				ResourceName:      "snowflake_standard_database.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAcc_DatabaseV1_ComputedValues(t *testing.T) {
+func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -140,7 +148,7 @@ func TestAcc_DatabaseV1_ComputedValues(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
@@ -186,27 +194,24 @@ func TestAcc_DatabaseV1_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "storage_serialization_policy.0.value", storageSerializationPolicy),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "log_level.0.value", logLevel),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "trace_level.0.value", traceLevel),
-					// TODO: resource.TestCheckResourceAttr("snowflake_standard_database.test", "replicate.#", "0"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
-				// TODO: fill
-				ConfigVariables: completeConfigVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyOptimized, sdk.LogLevelInfo, sdk.TraceLevelOnEvent),
+				ConfigVariables: completeConfigVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", "20"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "30"),
-					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "external_volume.0.value", externalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "catalog.0.value", catalog),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "external_volume.0.value", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "catalog.0.value", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replace_invalid_characters.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "default_ddl_collation.0.value", "en_US"),
-					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.0.value", string(sdk.StorageSerializationPolicyOptimized)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.0.value", string(sdk.StorageSerializationPolicyCompatible)),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "log_level.0.value", string(sdk.LogLevelInfo)),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "trace_level.0.value", string(sdk.TraceLevelOnEvent)),
-					// TODO: resource.TestCheckResourceAttr("snowflake_standard_database.test", "replicate.#", "0"),
 				),
 			},
 			{
@@ -225,15 +230,54 @@ func TestAcc_DatabaseV1_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "storage_serialization_policy.0.value", storageSerializationPolicy),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "log_level.0.value", logLevel),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "trace_level.0.value", traceLevel),
-					// TODO: resource.TestCheckResourceAttr("snowflake_standard_database.test", "replicate.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_DatabaseV1_Complete(t *testing.T) {
-	prefix := acc.TestClient().Ids.AlphaWithPrefix("_")
+func TestAcc_StandardDatabase_Complete(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+	comment := random.Comment()
+
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
+	configVariables := func(
+		id sdk.AccountObjectIdentifier,
+		comment string,
+		dataRetention int,
+		maxDataExtension int,
+		replaceInvalidCharacters bool,
+		defaultDdlCollation string,
+		storageSerializationPolicy sdk.StorageSerializationPolicy,
+		logLevel sdk.LogLevel,
+		traceLevel sdk.TraceLevel,
+		withFailover bool,
+		ignoreEditionCheck bool,
+	) config.Variables {
+		return config.Variables{
+			"name":                            config.StringVariable(id.Name()),
+			"comment":                         config.StringVariable(comment),
+			"transient":                       config.BoolVariable(false),
+			"data_retention_time_in_days":     config.IntegerVariable(dataRetention),
+			"max_data_extension_time_in_days": config.IntegerVariable(maxDataExtension),
+			"external_volume":                 config.StringVariable(externalVolumeId.Name()),
+			"catalog":                         config.StringVariable(catalogId.Name()),
+			"replace_invalid_characters":      config.BoolVariable(replaceInvalidCharacters),
+			"default_ddl_collation":           config.StringVariable(defaultDdlCollation),
+			"storage_serialization_policy":    config.StringVariable(string(storageSerializationPolicy)),
+			"log_level":                       config.StringVariable(string(logLevel)),
+			"trace_level":                     config.StringVariable(string(traceLevel)),
+			"account_identifier":              config.StringVariable(secondaryAccountIdentifier),
+			"with_failover":                   config.BoolVariable(withFailover),
+			"ignore_edition_check":            config.BoolVariable(ignoreEditionCheck),
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -241,22 +285,85 @@ func TestAcc_DatabaseV1_Complete(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
 		Steps: []resource.TestStep{
 			{
-				Config: dbConfig(prefix),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
+				ConfigVariables: configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
-					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", "20"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "30"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "external_volume.0.value", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "catalog.0.value", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replace_invalid_characters.0.value", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "default_ddl_collation.0.value", "en_US"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.0.value", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "log_level.0.value", string(sdk.LogLevelInfo)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "trace_level.0.value", string(sdk.TraceLevelOnEvent)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.with_failover", "true"),
 				),
+			},
+			{
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
+				ConfigVariables:         configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
+				ResourceName:            "snowflake_standard_database.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replication.0.ignore_edition_check"},
 			},
 		},
 	})
 }
 
-func TestAcc_DatabaseV1_HierarchicalValues(t *testing.T) {
-	prefix := acc.TestClient().Ids.AlphaWithPrefix("_")
+func TestAcc_StandardDatabase_Update(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+	comment := random.Comment()
+
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
+	configVariables := func(
+		id sdk.AccountObjectIdentifier,
+		comment string,
+		dataRetention int,
+		maxDataExtension int,
+		replaceInvalidCharacters bool,
+		defaultDdlCollation string,
+		storageSerializationPolicy sdk.StorageSerializationPolicy,
+		logLevel sdk.LogLevel,
+		traceLevel sdk.TraceLevel,
+		withFailover bool,
+		ignoreEditionCheck bool,
+	) config.Variables {
+		return config.Variables{
+			"name":                            config.StringVariable(id.Name()),
+			"comment":                         config.StringVariable(comment),
+			"transient":                       config.BoolVariable(false),
+			"data_retention_time_in_days":     config.IntegerVariable(dataRetention),
+			"max_data_extension_time_in_days": config.IntegerVariable(maxDataExtension),
+			"external_volume":                 config.StringVariable(externalVolumeId.Name()),
+			"catalog":                         config.StringVariable(catalogId.Name()),
+			"replace_invalid_characters":      config.BoolVariable(replaceInvalidCharacters),
+			"default_ddl_collation":           config.StringVariable(defaultDdlCollation),
+			"storage_serialization_policy":    config.StringVariable(string(storageSerializationPolicy)),
+			"log_level":                       config.StringVariable(string(logLevel)),
+			"trace_level":                     config.StringVariable(string(traceLevel)),
+			"account_identifier":              config.StringVariable(secondaryAccountIdentifier),
+			"with_failover":                   config.BoolVariable(withFailover),
+			"ignore_edition_check":            config.BoolVariable(ignoreEditionCheck),
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -264,15 +371,185 @@ func TestAcc_DatabaseV1_HierarchicalValues(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
 		Steps: []resource.TestStep{
 			{
-				Config: dbConfig(prefix),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
+				ConfigVariables: configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
-					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", "20"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "30"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "external_volume.0.value", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "catalog.0.value", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replace_invalid_characters.0.value", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "default_ddl_collation.0.value", "en_US"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "storage_serialization_policy.0.value", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "log_level.0.value", string(sdk.LogLevelInfo)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "trace_level.0.value", string(sdk.TraceLevelOnEvent)),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.with_failover", "true"),
 				),
+			},
+			{
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
+				ConfigVariables:         configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
+				ResourceName:            "snowflake_standard_database.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replication.0.ignore_edition_check"},
+			},
+		},
+	})
+}
+
+func TestAcc_StandardDatabase_HierarchicalValues(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	configVariables := func(id sdk.AccountObjectIdentifier, comment string) config.Variables {
+		return config.Variables{
+			"name":    config.StringVariable(id.Name()),
+			"comment": config.StringVariable(comment),
+		}
+	}
+
+	param, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterMaxDataExtensionTimeInDays)
+	require.NoError(t, err)
+
+	var revertAccountParameterToDefault func()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: configVariables(id, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", param.Default),
+				),
+			},
+			{
+				PreConfig: func() {
+					revertAccountParameterToDefault = acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterMaxDataExtensionTimeInDays, strconv.Itoa(50))
+					t.Cleanup(revertAccountParameterToDefault)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: configVariables(id, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "50"),
+				),
+			},
+			{
+				PreConfig: func() {
+					revertAccountParameterToDefault()
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: configVariables(id, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", param.Default),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StandardDatabase_Replication(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+
+	configVariables := func(id sdk.AccountObjectIdentifier, withReplication bool, withFailover bool, ignoreEditionCheck bool) config.Variables {
+		if withReplication {
+			return config.Variables{
+				"name":                 config.StringVariable(id.Name()),
+				"account_identifier":   config.StringVariable(secondaryAccountIdentifier),
+				"with_failover":        config.BoolVariable(withFailover),
+				"ignore_edition_check": config.BoolVariable(ignoreEditionCheck),
+			}
+		}
+		return config.Variables{
+			"name":    config.StringVariable(id.Name()),
+			"comment": config.StringVariable(""),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: configVariables(id, false, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "0"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/replication"),
+				ConfigVariables: configVariables(id, true, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.with_failover", "true"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/replication"),
+				ConfigVariables: configVariables(id, true, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.with_failover", "false"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: configVariables(id, false, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "0"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/replication"),
+				ConfigVariables: configVariables(id, true, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "replication.0.enable_for_account.0.with_failover", "true"),
+				),
+			},
+			{
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_StandardDatabase/replication"),
+				ConfigVariables:         configVariables(id, true, true, true),
+				ResourceName:            "snowflake_standard_database.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replication.0.ignore_edition_check"},
 			},
 		},
 	})

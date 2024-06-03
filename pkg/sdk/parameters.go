@@ -393,13 +393,17 @@ const (
 	AccountParameterWeekStart                             AccountParameter = "WEEK_START"
 
 	// Object Parameters (inherited)
+	AccountParameterCatalog                             AccountParameter = "CATALOG"
 	AccountParameterDataRetentionTimeInDays             AccountParameter = "DATA_RETENTION_TIME_IN_DAYS"
 	AccountParameterDefaultDDLCollation                 AccountParameter = "DEFAULT_DDL_COLLATION"
+	AccountParameterExternalVolume                      AccountParameter = "EXTERNAL_VOLUME"
 	AccountParameterLogLevel                            AccountParameter = "LOG_LEVEL"
 	AccountParameterMaxConcurrencyLevel                 AccountParameter = "MAX_CONCURRENCY_LEVEL"
 	AccountParameterMaxDataExtensionTimeInDays          AccountParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
 	AccountParameterPipeExecutionPaused                 AccountParameter = "PIPE_EXECUTION_PAUSED"
+	AccountParameterReplaceInvalidCharacters            AccountParameter = "REPLACE_INVALID_CHARACTERS"
 	AccountParameterStatementQueuedTimeoutInSeconds     AccountParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	AccountParameterStorageSerializationPolicy          AccountParameter = "STORAGE_SERIALIZATION_POLICY"
 	AccountParameterShareRestrictions                   AccountParameter = "SHARE_RESTRICTIONS"
 	AccountParameterSuspendTaskAfterNumFailures         AccountParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
 	AccountParameterTraceLevel                          AccountParameter = "TRACE_LEVEL"

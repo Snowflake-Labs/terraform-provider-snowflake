@@ -130,6 +130,10 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
+func GetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string) (*T, error) {
+	return GetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value")
+}
+
 // GetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
 // schema.TypeList with MaxItems set to one and inner schema with single value. To easily retrieve
 // the inner value, you can specify the top-level property with propertyKey and the nested value with nestedValueKey.
@@ -160,6 +164,10 @@ func GetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, property
 	}
 
 	return &typedNestedValue, nil
+}
+
+func SetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string, value T) error {
+	return SetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value", value)
 }
 
 // SetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
