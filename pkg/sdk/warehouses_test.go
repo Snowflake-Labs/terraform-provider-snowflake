@@ -277,9 +277,8 @@ func TestToWarehouseSize(t *testing.T) {
 		want  WarehouseSize
 	}
 
-	tests := []test{
+	valid := []test{
 		// case insensitive.
-		{input: "XSMALL", want: WarehouseSizeXSmall},
 		{input: "xsmall", want: WarehouseSizeXSmall},
 
 		// Supported Values
@@ -306,15 +305,30 @@ func TestToWarehouseSize(t *testing.T) {
 		{input: "6X-LARGE", want: WarehouseSizeX6Large},
 	}
 
-	for _, tc := range tests {
+	invalid := []test{
+		// old values
+		{input: "2XLARGE"},
+		{input: "3XLARGE"},
+		{input: "4XLARGE"},
+		{input: "5XLARGE"},
+		{input: "6XLARGE"},
+
+		// bad values
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
 		t.Run(tc.input, func(t *testing.T) {
 			got, err := ToWarehouseSize(tc.input)
 			require.NoError(t, err)
 			require.Equal(t, tc.want, got)
 		})
+	}
 
-		t.Run("invalid warehouse size", func(t *testing.T) {
-			_, err := ToWarehouseSize("foo")
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToWarehouseSize(tc.input)
 			require.Error(t, err)
 		})
 	}
