@@ -58,25 +58,25 @@ var (
 func ToWarehouseSize(s string) (WarehouseSize, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "XSMALL", "X-SMALL":
+	case string(WarehouseSizeXSmall), "X-SMALL":
 		return WarehouseSizeXSmall, nil
-	case "SMALL":
+	case string(WarehouseSizeSmall):
 		return WarehouseSizeSmall, nil
-	case "MEDIUM":
+	case string(WarehouseSizeMedium):
 		return WarehouseSizeMedium, nil
-	case "LARGE":
+	case string(WarehouseSizeLarge):
 		return WarehouseSizeLarge, nil
-	case "XLARGE", "X-LARGE":
+	case string(WarehouseSizeXLarge), "X-LARGE":
 		return WarehouseSizeXLarge, nil
-	case "XXLARGE", "X2LARGE", "2X-LARGE":
+	case string(WarehouseSizeXXLarge), "X2LARGE", "2X-LARGE":
 		return WarehouseSizeXXLarge, nil
-	case "XXXLARGE", "X3LARGE", "3X-LARGE":
+	case string(WarehouseSizeXXXLarge), "X3LARGE", "3X-LARGE":
 		return WarehouseSizeXXXLarge, nil
-	case "X4LARGE", "4X-LARGE":
+	case string(WarehouseSizeX4Large), "4X-LARGE":
 		return WarehouseSizeX4Large, nil
-	case "X5LARGE", "5X-LARGE":
+	case string(WarehouseSizeX5Large), "5X-LARGE":
 		return WarehouseSizeX5Large, nil
-	case "X6LARGE", "6X-LARGE":
+	case string(WarehouseSizeX6Large), "6X-LARGE":
 		return WarehouseSizeX6Large, nil
 	default:
 		return "", fmt.Errorf("invalid warehouse size: %s", s)

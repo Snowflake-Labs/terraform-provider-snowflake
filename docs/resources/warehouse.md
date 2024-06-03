@@ -42,7 +42,7 @@ resource "snowflake_warehouse" "warehouse" {
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - `statement_timeout_in_seconds` (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
 - `wait_for_provisioning` (Boolean, Deprecated) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
-- `warehouse_size` (String) Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).
+- `warehouse_size` (String) Specifies the size of the virtual warehouse. Valid values are: `XSMALL` | `X-SMALL` | `SMALL` | `MEDIUM` | `LARGE` | `XLARGE` | `X-LARGE` | `XXLARGE` | `X2LARGE` | `2X-LARGE` | `XXXLARGE` | `X3LARGE` | `3X-LARGE` | `X4LARGE` | `4X-LARGE` | `X5LARGE` | `5X-LARGE` | `X6LARGE` | `6X-LARGE`. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.
 - `warehouse_type` (String) Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse
 
 ### Read-Only
