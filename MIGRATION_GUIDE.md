@@ -7,13 +7,19 @@ across different versions.
 ## v0.91.0 ➞ v0.92.0
 ### snowflake_database new alternatives
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
-- Standard database (in progress)
+- Standard database - can be used as `snowflake_standard_database` (used to create databases with optional ability to become a primary database ready for replication)
 - Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
 - Secondary database - can be used as `snowflake_secondary_database` (used to create replicas of databases from external sources)
 From now on, please migrate and use the new database resources for their unique use cases. For more information, see the documentation for those resources on the [Terraform Registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
  
 The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level. 
 Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
+
+### *(behavior change)* snowflake_databases 
+- The `pattern` was replaced by `like` field.
+- Additional filtering options added (`limit`)
+- Added missing fields returned by SHOW DATABASES
+- Added outputs from DESC DATABASE and SHOW PARAMETERS IN DATABASE (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**)
 
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes

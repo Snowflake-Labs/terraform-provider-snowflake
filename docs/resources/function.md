@@ -23,14 +23,14 @@ provider "snowflake" {
 }
 
 // Create database
-resource "snowflake_database" "db" {
+resource "snowflake_standard_database" "db" {
   name                = "MY_DB"
   data_retention_days = 1
 }
 
 // Create schema
 resource "snowflake_schema" "schema" {
-  database            = snowflake_database.db.name
+  database            = snowflake_standard_database.db.name
   name                = "MY_SCHEMA"
   data_retention_days = 1
 }

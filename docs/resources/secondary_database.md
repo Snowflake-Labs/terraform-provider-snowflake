@@ -13,11 +13,14 @@ A secondary database creates a replica of an existing primary database (i.e. a s
 
 ```terraform
 # 1. Preparing primary database
-resource "snowflake_database" "primary" {
+resource "snowflake_standard_database" "primary" {
   provider = primary_account # notice the provider fields
   name     = "database_name"
-  replication_configuration {
-    accounts             = ["<secondary_account_organization_name>.<secondary_account_name>"]
+  replication {
+    enable_for_account {
+      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      with_failover      = true
+    }
     ignore_edition_check = true
   }
 }
@@ -25,8 +28,8 @@ resource "snowflake_database" "primary" {
 # 2. Creating secondary database
 resource "snowflake_secondary_database" "test" {
   provider      = secondary_account
-  name          = snowflake_database.primary.name # It's recommended to give a secondary database the same name as its primary database
-  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_database.primary.name}"
+  name          = snowflake_standard_database.primary.name # It's recommended to give a secondary database the same name as its primary database
+  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_standard_database.primary.name}"
   is_transient  = false
 
   data_retention_time_in_days {

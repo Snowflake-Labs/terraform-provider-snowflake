@@ -2,6 +2,10 @@ package resources_test
 
 import (
 	"context"
+	"slices"
+	"strconv"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -10,9 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
-	"slices"
-	"strconv"
-	"testing"
 )
 
 func TestAcc_StandardDatabase_Minimal(t *testing.T) {

@@ -2,11 +2,13 @@ package acceptance
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"strconv"
 )
 
+// TestCheckResourceAttrNumberAtLeast checks if specified field (key) in resource (name) is equal or greater than atLeast value.
 func TestCheckResourceAttrNumberAtLeast(name string, key string, atLeast int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := getPrimaryModuleInstanceState(s, name)
@@ -21,7 +23,7 @@ func TestCheckResourceAttrNumberAtLeast(name string, key string, atLeast int) re
 
 		actualValue, err := strconv.Atoi(v)
 		if err != nil {
-			return fmt.Errorf("failed to parse attribute %s, err: %s", key, err)
+			return fmt.Errorf("failed to parse attribute %s, err: %w", key, err)
 		}
 
 		if actualValue < atLeast {

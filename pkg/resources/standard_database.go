@@ -4,18 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"slices"
-	"strconv"
-	"strings"
 )
 
-var databaseV1Schema = map[string]*schema.Schema{
+var standardDatabaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -66,8 +67,7 @@ var databaseV1Schema = map[string]*schema.Schema{
 		fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 		func(inner *schema.Schema) {
 			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.EqualFold(oldValue, newValue) &&
-					d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
+				return strings.EqualFold(oldValue, newValue) && d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
 			}
 		},
 	),
@@ -90,8 +90,9 @@ var databaseV1Schema = map[string]*schema.Schema{
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"account_identifier": {
-								Type:        schema.TypeString,
-								Required:    true,
+								Type:     schema.TypeString,
+								Required: true,
+								// TODO(SNOW-1438810): Add account identifier validator
 								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\"`.",
 							},
 							"with_failover": {
@@ -140,7 +141,7 @@ func StandardDatabase() *schema.Resource {
 		),
 
 		Description: "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
-		Schema:      databaseV1Schema,
+		Schema:      standardDatabaseSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -228,29 +229,33 @@ func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 					}
 				}
 
-				err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
-					EnableReplication: &sdk.EnableReplication{
-						ToAccounts:         replicationForAccounts,
-						IgnoreEditionCheck: ignoreEditionCheck,
-					},
-				})
-				if err != nil {
-					diags = append(diags, diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  err.Error(),
+				if len(replicationForAccounts) > 0 {
+					err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+						EnableReplication: &sdk.EnableReplication{
+							ToAccounts:         replicationForAccounts,
+							IgnoreEditionCheck: ignoreEditionCheck,
+						},
 					})
+					if err != nil {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  err.Error(),
+						})
+					}
 				}
 
-				err = client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
-					EnableFailover: &sdk.EnableFailover{
-						ToAccounts: replicationForAccounts,
-					},
-				})
-				if err != nil {
-					diags = append(diags, diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  err.Error(),
+				if len(failoverForAccounts) > 0 {
+					err = client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+						EnableFailover: &sdk.EnableFailover{
+							ToAccounts: failoverForAccounts,
+						},
 					})
+					if err != nil {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  err.Error(),
+						})
+					}
 				}
 			}
 		}
@@ -423,7 +428,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 		fillReplicationMap(before.([]any), beforeReplicationFailoverConfigurationMap)
 		fillReplicationMap(after.([]any), afterReplicationFailoverConfigurationMap)
 
-		for accountIdentifier, _ := range beforeReplicationFailoverConfigurationMap {
+		for accountIdentifier := range beforeReplicationFailoverConfigurationMap {
 			if _, ok := afterReplicationFailoverConfigurationMap[accountIdentifier]; !ok {
 				// Entry removed -> only replication needs to be disabled, because failover will be disabled implicitly
 				// (in Snowflake you cannot have failover enabled when replication is disabled).
@@ -438,14 +443,12 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 				if withFailover {
 					accountsToEnableFailover = append(accountsToEnableFailover, accountIdentifier)
 				}
-			} else {
 				// Existing entry (check for possible failover modifications)
-				if beforeWithFailover != withFailover {
-					if withFailover {
-						accountsToEnableFailover = append(accountsToEnableFailover, accountIdentifier)
-					} else {
-						accountsToDisableFailover = append(accountsToDisableFailover, accountIdentifier)
-					}
+			} else if beforeWithFailover != withFailover {
+				if withFailover {
+					accountsToEnableFailover = append(accountsToEnableFailover, accountIdentifier)
+				} else {
+					accountsToDisableFailover = append(accountsToDisableFailover, accountIdentifier)
 				}
 			}
 		}

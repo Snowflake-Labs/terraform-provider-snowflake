@@ -108,6 +108,35 @@ func TestNestedIntValueAccountObjectComputedIf(t *testing.T) {
 	})
 }
 
+func TestNestedStringValueAccountObjectComputedIf(t *testing.T) {
+	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeString, resources.NestedStringValueAccountObjectComputedIf("nested_value", sdk.AccountParameterTraceLevel))
+
+	t.Run("different value than on the Snowflake side", func(t *testing.T) {
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
+			"nested_value": []any{
+				map[string]any{
+					"value": "not_a_valid_value",
+				},
+			},
+		})
+		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+	})
+
+	t.Run("same value as in Snowflake", func(t *testing.T) {
+		traceLevel, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterTraceLevel)
+		require.NoError(t, err)
+
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
+			"nested_value": []any{
+				map[string]any{
+					"value": traceLevel.Value,
+				},
+			},
+		})
+		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+	})
+}
+
 func createProviderWithNestedValueAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
 	t.Helper()
 	return &schema.Provider{

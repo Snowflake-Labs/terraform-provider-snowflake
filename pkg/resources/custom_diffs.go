@@ -22,8 +22,6 @@ func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountPara
 	)
 }
 
-/// TODO: TEST
-
 // NestedStringValueAccountObjectComputedIf is NestedValueComputedIf,
 // but dedicated for account level objects with string properties.
 func NestedStringValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {

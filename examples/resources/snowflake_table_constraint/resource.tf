@@ -1,14 +1,14 @@
-resource "snowflake_database" "d" {
+resource "snowflake_standard_database" "d" {
   name = "some_db"
 }
 
 resource "snowflake_schema" "s" {
   name     = "some_schema"
-  database = snowflake_database.d.name
+  database = snowflake_standard_database.d.name
 }
 
 resource "snowflake_table" "t" {
-  database = snowflake_database.d.name
+  database = snowflake_standard_database.d.name
   schema   = snowflake_schema.s.name
   name     = "some_table"
 
@@ -32,7 +32,7 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "fk_t" {
-  database = snowflake_database.d.name
+  database = snowflake_standard_database.d.name
   schema   = snowflake_schema.s.name
   name     = "fk_table"
 

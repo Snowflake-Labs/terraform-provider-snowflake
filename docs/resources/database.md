@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_database (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_standard_database or snowflake_shared_database or snowflake_secondary_database instead. <deprecation>
 
 ## Example Usage
 

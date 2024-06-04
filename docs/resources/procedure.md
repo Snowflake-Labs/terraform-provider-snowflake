@@ -12,20 +12,20 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_database" "db" {
+resource "snowflake_standard_database" "db" {
   name                = "MYDB"
   data_retention_days = 1
 }
 
 resource "snowflake_schema" "schema" {
-  database            = snowflake_database.db.name
+  database            = snowflake_standard_database.db.name
   name                = "MYSCHEMA"
   data_retention_days = 1
 }
 
 resource "snowflake_procedure" "proc" {
   name     = "SAMPLEPROC"
-  database = snowflake_database.db.name
+  database = snowflake_standard_database.db.name
   schema   = snowflake_schema.schema.name
   language = "JAVASCRIPT"
   arguments {

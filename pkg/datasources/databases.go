@@ -2,14 +2,13 @@ package datasources
 
 import (
 	"context"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// TODO: Breaking changes (migration guide)
 
 var databasesSchema = map[string]*schema.Schema{
 	"with_describe": {
@@ -209,8 +208,9 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	}
 	d.SetId("databases_read")
 
-	var flattenedDatabases []map[string]any
-	for _, database := range databases {
+	flattenedDatabases := make([]map[string]any, len(databases))
+
+	for i, database := range databases {
 		var databaseDescription []map[string]any
 		if d.Get("with_describe").(bool) {
 			describeResult, err := client.Databases.Describe(ctx, database.ID())
@@ -247,7 +247,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			}
 		}
 
-		flattenedDatabases = append(flattenedDatabases, map[string]any{
+		flattenedDatabases[i] = map[string]any{
 			"created_on":      database.CreatedOn.String(),
 			"name":            database.Name,
 			"kind":            database.Kind,
@@ -263,7 +263,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			"owner_role_type": database.OwnerRoleType,
 			"description":     databaseDescription,
 			"parameters":      databaseParameters,
-		})
+		}
 	}
 
 	err = d.Set("databases", flattenedDatabases)

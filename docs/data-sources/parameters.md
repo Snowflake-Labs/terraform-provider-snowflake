@@ -12,7 +12,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_database" "d" {
+resource "snowflake_standard_database" "d" {
   name = "TEST_DB"
 }
 
@@ -20,7 +20,7 @@ resource "snowflake_database" "d" {
 data "snowflake_parameters" "p" {
   parameter_type = "OBJECT"
   object_type    = "DATABASE"
-  object_name    = snowflake_database.d.name
+  object_name    = snowflake_standard_database.d.name
 }
 
 // read all account parameters with the pattern '%TIMESTAMP%'
