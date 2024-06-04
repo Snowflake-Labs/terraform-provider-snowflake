@@ -92,7 +92,7 @@ var databaseV1Schema = map[string]*schema.Schema{
 							"account_identifier": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
+								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\"`.",
 							},
 							"with_failover": {
 								Type:        schema.TypeBool,
