@@ -150,7 +150,7 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ForceNewIfComputedValueRemovedFromConfigAndDifferentThanDefault("warehouse_size", string(sdk.WarehouseSizeXSmall)),
+			SetNewIfComputedValueRemovedFromConfigAndDifferentThanDefault("warehouse_size", string(sdk.WarehouseSizeXSmall)),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{

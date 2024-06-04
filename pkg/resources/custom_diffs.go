@@ -65,7 +65,7 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 // TODO: extract default value
 // TODO: check othe possible solutions (without default?)
 // TODO: test this custom diff func
-func ForceNewIfComputedValueRemovedFromConfigAndDifferentThanDefault(key string, defaultValue string) schema.CustomizeDiffFunc {
+func SetNewIfComputedValueRemovedFromConfigAndDifferentThanDefault(key string, defaultValue string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 		configValue, ok := d.GetRawConfig().AsValueMap()[key]
 		stateValue := d.Get(key).(string)
@@ -74,11 +74,8 @@ func ForceNewIfComputedValueRemovedFromConfigAndDifferentThanDefault(key string,
 			if stateValue == defaultValue {
 				return nil
 			}
-			err := d.SetNewComputed(key)
+			err := d.SetNew(key, defaultValue)
 			if err != nil {
-				return err
-			}
-			if err = d.ForceNew(key); err != nil {
 				return err
 			}
 		}
