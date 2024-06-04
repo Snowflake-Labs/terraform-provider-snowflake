@@ -69,6 +69,15 @@ func (c *WarehouseClient) UpdateMaxConcurrencyLevel(t *testing.T, id sdk.Account
 	require.NoError(t, err)
 }
 
+func (c *WarehouseClient) UpdateWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, newSize sdk.WarehouseSize) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{WarehouseSize: sdk.Pointer(newSize)}})
+	require.NoError(t, err)
+}
+
 func (c *WarehouseClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Warehouse, error) {
 	t.Helper()
 	ctx := context.Background()
