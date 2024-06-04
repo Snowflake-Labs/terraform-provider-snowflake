@@ -350,9 +350,13 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		set.Comment = sdk.String(d.Get("comment").(string))
 	}
 	if d.HasChange("warehouse_size") {
+		n := d.Get("warehouse_size").(string)
 		runSet = true
-		v := d.Get("warehouse_size")
-		size, err := sdk.ToWarehouseSize(v.(string))
+		if n == "" || n == "<unset>" {
+			fmt.Println("Received empty size of warehouse; changing as PoC")
+			n = string(sdk.WarehouseSizeXSmall)
+		}
+		size, err := sdk.ToWarehouseSize(n)
 		if err != nil {
 			return err
 		}

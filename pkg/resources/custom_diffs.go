@@ -74,7 +74,7 @@ func SetNewIfComputedValueRemovedFromConfigAndDifferentThanDefault(key string, d
 			if stateValue == defaultValue {
 				return nil
 			}
-			err := d.SetNew(key, defaultValue)
+			err := d.SetNew(key, "<unset>")
 			if err != nil {
 				return err
 			}
