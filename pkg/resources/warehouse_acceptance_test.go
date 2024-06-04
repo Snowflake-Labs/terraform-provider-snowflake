@@ -278,6 +278,14 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeSmall)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
+				),
+			},
+			{
+				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeMedium)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeMedium)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeMedium)),
 				),
 			},
 			{
@@ -288,7 +296,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 			{
@@ -301,6 +310,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: wConfigTest(id.Name(), strings.ToLower(string(sdk.WarehouseSizeSmall))),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
 				),
 			},
 			{
@@ -308,17 +318,18 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 					warehouse, err := acc.TestClient().Warehouse.Show(t, id)
 					require.NoError(t, err)
 					require.Equal(t, sdk.WarehouseSizeSmall, warehouse.Size)
-					// we change the size to the default and remove the attribute from config, expecting empty plan
+					// we change the size to the default and remove the attribute from config, expecting non-empty plan (because we do not know the default)
 					acc.TestClient().Warehouse.UpdateWarehouseSize(t, id, sdk.WarehouseSizeXSmall)
 				},
 				Config: wConfigTest2(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectNonEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 			{
@@ -333,7 +344,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 		},

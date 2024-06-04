@@ -62,19 +62,31 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 	}
 }
 
-// TODO: extract default value
-// TODO: check othe possible solutions (without default?)
 // TODO: test this custom diff func
-func SetNewIfComputedValueRemovedFromConfigAndDifferentThanDefault(key string, defaultValue string) schema.CustomizeDiffFunc {
+func UpdateValueWithSnowflakeDefault(key string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		sfComputedKey := key + "_sf"
 		configValue, ok := d.GetRawConfig().AsValueMap()[key]
 		stateValue := d.Get(key).(string)
+		_, n := d.GetChange(sfComputedKey)
+
+		if n == "<value changed externally in Snowflake>" && stateValue == "" && (!ok || configValue.IsNull()) {
+			err := d.SetNew(key, "<unset to Snowflake default>")
+			if err != nil {
+				return err
+			}
+			err = d.SetNewComputed(sfComputedKey)
+			if err != nil {
+				return err
+			}
+		}
 
 		if stateValue != "" && (!ok || configValue.IsNull()) {
-			if stateValue == defaultValue {
-				return nil
+			err := d.SetNew(key, "<unset to Snowflake default>")
+			if err != nil {
+				return err
 			}
-			err := d.SetNew(key, "<unset>")
+			err = d.SetNewComputed(sfComputedKey)
 			if err != nil {
 				return err
 			}

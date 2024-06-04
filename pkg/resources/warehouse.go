@@ -32,6 +32,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
 		Description:      fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are (case-insensitive): %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
 	},
+	"warehouse_size_sf": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Stores warehouse size fetched from Snowflake.",
+	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
@@ -150,7 +155,7 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			SetNewIfComputedValueRemovedFromConfigAndDifferentThanDefault("warehouse_size", string(sdk.WarehouseSizeXSmall)),
+			UpdateValueWithSnowflakeDefault("warehouse_size"),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -248,8 +253,26 @@ func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("warehouse_type", w.Type); err != nil {
 		return err
 	}
-	if err = d.Set("warehouse_size", w.Size); err != nil {
-		return err
+	if v, ok := d.GetOk("warehouse_size"); ok {
+		if v == "<unset to Snowflake default>" {
+			if err = d.Set("warehouse_size", nil); err != nil {
+				return err
+			}
+		} else {
+			if err = d.Set("warehouse_size", w.Size); err != nil {
+				return err
+			}
+		}
+		if err = d.Set("warehouse_size_sf", w.Size); err != nil {
+			return err
+		}
+	} else {
+		vsf := d.Get("warehouse_size_sf").(string)
+		if vsf != string(w.Size) {
+			if err = d.Set("warehouse_size_sf", "<value changed externally in Snowflake>"); err != nil {
+				return err
+			}
+		}
 	}
 	if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
 		return err
@@ -352,8 +375,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
 		runSet = true
-		if n == "" || n == "<unset>" {
-			fmt.Println("Received empty size of warehouse; changing as PoC")
+		if n == "" || n == "<unset to Snowflake default>" {
 			n = string(sdk.WarehouseSizeXSmall)
 		}
 		size, err := sdk.ToWarehouseSize(n)
