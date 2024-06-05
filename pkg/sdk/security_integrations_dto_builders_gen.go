@@ -1402,17 +1402,9 @@ func (s *ScimIntegrationSetRequest) WithSyncPassword(SyncPassword bool) *ScimInt
 	return s
 }
 
-func (s *ScimIntegrationSetRequest) WithComment(Comment StringAllowEmptyRequest) *ScimIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithComment(Comment StringAllowEmpty) *ScimIntegrationSetRequest {
 	s.Comment = &Comment
 	return s
-}
-
-func NewStringAllowEmptyRequest(
-	Value string,
-) *StringAllowEmptyRequest {
-	s := StringAllowEmptyRequest{}
-	s.Value = Value
-	return &s
 }
 
 func NewScimIntegrationUnsetRequest() *ScimIntegrationUnsetRequest {

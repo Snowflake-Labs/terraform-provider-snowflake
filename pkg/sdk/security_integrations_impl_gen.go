@@ -587,11 +587,7 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			Enabled:       r.Set.Enabled,
 			NetworkPolicy: r.Set.NetworkPolicy,
 			SyncPassword:  r.Set.SyncPassword,
-		}
-		if r.Set.Comment != nil {
-			opts.Set.Comment = &StringAllowEmpty{
-				Value: r.Set.Comment.Value,
-			}
+			Comment:       r.Set.Comment,
 		}
 	}
 	if r.Unset != nil {

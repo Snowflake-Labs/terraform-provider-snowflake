@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -490,10 +492,6 @@ type ScimIntegrationSet struct {
 	Comment       *StringAllowEmpty        `ddl:"parameter" sql:"COMMENT"`
 }
 
-type StringAllowEmpty struct {
-	Value string `ddl:"keyword,single_quotes"`
-}
-
 type ScimIntegrationUnset struct {
 	Enabled       *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
@@ -529,6 +527,14 @@ type SecurityIntegrationProperty struct {
 	Default string
 }
 
+func (s SecurityIntegrationProperty) GetName() string {
+	return s.Name
+}
+
+func (s SecurityIntegrationProperty) GetDefault() string {
+	return s.Default
+}
+
 // ShowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-integrations.
 type ShowSecurityIntegrationOptions struct {
 	show                 bool  `ddl:"static" sql:"SHOW"`
@@ -552,4 +558,12 @@ type SecurityIntegration struct {
 	Enabled         bool
 	Comment         string
 	CreatedOn       time.Time
+}
+
+func (s *SecurityIntegration) SubType() (string, error) {
+	typeParts := strings.Split(s.IntegrationType, "-")
+	if len(typeParts) < 2 {
+		return "", fmt.Errorf("expected \"<type> - <subtype>\", got: %s", s.IntegrationType)
+	}
+	return strings.TrimSpace(typeParts[1]), nil
 }

@@ -1266,7 +1266,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
 					WithEnabled(true).
 					WithSyncPassword(false).
-					WithComment(sdk.StringAllowEmptyRequest{Value: "altered"}),
+					WithComment(sdk.StringAllowEmpty{Value: "altered"}),
 			)
 		err := client.SecurityIntegrations.AlterScim(ctx, setRequest)
 		require.NoError(t, err)
@@ -1286,10 +1286,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		// check setting empty comment because of lacking UNSET COMMENT
+		// TODO(SNOW-1461780): change this in UNSET
 		setRequest = sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
 				*sdk.NewScimIntegrationSetRequest().
-					WithComment(sdk.StringAllowEmptyRequest{Value: ""}),
+					WithComment(sdk.StringAllowEmpty{Value: ""}),
 			)
 		err = client.SecurityIntegrations.AlterScim(ctx, setRequest)
 		require.NoError(t, err)

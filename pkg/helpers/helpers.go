@@ -167,14 +167,3 @@ func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) er
 	}
 	return fmt.Errorf("giving up after %v attempts", attempts)
 }
-
-// MatchStringsRegex returns a regex matching every string in stringSlice
-func MatchStringsRegex(stringSlice []string) *regexp.Regexp {
-	escapedMessages := make([]string, len(stringSlice))
-	for i := range stringSlice {
-		escapedMessages[i] = regexp.QuoteMeta(stringSlice[i])
-	}
-	a := regexp.MustCompile(strings.Join(escapedMessages, "((.|\n)*)"))
-	fmt.Println(a)
-	return a
-}

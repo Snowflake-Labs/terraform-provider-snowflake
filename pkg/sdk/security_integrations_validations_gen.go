@@ -98,6 +98,9 @@ func (opts *CreateOauthForPartnerApplicationsSecurityIntegrationOptions) validat
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateOauthForPartnerApplicationsSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
+	if opts.OauthClient == OauthSecurityIntegrationClientLooker && opts.OauthRedirectUri == nil {
+		errs = append(errs, NewError("OauthRedirectUri is required when OauthClient is LOOKER"))
+	}
 	return JoinErrors(errs...)
 }
 

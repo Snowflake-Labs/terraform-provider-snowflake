@@ -2,15 +2,17 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -28,23 +30,19 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Description: "Specify whether the security integration is enabled.",
 	},
 	"scim_client": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the client type for the scim integration",
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList([]sdk.ScimSecurityIntegrationScimClientOption{
-			sdk.ScimSecurityIntegrationScimClientOkta, sdk.ScimSecurityIntegrationScimClientAzure, sdk.ScimSecurityIntegrationScimClientGeneric,
-		}), true),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
+		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
 	},
 	"run_as_role": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.",
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList([]sdk.ScimSecurityIntegrationRunAsRoleOption{
-			sdk.ScimSecurityIntegrationRunAsRoleOktaProvisioner, sdk.ScimSecurityIntegrationRunAsRoleAadProvisioner, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner,
-		}), true),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
+		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), false),
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
 	},
 	"network_policy": {
@@ -52,6 +50,9 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
 		Description:      "Specifies an existing network policy that controls SCIM network traffic.",
+		DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+			return sdk.NewAccountObjectIdentifierFromFullyQualifiedName(old) == sdk.NewAccountObjectIdentifierFromFullyQualifiedName(new)
+		},
 	},
 	"sync_password": {
 		Type:        schema.TypeBool,
@@ -71,37 +72,72 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	},
 }
 
-// SCIMIntegration returns a pointer to the resource representing a network policy.
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextSCIMIntegration,
 		ReadContext:   ReadContextSCIMIntegration,
 		UpdateContext: UpdateContextSCIMIntegration,
 		DeleteContext: DeleteContextSCIMIntegration,
-
+		CustomizeDiff: customdiff.All(
+			BoolComputedIf("sync_password", "SYNC_PASSWORD", func(client *sdk.Client, id sdk.AccountObjectIdentifier) ([]Property, error) {
+				props, err := client.SecurityIntegrations.Describe(context.Background(), id)
+				res := make([]Property, len(props))
+				for i := range props {
+					res[i] = props[i]
+				}
+				return res, err
+			}),
+		),
 		Schema: scimIntegrationSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v091ScimIntegrationStateUpgrader,
+			},
+		},
 	}
 }
 
-// CreateContextSCIMIntegration implements schema.CreateFunc.
+func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if rawState == nil {
+		return rawState, nil
+	}
+
+	rawState["run_as_role"] = rawState["provisioner_role"]
+	delete(rawState, "provisioner_role")
+	return rawState, nil
+}
+
 func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 	enabled := d.Get("enabled").(bool)
-	scimClient := d.Get("scim_client").(string)
-	runAsRole := d.Get("run_as_role").(string)
-
-	req := sdk.NewCreateScimSecurityIntegrationRequest(id, enabled, sdk.ScimSecurityIntegrationScimClientOption(scimClient), sdk.ScimSecurityIntegrationRunAsRoleOption(runAsRole))
+	scimClientRaw := d.Get("scim_client").(string)
+	runAsRoleRaw := d.Get("run_as_role").(string)
+	scimClient, err := sdk.ToScimSecurityIntegrationScimClientOption(scimClientRaw)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	runAsRole, err := sdk.ToScimSecurityIntegrationRunAsRoleOption(runAsRoleRaw)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	req := sdk.NewCreateScimSecurityIntegrationRequest(id, enabled, scimClient, runAsRole)
 
 	// Set optionals
 	if v, ok := d.GetOk("network_policy"); ok {
 		req.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v.(string)))
 	}
-	req.WithSyncPassword(d.Get("sync_password").(bool))
+	if !d.GetRawConfig().AsValueMap()["sync_password"].IsNull() {
+		req.WithSyncPassword(d.Get("sync_password").(bool))
+	}
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(v.(string))
 	}
@@ -114,24 +150,21 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	return ReadContextSCIMIntegration(ctx, d, meta)
 }
 
-// ReadContextSCIMIntegration implements schema.ReadFunc.
 func ReadContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
-		d.SetId("")
+		log.Printf("[DEBUG] security integration (%s) not found", d.Id())
+		if errors.Is(sdk.ErrObjectNotFound, err) {
+			d.SetId("")
+		}
 		return diag.FromErr(err)
 	}
 
-	if c := integration.Category; c != "SECURITY" {
+	if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 		return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
-	}
-
-	if err := d.Set("name", integration.Name); err != nil {
-		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", integration.Comment); err != nil {
@@ -145,17 +178,11 @@ func ReadContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("enabled", integration.Enabled); err != nil {
 		return diag.FromErr(err)
 	}
-	typeParts := strings.Split(integration.IntegrationType, "-")
-	if len(typeParts) < 2 {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Invalid security integration type format.",
-				Detail:   fmt.Sprintf("expected \"SCIM - <scim_client>\", got: %s", integration.IntegrationType),
-			},
-		}
+
+	scimClient, err := integration.SubType()
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	scimClient := strings.TrimSpace(typeParts[1])
 	if err := d.Set("scim_client", scimClient); err != nil {
 		return diag.FromErr(err)
 	}
@@ -170,7 +197,8 @@ func ReadContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, met
 		case "ENABLED", "COMMENT":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "NETWORK_POLICY":
-			if err := d.Set("network_policy", value); err != nil {
+			networkPolicyID := sdk.NewAccountObjectIdentifier(value)
+			if err := d.Set("network_policy", networkPolicyID.FullyQualifiedName()); err != nil {
 				return diag.FromErr(err)
 			}
 		case "SYNC_PASSWORD":
@@ -189,44 +217,36 @@ func ReadContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-// UpdateContextSCIMIntegration implements schema.UpdateFunc.
 func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	var runSet, runUnset bool
 	set, unset := sdk.NewScimIntegrationSetRequest(), sdk.NewScimIntegrationUnsetRequest()
 	if d.HasChange("enabled") {
-		runSet = true
 		set.WithEnabled(d.Get("enabled").(bool))
 	}
 	if d.HasChange("network_policy") {
 		networkPolicyID := sdk.NewAccountObjectIdentifier(d.Get("network_policy").(string))
 		if networkPolicyID.Name() != "" {
-			runSet = true
 			set.WithNetworkPolicy(networkPolicyID)
 		} else {
-			runUnset = true
 			unset.WithNetworkPolicy(true)
 		}
 	}
-	if d.GetRawConfig().AsValueMap()["sync_password"].IsNull() {
-		runUnset = true
-		unset.WithSyncPassword(true)
-	} else if d.HasChange("sync_password") {
-		runSet = true
+	if !d.GetRawConfig().AsValueMap()["sync_password"].IsNull() {
 		set.WithSyncPassword(d.Get("sync_password").(bool))
+	} else {
+		unset.WithSyncPassword(true)
 	}
 
 	if d.HasChange("comment") {
-		runSet = true
-		set.WithComment(sdk.StringAllowEmptyRequest{Value: d.Get("comment").(string)})
+		set.WithComment(sdk.StringAllowEmpty{Value: d.Get("comment").(string)})
 	}
-	if runSet {
+	if (*set != sdk.ScimIntegrationSetRequest{}) {
 		if err := client.SecurityIntegrations.AlterScim(ctx, sdk.NewAlterScimSecurityIntegrationRequest(id).WithSet(*set)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if runUnset {
+	if (*unset != sdk.ScimIntegrationUnsetRequest{}) {
 		if err := client.SecurityIntegrations.AlterScim(ctx, sdk.NewAlterScimSecurityIntegrationRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -234,7 +254,6 @@ func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	return ReadContextSCIMIntegration(ctx, d, meta)
 }
 
-// DeleteContextSCIMIntegration implements schema.DeleteFunc.
 func DeleteContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
