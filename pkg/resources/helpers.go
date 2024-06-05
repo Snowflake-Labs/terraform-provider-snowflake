@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -304,4 +305,24 @@ func nestedPropertyWithModifiers(innerType schema.ValueType, fieldDescription st
 		modifyInner(innerSchema)
 	}
 	return outerSchema
+}
+
+func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
+	merged := make(M)
+	for _, m := range src {
+		for k, v := range m {
+			merged[k] = v
+		}
+	}
+	return merged
+}
+
+func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
+	var result diag.Diagnostics
+	for _, diagnostic := range diagnostics {
+		if diagnostic != nil {
+			result = append(result, diagnostic...)
+		}
+	}
+	return result
 }

@@ -32,6 +32,12 @@ var standardDatabaseSchema = map[string]*schema.Schema{
 		schema.TypeInt,
 		"Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
 	),
+	// TODO: Remove
+	"data_retention_time_in_days_2": {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+	},
 	"max_data_extension_time_in_days": nestedProperty(
 		schema.TypeInt,
 		"Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).",
@@ -142,6 +148,10 @@ func StandardDatabase() *schema.Resource {
 		UpdateContext: UpdateStandardDatabase,
 
 		CustomizeDiff: customdiff.All(
+			// Value
+			//AccountObjectIntValueComputedIf("data_retention_time_in_days_2", sdk.AccountParameterDataRetentionTimeInDays),
+
+			// Nested
 			NestedIntValueAccountObjectComputedIf("data_retention_time_in_days", sdk.AccountParameterDataRetentionTimeInDays),
 			NestedIntValueAccountObjectComputedIf("max_data_extension_time_in_days", sdk.AccountParameterMaxDataExtensionTimeInDays),
 			NestedStringValueAccountObjectComputedIf("external_volume", sdk.AccountParameterExternalVolume),
@@ -166,48 +176,47 @@ func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	dataRetentionTimeInDays, _ := GetPropertyOfFirstNestedObjectByValueKey[int](d, "data_retention_time_in_days")
-	maxDataExtensionTimeInDays, _ := GetPropertyOfFirstNestedObjectByValueKey[int](d, "max_data_extension_time_in_days")
-	replaceInvalidCharacters, _ := GetPropertyOfFirstNestedObjectByValueKey[bool](d, "replace_invalid_characters")
-	defaultDdlCollation, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "default_ddl_collation")
+	dataRetentionTimeInDays,
+		maxDataExtensionTimeInDays,
+		externalVolume,
+		catalog,
+		replaceInvalidCharacters,
+		defaultDDLCollation,
+		storageSerializationPolicy,
+		logLevel,
+		traceLevel,
+		suspendTaskAfterNumFailures,
+		taskAutoRetryAttempts,
+		userTaskManagedInitialWarehouseSize,
+		userTaskTimeoutMs,
+		userTaskMinimumTriggerIntervalInSeconds,
+		quotedIdentifiersIgnoreCase,
+		enableConsoleOutput := GetAllDatabaseParameters(d)
 
-	var externalVolume *sdk.AccountObjectIdentifier
-	if externalVolumeRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "external_volume"); externalVolumeRaw != nil {
-		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(*externalVolumeRaw))
-	}
-
-	var catalog *sdk.AccountObjectIdentifier
-	if catalogRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "catalog"); catalogRaw != nil {
-		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(*catalogRaw))
-	}
-
-	var storageSerializationPolicy *sdk.StorageSerializationPolicy
-	if storageSerializationPolicyRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
-		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(*storageSerializationPolicyRaw))
-	}
-
-	var logLevel *sdk.LogLevel
-	if logLevelRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "log_level"); logLevelRaw != nil {
-		logLevel = sdk.Pointer(sdk.LogLevel(*logLevelRaw))
-	}
-
-	var traceLevel *sdk.TraceLevel
-	if traceLevelRaw, _ := GetPropertyOfFirstNestedObjectByValueKey[string](d, "trace_level"); traceLevelRaw != nil {
-		traceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevelRaw))
+	dataRetentionTimeInDays = nil
+	if v, ok := d.GetOk("data_retention_time_in_days_2"); ok {
+		dataRetentionTimeInDays = sdk.Int(v.(int))
 	}
 
 	err := client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
-		Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
-		DataRetentionTimeInDays:    dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays: maxDataExtensionTimeInDays,
-		ExternalVolume:             externalVolume,
-		Catalog:                    catalog,
-		ReplaceInvalidCharacters:   replaceInvalidCharacters,
-		DefaultDDLCollation:        defaultDdlCollation,
-		StorageSerializationPolicy: storageSerializationPolicy,
-		LogLevel:                   logLevel,
-		TraceLevel:                 traceLevel,
-		Comment:                    GetPropertyAsPointer[string](d, "comment"),
+		Transient:                               GetPropertyAsPointer[bool](d, "is_transient"),
+		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
+		ExternalVolume:                          externalVolume,
+		Catalog:                                 catalog,
+		ReplaceInvalidCharacters:                replaceInvalidCharacters,
+		DefaultDDLCollation:                     defaultDDLCollation,
+		StorageSerializationPolicy:              storageSerializationPolicy,
+		LogLevel:                                logLevel,
+		TraceLevel:                              traceLevel,
+		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
+		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
+		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
+		UserTaskTimeoutMs:                       userTaskTimeoutMs,
+		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
+		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
+		EnableConsoleOutput:                     enableConsoleOutput,
+		Comment:                                 GetPropertyAsPointer[string](d, "comment"),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -304,6 +313,14 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 				return diag.FromErr(err)
 			}
 			databaseSetRequest.DataRetentionTimeInDays = dataRetentionTimeInDays
+		} else {
+			databaseUnsetRequest.DataRetentionTimeInDays = sdk.Bool(true)
+		}
+	}
+
+	if d.HasChange("data_retention_time_in_days_2") {
+		if !d.GetRawConfig().AsValueMap()["data_retention_time_in_days_2"].IsNull() {
+			databaseSetRequest.DataRetentionTimeInDays = sdk.Pointer(d.Get("data_retention_time_in_days_2").(int))
 		} else {
 			databaseUnsetRequest.DataRetentionTimeInDays = sdk.Bool(true)
 		}
@@ -570,6 +587,10 @@ func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if err := SetPropertyOfFirstNestedObjectByKey(d, "data_retention_time_in_days", "value", database.RetentionTime); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("data_retention_time_in_days_2", database.RetentionTime); err != nil {
 		return diag.FromErr(err)
 	}
 

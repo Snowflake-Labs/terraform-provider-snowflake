@@ -6,6 +6,9 @@ resource "snowflake_standard_database" "test" {
   data_retention_time_in_days {
     value = var.data_retention_time_in_days
   }
+
+  data_retention_time_in_days_2 = var.data_retention_time_in_days
+
   max_data_extension_time_in_days {
     value = var.max_data_extension_time_in_days
   }

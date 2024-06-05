@@ -6,10 +6,6 @@ variable "as_replica_of" {
   type = string
 }
 
-variable "transient" {
-  type = bool
-}
-
 variable "data_retention_time_in_days" {
   type = string
 }
@@ -48,4 +44,32 @@ variable "trace_level" {
 
 variable "comment" {
   type = string
+}
+
+variable "suspend_task_after_num_failures" {
+  type = number
+}
+
+variable "task_auto_retry_attempts" {
+  type = number
+}
+
+variable "user_task_managed_initial_warehouse_size" {
+  type = string
+}
+
+variable "user_task_timeout_ms" {
+  type = number
+}
+
+variable "user_task_minimum_trigger_interval_in_seconds" {
+  type = number
+}
+
+variable "quoted_identifiers_ignore_case" {
+  type = bool
+}
+
+variable "enable_console_output" {
+  type = bool
 }

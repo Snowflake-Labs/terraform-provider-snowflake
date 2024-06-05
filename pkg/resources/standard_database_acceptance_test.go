@@ -106,6 +106,8 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
 
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+
 	completeConfigVariables := func(
 		id sdk.AccountObjectIdentifier,
 		comment string,
@@ -192,6 +194,7 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", dataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "data_retention_time_in_days_2", dataRetentionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", maxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "external_volume.0.value", externalVolume),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "catalog.0.value", catalog),
@@ -210,6 +213,7 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", "20"),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days_2", "20"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "30"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "external_volume.0.value", externalVolumeId.Name()),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "catalog.0.value", catalogId.Name()),
@@ -228,6 +232,7 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", dataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "data_retention_time_in_days_2", dataRetentionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", maxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "external_volume.0.value", externalVolume),
 					resource.TestCheckResourceAttrPtr("snowflake_standard_database.test", "catalog.0.value", catalog),
