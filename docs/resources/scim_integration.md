@@ -12,6 +12,14 @@ description: |-
 ## Example Usage
 
 ```terraform
+# basic resource
+resource "snowflake_scim_integration" "test" {
+  name          = "test"
+  enabled       = true
+  scim_client   = "GENERIC"
+  sync_password = true
+}
+# resource with all fields set
 resource "snowflake_scim_integration" "test" {
   name           = "test"
   enabled        = true
@@ -30,8 +38,8 @@ resource "snowflake_scim_integration" "test" {
 
 - `enabled` (Boolean) Specify whether the security integration is enabled.
 - `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account.
-- `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.
-- `scim_client` (String) Specifies the client type for the scim integration
+- `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: [OKTA_PROVISIONER AAD_PROVISIONER GENERIC_SCIM_PROVISIONER].
+- `scim_client` (String) Specifies the client type for the scim integration. Valid options are: [OKTA AZURE GENERIC].
 
 ### Optional
 
