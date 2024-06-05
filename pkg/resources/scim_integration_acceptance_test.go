@@ -68,7 +68,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name),
-					// resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", networkPolicy.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "created_on"),
