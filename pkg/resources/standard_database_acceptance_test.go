@@ -98,6 +98,8 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 		}
 	}
 
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
 
@@ -128,6 +130,9 @@ func TestAcc_StandardDatabase_ComputedValues(t *testing.T) {
 			"storage_serialization_policy":    config.StringVariable(string(storageSerializationPolicy)),
 			"log_level":                       config.StringVariable(string(logLevel)),
 			"trace_level":                     config.StringVariable(string(traceLevel)),
+			"account_identifier":              config.StringVariable(secondaryAccountIdentifier),
+			"with_failover":                   config.BoolVariable(true),
+			"ignore_edition_check":            config.BoolVariable(true),
 		}
 	}
 

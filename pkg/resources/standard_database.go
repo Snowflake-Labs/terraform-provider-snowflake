@@ -67,7 +67,7 @@ var standardDatabaseSchema = map[string]*schema.Schema{
 		fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 		func(inner *schema.Schema) {
 			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.EqualFold(oldValue, newValue) && d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
+				return strings.EqualFold(oldValue, newValue) || (d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == "")
 			}
 		},
 	),
