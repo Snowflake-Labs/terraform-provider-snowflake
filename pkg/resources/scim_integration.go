@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -30,12 +31,14 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Description: "Specify whether the security integration is enabled.",
 	},
 	"scim_client": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
-		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
-		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		Description:  fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
+		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+			return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
+		},
 	},
 	"run_as_role": {
 		Type:             schema.TypeString,

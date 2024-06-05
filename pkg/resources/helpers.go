@@ -36,6 +36,10 @@ func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) boo
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
 
+func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(old, new)
+}
+
 func setIntProperty(d *schema.ResourceData, key string, property *sdk.IntProperty) error {
 	if property != nil && property.Value != nil {
 		if err := d.Set(key, *property.Value); err != nil {

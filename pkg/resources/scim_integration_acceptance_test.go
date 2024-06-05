@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -112,7 +113,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 		return map[string]config.Variable{
 			"name":                config.StringVariable(id.Name()),
 			"enabled":             config.BoolVariable(false),
-			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientGeneric)),
+			"scim_client":         config.StringVariable(strings.ToLower(string(sdk.ScimSecurityIntegrationScimClientGeneric))),
 			"sync_password":       config.BoolVariable(false),
 			"network_policy_name": config.StringVariable(networkPolicy.Name),
 			"run_as_role":         config.StringVariable(role.ID().Name()),
@@ -134,18 +135,19 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", networkPolicy.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "created_on"),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
-				ConfigVariables:   m(),
-				ResourceName:      "snowflake_scim_integration.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables:         m(),
+				ResourceName:            "snowflake_scim_integration.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name"},
 			},
 		},
 	})
