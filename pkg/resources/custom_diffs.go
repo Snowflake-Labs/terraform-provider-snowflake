@@ -65,32 +65,24 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 // TODO: test this custom diff func
 func UpdateValueWithSnowflakeDefault(key string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		sfComputedKey := key + "_sf"
+		sfStateKey := key + "_sf"
+		needsRefreshKey := key + "_sf_changed"
+
 		configValue, ok := d.GetRawConfig().AsValueMap()[key]
 		stateValue := d.Get(key).(string)
-		_, n := d.GetChange(sfComputedKey)
+		_, needsRefresh := d.GetChange(needsRefreshKey)
 
-		if n == "<value changed externally in Snowflake>" && stateValue == "" && (!ok || configValue.IsNull()) {
-			err := d.SetNew(key, "<unset to Snowflake default>")
+		if needsRefresh.(bool) && stateValue == "" && (!ok || configValue.IsNull()) {
+			err := d.SetNew(needsRefreshKey, false)
 			if err != nil {
 				return err
 			}
-			err = d.SetNewComputed(sfComputedKey)
+			err = d.SetNewComputed(sfStateKey)
 			if err != nil {
 				return err
 			}
 		}
 
-		if stateValue != "" && (!ok || configValue.IsNull()) {
-			err := d.SetNew(key, "<unset to Snowflake default>")
-			if err != nil {
-				return err
-			}
-			err = d.SetNewComputed(sfComputedKey)
-			if err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 }

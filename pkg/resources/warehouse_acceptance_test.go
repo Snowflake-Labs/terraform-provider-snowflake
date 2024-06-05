@@ -1,6 +1,8 @@
 package resources_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -15,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
@@ -274,78 +275,136 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
+			// set up with concrete size
 			{
-				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeSmall)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
+					},
+				},
+				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeSmall)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
+			// import when size in config
 			{
-				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeMedium)),
+				ResourceName:      "snowflake_warehouse.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"initially_suspended",
+					"wait_for_provisioning",
+					"query_acceleration_max_scale_factor",
+					"max_concurrency_level",
+					"statement_queued_timeout_in_seconds",
+					"statement_timeout_in_seconds",
+				},
+				ImportStateCheck: ComposeImportStateCheck(
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
+				),
+			},
+			// change size in config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
+					},
+				},
+				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeMedium)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeMedium)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeMedium)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeMedium),
 				),
 			},
+			// remove size from config
 			{
-				Config: wConfigTest2(id.Name()),
+				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
 				),
 			},
+			// add config (lower case)
 			{
-				PreConfig: func() {
-					// we expect that warehouse size was moved back to the default value after unsetting size in config
-					warehouse, err := acc.TestClient().Warehouse.Show(t, id)
-					require.NoError(t, err)
-					require.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
-				},
-				Config: wConfigTest(id.Name(), strings.ToLower(string(sdk.WarehouseSizeSmall))),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
-				),
-			},
-			{
-				PreConfig: func() {
-					warehouse, err := acc.TestClient().Warehouse.Show(t, id)
-					require.NoError(t, err)
-					require.Equal(t, sdk.WarehouseSizeSmall, warehouse.Size)
-					// we change the size to the default and remove the attribute from config, expecting non-empty plan (because we do not know the default)
-					acc.TestClient().Warehouse.UpdateWarehouseSize(t, id, sdk.WarehouseSizeXSmall)
-				},
-				Config: wConfigTest2(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
+					},
+				},
+				Config: warehouseWithSizeConfig(id.Name(), strings.ToLower(string(sdk.WarehouseSizeSmall))),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", strings.ToLower(string(sdk.WarehouseSizeSmall))),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+				),
+			},
+			// remove size from config but update warehouse externally to default (still expecting non-empty plan because we do not know the default)
+			{
+				PreConfig: func() {
+					acc.TestClient().Warehouse.UpdateWarehouseSize(t, id, sdk.WarehouseSizeXSmall)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
 						plancheck.ExpectNonEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
 				),
 			},
+			// change the size externally
 			{
 				PreConfig: func() {
 					// we change the size to the size different from default, expecting action
 					acc.TestClient().Warehouse.UpdateWarehouseSize(t, id, sdk.WarehouseSizeSmall)
 				},
-				Config: wConfigTest2(id.Name()),
+				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						printPlanDetails("snowflake_warehouse.w"),
 						plancheck.ExpectNonEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
+					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
+				),
+			},
+			// import when no size in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				//ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{
+				//	"initially_suspended",
+				//	"wait_for_provisioning",
+				//	"query_acceleration_max_scale_factor",
+				//	"max_concurrency_level",
+				//	"statement_queued_timeout_in_seconds",
+				//	"statement_timeout_in_seconds",
+				//},
+				ImportStateCheck: ComposeImportStateCheck(
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
+					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
 				),
 			},
 		},
@@ -364,7 +423,7 @@ func TestAcc_Warehouse_SizeValidation(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config:      wConfigTest(id.Name(), "SMALLa"),
+				Config:      warehouseWithSizeConfig(id.Name(), "SMALLa"),
 				ExpectError: regexp.MustCompile(`expected a valid warehouse size, got "SMALLa"`),
 			},
 		},
@@ -389,7 +448,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: wConfigTest(id.Name(), string(sdk.WarehouseSizeX4Large)),
+				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeX4Large)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "4XLARGE"),
@@ -397,7 +456,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   wConfigTest(id.Name(), string(sdk.WarehouseSizeX4Large)),
+				Config:                   warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeX4Large)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -428,7 +487,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: wConfigTest2(id.Name()),
+				Config: warehouseBasicConfig(id.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
@@ -436,7 +495,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   wConfigTest2(id.Name()),
+				Config:                   warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -449,19 +508,94 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 	})
 }
 
-func wConfigTest(name string, size string) string {
+func warehouseWithSizeConfig(name string, size string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
-	name                      = "%s"
+	name           = "%s"
 	warehouse_size = "%s"
 }
 `, name, size)
 }
 
-func wConfigTest2(name string) string {
+func warehouseBasicConfig(name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
-	name                      = "%s"
+	name           = "%s"
 }
 `, name)
+}
+
+func testAccCheckWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, expectedSize sdk.WarehouseSize) func(state *terraform.State) error {
+	t.Helper()
+	return func(state *terraform.State) error {
+		warehouse, err := acc.TestClient().Warehouse.Show(t, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.Size != expectedSize {
+			return fmt.Errorf("expected size: %s; got: %s", expectedSize, warehouse.Size)
+		}
+		return nil
+	}
+}
+
+func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
+	return func(s []*terraform.InstanceState) error {
+		for i, f := range fs {
+			if err := f(s); err != nil {
+				return fmt.Errorf("check %d/%d error: %s", i+1, len(fs), err)
+			}
+		}
+		return nil
+	}
+}
+
+func testCheckResourceAttrInstanceState(id string, attributeName, attributeValue string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		for _, v := range is {
+			if v.ID != id {
+				continue
+			}
+
+			if attrVal, ok := v.Attributes[attributeName]; ok {
+				if attrVal != attributeValue {
+					return fmt.Errorf("expected: %s got: %s", attributeValue, attrVal)
+				}
+
+				return nil
+			}
+		}
+
+		return fmt.Errorf("attribute %s not found in instance state", attributeName)
+	}
+}
+
+var _ plancheck.PlanCheck = printingPlanCheck{}
+
+type printingPlanCheck struct {
+	resourceAddress string
+}
+
+func (e printingPlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var result []error
+
+	for _, change := range req.Plan.ResourceDrift {
+		if e.resourceAddress != change.Address {
+			continue
+		}
+		fmt.Printf("resource drift: %s actions: %v\n", change.Address, *change.Change)
+	}
+
+	for _, change := range req.Plan.ResourceChanges {
+		if e.resourceAddress != change.Address {
+			continue
+		}
+		fmt.Printf("resource changes: %s actions: %v\n", change.Address, *change.Change)
+	}
+
+	resp.Error = errors.Join(result...)
+}
+
+func printPlanDetails(resourceAddress string) plancheck.PlanCheck {
+	return printingPlanCheck{resourceAddress}
 }

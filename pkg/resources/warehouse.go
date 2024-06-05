@@ -27,7 +27,6 @@ var warehouseSchema = map[string]*schema.Schema{
 	"warehouse_size": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Computed:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseSize),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
 		Description:      fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are (case-insensitive): %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
@@ -36,6 +35,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "Stores warehouse size fetched from Snowflake.",
+	},
+	"warehouse_size_sf_changed": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Internal property used to track external changes of warehouse size.",
 	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
@@ -145,13 +149,13 @@ func Warehouse() *schema.Resource {
 		SchemaVersion: 1,
 
 		Create: CreateWarehouse,
-		Read:   ReadWarehouse,
+		Read:   GetReadWarehouseFunc(true, false),
 		Delete: DeleteWarehouse,
 		Update: UpdateWarehouse,
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportWarehouse,
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -167,6 +171,15 @@ func Warehouse() *schema.Resource {
 			},
 		},
 	}
+}
+
+func ImportWarehouse(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting warehouse import")
+	err := GetReadWarehouseFunc(false, true)(d, m)
+	if err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 // CreateWarehouse implements schema.CreateFunc.
@@ -229,85 +242,90 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
-	return ReadWarehouse(d, meta)
+	return GetReadWarehouseFunc(false, false)(d, meta)
 }
 
-// ReadWarehouse implements schema.ReadFunc.
-func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetting bool) schema.ReadFunc {
+	return func(d *schema.ResourceData, meta interface{}) error {
+		client := meta.(*provider.Context).Client
+		ctx := context.Background()
 
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	w, err := client.Warehouses.ShowByID(ctx, id)
-	if err != nil {
-		return err
-	}
+		w, err := client.Warehouses.ShowByID(ctx, id)
+		if err != nil {
+			return err
+		}
 
-	if err = d.Set("name", w.Name); err != nil {
-		return err
-	}
-	if err = d.Set("comment", w.Comment); err != nil {
-		return err
-	}
-	if err = d.Set("warehouse_type", w.Type); err != nil {
-		return err
-	}
-	if v, ok := d.GetOk("warehouse_size"); ok {
-		if v == "<unset to Snowflake default>" {
-			if err = d.Set("warehouse_size", nil); err != nil {
+		// TODO: set more
+		if withConfigFieldsSetting {
+			if err = d.Set("warehouse_size", w.Size); err != nil {
 				return err
 			}
+		}
+
+		if err = d.Set("name", w.Name); err != nil {
+			return err
+		}
+		if err = d.Set("comment", w.Comment); err != nil {
+			return err
+		}
+		if err = d.Set("warehouse_type", w.Type); err != nil {
+			return err
+		}
+
+		if withExternalChangesMarking {
+			if vsf, ok := d.GetOk("warehouse_size_sf"); ok {
+				if vsf != string(w.Size) {
+					if err = d.Set("warehouse_size_sf_changed", true); err != nil {
+						return err
+					}
+				}
+			}
 		} else {
-			if err = d.Set("warehouse_size", w.Size); err != nil {
+			if err = d.Set("warehouse_size_sf_changed", false); err != nil {
 				return err
 			}
 		}
 		if err = d.Set("warehouse_size_sf", w.Size); err != nil {
 			return err
 		}
-	} else {
-		vsf := d.Get("warehouse_size_sf").(string)
-		if vsf != string(w.Size) {
-			if err = d.Set("warehouse_size_sf", "<value changed externally in Snowflake>"); err != nil {
+
+		if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
+			return err
+		}
+		if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
+			return err
+		}
+		if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
+			return err
+		}
+		if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
+			return err
+		}
+		if err = d.Set("auto_resume", w.AutoResume); err != nil {
+			return err
+		}
+		if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
+			return err
+		}
+		if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+			return err
+		}
+
+		err = readWarehouseObjectProperties(d, id, client, ctx)
+		if err != nil {
+			return err
+		}
+
+		if w.EnableQueryAcceleration {
+			if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
 				return err
 			}
 		}
-	}
-	if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
-		return err
-	}
-	if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
-		return err
-	}
-	if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
-		return err
-	}
-	if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
-		return err
-	}
-	if err = d.Set("auto_resume", w.AutoResume); err != nil {
-		return err
-	}
-	if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
-		return err
-	}
-	if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
-		return err
-	}
 
-	err = readWarehouseObjectProperties(d, id, client, ctx)
-	if err != nil {
-		return err
+		return nil
 	}
-
-	if w.EnableQueryAcceleration {
-		if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func readWarehouseObjectProperties(d *schema.ResourceData, warehouseId sdk.AccountObjectIdentifier, client *sdk.Client, ctx context.Context) error {
@@ -375,7 +393,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
 		runSet = true
-		if n == "" || n == "<unset to Snowflake default>" {
+		if n == "" {
 			n = string(sdk.WarehouseSizeXSmall)
 		}
 		size, err := sdk.ToWarehouseSize(n)
@@ -383,6 +401,11 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		set.WarehouseSize = &size
+	}
+	if o, n := d.GetChange("warehouse_size_sf_changed"); o.(bool) && !n.(bool) {
+		// normally unset would go here
+		runSet = true
+		set.WarehouseSize = &sdk.WarehouseSizeXSmall
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {
@@ -488,7 +511,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ReadWarehouse(d, meta)
+	return GetReadWarehouseFunc(false, false)(d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc.
