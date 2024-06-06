@@ -35,7 +35,6 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Default:      "QUEUE",
 		ValidateFunc: validation.StringInSlice([]string{"QUEUE"}, true),
 		Description:  "A type of integration",
-		ForceNew:     true,
 		Deprecated:   "Will be removed - it is added automatically on the SDK level.",
 	},
 	"direction": {

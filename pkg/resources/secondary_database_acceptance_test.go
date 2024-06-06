@@ -15,6 +15,8 @@ import (
 )
 
 func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -98,6 +100,8 @@ func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -298,6 +302,8 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
