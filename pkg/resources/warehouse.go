@@ -41,35 +41,30 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"min_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"scaling_policy": {
 		Type:         schema.TypeString,
 		Description:  fmt.Sprintf("Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseScalingPoliciesString)),
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseScalingPoliciesString, true),
 	},
 	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 	},
 	"auto_resume": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
 		Optional:    true,
-		Computed:    true,
 	},
 	"initially_suspended": {
 		Type:        schema.TypeBool,
@@ -81,7 +76,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:    true,
-		Computed:    true,
 	},
 	"wait_for_provisioning": {
 		Type:        schema.TypeBool,
@@ -127,7 +121,6 @@ var warehouseSchema = map[string]*schema.Schema{
 	// TODO: better name?
 	"show_output": {
 		Type:        schema.TypeList,
-		MaxItems:    1,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW WAREHOUSE` for the given warehouse.",
 		Elem: &schema.Resource{
@@ -166,7 +159,7 @@ func Warehouse() *schema.Resource {
 	}
 }
 
-func ImportWarehouse(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func ImportWarehouse(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting warehouse import")
 	err := GetReadWarehouseFunc(false, true)(d, m)
 	if err != nil {
@@ -182,21 +175,37 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
-	whType := sdk.WarehouseType(d.Get("warehouse_type").(string))
-	createOptions := &sdk.CreateWarehouseOptions{
-		Comment:                         sdk.String(d.Get("comment").(string)),
-		StatementTimeoutInSeconds:       sdk.Int(d.Get("statement_timeout_in_seconds").(int)),
-		StatementQueuedTimeoutInSeconds: sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int)),
-		MaxConcurrencyLevel:             sdk.Int(d.Get("max_concurrency_level").(int)),
-		EnableQueryAcceleration:         sdk.Bool(d.Get("enable_query_acceleration").(bool)),
-		WarehouseType:                   &whType,
-	}
+	createOptions := &sdk.CreateWarehouseOptions{}
 
+	// TODO: align ordering with the schema order
 	if enable := *sdk.Bool(d.Get("enable_query_acceleration").(bool)); enable {
 		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
 			queryAccelerationMaxScaleFactor := sdk.Int(v.(int))
 			createOptions.QueryAccelerationMaxScaleFactor = queryAccelerationMaxScaleFactor
 		}
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		createOptions.Comment = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
+		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
+	}
+	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
+		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
+	}
+	if v, ok := d.GetOk("max_concurrency_level"); ok {
+		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
+	}
+	if v, ok := d.GetOk("enable_query_acceleration"); ok {
+		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("warehouse_type"); ok {
+		warehouseType, err := sdk.ToWarehouseType(v.(string))
+		if err != nil {
+			return err
+		}
+		createOptions.WarehouseType = &warehouseType
 	}
 
 	if v, ok := d.GetOk("warehouse_size"); ok {
@@ -265,50 +274,30 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 			}
 		}
 
-		if err = d.Set("name", w.Name); err != nil {
-			return err
-		}
-		if err = d.Set("comment", w.Comment); err != nil {
-			return err
-		}
-		if err = d.Set("warehouse_type", w.Type); err != nil {
-			return err
-		}
 		if err = d.Set("warehouse_size_sf", w.Size); err != nil {
 			return err
 		}
-		if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
-			return err
-		}
-		if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
-			return err
-		}
-		if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
-			return err
-		}
-		if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
-			return err
-		}
-		if err = d.Set("auto_resume", w.AutoResume); err != nil {
-			return err
-		}
-		if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
-			return err
-		}
-		if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+
+		if err = d.Set("name", w.Name); err != nil {
 			return err
 		}
 
-		err = readWarehouseObjectProperties(d, id, client, ctx)
-		if err != nil {
+		showOutput := schemas.WarehouseToSchema(w)
+		if err = d.Set("show_output", []any{showOutput}); err != nil {
 			return err
 		}
 
-		if w.EnableQueryAcceleration {
-			if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
-				return err
-			}
-		}
+		// TODO: fix
+		//err = readWarehouseObjectProperties(d, id, client, ctx)
+		//if err != nil {
+		//	return err
+		//}
+
+		//if w.EnableQueryAcceleration {
+		//	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
+		//		return err
+		//	}
+		//}
 
 		return nil
 	}

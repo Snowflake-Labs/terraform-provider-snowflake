@@ -40,6 +40,17 @@ var (
 	WarehouseTypeSnowparkOptimized WarehouseType = "SNOWPARK-OPTIMIZED"
 )
 
+func ToWarehouseType(s string) (WarehouseType, error) {
+	switch strings.ToUpper(s) {
+	case string(WarehouseTypeStandard):
+		return WarehouseTypeStandard, nil
+	case string(WarehouseTypeSnowparkOptimized):
+		return WarehouseTypeSnowparkOptimized, nil
+	default:
+		return "", fmt.Errorf("invalid warehouse type: %s", s)
+	}
+}
+
 type WarehouseSize string
 
 var (
