@@ -21,9 +21,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Identifier for the virtual warehouse; must be unique for your account.",
 	},
-	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
+	"warehouse_type": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
+		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
 	"warehouse_size": {
 		Type:             schema.TypeString,
@@ -77,26 +79,9 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:    true,
 	},
-	"wait_for_provisioning": {
-		Type:        schema.TypeBool,
-		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
-		Optional:    true,
-		Deprecated:  "This field is deprecated and will be removed in the next major version of the provider. It doesn't do anything and should be removed from your configuration.",
-	},
-	"statement_timeout_in_seconds": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
-	},
-	"statement_queued_timeout_in_seconds": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
-	},
-	"max_concurrency_level": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+	"comment": {
+		Type:     schema.TypeString,
+		Optional: true,
 	},
 	"enable_query_acceleration": {
 		Type:        schema.TypeBool,
@@ -112,11 +97,27 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
-	"warehouse_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
-		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
+	"max_concurrency_level": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+	},
+	"statement_queued_timeout_in_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+	},
+	"statement_timeout_in_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+	},
+	// TODO: remove deprecated field
+	"wait_for_provisioning": {
+		Type:        schema.TypeBool,
+		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
+		Optional:    true,
+		Deprecated:  "This field is deprecated and will be removed in the next major version of the provider. It doesn't do anything and should be removed from your configuration.",
 	},
 	// TODO: better name?
 	"show_output": {
