@@ -37,7 +37,7 @@ check "database_check" {
 
   assert {
     condition     = length(data.snowflake_databases.test.databases) == 1
-    error_message = "Databases fieltered by '${data.snowflake_databases.test.like}' returned ${length(data.snowflake_databases.test.databases)} databases where one was expected"
+    error_message = "Databases filtered by '${data.snowflake_databases.test.like}' returned ${length(data.snowflake_databases.test.databases)} databases where one was expected"
   }
 }
 ```

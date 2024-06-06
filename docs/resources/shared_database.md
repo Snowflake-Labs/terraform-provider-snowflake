@@ -54,7 +54,7 @@ resource "snowflake_shared_database" "test" {
 
 ### Required
 
-- `from_share` (String) A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `"<organization_name>"."<account_name>"."<database_name>"`.
+- `from_share` (String) A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `"<organization_name>"."<account_name>"."<share_name>"`.
 - `name` (String) Specifies the identifier for the database; must be unique for your account.
 
 ### Optional
