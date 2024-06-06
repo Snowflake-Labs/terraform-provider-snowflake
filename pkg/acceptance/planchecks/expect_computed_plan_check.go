@@ -33,15 +33,15 @@ func (e expectComputedPlanCheck) CheckPlan(_ context.Context, req plancheck.Chec
 		_, isComputed := computed[e.attribute]
 
 		if e.expectComputed && !isComputed {
-			result = append(result, fmt.Errorf("attribute %s expected to be computed", e.attribute))
+			result = append(result, fmt.Errorf("expect computed: attribute %s expected to be computed", e.attribute))
 		}
 		if !e.expectComputed && isComputed {
-			result = append(result, fmt.Errorf("attribute %s expected not to be computed", e.attribute))
+			result = append(result, fmt.Errorf("expect computed: attribute %s expected not to be computed", e.attribute))
 		}
 	}
 
 	if !resourceFound {
-		result = append(result, fmt.Errorf("no changes found for %s", e.resourceAddress))
+		result = append(result, fmt.Errorf("expect computed: no changes found for %s", e.resourceAddress))
 	}
 
 	resp.Error = errors.Join(result...)

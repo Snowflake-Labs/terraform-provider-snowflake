@@ -10,6 +10,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -304,10 +305,9 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 					"statement_queued_timeout_in_seconds",
 					"statement_timeout_in_seconds",
 				},
-				ImportStateCheck: ComposeImportStateCheck(
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
-					//testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
 				),
 			},
 			// change size in config
@@ -392,7 +392,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", nil, sdk.String(string(sdk.WarehouseSizeSmall))),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size_sf", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
 						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeSmall)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
@@ -417,10 +417,9 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				//	"statement_queued_timeout_in_seconds",
 				//	"statement_timeout_in_seconds",
 				//},
-				ImportStateCheck: ComposeImportStateCheck(
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
-					//testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 		},
@@ -552,36 +551,5 @@ func testAccCheckWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, exp
 			return fmt.Errorf("expected size: %s; got: %s", expectedSize, warehouse.Size)
 		}
 		return nil
-	}
-}
-
-func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		for i, f := range fs {
-			if err := f(s); err != nil {
-				return fmt.Errorf("check %d/%d error: %s", i+1, len(fs), err)
-			}
-		}
-		return nil
-	}
-}
-
-func testCheckResourceAttrInstanceState(id string, attributeName, attributeValue string) resource.ImportStateCheckFunc {
-	return func(is []*terraform.InstanceState) error {
-		for _, v := range is {
-			if v.ID != id {
-				continue
-			}
-
-			if attrVal, ok := v.Attributes[attributeName]; ok {
-				if attrVal != attributeValue {
-					return fmt.Errorf("expected: %s got: %s", attributeValue, attrVal)
-				}
-
-				return nil
-			}
-		}
-
-		return fmt.Errorf("attribute %s not found in instance state", attributeName)
 	}
 }
