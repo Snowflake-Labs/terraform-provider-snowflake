@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
@@ -279,6 +280,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionCreate, nil, sdk.String(string(sdk.WarehouseSizeSmall))),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeSmall)),
@@ -312,6 +315,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeSmall)), sdk.String(string(sdk.WarehouseSizeMedium))),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeMedium)),
@@ -326,8 +331,10 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeMedium)), nil),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -341,6 +348,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, nil, sdk.String(strings.ToLower(string(sdk.WarehouseSizeSmall)))),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), strings.ToLower(string(sdk.WarehouseSizeSmall))),
@@ -358,8 +367,12 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", sdk.String(strings.ToLower(string(sdk.WarehouseSizeSmall))), sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size_sf", sdk.String(string(sdk.WarehouseSizeSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), nil),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -377,8 +390,12 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size_sf", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeSmall)), nil),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "warehouse_size_sf", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
