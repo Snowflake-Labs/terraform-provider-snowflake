@@ -12,6 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -289,7 +290,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeSmall)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
 			// import when size in config
@@ -323,7 +324,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeMedium)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeMedium)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeMedium),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeMedium),
 				),
 			},
 			// remove size from config
@@ -340,7 +341,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
 				),
 			},
 			// add config (lower case)
@@ -356,7 +357,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", strings.ToLower(string(sdk.WarehouseSizeSmall))),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
 			// remove size from config but update warehouse externally to default (still expecting non-empty plan because we do not know the default)
@@ -378,7 +379,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
 				),
 			},
 			// change the size externally
@@ -401,7 +402,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
-					testAccCheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
+					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
 				),
 			},
 			// import when no size in config
@@ -538,18 +539,4 @@ resource "snowflake_warehouse" "w" {
 	name           = "%s"
 }
 `, name)
-}
-
-func testAccCheckWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, expectedSize sdk.WarehouseSize) func(state *terraform.State) error {
-	t.Helper()
-	return func(state *terraform.State) error {
-		warehouse, err := acc.TestClient().Warehouse.Show(t, id)
-		if err != nil {
-			return err
-		}
-		if warehouse.Size != expectedSize {
-			return fmt.Errorf("expected size: %s; got: %s", expectedSize, warehouse.Size)
-		}
-		return nil
-	}
 }
