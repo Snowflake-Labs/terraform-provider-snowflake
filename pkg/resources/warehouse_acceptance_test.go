@@ -300,6 +300,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"show_output",
 					"initially_suspended",
 					"wait_for_provisioning",
 					"query_acceleration_max_scale_factor",
@@ -376,8 +377,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "show_output"),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", sdk.String(strings.ToLower(string(sdk.WarehouseSizeSmall))), sdk.String(string(sdk.WarehouseSizeXSmall))),
-						// TODO: check drift
-						// planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size_sf", sdk.String(string(sdk.WarehouseSizeSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.size", sdk.String(string(sdk.WarehouseSizeSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
 						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
@@ -401,8 +401,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "show_output"),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", nil, sdk.String(string(sdk.WarehouseSizeSmall))),
-						// TODO: check drift
-						// planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size_sf", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.size", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
 						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeSmall)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},

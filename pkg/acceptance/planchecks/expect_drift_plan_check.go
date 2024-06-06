@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
+	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
 
@@ -22,6 +24,9 @@ type expectDriftPlanCheck struct {
 
 // TODO: test
 // TODO: extract common logic with expectChangePlanCheck
+// TODO: extract traversal for the attribute path
+// TODO: verify that path to attribute results in nil or primitive
+// TODO: check if the nested attributes also have plan
 func (e expectDriftPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	var result []error
 	var resourceFound bool
@@ -39,8 +44,33 @@ func (e expectDriftPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPl
 		if change.Change.After != nil {
 			after = change.Change.After.(map[string]any)
 		}
-		valueBefore, valueBeforeOk := before[e.attribute]
-		valueAfter, valueAfterOk := after[e.attribute]
+
+		attributePathParts := strings.Split(e.attribute, ".")
+		attributeRoot := attributePathParts[0]
+		valueBefore, valueBeforeOk := before[attributeRoot]
+		valueAfter, valueAfterOk := after[attributeRoot]
+
+		for idx, part := range attributePathParts {
+			part := part
+			if idx == 0 {
+				continue
+			}
+			partInt, err := strconv.Atoi(part)
+			if valueBefore != nil {
+				if err != nil {
+					valueBefore = valueBefore.(map[string]any)[part]
+				} else {
+					valueBefore = valueBefore.([]any)[partInt]
+				}
+			}
+			if valueAfter != nil {
+				if err != nil {
+					valueAfter = valueAfter.(map[string]any)[part]
+				} else {
+					valueAfter = valueAfter.([]any)[partInt]
+				}
+			}
+		}
 
 		if e.oldValue == nil && !(valueBefore == nil || valueBefore == "") {
 			result = append(result, fmt.Errorf("expect drift: attribute %s before expected to be empty, got: %s", e.attribute, valueBefore))

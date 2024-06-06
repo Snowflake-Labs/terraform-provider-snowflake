@@ -118,7 +118,7 @@ var ShowWarehouseSchema = map[string]*schema.Schema{
 }
 
 // TODO: better name?
-// TODO: interface (e.g. asMap)?
+// TODO: interface (e.g. asMap)? in SDK?
 func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema := make(map[string]any)
 	warehouseSchema["name"] = warehouse.Name
