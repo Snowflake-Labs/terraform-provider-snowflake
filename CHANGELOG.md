@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.92.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.91.0...v0.92.0) (2024-06-06)
+
+
+### 🎉 **What's new:**
+
+* Add Api Authentication security integration to sdk ([#2840](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2840)) ([57a07ee](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/57a07ee792fdf61299cf7ad51f06dd97408a2e52))
+* Add External Oauth security integration to sdk ([#2835](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2835)) ([82d1c09](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/82d1c09962d71d2b2a4bad23f8b11ec05cba1a7a))
+* add network rules ([#2746](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2746)) ([c79fa29](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c79fa2991700f4e4ec523c0f102a946534a9597f))
+* Add SCIM and SAML2 security integrations to sdk ([#2799](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2799)) ([1312ff1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1312ff14b33aee828604d0d64f6e7a6cfe1e2ebf))
+* Add Snowflake Oauth security integration to sdk ([#2830](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2830)) ([b576f29](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b576f297f3831cf60e9cc849bfe9e48d5febe4b0))
+* Database resource v1 readiness ([#2834](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2834)) ([30fe136](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/30fe1364be6ed92c4ddb072167bf2150a60d4d10))
+* Database SDK upgrade ([#2814](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2814)) ([750fe37](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/750fe372a1b4698bde51bdf537cce91dd1605582))
+
+
+### 🔧 **Misc**
+
+* accept non-pointer values in the generated builder methods ([#2816](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2816)) ([c29fbf1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c29fbf13674dd8441db0da4ff5d309fa0f6e925f))
+* Add a script for creating labels ([#2778](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2778)) ([ce0fbad](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ce0fbad38fa926a2b9a6b8b9ffc53c2c1bf1f9f0))
+* Adjust before 0.92.0 ([#2857](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2857)) ([0598656](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0598656d1f53fd31f11fc979555f0dea00fa107b))
+* Continue random ids rework ([#2819](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2819)) ([f20940c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f20940cc05029a3f3de5c51b21c8bac4c790cc3e))
+* Random ids rework part3 ([#2833](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2833)) ([36ead85](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/36ead8576d0ea54f9cc361d2baf9593006dc801f))
+* Random ids rework part4 ([#2837](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2837)) ([64518a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/64518a3a8305236353e5bf2de25a9c8a9723e10b))
+* Update issue for table and warehouse redesign state ([#2845](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2845)) ([149e55e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/149e55ede78b01e8621ce7dda5c33df3284b584b))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix failing integration tests ([#2832](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2832)) ([2e2ca6c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2e2ca6cd32f88a4ab8453bae05554e4656d3a975))
+* Fix QUOTED_IDENTIFIERS_IGNORE_CASE parameter test ([#2841](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2841)) ([92ad1d3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/92ad1d309c3fb5daf07fe71ea138256ca7e29c5a))
+
 ## [0.91.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.90.0...v0.91.0) (2024-05-16)
 
 
