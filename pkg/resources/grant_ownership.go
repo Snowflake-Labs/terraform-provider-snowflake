@@ -425,6 +425,7 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 	case sdk.ObjectTypeAggregationPolicy,
 		sdk.ObjectTypeAlert,
 		sdk.ObjectTypeAuthenticationPolicy,
+		sdk.ObjectTypeCortexSearchService,
 		sdk.ObjectTypeDataMetricFunction,
 		sdk.ObjectTypeDynamicTable,
 		sdk.ObjectTypeEventTable,

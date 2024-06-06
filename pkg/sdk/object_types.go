@@ -35,6 +35,7 @@ const (
 	ObjectTypeShare                ObjectType = "SHARE"
 	ObjectTypeTable                ObjectType = "TABLE"
 	ObjectTypeDynamicTable         ObjectType = "DYNAMIC TABLE"
+	ObjectTypeCortexSearchService  ObjectType = "CORTEX SEARCH SERVICE"
 	ObjectTypeExternalTable        ObjectType = "EXTERNAL TABLE"
 	ObjectTypeEventTable           ObjectType = "EVENT TABLE"
 	ObjectTypeView                 ObjectType = "VIEW"
@@ -100,6 +101,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeShare:                PluralObjectTypeShares,
 		ObjectTypeTable:                PluralObjectTypeTables,
 		ObjectTypeDynamicTable:         PluralObjectTypeDynamicTables,
+		ObjectTypeCortexSearchService:  PluralObjectTypeCortexSearchServices,
 		ObjectTypeExternalTable:        PluralObjectTypeExternalTables,
 		ObjectTypeEventTable:           PluralObjectTypeEventTables,
 		ObjectTypeView:                 PluralObjectTypeViews,
@@ -204,6 +206,7 @@ const (
 	PluralObjectTypeShares                 PluralObjectType = "SHARES"
 	PluralObjectTypeTables                 PluralObjectType = "TABLES"
 	PluralObjectTypeDynamicTables          PluralObjectType = "DYNAMIC TABLES"
+	PluralObjectTypeCortexSearchServices   PluralObjectType = "CORTEX SEARCH SERVICES"
 	PluralObjectTypeExternalTables         PluralObjectType = "EXTERNAL TABLES"
 	PluralObjectTypeEventTables            PluralObjectType = "EVENT TABLES"
 	PluralObjectTypeViews                  PluralObjectType = "VIEWS"
