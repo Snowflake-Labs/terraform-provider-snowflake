@@ -36,8 +36,8 @@ func (e printingPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanR
 		}
 		fmt.Printf("resource drift for [%s]: actions: %v\n", change.Address, actions)
 		for _, attr := range e.attributes {
-			valueBefore, _ := before[attr]
-			valueAfter, _ := after[attr]
+			valueBefore := before[attr]
+			valueAfter := after[attr]
 			_, isComputed := computed[attr]
 			fmt.Printf("\t[%s]: before: %v, after: %v, computed: %t\n", attr, valueBefore, valueAfter, isComputed)
 		}
@@ -60,8 +60,8 @@ func (e printingPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanR
 		}
 		fmt.Printf("resource change for [%s]: actions: %v\n", change.Address, actions)
 		for _, attr := range e.attributes {
-			valueBefore, _ := before[attr]
-			valueAfter, _ := after[attr]
+			valueBefore := before[attr]
+			valueAfter := after[attr]
 			_, isComputed := computed[attr]
 			fmt.Printf("\t[%s]: before: %v, after: %v, computed: %t\n", attr, valueBefore, valueAfter, isComputed)
 		}

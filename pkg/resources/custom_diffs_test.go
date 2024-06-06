@@ -155,11 +155,10 @@ func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue
 
 func Test_NormalizeAndCompare(t *testing.T) {
 	genericNormalize := func(value string) (any, error) {
-		if value == "ok" {
+		switch value {
+		case "ok", "ok1":
 			return "ok", nil
-		} else if value == "ok1" {
-			return "ok", nil
-		} else {
+		default:
 			return nil, fmt.Errorf("incorrect value %s", value)
 		}
 	}

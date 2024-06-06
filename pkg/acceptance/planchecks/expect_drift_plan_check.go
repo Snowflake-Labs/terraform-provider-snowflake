@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	tfjson "github.com/hashicorp/terraform-json"
 	"slices"
+
+	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )

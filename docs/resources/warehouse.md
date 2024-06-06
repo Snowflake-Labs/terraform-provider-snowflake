@@ -38,16 +38,51 @@ resource "snowflake_warehouse" "warehouse" {
 - `min_cluster_count` (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
 - `query_acceleration_max_scale_factor` (Number) Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.
 - `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
-- `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.
+- `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): `STANDARD` | `ECONOMY`.
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - `statement_timeout_in_seconds` (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
 - `wait_for_provisioning` (Boolean, Deprecated) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
-- `warehouse_size` (String) Specifies the size of the virtual warehouse. Valid values are: `XSMALL` | `X-SMALL` | `SMALL` | `MEDIUM` | `LARGE` | `XLARGE` | `X-LARGE` | `XXLARGE` | `X2LARGE` | `2X-LARGE` | `XXXLARGE` | `X3LARGE` | `3X-LARGE` | `X4LARGE` | `4X-LARGE` | `X5LARGE` | `5X-LARGE` | `X6LARGE` | `6X-LARGE`. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.
-- `warehouse_type` (String) Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse
+- `warehouse_size` (String) Specifies the size of the virtual warehouse. Valid values are (case-insensitive): `XSMALL` | `X-SMALL` | `SMALL` | `MEDIUM` | `LARGE` | `XLARGE` | `X-LARGE` | `XXLARGE` | `X2LARGE` | `2X-LARGE` | `XXXLARGE` | `X3LARGE` | `3X-LARGE` | `X4LARGE` | `4X-LARGE` | `X5LARGE` | `5X-LARGE` | `X6LARGE` | `6X-LARGE`. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.
+- `warehouse_type` (String) Specifies warehouse type. Valid values are (case-insensitive): `STANDARD` | `SNOWPARK-OPTIMIZED`.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW WAREHOUSE` for the given warehouse. (see [below for nested schema](#nestedatt--show_output))
+- `warehouse_size_sf` (String) Stores warehouse size fetched from Snowflake.
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `auto_resume` (Boolean)
+- `auto_suspend` (Number)
+- `available` (Number)
+- `comment` (String)
+- `created_on` (String)
+- `enable_query_acceleration` (Boolean)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `max_cluster_count` (Number)
+- `min_cluster_count` (Number)
+- `name` (String)
+- `other` (Number)
+- `owner` (String)
+- `owner_role_type` (String)
+- `provisioning` (Number)
+- `query_acceleration_max_scale_factor` (Number)
+- `queued` (Number)
+- `quiescing` (Number)
+- `resource_monitor` (String)
+- `resumed_on` (String)
+- `running` (Number)
+- `scaling_policy` (String)
+- `size` (String)
+- `started_clusters` (Number)
+- `state` (String)
+- `type` (String)
+- `updated_on` (String)
 
 ## Import
 

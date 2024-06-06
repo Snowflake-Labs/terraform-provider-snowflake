@@ -12,7 +12,7 @@ func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.Impor
 	return func(s []*terraform.InstanceState) error {
 		for i, f := range fs {
 			if err := f(s); err != nil {
-				return fmt.Errorf("check %d/%d error: %s", i+1, len(fs), err)
+				return fmt.Errorf("check %d/%d error: %w", i+1, len(fs), err)
 			}
 		}
 		return nil
