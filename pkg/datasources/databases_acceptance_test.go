@@ -55,7 +55,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.description.0.name"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.0.kind", "SCHEMA"),
 
-					acc.TestCheckResourceAttrNumberAtLeast("data.snowflake_databases.test", "databases.0.parameters.#", 10),
+					resource.TestCheckResourceAttrWith("data.snowflake_databases.test", "databases.0.parameters.#", acc.IsGreaterOrEqualTo(10)),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.parameters.0.key"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.0.value", ""),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.0.default", ""),

@@ -3,33 +3,48 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTestCheckResourceAttrNumberAtLeast(t *testing.T) {
-	state := &terraform.State{
-		Modules: []*terraform.ModuleState{
-			{
-				Path: []string{"root"},
-				Resources: map[string]*terraform.ResourceState{
-					"test": {
-						Primary: &terraform.InstanceState{
-							Attributes: map[string]string{
-								"smaller": "10",
-								"equal":   "20",
-								"greater": "30",
-								"not_int": "string_value",
-							},
-						},
-					},
-				},
-			},
+func TestIsGreaterOrEqualTo(t *testing.T) {
+	testCases := []struct {
+		Name             string
+		GreaterOrEqualTo int
+		Actual           string
+		Error            string
+	}{
+		{
+			Name:             "validation: smaller than expected",
+			GreaterOrEqualTo: 20,
+			Actual:           "10",
+			Error:            "expected value greater or equal to 20, got 10",
+		},
+		{
+			Name:             "validation: not int value",
+			GreaterOrEqualTo: 20,
+			Actual:           "not_int",
+			Error:            "strconv.Atoi: parsing \"string_value\": invalid syntax",
+		},
+		{
+			Name:             "validation: equal value",
+			GreaterOrEqualTo: 20,
+			Actual:           "20",
+		},
+		{
+			Name:             "validation: greater value",
+			GreaterOrEqualTo: 20,
+			Actual:           "30",
 		},
 	}
 
-	assert.ErrorContains(t, TestCheckResourceAttrNumberAtLeast("test", "smaller", 20)(state), "expected attribute smaller to be at least 20, but was 10")
-	assert.ErrorContains(t, TestCheckResourceAttrNumberAtLeast("test", "not_int", 20)(state), "failed to parse attribute not_int, err: strconv.Atoi: parsing \"string_value\": invalid syntax")
-	assert.Nil(t, TestCheckResourceAttrNumberAtLeast("test", "equal", 20)(state))
-	assert.Nil(t, TestCheckResourceAttrNumberAtLeast("test", "greater", 20)(state))
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			err := IsGreaterOrEqualTo(testCase.GreaterOrEqualTo)(testCase.Actual)
+			if testCase.Error != "" {
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
 }

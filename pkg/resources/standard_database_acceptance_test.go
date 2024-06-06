@@ -330,8 +330,12 @@ func TestAcc_StandardDatabase_Complete(t *testing.T) {
 
 func TestAcc_StandardDatabase_Update(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 	comment := random.Comment()
+
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newComment := random.Comment()
+
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
@@ -339,7 +343,14 @@ func TestAcc_StandardDatabase_Update(t *testing.T) {
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
 
-	configVariables := func(
+	basicConfigVariables := func(id sdk.AccountObjectIdentifier, comment string) config.Variables {
+		return config.Variables{
+			"name":    config.StringVariable(id.Name()),
+			"comment": config.StringVariable(comment),
+		}
+	}
+
+	fullConfigVariables := func(
 		id sdk.AccountObjectIdentifier,
 		comment string,
 		dataRetention int,
@@ -380,12 +391,16 @@ func TestAcc_StandardDatabase_Update(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
 		Steps: []resource.TestStep{
 			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: basicConfigVariables(id, comment),
+			},
+			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
-				ConfigVariables: configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
+				ConfigVariables: fullConfigVariables(newId, newComment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days.0.value", "20"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "max_data_extension_time_in_days.0.value", "30"),
 					resource.TestCheckResourceAttr("snowflake_standard_database.test", "external_volume.0.value", externalVolumeId.Name()),
@@ -403,12 +418,8 @@ func TestAcc_StandardDatabase_Update(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_StandardDatabase/complete-optionals-set"),
-				ConfigVariables:         configVariables(id, comment, 20, 30, true, "en_US", sdk.StorageSerializationPolicyCompatible, sdk.LogLevelInfo, sdk.TraceLevelOnEvent, true, true),
-				ResourceName:            "snowflake_standard_database.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"replication.0.ignore_edition_check"},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StandardDatabase/basic"),
+				ConfigVariables: basicConfigVariables(id, comment),
 			},
 		},
 	})

@@ -58,22 +58,35 @@ var standardDatabaseSchema = map[string]*schema.Schema{
 		schema.TypeString,
 		"Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).",
 	),
-	"storage_serialization_policy": nestedProperty(
+	"storage_serialization_policy": nestedPropertyWithInnerModifier(
 		schema.TypeString,
 		fmt.Sprintf("Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
+		func(inner *schema.Schema) {
+			inner.ValidateDiagFunc = StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true)
+			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return strings.EqualFold(oldValue, newValue) || (d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == "")
+			}
+		},
 	),
 	"log_level": nestedPropertyWithInnerModifier(
 		schema.TypeString,
 		fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 		func(inner *schema.Schema) {
+			inner.ValidateDiagFunc = StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true)
 			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 				return strings.EqualFold(oldValue, newValue) || (d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == "")
 			}
 		},
 	),
-	"trace_level": nestedProperty(
+	"trace_level": nestedPropertyWithInnerModifier(
 		schema.TypeString,
 		fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
+		func(inner *schema.Schema) {
+			inner.ValidateDiagFunc = StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true)
+			inner.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return strings.EqualFold(oldValue, newValue) || (d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == "")
+			}
+		},
 	),
 	"replication": {
 		Type:        schema.TypeList,
@@ -84,7 +97,7 @@ var standardDatabaseSchema = map[string]*schema.Schema{
 			Schema: map[string]*schema.Schema{
 				"enable_for_account": {
 					Type:        schema.TypeList,
-					Optional:    true,
+					Required:    true,
 					Description: "Entry to enable replication and optionally failover for a given account identifier.",
 					MinItems:    1,
 					Elem: &schema.Resource{

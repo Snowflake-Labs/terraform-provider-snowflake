@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -130,6 +131,38 @@ func TestNestedStringValueAccountObjectComputedIf(t *testing.T) {
 			"nested_value": []any{
 				map[string]any{
 					"value": traceLevel.Value,
+				},
+			},
+		})
+		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+	})
+}
+
+func TestNestedBoolValueAccountObjectComputedIf(t *testing.T) {
+	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeBool, resources.NestedBoolValueAccountObjectComputedIf("nested_value", sdk.AccountParameterReplaceInvalidCharacters))
+
+	replaceInvalidCharacters, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterReplaceInvalidCharacters)
+	require.NoError(t, err)
+
+	replaceInvalidCharactersBoolValue, err := strconv.ParseBool(replaceInvalidCharacters.Value)
+	require.NoError(t, err)
+
+	t.Run("different value than on the Snowflake side", func(t *testing.T) {
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
+			"nested_value": []any{
+				map[string]any{
+					"value": !replaceInvalidCharactersBoolValue,
+				},
+			},
+		})
+		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+	})
+
+	t.Run("same value as in Snowflake", func(t *testing.T) {
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
+			"nested_value": []any{
+				map[string]any{
+					"value": replaceInvalidCharactersBoolValue,
 				},
 			},
 		})

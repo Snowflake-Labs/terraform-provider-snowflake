@@ -16,10 +16,12 @@ The split was done (and will be done for several objects during the refactor) to
 Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
 
 ### *(behavior change)* snowflake_databases 
-- The `pattern` was replaced by `like` field.
-- Additional filtering options added (`limit`)
-- Added missing fields returned by SHOW DATABASES
-- Added outputs from DESC DATABASE and SHOW PARAMETERS IN DATABASE (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**)
+- `terse` and `history` fields were removed.
+- `replication_configuration` field was removed from `databases`.
+- `pattern` was replaced by `like` field.
+- Additional filtering options added (`limit`).
+- Added missing fields returned by SHOW DATABASES>
+- Added outputs from DESC DATABASE and SHOW PARAMETERS IN DATABASE (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
 
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes

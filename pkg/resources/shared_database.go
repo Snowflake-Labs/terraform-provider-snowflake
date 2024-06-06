@@ -24,7 +24,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
+		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
 	},
 	// TODO(SNOW-1325381): Add it as an item to discuss and either remove or uncomment (and implement) it
 	// "is_transient": {
