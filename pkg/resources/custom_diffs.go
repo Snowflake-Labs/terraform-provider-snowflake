@@ -62,27 +62,9 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 	}
 }
 
-// TODO: test this custom diff func
-func UpdateValueWithSnowflakeDefault(key string) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		sfStateKey := key + "_sf"
-		needsRefreshKey := key + "_sf_changed"
-
-		configValue, ok := d.GetRawConfig().AsValueMap()[key]
-		stateValue := d.Get(key).(string)
-		_, needsRefresh := d.GetChange(needsRefreshKey)
-
-		if needsRefresh.(bool) && stateValue == "" && (!ok || configValue.IsNull()) {
-			err := d.SetNew(needsRefreshKey, false)
-			if err != nil {
-				return err
-			}
-			err = d.SetNewComputed(sfStateKey)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
+// TODO: test
+func ComputedIfAttributeChanged(key string, changedAttributeKey string) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		return diff.HasChange(changedAttributeKey)
+	})
 }

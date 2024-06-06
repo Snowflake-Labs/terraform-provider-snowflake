@@ -279,7 +279,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeSmall)),
@@ -305,14 +305,14 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ImportStateCheck: ComposeImportStateCheck(
 					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
 					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeSmall)),
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
+					//testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
 				),
 			},
 			// change size in config
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeMedium)),
@@ -327,7 +327,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
 					},
 				},
@@ -341,7 +341,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 					},
 				},
 				Config: warehouseWithSizeConfig(id.Name(), strings.ToLower(string(sdk.WarehouseSizeSmall))),
@@ -359,7 +359,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectNonEmptyPlan(),
 					},
 				},
@@ -378,7 +378,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						printPlanDetails("snowflake_warehouse.w"),
+						printPlanDetails("snowflake_warehouse.w", "warehouse_size", "warehouse_size_sf"),
 						plancheck.ExpectNonEmptyPlan(),
 					},
 				},
@@ -404,7 +404,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ImportStateCheck: ComposeImportStateCheck(
 					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
 					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf", string(sdk.WarehouseSizeXSmall)),
-					testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
+					//testCheckResourceAttrInstanceState(id.Name(), "warehouse_size_sf_changed", "false"),
 				),
 			},
 		},
@@ -574,6 +574,7 @@ var _ plancheck.PlanCheck = printingPlanCheck{}
 
 type printingPlanCheck struct {
 	resourceAddress string
+	attributes      []string
 }
 
 func (e printingPlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
@@ -583,19 +584,56 @@ func (e printingPlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPla
 		if e.resourceAddress != change.Address {
 			continue
 		}
-		fmt.Printf("resource drift: %s actions: %v\n", change.Address, *change.Change)
+		actions := change.Change.Actions
+		var before, after, computed map[string]any
+		if change.Change.Before != nil {
+			before = change.Change.Before.(map[string]any)
+		}
+		if change.Change.After != nil {
+			after = change.Change.After.(map[string]any)
+		}
+		if change.Change.AfterUnknown != nil {
+			computed = change.Change.AfterUnknown.(map[string]any)
+		}
+		fmt.Printf("resource drift for [%s]: actions: %v\n", change.Address, actions)
+		for _, attr := range e.attributes {
+			valueBefore, _ := before[attr]
+			valueAfter, _ := after[attr]
+			_, isComputed := computed[attr]
+			fmt.Printf("\t[%s]: before: %v, after: %v, computed: %t\n", attr, valueBefore, valueAfter, isComputed)
+		}
 	}
 
 	for _, change := range req.Plan.ResourceChanges {
 		if e.resourceAddress != change.Address {
 			continue
 		}
-		fmt.Printf("resource changes: %s actions: %v\n", change.Address, *change.Change)
+		actions := change.Change.Actions
+		var before, after, computed map[string]any
+		if change.Change.Before != nil {
+			before = change.Change.Before.(map[string]any)
+		}
+		if change.Change.After != nil {
+			after = change.Change.After.(map[string]any)
+		}
+		if change.Change.AfterUnknown != nil {
+			computed = change.Change.AfterUnknown.(map[string]any)
+		}
+		fmt.Printf("resource change for [%s]: actions: %v\n", change.Address, actions)
+		for _, attr := range e.attributes {
+			valueBefore, _ := before[attr]
+			valueAfter, _ := after[attr]
+			_, isComputed := computed[attr]
+			fmt.Printf("\t[%s]: before: %v, after: %v, computed: %t\n", attr, valueBefore, valueAfter, isComputed)
+		}
 	}
 
 	resp.Error = errors.Join(result...)
 }
 
-func printPlanDetails(resourceAddress string) plancheck.PlanCheck {
-	return printingPlanCheck{resourceAddress}
+func printPlanDetails(resourceAddress string, attributes ...string) plancheck.PlanCheck {
+	return printingPlanCheck{
+		resourceAddress,
+		attributes,
+	}
 }

@@ -36,11 +36,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Stores warehouse size fetched from Snowflake.",
 	},
-	"warehouse_size_sf_changed": {
-		Type:        schema.TypeBool,
-		Computed:    true,
-		Description: "Internal property used to track external changes of warehouse size.",
-	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
@@ -159,7 +154,7 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			UpdateValueWithSnowflakeDefault("warehouse_size"),
+			ComputedIfAttributeChanged("warehouse_size_sf", "warehouse_size"),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -264,6 +259,14 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 			}
 		}
 
+		if withExternalChangesMarking {
+			if d.Get("warehouse_size_sf").(string) != string(w.Size) {
+				if err = d.Set("warehouse_size", w.Size); err != nil {
+					return err
+				}
+			}
+		}
+
 		if err = d.Set("name", w.Name); err != nil {
 			return err
 		}
@@ -273,24 +276,9 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 		if err = d.Set("warehouse_type", w.Type); err != nil {
 			return err
 		}
-
-		if withExternalChangesMarking {
-			if vsf, ok := d.GetOk("warehouse_size_sf"); ok {
-				if vsf != string(w.Size) {
-					if err = d.Set("warehouse_size_sf_changed", true); err != nil {
-						return err
-					}
-				}
-			}
-		} else {
-			if err = d.Set("warehouse_size_sf_changed", false); err != nil {
-				return err
-			}
-		}
 		if err = d.Set("warehouse_size_sf", w.Size); err != nil {
 			return err
 		}
-
 		if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
 			return err
 		}
@@ -401,11 +389,6 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		set.WarehouseSize = &size
-	}
-	if o, n := d.GetChange("warehouse_size_sf_changed"); o.(bool) && !n.(bool) {
-		// normally unset would go here
-		runSet = true
-		set.WarehouseSize = &sdk.WarehouseSizeXSmall
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {
