@@ -49,7 +49,6 @@ resource "snowflake_warehouse" "warehouse" {
 
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW WAREHOUSE` for the given warehouse. (see [below for nested schema](#nestedatt--show_output))
-- `warehouse_size_sf` (String) Stores warehouse size fetched from Snowflake.
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`

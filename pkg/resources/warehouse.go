@@ -34,11 +34,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
 		Description:      fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are (case-insensitive): %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
 	},
-	"warehouse_size_sf": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Stores warehouse size fetched from Snowflake.",
-	},
 	"max_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
@@ -146,7 +141,8 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAttributeChanged("warehouse_size_sf", "warehouse_size"),
+			// TODO: ComputedIfAnyAttributeChanged?
+			ComputedIfAttributeChanged("show_output", "warehouse_size"),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -268,15 +264,18 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 		}
 
 		if withExternalChangesMarking {
-			if d.Get("warehouse_size_sf").(string) != string(w.Size) {
-				if err = d.Set("warehouse_size", w.Size); err != nil {
-					return err
+			// TODO: extract/fix/make safer
+			if showOutput, ok := d.GetOk("show_output"); ok {
+				showOutputList := showOutput.([]any)
+				if len(showOutputList) == 1 {
+					result := showOutputList[0].(map[string]any)
+					if result["size"].(string) != string(w.Size) {
+						if err = d.Set("warehouse_size", w.Size); err != nil {
+							return err
+						}
+					}
 				}
 			}
-		}
-
-		if err = d.Set("warehouse_size_sf", w.Size); err != nil {
-			return err
 		}
 
 		if err = d.Set("name", w.Name); err != nil {
@@ -284,17 +283,17 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 		}
 
 		showOutput := schemas.WarehouseToSchema(w)
-		if err = d.Set("show_output", []any{showOutput}); err != nil {
+		if err = d.Set("show_output", []map[string]any{showOutput}); err != nil {
 			return err
 		}
 
 		// TODO: fix
-		//err = readWarehouseObjectProperties(d, id, client, ctx)
+		// err = readWarehouseObjectProperties(d, id, client, ctx)
 		//if err != nil {
 		//	return err
 		//}
 
-		//if w.EnableQueryAcceleration {
+		// if w.EnableQueryAcceleration {
 		//	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
 		//		return err
 		//	}
