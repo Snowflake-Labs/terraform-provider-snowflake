@@ -4,6 +4,28 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.92.0 ➞ v0.93.0
+### snowflake_warehouse resource changes
+#### *(potential behavior change)* Default values removed
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider. Because of that the following defaults were removed:
+- `comment`
+- `statement_timeout_in_seconds`
+- `statement_queued_timeout_in_seconds`
+- `max_concurrency_level`
+- `enable_query_acceleration`
+- `query_acceleration_max_scale_factor`
+- `warehouse_type`
+
+All previous details were aligned with the current Snowflake ones, however:
+- if the given parameter was changed on the account level, terraform will try to update it
+- TODO: describe the new state approach
+
+#### *(behavior change)* Validation changes
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted:
+- `max_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
+- `min_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
+- `auto_suspend` - adjusted: added `0` as valid value
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added

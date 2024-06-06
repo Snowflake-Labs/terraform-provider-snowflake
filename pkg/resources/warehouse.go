@@ -22,7 +22,6 @@ var warehouseSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default:  "",
 	},
 	"warehouse_size": {
 		Type:             schema.TypeString,
@@ -41,33 +40,29 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(1),
+		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"min_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(1),
+		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"scaling_policy": {
-		Type:        schema.TypeString,
-		Description: "Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.",
-		Optional:    true,
-		Computed:    true,
-		ValidateFunc: validation.StringInSlice([]string{
-			string(sdk.ScalingPolicyStandard),
-			string(sdk.ScalingPolicyEconomy),
-		}, true),
+		Type:         schema.TypeString,
+		Description:  fmt.Sprintf("Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseScalingPoliciesString)),
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseScalingPoliciesString, true),
 	},
 	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(1),
+		ValidateFunc: validation.IntAtLeast(0),
 	},
-	// @TODO add a disable_auto_suspend property that sets the value of auto_suspend to NULL
 	"auto_resume": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
@@ -95,31 +90,26 @@ var warehouseSchema = map[string]*schema.Schema{
 	"statement_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     172800,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
 	"statement_queued_timeout_in_seconds": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     0,
 		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
 	},
 	"max_concurrency_level": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Default:     8,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 	"enable_query_acceleration": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     false,
 		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
 	},
 	"query_acceleration_max_scale_factor": {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  8,
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return !d.Get("enable_query_acceleration").(bool)
 		},
@@ -127,14 +117,10 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
 	"warehouse_type": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  string(sdk.WarehouseTypeStandard),
-		ValidateFunc: validation.StringInSlice([]string{
-			string(sdk.WarehouseTypeStandard),
-			string(sdk.WarehouseTypeSnowparkOptimized),
-		}, true),
-		Description: "Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse",
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
+		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
 }
 

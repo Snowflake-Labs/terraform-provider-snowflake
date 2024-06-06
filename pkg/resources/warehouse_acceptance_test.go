@@ -485,6 +485,9 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 	})
 }
 
+// TODO: test defaults removal
+// TODO: test basic creation (check previous defaults)
+// TODO: test auto_suspend set to 0 (or NULL?)
 func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 

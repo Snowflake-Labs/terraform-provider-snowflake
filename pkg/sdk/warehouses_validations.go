@@ -22,3 +22,15 @@ var ValidWarehouseSizesString = []string{
 	string(WarehouseSizeX6Large),
 	"6X-LARGE",
 }
+
+// ValidWarehouseScalingPoliciesString is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties
+var ValidWarehouseScalingPoliciesString = []string{
+	string(ScalingPolicyStandard),
+	string(ScalingPolicyEconomy),
+}
+
+// ValidWarehouseTypesString is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties
+var ValidWarehouseTypesString = []string{
+	string(WarehouseTypeStandard),
+	string(WarehouseTypeSnowparkOptimized),
+}
