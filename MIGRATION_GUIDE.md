@@ -18,7 +18,7 @@ Its purpose was also to divide the resources by their specific purpose rather th
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Renamed fields
 
-Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs.
+Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
 #### *(behavior change)* Force new for multiple attributes
 Force new was added for the following attributes (because no usable SQL alter statements for them):

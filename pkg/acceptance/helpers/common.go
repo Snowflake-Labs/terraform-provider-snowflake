@@ -25,8 +25,8 @@ func EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(client *sdk.Client, ctx conte
 	return nil
 }
 
-// MatchAllStringsInOrder returns a regex matching every string in parts
-func MatchAllStringsInOrder(parts []string) *regexp.Regexp {
+// MatchAllStringsInOrderNonOverlapping returns a regex matching every string in parts. Matchings are non overlapping.
+func MatchAllStringsInOrderNonOverlapping(parts []string) *regexp.Regexp {
 	escapedParts := make([]string, len(parts))
 	for i := range parts {
 		escapedParts[i] = regexp.QuoteMeta(parts[i])

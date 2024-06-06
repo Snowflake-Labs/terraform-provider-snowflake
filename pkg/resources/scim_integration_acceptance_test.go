@@ -76,12 +76,11 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
-				ConfigVariables:         m(true, sdk.ScimSecurityIntegrationScimClientOkta, role2, true),
-				ResourceName:            "snowflake_scim_integration.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name"},
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
+				ConfigVariables:   m(true, sdk.ScimSecurityIntegrationScimClientOkta, role2, true),
+				ResourceName:      "snowflake_scim_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// unset
 			{
@@ -142,12 +141,11 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
-				ConfigVariables:         m(),
-				ResourceName:            "snowflake_scim_integration.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name"},
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables:   m(),
+				ResourceName:      "snowflake_scim_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -176,7 +174,7 @@ func TestAcc_ScimIntegration_invalid(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(),
-				ExpectError: helpers.MatchAllStringsInOrder([]string{
+				ExpectError: helpers.MatchAllStringsInOrderNonOverlapping([]string{
 					`expected scim_client to be one of ["OKTA" "AZURE" "GENERIC"], got invalid`,
 					`expected run_as_role to be one of ["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`,
 				}),
@@ -268,7 +266,7 @@ func scimIntegrationv092(name, roleName string) string {
 	s := `
 resource "snowflake_scim_integration" "test" {
 	name             = "%s"
-	enabled          = true
+	enabled          = false
 	scim_client      = "%s"
 	run_as_role		 = "%s"
 }

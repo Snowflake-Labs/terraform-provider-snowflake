@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -48,12 +49,7 @@ func NestedValueComputedIf(key string, showParam func(client *sdk.Client) (*sdk.
 	})
 }
 
-type Property interface {
-	GetName() string
-	GetDefault() string
-}
-
-func BoolComputedIf(key, property string, describe func(client *sdk.Client, id sdk.AccountObjectIdentifier) ([]Property, error)) schema.CustomizeDiffFunc {
+func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.AccountObjectIdentifier) (string, error)) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 		configValue := d.GetRawConfig().AsValueMap()[key]
 		if !configValue.IsNull() {
@@ -62,18 +58,8 @@ func BoolComputedIf(key, property string, describe func(client *sdk.Client, id s
 
 		client := meta.(*provider.Context).Client
 
-		props, err := describe(client, sdk.NewAccountObjectIdentifier(d.Id()))
+		def, err := getDefault(client, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier))
 		if err != nil {
-			return false
-		}
-		var def string
-		for _, v := range props {
-			if v.GetName() == property {
-				def = v.GetDefault()
-				break
-			}
-		}
-		if def == "" {
 			return false
 		}
 		stateValue := d.Get(key).(bool)

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMatchAllStringsInOrder(t *testing.T) {
+func TestMatchAllStringsInOrderNonOverlapping(t *testing.T) {
 	testCases := map[string]struct {
 		parts     []string
 		text      string
@@ -31,15 +31,27 @@ func TestMatchAllStringsInOrder(t *testing.T) {
 			text:      "xyaxyb",
 			wantMatch: true,
 		},
-		"not matching": {
+		"partial matching": {
 			parts: []string{"a", "b"},
 			text:  "axyz",
+		},
+		"not matching": {
+			parts: []string{"a", "b"},
+			text:  "xyz",
+		},
+		"wrong order": {
+			parts: []string{"a", "b"},
+			text:  "ba",
+		},
+		"overlapping match": {
+			parts: []string{"abb", "bba"},
+			text:  "abba",
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			regex := MatchAllStringsInOrder(tc.parts)
+			regex := MatchAllStringsInOrderNonOverlapping(tc.parts)
 			require.Equal(t, tc.wantMatch, regex.Match([]byte(tc.text)))
 		})
 	}

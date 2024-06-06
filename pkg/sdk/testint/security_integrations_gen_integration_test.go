@@ -1286,7 +1286,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		// check setting empty comment because of lacking UNSET COMMENT
-		// TODO(SNOW-1461780): change this in UNSET
+		// TODO(SNOW-1461780): change this to UNSET
 		setRequest = sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
 				*sdk.NewScimIntegrationSetRequest().

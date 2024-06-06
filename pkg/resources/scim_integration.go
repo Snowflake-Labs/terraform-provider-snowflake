@@ -31,22 +31,25 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Description: "Specify whether the security integration is enabled.",
 	},
 	"scim_client": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
-		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-			return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
-		},
-	},
-	"run_as_role": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
-		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), false),
-		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
+		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
+		DiffSuppressFunc: ignoreCaseAndTrimSpaceSuppressFunc,
+	},
+	"run_as_role": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		Description:  fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			normalize := func(s string) string {
+				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
+			}
+			return normalize(old) == normalize(new)
+		},
 	},
 	"network_policy": {
 		Type:             schema.TypeString,
@@ -77,25 +80,30 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextSCIMIntegration,
 		ReadContext:   ReadContextSCIMIntegration,
 		UpdateContext: UpdateContextSCIMIntegration,
 		DeleteContext: DeleteContextSCIMIntegration,
 		CustomizeDiff: customdiff.All(
-			BoolComputedIf("sync_password", "SYNC_PASSWORD", func(client *sdk.Client, id sdk.AccountObjectIdentifier) ([]Property, error) {
+			BoolComputedIf("sync_password", func(client *sdk.Client, id sdk.AccountObjectIdentifier) (string, error) {
 				props, err := client.SecurityIntegrations.Describe(context.Background(), id)
-				res := make([]Property, len(props))
-				for i := range props {
-					res[i] = props[i]
+				if err != nil {
+					return "", err
 				}
-				return res, err
+				for _, prop := range props {
+					if prop.GetName() == "SYNC_PASSWORD" {
+						return prop.GetDefault(), nil
+					}
+				}
+				return "", fmt.Errorf("")
 			}),
 		),
 		Schema: scimIntegrationSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
@@ -105,16 +113,6 @@ func SCIMIntegration() *schema.Resource {
 			},
 		},
 	}
-}
-
-func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	if rawState == nil {
-		return rawState, nil
-	}
-
-	rawState["run_as_role"] = rawState["provisioner_role"]
-	delete(rawState, "provisioner_role")
-	return rawState, nil
 }
 
 func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -159,15 +157,25 @@ func ReadContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, met
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] security integration (%s) not found", d.Id())
-		if errors.Is(sdk.ErrObjectNotFound, err) {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query security integration. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
 		}
 		return diag.FromErr(err)
 	}
 
 	if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 		return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
+	}
+
+	if err := d.Set("name", integration.Name); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", integration.Comment); err != nil {

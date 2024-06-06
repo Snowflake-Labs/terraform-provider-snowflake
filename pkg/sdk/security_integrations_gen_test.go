@@ -1,7 +1,10 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSecurityIntegrations_CreateApiAuthenticationWithClientCredentialsFlow(t *testing.T) {
@@ -1419,4 +1422,37 @@ func TestSecurityIntegrations_Show(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW SECURITY INTEGRATIONS LIKE 'some pattern'")
 	})
+}
+
+func TestSecurityIntegration_SubType(t *testing.T) {
+	testCases := map[string]struct {
+		integration SecurityIntegration
+		subType     string
+		err         error
+	}{
+		"subtype for scim integration": {
+			integration: SecurityIntegration{IntegrationType: "SCIM - AZURE"},
+			subType:     "AZURE",
+		},
+		"invalid integration type": {
+			integration: SecurityIntegration{IntegrationType: "invalid"},
+			err:         errors.New("expected \"<type> - <subtype>\", got: invalid"),
+		},
+		"empty integration type": {
+			integration: SecurityIntegration{IntegrationType: ""},
+			err:         errors.New("expected \"<type> - <subtype>\", got: "),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			subType, err := tc.integration.SubType()
+			if err != nil {
+				require.Equal(t, tc.err, err)
+			} else {
+				require.NoError(t, tc.err)
+				require.Equal(t, tc.subType, subType)
+			}
+		})
+	}
 }

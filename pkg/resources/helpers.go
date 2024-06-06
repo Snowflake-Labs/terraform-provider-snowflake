@@ -40,6 +40,10 @@ func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.EqualFold(old, new)
 }
 
+func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
+}
+
 func setIntProperty(d *schema.ResourceData, key string, property *sdk.IntProperty) error {
 	if property != nil && property.Value != nil {
 		if err := d.Set(key, *property.Value); err != nil {
