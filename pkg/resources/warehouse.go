@@ -472,5 +472,5 @@ func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return nil
+	return ReadWarehouse(d, meta)
 }
