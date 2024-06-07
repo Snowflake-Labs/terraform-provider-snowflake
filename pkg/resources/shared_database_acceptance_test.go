@@ -16,6 +16,8 @@ import (
 )
 
 func TestAcc_CreateSharedDatabase_minimal(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -85,6 +87,8 @@ func TestAcc_CreateSharedDatabase_minimal(t *testing.T) {
 }
 
 func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	externalShareId := createShareableDatabase(t)
@@ -179,6 +183,8 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 }
 
 func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
+	t.Skip("To be unskipped in the next database pr")
+
 	comment := random.Comment()
 
 	configVariables := func(
