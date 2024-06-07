@@ -521,13 +521,11 @@ func (s *CreateSaml2SecurityIntegrationRequest) WithComment(Comment string) *Cre
 
 func NewCreateScimSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-	Enabled bool,
 	ScimClient ScimSecurityIntegrationScimClientOption,
 	RunAsRole ScimSecurityIntegrationRunAsRoleOption,
 ) *CreateScimSecurityIntegrationRequest {
 	s := CreateScimSecurityIntegrationRequest{}
 	s.name = name
-	s.Enabled = Enabled
 	s.ScimClient = ScimClient
 	s.RunAsRole = RunAsRole
 	return &s
@@ -540,6 +538,11 @@ func (s *CreateScimSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *Cr
 
 func (s *CreateScimSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateScimSecurityIntegrationRequest {
 	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateScimSecurityIntegrationRequest) WithEnabled(Enabled bool) *CreateScimSecurityIntegrationRequest {
+	s.Enabled = &Enabled
 	return s
 }
 

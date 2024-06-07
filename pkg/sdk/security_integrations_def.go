@@ -567,7 +567,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 		createSecurityIntegrationOperation("CreateScim", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SCIM")).
-				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 				Assignment(
 					"SCIM_CLIENT",
 					g.KindOfT[ScimSecurityIntegrationScimClientOption](),

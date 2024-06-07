@@ -182,8 +182,8 @@ func (r *CreateSaml2SecurityIntegrationRequest) GetName() AccountObjectIdentifie
 type CreateScimSecurityIntegrationRequest struct {
 	OrReplace     *bool
 	IfNotExists   *bool
-	name          AccountObjectIdentifier                 // required
-	Enabled       bool                                    // required
+	name          AccountObjectIdentifier // required
+	Enabled       *bool
 	ScimClient    ScimSecurityIntegrationScimClientOption // required
 	RunAsRole     ScimSecurityIntegrationRunAsRoleOption  // required
 	NetworkPolicy *AccountObjectIdentifier

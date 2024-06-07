@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -145,12 +144,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	createSCIMIntegration := func(t *testing.T, with func(*sdk.CreateScimSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
-		role, roleCleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
-		t.Cleanup(roleCleanup)
-		testClientHelper().Role.GrantRoleToCurrentRole(t, role.ID())
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		scimReq := sdk.NewCreateScimSecurityIntegrationRequest(id, false, sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner)
+		scimReq := sdk.NewCreateScimSecurityIntegrationRequest(id, sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner)
 		if with != nil {
 			with(scimReq)
 		}
@@ -590,11 +586,11 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "false", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "a")
+		assertSCIMDescribe(details, "true", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "a")
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "a")
+		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", true, "a")
 	})
 
 	t.Run("AlterApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
@@ -1264,7 +1260,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			WithSet(
 				*sdk.NewScimIntegrationSetRequest().
 					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
-					WithEnabled(true).
+					WithEnabled(false).
 					WithSyncPassword(false).
 					WithComment(sdk.StringAllowEmpty{Value: "altered"}),
 			)
@@ -1274,11 +1270,12 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
+		assertSCIMDescribe(details, "false", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
 
 		unsetRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithUnset(
 				*sdk.NewScimIntegrationUnsetRequest().
+					WithEnabled(true).
 					WithNetworkPolicy(true).
 					WithSyncPassword(true),
 			)
@@ -1298,7 +1295,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "")
+		assertSCIMDescribe(details, "false", "", "GENERIC_SCIM_PROVISIONER", "true", "")
 	})
 
 	t.Run("AlterSCIMIntegration - set and unset tags", func(t *testing.T) {

@@ -25,9 +25,6 @@ Force new was added for the following attributes (because no usable SQL alter st
 - `scim_client`
 - `run_as_role`
 
-#### *(behavior change)* New fields are required
-Field `enabled` is now required.
-
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added

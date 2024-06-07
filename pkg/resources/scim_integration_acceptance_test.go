@@ -19,23 +19,16 @@ import (
 func TestAcc_ScimIntegration_basic(t *testing.T) {
 	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
-
-	role, roleCleanup := acc.TestClient().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
-	t.Cleanup(roleCleanup)
-	acc.TestClient().Role.GrantRoleToCurrentRole(t, role.ID())
-	role2, role2Cleanup := acc.TestClient().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.OktaProvisioner).WithOrReplace(true))
-	t.Cleanup(role2Cleanup)
-	acc.TestClient().Role.GrantRoleToCurrentRole(t, role2.ID())
-
+	role, role2 := snowflakeroles.GenericScimProvisioner, snowflakeroles.OktaProvisioner
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	m := func(enabled bool, scimClient sdk.ScimSecurityIntegrationScimClientOption, runAsRole *sdk.Role, complete bool) map[string]config.Variable {
+	m := func(enabled bool, scimClient sdk.ScimSecurityIntegrationScimClientOption, runAsRole sdk.AccountObjectIdentifier, complete bool) map[string]config.Variable {
 		c := map[string]config.Variable{
 			"name":        config.StringVariable(id.Name()),
-			"enabled":     config.BoolVariable(enabled),
 			"scim_client": config.StringVariable(string(scimClient)),
-			"run_as_role": config.StringVariable(runAsRole.ID().Name()),
+			"run_as_role": config.StringVariable(runAsRole.Name()),
 		}
 		if complete {
+			c["enabled"] = config.BoolVariable(enabled)
 			c["sync_password"] = config.BoolVariable(false)
 			c["network_policy_name"] = config.StringVariable(networkPolicy.Name)
 			c["comment"] = config.StringVariable("foo")
@@ -54,9 +47,9 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				ConfigVariables: m(false, sdk.ScimSecurityIntegrationScimClientGeneric, role, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
+					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "enabled"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "sync_password"),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "created_on"),
 				),
@@ -68,7 +61,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
@@ -90,7 +83,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", ""),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "true"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", ""),
@@ -104,10 +97,8 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 func TestAcc_ScimIntegration_complete(t *testing.T) {
 	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
-	role, roleCleanup := acc.TestClient().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
-	t.Cleanup(roleCleanup)
-	acc.TestClient().Role.GrantRoleToCurrentRole(t, role.ID())
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	role := snowflakeroles.GenericScimProvisioner
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":                config.StringVariable(id.Name()),
@@ -115,7 +106,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 			"scim_client":         config.StringVariable(strings.ToLower(string(sdk.ScimSecurityIntegrationScimClientGeneric))),
 			"sync_password":       config.BoolVariable(false),
 			"network_policy_name": config.StringVariable(networkPolicy.Name),
-			"run_as_role":         config.StringVariable(role.ID().Name()),
+			"run_as_role":         config.StringVariable(role.Name()),
 			"comment":             config.StringVariable("foo"),
 		}
 	}
@@ -133,7 +124,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
@@ -211,10 +202,8 @@ func TestAcc_ScimIntegration_InvalidIncomplete(t *testing.T) {
 }
 
 func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
-	role, roleCleanup := acc.TestClient().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(snowflakeroles.GenericScimProvisioner).WithOrReplace(true))
-	t.Cleanup(roleCleanup)
-	acc.TestClient().Role.GrantRoleToCurrentRole(t, role.ID())
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	role := snowflakeroles.GenericScimProvisioner
 	resourceName := "snowflake_scim_integration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -230,21 +219,21 @@ func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: scimIntegrationv091(id.Name(), role.Name),
+				Config: scimIntegrationv091(id.Name(), role.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "provisioner_role", role.ID().Name()),
+					resource.TestCheckResourceAttr(resourceName, "provisioner_role", role.Name()),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   scimIntegrationv092(id.Name(), role.Name),
+				Config:                   scimIntegrationv092(id.Name(), role.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "run_as_role", role.ID().Name()),
+					resource.TestCheckResourceAttr(resourceName, "run_as_role", role.Name()),
 				),
 			},
 		},

@@ -238,7 +238,7 @@ type CreateScimSecurityIntegrationOptions struct {
 	IfNotExists         *bool                                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                AccountObjectIdentifier                 `ddl:"identifier"`
 	integrationType     string                                  `ddl:"static" sql:"TYPE = SCIM"`
-	Enabled             bool                                    `ddl:"parameter" sql:"ENABLED"`
+	Enabled             *bool                                   `ddl:"parameter" sql:"ENABLED"`
 	ScimClient          ScimSecurityIntegrationScimClientOption `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
 	RunAsRole           ScimSecurityIntegrationRunAsRoleOption  `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
 	NetworkPolicy       *AccountObjectIdentifier                `ddl:"identifier,equals" sql:"NETWORK_POLICY"`

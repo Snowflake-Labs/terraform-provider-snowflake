@@ -27,8 +27,14 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	},
 	"enabled": {
 		Type:        schema.TypeBool,
-		Required:    true,
+		Optional:    true,
 		Description: "Specify whether the security integration is enabled.",
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			if d.GetRawConfig().AsValueMap()["enabled"].IsNull() {
+				return true
+			}
+			return oldValue == newValue
+		},
 	},
 	"scim_client": {
 		Type:             schema.TypeString,
@@ -39,10 +45,11 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: ignoreCaseAndTrimSpaceSuppressFunc,
 	},
 	"run_as_role": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		Description: fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM."+
+			" Provider assumes that the specified role is already provided. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
 		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -119,7 +126,6 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
-	enabled := d.Get("enabled").(bool)
 	scimClientRaw := d.Get("scim_client").(string)
 	runAsRoleRaw := d.Get("run_as_role").(string)
 	scimClient, err := sdk.ToScimSecurityIntegrationScimClientOption(scimClientRaw)
@@ -130,9 +136,12 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	req := sdk.NewCreateScimSecurityIntegrationRequest(id, enabled, scimClient, runAsRole)
+	req := sdk.NewCreateScimSecurityIntegrationRequest(id, scimClient, runAsRole)
 
 	// Set optionals
+	if !d.GetRawConfig().AsValueMap()["enabled"].IsNull() {
+		req.WithEnabled(d.Get("enabled").(bool))
+	}
 	if v, ok := d.GetOk("network_policy"); ok {
 		req.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v.(string)))
 	}

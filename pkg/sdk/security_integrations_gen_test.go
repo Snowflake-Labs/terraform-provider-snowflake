@@ -398,7 +398,6 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	defaultOpts := func() *CreateScimSecurityIntegrationOptions {
 		return &CreateScimSecurityIntegrationOptions{
 			name:       id,
-			Enabled:    true,
 			ScimClient: "GENERIC",
 			RunAsRole:  "GENERIC_SCIM_PROVISIONER",
 		}
@@ -419,12 +418,13 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Pointer(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SCIM SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		networkPolicyID := randomAccountObjectIdentifier()
+		opts.Enabled = Pointer(true)
 		opts.IfNotExists = Pointer(true)
 		opts.NetworkPolicy = Pointer(networkPolicyID)
 		opts.SyncPassword = Pointer(true)

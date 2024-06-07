@@ -1,9 +1,6 @@
 variable "name" {
   type = string
 }
-variable "enabled" {
-  type = bool
-}
 variable "scim_client" {
   type = string
 }

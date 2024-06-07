@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,42 @@ func EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(client *sdk.Client, ctx conte
 		return fmt.Errorf("parameter QUOTED_IDENTIFIERS_IGNORE_CASE has value %s, expected: false", param.Value)
 	}
 	return nil
+}
+
+func EnsureScimProvisionerRolesExist(client *sdk.Client, ctx context.Context) error {
+	log.Printf("[DEBUG] Making sure Scim Provisioner roles exist")
+	roleIDs := []sdk.AccountObjectIdentifier{snowflakeroles.GenericScimProvisioner, snowflakeroles.OktaProvisioner}
+	currentRoleID, err := client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	for _, roleID := range roleIDs {
+		_, err := client.Roles.ShowByID(ctx, roleID)
+		if err != nil {
+			return err
+		}
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			Of: &sdk.ShowGrantsOf{
+				Role: roleID,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		if !hasGranteeName(grants, currentRoleID) {
+			return fmt.Errorf("role %s not granted to %s", currentRoleID.Name(), roleID.Name())
+		}
+	}
+	return nil
+}
+
+func hasGranteeName(grants []sdk.Grant, role sdk.AccountObjectIdentifier) bool {
+	for _, grant := range grants {
+		if grant.GranteeName == role {
+			return true
+		}
+	}
+	return false
 }
 
 // MatchAllStringsInOrderNonOverlapping returns a regex matching every string in parts. Matchings are non overlapping.

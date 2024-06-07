@@ -36,14 +36,14 @@ resource "snowflake_scim_integration" "test" {
 
 ### Required
 
-- `enabled` (Boolean) Specify whether the security integration is enabled.
 - `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account.
-- `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Valid options are: [OKTA_PROVISIONER AAD_PROVISIONER GENERIC_SCIM_PROVISIONER].
+- `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Provider assumes that the specified role is already provided. Valid options are: [OKTA_PROVISIONER AAD_PROVISIONER GENERIC_SCIM_PROVISIONER].
 - `scim_client` (String) Specifies the client type for the scim integration. Valid options are: [OKTA AZURE GENERIC].
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the integration.
+- `enabled` (Boolean) Specify whether the security integration is enabled.
 - `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic.
 - `sync_password` (Boolean) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake.
 
