@@ -36,7 +36,7 @@ var databasesSchema = map[string]*schema.Schema{
 	"limit": {
 		Type:        schema.TypeList,
 		Optional:    true,
-		Description: `Limits the number of rows returned, while also enabling "pagination" or the results.`,
+		Description: `Limits the number of rows returned. The limit may start from the first element matched by from which is optional.`,
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

@@ -2,191 +2,74 @@ package resources_test
 
 import (
 	"context"
-	"strconv"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/assert"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNestedValueComputedIf(t *testing.T) {
-	customDiff := resources.NestedValueComputedIf(
-		"nested_value",
-		func(client *sdk.Client) (*sdk.Parameter, error) {
-			return &sdk.Parameter{
-				Key:   "Parameter",
-				Value: "snow-value",
-			}, nil
+	customDiff := resources.ValueComputedIf[string](
+		"value",
+		[]*sdk.Parameter{
+			{
+				Key:   string(sdk.AccountParameterLogLevel),
+				Value: string(sdk.LogLevelInfo),
+			},
 		},
+		sdk.AccountParameterLogLevel,
 		func(v any) string { return v.(string) },
+		func(v string) string { return v },
 	)
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeString, customDiff)
+	providerConfig := createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
 
 	t.Run("value set in the configuration and state", func(t *testing.T) {
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"nested_value": cty.ListVal([]cty.Value{
-				cty.MapVal(map[string]cty.Value{
-					"value": cty.NumberIntVal(123),
-				}),
-			}),
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": 123,
-				},
-			},
+			"value": string(sdk.LogLevelInfo),
 		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
 	t.Run("value set only in the configuration", func(t *testing.T) {
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"nested_value": cty.ListVal([]cty.Value{
-				cty.MapVal(map[string]cty.Value{
-					"value": cty.NumberIntVal(123),
-				}),
-			}),
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.True(t, diff.Attributes["value"].NewComputed)
 	})
 
 	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": "value-to-change",
-				},
-			},
+			"value": string(sdk.LogLevelDebug),
 		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.Equal(t, string(sdk.LogLevelInfo), diff.Attributes["value"].New)
 	})
 
 	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": "snow-value",
-				},
-			},
+			"value": string(sdk.LogLevelInfo),
 		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 }
 
-func TestNestedIntValueAccountObjectComputedIf(t *testing.T) {
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeInt, resources.NestedIntValueAccountObjectComputedIf("nested_value", sdk.AccountParameterDataRetentionTimeInDays))
-
-	t.Run("different value than on the Snowflake side", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": 999, // value outside of valid range
-				},
-			},
-		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-
-	t.Run("same value as in Snowflake", func(t *testing.T) {
-		dataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-		require.NoError(t, err)
-
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": dataRetentionTimeInDays.Value,
-				},
-			},
-		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-}
-
-func TestNestedStringValueAccountObjectComputedIf(t *testing.T) {
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeString, resources.NestedStringValueAccountObjectComputedIf("nested_value", sdk.AccountParameterTraceLevel))
-
-	t.Run("different value than on the Snowflake side", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": "not_a_valid_value",
-				},
-			},
-		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-
-	t.Run("same value as in Snowflake", func(t *testing.T) {
-		traceLevel, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterTraceLevel)
-		require.NoError(t, err)
-
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": traceLevel.Value,
-				},
-			},
-		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-}
-
-func TestNestedBoolValueAccountObjectComputedIf(t *testing.T) {
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeBool, resources.NestedBoolValueAccountObjectComputedIf("nested_value", sdk.AccountParameterReplaceInvalidCharacters))
-
-	replaceInvalidCharacters, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterReplaceInvalidCharacters)
-	require.NoError(t, err)
-
-	replaceInvalidCharactersBoolValue, err := strconv.ParseBool(replaceInvalidCharacters.Value)
-	require.NoError(t, err)
-
-	t.Run("different value than on the Snowflake side", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": !replaceInvalidCharactersBoolValue,
-				},
-			},
-		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-
-	t.Run("same value as in Snowflake", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": replaceInvalidCharactersBoolValue,
-				},
-			},
-		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-}
-
-func createProviderWithNestedValueAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
+func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
 	t.Helper()
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"test": {
 				Schema: map[string]*schema.Schema{
-					"nested_value": {
-						Type:     schema.TypeList,
-						MaxItems: 1,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"value": {
-									Type:     valueType,
-									Required: true,
-								},
-							},
-						},
+					"value": {
+						Type:     valueType,
 						Computed: true,
 						Optional: true,
 					},

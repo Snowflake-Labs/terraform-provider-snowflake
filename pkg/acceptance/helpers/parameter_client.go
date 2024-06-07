@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -22,6 +24,35 @@ func (c *ParameterClient) client() sdk.Parameters {
 	return c.context.client.Parameters
 }
 
+func (c *ParameterClient) ShowAccountParameters(t *testing.T) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Account: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
+func (c *ParameterClient) ShowDatabaseParameters(t *testing.T, id sdk.AccountObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Database: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
+func (c *ParameterClient) GetAccountParameter(t *testing.T, parameter sdk.AccountParameter) *sdk.Parameter {
+	t.Helper()
+	param, err := c.client().ShowAccountParameter(context.Background(), parameter)
+	require.NoError(t, err)
+	return param
+}
+
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -37,4 +68,13 @@ func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parame
 		err = c.client().SetAccountParameter(ctx, parameter, oldValue)
 		require.NoError(t, err)
 	}
+}
+
+func FindParameter(t *testing.T, parameters []*sdk.Parameter, parameter sdk.AccountParameter) *sdk.Parameter {
+	t.Helper()
+	idx := slices.IndexFunc(parameters, func(p *sdk.Parameter) bool {
+		return p.Key == string(parameter)
+	})
+	require.NotEqual(t, -1, idx, fmt.Sprintf("parameter %s not found", string(parameter)))
+	return parameters[idx]
 }

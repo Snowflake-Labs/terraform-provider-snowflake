@@ -1,13 +1,57 @@
-data "snowflake_databases" "test" {
-  with_describe   = false
-  with_parameters = false
-  like            = "database-name"
-  starts_with     = "database-name"
-  limit {
-    rows = 20
-    from = "database-name"
-  }
+# Simple usage
+data "snowflake_databases" "simple" {
+}
 
+output "simple_output" {
+  value = data.snowflake_databases.simple.databases
+}
+
+# Filtering (like)
+data "snowflake_databases" "like" {
+  like = "database-name"
+}
+
+output "like_output" {
+  value = data.snowflake_databases.like.databases
+}
+
+# Filtering (starts_with)
+data "snowflake_databases" "starts_with" {
+  starts_with = "database-"
+}
+
+output "starts_with_output" {
+  value = data.snowflake_databases.starts_with.databases
+}
+
+# Filtering (limit)
+data "snowflake_databases" "limit" {
+  limit {
+    rows = 10
+    from = "database-"
+  }
+}
+
+output "limit_output" {
+  value = data.snowflake_databases.limit.databases
+}
+
+# Without additional data (to limit the number of calls make for every found database)
+data "snowflake_databases" "only_show" {
+  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches it's output to databases.*.description field
+  with_describe = false
+
+  # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches it's output to databases.*.parameters field
+  with_parameters = false
+}
+
+output "only_show_output" {
+  value = data.snowflake_databases.only_show.databases
+}
+
+# Ensure the number of databases is equal to at least one element (with the use of postcondition)
+data "snowflake_databases" "assert_with_postcondition" {
+  starts_with = "database-name"
   lifecycle {
     postcondition {
       condition     = length(self.databases) > 0
@@ -16,8 +60,9 @@ data "snowflake_databases" "test" {
   }
 }
 
+# Ensure the number of databases is equal to at exatly one element (with the use of check block)
 check "database_check" {
-  data "snowflake_databases" "test" {
+  data "snowflake_databases" "assert_with_check_block" {
     like = "database-name"
   }
 

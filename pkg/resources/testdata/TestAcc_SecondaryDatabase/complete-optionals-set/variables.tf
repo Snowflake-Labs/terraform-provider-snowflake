@@ -6,6 +6,10 @@ variable "as_replica_of" {
   type = string
 }
 
+variable "comment" {
+  type = string
+}
+
 variable "data_retention_time_in_days" {
   type = string
 }
@@ -39,10 +43,6 @@ variable "log_level" {
 }
 
 variable "trace_level" {
-  type = string
-}
-
-variable "comment" {
   type = string
 }
 

@@ -176,8 +176,6 @@ type CreateDatabaseOptions struct {
 	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
 	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
-	// TODO: Preview feature (document in pr desc)
-	//MetricLevel                             *MetricLevel                `ddl:"parameter" sql:"METRIC_LEVEL"`
 
 	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Tag     []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
@@ -323,8 +321,6 @@ type CreateSecondaryDatabaseOptions struct {
 	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
 	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
-	// TODO: Preview feature (document in pr desc)
-	//MetricLevel                             *MetricLevel                `ddl:"parameter" sql:"METRIC_LEVEL"`
 
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }

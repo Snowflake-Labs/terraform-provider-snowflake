@@ -23,7 +23,7 @@ func TestIsGreaterOrEqualTo(t *testing.T) {
 			Name:             "validation: not int value",
 			GreaterOrEqualTo: 20,
 			Actual:           "not_int",
-			Error:            "strconv.Atoi: parsing \"not_int\": invalid syntax",
+			Error:            "unable to parse value not_int as integer, err = strconv.Atoi: parsing \"not_int\": invalid syntax",
 		},
 		{
 			Name:             "validation: equal value",
@@ -43,7 +43,7 @@ func TestIsGreaterOrEqualTo(t *testing.T) {
 			if testCase.Error != "" {
 				assert.ErrorContains(t, err, testCase.Error)
 			} else {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}

@@ -29,25 +29,26 @@ resource "snowflake_standard_database" "primary" {
 resource "snowflake_secondary_database" "test" {
   provider      = secondary_account
   name          = snowflake_standard_database.primary.name # It's recommended to give a secondary database the same name as its primary database
-  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_standard_database.primary.name}"
   is_transient  = false
+  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_standard_database.primary.name}"
+  comment       = "A secondary database"
 
-  data_retention_time_in_days {
-    value = 10
-  }
-
-  max_data_extension_time_in_days {
-    value = 20
-  }
-
-  external_volume              = "external_volume_name"
-  catalog                      = "catalog_name"
-  replace_invalid_characters   = false
-  default_ddl_collation        = "en_US"
-  storage_serialization_policy = "OPTIMIZED"
-  log_level                    = "OFF"
-  trace_level                  = "OFF"
-  comment                      = "A secondary database"
+  data_retention_time_in_days                   = 10
+  max_data_extension_time_in_days               = 20
+  external_volume                               = "<external_volume_name>"
+  catalog                                       = "<external_volume_name>"
+  replace_invalid_characters                    = false
+  default_ddl_collation                         = "en_US"
+  storage_serialization_policy                  = "COMPATIBLE"
+  log_level                                     = "INFO"
+  trace_level                                   = "ALWAYS"
+  suspend_task_after_num_failures               = 10
+  task_auto_retry_attempts                      = 10
+  user_task_managed_initial_warehouse_size      = "LARGE"
+  user_task_timeout_ms                          = 3600000
+  user_task_minimum_trigger_interval_in_seconds = 120
+  quoted_identifiers_ignore_case                = false
+  enable_console_output                         = false
 }
 ```
 
@@ -63,34 +64,26 @@ resource "snowflake_secondary_database" "test" {
 
 - `catalog` (String) The database parameter that specifies the default catalog to use for Iceberg tables.
 - `comment` (String) Specifies a comment for the database.
-- `data_retention_time_in_days` (Block List, Max: 1) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel). (see [below for nested schema](#nestedblock--data_retention_time_in_days))
+- `data_retention_time_in_days` (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).
 - `default_ddl_collation` (String) Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).
+- `enable_console_output` (Boolean) If true, enables stdout/stderr fast path logging for anonymous stored procedures.
 - `external_volume` (String) The database parameter that specifies the default external volume to use for Iceberg tables.
 - `is_transient` (Boolean) Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `log_level` (String) Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: [TRACE DEBUG INFO WARN ERROR FATAL OFF]. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).
-- `max_data_extension_time_in_days` (Block List, Max: 1) Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days). (see [below for nested schema](#nestedblock--max_data_extension_time_in_days))
+- `max_data_extension_time_in_days` (Number) Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).
+- `quoted_identifiers_ignore_case` (Boolean) If true, the case of quoted identifiers is ignored.
 - `replace_invalid_characters` (Boolean) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.
-- `storage_serialization_policy` (String) Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
+- `storage_serialization_policy` (String) The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
+- `suspend_task_after_num_failures` (Number) How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.
+- `task_auto_retry_attempts` (Number) Maximum automatic retries allowed for a user task.
 - `trace_level` (String) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).
+- `user_task_managed_initial_warehouse_size` (String) The initial size of warehouse to use for managed warehouses in the absence of history.
+- `user_task_minimum_trigger_interval_in_seconds` (Number) Minimum amount of time between Triggered Task executions in seconds.
+- `user_task_timeout_ms` (Number) User task execution timeout in milliseconds.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--data_retention_time_in_days"></a>
-### Nested Schema for `data_retention_time_in_days`
-
-Required:
-
-- `value` (Number)
-
-
-<a id="nestedblock--max_data_extension_time_in_days"></a>
-### Nested Schema for `max_data_extension_time_in_days`
-
-Required:
-
-- `value` (Number)
 
 ## Import
 

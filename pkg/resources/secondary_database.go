@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -122,7 +123,10 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 
 	databaseSetRequest := new(sdk.DatabaseSet)
 	databaseUnsetRequest := new(sdk.DatabaseUnset)
-	updateParamDiags := HandleDatabaseParameterChanges(d, databaseSetRequest, databaseUnsetRequest)
+
+	if updateParamDiags := HandleDatabaseParameterChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+		return updateParamDiags
+	}
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
@@ -151,7 +155,7 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	return append(updateParamDiags, ReadSecondaryDatabase(ctx, d, meta)...)
+	return ReadSecondaryDatabase(ctx, d, meta)
 }
 
 func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -8,6 +8,7 @@ import (
 // deprecationMessageRegex is the message that should be used in resource/datasource DeprecationMessage to get a nice link in the documentation to the replacing resource.
 var deprecationMessageRegex = regexp.MustCompile(`Please use (snowflake_(\w+)) instead.`)
 
+// TODO(SNOW-1465227): Should detect more than one replacements
 // GetDeprecatedResourceReplacement allows us to get resource replacement based on the regex deprecationMessageRegex
 func GetDeprecatedResourceReplacement(deprecationMessage string) (replacement string, replacementPage string, ok bool) {
 	resourceReplacement := deprecationMessageRegex.FindStringSubmatch(deprecationMessage)

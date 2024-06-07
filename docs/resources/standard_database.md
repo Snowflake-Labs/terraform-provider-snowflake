@@ -17,33 +17,22 @@ resource "snowflake_standard_database" "primary" {
   is_transient = false
   comment      = "my standard database"
 
-  data_retention_time_in_days {
-    value = 10
-  }
-  max_data_extension_time_in_days {
-    value = 20
-  }
-  external_volume {
-    value = "<external_volume_name>"
-  }
-  catalog {
-    value = "<external_volume_name>"
-  }
-  replace_invalid_characters {
-    value = false
-  }
-  default_ddl_collation {
-    value = "en_US"
-  }
-  storage_serialization_policy {
-    value = "COMPATIBLE"
-  }
-  log_level {
-    value = "INFO"
-  }
-  trace_level {
-    value = "ALWAYS"
-  }
+  data_retention_time_in_days                   = 10
+  max_data_extension_time_in_days               = 20
+  external_volume                               = "<external_volume_name>"
+  catalog                                       = "<external_volume_name>"
+  replace_invalid_characters                    = false
+  default_ddl_collation                         = "en_US"
+  storage_serialization_policy                  = "COMPATIBLE"
+  log_level                                     = "INFO"
+  trace_level                                   = "ALWAYS"
+  suspend_task_after_num_failures               = 10
+  task_auto_retry_attempts                      = 10
+  user_task_managed_initial_warehouse_size      = "LARGE"
+  user_task_timeout_ms                          = 3600000
+  user_task_minimum_trigger_interval_in_seconds = 120
+  quoted_identifiers_ignore_case                = false
+  enable_console_output                         = false
 
   replication {
     enable_for_account {
@@ -64,78 +53,29 @@ resource "snowflake_standard_database" "primary" {
 
 ### Optional
 
-- `catalog` (Block List, Max: 1) The database parameter that specifies the default catalog to use for Iceberg tables. (see [below for nested schema](#nestedblock--catalog))
+- `catalog` (String) The database parameter that specifies the default catalog to use for Iceberg tables.
 - `comment` (String) Specifies a comment for the database.
-- `data_retention_time_in_days` (Block List, Max: 1) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel). (see [below for nested schema](#nestedblock--data_retention_time_in_days))
-- `default_ddl_collation` (Block List, Max: 1) Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification). (see [below for nested schema](#nestedblock--default_ddl_collation))
-- `external_volume` (Block List, Max: 1) The database parameter that specifies the default external volume to use for Iceberg tables. (see [below for nested schema](#nestedblock--external_volume))
+- `data_retention_time_in_days` (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).
+- `default_ddl_collation` (String) Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).
+- `enable_console_output` (Boolean) If true, enables stdout/stderr fast path logging for anonymous stored procedures.
+- `external_volume` (String) The database parameter that specifies the default external volume to use for Iceberg tables.
 - `is_transient` (Boolean) Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
-- `log_level` (Block List, Max: 1) Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: [TRACE DEBUG INFO WARN ERROR FATAL OFF]. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level). (see [below for nested schema](#nestedblock--log_level))
-- `max_data_extension_time_in_days` (Block List, Max: 1) Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days). (see [below for nested schema](#nestedblock--max_data_extension_time_in_days))
-- `replace_invalid_characters` (Block List, Max: 1) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog. (see [below for nested schema](#nestedblock--replace_invalid_characters))
+- `log_level` (String) Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: [TRACE DEBUG INFO WARN ERROR FATAL OFF]. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).
+- `max_data_extension_time_in_days` (Number) Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).
+- `quoted_identifiers_ignore_case` (Boolean) If true, the case of quoted identifiers is ignored.
+- `replace_invalid_characters` (Boolean) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.
 - `replication` (Block List, Max: 1) Configures replication for a given database. When specified, this database will be promoted to serve as a primary database for replication. A primary database can be replicated in one or more accounts, allowing users in those accounts to query objects in each secondary (i.e. replica) database. (see [below for nested schema](#nestedblock--replication))
-- `storage_serialization_policy` (Block List, Max: 1) Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake. (see [below for nested schema](#nestedblock--storage_serialization_policy))
-- `trace_level` (Block List, Max: 1) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level). (see [below for nested schema](#nestedblock--trace_level))
+- `storage_serialization_policy` (String) The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
+- `suspend_task_after_num_failures` (Number) How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.
+- `task_auto_retry_attempts` (Number) Maximum automatic retries allowed for a user task.
+- `trace_level` (String) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).
+- `user_task_managed_initial_warehouse_size` (String) The initial size of warehouse to use for managed warehouses in the absence of history.
+- `user_task_minimum_trigger_interval_in_seconds` (Number) Minimum amount of time between Triggered Task executions in seconds.
+- `user_task_timeout_ms` (Number) User task execution timeout in milliseconds.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--catalog"></a>
-### Nested Schema for `catalog`
-
-Required:
-
-- `value` (String)
-
-
-<a id="nestedblock--data_retention_time_in_days"></a>
-### Nested Schema for `data_retention_time_in_days`
-
-Required:
-
-- `value` (Number)
-
-
-<a id="nestedblock--default_ddl_collation"></a>
-### Nested Schema for `default_ddl_collation`
-
-Required:
-
-- `value` (String)
-
-
-<a id="nestedblock--external_volume"></a>
-### Nested Schema for `external_volume`
-
-Required:
-
-- `value` (String)
-
-
-<a id="nestedblock--log_level"></a>
-### Nested Schema for `log_level`
-
-Required:
-
-- `value` (String)
-
-
-<a id="nestedblock--max_data_extension_time_in_days"></a>
-### Nested Schema for `max_data_extension_time_in_days`
-
-Required:
-
-- `value` (Number)
-
-
-<a id="nestedblock--replace_invalid_characters"></a>
-### Nested Schema for `replace_invalid_characters`
-
-Required:
-
-- `value` (Boolean)
-
 
 <a id="nestedblock--replication"></a>
 ### Nested Schema for `replication`
@@ -158,23 +98,6 @@ Required:
 Optional:
 
 - `with_failover` (Boolean) Specifies if failover should be enabled for the specified account identifier
-
-
-
-<a id="nestedblock--storage_serialization_policy"></a>
-### Nested Schema for `storage_serialization_policy`
-
-Required:
-
-- `value` (String)
-
-
-<a id="nestedblock--trace_level"></a>
-### Nested Schema for `trace_level`
-
-Required:
-
-- `value` (String)
 
 ## Import
 

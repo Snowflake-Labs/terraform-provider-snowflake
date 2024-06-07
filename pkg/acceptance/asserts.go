@@ -11,11 +11,11 @@ func IsGreaterOrEqualTo(greaterOrEqualValue int) resource.CheckResourceAttrWithF
 	return func(value string) error {
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to parse value %s as integer, err = %w", value, err)
 		}
 
 		if intValue < greaterOrEqualValue {
-			return fmt.Errorf("expected value greater or equal to %d, got %d", greaterOrEqualValue, intValue)
+			return fmt.Errorf("expected value %d greater or equal to  %d", intValue, greaterOrEqualValue)
 		}
 
 		return nil

@@ -33,19 +33,29 @@ resource "snowflake_grant_privileges_to_share" "test" {
 
 # 2. Creating shared database
 resource "snowflake_shared_database" "test" {
-  provider                     = secondary_account
-  depends_on                   = [snowflake_grant_privileges_to_share.test]
-  name                         = snowflake_standard_database.test.name # shared database should have the same as the "imported" one
-  from_share                   = "<primary_account_organization_name>.<primary_account_name>.${snowflake_share.test.name}"
-  is_transient                 = false
-  external_volume              = "external_volume_name"
-  catalog                      = "catalog_name"
-  replace_invalid_characters   = false
-  default_ddl_collation        = "en_US"
-  storage_serialization_policy = "OPTIMIZED"
-  log_level                    = "OFF"
-  trace_level                  = "OFF"
-  comment                      = "A shared database"
+  provider     = secondary_account
+  depends_on   = [snowflake_grant_privileges_to_share.test]
+  name         = snowflake_standard_database.test.name # shared database should have the same as the "imported" one
+  is_transient = false
+  from_share   = "<primary_account_organization_name>.<primary_account_name>.${snowflake_share.test.name}"
+  comment      = "A shared database"
+
+  data_retention_time_in_days                   = 10
+  max_data_extension_time_in_days               = 20
+  external_volume                               = "<external_volume_name>"
+  catalog                                       = "<external_volume_name>"
+  replace_invalid_characters                    = false
+  default_ddl_collation                         = "en_US"
+  storage_serialization_policy                  = "COMPATIBLE"
+  log_level                                     = "INFO"
+  trace_level                                   = "ALWAYS"
+  suspend_task_after_num_failures               = 10
+  task_auto_retry_attempts                      = 10
+  user_task_managed_initial_warehouse_size      = "LARGE"
+  user_task_timeout_ms                          = 3600000
+  user_task_minimum_trigger_interval_in_seconds = 120
+  quoted_identifiers_ignore_case                = false
+  enable_console_output                         = false
 }
 ```
 
@@ -62,11 +72,18 @@ resource "snowflake_shared_database" "test" {
 - `catalog` (String) The database parameter that specifies the default catalog to use for Iceberg tables.
 - `comment` (String) Specifies a comment for the database.
 - `default_ddl_collation` (String) Specifies a default collation specification for all schemas and tables added to the database. It can be overridden on schema or table level. For more information, see [collation specification](https://docs.snowflake.com/en/sql-reference/collation#label-collation-specification).
+- `enable_console_output` (Boolean) If true, enables stdout/stderr fast path logging for anonymous stored procedures.
 - `external_volume` (String) The database parameter that specifies the default external volume to use for Iceberg tables.
 - `log_level` (String) Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: [TRACE DEBUG INFO WARN ERROR FATAL OFF]. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).
+- `quoted_identifiers_ignore_case` (Boolean) If true, the case of quoted identifiers is ignored.
 - `replace_invalid_characters` (Boolean) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.
-- `storage_serialization_policy` (String) Specifies the storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
+- `storage_serialization_policy` (String) The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
+- `suspend_task_after_num_failures` (Number) How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.
+- `task_auto_retry_attempts` (Number) Maximum automatic retries allowed for a user task.
 - `trace_level` (String) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).
+- `user_task_managed_initial_warehouse_size` (String) The initial size of warehouse to use for managed warehouses in the absence of history.
+- `user_task_minimum_trigger_interval_in_seconds` (Number) Minimum amount of time between Triggered Task executions in seconds.
+- `user_task_timeout_ms` (Number) User task execution timeout in milliseconds.
 
 ### Read-Only
 

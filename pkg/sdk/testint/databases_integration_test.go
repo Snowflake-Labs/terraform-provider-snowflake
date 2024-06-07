@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -112,40 +114,28 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		assert.Equal(t, databaseId.Name(), database.Name)
 		assert.Equal(t, comment, database.Comment)
 
-		params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Database: databaseId,
-			},
-		})
-
-		assertParameterEquals := func(t *testing.T, parameterName sdk.ObjectParameter, expected string) {
+		params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+		assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 			t.Helper()
-			param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
-			assert.NoError(t, err)
-			assert.NotNil(t, param)
-			if param != nil {
-				param := *param
-				assert.Equal(t, "DATABASE", string(param.Level))
-				assert.Equal(t, expected, param.Value)
-			}
+			assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
 		}
 
-		assertParameterEquals(t, sdk.ObjectParameterDataRetentionTimeInDays, "0")
-		assertParameterEquals(t, sdk.ObjectParameterMaxDataExtensionTimeInDays, "10")
-		assertParameterEquals(t, sdk.ObjectParameterDefaultDDLCollation, "en_US")
-		assertParameterEquals(t, sdk.ObjectParameterExternalVolume, externalVolume.Name())
-		assertParameterEquals(t, sdk.ObjectParameterCatalog, catalog.Name())
-		assertParameterEquals(t, sdk.ObjectParameterLogLevel, string(sdk.LogLevelInfo))
-		assertParameterEquals(t, sdk.ObjectParameterTraceLevel, string(sdk.TraceLevelOnEvent))
-		assertParameterEquals(t, sdk.ObjectParameterReplaceInvalidCharacters, "true")
-		assertParameterEquals(t, sdk.ObjectParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyCompatible))
-		assertParameterEquals(t, sdk.ObjectParameterSuspendTaskAfterNumFailures, "10")
-		assertParameterEquals(t, sdk.ObjectParameterTaskAutoRetryAttempts, "10")
-		assertParameterEquals(t, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
-		assertParameterEquals(t, sdk.ObjectParameterUserTaskTimeoutMs, "12000")
-		assertParameterEquals(t, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
-		assertParameterEquals(t, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, "true")
-		assertParameterEquals(t, sdk.ObjectParameterEnableConsoleOutput, "true")
+		assertParameterEquals(t, sdk.AccountParameterDataRetentionTimeInDays, "0")
+		assertParameterEquals(t, sdk.AccountParameterMaxDataExtensionTimeInDays, "10")
+		assertParameterEquals(t, sdk.AccountParameterDefaultDDLCollation, "en_US")
+		assertParameterEquals(t, sdk.AccountParameterExternalVolume, externalVolume.Name())
+		assertParameterEquals(t, sdk.AccountParameterCatalog, catalog.Name())
+		assertParameterEquals(t, sdk.AccountParameterLogLevel, string(sdk.LogLevelInfo))
+		assertParameterEquals(t, sdk.AccountParameterTraceLevel, string(sdk.TraceLevelOnEvent))
+		assertParameterEquals(t, sdk.AccountParameterReplaceInvalidCharacters, "true")
+		assertParameterEquals(t, sdk.AccountParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyCompatible))
+		assertParameterEquals(t, sdk.AccountParameterSuspendTaskAfterNumFailures, "10")
+		assertParameterEquals(t, sdk.AccountParameterTaskAutoRetryAttempts, "10")
+		assertParameterEquals(t, sdk.AccountParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
+		assertParameterEquals(t, sdk.AccountParameterUserTaskTimeoutMs, "12000")
+		assertParameterEquals(t, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
+		assertParameterEquals(t, sdk.AccountParameterQuotedIdentifiersIgnoreCase, "true")
+		assertParameterEquals(t, sdk.AccountParameterEnableConsoleOutput, "true")
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
@@ -236,38 +226,26 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: databaseId,
-		},
-	})
-
-	assertParameterEquals := func(t *testing.T, parameterName sdk.ObjectParameter, expected string) {
+	params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+	assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
-		assert.NoError(t, err)
-		assert.NotNil(t, param)
-		if param != nil {
-			param := *param
-			assert.Equal(t, "DATABASE", string(param.Level))
-			assert.Equal(t, expected, param.Value)
-		}
+		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
 	}
 
-	assertParameterEquals(t, sdk.ObjectParameterDefaultDDLCollation, "en_US")
-	assertParameterEquals(t, sdk.ObjectParameterExternalVolume, externalVolume.Name())
-	assertParameterEquals(t, sdk.ObjectParameterCatalog, catalog.Name())
-	assertParameterEquals(t, sdk.ObjectParameterLogLevel, string(sdk.LogLevelDebug))
-	assertParameterEquals(t, sdk.ObjectParameterTraceLevel, string(sdk.TraceLevelAlways))
-	assertParameterEquals(t, sdk.ObjectParameterReplaceInvalidCharacters, "true")
-	assertParameterEquals(t, sdk.ObjectParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyOptimized))
-	assertParameterEquals(t, sdk.ObjectParameterSuspendTaskAfterNumFailures, "10")
-	assertParameterEquals(t, sdk.ObjectParameterTaskAutoRetryAttempts, "10")
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskTimeoutMs, "12000")
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
-	assertParameterEquals(t, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, "true")
-	assertParameterEquals(t, sdk.ObjectParameterEnableConsoleOutput, "true")
+	assertParameterEquals(t, sdk.AccountParameterDefaultDDLCollation, "en_US")
+	assertParameterEquals(t, sdk.AccountParameterExternalVolume, externalVolume.Name())
+	assertParameterEquals(t, sdk.AccountParameterCatalog, catalog.Name())
+	assertParameterEquals(t, sdk.AccountParameterLogLevel, string(sdk.LogLevelDebug))
+	assertParameterEquals(t, sdk.AccountParameterTraceLevel, string(sdk.TraceLevelAlways))
+	assertParameterEquals(t, sdk.AccountParameterReplaceInvalidCharacters, "true")
+	assertParameterEquals(t, sdk.AccountParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyOptimized))
+	assertParameterEquals(t, sdk.AccountParameterSuspendTaskAfterNumFailures, "10")
+	assertParameterEquals(t, sdk.AccountParameterTaskAutoRetryAttempts, "10")
+	assertParameterEquals(t, sdk.AccountParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
+	assertParameterEquals(t, sdk.AccountParameterUserTaskTimeoutMs, "12000")
+	assertParameterEquals(t, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
+	assertParameterEquals(t, sdk.AccountParameterQuotedIdentifiersIgnoreCase, "true")
+	assertParameterEquals(t, sdk.AccountParameterEnableConsoleOutput, "true")
 
 	tag1Value, err := client.SystemFunctions.GetTag(ctx, testTag.ID(), database.ID(), sdk.ObjectTypeDatabase)
 	require.NoError(t, err)
@@ -332,40 +310,28 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: databaseId,
-		},
-	})
-
-	assertParameterEquals := func(t *testing.T, parameterName sdk.ObjectParameter, expected string) {
+	params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+	assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
-		assert.NoError(t, err)
-		assert.NotNil(t, param)
-		if param != nil {
-			param := *param
-			assert.Equal(t, "DATABASE", string(param.Level))
-			assert.Equal(t, expected, param.Value)
-		}
+		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
 	}
 
-	assertParameterEquals(t, sdk.ObjectParameterDataRetentionTimeInDays, "10")
-	assertParameterEquals(t, sdk.ObjectParameterMaxDataExtensionTimeInDays, "10")
-	assertParameterEquals(t, sdk.ObjectParameterDefaultDDLCollation, "en_US")
-	assertParameterEquals(t, sdk.ObjectParameterExternalVolume, externalVolume.Name())
-	assertParameterEquals(t, sdk.ObjectParameterCatalog, catalog.Name())
-	assertParameterEquals(t, sdk.ObjectParameterLogLevel, string(sdk.LogLevelDebug))
-	assertParameterEquals(t, sdk.ObjectParameterTraceLevel, string(sdk.TraceLevelAlways))
-	assertParameterEquals(t, sdk.ObjectParameterReplaceInvalidCharacters, "true")
-	assertParameterEquals(t, sdk.ObjectParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyOptimized))
-	assertParameterEquals(t, sdk.ObjectParameterSuspendTaskAfterNumFailures, "10")
-	assertParameterEquals(t, sdk.ObjectParameterTaskAutoRetryAttempts, "10")
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskTimeoutMs, "12000")
-	assertParameterEquals(t, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
-	assertParameterEquals(t, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, "true")
-	assertParameterEquals(t, sdk.ObjectParameterEnableConsoleOutput, "true")
+	assertParameterEquals(t, sdk.AccountParameterDataRetentionTimeInDays, "10")
+	assertParameterEquals(t, sdk.AccountParameterMaxDataExtensionTimeInDays, "10")
+	assertParameterEquals(t, sdk.AccountParameterDefaultDDLCollation, "en_US")
+	assertParameterEquals(t, sdk.AccountParameterExternalVolume, externalVolume.Name())
+	assertParameterEquals(t, sdk.AccountParameterCatalog, catalog.Name())
+	assertParameterEquals(t, sdk.AccountParameterLogLevel, string(sdk.LogLevelDebug))
+	assertParameterEquals(t, sdk.AccountParameterTraceLevel, string(sdk.TraceLevelAlways))
+	assertParameterEquals(t, sdk.AccountParameterReplaceInvalidCharacters, "true")
+	assertParameterEquals(t, sdk.AccountParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyOptimized))
+	assertParameterEquals(t, sdk.AccountParameterSuspendTaskAfterNumFailures, "10")
+	assertParameterEquals(t, sdk.AccountParameterTaskAutoRetryAttempts, "10")
+	assertParameterEquals(t, sdk.AccountParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
+	assertParameterEquals(t, sdk.AccountParameterUserTaskTimeoutMs, "12000")
+	assertParameterEquals(t, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
+	assertParameterEquals(t, sdk.AccountParameterQuotedIdentifiersIgnoreCase, "true")
+	assertParameterEquals(t, sdk.AccountParameterEnableConsoleOutput, "true")
 }
 
 func TestInt_DatabasesAlter(t *testing.T) {
@@ -373,27 +339,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	queryParametersForDatabase := func(t *testing.T, id sdk.AccountObjectIdentifier) []*sdk.Parameter {
+	assertDatabaseParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
-		params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Database: id,
-			},
-		})
-		require.NoError(t, err)
-		return params
-	}
-
-	assertDatabaseParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter, expected string) {
-		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
-		assert.NoError(t, err)
-		assert.NotNil(t, param)
-		if param != nil {
-			param := *param
-			assert.Equal(t, "DATABASE", string(param.Level))
-			assert.Equal(t, expected, param.Value)
-		}
+		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
 	}
 
 	assertDatabaseParameterEqualsToDefaultValue := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter) {
@@ -544,24 +492,23 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			params := queryParametersForDatabase(t, databaseTest.ID())
-
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterDataRetentionTimeInDays, "42")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays, "42")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterExternalVolume, externalVolumeTest.Name())
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterCatalog, catalogIntegrationTest.Name())
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterReplaceInvalidCharacters, "true")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterDefaultDDLCollation, "en_US")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyCompatible))
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterLogLevel, string(sdk.LogLevelInfo))
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterTraceLevel, string(sdk.TraceLevelOnEvent))
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterSuspendTaskAfterNumFailures, "10")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterTaskAutoRetryAttempts, "10")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterUserTaskTimeoutMs, "12000")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, "true")
-			assertDatabaseParameterEquals(t, params, sdk.ObjectParameterEnableConsoleOutput, "true")
+			params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseTest.ID())
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, "42")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, "42")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterExternalVolume, externalVolumeTest.Name())
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterCatalog, catalogIntegrationTest.Name())
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterReplaceInvalidCharacters, "true")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterDefaultDDLCollation, "en_US")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterStorageSerializationPolicy, string(sdk.StorageSerializationPolicyCompatible))
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterLogLevel, string(sdk.LogLevelInfo))
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterTraceLevel, string(sdk.TraceLevelOnEvent))
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures, "10")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterTaskAutoRetryAttempts, "10")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize, string(sdk.WarehouseSizeMedium))
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterUserTaskTimeoutMs, "12000")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, "30")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase, "true")
+			assertDatabaseParameterEquals(t, params, sdk.AccountParameterEnableConsoleOutput, "true")
 
 			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 				Unset: &sdk.DatabaseUnset{
@@ -585,7 +532,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			params = queryParametersForDatabase(t, databaseTest.ID())
+			params = testClientHelper().Parameter.ShowDatabaseParameters(t, databaseTest.ID())
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
