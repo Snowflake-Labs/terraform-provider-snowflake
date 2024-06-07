@@ -1361,7 +1361,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "false", "", "GENERIC_SCIM_PROVISIONER", "true", "")
+		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "")
 	})
 
 	t.Run("ShowByID", func(t *testing.T) {
@@ -1369,7 +1369,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", false, "")
+		assertSecurityIntegration(t, si, id, "SCIM - GENERIC", true, "")
 	})
 
 	t.Run("Show ExternalOauth", func(t *testing.T) {
