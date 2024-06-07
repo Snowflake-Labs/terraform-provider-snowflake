@@ -6,7 +6,7 @@ This document is a changelog of resources and datasources as part of the https:/
 ### snowflake_scim_integration resource changes
 
 New fields:
-- `enabled`, required
+- `enabled`
 - `sync_password`
 - `comment`
 
