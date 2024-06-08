@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -39,6 +40,22 @@ func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceD
 			return false
 		}
 		return oldId.FullyQualifiedName() == newId.FullyQualifiedName()
+	}
+}
+
+// Snowflake by nature requires identifiers with spaces to be surrounded by quotes.
+// Why would you have an identifier with spaces, you ask?
+// Well, for instance, if SAML usergroups are mapped directly to roles,
+// then default_role might end up being "\"ENGINEERING STAFF\"",
+// but this is read afterwards as "ENGINEERING STAFF", causing a permanent diff.
+// This seems oddly specific, but this is a real issue we're having in production!
+
+// Suppress a diff of the nature "SOMETHING" -> "\"SOMETHING\""
+func suppressEscapeQuotes(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+	if oldValue == "" || newValue == "" {
+		return false
+	} else {
+		return oldValue == fmt.Sprintf("\"%s\"", newValue) || newValue == fmt.Sprintf("\"%s\"", oldValue)
 	}
 }
 

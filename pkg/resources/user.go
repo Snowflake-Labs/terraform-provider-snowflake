@@ -18,6 +18,11 @@ var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool 
 	return strings.EqualFold(old, new)
 }
 
+var diffDefaultRole = func(k, old, new string, d *schema.ResourceData) bool {
+	return diffCaseInsensitive(k, old, new, d) || suppressEscapeQuotes(k, old, new, d)
+}
+
+
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -66,7 +71,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Computed:         true,
-		DiffSuppressFunc: diffCaseInsensitive,
+		DiffSuppressFunc: diffDefaultRole,
 		Description:      "Specifies the role that is active by default for the user’s session upon login.",
 	},
 	"default_secondary_roles": {
