@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -301,7 +303,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		}
 
 		if withExternalChangesMarking {
-			// TODO: extract/fix/make safer
+			// TODO: extract/fix/make safer (casting)
 			if showOutput, ok := d.GetOk("show_output"); ok {
 				showOutputList := showOutput.([]any)
 				if len(showOutputList) == 1 {
@@ -310,6 +312,36 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 						if err = d.Set("warehouse_size", w.Size); err != nil {
 							return diag.FromErr(err)
 						}
+					}
+				}
+			}
+
+			// TODO: extract and test (unit and acceptance)
+			// TODO: extract warehouse parameters (in SDK)
+			for _, param := range []sdk.ObjectParameter{sdk.ObjectParameterMaxConcurrencyLevel, sdk.ObjectParameterStatementQueuedTimeoutInSeconds, sdk.ObjectParameterStatementTimeoutInSeconds} {
+				currentSnowflakeParameter, err := collections.FindOne(warehouseParameters, func(p *sdk.Parameter) bool {
+					return p.Key == string(param)
+				})
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				// this handles situations in which parameter was set on object externally (so either the value or the level was changed)
+				// we can just set the config value to the current Snowflake value because:
+				// 1. if it did not change, then no drift will be reported
+				// 2. if it had different non-empty value, then the drift will be reported and the value will be set during update
+				// 3. if it had empty value, then the drift will be reported and the value will be unset during update
+				if (*currentSnowflakeParameter).Level == sdk.ParameterTypeWarehouse {
+					if err = d.Set(strings.ToLower(string(param)), (*currentSnowflakeParameter).Value); err != nil {
+						return diag.FromErr(err)
+					}
+				}
+				// this handles situations in which parameter was unset from the object
+				// we can just set the config value to <nil> because:
+				// 1. if it was missing in config before, then no drift will be reported
+				// 2. if it had a non-empty value, then the drift will be reported and the value will be set during update
+				if (*currentSnowflakeParameter).Level != sdk.ParameterTypeWarehouse {
+					if err = d.Set(strings.ToLower(string(param)), nil); err != nil {
+						return diag.FromErr(err)
 					}
 				}
 			}
