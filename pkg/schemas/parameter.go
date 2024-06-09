@@ -25,7 +25,7 @@ var ParameterSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"description": {
-		Type:     schema.TypeInt,
+		Type:     schema.TypeString,
 		Computed: true,
 	},
 }

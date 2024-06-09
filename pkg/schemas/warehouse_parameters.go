@@ -1,13 +1,14 @@
 package schemas
 
 import (
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strings"
 )
 
 // ShowWarehouseParametersSchema contains all Snowflake parameters for the warehouses.
-// TODO: descriptions
+// TODO: descriptions (take from .Description; tool to validate changes later)
 // TODO: should be generated later based on the existing Snowflake parameters for warehouses
 var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 	"max_concurrency_level": {
@@ -40,11 +41,11 @@ func WarehouseParametersToSchema(parameters []*sdk.Parameter) map[string]any {
 		parameterSchema := ParameterToSchema(param)
 		switch strings.ToUpper(param.Key) {
 		case string(sdk.ObjectParameterMaxConcurrencyLevel):
-			warehouseParameters["max_concurrency_level"] = parameterSchema
+			warehouseParameters["max_concurrency_level"] = []map[string]any{parameterSchema}
 		case string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds):
-			warehouseParameters["statement_queued_timeout_in_seconds"] = parameterSchema
+			warehouseParameters["statement_queued_timeout_in_seconds"] = []map[string]any{parameterSchema}
 		case string(sdk.ObjectParameterStatementTimeoutInSeconds):
-			warehouseParameters["statement_timeout_in_seconds"] = parameterSchema
+			warehouseParameters["statement_timeout_in_seconds"] = []map[string]any{parameterSchema}
 		}
 	}
 	return warehouseParameters

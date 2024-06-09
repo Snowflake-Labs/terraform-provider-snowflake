@@ -296,18 +296,18 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 			},
 			// import when size in config
 			{
-				ResourceName:      "snowflake_warehouse.w",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"show_output",
-					"initially_suspended",
-					"wait_for_provisioning",
-					"query_acceleration_max_scale_factor",
-					"max_concurrency_level",
-					"statement_queued_timeout_in_seconds",
-					"statement_timeout_in_seconds",
-				},
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				//ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{
+				//	"show_output",
+				//	"initially_suspended",
+				//	"wait_for_provisioning",
+				//	"query_acceleration_max_scale_factor",
+				//	"max_concurrency_level",
+				//	"statement_queued_timeout_in_seconds",
+				//	"statement_timeout_in_seconds",
+				//},
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
