@@ -5,7 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ShowWarehouseSchema should be generated later based on the sdk.Warehouse
+// ShowWarehouseSchema represents output of SHOW WAREHOUSES query for the single warehouse.
+// TODO: should be generated later based on the sdk.Warehouse
 var ShowWarehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,

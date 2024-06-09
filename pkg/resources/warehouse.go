@@ -109,12 +109,21 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
 	// TODO: better name?
+	// TODO: min/max?
 	"show_output": {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW WAREHOUSE` for the given warehouse.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowWarehouseSchema,
+		},
+	},
+	"parameters": {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN WAREHOUSE` for the given warehouse.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowWarehouseParametersSchema,
 		},
 	},
 }
@@ -194,7 +203,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
 		return nil, err
 	}
-	// TODO: handle parameters too
+	// TODO: handle parameters too (query all for warehouse and take only the ones with warehouse level)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -289,6 +298,15 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
+		warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				Warehouse: id,
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		if withExternalChangesMarking {
 			// TODO: extract/fix/make safer
 			if showOutput, ok := d.GetOk("show_output"); ok {
@@ -304,6 +322,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 		}
 
+		// TODO: name to import?
 		if err = d.Set("name", w.Name); err != nil {
 			return diag.FromErr(err)
 		}
@@ -313,11 +332,10 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		// TODO: fix
-		// err = readWarehouseObjectProperties(d, id, client, ctx)
-		//if err != nil {
-		//	return err
-		//}
+		parameters := schemas.WarehouseParametersToSchema(warehouseParameters)
+		if err = d.Set("parameters", []map[string]any{parameters}); err != nil {
+			return diag.FromErr(err)
+		}
 
 		// if w.EnableQueryAcceleration {
 		//	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
@@ -327,37 +345,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		return nil
 	}
-}
-
-func readWarehouseObjectProperties(d *schema.ResourceData, warehouseId sdk.AccountObjectIdentifier, client *sdk.Client, ctx context.Context) error {
-	statementTimeoutInSecondsParameter, err := client.Parameters.ShowObjectParameter(ctx, "STATEMENT_TIMEOUT_IN_SECONDS", sdk.Object{ObjectType: sdk.ObjectTypeWarehouse, Name: warehouseId})
-	if err != nil {
-		return err
-	}
-	logging.DebugLogger.Printf("[DEBUG] STATEMENT_TIMEOUT_IN_SECONDS parameter was fetched: %v", statementTimeoutInSecondsParameter)
-	if err = d.Set("statement_timeout_in_seconds", sdk.ToInt(statementTimeoutInSecondsParameter.Value)); err != nil {
-		return err
-	}
-
-	statementQueuedTimeoutInSecondsParameter, err := client.Parameters.ShowObjectParameter(ctx, "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS", sdk.Object{ObjectType: sdk.ObjectTypeWarehouse, Name: warehouseId})
-	if err != nil {
-		return err
-	}
-	logging.DebugLogger.Printf("[DEBUG] STATEMENT_QUEUED_TIMEOUT_IN_SECONDS parameter was fetched: %v", statementQueuedTimeoutInSecondsParameter)
-	if err = d.Set("statement_queued_timeout_in_seconds", sdk.ToInt(statementQueuedTimeoutInSecondsParameter.Value)); err != nil {
-		return err
-	}
-
-	maxConcurrencyLevelParameter, err := client.Parameters.ShowObjectParameter(ctx, "MAX_CONCURRENCY_LEVEL", sdk.Object{ObjectType: sdk.ObjectTypeWarehouse, Name: warehouseId})
-	if err != nil {
-		return err
-	}
-	logging.DebugLogger.Printf("[DEBUG] MAX_CONCURRENCY_LEVEL parameter was fetched: %v", maxConcurrencyLevelParameter)
-	if err = d.Set("max_concurrency_level", sdk.ToInt(maxConcurrencyLevelParameter.Value)); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // UpdateWarehouse implements schema.UpdateFunc.
