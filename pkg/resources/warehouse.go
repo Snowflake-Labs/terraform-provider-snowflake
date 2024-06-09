@@ -363,7 +363,6 @@ func readWarehouseObjectProperties(d *schema.ResourceData, warehouseId sdk.Accou
 // UpdateWarehouse implements schema.UpdateFunc.
 func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	// Change name separately
@@ -382,17 +381,13 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	// Batch SET operations and UNSET operations
-	var runSet bool
-	var runUnset bool
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
 	if d.HasChange("comment") {
-		runSet = true
 		set.Comment = sdk.String(d.Get("comment").(string))
 	}
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
-		runSet = true
 		if n == "" {
 			n = string(sdk.WarehouseSizeXSmall)
 		}
@@ -404,92 +399,73 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {
-			runSet = true
 			set.MaxClusterCount = sdk.Int(v.(int))
 		} else {
-			runUnset = true
 			unset.MaxClusterCount = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("min_cluster_count") {
 		if v, ok := d.GetOk("min_cluster_count"); ok {
-			runSet = true
 			set.MinClusterCount = sdk.Int(v.(int))
 		} else {
-			runUnset = true
 			unset.MinClusterCount = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("scaling_policy") {
 		if v, ok := d.GetOk("scaling_policy"); ok {
-			runSet = true
 			scalingPolicy := sdk.ScalingPolicy(v.(string))
 			set.ScalingPolicy = &scalingPolicy
 		} else {
-			runUnset = true
 			unset.ScalingPolicy = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("auto_suspend") {
 		if v, ok := d.GetOk("auto_suspend"); ok {
-			runSet = true
 			set.AutoSuspend = sdk.Int(v.(int))
 		} else {
-			runUnset = true
 			unset.AutoSuspend = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("auto_resume") {
 		if v, ok := d.GetOk("auto_resume"); ok {
-			runSet = true
 			set.AutoResume = sdk.Bool(v.(bool))
 		} else {
-			runUnset = true
 			unset.AutoResume = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("resource_monitor") {
 		if v, ok := d.GetOk("resource_monitor"); ok {
-			runSet = true
 			set.ResourceMonitor = sdk.NewAccountObjectIdentifier(v.(string))
 		} else {
-			runUnset = true
 			unset.ResourceMonitor = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_timeout_in_seconds") {
-		runSet = true
 		set.StatementTimeoutInSeconds = sdk.Int(d.Get("statement_timeout_in_seconds").(int))
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
-		runSet = true
 		set.StatementQueuedTimeoutInSeconds = sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int))
 	}
 	if d.HasChange("max_concurrency_level") {
-		runSet = true
 		set.MaxConcurrencyLevel = sdk.Int(d.Get("max_concurrency_level").(int))
 	}
 	if d.HasChange("enable_query_acceleration") {
-		runSet = true
 		set.EnableQueryAcceleration = sdk.Bool(d.Get("enable_query_acceleration").(bool))
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
-		runSet = true
 		set.QueryAccelerationMaxScaleFactor = sdk.Int(d.Get("query_acceleration_max_scale_factor").(int))
 	}
 	if d.HasChange("warehouse_type") {
 		if v, ok := d.GetOk("warehouse_type"); ok {
-			runSet = true
 			whType := sdk.WarehouseType(v.(string))
 			set.WarehouseType = &whType
 		} else {
-			runUnset = true
 			unset.WarehouseType = sdk.Bool(true)
 		}
 	}
 
 	// Apply SET and UNSET changes
-	if runSet {
+	if (set != sdk.WarehouseSet{}) {
 		err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
 			Set: &set,
 		})
@@ -497,7 +473,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return diag.FromErr(err)
 		}
 	}
-	if runUnset {
+	if (unset != sdk.WarehouseUnset{}) {
 		err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
 			Unset: &unset,
 		})
