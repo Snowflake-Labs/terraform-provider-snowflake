@@ -108,13 +108,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
-	// TODO: remove deprecated field
-	"wait_for_provisioning": {
-		Type:        schema.TypeBool,
-		Description: "Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.",
-		Optional:    true,
-		Deprecated:  "This field is deprecated and will be removed in the next major version of the provider. It doesn't do anything and should be removed from your configuration.",
-	},
 	// TODO: better name?
 	"show_output": {
 		Type:        schema.TypeList,

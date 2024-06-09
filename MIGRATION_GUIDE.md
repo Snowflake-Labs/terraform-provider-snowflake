@@ -26,6 +26,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 - `min_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
 - `auto_suspend` - adjusted: added `0` as valid value
 
+#### *(behavior change)* Deprecated `wait_for_provisioning` field removed
+`wait_for_provisioning` field was deprecated a long time ago. It's high time it was removed from the schema.
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added
