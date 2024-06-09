@@ -85,11 +85,8 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
 	},
 	"query_acceleration_max_scale_factor": {
-		Type:     schema.TypeInt,
-		Optional: true,
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return !d.Get("enable_query_acceleration").(bool)
-		},
+		Type:         schema.TypeInt,
+		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
@@ -262,12 +259,8 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v, ok := d.GetOk("enable_query_acceleration"); ok {
 		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
 	}
-	// TODO: remove this logic
-	if enable := *sdk.Bool(d.Get("enable_query_acceleration").(bool)); enable {
-		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-			queryAccelerationMaxScaleFactor := sdk.Int(v.(int))
-			createOptions.QueryAccelerationMaxScaleFactor = queryAccelerationMaxScaleFactor
-		}
+	if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("max_concurrency_level"); ok {
 		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
@@ -336,12 +329,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		if err = d.Set("parameters", []map[string]any{parameters}); err != nil {
 			return diag.FromErr(err)
 		}
-
-		// if w.EnableQueryAcceleration {
-		//	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
-		//		return err
-		//	}
-		//}
 
 		return nil
 	}

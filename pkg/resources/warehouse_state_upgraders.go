@@ -57,5 +57,7 @@ func v091WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]inter
 	}
 	rawState["warehouse_size"] = string(warehouseSize)
 
+	// TODO: clear wait_for_provisioning and test
+
 	return rawState, nil
 }

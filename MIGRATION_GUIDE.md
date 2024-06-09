@@ -29,6 +29,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 #### *(behavior change)* Deprecated `wait_for_provisioning` field removed
 `wait_for_provisioning` field was deprecated a long time ago. It's high time it was removed from the schema.
 
+#### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
+TODO: describe
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added
