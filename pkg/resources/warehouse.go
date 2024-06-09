@@ -383,8 +383,14 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	// Batch SET operations and UNSET operations
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
-	if d.HasChange("comment") {
-		set.Comment = sdk.String(d.Get("comment").(string))
+	if d.HasChange("warehouse_type") {
+		if v, ok := d.GetOk("warehouse_type"); ok {
+			// TODO: validate
+			warehouseType := sdk.WarehouseType(v.(string))
+			set.WarehouseType = &warehouseType
+		} else {
+			unset.WarehouseType = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
@@ -440,14 +446,8 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			unset.ResourceMonitor = sdk.Bool(true)
 		}
 	}
-	if d.HasChange("statement_timeout_in_seconds") {
-		set.StatementTimeoutInSeconds = sdk.Int(d.Get("statement_timeout_in_seconds").(int))
-	}
-	if d.HasChange("statement_queued_timeout_in_seconds") {
-		set.StatementQueuedTimeoutInSeconds = sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int))
-	}
-	if d.HasChange("max_concurrency_level") {
-		set.MaxConcurrencyLevel = sdk.Int(d.Get("max_concurrency_level").(int))
+	if d.HasChange("comment") {
+		set.Comment = sdk.String(d.Get("comment").(string))
 	}
 	if d.HasChange("enable_query_acceleration") {
 		set.EnableQueryAcceleration = sdk.Bool(d.Get("enable_query_acceleration").(bool))
@@ -455,13 +455,14 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if d.HasChange("query_acceleration_max_scale_factor") {
 		set.QueryAccelerationMaxScaleFactor = sdk.Int(d.Get("query_acceleration_max_scale_factor").(int))
 	}
-	if d.HasChange("warehouse_type") {
-		if v, ok := d.GetOk("warehouse_type"); ok {
-			whType := sdk.WarehouseType(v.(string))
-			set.WarehouseType = &whType
-		} else {
-			unset.WarehouseType = sdk.Bool(true)
-		}
+	if d.HasChange("max_concurrency_level") {
+		set.MaxConcurrencyLevel = sdk.Int(d.Get("max_concurrency_level").(int))
+	}
+	if d.HasChange("statement_queued_timeout_in_seconds") {
+		set.StatementQueuedTimeoutInSeconds = sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int))
+	}
+	if d.HasChange("statement_timeout_in_seconds") {
+		set.StatementTimeoutInSeconds = sdk.Int(d.Get("statement_timeout_in_seconds").(int))
 	}
 
 	// Apply SET and UNSET changes
