@@ -174,29 +174,6 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 	createOptions := &sdk.CreateWarehouseOptions{}
 
-	// TODO: align ordering with the schema order
-	if enable := *sdk.Bool(d.Get("enable_query_acceleration").(bool)); enable {
-		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-			queryAccelerationMaxScaleFactor := sdk.Int(v.(int))
-			createOptions.QueryAccelerationMaxScaleFactor = queryAccelerationMaxScaleFactor
-		}
-	}
-
-	if v, ok := d.GetOk("comment"); ok {
-		createOptions.Comment = sdk.String(v.(string))
-	}
-	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("max_concurrency_level"); ok {
-		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
-	}
-	if v, ok := d.GetOk("enable_query_acceleration"); ok {
-		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
-	}
 	if v, ok := d.GetOk("warehouse_type"); ok {
 		warehouseType, err := sdk.ToWarehouseType(v.(string))
 		if err != nil {
@@ -204,7 +181,6 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 		createOptions.WarehouseType = &warehouseType
 	}
-
 	if v, ok := d.GetOk("warehouse_size"); ok {
 		size, err := sdk.ToWarehouseSize(v.(string))
 		if err != nil {
@@ -219,6 +195,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		createOptions.MinClusterCount = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("scaling_policy"); ok {
+		// TODO: move to SDK and handle error
 		scalingPolicy := sdk.ScalingPolicy(v.(string))
 		createOptions.ScalingPolicy = &scalingPolicy
 	}
@@ -232,7 +209,30 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		createOptions.InitiallySuspended = sdk.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("resource_monitor"); ok {
+		// TODO: resource monitor identifier?
 		createOptions.ResourceMonitor = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		createOptions.Comment = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("enable_query_acceleration"); ok {
+		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
+	}
+	// TODO: remove this logic
+	if enable := *sdk.Bool(d.Get("enable_query_acceleration").(bool)); enable {
+		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+			queryAccelerationMaxScaleFactor := sdk.Int(v.(int))
+			createOptions.QueryAccelerationMaxScaleFactor = queryAccelerationMaxScaleFactor
+		}
+	}
+	if v, ok := d.GetOk("max_concurrency_level"); ok {
+		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
+	}
+	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
+		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
+	}
+	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
+		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
 	}
 
 	err := client.Warehouses.Create(ctx, objectIdentifier, createOptions)
