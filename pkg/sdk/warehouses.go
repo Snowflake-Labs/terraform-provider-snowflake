@@ -100,6 +100,17 @@ var (
 	ScalingPolicyEconomy  ScalingPolicy = "ECONOMY"
 )
 
+func ToScalingPolicy(s string) (ScalingPolicy, error) {
+	switch strings.ToUpper(s) {
+	case string(ScalingPolicyStandard):
+		return ScalingPolicyStandard, nil
+	case string(ScalingPolicyEconomy):
+		return ScalingPolicyEconomy, nil
+	default:
+		return "", fmt.Errorf("invalid scaling policy: %s", s)
+	}
+}
+
 // CreateWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse.
 type CreateWarehouseOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"`

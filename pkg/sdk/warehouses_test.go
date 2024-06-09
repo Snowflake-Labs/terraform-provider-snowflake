@@ -271,6 +271,7 @@ func TestWarehouseDescribe(t *testing.T) {
 	})
 }
 
+// TODO: test warehouse type and scaling policy
 func TestToWarehouseSize(t *testing.T) {
 	type test struct {
 		input string

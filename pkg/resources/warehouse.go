@@ -228,8 +228,10 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		createOptions.MinClusterCount = sdk.Int(v.(int))
 	}
 	if v, ok := d.GetOk("scaling_policy"); ok {
-		// TODO: move to SDK and handle error
-		scalingPolicy := sdk.ScalingPolicy(v.(string))
+		scalingPolicy, err := sdk.ToScalingPolicy(v.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		createOptions.ScalingPolicy = &scalingPolicy
 	}
 	if v, ok := d.GetOk("auto_suspend"); ok {
