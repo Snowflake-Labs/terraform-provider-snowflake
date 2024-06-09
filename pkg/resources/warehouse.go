@@ -213,7 +213,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	client := meta.(*provider.Context).Client
 
 	name := d.Get("name").(string)
-	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(name)
 	createOptions := &sdk.CreateWarehouseOptions{}
 
 	if v, ok := d.GetOk("warehouse_type"); ok {
@@ -279,11 +279,11 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
 	}
 
-	err := client.Warehouses.Create(ctx, objectIdentifier, createOptions)
+	err := client.Warehouses.Create(ctx, id, createOptions)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
