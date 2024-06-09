@@ -433,6 +433,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			unset.ResourceMonitor = sdk.Bool(true)
 		}
 	}
+	// TODO: add unsets
 	if d.HasChange("comment") {
 		set.Comment = sdk.String(d.Get("comment").(string))
 	}
