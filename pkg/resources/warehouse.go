@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -130,10 +131,11 @@ func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		Create: CreateWarehouse,
-		Read:   GetReadWarehouseFunc(true, false),
-		Delete: DeleteWarehouse,
-		Update: UpdateWarehouse,
+		CreateContext: CreateWarehouse,
+		UpdateContext: UpdateWarehouse,
+		ReadContext:   GetReadWarehouseFunc(true),
+		DeleteContext: DeleteWarehouse,
+		Description:   "Resource used to manage warehouse objects. For more information, check [warehouse documentation](https://docs.snowflake.com/en/sql-reference/commands-warehouse).",
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
@@ -156,19 +158,57 @@ func Warehouse() *schema.Resource {
 	}
 }
 
-func ImportWarehouse(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting warehouse import")
-	err := GetReadWarehouseFunc(false, true)(d, m)
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	w, err := client.Warehouses.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
+
+	if err = d.Set("warehouse_type", w.Type); err != nil {
+		return nil, err
+	}
+	if err = d.Set("warehouse_size", w.Size); err != nil {
+		return nil, err
+	}
+	if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
+		return nil, err
+	}
+	if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
+		return nil, err
+	}
+	if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
+		return nil, err
+	}
+	if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
+		return nil, err
+	}
+	if err = d.Set("auto_resume", w.AutoResume); err != nil {
+		return nil, err
+	}
+	if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
+		return nil, err
+	}
+	if err = d.Set("comment", w.Comment); err != nil {
+		return nil, err
+	}
+	if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+		return nil, err
+	}
+	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
+		return nil, err
+	}
+	// TODO: handle parameters too
+
 	return []*schema.ResourceData{d}, nil
 }
 
 // CreateWarehouse implements schema.CreateFunc.
-func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
+func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
@@ -177,14 +217,14 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("warehouse_type"); ok {
 		warehouseType, err := sdk.ToWarehouseType(v.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		createOptions.WarehouseType = &warehouseType
 	}
 	if v, ok := d.GetOk("warehouse_size"); ok {
 		size, err := sdk.ToWarehouseSize(v.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		createOptions.WarehouseSize = &size
 	}
@@ -237,30 +277,21 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Warehouses.Create(ctx, objectIdentifier, createOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
-	return GetReadWarehouseFunc(false, false)(d, meta)
+	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
 
-func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetting bool) schema.ReadFunc {
-	return func(d *schema.ResourceData, meta interface{}) error {
+func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		ctx := context.Background()
-
 		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 		w, err := client.Warehouses.ShowByID(ctx, id)
 		if err != nil {
-			return err
-		}
-
-		// TODO: set more
-		if withConfigFieldsSetting {
-			if err = d.Set("warehouse_size", w.Size); err != nil {
-				return err
-			}
+			return diag.FromErr(err)
 		}
 
 		if withExternalChangesMarking {
@@ -271,7 +302,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 					result := showOutputList[0].(map[string]any)
 					if result["size"].(string) != string(w.Size) {
 						if err = d.Set("warehouse_size", w.Size); err != nil {
-							return err
+							return diag.FromErr(err)
 						}
 					}
 				}
@@ -279,12 +310,12 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool, withConfigFieldsSetti
 		}
 
 		if err = d.Set("name", w.Name); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		showOutput := schemas.WarehouseToSchema(w)
 		if err = d.Set("show_output", []map[string]any{showOutput}); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		// TODO: fix
@@ -335,9 +366,8 @@ func readWarehouseObjectProperties(d *schema.ResourceData, warehouseId sdk.Accou
 }
 
 // UpdateWarehouse implements schema.UpdateFunc.
-func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
+func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
@@ -349,7 +379,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 			NewName: &newId,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
@@ -373,7 +403,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		}
 		size, err := sdk.ToWarehouseSize(n)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		set.WarehouseSize = &size
 	}
@@ -469,7 +499,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 			Set: &set,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if runUnset {
@@ -477,24 +507,25 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 			Unset: &unset,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return GetReadWarehouseFunc(false, false)(d, meta)
+	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc.
-func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
+func DeleteWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Warehouses.Drop(ctx, id, nil)
+	err := client.Warehouses.Drop(ctx, id, &sdk.DropWarehouseOptions{
+		IfExists: sdk.Bool(true),
+	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
+	d.SetId("")
 	return nil
 }
