@@ -39,7 +39,7 @@ func (c *CortexSearchServiceClient) CreateCortexSearchServiceWithOptions(t *test
 	comment := random.Comment()
 	ctx := context.Background()
 
-	err := c.client().Create(ctx, sdk.NewCreateCortexSearchServiceRequest(id, on, warehouseId, targetLag, query).WithComment(&comment))
+	err := c.client().Create(ctx, sdk.NewCreateCortexSearchServiceRequest(id, on, warehouseId, targetLag, query).WithComment(comment))
 	require.NoError(t, err)
 
 	contextSearchService, err := c.client().ShowByID(ctx, id)
@@ -53,7 +53,7 @@ func (c *CortexSearchServiceClient) DropCortexSearchServiceFunc(t *testing.T, id
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropCortexSearchServiceRequest(id).WithIfExists(true))
+		err := c.client().Drop(ctx, sdk.NewDropCortexSearchServiceRequest(id))
 		require.NoError(t, err)
 	}
 }

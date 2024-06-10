@@ -18,7 +18,7 @@ func init() {
 				return fmt.Errorf("error getting default client during sweep: %w", err)
 			}
 			ctx := context.Background()
-			cortexSearchServices, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithIn(&sdk.In{
+			cortexSearchServices, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithIn(sdk.In{
 				Schema: acc.TestClient().Ids.SchemaId(),
 			}))
 			if err != nil {

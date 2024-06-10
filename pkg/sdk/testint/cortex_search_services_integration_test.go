@@ -23,13 +23,13 @@ func TestInt_CortexSearchServiceCreateAndDrop(t *testing.T) {
 		targetLag := "2 minutes"
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
-		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(name, "id", testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(name, "id", testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.CortexSearchServices.Drop(ctx, sdk.NewDropCortexSearchServiceRequest(name))
 			require.NoError(t, err)
 		})
-		entities, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithLike(&sdk.Like{Pattern: sdk.String(name.Name())}))
+		entities, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithLike(sdk.Like{Pattern: sdk.String(name.Name())}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
 
@@ -56,12 +56,12 @@ func TestInt_CortexSearchServiceDescribe(t *testing.T) {
 	t.Cleanup(cortexSearchServiceCleanup)
 
 	t.Run("when cortex search service exists", func(t *testing.T) {
-		_, err := client.CortexSearchServices.Describe(ctx, sdk.NewDescribeCortexSearchServiceRequest(cortexSearchService.ID()))
+		_, err := client.CortexSearchServices.Describe(ctx, cortexSearchService.ID())
 		require.NoError(t, err)
 	})
 
 	t.Run("when cortex search service does not exist", func(t *testing.T) {
-		_, err := client.CortexSearchServices.Describe(ctx, sdk.NewDescribeCortexSearchServiceRequest(NonExistingSchemaObjectIdentifier))
+		_, err := client.CortexSearchServices.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
@@ -77,9 +77,9 @@ func TestInt_CortexSearchServiceAlter(t *testing.T) {
 		cortexSearchService, cortexSearchServiceCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
 		t.Cleanup(cortexSearchServiceCleanup)
 
-		err := client.CortexSearchServices.Alter(ctx, sdk.NewAlterCortexSearchServiceRequest(cortexSearchService.ID()).WithSet(sdk.NewCortexSearchServiceSetRequest().WithTargetLag("10 minutes")))
+		err := client.CortexSearchServices.Alter(ctx, sdk.NewAlterCortexSearchServiceRequest(cortexSearchService.ID()).WithSet(*sdk.NewCortexSearchServiceSetRequest().WithTargetLag("10 minutes")))
 		require.NoError(t, err)
-		entities, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithLike(&sdk.Like{Pattern: sdk.String(cortexSearchService.Name)}))
+		entities, err := client.CortexSearchServices.Show(ctx, sdk.NewShowCortexSearchServiceRequest().WithLike(sdk.Like{Pattern: sdk.String(cortexSearchService.Name)}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
 	})

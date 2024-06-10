@@ -125,7 +125,7 @@ func CreateCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 
 	request := sdk.NewCreateCortexSearchServiceRequest(id, on, warehouse, target_lag, query)
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		request.WithOrReplace(true)
@@ -134,7 +134,10 @@ func CreateCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 		request.WithIfNotExists(true)
 	}
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]string)) > 0 {
-		request.WithAttributes(v.([]string))
+		attributes := sdk.AttributesRequest{
+			Columns: v.([]string),
+		}
+		request.WithAttributes(attributes)
 	}
 	if err := client.CortexSearchServices.Create(context.Background(), request); err != nil {
 		return err
@@ -165,23 +168,19 @@ func UpdateCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 		runSet = true
 	}
 
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		set.WithComment(comment)
+		runSet = true
+	}
+
 	if runSet {
-		request.WithSet(set)
+		request.WithSet(*set)
 		if err := client.CortexSearchServices.Alter(ctx, request); err != nil {
 			return err
 		}
 	}
 
-	if d.HasChange("comment") {
-		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
-			ObjectType: sdk.ObjectTypeCortexSearchService,
-			ObjectName: id,
-			Value:      sdk.String(d.Get("comment").(string)),
-		})
-		if err != nil {
-			return err
-		}
-	}
 	return ReadCortexSearchService(d, meta)
 }
 
@@ -190,10 +189,6 @@ func DeleteCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewDropCortexSearchServiceRequest(id)
-
-	if v, ok := d.GetOk("if exists"); ok && v.(bool) {
-		request.IfExists = sdk.Bool(v.(bool))
-	}
 
 	if err := client.CortexSearchServices.Drop(context.Background(), request); err != nil {
 		return err

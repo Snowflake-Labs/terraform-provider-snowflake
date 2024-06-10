@@ -131,7 +131,7 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("like"); ok {
 		like := v.([]interface{})[0].(map[string]interface{})
 		pattern := like["pattern"].(string)
-		request.WithLike(&sdk.Like{Pattern: sdk.String(pattern)})
+		request.WithLike(sdk.Like{Pattern: sdk.String(pattern)})
 	}
 
 	if v, ok := d.GetOk("in"); ok {
@@ -139,25 +139,25 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := in["account"]; ok {
 			account := v.(bool)
 			if account {
-				request.WithIn(&sdk.In{Account: sdk.Bool(account)})
+				request.WithIn(sdk.In{Account: sdk.Bool(account)})
 			}
 		}
 		if v, ok := in["database"]; ok {
 			database := v.(string)
 			if database != "" {
-				request.WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(database)})
+				request.WithIn(sdk.In{Database: sdk.NewAccountObjectIdentifier(database)})
 			}
 		}
 		if v, ok := in["schema"]; ok {
 			schema := v.(string)
 			if schema != "" {
-				request.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schema)})
+				request.WithIn(sdk.In{Schema: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schema)})
 			}
 		}
 	}
 	if v, ok := d.GetOk("starts_with"); ok {
 		startsWith := v.(string)
-		request.WithStartsWith(sdk.String(startsWith))
+		request.WithStartsWith(startsWith)
 	}
 	if v, ok := d.GetOk("limit"); ok {
 		l := v.([]interface{})[0].(map[string]interface{})
@@ -170,7 +170,7 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 			from := v.(string)
 			limit.From = sdk.String(from)
 		}
-		request.WithLimit(&limit)
+		request.WithLimit(limit)
 	}
 
 	dts, err := client.CortexSearchServices.Show(context.Background(), request)
