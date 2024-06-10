@@ -4,7 +4,7 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
-## v0.91.0 ➞ v0.92.0
+## v0.92.0 ➞ v0.93.0
 ### snowflake_database new alternatives
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
 - Standard database - can be used as `snowflake_standard_database` (used to create databases with optional ability to become a primary database ready for replication)
