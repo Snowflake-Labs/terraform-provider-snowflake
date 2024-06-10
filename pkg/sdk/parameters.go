@@ -243,6 +243,12 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 			return fmt.Errorf("STATEMENT_QUEUED_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
 		}
 		opts.Set.Parameters.ObjectParameters.StatementQueuedTimeoutInSeconds = Pointer(v)
+	case ObjectParameterStatementTimeoutInSeconds:
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
+		}
+		opts.Set.Parameters.ObjectParameters.StatementTimeoutInSeconds = Pointer(v)
 	case ObjectParameterNetworkPolicy:
 		opts.Set.Parameters.ObjectParameters.NetworkPolicy = &value
 	case ObjectParameterShareRestrictions:
@@ -776,6 +782,7 @@ type ObjectParameters struct {
 	PipeExecutionPaused                 *bool          `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
 	PreventUnloadToInternalStages       *bool          `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
 	StatementQueuedTimeoutInSeconds     *int           `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds           *int           `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 	NetworkPolicy                       *string        `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
 	ShareRestrictions                   *bool          `ddl:"parameter" sql:"SHARE_RESTRICTIONS"`
 	SuspendTaskAfterNumFailures         *int           `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
@@ -806,6 +813,11 @@ func (v *ObjectParameters) validate() error {
 			errs = append(errs, errIntValue("ObjectParameters", "StatementQueuedTimeoutInSeconds", IntErrGreaterOrEqual, 0))
 		}
 	}
+	if valueSet(v.StatementTimeoutInSeconds) {
+		if !validateIntGreaterThanOrEqual(*v.StatementTimeoutInSeconds, 0) {
+			errs = append(errs, errIntValue("ObjectParameters", "StatementTimeoutInSeconds", IntErrGreaterOrEqual, 0))
+		}
+	}
 	if valueSet(v.SuspendTaskAfterNumFailures) {
 		if !validateIntGreaterThanOrEqual(*v.SuspendTaskAfterNumFailures, 0) {
 			errs = append(errs, errIntValue("ObjectParameters", "SuspendTaskAfterNumFailures", IntErrGreaterOrEqual, 0))
@@ -828,6 +840,7 @@ type ObjectParametersUnset struct {
 	PipeExecutionPaused                 *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
 	PreventUnloadToInternalStages       *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
 	StatementQueuedTimeoutInSeconds     *bool `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds           *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 	NetworkPolicy                       *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	ShareRestrictions                   *bool `ddl:"keyword" sql:"SHARE_RESTRICTIONS"`
 	SuspendTaskAfterNumFailures         *bool `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`

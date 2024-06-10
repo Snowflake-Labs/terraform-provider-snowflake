@@ -321,8 +321,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 
 			// TODO: extract and test (unit and acceptance)
-			// TODO: extract warehouse parameters (in SDK)
-			for _, param := range []sdk.ObjectParameter{sdk.ObjectParameterMaxConcurrencyLevel, sdk.ObjectParameterStatementQueuedTimeoutInSeconds, sdk.ObjectParameterStatementTimeoutInSeconds} {
+			for _, param := range sdk.WarehouseParameters {
 				currentSnowflakeParameter, err := collections.FindOne(warehouseParameters, func(p *sdk.Parameter) bool {
 					return p.Key == string(param)
 				})

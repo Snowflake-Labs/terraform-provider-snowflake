@@ -9,7 +9,7 @@ import (
 
 // ShowWarehouseParametersSchema contains all Snowflake parameters for the warehouses.
 // TODO: descriptions (take from .Description; tool to validate changes later)
-// TODO: should be generated later based on the existing Snowflake parameters for warehouses
+// TODO: should be generated later based on sdk.WarehouseParameters
 var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 	"max_concurrency_level": {
 		Type:     schema.TypeList,
