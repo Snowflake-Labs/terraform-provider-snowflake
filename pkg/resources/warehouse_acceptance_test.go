@@ -299,8 +299,8 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 			{
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
-				//ImportStateVerify: true,
-				//ImportStateVerifyIgnore: []string{
+				// ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{
 				//	"show_output",
 				//	"initially_suspended",
 				//	"wait_for_provisioning",
@@ -308,7 +308,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				//	"max_concurrency_level",
 				//	"statement_queued_timeout_in_seconds",
 				//	"statement_timeout_in_seconds",
-				//},
+				// },
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
@@ -456,6 +456,85 @@ func TestAcc_Warehouse_SizeValidation(t *testing.T) {
 	})
 }
 
+func TestAcc_Warehouse_ZeroValues(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			// create with valid "zero" values
+			{
+				Config: warehouseWithAllValidZeroValues(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "0"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "0"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+
+					// TODO: snowflake checks?
+					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+				),
+			},
+			// remove all from config (to validate that unset is run correctly)
+			{
+				Config: warehouseBasicConfig(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					// TODO: unset seems not to work for auto_suspend (so 0 instead of 600)
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", ""),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", ""),
+				),
+			},
+			// add valid "zero" values again (to validate if set is run correctly)
+			{
+				Config: warehouseWithAllValidZeroValues(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "0"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "0"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -550,6 +629,18 @@ func warehouseBasicConfig(name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name           = "%s"
+}
+`, name)
+}
+
+func warehouseWithAllValidZeroValues(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                                = "%s"
+	auto_suspend                        = 0
+    query_acceleration_max_scale_factor = 0
+    statement_queued_timeout_in_seconds = 0
+    statement_timeout_in_seconds        = 0
 }
 `, name)
 }

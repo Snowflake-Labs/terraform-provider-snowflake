@@ -55,12 +55,12 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseScalingPoliciesString, true),
 	},
-	// TODO: handle correctly the zero-value
 	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Optional:     true,
 		ValidateFunc: validation.IntAtLeast(0),
+		Default:      -1,
 	},
 	"auto_resume": {
 		Type:        schema.TypeBool,
@@ -90,33 +90,33 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
 	},
-	// TODO: handle correctly the zero-value
 	"query_acceleration_max_scale_factor": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
+		Default:      -1,
 	},
-	// TODO: check if zero is accepted
-	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(1),
+		Description:  "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+		Default:      -1,
 	},
-	// TODO: handle correctly the zero-value
-	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)): {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+		Default:      -1,
 	},
-	// TODO: handle correctly the zero-value
-	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)): {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntBetween(0, 604800),
+		Description:  "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+		Default:      -1,
 	},
 	// TODO: min/max?
 	showOutputAttributeName: {
@@ -155,8 +155,21 @@ func Warehouse() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO: ComputedIfAnyAttributeChanged?
+			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_type"),
 			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_size"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "max_cluster_count"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "min_cluster_count"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "scaling_policy"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "auto_suspend"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "auto_resume"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "initially_suspended"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "resource_monitor"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "comment"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "enable_query_acceleration"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "query_acceleration_max_scale_factor"),
 			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel))),
+			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds))),
+			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -228,8 +241,6 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	id := sdk.NewAccountObjectIdentifier(name)
 	createOptions := &sdk.CreateWarehouseOptions{}
 
-	//!d.GetRawConfig().AsValueMap()["auto_suspend"].IsNull()
-	// TODO: handle valid "zero" values
 	if v, ok := d.GetOk("warehouse_type"); ok {
 		warehouseType, err := sdk.ToWarehouseType(v.(string))
 		if err != nil {
@@ -257,8 +268,8 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 		createOptions.ScalingPolicy = &scalingPolicy
 	}
-	if v, ok := d.GetOk("auto_suspend"); ok {
-		createOptions.AutoSuspend = sdk.Int(v.(int))
+	if v := d.Get("auto_suspend").(int); v != -1 {
+		createOptions.AutoSuspend = sdk.Int(v)
 	}
 	if v, ok := d.GetOk("auto_resume"); ok {
 		createOptions.AutoResume = sdk.Bool(v.(bool))
@@ -275,17 +286,17 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v, ok := d.GetOk("enable_query_acceleration"); ok {
 		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
+	if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
+		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 	}
-	if v, ok := d.GetOk("max_concurrency_level"); ok {
-		createOptions.MaxConcurrencyLevel = sdk.Int(v.(int))
+	if v := d.Get("max_concurrency_level").(int); v != -1 {
+		createOptions.MaxConcurrencyLevel = sdk.Int(v)
 	}
-	if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
+	if v := d.Get("statement_queued_timeout_in_seconds").(int); v != -1 {
+		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v)
 	}
-	if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-		createOptions.StatementTimeoutInSeconds = sdk.Int(v.(int))
+	if v := d.Get("statement_timeout_in_seconds").(int); v != -1 {
+		createOptions.StatementTimeoutInSeconds = sdk.Int(v)
 	}
 
 	err := client.Warehouses.Create(ctx, id, createOptions)
@@ -366,7 +377,6 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		id = newId
 	}
 
-	// TODO: handle valid "zero" values
 	// Batch SET operations and UNSET operations
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
@@ -419,8 +429,8 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("auto_suspend") {
-		if v, ok := d.GetOk("auto_suspend"); ok {
-			set.AutoSuspend = sdk.Int(v.(int))
+		if v := d.Get("auto_suspend").(int); v != -1 {
+			set.AutoSuspend = sdk.Int(v)
 		} else {
 			unset.AutoSuspend = sdk.Bool(true)
 		}
@@ -454,29 +464,29 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
-		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
-			set.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
+		if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
+			set.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 		} else {
 			unset.QueryAccelerationMaxScaleFactor = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("max_concurrency_level") {
-		if v, ok := d.GetOk("max_concurrency_level"); ok {
-			set.MaxConcurrencyLevel = sdk.Int(v.(int))
+		if v := d.Get("max_concurrency_level").(int); v != -1 {
+			set.MaxConcurrencyLevel = sdk.Int(v)
 		} else {
 			unset.MaxConcurrencyLevel = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
-		if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
-			set.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
+		if v := d.Get("statement_queued_timeout_in_seconds").(int); v != -1 {
+			set.StatementQueuedTimeoutInSeconds = sdk.Int(v)
 		} else {
 			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_timeout_in_seconds") {
-		if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
-			set.StatementTimeoutInSeconds = sdk.Int(v.(int))
+		if v := d.Get("statement_timeout_in_seconds").(int); v != -1 {
+			set.StatementTimeoutInSeconds = sdk.Int(v)
 		} else {
 			unset.StatementTimeoutInSeconds = sdk.Bool(true)
 		}
@@ -518,3 +528,8 @@ func DeleteWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.SetId("")
 	return nil
 }
+
+// TODO: for later
+// func isNullInConfig(d *schema.ResourceData, key string) bool {
+//	return d.GetRawConfig().AsValueMap()[key].IsNull()
+//}

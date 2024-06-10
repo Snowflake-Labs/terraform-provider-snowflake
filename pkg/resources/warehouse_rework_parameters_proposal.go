@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -13,6 +14,7 @@ const parametersAttributeName = "parameters"
 // markChangedParameters assumes that the snowflake parameter name is mirrored in schema (as lower-cased name)
 // TODO: test (unit and acceptance)
 // TODO: more readable errors
+// TODO: handle different types than int
 func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParameters []*sdk.Parameter, d *schema.ResourceData, level sdk.ParameterType) error {
 	for _, param := range objectParameters {
 		currentSnowflakeParameter, err := collections.FindOne(currentParameters, func(p *sdk.Parameter) bool {
@@ -27,7 +29,11 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 2. if it had different non-empty value, then the drift will be reported and the value will be set during update
 		// 3. if it had empty value, then the drift will be reported and the value will be unset during update
 		if (*currentSnowflakeParameter).Level == level {
-			if err = d.Set(strings.ToLower(string(param)), (*currentSnowflakeParameter).Value); err != nil {
+			intValue, err := strconv.Atoi((*currentSnowflakeParameter).Value)
+			if err != nil {
+				return err
+			}
+			if err = d.Set(strings.ToLower(string(param)), intValue); err != nil {
 				return err
 			}
 		}
@@ -36,7 +42,8 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 1. if it was missing in config before, then no drift will be reported
 		// 2. if it had a non-empty value, then the drift will be reported and the value will be set during update
 		if (*currentSnowflakeParameter).Level != level {
-			if err = d.Set(strings.ToLower(string(param)), nil); err != nil {
+			// TODO: this is currently set to the artificial default
+			if err = d.Set(strings.ToLower(string(param)), -1); err != nil {
 				return err
 			}
 		}
