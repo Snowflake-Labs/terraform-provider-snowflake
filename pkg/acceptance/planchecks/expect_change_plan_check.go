@@ -79,15 +79,15 @@ func (e expectChangePlanCheck) CheckPlan(_ context.Context, req plancheck.CheckP
 		if e.oldValue != nil {
 			if !valueBeforeOk {
 				result = append(result, fmt.Errorf("expect change: attribute %s before expected to be %s, got empty", e.attribute, *e.oldValue))
-			} else if *e.oldValue != valueBefore {
-				result = append(result, fmt.Errorf("expect change: attribute %s before expected to be %s, got %s", e.attribute, *e.oldValue, valueBefore))
+			} else if *e.oldValue != fmt.Sprintf("%v", valueBefore) {
+				result = append(result, fmt.Errorf("expect change: attribute %s before expected to be %s, got %v", e.attribute, *e.oldValue, valueBefore))
 			}
 		}
 		if e.newValue != nil {
 			if !valueAfterOk {
 				result = append(result, fmt.Errorf("expect change: attribute %s after expected to be %s, got empty", e.attribute, *e.newValue))
-			} else if *e.newValue != valueAfter {
-				result = append(result, fmt.Errorf("expect change: attribute %s after expected to be %s, got %s", e.attribute, *e.newValue, valueAfter))
+			} else if *e.newValue != fmt.Sprintf("%v", valueAfter) {
+				result = append(result, fmt.Errorf("expect change: attribute %s after expected to be %s, got %v", e.attribute, *e.newValue, valueAfter))
 			}
 		}
 
