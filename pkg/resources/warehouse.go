@@ -392,8 +392,10 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	unset := sdk.WarehouseUnset{}
 	if d.HasChange("warehouse_type") {
 		if v, ok := d.GetOk("warehouse_type"); ok {
-			// TODO: validate
-			warehouseType := sdk.WarehouseType(v.(string))
+			warehouseType, err := sdk.ToWarehouseType(v.(string))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			set.WarehouseType = &warehouseType
 		} else {
 			unset.WarehouseType = sdk.Bool(true)
@@ -401,6 +403,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
+		// TODO: get rid of that part (replace with force new for this parameter)
 		if n == "" {
 			n = string(sdk.WarehouseSizeXSmall)
 		}
@@ -426,7 +429,10 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("scaling_policy") {
 		if v, ok := d.GetOk("scaling_policy"); ok {
-			scalingPolicy := sdk.ScalingPolicy(v.(string))
+			scalingPolicy, err := sdk.ToScalingPolicy(v.(string))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			set.ScalingPolicy = &scalingPolicy
 		} else {
 			unset.ScalingPolicy = sdk.Bool(true)
