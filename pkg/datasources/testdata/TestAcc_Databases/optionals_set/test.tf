@@ -2,7 +2,7 @@ resource "snowflake_standard_database" "test" {
   name    = var.name
   comment = var.comment
   replication {
-    enable_for_account {
+    enable_to_account {
       account_identifier = var.account_identifier
       with_failover      = true
     }

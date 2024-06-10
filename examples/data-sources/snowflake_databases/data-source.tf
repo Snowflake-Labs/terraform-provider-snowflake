@@ -38,10 +38,10 @@ output "limit_output" {
 
 # Without additional data (to limit the number of calls make for every found database)
 data "snowflake_databases" "only_show" {
-  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches it's output to databases.*.description field
+  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.description field
   with_describe = false
 
-  # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches it's output to databases.*.parameters field
+  # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches its output to databases.*.parameters field
   with_parameters = false
 }
 
@@ -60,7 +60,7 @@ data "snowflake_databases" "assert_with_postcondition" {
   }
 }
 
-# Ensure the number of databases is equal to at exatly one element (with the use of check block)
+# Ensure the number of databases is equal to at exactly one element (with the use of check block)
 check "database_check" {
   data "snowflake_databases" "assert_with_check_block" {
     like = "database-name"

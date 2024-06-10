@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -274,40 +275,6 @@ func getTags(from interface{}) (to tags) {
 	return to
 }
 
-func nestedProperty(innerType schema.ValueType, fieldDescription string) *schema.Schema {
-	return nestedPropertyWithModifiers(innerType, fieldDescription, nil, nil)
-}
-
-func nestedPropertyWithInnerModifier(innerType schema.ValueType, fieldDescription string, modifyInner func(inner *schema.Schema)) *schema.Schema {
-	return nestedPropertyWithModifiers(innerType, fieldDescription, nil, modifyInner)
-}
-
-func nestedPropertyWithModifiers(innerType schema.ValueType, fieldDescription string, modifyOuter func(outer *schema.Schema), modifyInner func(inner *schema.Schema)) *schema.Schema {
-	innerSchema := &schema.Schema{
-		Type:     innerType,
-		Required: true,
-	}
-	outerSchema := &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": innerSchema,
-			},
-		},
-		Computed:    true,
-		Optional:    true,
-		Description: fieldDescription,
-	}
-	if modifyOuter != nil {
-		modifyOuter(outerSchema)
-	}
-	if modifyInner != nil {
-		modifyInner(innerSchema)
-	}
-	return outerSchema
-}
-
 func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
 	merged := make(M)
 	for _, m := range src {
@@ -326,4 +293,25 @@ func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
 		}
 	}
 	return result
+}
+
+// ListDiff Compares two lists (before and after), then compares and returns two lists that include
+// added and removed items between those lists.
+func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
+	added = make([]T, 0)
+	removed = make([]T, 0)
+
+	for _, privilegeBeforeChange := range beforeList {
+		if !slices.Contains(afterList, privilegeBeforeChange) {
+			removed = append(removed, privilegeBeforeChange)
+		}
+	}
+
+	for _, privilegeAfterChange := range afterList {
+		if !slices.Contains(beforeList, privilegeAfterChange) {
+			added = append(added, privilegeAfterChange)
+		}
+	}
+
+	return added, removed
 }

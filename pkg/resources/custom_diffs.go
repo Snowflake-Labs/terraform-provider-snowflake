@@ -15,7 +15,7 @@ func AccountObjectStringValueComputedIf(key string, params []*sdk.Parameter, par
 		params,
 		parameter,
 		func(value any) string { return value.(string) },
-		func(value string) string { return value },
+		func(value string) (string, error) { return value, nil },
 	)
 }
 
@@ -25,11 +25,7 @@ func AccountObjectIntValueComputedIf(key string, params []*sdk.Parameter, parame
 		params,
 		parameter,
 		func(value any) string { return strconv.Itoa(value.(int)) },
-		func(value string) int {
-			intValue, _ := strconv.Atoi(value)
-			// TODO: Handle err
-			return intValue
-		},
+		strconv.Atoi,
 	)
 }
 
@@ -39,15 +35,11 @@ func AccountObjectBoolValueComputedIf(key string, params []*sdk.Parameter, param
 		params,
 		parameter,
 		func(value any) string { return strconv.FormatBool(value.(bool)) },
-		func(value string) bool {
-			boolValue, _ := strconv.ParseBool(value)
-			// TODO: Handle err
-			return boolValue
-		},
+		strconv.ParseBool,
 	)
 }
 
-func ValueComputedIf[T any](key string, parameters []*sdk.Parameter, accountParameter sdk.AccountParameter, valueToString func(v any) string, valueFromString func(value string) T) schema.CustomizeDiffFunc {
+func ValueComputedIf[T any](key string, parameters []*sdk.Parameter, accountParameter sdk.AccountParameter, valueToString func(v any) string, valueFromString func(value string) (T, error)) schema.CustomizeDiffFunc {
 	var parameterValue *string
 	for _, parameter := range parameters {
 		if parameter.Key == string(accountParameter) {
@@ -75,7 +67,11 @@ func ValueComputedIf[T any](key string, parameters []*sdk.Parameter, accountPara
 			if *parameterValue == "" {
 				return d.SetNew(key, "<null>")
 			} else {
-				return d.SetNew(key, valueFromString(*parameterValue))
+				value, err := valueFromString(*parameterValue)
+				if err != nil {
+					return err
+				}
+				return d.SetNew(key, value)
 			}
 		}
 

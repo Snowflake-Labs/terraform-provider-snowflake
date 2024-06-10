@@ -1,12 +1,19 @@
+## Minimal
+resource "snowflake_standard_database" "primary" {
+  name = "database_name"
+}
+
+## Complete (with every optional set)
 resource "snowflake_standard_database" "primary" {
   name         = "database_name"
   is_transient = false
   comment      = "my standard database"
 
   data_retention_time_in_days                   = 10
+  data_retention_time_in_days_save              = 10
   max_data_extension_time_in_days               = 20
   external_volume                               = "<external_volume_name>"
-  catalog                                       = "<external_volume_name>"
+  catalog                                       = "<catalog_name>"
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -21,10 +28,34 @@ resource "snowflake_standard_database" "primary" {
   enable_console_output                         = false
 
   replication {
-    enable_for_account {
+    enable_to_account {
       account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
       with_failover      = true
     }
+    ignore_edition_check = true
+  }
+}
+
+## Replication with for_each
+locals {
+  replication_configs = [
+    {
+      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      with_failover      = true
+    },
+    {
+      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      with_failover      = true
+    },
+  ]
+}
+
+resource "snowflake_standard_database" "primary" {
+  name     = "database_name"
+  for_each = local.replication_configs
+
+  replication {
+    enable_to_account    = each.value
     ignore_edition_check = true
   }
 }

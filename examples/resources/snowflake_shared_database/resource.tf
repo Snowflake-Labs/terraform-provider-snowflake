@@ -18,6 +18,15 @@ resource "snowflake_grant_privileges_to_share" "test" {
 }
 
 # 2. Creating shared database
+## 2.1. Minimal version
+resource "snowflake_shared_database" "test" {
+  provider   = secondary_account
+  depends_on = [snowflake_grant_privileges_to_share.test]
+  name       = snowflake_standard_database.test.name # shared database should have the same as the "imported" one
+  from_share = "<primary_account_organization_name>.<primary_account_name>.${snowflake_share.test.name}"
+}
+
+## 2.2. Complete version (with every optional set)
 resource "snowflake_shared_database" "test" {
   provider     = secondary_account
   depends_on   = [snowflake_grant_privileges_to_share.test]
@@ -29,7 +38,7 @@ resource "snowflake_shared_database" "test" {
   data_retention_time_in_days                   = 10
   max_data_extension_time_in_days               = 20
   external_volume                               = "<external_volume_name>"
-  catalog                                       = "<external_volume_name>"
+  catalog                                       = "<catalog_name>"
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"

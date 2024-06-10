@@ -6,7 +6,6 @@ import (
 	"log"
 	"reflect"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -167,25 +166,4 @@ func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) er
 		}
 	}
 	return fmt.Errorf("giving up after %v attempts", attempts)
-}
-
-// ListDiff Compares two lists (before and after), then compares and returns two lists that include
-// added and removed items between those lists.
-func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
-	added = make([]T, 0)
-	removed = make([]T, 0)
-
-	for _, privilegeBeforeChange := range beforeList {
-		if !slices.Contains(afterList, privilegeBeforeChange) {
-			removed = append(removed, privilegeBeforeChange)
-		}
-	}
-
-	for _, privilegeAfterChange := range afterList {
-		if !slices.Contains(beforeList, privilegeAfterChange) {
-			added = append(added, privilegeAfterChange)
-		}
-	}
-
-	return added, removed
 }

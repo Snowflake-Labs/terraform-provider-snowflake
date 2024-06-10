@@ -52,10 +52,10 @@ output "limit_output" {
 
 # Without additional data (to limit the number of calls make for every found database)
 data "snowflake_databases" "only_show" {
-  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches it's output to databases.*.description field
+  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.description field
   with_describe = false
 
-  # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches it's output to databases.*.parameters field
+  # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches its output to databases.*.parameters field
   with_parameters = false
 }
 
@@ -74,7 +74,7 @@ data "snowflake_databases" "assert_with_postcondition" {
   }
 }
 
-# Ensure the number of databases is equal to at exatly one element (with the use of check block)
+# Ensure the number of databases is equal to at exactly one element (with the use of check block)
 check "database_check" {
   data "snowflake_databases" "assert_with_check_block" {
     like = "database-name"
@@ -93,7 +93,7 @@ check "database_check" {
 ### Optional
 
 - `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
-- `limit` (Block List, Max: 1) Limits the number of rows returned. The limit may start from the first element matched by from which is optional. (see [below for nested schema](#nestedblock--limit))
+- `limit` (Block List, Max: 1) Limits the number of rows returned. If the `limit.from` is set, then the limit wll start from the first element matched by the expression. The expression is only used to match with the first element, later on the elements are not matched by the prefix, but you can enforce a certain pattern with `starts_with` or `like`. (see [below for nested schema](#nestedblock--limit))
 - `starts_with` (String) Filters the output with **case-sensitive** characters indicating the beginning of the object name.
 - `with_describe` (Boolean) Runs DESC DATABASE for each database returned by SHOW DATABASES. The output of describe is saved to the description field. By default this value is set to true.
 - `with_parameters` (Boolean) Runs SHOW PARAMETERS FOR DATABASE for each database returned by SHOW DATABASES. The output of describe is saved to the parameters field as a map. By default this value is set to true.

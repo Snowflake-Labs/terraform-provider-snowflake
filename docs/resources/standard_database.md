@@ -12,15 +12,22 @@ Represents a standard database. If replication configuration is specified, the d
 ## Example Usage
 
 ```terraform
+## Minimal
+resource "snowflake_standard_database" "primary" {
+  name = "database_name"
+}
+
+## Complete (with every optional set)
 resource "snowflake_standard_database" "primary" {
   name         = "database_name"
   is_transient = false
   comment      = "my standard database"
 
   data_retention_time_in_days                   = 10
+  data_retention_time_in_days_save              = 10
   max_data_extension_time_in_days               = 20
   external_volume                               = "<external_volume_name>"
-  catalog                                       = "<external_volume_name>"
+  catalog                                       = "<catalog_name>"
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -35,10 +42,34 @@ resource "snowflake_standard_database" "primary" {
   enable_console_output                         = false
 
   replication {
-    enable_for_account {
+    enable_to_account {
       account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
       with_failover      = true
     }
+    ignore_edition_check = true
+  }
+}
+
+## Replication with for_each
+locals {
+  replication_configs = [
+    {
+      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      with_failover      = true
+    },
+    {
+      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      with_failover      = true
+    },
+  ]
+}
+
+resource "snowflake_standard_database" "primary" {
+  name     = "database_name"
+  for_each = local.replication_configs
+
+  replication {
+    enable_to_account    = each.value
     ignore_edition_check = true
   }
 }
@@ -82,14 +113,14 @@ resource "snowflake_standard_database" "primary" {
 
 Required:
 
-- `enable_for_account` (Block List, Min: 1) Entry to enable replication and optionally failover for a given account identifier. (see [below for nested schema](#nestedblock--replication--enable_for_account))
+- `enable_to_account` (Block List, Min: 1) Entry to enable replication and optionally failover for a given account identifier. (see [below for nested schema](#nestedblock--replication--enable_to_account))
 
 Optional:
 
 - `ignore_edition_check` (Boolean) Allows replicating data to accounts on lower editions in either of the following scenarios: 1. The primary database is in a Business Critical (or higher) account but one or more of the accounts approved for replication are on lower editions. Business Critical Edition is intended for Snowflake accounts with extremely sensitive data. 2. The primary database is in a Business Critical (or higher) account and a signed business associate agreement is in place to store PHI data in the account per HIPAA and HITRUST regulations, but no such agreement is in place for one or more of the accounts approved for replication, regardless if they are Business Critical (or higher) accounts. Both scenarios are prohibited by default in an effort to help prevent account administrators for Business Critical (or higher) accounts from inadvertently replicating sensitive data to accounts on lower editions.
 
-<a id="nestedblock--replication--enable_for_account"></a>
-### Nested Schema for `replication.enable_for_account`
+<a id="nestedblock--replication--enable_to_account"></a>
+### Nested Schema for `replication.enable_to_account`
 
 Required:
 

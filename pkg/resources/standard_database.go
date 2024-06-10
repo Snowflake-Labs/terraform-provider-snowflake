@@ -217,7 +217,7 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 	databaseSetRequest := new(sdk.DatabaseSet)
 	databaseUnsetRequest := new(sdk.DatabaseUnset)
 
-	if updateParamDiags := HandleDatabaseParameterChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+	if updateParamDiags := HandleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
 	}
 
@@ -246,8 +246,8 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 		beforeReplicationEnabledToAccounts, beforeFailoverEnabledToAccounts := getReplicationConfiguration(before.([]any))
 		afterReplicationEnabledToAccounts, afterFailoverEnabledToAccounts := getReplicationConfiguration(after.([]any))
 
-		addedFailovers, removedFailovers := helpers.ListDiff(beforeFailoverEnabledToAccounts, afterFailoverEnabledToAccounts)
-		addedReplications, removedReplications := helpers.ListDiff(beforeReplicationEnabledToAccounts, afterReplicationEnabledToAccounts)
+		addedFailovers, removedFailovers := ListDiff(beforeFailoverEnabledToAccounts, afterFailoverEnabledToAccounts)
+		addedReplications, removedReplications := ListDiff(beforeReplicationEnabledToAccounts, afterReplicationEnabledToAccounts)
 		// Failovers will be disabled implicitly by disabled replications
 		removedFailovers = slices.DeleteFunc(removedFailovers, func(identifier sdk.AccountIdentifier) bool { return slices.Contains(removedReplications, identifier) })
 

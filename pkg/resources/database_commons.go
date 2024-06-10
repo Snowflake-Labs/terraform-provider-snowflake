@@ -56,26 +56,6 @@ var (
 	}
 )
 
-// handleValuePropertyChange calls internally handleValuePropertyChangeWithMapping with identity mapping
-func handleValuePropertyChange[T any](d *schema.ResourceData, key string, setField **T, unsetField **bool) diag.Diagnostics {
-	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) T { return value })
-}
-
-// handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected,
-// it checks if the value is set in the configuration. If the value is set, setField (representing setter for a value) is
-// set to the new planned value applying mapping in such cases as enum values, identifiers, etc. have to be set.
-// Otherwise, unset is called for a given field.
-func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) R) diag.Diagnostics {
-	if d.HasChange(key) {
-		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
-			*setField = sdk.Pointer(mapping(d.Get(key).(T)))
-		} else {
-			*unsetField = sdk.Bool(true)
-		}
-	}
-	return nil
-}
-
 func init() {
 	databaseParameterFields := []struct {
 		Name         sdk.ObjectParameter
@@ -266,7 +246,7 @@ func GetAllDatabaseParameters(d *schema.ResourceData) (
 	return
 }
 
-func HandleDatabaseParameterChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
+func HandleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
 	return JoinDiags(
 		handleValuePropertyChange[int](d, "data_retention_time_in_days", &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
 		handleValuePropertyChange[int](d, "max_data_extension_time_in_days", &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
@@ -279,12 +259,32 @@ func HandleDatabaseParameterChanges(d *schema.ResourceData, set *sdk.DatabaseSet
 		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, func(value string) sdk.TraceLevel { return sdk.TraceLevel(value) }),
 		handleValuePropertyChange[int](d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
 		handleValuePropertyChange[int](d, "task_auto_retry_attempts", &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
-		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, func(value string) sdk.WarehouseSize { return sdk.WarehouseSize(value) }), // TODO: ToWarehouseSize?
+		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, func(value string) sdk.WarehouseSize { return sdk.WarehouseSize(value) }),
 		handleValuePropertyChange[int](d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
 		handleValuePropertyChange[int](d, "user_task_minimum_trigger_interval_in_seconds", &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
 		handleValuePropertyChange[bool](d, "quoted_identifiers_ignore_case", &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
 		handleValuePropertyChange[bool](d, "enable_console_output", &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
 	)
+}
+
+// handleValuePropertyChange calls internally handleValuePropertyChangeWithMapping with identity mapping
+func handleValuePropertyChange[T any](d *schema.ResourceData, key string, setField **T, unsetField **bool) diag.Diagnostics {
+	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) T { return value })
+}
+
+// handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected,
+// it checks if the value is set in the configuration. If the value is set, setField (representing setter for a value) is
+// set to the new planned value applying mapping in such cases as enum values, identifiers, etc. have to be set.
+// Otherwise, unset is called for a given field.
+func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) R) diag.Diagnostics {
+	if d.HasChange(key) {
+		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
+			*setField = sdk.Pointer(mapping(d.Get(key).(T)))
+		} else {
+			*unsetField = sdk.Bool(true)
+		}
+	}
+	return nil
 }
 
 func HandleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {

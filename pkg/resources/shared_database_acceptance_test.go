@@ -142,8 +142,6 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 	})
 }
 
-// TODO: Tests
-
 func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
