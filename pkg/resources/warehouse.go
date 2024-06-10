@@ -82,8 +82,9 @@ var warehouseSchema = map[string]*schema.Schema{
 	},
 	// TODO: test setting empty comment
 	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies a comment for the warehouse.",
 	},
 	"enable_query_acceleration": {
 		Type:        schema.TypeBool,
@@ -118,7 +119,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 		Default:      -1,
 	},
-	// TODO: min/max?
 	showOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
