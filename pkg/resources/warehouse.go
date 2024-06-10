@@ -205,7 +205,6 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
 		return nil, err
 	}
-	// TODO: handle parameters too (query all for warehouse and take only the ones with warehouse level)
 
 	return []*schema.ResourceData{d}, nil
 }

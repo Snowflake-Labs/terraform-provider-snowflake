@@ -266,6 +266,7 @@ resource "snowflake_warehouse" "w" {
 `, name)
 }
 
+// TODO: parameters should be filled out by read, validate
 func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
