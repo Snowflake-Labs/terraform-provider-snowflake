@@ -169,6 +169,9 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 		return nil, err
 	}
 
+	if err = d.Set("name", w.Name); err != nil {
+		return nil, err
+	}
 	if err = d.Set("warehouse_type", w.Type); err != nil {
 		return nil, err
 	}
@@ -215,6 +218,8 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	id := sdk.NewAccountObjectIdentifier(name)
 	createOptions := &sdk.CreateWarehouseOptions{}
 
+	//!d.GetRawConfig().AsValueMap()["auto_suspend"].IsNull()
+	// TODO: handle valid "zero" values
 	if v, ok := d.GetOk("warehouse_type"); ok {
 		warehouseType, err := sdk.ToWarehouseType(v.(string))
 		if err != nil {
@@ -347,11 +352,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 		}
 
-		// TODO: name to import?
-		if err = d.Set("name", w.Name); err != nil {
-			return diag.FromErr(err)
-		}
-
 		showOutput := schemas.WarehouseToSchema(w)
 		if err = d.Set("show_output", []map[string]any{showOutput}); err != nil {
 			return diag.FromErr(err)
@@ -386,6 +386,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		id = newId
 	}
 
+	// TODO: handle valid "zero" values
 	// Batch SET operations and UNSET operations
 	set := sdk.WarehouseSet{}
 	unset := sdk.WarehouseUnset{}
@@ -452,24 +453,47 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			unset.ResourceMonitor = sdk.Bool(true)
 		}
 	}
-	// TODO: add unsets
 	if d.HasChange("comment") {
-		set.Comment = sdk.String(d.Get("comment").(string))
+		if v, ok := d.GetOk("comment"); ok {
+			set.Comment = sdk.String(v.(string))
+		} else {
+			unset.Comment = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("enable_query_acceleration") {
-		set.EnableQueryAcceleration = sdk.Bool(d.Get("enable_query_acceleration").(bool))
+		if v, ok := d.GetOk("enable_query_acceleration"); ok {
+			set.EnableQueryAcceleration = sdk.Bool(v.(bool))
+		} else {
+			unset.EnableQueryAcceleration = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
-		set.QueryAccelerationMaxScaleFactor = sdk.Int(d.Get("query_acceleration_max_scale_factor").(int))
+		if v, ok := d.GetOk("query_acceleration_max_scale_factor"); ok {
+			set.QueryAccelerationMaxScaleFactor = sdk.Int(v.(int))
+		} else {
+			unset.QueryAccelerationMaxScaleFactor = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("max_concurrency_level") {
-		set.MaxConcurrencyLevel = sdk.Int(d.Get("max_concurrency_level").(int))
+		if v, ok := d.GetOk("max_concurrency_level"); ok {
+			set.MaxConcurrencyLevel = sdk.Int(v.(int))
+		} else {
+			unset.MaxConcurrencyLevel = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
-		set.StatementQueuedTimeoutInSeconds = sdk.Int(d.Get("statement_queued_timeout_in_seconds").(int))
+		if v, ok := d.GetOk("statement_queued_timeout_in_seconds"); ok {
+			set.StatementQueuedTimeoutInSeconds = sdk.Int(v.(int))
+		} else {
+			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
+		}
 	}
 	if d.HasChange("statement_timeout_in_seconds") {
-		set.StatementTimeoutInSeconds = sdk.Int(d.Get("statement_timeout_in_seconds").(int))
+		if v, ok := d.GetOk("statement_timeout_in_seconds"); ok {
+			set.StatementTimeoutInSeconds = sdk.Int(v.(int))
+		} else {
+			unset.StatementTimeoutInSeconds = sdk.Bool(true)
+		}
 	}
 
 	// Apply SET and UNSET changes
