@@ -8,6 +8,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -41,6 +42,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
@@ -116,6 +118,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
@@ -188,7 +191,6 @@ func TestAcc_ScimIntegration_InvalidIncomplete(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			`The argument "enabled" is required, but no definition was found.`,
 			`The argument "scim_client" is required, but no definition was found.`,
 			`The argument "run_as_role" is required, but no definition was found.`,
 		}),
@@ -255,7 +257,7 @@ func scimIntegrationv092(name, roleName string) string {
 	s := `
 resource "snowflake_scim_integration" "test" {
 	name             = "%s"
-	enabled          = false
+	enabled          = true
 	scim_client      = "%s"
 	run_as_role		 = "%s"
 }

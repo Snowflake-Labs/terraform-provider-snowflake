@@ -28,12 +28,9 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specify whether the security integration is enabled.",
+		Description: "Specify whether the security integration is enabled. ",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			if d.GetRawConfig().AsValueMap()["enabled"].IsNull() {
-				return true
-			}
-			return oldValue == newValue
+			return d.GetRawConfig().AsValueMap()["enabled"].IsNull()
 		},
 	},
 	"scim_client": {
