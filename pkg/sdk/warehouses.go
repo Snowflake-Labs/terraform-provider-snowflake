@@ -120,18 +120,18 @@ type CreateWarehouseOptions struct {
 	name        AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
-	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
-	MaxClusterCount                 *int           `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *int           `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
-	AutoSuspend                     *int           `ddl:"parameter" sql:"AUTO_SUSPEND"`
-	AutoResume                      *bool          `ddl:"parameter" sql:"AUTO_RESUME"`
-	InitiallySuspended              *bool          `ddl:"parameter" sql:"INITIALLY_SUSPENDED"`
-	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" sql:"RESOURCE_MONITOR"`
-	Comment                         *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	EnableQueryAcceleration         *bool          `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	WarehouseType                   *WarehouseType           `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *WarehouseSize           `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
+	MaxClusterCount                 *int                     `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int                     `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *ScalingPolicy           `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
+	AutoSuspend                     *int                     `ddl:"parameter" sql:"AUTO_SUSPEND"`
+	AutoResume                      *bool                    `ddl:"parameter" sql:"AUTO_RESUME"`
+	InitiallySuspended              *bool                    `ddl:"parameter" sql:"INITIALLY_SUSPENDED"`
+	ResourceMonitor                 *AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	Comment                         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableQueryAcceleration         *bool                    `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *int                     `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
 	MaxConcurrencyLevel             *int             `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`

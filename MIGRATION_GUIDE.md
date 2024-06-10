@@ -32,6 +32,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 #### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
 TODO: describe
 
+#### *(note)* `resource_monitor` validation and diff suppression
+`resource_monitor` is an identifier and handling logic may be slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added

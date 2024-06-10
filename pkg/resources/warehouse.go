@@ -29,6 +29,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
 		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
+	// TODO: handle forceNew instead of update
 	"warehouse_size": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -73,9 +74,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"resource_monitor": {
-		Type:        schema.TypeString,
-		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
-		Optional:    true,
+		Type:             schema.TypeString,
+		Description:      "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
+		Optional:         true,
+		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	// TODO: test setting empty comment
 	"comment": {
@@ -264,8 +267,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		createOptions.InitiallySuspended = sdk.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("resource_monitor"); ok {
-		// TODO: resource monitor identifier?
-		createOptions.ResourceMonitor = sdk.String(v.(string))
+		createOptions.ResourceMonitor = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
 	}
 	if v, ok := d.GetOk("comment"); ok {
 		createOptions.Comment = sdk.String(v.(string))

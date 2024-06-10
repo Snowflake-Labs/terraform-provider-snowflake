@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: add resource monitor test
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
