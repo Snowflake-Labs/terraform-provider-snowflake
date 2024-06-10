@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -90,24 +91,23 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
-	"max_concurrency_level": {
+	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
-	"statement_queued_timeout_in_seconds": {
+	strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
 	},
-	"statement_timeout_in_seconds": {
+	strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
-	// TODO: better name?
 	// TODO: min/max?
-	"show_output": {
+	showOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW WAREHOUSE` for the given warehouse.",
@@ -115,7 +115,7 @@ var warehouseSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowWarehouseSchema,
 		},
 	},
-	"parameters": {
+	parametersAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW PARAMETERS IN WAREHOUSE` for the given warehouse.",
@@ -143,7 +143,8 @@ func Warehouse() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO: ComputedIfAnyAttributeChanged?
-			ComputedIfAttributeChanged("show_output", "warehouse_size"),
+			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_size"),
+			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel))),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -305,17 +306,16 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		}
 
 		if withExternalChangesMarking {
-			// TODO: extract/fix/make safer (casting)
-			if showOutput, ok := d.GetOk("show_output"); ok {
-				showOutputList := showOutput.([]any)
-				if len(showOutputList) == 1 {
-					result := showOutputList[0].(map[string]any)
-					if result["size"].(string) != string(w.Size) {
-						if err = d.Set("warehouse_size", w.Size); err != nil {
-							return diag.FromErr(err)
-						}
+			if err = handleExternalChangesToObject(d, func(result map[string]any) error {
+				// TODO: add all dependencies
+				if result["size"].(string) != string(w.Size) {
+					if err = d.Set("warehouse_size", w.Size); err != nil {
+						return err
 					}
 				}
+				return nil
+			}); err != nil {
+				return diag.FromErr(err)
 			}
 
 			if err = markChangedParameters(sdk.WarehouseParameters, warehouseParameters, d, sdk.ParameterTypeWarehouse); err != nil {
@@ -323,13 +323,11 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 		}
 
-		showOutput := schemas.WarehouseToSchema(w)
-		if err = d.Set("show_output", []map[string]any{showOutput}); err != nil {
+		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.WarehouseToSchema(w)}); err != nil {
 			return diag.FromErr(err)
 		}
 
-		parameters := schemas.WarehouseParametersToSchema(warehouseParameters)
-		if err = d.Set("parameters", []map[string]any{parameters}); err != nil {
+		if err = d.Set(parametersAttributeName, []map[string]any{schemas.WarehouseParametersToSchema(warehouseParameters)}); err != nil {
 			return diag.FromErr(err)
 		}
 

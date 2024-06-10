@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const parametersAttributeName = "parameters"
+
 // markChangedParameters assumes that the snowflake parameter name is mirrored in schema (as lower-cased name)
 // TODO: test (unit and acceptance)
 // TODO: more readable errors
