@@ -54,6 +54,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseScalingPoliciesString, true),
 	},
+	// TODO: handle correctly the zero-value
 	"auto_suspend": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
@@ -76,6 +77,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:    true,
 	},
+	// TODO: test setting empty comment
 	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
@@ -85,22 +87,29 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
 	},
+	// TODO: handle correctly the zero-value
 	"query_acceleration_max_scale_factor": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 100),
 		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 	},
+	// TODO: check if zero is accepted
+	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
+	// TODO: handle correctly the zero-value
+	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
 	},
+	// TODO: handle correctly the zero-value
+	// TODO: add validation
 	strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)): {
 		Type:        schema.TypeInt,
 		Optional:    true,
