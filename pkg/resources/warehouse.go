@@ -29,7 +29,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
 		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
-	// TODO: handle forceNew instead of update
 	"warehouse_size": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -62,6 +61,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      -1,
 	},
+	// TODO [this PR]: check default for boolean
 	"auto_resume": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
@@ -169,6 +169,9 @@ func Warehouse() *schema.Resource {
 			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel))),
 			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds))),
 			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
+				return old.(string) != "" && new.(string) == ""
+			}),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -443,10 +446,6 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
-		// TODO [this PR]: get rid of that part (replace with force new for this parameter)
-		if n == "" {
-			n = string(sdk.WarehouseSizeXSmall)
-		}
 		size, err := sdk.ToWarehouseSize(n)
 		if err != nil {
 			return diag.FromErr(err)

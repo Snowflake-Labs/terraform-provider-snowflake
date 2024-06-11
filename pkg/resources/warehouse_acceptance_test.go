@@ -313,7 +313,6 @@ func TestAcc_Warehouse_WarehouseType(t *testing.T) {
 	})
 }
 
-// TODO: force new instead
 func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -374,14 +373,14 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionDestroyBeforeCreate),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeMedium)), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionCreate, sdk.String(string(sdk.WarehouseSizeMedium)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_size"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
 					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
@@ -416,12 +415,12 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "show_output"),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", sdk.String(strings.ToLower(string(sdk.WarehouseSizeSmall))), sdk.String(string(sdk.WarehouseSizeXSmall))),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.size", sdk.String(string(sdk.WarehouseSizeSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
-						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionCreate, sdk.String(string(sdk.WarehouseSizeXSmall)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_size"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
 					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
@@ -440,12 +439,12 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_size", "show_output"),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "warehouse_size", nil, sdk.String(string(sdk.WarehouseSizeSmall))),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.size", sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeSmall))),
-						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeSmall)), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionCreate, sdk.String(string(sdk.WarehouseSizeSmall)), nil),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", ""),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_size"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
 					snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeXSmall),
