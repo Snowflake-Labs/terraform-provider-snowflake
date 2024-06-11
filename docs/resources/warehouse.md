@@ -28,7 +28,7 @@ resource "snowflake_warehouse" "warehouse" {
 
 ### Optional
 
-- `auto_resume` (Boolean) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
+- `auto_resume` (String) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
 - `auto_suspend` (Number) Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.
 - `comment` (String) Specifies a comment for the warehouse.
 - `enable_query_acceleration` (Boolean) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.

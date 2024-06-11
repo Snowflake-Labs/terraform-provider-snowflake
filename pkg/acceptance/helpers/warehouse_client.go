@@ -96,6 +96,15 @@ func (c *WarehouseClient) UpdateStatementTimeoutInSeconds(t *testing.T, id sdk.A
 	require.NoError(t, err)
 }
 
+func (c *WarehouseClient) UpdateAutoResume(t *testing.T, id sdk.AccountObjectIdentifier, newAutoResume bool) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{AutoResume: sdk.Pointer(newAutoResume)}})
+	require.NoError(t, err)
+}
+
 func (c *WarehouseClient) Suspend(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 

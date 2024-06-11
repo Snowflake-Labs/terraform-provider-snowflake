@@ -477,7 +477,119 @@ func TestAcc_Warehouse_SizeValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      warehouseWithSizeConfig(id.Name(), "SMALLa"),
-				ExpectError: regexp.MustCompile(`expected a valid warehouse size, got "SMALLa"`),
+				ExpectError: regexp.MustCompile("invalid warehouse size: SMALLa"),
+			},
+		},
+	})
+}
+
+// TestAcc_Warehouse_AutoResume validates behavior for falling back to Snowflake default for boolean attribute
+func TestAcc_Warehouse_AutoResume(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			// set up with auto resume set in config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionCreate, nil, sdk.String("true")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Config: warehouseWithAutoResumeConfig(id.Name(), true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "true"),
+					snowflakechecks.CheckAutoResume(t, id, true),
+				),
+			},
+			// import when type in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "true"),
+				),
+			},
+			// change value in config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Config: warehouseWithAutoResumeConfig(id.Name(), false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "false"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
+					snowflakechecks.CheckAutoResume(t, id, false),
+				),
+			},
+			// remove type from config (expecting non-empty plan because we do not know the default)
+			{
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("false"), sdk.String("none")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "none"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
+					snowflakechecks.CheckAutoResume(t, id, false),
+				),
+			},
+			// change auto resume externally
+			{
+				PreConfig: func() {
+					// we change the auto resume to the type different from default, expecting action
+					acc.TestClient().Warehouse.UpdateAutoResume(t, id, true)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_resume", sdk.String("none"), sdk.String("true")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_resume", sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("none")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "none"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
+					snowflakechecks.CheckWarehouseType(t, id, sdk.WarehouseTypeStandard),
+				),
+			},
+			// import when no type in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "false"),
+				),
 			},
 		},
 	})
@@ -907,6 +1019,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 // TODO: test basic creation (check previous defaults)
 // TODO: test auto_suspend set to 0 (or NULL?)
 // TODO: do we care about drift in warehouse for is_current warehouse? (test)
+// TODO: test boolean type change (with leaving boolean/int in config) and add migration
 func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -963,6 +1076,15 @@ resource "snowflake_warehouse" "w" {
 	warehouse_size = "%s"
 }
 `, name, warehouseType, size)
+}
+
+func warehouseWithAutoResumeConfig(name string, autoResume bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name        = "%s"
+	auto_resume = "%t"
+}
+`, name, autoResume)
 }
 
 func warehouseBasicConfig(name string) string {

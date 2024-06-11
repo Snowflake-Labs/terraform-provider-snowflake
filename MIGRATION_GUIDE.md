@@ -38,6 +38,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 #### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
 Previously, the `query_acceleration_max_scale_factor` was depending on `enable_query_acceleration` parameter, but it is not required on Snowflake side. After migration, `terraform plan` should suggest changes if `enable_query_acceleration` was earlier set to false (manually or from default) and if `query_acceleration_max_scale_factor` was set in config.
 
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `auto_resume` was changed from boolean to string. This should not require updating existing configs (boolean/int value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings. Terraform should perform an action for configs lacking `auto_resume` (`ALTER WAREHOUSE UNSET AUTO_RESUME` will be run underneath which should not affect the Snowflake object, because `auto_resume` should be false by default).
+
 #### *(note)* `resource_monitor` validation and diff suppression
 `resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 

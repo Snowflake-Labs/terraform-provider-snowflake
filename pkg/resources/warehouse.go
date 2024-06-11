@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -61,11 +62,12 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      -1,
 	},
-	// TODO [this PR]: check default for boolean
 	"auto_resume": {
-		Type:        schema.TypeBool,
-		Description: "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
-		Optional:    true,
+		Type:         schema.TypeString,
+		Description:  "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
+		ValidateFunc: validation.StringInSlice([]string{"true", "false"}, true),
+		Optional:     true,
+		Default:      "unknown",
 	},
 	"initially_suspended": {
 		Type:        schema.TypeBool,
@@ -216,7 +218,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
 		return nil, err
 	}
-	if err = d.Set("auto_resume", w.AutoResume); err != nil {
+	if err = d.Set("auto_resume", fmt.Sprintf("%t", w.AutoResume)); err != nil {
 		return nil, err
 	}
 	if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
@@ -273,8 +275,12 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v := d.Get("auto_suspend").(int); v != -1 {
 		createOptions.AutoSuspend = sdk.Int(v)
 	}
-	if v, ok := d.GetOk("auto_resume"); ok {
-		createOptions.AutoResume = sdk.Bool(v.(bool))
+	if v := d.Get("auto_resume").(string); v != "unknown" {
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		createOptions.AutoResume = sdk.Bool(parsed)
 	}
 	if v, ok := d.GetOk("initially_suspended"); ok {
 		createOptions.InitiallySuspended = sdk.Bool(v.(bool))
@@ -362,7 +368,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 					}
 				}
 				if result["auto_resume"].(bool) != w.AutoResume {
-					if err = d.Set("auto_resume", w.AutoResume); err != nil {
+					if err = d.Set("auto_resume", fmt.Sprintf("%t", w.AutoResume)); err != nil {
 						return err
 					}
 				}
@@ -440,7 +446,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			set.WarehouseType = &warehouseType
 		} else {
 			// TODO [SNOW-1473453]: UNSET of type does not work
-			//unset.WarehouseType = sdk.Bool(true)
+			// unset.WarehouseType = sdk.Bool(true)
 			set.WarehouseType = &sdk.WarehouseTypeStandard
 		}
 	}
@@ -482,13 +488,17 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			set.AutoSuspend = sdk.Int(v)
 		} else {
 			// TODO [SNOW-1473453]: UNSET of type does not work
-			//unset.AutoSuspend = sdk.Bool(true)
+			// unset.AutoSuspend = sdk.Bool(true)
 			set.AutoSuspend = sdk.Int(600)
 		}
 	}
 	if d.HasChange("auto_resume") {
-		if v, ok := d.GetOk("auto_resume"); ok {
-			set.AutoResume = sdk.Bool(v.(bool))
+		if v := d.Get("auto_resume").(string); v != "unknown" {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.AutoResume = sdk.Bool(parsed)
 		} else {
 			unset.AutoResume = sdk.Bool(true)
 		}

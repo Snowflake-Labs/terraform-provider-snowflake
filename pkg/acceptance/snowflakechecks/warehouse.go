@@ -38,3 +38,17 @@ func CheckWarehouseType(t *testing.T, id sdk.AccountObjectIdentifier, expectedTy
 		return nil
 	}
 }
+
+func CheckAutoResume(t *testing.T, id sdk.AccountObjectIdentifier, expectedAutoResume bool) func(state *terraform.State) error {
+	t.Helper()
+	return func(_ *terraform.State) error {
+		warehouse, err := acc.TestClient().Warehouse.Show(t, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.AutoResume != expectedAutoResume {
+			return fmt.Errorf("expected auto resume: %t; got: %t", expectedAutoResume, warehouse.AutoResume)
+		}
+		return nil
+	}
+}
