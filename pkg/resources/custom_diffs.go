@@ -63,9 +63,12 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 }
 
 // TODO [follow-up PR]: test
-// TODO [follow-up PR]: ComputedIfAnyAttributeChanged?
-func ComputedIfAttributeChanged(key string, changedAttributeKey string) schema.CustomizeDiffFunc {
+func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-		return diff.HasChange(changedAttributeKey)
+		var result bool
+		for _, changedKey := range changedAttributeKeys {
+			result = result || diff.HasChange(changedKey)
+		}
+		return result
 	})
 }

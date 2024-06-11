@@ -158,21 +158,8 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_type"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_size"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "max_cluster_count"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "min_cluster_count"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "scaling_policy"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "auto_suspend"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "auto_resume"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "initially_suspended"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "resource_monitor"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "comment"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "enable_query_acceleration"),
-			ComputedIfAttributeChanged(showOutputAttributeName, "query_acceleration_max_scale_factor"),
-			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel))),
-			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds))),
-			ComputedIfAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			ComputedIfAnyAttributeChanged(showOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "initially_suspended", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
+			ComputedIfAnyAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
