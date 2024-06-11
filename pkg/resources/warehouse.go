@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-1348102 - next PR]: extract three-value logic
+// TODO [SNOW-1348102 - next PR]: handle conditional suspension for some updates (additional optional field)
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -69,6 +71,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      "unknown",
 	},
+	// TODO [SNOW-1348102 - next PR]: do we really need forceNew for this?
 	"initially_suspended": {
 		Type:        schema.TypeBool,
 		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
@@ -82,7 +85,6 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
-	// TODO: test setting empty comment
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,

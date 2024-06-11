@@ -199,7 +199,7 @@ func TestAcc_Warehouse_WarehouseType(t *testing.T) {
 			// change type in config
 			{
 				PreConfig: func() {
-					// TODO [this PR]: currently just for tests, later add suspension to the resource
+					// TODO [SNOW-1348102 - next PR]: currently just for tests, later add suspension to the resource (additional field state to allow escaping from the bad situation?)
 					acc.TestClient().Warehouse.Suspend(t, id)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -635,7 +635,7 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 
-					// TODO: snowflake checks?
+					// TODO [SNOW-1348102 - next PR]: snowflake checks?
 					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
@@ -731,7 +731,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 
-					// TODO: snowflake checks?
+					// TODO [SNOW-1348102 - next PR]: snowflake checks?
 					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
@@ -1015,12 +1015,12 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 	})
 }
 
-// TODO: test defaults removal
-// TODO: test basic creation (check previous defaults)
-// TODO: test auto_suspend set to 0 (or NULL?)
-// TODO: do we care about drift in warehouse for is_current warehouse? (test)
-// TODO: test boolean type change (with leaving boolean/int in config) and add migration
-// TODO: test int, string, identifier changed externally
+// TODO [SNOW-1348102 - next PR]: test defaults removal
+// TODO [SNOW-1348102 - next PR]: test basic creation (check previous defaults)
+// TODO [SNOW-1348102 - next PR]: test auto_suspend set to 0 (or NULL?)
+// TODO [SNOW-1348102 - next PR]: do we care about drift in warehouse for is_current warehouse? (test)
+// TODO [SNOW-1348102 - next PR]: test boolean type change (with leaving boolean/int in config) and add migration
+// TODO [SNOW-1348102 - next PR]: test int, string, identifier changed externally
 func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 

@@ -10,8 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [this PR]: add resource monitor test
-// TODO [this PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
+// TODO [SNOW-1348102 - next PR]: add resource monitor test
+// TODO [SNOW-1348102 - next PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
+// TODO [SNOW-1348102 - next PR]: test setting empty comment
+// TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
