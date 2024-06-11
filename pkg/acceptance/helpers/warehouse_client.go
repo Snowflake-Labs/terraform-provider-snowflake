@@ -78,12 +78,30 @@ func (c *WarehouseClient) UpdateWarehouseSize(t *testing.T, id sdk.AccountObject
 	require.NoError(t, err)
 }
 
+func (c *WarehouseClient) UpdateWarehouseType(t *testing.T, id sdk.AccountObjectIdentifier, newType sdk.WarehouseType) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{WarehouseType: sdk.Pointer(newType)}})
+	require.NoError(t, err)
+}
+
 func (c *WarehouseClient) UpdateStatementTimeoutInSeconds(t *testing.T, id sdk.AccountObjectIdentifier, newValue int) {
 	t.Helper()
 
 	ctx := context.Background()
 
 	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{StatementTimeoutInSeconds: sdk.Int(newValue)}})
+	require.NoError(t, err)
+}
+
+func (c *WarehouseClient) Suspend(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Suspend: sdk.Bool(true)})
 	require.NoError(t, err)
 }
 

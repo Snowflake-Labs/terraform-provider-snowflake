@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add resource monitor test
+// TODO [this PR]: add resource monitor test
+// TODO [this PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

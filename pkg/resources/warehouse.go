@@ -436,12 +436,14 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			}
 			set.WarehouseType = &warehouseType
 		} else {
-			unset.WarehouseType = sdk.Bool(true)
+			// TODO [SNOW-1473453]: UNSET of type does not work
+			//unset.WarehouseType = sdk.Bool(true)
+			set.WarehouseType = &sdk.WarehouseTypeStandard
 		}
 	}
 	if d.HasChange("warehouse_size") {
 		n := d.Get("warehouse_size").(string)
-		// TODO: get rid of that part (replace with force new for this parameter)
+		// TODO [this PR]: get rid of that part (replace with force new for this parameter)
 		if n == "" {
 			n = string(sdk.WarehouseSizeXSmall)
 		}

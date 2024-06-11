@@ -24,3 +24,17 @@ func CheckWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, expectedSi
 		return nil
 	}
 }
+
+func CheckWarehouseType(t *testing.T, id sdk.AccountObjectIdentifier, expectedType sdk.WarehouseType) func(state *terraform.State) error {
+	t.Helper()
+	return func(_ *terraform.State) error {
+		warehouse, err := acc.TestClient().Warehouse.Show(t, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.Type != expectedType {
+			return fmt.Errorf("expected type: %s; got: %s", expectedType, warehouse.Type)
+		}
+		return nil
+	}
+}
