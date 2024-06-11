@@ -27,9 +27,9 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 			"name":        config.StringVariable(id.Name()),
 			"scim_client": config.StringVariable(string(scimClient)),
 			"run_as_role": config.StringVariable(runAsRole.Name()),
+			"enabled":     config.BoolVariable(enabled),
 		}
 		if complete {
-			c["enabled"] = config.BoolVariable(enabled)
 			c["sync_password"] = config.BoolVariable(false)
 			c["network_policy_name"] = config.StringVariable(networkPolicy.Name)
 			c["comment"] = config.StringVariable("foo")
@@ -49,7 +49,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				ConfigVariables: m(false, sdk.ScimSecurityIntegrationScimClientGeneric, role, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
-					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "enabled"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
 					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "sync_password"),

@@ -7,3 +7,6 @@ variable "scim_client" {
 variable "run_as_role" {
   type = string
 }
+variable "enabled" {
+  type = bool
+}

@@ -27,7 +27,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	},
 	"enabled": {
 		Type:        schema.TypeBool,
-		Optional:    true,
+		Required:    true,
 		Description: "Specify whether the security integration is enabled. ",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return d.GetRawConfig().AsValueMap()["enabled"].IsNull()
@@ -133,12 +133,8 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	req := sdk.NewCreateScimSecurityIntegrationRequest(id, scimClient, runAsRole)
+	req := sdk.NewCreateScimSecurityIntegrationRequest(id, scimClient, runAsRole).WithEnabled(d.Get("enabled").(bool))
 
-	// Set optionals
-	if !d.GetRawConfig().AsValueMap()["enabled"].IsNull() {
-		req.WithEnabled(d.Get("enabled").(bool))
-	}
 	if v, ok := d.GetOk("network_policy"); ok {
 		req.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v.(string)))
 	}

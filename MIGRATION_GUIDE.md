@@ -20,6 +20,10 @@ Its purpose was also to divide the resources by their specific purpose rather th
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
+#### *(behavior change)* Changed behavior of `enabled`
+
+Field `enabled` is now required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
+
 #### *(behavior change)* Force new for multiple attributes
 Force new was added for the following attributes (because no usable SQL alter statements for them):
 - `scim_client`
