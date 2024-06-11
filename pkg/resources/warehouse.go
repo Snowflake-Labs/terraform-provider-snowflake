@@ -89,9 +89,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the warehouse.",
 	},
 	"enable_query_acceleration": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
+		Type:         schema.TypeString,
+		Description:  "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
+		ValidateFunc: validation.StringInSlice([]string{"true", "false"}, true),
+		Optional:     true,
+		Default:      "unknown",
 	},
 	"query_acceleration_max_scale_factor": {
 		Type:         schema.TypeInt,
@@ -227,7 +229,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("comment", w.Comment); err != nil {
 		return nil, err
 	}
-	if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+	if err = d.Set("enable_query_acceleration", fmt.Sprintf("%t", w.EnableQueryAcceleration)); err != nil {
 		return nil, err
 	}
 	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
@@ -291,8 +293,12 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v, ok := d.GetOk("comment"); ok {
 		createOptions.Comment = sdk.String(v.(string))
 	}
-	if v, ok := d.GetOk("enable_query_acceleration"); ok {
-		createOptions.EnableQueryAcceleration = sdk.Bool(v.(bool))
+	if v := d.Get("enable_query_acceleration").(string); v != "unknown" {
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		createOptions.EnableQueryAcceleration = sdk.Bool(parsed)
 	}
 	if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
 		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v)
@@ -383,7 +389,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 					}
 				}
 				if result["enable_query_acceleration"].(bool) != w.EnableQueryAcceleration {
-					if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+					if err = d.Set("enable_query_acceleration", fmt.Sprintf("%t", w.EnableQueryAcceleration)); err != nil {
 						return err
 					}
 				}
@@ -518,8 +524,12 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("enable_query_acceleration") {
-		if v, ok := d.GetOk("enable_query_acceleration"); ok {
-			set.EnableQueryAcceleration = sdk.Bool(v.(bool))
+		if v := d.Get("enable_query_acceleration").(string); v != "unknown" {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.EnableQueryAcceleration = sdk.Bool(parsed)
 		} else {
 			unset.EnableQueryAcceleration = sdk.Bool(true)
 		}

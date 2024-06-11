@@ -31,7 +31,7 @@ resource "snowflake_warehouse" "warehouse" {
 - `auto_resume` (String) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
 - `auto_suspend` (Number) Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.
 - `comment` (String) Specifies a comment for the warehouse.
-- `enable_query_acceleration` (Boolean) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.
+- `enable_query_acceleration` (String) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.
 - `initially_suspended` (Boolean) Specifies whether the warehouse is created initially in the ‘Suspended’ state.
 - `max_cluster_count` (Number) Specifies the maximum number of server clusters for the warehouse.
 - `max_concurrency_level` (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
