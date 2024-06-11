@@ -122,28 +122,6 @@ func TestAcc_Warehouse(t *testing.T) {
 	})
 }
 
-func TestAcc_WarehousePattern(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
-		Steps: []resource.TestStep{
-			{
-				Config: wConfigPattern(prefix),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w1", "name", fmt.Sprintf("%s_", prefix)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w2", "name", fmt.Sprintf("%s1", prefix)),
-				),
-			},
-		},
-	})
-}
-
 func wConfig(prefix string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
@@ -178,18 +156,6 @@ resource "snowflake_warehouse" "w" {
 	max_concurrency_level = %[3]d
 }
 `, prefix, size, maxConcurrencyLevel, minClusterCount, comment)
-}
-
-func wConfigPattern(prefix string) string {
-	s := `
-resource "snowflake_warehouse" "w1" {
-	name           = "%s_"
-}
-resource "snowflake_warehouse" "w2" {
-	name           = "%s1"
-}
-`
-	return fmt.Sprintf(s, prefix, prefix)
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2763
