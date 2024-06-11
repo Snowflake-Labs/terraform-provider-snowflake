@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TODO: consider using size from state instead of passing it
+// TODO [SNOW-1473412]: consider using size from state instead of passing it
 func CheckWarehouseSize(t *testing.T, id sdk.AccountObjectIdentifier, expectedSize sdk.WarehouseSize) func(state *terraform.State) error {
 	t.Helper()
 	return func(_ *terraform.State) error {

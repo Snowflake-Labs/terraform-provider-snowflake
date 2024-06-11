@@ -54,7 +54,7 @@ func (c *ParameterClient) ShowAccountParameter(t *testing.T, parameter sdk.Accou
 	return param
 }
 
-// TODO: add unset account parameter to sdk.Parameters
+// TODO [SNOW-1473408]: add unset account parameter to sdk.Parameters
 func (c *ParameterClient) UnsetAccountParameter(t *testing.T, parameter sdk.AccountParameter) {
 	t.Helper()
 	ctx := context.Background()

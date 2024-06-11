@@ -6,7 +6,7 @@ import (
 )
 
 // ShowWarehouseSchema represents output of SHOW WAREHOUSES query for the single warehouse.
-// TODO: should be generated later based on the sdk.Warehouse
+// TODO [SNOW-1473425]: should be generated later based on the sdk.Warehouse
 var ShowWarehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
@@ -118,8 +118,8 @@ var ShowWarehouseSchema = map[string]*schema.Schema{
 	},
 }
 
-// TODO: better name?
-// TODO: interface (e.g. asMap)? in SDK?
+// TODO [SNOW-1473425]: better name?
+// TODO [SNOW-1473425]: interface (e.g. asMap)? in SDK?
 func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema := make(map[string]any)
 	warehouseSchema["name"] = warehouse.Name

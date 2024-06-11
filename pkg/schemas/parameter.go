@@ -6,7 +6,7 @@ import (
 )
 
 // ParameterSchema represents Snowflake parameter object.
-// TODO: should be generated later based on the sdk.Parameter
+// TODO [SNOW-1473425]: should be generated later based on the sdk.Parameter
 var ParameterSchema = map[string]*schema.Schema{
 	"key": {
 		Type:     schema.TypeString,

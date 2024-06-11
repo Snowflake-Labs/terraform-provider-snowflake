@@ -16,24 +16,30 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 - `query_acceleration_max_scale_factor`
 - `warehouse_type`
 
-All previous details were aligned with the current Snowflake ones, however:
+All previous defaults were aligned with the current Snowflake ones, however:
+TODO: state migrator?
 - if the given parameter was changed on the account level, terraform will try to update it
 - TODO: describe the new state approach
 
 #### *(behavior change)* Validation changes
-As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted:
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:
 - `max_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
 - `min_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
 - `auto_suspend` - adjusted: added `0` as valid value
+- `warehouse_size` - adjusted: removed incorrect `2XLARGE`, `3XLARGE`, `4XLARGE`, `5XLARGE`, `6XLARGE` values
+- `resource_monitor` - added: validation for a valid identifier (still subject to change during [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework))
+- `max_concurrency_level` - added: validation according to MAX_CONCURRENCY_LEVEL parameter docs
+- `statement_queued_timeout_in_seconds` - added: validation according to STATEMENT_QUEUED_TIMEOUT_IN_SECONDS parameter docs
+- `statement_timeout_in_seconds` - added: validation according to STATEMENT_TIMEOUT_IN_SECONDS parameter docs
 
 #### *(behavior change)* Deprecated `wait_for_provisioning` field removed
 `wait_for_provisioning` field was deprecated a long time ago. It's high time it was removed from the schema.
 
 #### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
-TODO: describe
+Previously, the `query_acceleration_max_scale_factor` was depending on `enable_query_acceleration` parameter, but it is not required on Snowflake side. After migration, `terraform plan` should suggest changes if `enable_query_acceleration` was earlier set to false (manually or from default) and if `query_acceleration_max_scale_factor` was set in config.
 
 #### *(note)* `resource_monitor` validation and diff suppression
-`resource_monitor` is an identifier and handling logic may be slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
+`resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes

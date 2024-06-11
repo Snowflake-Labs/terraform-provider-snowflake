@@ -154,7 +154,6 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			// TODO: ComputedIfAnyAttributeChanged?
 			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_type"),
 			ComputedIfAttributeChanged(showOutputAttributeName, "warehouse_size"),
 			ComputedIfAttributeChanged(showOutputAttributeName, "max_cluster_count"),
@@ -177,7 +176,7 @@ func Warehouse() *schema.Resource {
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
-				Upgrade: v091WarehouseSizeStateUpgrader,
+				Upgrade: v092WarehouseSizeStateUpgrader,
 			},
 		},
 	}
@@ -329,9 +328,58 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObject(d, func(result map[string]any) error {
-				// TODO: add all dependencies
+				if result["type"].(string) != string(w.Type) {
+					if err = d.Set("warehouse_type", w.Type); err != nil {
+						return err
+					}
+				}
 				if result["size"].(string) != string(w.Size) {
 					if err = d.Set("warehouse_size", w.Size); err != nil {
+						return err
+					}
+				}
+				if result["max_cluster_count"].(int) != w.MaxClusterCount {
+					if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
+						return err
+					}
+				}
+				if result["min_cluster_count"].(int) != w.MinClusterCount {
+					if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
+						return err
+					}
+				}
+				if result["scaling_policy"].(string) != string(w.ScalingPolicy) {
+					if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
+						return err
+					}
+				}
+				if result["auto_suspend"].(int) != w.AutoSuspend {
+					if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
+						return err
+					}
+				}
+				if result["auto_resume"].(bool) != w.AutoResume {
+					if err = d.Set("auto_resume", w.AutoResume); err != nil {
+						return err
+					}
+				}
+				if sdk.NewAccountIdentifierFromFullyQualifiedName(result["resource_monitor"].(string)).FullyQualifiedName() != sdk.NewAccountIdentifierFromFullyQualifiedName(w.ResourceMonitor).FullyQualifiedName() {
+					if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
+						return err
+					}
+				}
+				if result["comment"].(string) != w.Comment {
+					if err = d.Set("comment", w.Comment); err != nil {
+						return err
+					}
+				}
+				if result["enable_query_acceleration"].(bool) != w.EnableQueryAcceleration {
+					if err = d.Set("enable_query_acceleration", w.EnableQueryAcceleration); err != nil {
+						return err
+					}
+				}
+				if result["query_acceleration_max_scale_factor"].(int) != w.QueryAccelerationMaxScaleFactor {
+					if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
 						return err
 					}
 				}
@@ -528,8 +576,3 @@ func DeleteWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.SetId("")
 	return nil
 }
-
-// TODO: for later
-// func isNullInConfig(d *schema.ResourceData, key string) bool {
-//	return d.GetRawConfig().AsValueMap()[key].IsNull()
-//}

@@ -8,8 +8,8 @@ import (
 )
 
 // ShowWarehouseParametersSchema contains all Snowflake parameters for the warehouses.
-// TODO: descriptions (take from .Description; tool to validate changes later)
-// TODO: should be generated later based on sdk.WarehouseParameters
+// TODO [SNOW-1473425]: descriptions (take from .Description; tool to validate changes later)
+// TODO [SNOW-1473425]: should be generated later based on sdk.WarehouseParameters
 var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 	"max_concurrency_level": {
 		Type:     schema.TypeList,
@@ -34,7 +34,7 @@ var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 	},
 }
 
-// TODO: validate all present?
+// TODO [SNOW-1473425]: validate all present?
 func WarehouseParametersToSchema(parameters []*sdk.Parameter) map[string]any {
 	warehouseParameters := make(map[string]any)
 	for _, param := range parameters {

@@ -7,8 +7,8 @@ import (
 const showOutputAttributeName = "show_output"
 
 // handleExternalChangesToObject assumes that show output is kept in showOutputAttributeName attribute
-// TODO: fix/make safer (casting)
-// TODO: replace func with generic struct to build this internally?
+// TODO [after discussion/next PR]: fix/make safer (casting)
+// TODO [after discussion/next PR]: replace func with generic struct to build this internally?
 func handleExternalChangesToObject(d *schema.ResourceData, handler func(map[string]any) error) error {
 	if showOutput, ok := d.GetOk(showOutputAttributeName); ok {
 		showOutputList := showOutput.([]any)

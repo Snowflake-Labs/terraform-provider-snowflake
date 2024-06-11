@@ -36,12 +36,12 @@ func v091ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
 	}
 }
 
-// v091WarehouseSizeStateUpgrader is needed because we are removing incorrect mapped values from sdk.ToWarehouseSize (like 2XLARGE, 3XLARGE, ...)
+// v092WarehouseSizeStateUpgrader is needed because we are removing incorrect mapped values from sdk.ToWarehouseSize (like 2XLARGE, 3XLARGE, ...)
 // Result of:
 // - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1873
 // - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1946
 // - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889#issuecomment-1631149585
-func v091WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return rawState, nil
 	}
@@ -57,7 +57,9 @@ func v091WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]inter
 	}
 	rawState["warehouse_size"] = string(warehouseSize)
 
-	// TODO: clear wait_for_provisioning and test
+	// TODO [this PR]: clear wait_for_provisioning and test
+	// TODO [this PR]: adjust other fields if needed
+	// TODO [this PR]: adjust description of the upgrader
 
 	return rawState, nil
 }

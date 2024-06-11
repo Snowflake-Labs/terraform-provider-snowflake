@@ -15,8 +15,8 @@ type printingPlanCheck struct {
 	attributes      []string
 }
 
-// TODO: test
-// TODO: add traversal
+// TODO [SNOW-1473409]: test
+// TODO [SNOW-1473409]: add traversal
 func (e printingPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	var result []error
 

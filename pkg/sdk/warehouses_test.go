@@ -272,8 +272,7 @@ func TestWarehouseDescribe(t *testing.T) {
 	})
 }
 
-// TODO: test warehouse type and scaling policy
-func TestToWarehouseSize(t *testing.T) {
+func Test_Warehouse_ToWarehouseSize(t *testing.T) {
 	type test struct {
 		input string
 		want  WarehouseSize
@@ -331,6 +330,84 @@ func TestToWarehouseSize(t *testing.T) {
 	for _, tc := range invalid {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := ToWarehouseSize(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_Warehouse_ToWarehouseType(t *testing.T) {
+	type test struct {
+		input string
+		want  WarehouseType
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "standard", want: WarehouseTypeStandard},
+
+		// Supported Values
+		{input: "STANDARD", want: WarehouseTypeStandard},
+		{input: "SNOWPARK-OPTIMIZED", want: WarehouseTypeSnowparkOptimized},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'STANDARD'"},
+		{input: "'SNOWPARK-OPTIMIZED'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToWarehouseType(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToWarehouseType(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_Warehouse_ToScalingPolicy(t *testing.T) {
+	type test struct {
+		input string
+		want  ScalingPolicy
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "standard", want: ScalingPolicyStandard},
+
+		// Supported Values
+		{input: "STANDARD", want: ScalingPolicyStandard},
+		{input: "ECONOMY", want: ScalingPolicyEconomy},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToScalingPolicy(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToScalingPolicy(tc.input)
 			require.Error(t, err)
 		})
 	}
