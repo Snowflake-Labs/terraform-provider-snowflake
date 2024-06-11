@@ -329,64 +329,21 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		}
 
 		if withExternalChangesMarking {
-			if err = handleExternalChangesToObject(d, func(result map[string]any) error {
-				if result["type"].(string) != string(w.Type) {
-					if err = d.Set("warehouse_type", w.Type); err != nil {
-						return err
-					}
-				}
-				if result["size"].(string) != string(w.Size) {
-					if err = d.Set("warehouse_size", w.Size); err != nil {
-						return err
-					}
-				}
-				if result["max_cluster_count"].(int) != w.MaxClusterCount {
-					if err = d.Set("max_cluster_count", w.MaxClusterCount); err != nil {
-						return err
-					}
-				}
-				if result["min_cluster_count"].(int) != w.MinClusterCount {
-					if err = d.Set("min_cluster_count", w.MinClusterCount); err != nil {
-						return err
-					}
-				}
-				if result["scaling_policy"].(string) != string(w.ScalingPolicy) {
-					if err = d.Set("scaling_policy", w.ScalingPolicy); err != nil {
-						return err
-					}
-				}
-				if result["auto_suspend"].(int) != w.AutoSuspend {
-					if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
-						return err
-					}
-				}
-				if result["auto_resume"].(bool) != w.AutoResume {
-					if err = d.Set("auto_resume", fmt.Sprintf("%t", w.AutoResume)); err != nil {
-						return err
-					}
-				}
-				if sdk.NewAccountIdentifierFromFullyQualifiedName(result["resource_monitor"].(string)).FullyQualifiedName() != sdk.NewAccountIdentifierFromFullyQualifiedName(w.ResourceMonitor).FullyQualifiedName() {
-					if err = d.Set("resource_monitor", w.ResourceMonitor); err != nil {
-						return err
-					}
-				}
-				if result["comment"].(string) != w.Comment {
-					if err = d.Set("comment", w.Comment); err != nil {
-						return err
-					}
-				}
-				if result["enable_query_acceleration"].(bool) != w.EnableQueryAcceleration {
-					if err = d.Set("enable_query_acceleration", fmt.Sprintf("%t", w.EnableQueryAcceleration)); err != nil {
-						return err
-					}
-				}
-				if result["query_acceleration_max_scale_factor"].(int) != w.QueryAccelerationMaxScaleFactor {
-					if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
-						return err
-					}
-				}
-				return nil
-			}); err != nil {
+			if err = handleExternalChangesToObject(d,
+				showMapping{"type", "warehouse_type", string(w.Type), w.Type, nil},
+				showMapping{"size", "warehouse_size", string(w.Size), w.Size, nil},
+				showMapping{"max_cluster_count", "max_cluster_count", w.MaxClusterCount, w.MaxClusterCount, nil},
+				showMapping{"min_cluster_count", "min_cluster_count", w.MinClusterCount, w.MinClusterCount, nil},
+				showMapping{"scaling_policy", "scaling_policy", string(w.ScalingPolicy), w.ScalingPolicy, nil},
+				showMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
+				showMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
+				showMapping{"resource_monitor", "resource_monitor", sdk.NewAccountIdentifierFromFullyQualifiedName(w.ResourceMonitor).FullyQualifiedName(), w.ResourceMonitor, func(from any) any {
+					return sdk.NewAccountIdentifierFromFullyQualifiedName(from.(string)).FullyQualifiedName()
+				}},
+				showMapping{"comment", "comment", w.Comment, w.Comment, nil},
+				showMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
+				showMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},
+			); err != nil {
 				return diag.FromErr(err)
 			}
 

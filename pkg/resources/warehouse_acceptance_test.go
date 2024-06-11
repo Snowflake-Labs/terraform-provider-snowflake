@@ -546,12 +546,12 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("false"), sdk.String("none")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("false"), sdk.String("unknown")),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "none"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
 					snowflakechecks.CheckAutoResume(t, id, false),
@@ -568,14 +568,14 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_resume", sdk.String("none"), sdk.String("true")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_resume", sdk.String("unknown"), sdk.String("true")),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_resume", sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("none")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("unknown")),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "none"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
 					snowflakechecks.CheckWarehouseType(t, id, sdk.WarehouseTypeStandard),
@@ -1020,6 +1020,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 // TODO: test auto_suspend set to 0 (or NULL?)
 // TODO: do we care about drift in warehouse for is_current warehouse? (test)
 // TODO: test boolean type change (with leaving boolean/int in config) and add migration
+// TODO: test int, string, identifier changed externally
 func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
