@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
@@ -360,7 +361,7 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with valid "zero" values
 			{
-				Config: warehouseWithAllValidZeroValues(id.Name()),
+				Config: warehouseWithAllValidZeroValuesConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "query_acceleration_max_scale_factor", "statement_queued_timeout_in_seconds", "statement_timeout_in_seconds", "show_output"),
@@ -424,7 +425,7 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 			},
 			// add valid "zero" values again (to validate if set is run correctly)
 			{
-				Config: warehouseWithAllValidZeroValues(id.Name()),
+				Config: warehouseWithAllValidZeroValuesConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "query_acceleration_max_scale_factor", "statement_queued_timeout_in_seconds", "statement_timeout_in_seconds", "show_output"),
@@ -450,6 +451,279 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_Parameter(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			// create with setting one param
+			{
+				Config: warehouseWithParameterConfig(id.Name(), 86400),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionCreate, nil, sdk.String("86400")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "86400"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+
+					// TODO: snowflake checks?
+					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+				),
+			},
+			// do not make any change (to check if there is no drift)
+			{
+				Config: warehouseWithParameterConfig(id.Name(), 86400),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// import when param in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+			// change the param value in config
+			{
+				Config: warehouseWithParameterConfig(id.Name(), 43200),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("86400"), sdk.String("43200")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "43200"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+			// change param value on account - expect no changes
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+					require.Equal(t, "", string(param.Level))
+					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterStatementTimeoutInSeconds, "86400")
+					t.Cleanup(revert)
+				},
+				Config: warehouseWithParameterConfig(id.Name(), 43200),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", tfjson.ActionNoop, sdk.String("43200"), sdk.String("43200")),
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "43200"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+			// change the param value externally
+			{
+				PreConfig: func() {
+					// clean after previous step
+					acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+					// update externally
+					acc.TestClient().Warehouse.UpdateStatementTimeoutInSeconds(t, id, 86400)
+				},
+				Config: warehouseWithParameterConfig(id.Name(), 43200),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "statement_timeout_in_seconds", sdk.String("43200"), sdk.String("86400")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("86400"), sdk.String("43200")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "43200"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+			// remove the param from config
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+					require.Equal(t, "", string(param.Level))
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("43200"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", ""),
+				),
+			},
+			// import when param not in config (snowflake default)
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", ""),
+				),
+			},
+			// change the param value in config to snowflake default
+			{
+				Config: warehouseWithParameterConfig(id.Name(), 172800),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("172800")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+				),
+			},
+			// remove the param from config
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+					require.Equal(t, "", string(param.Level))
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("172800"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", ""),
+				),
+			},
+			// change param value on account - change expected to be noop
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+					require.Equal(t, "", string(param.Level))
+					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterStatementTimeoutInSeconds, "86400")
+					t.Cleanup(revert)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", sdk.String("172800"), sdk.String("86400")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", tfjson.ActionNoop, sdk.String("86400"), sdk.String("86400")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+				),
+			},
+			// import when param not in config (set on account)
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+				),
+			},
+			// change param value on warehouse
+			{
+				PreConfig: func() {
+					acc.TestClient().Warehouse.UpdateStatementTimeoutInSeconds(t, id, 86400)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("86400"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "parameters", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+				),
+			},
+			// unset param on account
+			{
+				PreConfig: func() {
+					acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterStatementTimeoutInSeconds)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", sdk.String("86400"), sdk.String("172800")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", sdk.String(string(sdk.ParameterTypeAccount)), sdk.String("")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", ""),
 				),
 			},
 		},
@@ -555,7 +829,7 @@ resource "snowflake_warehouse" "w" {
 `, name)
 }
 
-func warehouseWithAllValidZeroValues(name string) string {
+func warehouseWithAllValidZeroValuesConfig(name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name                                = "%s"
@@ -565,4 +839,13 @@ resource "snowflake_warehouse" "w" {
     statement_timeout_in_seconds        = 0
 }
 `, name)
+}
+
+func warehouseWithParameterConfig(name string, value int) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                                = "%s"
+    statement_timeout_in_seconds        = %d
+}
+`, name, value)
 }
