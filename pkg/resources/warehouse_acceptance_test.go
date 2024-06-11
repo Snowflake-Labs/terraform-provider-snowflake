@@ -548,8 +548,7 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					// TODO [SNOW-1473453]: unset seems not to work for auto_suspend (so 0 instead of 600)
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
