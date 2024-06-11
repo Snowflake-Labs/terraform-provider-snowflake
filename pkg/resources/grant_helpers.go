@@ -275,6 +275,12 @@ func readGenericCurrentGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gr
 			continue
 		}
 
+		if currentGrant.GranteeType == "DATABASE_ROLE" {
+			// Temporary measure so that Terraform will not fail
+			// when a database role has been granted privileges
+			continue
+		}
+
 		grant := &grant{
 			CreatedOn:   currentGrant.CreatedOn,
 			Privilege:   currentGrant.Privilege,
@@ -306,6 +312,13 @@ func readGenericFutureGrants(db *sql.DB, builder snowflake.GrantBuilder) ([]*gra
 		if err := rows.StructScan(futureGrant); err != nil {
 			return nil, err
 		}
+
+		if futureGrant.GranteeType == "DATABASE_ROLE" {
+			// Temporary measure so that Terraform will not fail
+			// when a database role has been granted privileges
+			continue
+		}
+
 		grant := &grant{
 			CreatedOn:   futureGrant.CreatedOn,
 			Privilege:   futureGrant.Privilege,
