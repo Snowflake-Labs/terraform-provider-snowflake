@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"slices"
 	"strconv"
 	"strings"
@@ -29,29 +30,33 @@ var (
 		client := meta.(*provider.Context).Client
 		params, err := client.Parameters.ShowParameters(context.Background(), &sdk.ShowParametersOptions{
 			In: &sdk.ParametersIn{
-				Account: sdk.Bool(true),
+				Database: helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier),
 			},
 		})
 		if err != nil {
 			return err
 		}
+
+		if err != nil {
+			return err
+		}
 		return customdiff.All(
-			AccountObjectIntValueComputedIf("data_retention_time_in_days", params, sdk.AccountParameterDataRetentionTimeInDays),
-			AccountObjectIntValueComputedIf("max_data_extension_time_in_days", params, sdk.AccountParameterMaxDataExtensionTimeInDays),
-			AccountObjectStringValueComputedIf("external_volume", params, sdk.AccountParameterExternalVolume),
-			AccountObjectStringValueComputedIf("catalog", params, sdk.AccountParameterCatalog),
-			AccountObjectBoolValueComputedIf("replace_invalid_characters", params, sdk.AccountParameterReplaceInvalidCharacters),
-			AccountObjectStringValueComputedIf("default_ddl_collation", params, sdk.AccountParameterDefaultDDLCollation),
-			AccountObjectStringValueComputedIf("storage_serialization_policy", params, sdk.AccountParameterStorageSerializationPolicy),
-			AccountObjectStringValueComputedIf("log_level", params, sdk.AccountParameterLogLevel),
-			AccountObjectStringValueComputedIf("trace_level", params, sdk.AccountParameterTraceLevel),
-			AccountObjectIntValueComputedIf("suspend_task_after_num_failures", params, sdk.AccountParameterSuspendTaskAfterNumFailures),
-			AccountObjectIntValueComputedIf("task_auto_retry_attempts", params, sdk.AccountParameterTaskAutoRetryAttempts),
-			AccountObjectStringValueComputedIf("user_task_managed_initial_warehouse_size", params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize),
-			AccountObjectIntValueComputedIf("user_task_timeout_ms", params, sdk.AccountParameterUserTaskTimeoutMs),
-			AccountObjectIntValueComputedIf("user_task_minimum_trigger_interval_in_seconds", params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds),
-			AccountObjectBoolValueComputedIf("quoted_identifiers_ignore_case", params, sdk.AccountParameterQuotedIdentifiersIgnoreCase),
-			AccountObjectBoolValueComputedIf("enable_console_output", params, sdk.AccountParameterEnableConsoleOutput),
+			AccountObjectIntValueComputedIf("data_retention_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDataRetentionTimeInDays),
+			AccountObjectIntValueComputedIf("max_data_extension_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterMaxDataExtensionTimeInDays),
+			AccountObjectStringValueComputedIf("external_volume", params, sdk.ParameterTypeDatabase, sdk.AccountParameterExternalVolume),
+			AccountObjectStringValueComputedIf("catalog", params, sdk.ParameterTypeDatabase, sdk.AccountParameterCatalog),
+			AccountObjectBoolValueComputedIf("replace_invalid_characters", params, sdk.ParameterTypeDatabase, sdk.AccountParameterReplaceInvalidCharacters),
+			AccountObjectStringValueComputedIf("default_ddl_collation", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDefaultDDLCollation),
+			AccountObjectStringValueComputedIf("storage_serialization_policy", params, sdk.ParameterTypeDatabase, sdk.AccountParameterStorageSerializationPolicy),
+			AccountObjectStringValueComputedIf("log_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterLogLevel),
+			AccountObjectStringValueComputedIf("trace_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTraceLevel),
+			AccountObjectIntValueComputedIf("suspend_task_after_num_failures", params, sdk.ParameterTypeDatabase, sdk.AccountParameterSuspendTaskAfterNumFailures),
+			AccountObjectIntValueComputedIf("task_auto_retry_attempts", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTaskAutoRetryAttempts),
+			AccountObjectStringValueComputedIf("user_task_managed_initial_warehouse_size", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskManagedInitialWarehouseSize),
+			AccountObjectIntValueComputedIf("user_task_timeout_ms", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskTimeoutMs),
+			AccountObjectIntValueComputedIf("user_task_minimum_trigger_interval_in_seconds", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds),
+			AccountObjectBoolValueComputedIf("quoted_identifiers_ignore_case", params, sdk.ParameterTypeDatabase, sdk.AccountParameterQuotedIdentifiersIgnoreCase),
+			AccountObjectBoolValueComputedIf("enable_console_output", params, sdk.ParameterTypeDatabase, sdk.AccountParameterEnableConsoleOutput),
 		)(ctx, d, meta)
 	}
 )
@@ -272,12 +277,12 @@ func handleValuePropertyChange[T any](d *schema.ResourceData, key string, setFie
 	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) T { return value })
 }
 
-// handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected,
-// it checks if the value is set in the configuration. If the value is set, setField (representing setter for a value) is
-// set to the new planned value applying mapping in such cases as enum values, identifiers, etc. have to be set.
-// Otherwise, unset is called for a given field.
+// handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected
+// (or unknown value that basically indicates diff.SetNewComputed was called on the key), it checks if the value is set in the configuration.
+// If the value is set, setField (representing setter for a value) is set to the new planned value applying mapping beforehand in cases where enum values,
+// identifiers, etc. have to be set. Otherwise, unsetField is populated.
 func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) R) diag.Diagnostics {
-	if d.HasChange(key) {
+	if d.HasChange(key) || !d.GetRawPlan().AsValueMap()[key].IsKnown() {
 		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
 			*setField = sdk.Pointer(mapping(d.Get(key).(T)))
 		} else {

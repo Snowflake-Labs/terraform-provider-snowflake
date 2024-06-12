@@ -1,6 +1,14 @@
 package resources_test
 
 import (
+	"errors"
+	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -637,4 +645,268 @@ func TestAcc_StandardDatabase_Replication(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Database_Parameter(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StandardDatabase),
+		Steps: []resource.TestStep{
+			// create with setting one param
+			{
+				Config: databaseWithIntParameterConfig(id.Name(), 50),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionCreate, nil, sdk.String("50")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "50"),
+				),
+			},
+			// do not make any change (to check if there is no drift)
+			{
+				Config: databaseWithIntParameterConfig(id.Name(), 50),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// import when param in config
+			{
+				ResourceName: "snowflake_standard_database.test",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+				),
+			},
+			// change the param value in config
+			{
+				Config: databaseWithIntParameterConfig(id.Name(), 25),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), sdk.String("25")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "25"),
+				),
+			},
+			// change param value on account - expect no changes
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+					require.Equal(t, "", string(param.Level))
+					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "50")
+					t.Cleanup(revert)
+				},
+				Config: databaseWithIntParameterConfig(id.Name(), 25),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("25"), sdk.String("25")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "25"),
+				),
+			},
+			// change the param value externally
+			{
+				PreConfig: func() {
+					// clean after previous step
+					acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+					// update externally
+					acc.TestClient().Database.UpdateDataRetentionTime(t, id, 50)
+				},
+				Config: databaseWithIntParameterConfig(id.Name(), 25),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("25"), sdk.String("25")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "25"),
+					CheckDatabaseRetention(t, id, "DATABASE", "25"),
+				),
+			},
+			// remove the param from config
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+					require.Equal(t, "", string(param.Level))
+				},
+				Config: databaseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("25"), nil),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "1"),
+					CheckDatabaseRetention(t, id, "", "1"),
+				),
+			},
+			// import when param not in config (snowflake default)
+			{
+				ResourceName: "snowflake_standard_database.test",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "1"),
+				),
+			},
+			// change the param value in config to snowflake default
+			{
+				Config: databaseWithIntParameterConfig(id.Name(), 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "1"),
+					CheckDatabaseRetention(t, id, "DATABASE", "1"),
+				),
+			},
+			// remove the param from config
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+					require.Equal(t, "", string(param.Level))
+				},
+				Config: databaseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "1"), // Database default
+					CheckDatabaseRetention(t, id, "", "1"),
+				),
+			},
+			// change param value on account - change expected to be noop
+			{
+				PreConfig: func() {
+					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+					require.Equal(t, "", string(param.Level))
+					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "50")
+					t.Cleanup(revert)
+				},
+				Config: databaseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectDrift("snowflake_standard_database.test", "data_retention_time_in_days", sdk.String("1"), sdk.String("50")),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("50"), sdk.String("50")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "50"),
+					CheckDatabaseRetention(t, id, "ACCOUNT", "50"),
+				),
+			},
+			// import when param not in config (set on account)
+			{
+				ResourceName: "snowflake_standard_database.test",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					CheckDatabaseRetention(t, id, "ACCOUNT", "50"),
+				),
+			},
+			// change param value on database
+			{
+				PreConfig: func() {
+					acc.TestClient().Database.UpdateDataRetentionTime(t, id, 50)
+				},
+				Config: databaseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("50"), sdk.String("50")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "50"),
+					CheckDatabaseRetention(t, id, "ACCOUNT", "50"),
+				),
+			},
+			// unset param on account
+			{
+				PreConfig: func() {
+					acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+				},
+				Config: databaseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_standard_database.test", "data_retention_time_in_days"),
+						planchecks.ExpectDrift("snowflake_standard_database.test", "data_retention_time_in_days", sdk.String("50"), sdk.String("1")),
+						planchecks.ExpectChange("snowflake_standard_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("1"), sdk.String("1")),
+						planchecks.ExpectComputed("snowflake_standard_database.test", "data_retention_time_in_days", false),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_standard_database.test", "data_retention_time_in_days", "1"),
+					CheckDatabaseRetention(t, id, "", "1"),
+				),
+			},
+		},
+	})
+}
+
+func databaseBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_standard_database" "test" {
+	name           = "%s"
+}
+`, name)
+}
+
+func databaseWithIntParameterConfig(name string, dataRetention int) string {
+	return fmt.Sprintf(`
+resource "snowflake_standard_database" "test" {
+	name                                = "%s"
+    data_retention_time_in_days        = %d
+}
+`, name, dataRetention)
+}
+
+func CheckDatabaseRetention(t *testing.T, databaseId sdk.AccountObjectIdentifier, level string, value string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		param := helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, databaseId), sdk.AccountParameterDataRetentionTimeInDays)
+		var errs []error
+		if param.Level != sdk.ParameterType(level) {
+			errs = append(errs, fmt.Errorf("expected parameter level %s, got %s", sdk.ParameterType(level), param.Level))
+		}
+		if param.Value != value {
+			errs = append(errs, fmt.Errorf("expected parameter value %s, got %s", sdk.ParameterType(level), param.Level))
+		}
+		return errors.Join(errs...)
+	}
 }

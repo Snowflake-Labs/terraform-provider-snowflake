@@ -898,10 +898,11 @@ func (v *ParametersIn) validate() error {
 type ParameterType string
 
 const (
-	ParameterTypeAccount ParameterType = "ACCOUNT"
-	ParameterTypeUser    ParameterType = "USER"
-	ParameterTypeSession ParameterType = "SESSION"
-	ParameterTypeObject  ParameterType = "OBJECT"
+	ParameterTypeAccount  ParameterType = "ACCOUNT"
+	ParameterTypeUser     ParameterType = "USER"
+	ParameterTypeSession  ParameterType = "SESSION"
+	ParameterTypeObject   ParameterType = "OBJECT"
+	ParameterTypeDatabase ParameterType = "DATABASE"
 )
 
 type Parameter struct {

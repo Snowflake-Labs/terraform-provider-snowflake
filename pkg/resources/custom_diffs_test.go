@@ -4,34 +4,47 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/assert"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestValueComputedIf(t *testing.T) {
-	customDiff := resources.ValueComputedIf[string](
-		"value",
-		[]*sdk.Parameter{
-			{
-				Key:   string(sdk.AccountParameterLogLevel),
-				Value: string(sdk.LogLevelInfo),
+	createProviderConfig := func(parameterLevel sdk.ParameterType, parameterValue sdk.LogLevel) *schema.Provider {
+		customDiff := resources.ValueComputedIf(
+			"value",
+			[]*sdk.Parameter{
+				{
+					Key:   string(sdk.AccountParameterLogLevel),
+					Level: parameterLevel,
+					Value: string(parameterValue),
+				},
 			},
-		},
-		sdk.AccountParameterLogLevel,
-		func(v any) string { return v.(string) },
-		func(v string) (string, error) { return v, nil },
-	)
-	providerConfig := createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
+			sdk.ParameterTypeDatabase,
+			sdk.AccountParameterLogLevel,
+			func(v any) string { return v.(string) },
+		)
+		return createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
+	}
 
-	t.Run("value set in the configuration and state", func(t *testing.T) {
+	t.Run("config: true - state: true - level: different - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
+		}), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.True(t, diff.Attributes["value"].NewComputed)
+	})
+
+	t.Run("config: true - state: true - level: different - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -40,42 +53,8 @@ func TestValueComputedIf(t *testing.T) {
 		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set only in the configuration", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"value": cty.StringVal(string(sdk.LogLevelInfo)),
-		}), map[string]any{})
-		assert.True(t, diff.Attributes["value"].NewComputed)
-	})
-
-	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": string(sdk.LogLevelDebug),
-		})
-		assert.Equal(t, string(sdk.LogLevelInfo), diff.Attributes["value"].New)
-	})
-
-	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": string(sdk.LogLevelInfo),
-		})
-		assert.False(t, diff.Attributes["value"].NewComputed)
-	})
-}
-
-func TestAccountObjectStringValueComputedIf(t *testing.T) {
-	customDiff := resources.AccountObjectStringValueComputedIf(
-		"value",
-		[]*sdk.Parameter{
-			{
-				Key:   string(sdk.AccountParameterLogLevel),
-				Value: string(sdk.LogLevelInfo),
-			},
-		},
-		sdk.AccountParameterLogLevel,
-	)
-	providerConfig := createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
-
-	t.Run("value set in the configuration and state", func(t *testing.T) {
+	t.Run("config: true - state: true - level: same - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -84,114 +63,50 @@ func TestAccountObjectStringValueComputedIf(t *testing.T) {
 		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set only in the configuration", func(t *testing.T) {
+	t.Run("config: true - state: true - level: same - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
-		}), map[string]any{})
-		assert.True(t, diff.Attributes["value"].NewComputed)
-	})
-
-	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": string(sdk.LogLevelDebug),
-		})
-		assert.Equal(t, string(sdk.LogLevelInfo), diff.Attributes["value"].New)
-	})
-
-	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
+		}), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
 		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
-}
 
-func TestAccountObjectIntValueComputedIf(t *testing.T) {
-	customDiff := resources.AccountObjectIntValueComputedIf(
-		"value",
-		[]*sdk.Parameter{
-			{
-				Key:   string(sdk.AccountParameterDataRetentionTimeInDays),
-				Value: "10",
-			},
-		},
-		sdk.AccountParameterDataRetentionTimeInDays,
-	)
-	providerConfig := createProviderWithValuePropertyAndCustomDiff(t, schema.TypeInt, customDiff)
-
-	t.Run("value set in the configuration and state", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"value": cty.NumberIntVal(10),
-		}), map[string]any{
-			"value": "10",
+	t.Run("config: false - state: true - level: different - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
 		})
 		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set only in the configuration", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"value": cty.NumberIntVal(10),
-		}), map[string]any{})
+	t.Run("config: false - state: true - level: different - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
 		assert.True(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": "20",
-		})
-		assert.Equal(t, "10", diff.Attributes["value"].New)
-	})
-
-	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": "10",
-		})
-		assert.False(t, diff.Attributes["value"].NewComputed)
-	})
-}
-
-func TestAccountObjectBoolValueComputedIf(t *testing.T) {
-	customDiff := resources.AccountObjectBoolValueComputedIf(
-		"value",
-		[]*sdk.Parameter{
-			{
-				Key:   string(sdk.AccountParameterEnableConsoleOutput),
-				Value: "true",
-			},
-		},
-		sdk.AccountParameterEnableConsoleOutput,
-	)
-	providerConfig := createProviderWithValuePropertyAndCustomDiff(t, schema.TypeBool, customDiff)
-
-	t.Run("value set in the configuration and state", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"value": cty.BoolVal(true),
-		}), map[string]any{
-			"value": "true",
+	t.Run("config: false - state: true - level: same - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
 		})
 		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set only in the configuration", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"value": cty.BoolVal(true),
-		}), map[string]any{})
+	t.Run("config: false - state: true - level: same - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
 		assert.True(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": "false",
-		})
-		assert.Equal(t, "true", diff.Attributes["value"].New)
-	})
-
-	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"value": "true",
-		})
-		assert.False(t, diff.Attributes["value"].NewComputed)
-	})
+	// Tests for filled config and empty state were not added as the only way
+	// of getting into this situation would be in create operation for which custom diffs are skipped.
 }
 
 func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
