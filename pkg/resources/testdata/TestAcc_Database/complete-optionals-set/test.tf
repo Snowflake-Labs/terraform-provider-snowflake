@@ -1,4 +1,4 @@
-resource "snowflake_standard_database" "test" {
+resource "snowflake_database" "test" {
   name         = var.name
   comment      = var.comment
   is_transient = var.transient

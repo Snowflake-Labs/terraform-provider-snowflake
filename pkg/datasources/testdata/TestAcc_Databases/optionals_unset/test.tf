@@ -1,4 +1,4 @@
-resource "snowflake_standard_database" "test" {
+resource "snowflake_database" "test" {
   name    = var.name
   comment = var.comment
   replication {
@@ -13,7 +13,7 @@ resource "snowflake_standard_database" "test" {
 data "snowflake_databases" "test" {
   with_describe   = false
   with_parameters = false
-  depends_on      = [snowflake_standard_database.test]
+  depends_on      = [snowflake_database.test]
   like            = var.name
   starts_with     = var.name
   limit {

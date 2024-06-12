@@ -5,15 +5,32 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.92.0 ➞ v0.93.0
-### snowflake_database new alternatives
+### new database resources
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
-- Standard database - can be used as `snowflake_standard_database` (used to create databases with optional ability to become a primary database ready for replication)
+- Standard database - can be used as `snowflake_database` (replaces the old one and is used to create databases with optional ability to become a primary database ready for replication)
 - Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
 - Secondary database - can be used as `snowflake_secondary_database` (used to create replicas of databases from external sources)
-From now on, please migrate and use the new database resources for their unique use cases. For more information, see the documentation for those resources on the [Terraform Registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
- 
-The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level. 
+
+The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level.
 Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
+
+### Resource renamed snowflake_database -> snowflake_database_old
+We made a decision to use the existing `snowflake_database` resource for redesigning it into a standard database.
+The previous `snowflake_database` was renamed to `snowflake_database_old` and the current `snowflake_database` 
+contains completely new implementation that follows our guidelines we set for V1.
+When upgrading to the 0.93.0 version, the automatic state upgrader should cover the migration for databases that didn't have the following fields set:
+- `from_share` (now, the new `snowflake_shared_database` should be used instead)
+- `from_replica` (now, the new `snowflake_secondary_database` should be used instead)
+- [//]: # (- // TODO: check for cloning)
+- `from_database` (for now, we're dropping the possibility to create a database from other databases) 
+
+
+For databases with one of the fields mentioned above, manual migration will be needed.
+Please refer to our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration.
+
+If you would like to upgrade to the latest version and postpone the upgrade, you still have to perform the maunal migration
+to the `snowflake_database_old` resource by following the [zero downtime migrations document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+The only difference would be that instead of writing/generating new configurations you have to just rename the existing ones to contain `_old` suffix.
 
 ### *(behavior change)* snowflake_databases datasource
 - `terse` and `history` fields were removed.

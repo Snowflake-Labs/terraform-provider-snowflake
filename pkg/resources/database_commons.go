@@ -3,10 +3,11 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"

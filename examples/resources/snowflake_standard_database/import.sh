@@ -1,1 +1,0 @@
-terraform import snowflake_standard_database.example 'standard_database_name'

@@ -2,370 +2,455 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"slices"
-	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var databaseSchema = map[string]*schema.Schema{
+// TODO: State upgrader
+
+var standardDatabaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier for the database; must be unique for your account.",
-	},
-	"comment": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "",
-		Description: "Specifies a comment for the database.",
+		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     false,
-		Description: "Specifies a database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 		ForceNew:    true,
+		Description: "Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 	},
-	"data_retention_time_in_days": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Default:      -1,
-		Description:  "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
-		ValidateFunc: validation.IntBetween(-1, 90),
-	},
-	"from_share": {
-		Type:          schema.TypeMap,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-		Description:   "Specify a provider and a share in this map to create a database from a share. As of version 0.87.0, the provider field is the account locator.",
-		Optional:      true,
-		ForceNew:      true,
-		ConflictsWith: []string{"from_database", "from_replica"},
-	},
-	"from_database": {
-		Type:          schema.TypeString,
-		Description:   "Specify a database to create a clone from.",
-		Optional:      true,
-		ForceNew:      true,
-		ConflictsWith: []string{"from_share", "from_replica"},
-	},
-	"from_replica": {
-		Type:          schema.TypeString,
-		Description:   "Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<db_name>\"`. An example would be: `\"myorg1\".\"account1\".\"db1\"`",
-		Optional:      true,
-		ForceNew:      true,
-		ConflictsWith: []string{"from_share", "from_database"},
-	},
-	"replication_configuration": {
+	"replication": {
 		Type:        schema.TypeList,
-		Description: "When set, specifies the configurations for database replication.",
 		Optional:    true,
+		Description: "Configures replication for a given database. When specified, this database will be promoted to serve as a primary database for replication. A primary database can be replicated in one or more accounts, allowing users in those accounts to query objects in each secondary (i.e. replica) database.",
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"accounts": {
-					Type:     schema.TypeList,
-					Required: true,
-					MinItems: 1,
-					Elem:     &schema.Schema{Type: schema.TypeString},
+				"enable_to_account": {
+					Type:        schema.TypeList,
+					Required:    true,
+					Description: "Entry to enable replication and optionally failover for a given account identifier.",
+					MinItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								// TODO(SNOW-1438810): Add account identifier validator
+								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\"`.",
+							},
+							"with_failover": {
+								Type:        schema.TypeBool,
+								Optional:    true,
+								Description: "Specifies if failover should be enabled for the specified account identifier",
+							},
+						},
+					},
 				},
 				"ignore_edition_check": {
 					Type:     schema.TypeBool,
-					Default:  true,
 					Optional: true,
+					Description: "Allows replicating data to accounts on lower editions in either of the following scenarios: " +
+						"1. The primary database is in a Business Critical (or higher) account but one or more of the accounts approved for replication are on lower editions. Business Critical Edition is intended for Snowflake accounts with extremely sensitive data. " +
+						"2. The primary database is in a Business Critical (or higher) account and a signed business associate agreement is in place to store PHI data in the account per HIPAA and HITRUST regulations, but no such agreement is in place for one or more of the accounts approved for replication, regardless if they are Business Critical (or higher) accounts. " +
+						"Both scenarios are prohibited by default in an effort to help prevent account administrators for Business Critical (or higher) accounts from inadvertently replicating sensitive data to accounts on lower editions.",
 				},
 			},
 		},
 	},
+	"comment": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies a comment for the database.",
+	},
 }
 
-// Database returns a pointer to the resource representing a database.
 func Database() *schema.Resource {
 	return &schema.Resource{
-		Create:             CreateDatabase,
-		Read:               ReadDatabase,
-		Delete:             DeleteDatabase,
-		Update:             UpdateDatabase,
-		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_standard_database or snowflake_shared_database or snowflake_secondary_database instead.",
+		CreateContext: CreateStandardDatabase,
+		ReadContext:   ReadStandardDatabase,
+		DeleteContext: DeleteStandardDatabase,
+		UpdateContext: UpdateStandardDatabase,
+		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		Schema: databaseSchema,
+		CustomizeDiff: DatabaseParametersCustomDiff,
+		Schema:        MergeMaps(standardDatabaseSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-// CreateDatabase implements schema.CreateFunc.
-func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
+func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	name := d.Get("name").(string)
-	id := sdk.NewAccountObjectIdentifier(name)
 
-	// Is it a Shared Database?
-	if fromShare, ok := d.GetOk("from_share"); ok {
-		account := fromShare.(map[string]interface{})["provider"].(string)
-		share := fromShare.(map[string]interface{})["share"].(string)
-		shareID := sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifierFromAccountLocator(account), sdk.NewAccountObjectIdentifier(share))
-		opts := &sdk.CreateSharedDatabaseOptions{}
-		if v, ok := d.GetOk("comment"); ok {
-			opts.Comment = sdk.String(v.(string))
-		}
-		err := client.Databases.CreateShared(ctx, id, shareID, opts)
-		if err != nil {
-			return fmt.Errorf("error creating database %v: %w", name, err)
-		}
-		d.SetId(name)
-		return ReadDatabase(d, meta)
-	}
-	// Is it a Secondary Database?
-	if primaryName, ok := d.GetOk("from_replica"); ok {
-		primaryID := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(primaryName.(string))
-		opts := &sdk.CreateSecondaryDatabaseOptions{}
-		if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
-			opts.DataRetentionTimeInDays = sdk.Int(v.(int))
-		}
-		err := client.Databases.CreateSecondary(ctx, id, primaryID, opts)
-		if err != nil {
-			return fmt.Errorf("error creating database %v: %w", name, err)
-		}
-		d.SetId(name)
-		// todo: add failover_configuration block
-		return ReadDatabase(d, meta)
-	}
+	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	// Otherwise it is a Standard Database
-	opts := sdk.CreateDatabaseOptions{}
-	if v, ok := d.GetOk("comment"); ok {
-		opts.Comment = sdk.String(v.(string))
-	}
+	dataRetentionTimeInDays,
+		maxDataExtensionTimeInDays,
+		externalVolume,
+		catalog,
+		replaceInvalidCharacters,
+		defaultDDLCollation,
+		storageSerializationPolicy,
+		logLevel,
+		traceLevel,
+		suspendTaskAfterNumFailures,
+		taskAutoRetryAttempts,
+		userTaskManagedInitialWarehouseSize,
+		userTaskTimeoutMs,
+		userTaskMinimumTriggerIntervalInSeconds,
+		quotedIdentifiersIgnoreCase,
+		enableConsoleOutput := GetAllDatabaseParameters(d)
 
-	if v, ok := d.GetOk("is_transient"); ok && v.(bool) {
-		opts.Transient = sdk.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("from_database"); ok {
-		opts.Clone = &sdk.Clone{
-			SourceObject: sdk.NewAccountObjectIdentifier(v.(string)),
-		}
-	}
-
-	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
-		opts.DataRetentionTimeInDays = sdk.Int(v.(int))
-	}
-
-	err := client.Databases.Create(ctx, id, &opts)
+	err := client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
+		Transient:                               GetPropertyAsPointer[bool](d, "is_transient"),
+		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
+		ExternalVolume:                          externalVolume,
+		Catalog:                                 catalog,
+		ReplaceInvalidCharacters:                replaceInvalidCharacters,
+		DefaultDDLCollation:                     defaultDDLCollation,
+		StorageSerializationPolicy:              storageSerializationPolicy,
+		LogLevel:                                logLevel,
+		TraceLevel:                              traceLevel,
+		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
+		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
+		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
+		UserTaskTimeoutMs:                       userTaskTimeoutMs,
+		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
+		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
+		EnableConsoleOutput:                     enableConsoleOutput,
+		Comment:                                 GetPropertyAsPointer[string](d, "comment"),
+	})
 	if err != nil {
-		return fmt.Errorf("error creating database %v: %w", name, err)
-	}
-	d.SetId(name)
-
-	if v, ok := d.GetOk("replication_configuration"); ok {
-		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
-		accounts := replicationConfiguration["accounts"].([]interface{})
-		accountIDs := make([]sdk.AccountIdentifier, len(accounts))
-		for i, account := range accounts {
-			accountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
-		}
-		opts := &sdk.AlterDatabaseReplicationOptions{
-			EnableReplication: &sdk.EnableReplication{
-				ToAccounts: accountIDs,
-			},
-		}
-		if ignoreEditionCheck, ok := replicationConfiguration["ignore_edition_check"]; ok {
-			opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck.(bool))
-		}
-		err := client.Databases.AlterReplication(ctx, id, opts)
-		if err != nil {
-			return fmt.Errorf("error enabling replication for database %v: %w", name, err)
-		}
+		return diag.FromErr(err)
 	}
 
-	return ReadDatabase(d, meta)
+	d.SetId(helpers.EncodeSnowflakeID(id))
+
+	var diags diag.Diagnostics
+
+	if v, ok := d.GetOk("replication"); ok {
+		replicationConfiguration := v.([]any)[0].(map[string]any)
+
+		var ignoreEditionCheck *bool
+		if v, ok := replicationConfiguration["ignore_edition_check"]; ok {
+			ignoreEditionCheck = sdk.Pointer(v.(bool))
+		}
+
+		if enableToAccounts, ok := replicationConfiguration["enable_to_account"]; ok {
+			enableToAccountList := enableToAccounts.([]any)
+
+			if len(enableToAccountList) > 0 {
+				replicationToAccounts := make([]sdk.AccountIdentifier, 0)
+				failoverToAccounts := make([]sdk.AccountIdentifier, 0)
+
+				for _, enableToAccount := range enableToAccountList {
+					accountConfig := enableToAccount.(map[string]any)
+					accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(accountConfig["account_identifier"].(string))
+
+					replicationToAccounts = append(replicationToAccounts, accountIdentifier)
+					if v, ok := accountConfig["with_failover"]; ok && v.(bool) {
+						failoverToAccounts = append(failoverToAccounts, accountIdentifier)
+					}
+				}
+
+				if len(replicationToAccounts) > 0 {
+					err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+						EnableReplication: &sdk.EnableReplication{
+							ToAccounts:         replicationToAccounts,
+							IgnoreEditionCheck: ignoreEditionCheck,
+						},
+					})
+					if err != nil {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  err.Error(),
+						})
+					}
+				}
+
+				if len(failoverToAccounts) > 0 {
+					err = client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+						EnableFailover: &sdk.EnableFailover{
+							ToAccounts: failoverToAccounts,
+						},
+					})
+					if err != nil {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  err.Error(),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	return append(diags, ReadStandardDatabase(ctx, d, meta)...)
 }
 
-func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
+func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-
-	database, err := client.Databases.ShowByID(ctx, id)
-	if err != nil {
-		d.SetId("")
-		log.Printf("Database %s not found, err = %s", id.Name(), err)
-		return nil
-	}
-
-	if err := d.Set("name", database.Name); err != nil {
-		return err
-	}
-	if err := d.Set("comment", database.Comment); err != nil {
-		return err
-	}
-
-	dataRetention, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
-	if err != nil {
-		return err
-	}
-	paramDataRetention, err := strconv.Atoi(dataRetention.Value)
-	if err != nil {
-		return err
-	}
-
-	if dataRetentionDays := d.Get("data_retention_time_in_days"); dataRetentionDays.(int) != -1 || database.RetentionTime != paramDataRetention {
-		if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
-			return err
-		}
-	}
-
-	if err := d.Set("is_transient", database.Transient); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	if d.HasChange("name") {
-		newName := d.Get("name").(string)
-		newId := sdk.NewAccountObjectIdentifier(newName)
-		opts := &sdk.AlterDatabaseOptions{
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			NewName: &newId,
-		}
-		err := client.Databases.Alter(ctx, id, opts)
+		})
 		if err != nil {
-			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
+			return diag.FromErr(err)
 		}
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 		id = newId
 	}
 
-	if d.HasChange("comment") {
-		comment := ""
-		if c := d.Get("comment"); c != nil {
-			comment = c.(string)
-		}
-		opts := &sdk.AlterDatabaseOptions{
-			Set: &sdk.DatabaseSet{
-				Comment: sdk.String(comment),
-			},
-		}
-		err := client.Databases.Alter(ctx, id, opts)
-		if err != nil {
-			return fmt.Errorf("error updating database comment on %v err = %w", d.Id(), err)
-		}
+	databaseSetRequest := new(sdk.DatabaseSet)
+	databaseUnsetRequest := new(sdk.DatabaseUnset)
+
+	if updateParamDiags := HandleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+		return updateParamDiags
 	}
 
-	if d.HasChange("data_retention_time_in_days") {
-		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
-			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
-				Set: &sdk.DatabaseSet{
-					DataRetentionTimeInDays: sdk.Int(days.(int)),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error when setting database data retention time on %v err = %w", d.Id(), err)
-			}
-		} else {
-			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
-				Unset: &sdk.DatabaseUnset{
-					DataRetentionTimeInDays: sdk.Bool(true),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error when usetting database data retention time on %v err = %w", d.Id(), err)
-			}
-		}
-	}
+	if d.HasChange("replication") {
+		before, after := d.GetChange("replication")
 
-	// If replication configuration changes, need to update accounts that have permission to replicate database
-	if d.HasChange("replication_configuration") {
-		oldConfig, newConfig := d.GetChange("replication_configuration")
+		getReplicationConfiguration := func(replicationConfigs []any) (replicationEnabledToAccounts []sdk.AccountIdentifier, failoverEnabledToAccounts []sdk.AccountIdentifier) {
+			replicationEnabledToAccounts = make([]sdk.AccountIdentifier, 0)
+			failoverEnabledToAccounts = make([]sdk.AccountIdentifier, 0)
 
-		newAccountIDs := make([]sdk.AccountIdentifier, 0)
-		ignoreEditionCheck := false
-		if len(newConfig.([]interface{})) != 0 {
-			newAccounts := newConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
-			for _, account := range newAccounts {
-				newAccountIDs = append(newAccountIDs, sdk.NewAccountIdentifierFromAccountLocator(account.(string)))
-			}
-			ignoreEditionCheck = newConfig.([]interface{})[0].(map[string]interface{})["ignore_edition_check"].(bool)
-		}
+			for _, replicationConfigurationMap := range replicationConfigs {
+				replicationConfiguration := replicationConfigurationMap.(map[string]any)
+				for _, enableToAccountMap := range replicationConfiguration["enable_to_account"].([]any) {
+					enableToAccount := enableToAccountMap.(map[string]any)
+					accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(enableToAccount["account_identifier"].(string))
 
-		oldAccountIDs := make([]sdk.AccountIdentifier, 0)
-		if len(oldConfig.([]interface{})) != 0 {
-			oldAccounts := oldConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
-			for _, account := range oldAccounts {
-				oldAccountIDs = append(oldAccountIDs, sdk.NewAccountIdentifierFromAccountLocator(account.(string)))
+					replicationEnabledToAccounts = append(replicationEnabledToAccounts, accountIdentifier)
+					if enableToAccount["with_failover"].(bool) {
+						failoverEnabledToAccounts = append(failoverEnabledToAccounts, accountIdentifier)
+					}
+				}
 			}
-		}
 
-		accountsToRemove := make([]sdk.AccountIdentifier, 0)
-		accountsToAdd := make([]sdk.AccountIdentifier, 0)
-		// Find accounts to remove
-		for _, oldAccountID := range oldAccountIDs {
-			if !slices.Contains(newAccountIDs, oldAccountID) {
-				accountsToRemove = append(accountsToRemove, oldAccountID)
-			}
+			return replicationEnabledToAccounts, failoverEnabledToAccounts
 		}
+		beforeReplicationEnabledToAccounts, beforeFailoverEnabledToAccounts := getReplicationConfiguration(before.([]any))
+		afterReplicationEnabledToAccounts, afterFailoverEnabledToAccounts := getReplicationConfiguration(after.([]any))
 
-		// Find accounts to add
-		for _, newAccountID := range newAccountIDs {
-			if !slices.Contains(oldAccountIDs, newAccountID) {
-				accountsToAdd = append(accountsToAdd, newAccountID)
-			}
-		}
-		if len(accountsToAdd) > 0 {
-			opts := &sdk.AlterDatabaseReplicationOptions{
+		addedFailovers, removedFailovers := ListDiff(beforeFailoverEnabledToAccounts, afterFailoverEnabledToAccounts)
+		addedReplications, removedReplications := ListDiff(beforeReplicationEnabledToAccounts, afterReplicationEnabledToAccounts)
+		// Failovers will be disabled implicitly by disabled replications
+		removedFailovers = slices.DeleteFunc(removedFailovers, func(identifier sdk.AccountIdentifier) bool { return slices.Contains(removedReplications, identifier) })
+
+		if len(addedReplications) > 0 {
+			err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
 				EnableReplication: &sdk.EnableReplication{
-					ToAccounts: accountsToAdd,
+					ToAccounts:         addedReplications,
+					IgnoreEditionCheck: sdk.Bool(d.Get("replication.0.ignore_edition_check").(bool)),
 				},
-			}
-			if ignoreEditionCheck {
-				opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck)
-			}
-			err := client.Databases.AlterReplication(ctx, id, opts)
+			})
 			if err != nil {
-				return fmt.Errorf("error enabling replication configuration on %v err = %w", d.Id(), err)
+				return diag.FromErr(err)
 			}
 		}
 
-		if len(accountsToRemove) > 0 {
-			opts := &sdk.AlterDatabaseReplicationOptions{
-				DisableReplication: &sdk.DisableReplication{
-					ToAccounts: accountsToRemove,
+		if len(addedFailovers) > 0 {
+			err := client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+				EnableFailover: &sdk.EnableFailover{
+					ToAccounts: addedFailovers,
 				},
-			}
-			err := client.Databases.AlterReplication(ctx, id, opts)
+			})
 			if err != nil {
-				return fmt.Errorf("error disabling replication configuration on %v err = %w", d.Id(), err)
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(removedReplications) > 0 {
+			err := client.Databases.AlterReplication(ctx, id, &sdk.AlterDatabaseReplicationOptions{
+				DisableReplication: &sdk.DisableReplication{
+					ToAccounts: removedReplications,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(removedFailovers) > 0 {
+			err := client.Databases.AlterFailover(ctx, id, &sdk.AlterDatabaseFailoverOptions{
+				DisableFailover: &sdk.DisableFailover{
+					ToAccounts: removedFailovers,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
 
-	return ReadDatabase(d, meta)
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		if len(comment) > 0 {
+			databaseSetRequest.Comment = &comment
+		} else {
+			databaseUnsetRequest.Comment = sdk.Bool(true)
+		}
+	}
+
+	if (*databaseSetRequest != sdk.DatabaseSet{}) {
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+			Set: databaseSetRequest,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if (*databaseUnsetRequest != sdk.DatabaseUnset{}) {
+		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+			Unset: databaseUnsetRequest,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return ReadStandardDatabase(ctx, d, meta)
 }
 
-func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
+func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	database, err := client.Databases.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query secondary database. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("name", database.Name); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("is_transient", database.Transient); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("comment", database.Comment); err != nil {
+		return diag.FromErr(err)
+	}
+
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+	replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
+		WithPrimary: sdk.Pointer(sdk.NewExternalObjectIdentifier(currentAccountIdentifier, id)),
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if len(replicationDatabases) == 1 {
+		replicationAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+		failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].ReplicationAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			replicationAllowedToAccounts = append(replicationAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].FailoverAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		enableToAccount := make([]map[string]any, 0)
+		for _, allowedAccount := range replicationAllowedToAccounts {
+			enableToAccount = append(enableToAccount, map[string]any{
+				"account_identifier": allowedAccount.FullyQualifiedName(),
+				"with_failover":      slices.Contains(failoverAllowedToAccounts, allowedAccount),
+			})
+		}
+
+		var ignoreEditionCheck bool
+		if v, ok := d.GetOk("replication.0.ignore_edition_check"); ok {
+			ignoreEditionCheck = v.(bool)
+		}
+
+		if len(enableToAccount) == 0 {
+			err := d.Set("replication", []any{})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			err := d.Set("replication", []any{
+				map[string]any{
+					"enable_to_account":    enableToAccount,
+					"ignore_edition_check": ignoreEditionCheck,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Database: id,
+		},
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+		return diags
+	}
+
+	return nil
+}
+
+func DeleteStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
 	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
+
 	d.SetId("")
 	return nil
 }

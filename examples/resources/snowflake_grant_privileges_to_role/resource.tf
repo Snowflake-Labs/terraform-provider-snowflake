@@ -27,7 +27,7 @@ resource "snowflake_grant_privileges_to_role" "g3" {
   role_name  = snowflake_role.r.name
   on_account_object {
     object_type = "DATABASE"
-    object_name = snowflake_standard_database.d.name
+    object_name = snowflake_database.d.name
   }
 }
 
@@ -36,7 +36,7 @@ resource "snowflake_grant_privileges_to_role" "g4" {
   role_name = snowflake_role.r.name
   on_account_object {
     object_type = "DATABASE"
-    object_name = snowflake_standard_database.d.name
+    object_name = snowflake_database.d.name
   }
   all_privileges    = true
   with_grant_option = true
@@ -70,7 +70,7 @@ resource "snowflake_grant_privileges_to_role" "g7" {
   privileges = ["MODIFY", "CREATE TABLE"]
   role_name  = snowflake_role.r.name
   on_schema {
-    all_schemas_in_database = snowflake_standard_database.d.name
+    all_schemas_in_database = snowflake_database.d.name
   }
 }
 
@@ -79,7 +79,7 @@ resource "snowflake_grant_privileges_to_role" "g8" {
   privileges = ["MODIFY", "CREATE TABLE"]
   role_name  = snowflake_role.r.name
   on_schema {
-    future_schemas_in_database = snowflake_standard_database.d.name
+    future_schemas_in_database = snowflake_database.d.name
   }
 }
 
@@ -115,7 +115,7 @@ resource "snowflake_grant_privileges_to_role" "g11" {
   on_schema_object {
     all {
       object_type_plural = "TABLES"
-      in_database        = snowflake_standard_database.d.name
+      in_database        = snowflake_database.d.name
     }
   }
 }
@@ -139,7 +139,7 @@ resource "snowflake_grant_privileges_to_role" "g13" {
   on_schema_object {
     future {
       object_type_plural = "TABLES"
-      in_database        = snowflake_standard_database.d.name
+      in_database        = snowflake_database.d.name
     }
   }
 }

@@ -1,5 +1,5 @@
 # 1. Preparing primary database
-resource "snowflake_standard_database" "primary" {
+resource "snowflake_database" "primary" {
   provider = primary_account # notice the provider fields
   name     = "database_name"
   replication {
@@ -15,16 +15,16 @@ resource "snowflake_standard_database" "primary" {
 ## 2.1. Minimal version
 resource "snowflake_secondary_database" "test" {
   provider      = secondary_account
-  name          = snowflake_standard_database.primary.name # It's recommended to give a secondary database the same name as its primary database
-  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_standard_database.primary.name}"
+  name          = snowflake_database.primary.name # It's recommended to give a secondary database the same name as its primary database
+  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_database.primary.name}"
 }
 
 ## 2.2. Complete version (with every optional set)
 resource "snowflake_secondary_database" "test" {
   provider      = secondary_account
-  name          = snowflake_standard_database.primary.name # It's recommended to give a secondary database the same name as its primary database
+  name          = snowflake_database.primary.name # It's recommended to give a secondary database the same name as its primary database
   is_transient  = false
-  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_standard_database.primary.name}"
+  as_replica_of = "<primary_account_organization_name>.<primary_account_name>.${snowflake_database.primary.name}"
   comment       = "A secondary database"
 
   data_retention_time_in_days                   = 10
@@ -48,17 +48,17 @@ resource "snowflake_secondary_database" "test" {
 # The snowflake_secondary_database resource doesn't refresh itself, as the best practice is to use tasks scheduled for a certain interval.
 # To create the refresh tasks, use separate database and schema.
 
-resource "snowflake_standard_database" "tasks" {
+resource "snowflake_database" "tasks" {
   name = "database_for_tasks"
 }
 
 resource "snowflake_schema" "tasks" {
   name     = "schema_for_tasks"
-  database = snowflake_standard_database.tasks.name
+  database = snowflake_database.tasks.name
 }
 
 resource "snowflake_task" "refresh_secondary_database" {
-  database      = snowflake_standard_database.tasks.name
+  database      = snowflake_database.tasks.name
   name          = "refresh_secondary_database"
   schema        = snowflake_schema.tasks.name
   schedule      = "10 minute"
