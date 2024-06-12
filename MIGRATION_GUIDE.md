@@ -17,9 +17,11 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 - `warehouse_type`
 
 All previous defaults were aligned with the current Snowflake ones, however:
-TODO: state migrator?
+
+[//]: # (TODO [SNOW-1348102 - next PR]: state migrator?)
 - if the given parameter was changed on the account level, terraform will try to update it
-- TODO: describe the new state approach
+
+[//]: # (- TODO [SNOW-1348102 - next PR]: describe the new state approach if decided)
 
 #### *(behavior change)* Validation changes
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:
