@@ -2,12 +2,12 @@
 page_title: "snowflake_warehouse Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage warehouse objects. For more information, check warehouse documentation https://docs.snowflake.com/en/sql-reference/commands-warehouse.
 ---
 
 # snowflake_warehouse (Resource)
 
-
+Resource used to manage warehouse objects. For more information, check [warehouse documentation](https://docs.snowflake.com/en/sql-reference/commands-warehouse).
 
 ## Example Usage
 
@@ -28,26 +28,106 @@ resource "snowflake_warehouse" "warehouse" {
 
 ### Optional
 
-- `auto_resume` (Boolean) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
+- `auto_resume` (String) Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.
 - `auto_suspend` (Number) Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.
-- `comment` (String)
-- `enable_query_acceleration` (Boolean) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.
+- `comment` (String) Specifies a comment for the warehouse.
+- `enable_query_acceleration` (String) Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.
 - `initially_suspended` (Boolean) Specifies whether the warehouse is created initially in the ‘Suspended’ state.
 - `max_cluster_count` (Number) Specifies the maximum number of server clusters for the warehouse.
 - `max_concurrency_level` (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
 - `min_cluster_count` (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
 - `query_acceleration_max_scale_factor` (Number) Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.
 - `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
-- `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode.
+- `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): `STANDARD` | `ECONOMY`.
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - `statement_timeout_in_seconds` (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
-- `wait_for_provisioning` (Boolean, Deprecated) Specifies whether the warehouse, after being resized, waits for all the servers to provision before executing any queued or new queries.
-- `warehouse_size` (String) Specifies the size of the virtual warehouse. Larger warehouse sizes 5X-Large and 6X-Large are currently in preview and only available on Amazon Web Services (AWS).
-- `warehouse_type` (String) Specifies a STANDARD or SNOWPARK-OPTIMIZED warehouse
+- `warehouse_size` (String) Specifies the size of the virtual warehouse. Valid values are (case-insensitive): `XSMALL` | `X-SMALL` | `SMALL` | `MEDIUM` | `LARGE` | `XLARGE` | `X-LARGE` | `XXLARGE` | `X2LARGE` | `2X-LARGE` | `XXXLARGE` | `X3LARGE` | `3X-LARGE` | `X4LARGE` | `4X-LARGE` | `X5LARGE` | `5X-LARGE` | `X6LARGE` | `6X-LARGE`. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details.
+- `warehouse_type` (String) Specifies warehouse type. Valid values are (case-insensitive): `STANDARD` | `SNOWPARK-OPTIMIZED`.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `parameters` (List of Object) Outputs the result of `SHOW PARAMETERS IN WAREHOUSE` for the given warehouse. (see [below for nested schema](#nestedatt--parameters))
+- `show_output` (List of Object) Outputs the result of `SHOW WAREHOUSE` for the given warehouse. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--parameters"></a>
+### Nested Schema for `parameters`
+
+Read-Only:
+
+- `max_concurrency_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--max_concurrency_level))
+- `statement_queued_timeout_in_seconds` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--statement_queued_timeout_in_seconds))
+- `statement_timeout_in_seconds` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--statement_timeout_in_seconds))
+
+<a id="nestedobjatt--parameters--max_concurrency_level"></a>
+### Nested Schema for `parameters.max_concurrency_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--statement_queued_timeout_in_seconds"></a>
+### Nested Schema for `parameters.statement_queued_timeout_in_seconds`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--statement_timeout_in_seconds"></a>
+### Nested Schema for `parameters.statement_timeout_in_seconds`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `auto_resume` (Boolean)
+- `auto_suspend` (Number)
+- `available` (Number)
+- `comment` (String)
+- `created_on` (String)
+- `enable_query_acceleration` (Boolean)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `max_cluster_count` (Number)
+- `min_cluster_count` (Number)
+- `name` (String)
+- `other` (Number)
+- `owner` (String)
+- `owner_role_type` (String)
+- `provisioning` (Number)
+- `query_acceleration_max_scale_factor` (Number)
+- `queued` (Number)
+- `quiescing` (Number)
+- `resource_monitor` (String)
+- `resumed_on` (String)
+- `running` (Number)
+- `scaling_policy` (String)
+- `size` (String)
+- `started_clusters` (Number)
+- `state` (String)
+- `type` (String)
+- `updated_on` (String)
 
 ## Import
 

@@ -4,17 +4,7 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
-## v0.91.0 ➞ v0.92.0
-### snowflake_database new alternatives
-As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
-- Standard database (in progress)
-- Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
-- Secondary database - can be used as `snowflake_secondary_database` (used to create replicas of databases from external sources)
-From now on, please migrate and use the new database resources for their unique use cases. For more information, see the documentation for those resources on the [Terraform Registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
-
-The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level.
-Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
-
+## v0.92.0 ➞ v0.93.0
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Renamed fields
 
@@ -28,6 +18,47 @@ Field `enabled` is now required. Previously the default value during create in S
 Force new was added for the following attributes (because no usable SQL alter statements for them):
 - `scim_client`
 - `run_as_role`
+
+### snowflake_warehouse resource changes
+#### *(potential behavior change)* Default values removed
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider. Because of that the following defaults were removed:
+- `comment`
+- `statement_timeout_in_seconds`
+- `statement_queued_timeout_in_seconds`
+- `max_concurrency_level`
+- `enable_query_acceleration`
+- `query_acceleration_max_scale_factor`
+- `warehouse_type`
+
+All previous defaults were aligned with the current Snowflake ones, however:
+
+[//]: # (TODO [SNOW-1348102 - next PR]: state migrator?)
+- if the given parameter was changed on the account level, terraform will try to update it
+
+[//]: # (- TODO [SNOW-1348102 - next PR]: describe the new state approach if decided)
+
+#### *(behavior change)* Validation changes
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:
+- `max_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
+- `min_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
+- `auto_suspend` - adjusted: added `0` as valid value
+- `warehouse_size` - adjusted: removed incorrect `2XLARGE`, `3XLARGE`, `4XLARGE`, `5XLARGE`, `6XLARGE` values
+- `resource_monitor` - added: validation for a valid identifier (still subject to change during [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework))
+- `max_concurrency_level` - added: validation according to MAX_CONCURRENCY_LEVEL parameter docs
+- `statement_queued_timeout_in_seconds` - added: validation according to STATEMENT_QUEUED_TIMEOUT_IN_SECONDS parameter docs
+- `statement_timeout_in_seconds` - added: validation according to STATEMENT_TIMEOUT_IN_SECONDS parameter docs
+
+#### *(behavior change)* Deprecated `wait_for_provisioning` field removed
+`wait_for_provisioning` field was deprecated a long time ago. It's high time it was removed from the schema.
+
+#### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
+Previously, the `query_acceleration_max_scale_factor` was depending on `enable_query_acceleration` parameter, but it is not required on Snowflake side. After migration, `terraform plan` should suggest changes if `enable_query_acceleration` was earlier set to false (manually or from default) and if `query_acceleration_max_scale_factor` was set in config.
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `auto_resume` and `enable_query_acceleration` was changed from boolean to string. This should not require updating existing configs (boolean/int value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings. Terraform should perform an action for configs lacking `auto_resume` or `enable_query_acceleration` (`ALTER WAREHOUSE UNSET AUTO_RESUME` and/or `ALTER WAREHOUSE UNSET ENABLE_QUERY_ACCELERATION` will be run underneath which should not affect the Snowflake object, because `auto_resume` and `enable_query_acceleration` are false by default).
+
+#### *(note)* `resource_monitor` validation and diff suppression
+`resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes

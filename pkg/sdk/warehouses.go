@@ -40,6 +40,17 @@ var (
 	WarehouseTypeSnowparkOptimized WarehouseType = "SNOWPARK-OPTIMIZED"
 )
 
+func ToWarehouseType(s string) (WarehouseType, error) {
+	switch strings.ToUpper(s) {
+	case string(WarehouseTypeStandard):
+		return WarehouseTypeStandard, nil
+	case string(WarehouseTypeSnowparkOptimized):
+		return WarehouseTypeSnowparkOptimized, nil
+	default:
+		return "", fmt.Errorf("invalid warehouse type: %s", s)
+	}
+}
+
 type WarehouseSize string
 
 var (
@@ -56,27 +67,26 @@ var (
 )
 
 func ToWarehouseSize(s string) (WarehouseSize, error) {
-	s = strings.ToUpper(s)
-	switch s {
-	case "XSMALL", "X-SMALL":
+	switch strings.ToUpper(s) {
+	case string(WarehouseSizeXSmall), "X-SMALL":
 		return WarehouseSizeXSmall, nil
-	case "SMALL":
+	case string(WarehouseSizeSmall):
 		return WarehouseSizeSmall, nil
-	case "MEDIUM":
+	case string(WarehouseSizeMedium):
 		return WarehouseSizeMedium, nil
-	case "LARGE":
+	case string(WarehouseSizeLarge):
 		return WarehouseSizeLarge, nil
-	case "XLARGE", "X-LARGE":
+	case string(WarehouseSizeXLarge), "X-LARGE":
 		return WarehouseSizeXLarge, nil
-	case "XXLARGE", "X2LARGE", "2X-LARGE", "2XLARGE":
+	case string(WarehouseSizeXXLarge), "X2LARGE", "2X-LARGE":
 		return WarehouseSizeXXLarge, nil
-	case "XXXLARGE", "X3LARGE", "3X-LARGE", "3XLARGE":
+	case string(WarehouseSizeXXXLarge), "X3LARGE", "3X-LARGE":
 		return WarehouseSizeXXXLarge, nil
-	case "X4LARGE", "4X-LARGE", "4XLARGE":
+	case string(WarehouseSizeX4Large), "4X-LARGE":
 		return WarehouseSizeX4Large, nil
-	case "X5LARGE", "5X-LARGE", "5XLARGE":
+	case string(WarehouseSizeX5Large), "5X-LARGE":
 		return WarehouseSizeX5Large, nil
-	case "X6LARGE", "6X-LARGE", "6XLARGE":
+	case string(WarehouseSizeX6Large), "6X-LARGE":
 		return WarehouseSizeX6Large, nil
 	default:
 		return "", fmt.Errorf("invalid warehouse size: %s", s)
@@ -90,6 +100,17 @@ var (
 	ScalingPolicyEconomy  ScalingPolicy = "ECONOMY"
 )
 
+func ToScalingPolicy(s string) (ScalingPolicy, error) {
+	switch strings.ToUpper(s) {
+	case string(ScalingPolicyStandard):
+		return ScalingPolicyStandard, nil
+	case string(ScalingPolicyEconomy):
+		return ScalingPolicyEconomy, nil
+	default:
+		return "", fmt.Errorf("invalid scaling policy: %s", s)
+	}
+}
+
 // CreateWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse.
 type CreateWarehouseOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"`
@@ -99,18 +120,18 @@ type CreateWarehouseOptions struct {
 	name        AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
-	WarehouseType                   *WarehouseType `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *WarehouseSize `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
-	MaxClusterCount                 *int           `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
-	MinClusterCount                 *int           `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
-	ScalingPolicy                   *ScalingPolicy `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
-	AutoSuspend                     *int           `ddl:"parameter" sql:"AUTO_SUSPEND"`
-	AutoResume                      *bool          `ddl:"parameter" sql:"AUTO_RESUME"`
-	InitiallySuspended              *bool          `ddl:"parameter" sql:"INITIALLY_SUSPENDED"`
-	ResourceMonitor                 *string        `ddl:"parameter,double_quotes" sql:"RESOURCE_MONITOR"`
-	Comment                         *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	EnableQueryAcceleration         *bool          `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
-	QueryAccelerationMaxScaleFactor *int           `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
+	WarehouseType                   *WarehouseType           `ddl:"parameter,single_quotes" sql:"WAREHOUSE_TYPE"`
+	WarehouseSize                   *WarehouseSize           `ddl:"parameter,single_quotes" sql:"WAREHOUSE_SIZE"`
+	MaxClusterCount                 *int                     `ddl:"parameter" sql:"MAX_CLUSTER_COUNT"`
+	MinClusterCount                 *int                     `ddl:"parameter" sql:"MIN_CLUSTER_COUNT"`
+	ScalingPolicy                   *ScalingPolicy           `ddl:"parameter,single_quotes" sql:"SCALING_POLICY"`
+	AutoSuspend                     *int                     `ddl:"parameter" sql:"AUTO_SUSPEND"`
+	AutoResume                      *bool                    `ddl:"parameter" sql:"AUTO_RESUME"`
+	InitiallySuspended              *bool                    `ddl:"parameter" sql:"INITIALLY_SUSPENDED"`
+	ResourceMonitor                 *AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	Comment                         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableQueryAcceleration         *bool                    `ddl:"parameter" sql:"ENABLE_QUERY_ACCELERATION"`
+	QueryAccelerationMaxScaleFactor *int                     `ddl:"parameter" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
 	MaxConcurrencyLevel             *int             `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
@@ -417,11 +438,15 @@ type warehouseDBRow struct {
 }
 
 func (row warehouseDBRow) convert() *Warehouse {
+	size, err := ToWarehouseSize(row.Size)
+	if err != nil {
+		size = WarehouseSize(strings.ToUpper(row.Size))
+	}
 	wh := &Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
 		Type:                            WarehouseType(row.Type),
-		Size:                            WarehouseSize(strings.ReplaceAll(strings.ToUpper(row.Size), "-", "")),
+		Size:                            size,
 		MinClusterCount:                 row.MinClusterCount,
 		MaxClusterCount:                 row.MaxClusterCount,
 		StartedClusters:                 row.StartedClusters,

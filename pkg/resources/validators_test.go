@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -209,4 +210,48 @@ func TestGetExpectedIdentifierFormParam(t *testing.T) {
 			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
 		})
 	}
+}
+
+func Test_sdkValidation(t *testing.T) {
+	genericNormalize := func(value string) (any, error) {
+		if value == "ok" {
+			return "ok", nil
+		} else {
+			return nil, fmt.Errorf("incorrect value %s", value)
+		}
+	}
+
+	t.Run("valid generic normalize", func(t *testing.T) {
+		valid := "ok"
+
+		diag := sdkValidation(genericNormalize)(valid, cty.IndexStringPath("path"))
+
+		assert.Empty(t, diag)
+	})
+
+	t.Run("invalid generic normalize", func(t *testing.T) {
+		invalid := "nok"
+
+		diag := sdkValidation(genericNormalize)(invalid, cty.IndexStringPath("path"))
+
+		assert.Len(t, diag, 1)
+		assert.Contains(t, diag[0].Summary, fmt.Sprintf("incorrect value %s", invalid))
+	})
+
+	t.Run("valid warehouse size", func(t *testing.T) {
+		valid := string(sdk.WarehouseSizeSmall)
+
+		diag := sdkValidation(sdk.ToWarehouseSize)(valid, cty.IndexStringPath("path"))
+
+		assert.Empty(t, diag)
+	})
+
+	t.Run("invalid warehouse size", func(t *testing.T) {
+		invalid := "SMALLa"
+
+		diag := sdkValidation(sdk.ToWarehouseSize)(invalid, cty.IndexStringPath("path"))
+
+		assert.Len(t, diag, 1)
+		assert.Contains(t, diag[0].Summary, fmt.Sprintf("invalid warehouse size: %s", invalid))
+	})
 }

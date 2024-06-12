@@ -66,3 +66,14 @@ func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.Accou
 		return def != strconv.FormatBool(stateValue)
 	})
 }
+
+// TODO [follow-up PR]: test
+func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		var result bool
+		for _, changedKey := range changedAttributeKeys {
+			result = result || diff.HasChange(changedKey)
+		}
+		return result
+	})
+}

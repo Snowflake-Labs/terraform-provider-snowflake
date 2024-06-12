@@ -217,7 +217,7 @@ func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.91.0",
+						VersionConstraint: "=0.92.0",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
