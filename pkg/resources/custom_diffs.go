@@ -67,20 +67,6 @@ func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.Accou
 	})
 }
 
-func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema.SchemaDiffSuppressFunc {
-	return func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
-		oldNormalized, err := normalize(oldValue)
-		if err != nil {
-			return false
-		}
-		newNormalized, err := normalize(newValue)
-		if err != nil {
-			return false
-		}
-		return oldNormalized == newNormalized
-	}
-}
-
 // TODO [follow-up PR]: test
 func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {

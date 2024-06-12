@@ -992,7 +992,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.91.0",
+						VersionConstraint: "=0.92.0",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
@@ -1040,7 +1040,7 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.91.0",
+						VersionConstraint: "=0.92.0",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},

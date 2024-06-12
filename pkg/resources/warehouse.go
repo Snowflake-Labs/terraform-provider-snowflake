@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348102 - next PR]: extract three-value logic
+// TODO [SNOW-1348102 - next PR]: extract three-value logic; add better description for each field
 // TODO [SNOW-1348102 - next PR]: handle conditional suspension for some updates (additional optional field)
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
@@ -27,10 +27,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Identifier for the virtual warehouse; must be unique for your account.",
 	},
 	"warehouse_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseTypesString, true),
-		Description:  fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseType),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseType),
+		Description:      fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
 	"warehouse_size": {
 		Type:             schema.TypeString,
@@ -52,10 +53,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntBetween(1, 10),
 	},
 	"scaling_policy": {
-		Type:         schema.TypeString,
-		Description:  fmt.Sprintf("Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseScalingPoliciesString)),
-		Optional:     true,
-		ValidateFunc: validation.StringInSlice(sdk.ValidWarehouseScalingPoliciesString, true),
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: sdkValidation(sdk.ToScalingPolicy),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToScalingPolicy),
+		Description:      fmt.Sprintf("Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseScalingPoliciesString)),
 	},
 	"auto_suspend": {
 		Type:         schema.TypeInt,
