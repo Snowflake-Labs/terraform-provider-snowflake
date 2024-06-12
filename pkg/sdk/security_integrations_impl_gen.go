@@ -595,7 +595,6 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			Enabled:       r.Unset.Enabled,
 			NetworkPolicy: r.Unset.NetworkPolicy,
 			SyncPassword:  r.Unset.SyncPassword,
-			Comment:       r.Unset.Comment,
 		}
 	}
 	return opts

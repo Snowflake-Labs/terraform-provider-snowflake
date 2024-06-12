@@ -51,8 +51,9 @@ func generateAccessTokenConfig(name string) string {
 
 	resource "snowflake_scim_integration" "azured" {
 		name = "%s"
+		enabled = true
 		scim_client = "AZURE"
-		provisioner_role = snowflake_role.azured.name
+		run_as_role = snowflake_role.azured.name
 		depends_on = [
 			snowflake_grant_privileges_to_account_role.azure_grants,
 			snowflake_grant_account_role.azured

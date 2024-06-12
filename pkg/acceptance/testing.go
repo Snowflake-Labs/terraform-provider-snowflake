@@ -156,6 +156,14 @@ func TestAccPreCheck(t *testing.T) {
 		if err := helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(atc.secondaryClient, ctx); err != nil {
 			t.Fatal(err)
 		}
+
+		if err := helpers.EnsureScimProvisionerRolesExist(atc.client, ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := helpers.EnsureScimProvisionerRolesExist(atc.secondaryClient, ctx); err != nil {
+			t.Fatal(err)
+		}
 	})
 }
 

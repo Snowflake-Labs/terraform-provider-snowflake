@@ -521,13 +521,11 @@ func (s *CreateSaml2SecurityIntegrationRequest) WithComment(Comment string) *Cre
 
 func NewCreateScimSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
-	Enabled bool,
 	ScimClient ScimSecurityIntegrationScimClientOption,
 	RunAsRole ScimSecurityIntegrationRunAsRoleOption,
 ) *CreateScimSecurityIntegrationRequest {
 	s := CreateScimSecurityIntegrationRequest{}
 	s.name = name
-	s.Enabled = Enabled
 	s.ScimClient = ScimClient
 	s.RunAsRole = RunAsRole
 	return &s
@@ -540,6 +538,11 @@ func (s *CreateScimSecurityIntegrationRequest) WithOrReplace(OrReplace bool) *Cr
 
 func (s *CreateScimSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateScimSecurityIntegrationRequest {
 	s.IfNotExists = &IfNotExists
+	return s
+}
+
+func (s *CreateScimSecurityIntegrationRequest) WithEnabled(Enabled bool) *CreateScimSecurityIntegrationRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
@@ -1402,7 +1405,7 @@ func (s *ScimIntegrationSetRequest) WithSyncPassword(SyncPassword bool) *ScimInt
 	return s
 }
 
-func (s *ScimIntegrationSetRequest) WithComment(Comment string) *ScimIntegrationSetRequest {
+func (s *ScimIntegrationSetRequest) WithComment(Comment StringAllowEmpty) *ScimIntegrationSetRequest {
 	s.Comment = &Comment
 	return s
 }
@@ -1423,11 +1426,6 @@ func (s *ScimIntegrationUnsetRequest) WithNetworkPolicy(NetworkPolicy bool) *Sci
 
 func (s *ScimIntegrationUnsetRequest) WithSyncPassword(SyncPassword bool) *ScimIntegrationUnsetRequest {
 	s.SyncPassword = &SyncPassword
-	return s
-}
-
-func (s *ScimIntegrationUnsetRequest) WithComment(Comment bool) *ScimIntegrationUnsetRequest {
-	s.Comment = &Comment
 	return s
 }
 

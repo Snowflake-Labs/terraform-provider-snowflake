@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -236,7 +238,7 @@ type CreateScimSecurityIntegrationOptions struct {
 	IfNotExists         *bool                                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                AccountObjectIdentifier                 `ddl:"identifier"`
 	integrationType     string                                  `ddl:"static" sql:"TYPE = SCIM"`
-	Enabled             bool                                    `ddl:"parameter" sql:"ENABLED"`
+	Enabled             *bool                                   `ddl:"parameter" sql:"ENABLED"`
 	ScimClient          ScimSecurityIntegrationScimClientOption `ddl:"parameter,single_quotes" sql:"SCIM_CLIENT"`
 	RunAsRole           ScimSecurityIntegrationRunAsRoleOption  `ddl:"parameter,single_quotes" sql:"RUN_AS_ROLE"`
 	NetworkPolicy       *AccountObjectIdentifier                `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
@@ -487,14 +489,13 @@ type ScimIntegrationSet struct {
 	Enabled       *bool                    `ddl:"parameter" sql:"ENABLED"`
 	NetworkPolicy *AccountObjectIdentifier `ddl:"identifier,equals" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool                    `ddl:"parameter" sql:"SYNC_PASSWORD"`
-	Comment       *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Comment       *StringAllowEmpty        `ddl:"parameter" sql:"COMMENT"`
 }
 
 type ScimIntegrationUnset struct {
 	Enabled       *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	SyncPassword  *bool `ddl:"keyword" sql:"SYNC_PASSWORD"`
-	Comment       *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 // DropSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.
@@ -526,6 +527,14 @@ type SecurityIntegrationProperty struct {
 	Default string
 }
 
+func (s SecurityIntegrationProperty) GetName() string {
+	return s.Name
+}
+
+func (s SecurityIntegrationProperty) GetDefault() string {
+	return s.Default
+}
+
 // ShowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-integrations.
 type ShowSecurityIntegrationOptions struct {
 	show                 bool  `ddl:"static" sql:"SHOW"`
@@ -549,4 +558,12 @@ type SecurityIntegration struct {
 	Enabled         bool
 	Comment         string
 	CreatedOn       time.Time
+}
+
+func (s *SecurityIntegration) SubType() (string, error) {
+	typeParts := strings.Split(s.IntegrationType, "-")
+	if len(typeParts) < 2 {
+		return "", fmt.Errorf("expected \"<type> - <subtype>\", got: %s", s.IntegrationType)
+	}
+	return strings.TrimSpace(typeParts[1]), nil
 }

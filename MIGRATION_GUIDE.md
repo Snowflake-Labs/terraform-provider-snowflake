@@ -4,6 +4,31 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.91.0 ➞ v0.92.0
+### snowflake_database new alternatives
+As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
+- Standard database (in progress)
+- Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
+- Secondary database - can be used as `snowflake_secondary_database` (used to create replicas of databases from external sources)
+From now on, please migrate and use the new database resources for their unique use cases. For more information, see the documentation for those resources on the [Terraform Registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
+
+The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level.
+Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
+
+### snowflake_scim_integration resource changes
+#### *(behavior change)* Renamed fields
+
+Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+
+#### *(behavior change)* Changed behavior of `enabled`
+
+Field `enabled` is now required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
+
+#### *(behavior change)* Force new for multiple attributes
+Force new was added for the following attributes (because no usable SQL alter statements for them):
+- `scim_client`
+- `run_as_role`
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added
@@ -23,7 +48,7 @@ resource "snowflake_tag_masking_policy_association" "name" {
     masking_policy_id = snowflake_masking_policy.example_masking_policy.id
 }
 ```
-    
+
 After
 ```terraform
 resource "snowflake_tag_masking_policy_association" "name" {
@@ -128,7 +153,7 @@ Descriptions of attributes were altered. More examples were added (both for old 
 
 Previously, in `snowflake_database` when creating a database form share, it was possible to provide `from_share.provider`
 in the format of `<org_name>.<account_name>`. It worked even though we expected account locator because our "external" identifier wasn't quoting its string representation.
-To be consistent with other identifier types, we quoted the output of "external" identifiers which makes such configurations break 
+To be consistent with other identifier types, we quoted the output of "external" identifiers which makes such configurations break
 (previously, they were working "by accident"). To fix it, the previous format of `<org_name>.<account_name>` has to be changed
 to account locator format `<account_locator>` (mind that it's now case-sensitive). The account locator can be retrieved by calling `select current_account();` on the sharing account.
 In the future we would like to eventually come back to the `<org_name>.<account_name>` format as it's recommended by Snowflake.
