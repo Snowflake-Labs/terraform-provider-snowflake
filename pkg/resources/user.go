@@ -14,10 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-var diffCaseInsensitive = func(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
-}
-
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -32,7 +28,7 @@ var userSchema = map[string]*schema.Schema{
 		Sensitive:   false,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
-		DiffSuppressFunc: diffCaseInsensitive,
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -59,14 +55,14 @@ var userSchema = map[string]*schema.Schema{
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: diffCaseInsensitive,
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
 	"default_role": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Computed:         true,
-		DiffSuppressFunc: diffCaseInsensitive,
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
 		Description:      "Specifies the role that is active by default for the user’s session upon login.",
 	},
 	"default_secondary_roles": {
