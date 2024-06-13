@@ -525,7 +525,7 @@ func TestAcc_Database_HierarchicalValues(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					*paramDefault = acc.TestClient().Parameter.GetAccountParameter(t, sdk.AccountParameterMaxDataExtensionTimeInDays).Default
+					*paramDefault = acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterMaxDataExtensionTimeInDays).Default
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
@@ -761,7 +761,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "25"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "25"),
 				),
 			},
 			// remove the param from config
@@ -806,7 +806,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "1"),
 				),
 			},
 			// remove the param from config
@@ -849,7 +849,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
 				),
 			},
 			// import when param not in config (set on account)
@@ -861,7 +861,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
 				),
 			},
 			// change param value on database
@@ -880,7 +880,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
 				),
 			},
 			// unset param on account
@@ -907,7 +907,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 	})
 }
 
-func TestAcc_Database_BasicUpgrade(t *testing.T) {
+func TestAcc_Database_UpgradeWithTheSameFieldsAsInTheOldOne(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	dataRetentionTimeInDays := new(string)

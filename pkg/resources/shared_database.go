@@ -72,9 +72,13 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		userTaskTimeoutMs,
 		userTaskMinimumTriggerIntervalInSeconds,
 		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput := GetAllDatabaseParameters(d)
+		enableConsoleOutput,
+		err := GetAllDatabaseParameters(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.CreateShared(ctx, id, externalShareId, &sdk.CreateSharedDatabaseOptions{
+	err = client.Databases.CreateShared(ctx, id, externalShareId, &sdk.CreateSharedDatabaseOptions{
 		// TODO(SNOW-1325381)
 		// Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
 		ExternalVolume:                          externalVolume,

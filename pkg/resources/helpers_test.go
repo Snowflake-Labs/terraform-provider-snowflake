@@ -238,6 +238,13 @@ func TestListDiff(t *testing.T) {
 		Removed []any
 	}{
 		{
+			Name:    "no changes",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{},
+		},
+		{
 			Name:    "only removed",
 			Before:  []any{1, 2, 3, 4},
 			After:   []any{},

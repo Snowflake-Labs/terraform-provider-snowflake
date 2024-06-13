@@ -74,9 +74,13 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 		userTaskTimeoutMs,
 		userTaskMinimumTriggerIntervalInSeconds,
 		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput := GetAllDatabaseParameters(d)
+		enableConsoleOutput,
+		err := GetAllDatabaseParameters(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
+	err = client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
 		Transient:                               GetPropertyAsPointer[bool](d, "is_transient"),
 		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
 		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,

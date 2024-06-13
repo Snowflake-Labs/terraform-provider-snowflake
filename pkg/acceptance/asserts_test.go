@@ -17,7 +17,25 @@ func TestIsGreaterOrEqualTo(t *testing.T) {
 			Name:             "validation: smaller than expected",
 			GreaterOrEqualTo: 20,
 			Actual:           "10",
-			Error:            "expected value 10 greater or equal to 20",
+			Error:            "expected value 10 to be greater or equal to 20",
+		},
+		{
+			Name:             "validation: zero actual value",
+			GreaterOrEqualTo: 20,
+			Actual:           "0",
+			Error:            "expected value 0 to be greater or equal to 20",
+		},
+		{
+			Name:             "validation: zero greater value",
+			GreaterOrEqualTo: 0,
+			Actual:           "-10",
+			Error:            "expected value -10 to be greater or equal to 0",
+		},
+		{
+			Name:             "validation: negative value",
+			GreaterOrEqualTo: -20,
+			Actual:           "-30",
+			Error:            "expected value -30 to be greater or equal to -20",
 		},
 		{
 			Name:             "validation: not int value",
@@ -33,6 +51,11 @@ func TestIsGreaterOrEqualTo(t *testing.T) {
 		{
 			Name:             "validation: greater value",
 			GreaterOrEqualTo: 20,
+			Actual:           "30",
+		},
+		{
+			Name:             "validation: greater value with expected negative value",
+			GreaterOrEqualTo: -20,
 			Actual:           "30",
 		},
 	}

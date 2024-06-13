@@ -70,6 +70,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ApiIntegrations.ShowByID)
 	},
+	resources.Database: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Databases.ShowByID)
+	},
 	resources.DatabaseOld: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},
@@ -153,9 +156,6 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.Stage: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Stages.ShowByID)
-	},
-	resources.Database: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Databases.ShowByID)
 	},
 	resources.StorageIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.StorageIntegrations.ShowByID)

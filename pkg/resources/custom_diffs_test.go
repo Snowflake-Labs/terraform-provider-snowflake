@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValueComputedIf(t *testing.T) {
+func TestParameterValueComputedIf(t *testing.T) {
 	createProviderConfig := func(parameterLevel sdk.ParameterType, parameterValue sdk.LogLevel) *schema.Provider {
-		customDiff := resources.ValueComputedIf(
+		customDiff := resources.ParameterValueComputedIf(
 			"value",
 			[]*sdk.Parameter{
 				{

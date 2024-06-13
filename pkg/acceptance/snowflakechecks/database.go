@@ -12,16 +12,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func CheckDatabaseDataRetentionTimeInDays(t *testing.T, databaseId sdk.AccountObjectIdentifier, level string, value string) resource.TestCheckFunc {
+func CheckDatabaseDataRetentionTimeInDays(t *testing.T, databaseId sdk.AccountObjectIdentifier, expectedLevel sdk.ParameterType, expectedValue string) resource.TestCheckFunc {
 	t.Helper()
 	return func(state *terraform.State) error {
 		param := helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, databaseId), sdk.AccountParameterDataRetentionTimeInDays)
 		var errs []error
-		if param.Level != sdk.ParameterType(level) {
-			errs = append(errs, fmt.Errorf("expected parameter level %s, got %s", sdk.ParameterType(level), param.Level))
+		if param.Level != expectedLevel {
+			errs = append(errs, fmt.Errorf("expected parameter level %s, got %s", expectedLevel, param.Level))
 		}
-		if param.Value != value {
-			errs = append(errs, fmt.Errorf("expected parameter value %s, got %s", sdk.ParameterType(level), param.Level))
+		if param.Value != expectedValue {
+			errs = append(errs, fmt.Errorf("expected parameter value %s, got %s", expectedLevel, param.Level))
 		}
 		return errors.Join(errs...)
 	}

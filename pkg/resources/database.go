@@ -121,9 +121,13 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		userTaskTimeoutMs,
 		userTaskMinimumTriggerIntervalInSeconds,
 		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput := GetAllDatabaseParameters(d)
+		enableConsoleOutput,
+		err := GetAllDatabaseParameters(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
+	err = client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
 		Transient:                               GetPropertyAsPointer[bool](d, "is_transient"),
 		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
 		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,

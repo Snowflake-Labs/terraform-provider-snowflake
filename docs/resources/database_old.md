@@ -81,5 +81,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_database_old.example name
+terraform import snowflake_database_old.example 'database_name'
 ```

@@ -27,13 +27,3 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 
 	return rawState, nil
 }
-
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.#", "1"),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.ignore_edition_check", "true"),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.accounts.#", "1"),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.accounts.0", secondaryAccountIdentifier),
-
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.0.account_identifier", secondaryAccountIdentifier),
-// resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.0.with_failover", "false"),

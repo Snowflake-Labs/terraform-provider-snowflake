@@ -40,26 +40,23 @@ var (
 			return err
 		}
 
-		if err != nil {
-			return err
-		}
 		return customdiff.All(
-			AccountObjectIntValueComputedIf("data_retention_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDataRetentionTimeInDays),
-			AccountObjectIntValueComputedIf("max_data_extension_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterMaxDataExtensionTimeInDays),
-			AccountObjectStringValueComputedIf("external_volume", params, sdk.ParameterTypeDatabase, sdk.AccountParameterExternalVolume),
-			AccountObjectStringValueComputedIf("catalog", params, sdk.ParameterTypeDatabase, sdk.AccountParameterCatalog),
-			AccountObjectBoolValueComputedIf("replace_invalid_characters", params, sdk.ParameterTypeDatabase, sdk.AccountParameterReplaceInvalidCharacters),
-			AccountObjectStringValueComputedIf("default_ddl_collation", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDefaultDDLCollation),
-			AccountObjectStringValueComputedIf("storage_serialization_policy", params, sdk.ParameterTypeDatabase, sdk.AccountParameterStorageSerializationPolicy),
-			AccountObjectStringValueComputedIf("log_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterLogLevel),
-			AccountObjectStringValueComputedIf("trace_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTraceLevel),
-			AccountObjectIntValueComputedIf("suspend_task_after_num_failures", params, sdk.ParameterTypeDatabase, sdk.AccountParameterSuspendTaskAfterNumFailures),
-			AccountObjectIntValueComputedIf("task_auto_retry_attempts", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTaskAutoRetryAttempts),
-			AccountObjectStringValueComputedIf("user_task_managed_initial_warehouse_size", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskManagedInitialWarehouseSize),
-			AccountObjectIntValueComputedIf("user_task_timeout_ms", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskTimeoutMs),
-			AccountObjectIntValueComputedIf("user_task_minimum_trigger_interval_in_seconds", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds),
-			AccountObjectBoolValueComputedIf("quoted_identifiers_ignore_case", params, sdk.ParameterTypeDatabase, sdk.AccountParameterQuotedIdentifiersIgnoreCase),
-			AccountObjectBoolValueComputedIf("enable_console_output", params, sdk.ParameterTypeDatabase, sdk.AccountParameterEnableConsoleOutput),
+			IntParameterValueComputedIf("data_retention_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDataRetentionTimeInDays),
+			IntParameterValueComputedIf("max_data_extension_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterMaxDataExtensionTimeInDays),
+			StringParameterValueComputedIf("external_volume", params, sdk.ParameterTypeDatabase, sdk.AccountParameterExternalVolume),
+			StringParameterValueComputedIf("catalog", params, sdk.ParameterTypeDatabase, sdk.AccountParameterCatalog),
+			BoolParameterValueComputedIf("replace_invalid_characters", params, sdk.ParameterTypeDatabase, sdk.AccountParameterReplaceInvalidCharacters),
+			StringParameterValueComputedIf("default_ddl_collation", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDefaultDDLCollation),
+			StringParameterValueComputedIf("storage_serialization_policy", params, sdk.ParameterTypeDatabase, sdk.AccountParameterStorageSerializationPolicy),
+			StringParameterValueComputedIf("log_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterLogLevel),
+			StringParameterValueComputedIf("trace_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTraceLevel),
+			IntParameterValueComputedIf("suspend_task_after_num_failures", params, sdk.ParameterTypeDatabase, sdk.AccountParameterSuspendTaskAfterNumFailures),
+			IntParameterValueComputedIf("task_auto_retry_attempts", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTaskAutoRetryAttempts),
+			StringParameterValueComputedIf("user_task_managed_initial_warehouse_size", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskManagedInitialWarehouseSize),
+			IntParameterValueComputedIf("user_task_timeout_ms", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskTimeoutMs),
+			IntParameterValueComputedIf("user_task_minimum_trigger_interval_in_seconds", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds),
+			BoolParameterValueComputedIf("quoted_identifiers_ignore_case", params, sdk.ParameterTypeDatabase, sdk.AccountParameterQuotedIdentifiersIgnoreCase),
+			BoolParameterValueComputedIf("enable_console_output", params, sdk.ParameterTypeDatabase, sdk.AccountParameterEnableConsoleOutput),
 		)(ctx, d, meta)
 	}
 )
@@ -147,20 +144,11 @@ func init() {
 			ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		{
-			Name:        sdk.ObjectParameterUserTaskManagedInitialWarehouseSize,
-			Type:        schema.TypeString,
-			Description: "The initial size of warehouse to use for managed warehouses in the absence of history.",
-			DiffSuppress: func(k, old, new string, d *schema.ResourceData) bool {
-				oldSize, err := sdk.ToWarehouseSize(old)
-				if err != nil {
-					return false
-				}
-				newSize, err := sdk.ToWarehouseSize(new)
-				if err != nil {
-					return false
-				}
-				return oldSize == newSize
-			},
+			Name:         sdk.ObjectParameterUserTaskManagedInitialWarehouseSize,
+			Type:         schema.TypeString,
+			Description:  "The initial size of warehouse to use for managed warehouses in the absence of history.",
+			ValidateDiag: sdkValidation(sdk.ToWarehouseSize),
+			DiffSuppress: NormalizeAndCompare(sdk.ToWarehouseSize),
 		},
 		{
 			Name:         sdk.ObjectParameterUserTaskTimeoutMs,
@@ -212,6 +200,7 @@ func init() {
 	}
 }
 
+// TODO(SNOW-1480106): Change to smaller and safer return type
 func GetAllDatabaseParameters(d *schema.ResourceData) (
 	dataRetentionTimeInDays *int,
 	maxDataExtensionTimeInDays *int,
@@ -229,6 +218,7 @@ func GetAllDatabaseParameters(d *schema.ResourceData) (
 	userTaskMinimumTriggerIntervalInSeconds *int,
 	quotedIdentifiersIgnoreCase *bool,
 	enableConsoleOutput *bool,
+	err error,
 ) {
 	dataRetentionTimeInDays = GetPropertyAsPointer[int](d, "data_retention_time_in_days")
 	maxDataExtensionTimeInDays = GetPropertyAsPointer[int](d, "max_data_extension_time_in_days")
@@ -252,7 +242,11 @@ func GetAllDatabaseParameters(d *schema.ResourceData) (
 	suspendTaskAfterNumFailures = GetPropertyAsPointer[int](d, "suspend_task_after_num_failures")
 	taskAutoRetryAttempts = GetPropertyAsPointer[int](d, "task_auto_retry_attempts")
 	if userTaskManagedInitialWarehouseSizeRaw := GetPropertyAsPointer[string](d, "user_task_managed_initial_warehouse_size"); userTaskManagedInitialWarehouseSizeRaw != nil {
-		userTaskManagedInitialWarehouseSize = sdk.Pointer(sdk.WarehouseSize(*userTaskManagedInitialWarehouseSizeRaw))
+		var warehouseSize sdk.WarehouseSize
+		if warehouseSize, err = sdk.ToWarehouseSize(*userTaskManagedInitialWarehouseSizeRaw); err != nil {
+			return
+		}
+		userTaskManagedInitialWarehouseSize = sdk.Pointer(warehouseSize)
 	}
 	userTaskTimeoutMs = GetPropertyAsPointer[int](d, "user_task_timeout_ms")
 	userTaskMinimumTriggerIntervalInSeconds = GetPropertyAsPointer[int](d, "user_task_minimum_trigger_interval_in_seconds")

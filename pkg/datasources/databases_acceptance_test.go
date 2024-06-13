@@ -93,7 +93,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 }
 
 func TestAcc_Databases_DifferentFiltering(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
+	prefix := random.String()
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()

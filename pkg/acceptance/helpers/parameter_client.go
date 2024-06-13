@@ -3,8 +3,9 @@ package helpers
 import (
 	"context"
 	"fmt"
-	"slices"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
@@ -44,13 +45,6 @@ func (c *ParameterClient) ShowDatabaseParameters(t *testing.T, id sdk.AccountObj
 	})
 	require.NoError(t, err)
 	return params
-}
-
-func (c *ParameterClient) GetAccountParameter(t *testing.T, parameter sdk.AccountParameter) *sdk.Parameter {
-	t.Helper()
-	param, err := c.client().ShowAccountParameter(context.Background(), parameter)
-	require.NoError(t, err)
-	return param
 }
 
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
@@ -95,9 +89,7 @@ func (c *ParameterClient) UnsetAccountParameter(t *testing.T, parameter sdk.Acco
 
 func FindParameter(t *testing.T, parameters []*sdk.Parameter, parameter sdk.AccountParameter) *sdk.Parameter {
 	t.Helper()
-	idx := slices.IndexFunc(parameters, func(p *sdk.Parameter) bool {
-		return p.Key == string(parameter)
-	})
-	require.NotEqual(t, -1, idx, fmt.Sprintf("parameter %s not found", string(parameter)))
-	return parameters[idx]
+	param, err := collections.FindOne(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
+	require.NoError(t, err)
+	return *param
 }

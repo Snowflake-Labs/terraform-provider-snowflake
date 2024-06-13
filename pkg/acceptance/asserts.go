@@ -15,7 +15,7 @@ func IsGreaterOrEqualTo(greaterOrEqualValue int) resource.CheckResourceAttrWithF
 		}
 
 		if intValue < greaterOrEqualValue {
-			return fmt.Errorf("expected value %d greater or equal to %d", intValue, greaterOrEqualValue)
+			return fmt.Errorf("expected value %d to be greater or equal to %d", intValue, greaterOrEqualValue)
 		}
 
 		return nil
