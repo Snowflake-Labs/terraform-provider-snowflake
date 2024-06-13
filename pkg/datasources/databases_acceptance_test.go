@@ -34,7 +34,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals-set"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_set"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
@@ -66,7 +66,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals-unset"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_unset"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
@@ -160,7 +160,7 @@ func TestAcc_Databases_DatabaseNotFound_WithPostConditions(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/without-database"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/without_database"),
 				ExpectError:     regexp.MustCompile("there should be at least one database"),
 			},
 		},

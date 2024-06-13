@@ -17,7 +17,7 @@ func TestIsGreaterOrEqualTo(t *testing.T) {
 			Name:             "validation: smaller than expected",
 			GreaterOrEqualTo: 20,
 			Actual:           "10",
-			Error:            "expected value greater or equal to 20, got 10",
+			Error:            "expected value 10 greater or equal to 20",
 		},
 		{
 			Name:             "validation: not int value",
