@@ -1,15 +1,16 @@
 package resources_test
 
 import (
-	"errors"
 	"fmt"
+	"strconv"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -263,7 +264,7 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete-optionals-set"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
@@ -364,7 +365,7 @@ func TestAcc_Database_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete-optionals-set"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
@@ -388,7 +389,7 @@ func TestAcc_Database_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.test", "quoted_identifiers_ignore_case", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "enable_console_output", "true"),
 
-					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.0.account_identifier", secondaryAccountIdentifier),
@@ -396,7 +397,7 @@ func TestAcc_Database_Complete(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_Database/complete-optionals-set"),
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables:         completeConfigVariables,
 				ResourceName:            "snowflake_database.test",
 				ImportState:             true,
@@ -467,7 +468,7 @@ func TestAcc_Database_Update(t *testing.T) {
 				ConfigVariables: basicConfigVariables(id, comment),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete-optionals-set"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.Name()),
@@ -697,8 +698,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			},
 			// import when param in config
 			{
-				ResourceName: "snowflake_database.test",
-				ImportState:  true,
+				ResourceName:    "snowflake_database.test",
+				ImportState:     true,
+				ConfigVariables: databaseWithIntParameterConfig(50),
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
 				),
@@ -759,7 +761,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "25"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "25"),
 				),
 			},
 			// remove the param from config
@@ -779,13 +781,14 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
 				),
 			},
 			// import when param not in config (snowflake default)
 			{
-				ResourceName: "snowflake_database.test",
-				ImportState:  true,
+				ResourceName:    "snowflake_database.test",
+				ImportState:     true,
+				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "1"),
 				),
@@ -803,7 +806,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "DATABASE", "1"),
 				),
 			},
 			// remove the param from config
@@ -823,7 +826,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"), // Database default
-					checkDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
 				),
 			},
 			// change param value on account - change expected to be noop
@@ -846,18 +849,19 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
 				),
 			},
 			// import when param not in config (set on account)
 			{
-				ResourceName: "snowflake_database.test",
-				ImportState:  true,
+				ResourceName:    "snowflake_database.test",
+				ImportState:     true,
+				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					checkDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
 				),
 			},
 			// change param value on database
@@ -876,7 +880,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "ACCOUNT", "50"),
 				),
 			},
 			// unset param on account
@@ -896,24 +900,410 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					checkDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
 				),
 			},
 		},
 	})
 }
 
-func checkDatabaseDataRetentionTimeInDays(t *testing.T, databaseId sdk.AccountObjectIdentifier, level string, value string) resource.TestCheckFunc {
-	t.Helper()
-	return func(state *terraform.State) error {
-		param := helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, databaseId), sdk.AccountParameterDataRetentionTimeInDays)
-		var errs []error
-		if param.Level != sdk.ParameterType(level) {
-			errs = append(errs, fmt.Errorf("expected parameter level %s, got %s", sdk.ParameterType(level), param.Level))
-		}
-		if param.Value != value {
-			errs = append(errs, fmt.Errorf("expected parameter value %s, got %s", sdk.ParameterType(level), param.Level))
-		}
-		return errors.Join(errs...)
+func TestAcc_Database_BasicUpgrade(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+	dataRetentionTimeInDays := new(string)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderBasic(id, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "true"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+				),
+			},
+			{
+				PreConfig: func() {
+					*dataRetentionTimeInDays = helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, id), sdk.AccountParameterDataRetentionTimeInDays).Value
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderBasic(id, comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "true"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
+					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", dataRetentionTimeInDays),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderBasic(id sdk.AccountObjectIdentifier, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	is_transient = true
+	comment = "%s"
+}
+`, id.Name(), comment)
+}
+
+func TestAcc_Database_UpgradeWithDataRetentionSet(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderDataRetentionSet(id, comment, 10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "10"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderDataRetentionSet(id, comment, 10),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "10"),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderDataRetentionSet(id sdk.AccountObjectIdentifier, comment string, dataRetention int) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	comment = "%s"
+	data_retention_time_in_days = %d
+}
+`, id.Name(), comment, dataRetention)
+}
+
+func TestAcc_Database_WithReplication(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	secondaryAccountLocator := acc.SecondaryClient(t).GetAccountLocator()
+	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderWithReplicationOld(id, secondaryAccountLocator),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication_configuration.0.accounts.0", secondaryAccountLocator),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderWithReplicationNew(id, secondaryAccountIdentifier),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// plancheck.ExpectNonEmptyPlan(), // Account locators have to be changed to the new account identifier format
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.0.account_identifier", secondaryAccountIdentifier),
+					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.0.with_failover", "false"),
+					resource.TestCheckNoResourceAttr("snowflake_database.test", "replication_configuration"),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderWithReplicationOld(id sdk.AccountObjectIdentifier, enableToAccount string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	replication_configuration {
+		accounts = ["%s"] 
+		ignore_edition_check = true
 	}
+}
+`, id.Name(), enableToAccount)
+}
+
+func databaseStateUpgraderWithReplicationNew(id sdk.AccountObjectIdentifier, enableToAccount string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	replication {
+		enable_to_account {
+			account_identifier = %s
+			with_failover = false
+		}
+		ignore_edition_check = true
+	}
+}
+`, id.Name(), strconv.Quote(enableToAccount))
+}
+
+func TestAcc_Database_UpgradeFromShare(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareExternalId := createShareableDatabase(t)
+	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, shareExternalId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.provider", secondaryClientLocator),
+					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.share", shareExternalId.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromShareNew(id),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckNoResourceAttr("snowflake_database.test", "from_share"),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare sdk.ExternalObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	from_share = {
+		provider = "%s"
+		share = "%s"
+	}
+}
+`, id.Name(), secondaryClientLocator, externalShare.Name())
+}
+
+func databaseStateUpgraderFromShareNew(id sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0
+}
+`, id.Name())
+}
+
+func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, primaryDatabaseId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		acc.TestClient().Account.GetAccountIdentifier(t),
+	})
+	t.Cleanup(databaseCleanup)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderFromReplicaOld(id, primaryDatabaseId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "from_replica", primaryDatabaseId.FullyQualifiedName()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromReplicaNew(id),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckNoResourceAttr("snowflake_database.test", "from_replica"),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderFromReplicaOld(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	from_replica = %s
+}
+`, id.Name(), strconv.Quote(primaryDatabaseId.FullyQualifiedName()))
+}
+
+func databaseStateUpgraderFromReplicaNew(id sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0
+}
+`, id.Name())
+}
+
+func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	cloneId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderFromDatabaseOld(id, cloneId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.cloned", "id", cloneId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.cloned", "name", cloneId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.cloned", "from_database", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromDatabaseNew(id, cloneId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.cloned", "id", cloneId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.cloned", "name", cloneId.Name()),
+					resource.TestCheckNoResourceAttr("snowflake_database.cloned", "from_database"),
+				),
+			},
+		},
+	})
+}
+
+func databaseStateUpgraderFromDatabaseOld(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+}
+
+resource "snowflake_database" "cloned" {
+	name = "%s"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	from_database = snowflake_database.test.name
+}
+`, id.Name(), secondId.Name())
+}
+
+func databaseStateUpgraderFromDatabaseNew(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+	data_retention_time_in_days = 0
+}
+
+resource "snowflake_database" "cloned" {
+	name = "%s"
+	data_retention_time_in_days = 0
+}
+`, id.Name(), secondId.Name())
 }

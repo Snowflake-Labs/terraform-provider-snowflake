@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -14,9 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO: State upgrader
-
-var standardDatabaseSchema = map[string]*schema.Schema{
+var databaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -76,21 +76,32 @@ var standardDatabaseSchema = map[string]*schema.Schema{
 
 func Database() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStandardDatabase,
-		ReadContext:   ReadStandardDatabase,
-		DeleteContext: DeleteStandardDatabase,
-		UpdateContext: UpdateStandardDatabase,
+		SchemaVersion: 1,
+
+		CreateContext: CreateDatabase,
+		ReadContext:   ReadDatabase,
+		DeleteContext: DeleteDatabase,
+		UpdateContext: UpdateDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
 		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        MergeMaps(standardDatabaseSchema, DatabaseParametersSchema),
+		Schema:        MergeMaps(databaseSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v092DatabaseStateUpgrader,
+			},
 		},
 	}
 }
 
-func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
@@ -197,10 +208,10 @@ func CreateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	return append(diags, ReadStandardDatabase(ctx, d, meta)...)
+	return append(diags, ReadDatabase(ctx, d, meta)...)
 }
 
-func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
@@ -326,10 +337,10 @@ func UpdateStandardDatabase(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	return ReadStandardDatabase(ctx, d, meta)
+	return ReadDatabase(ctx, d, meta)
 }
 
-func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
@@ -440,7 +451,7 @@ func ReadStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	return nil
 }
 
-func DeleteStandardDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func DeleteDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 

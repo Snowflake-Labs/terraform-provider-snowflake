@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -74,6 +76,8 @@ func init() {
 			Name:        sdk.ObjectParameterDataRetentionTimeInDays,
 			Type:        schema.TypeInt,
 			Description: "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the database, as well as specifying the default Time Travel retention time for all schemas created in the database. For more details, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
+			// Choosing higher range (for the standard edition or transient databases, the maximum number is 1)
+			ValidateDiag: validation.ToDiagFunc(validation.IntBetween(0, 90)),
 		},
 		{
 			Name:        sdk.ObjectParameterDefaultDDLCollation,
@@ -98,7 +102,7 @@ func init() {
 			Description:  fmt.Sprintf("Specifies the severity level of messages that should be ingested and made available in the active event table. Valid options are: %v. Messages at the specified level (and at more severe levels) are ingested. For more information, see [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-log-level).", sdk.AsStringList(sdk.AllLogLevels)),
 			ValidateDiag: StringInSlice(sdk.AsStringList(sdk.AllLogLevels), true),
 			DiffSuppress: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.EqualFold(oldValue, newValue) && d.Get(k).(string) == string(sdk.LogLevelOff) && newValue == ""
+				return strings.EqualFold(oldValue, newValue)
 			},
 		},
 		{
@@ -107,13 +111,14 @@ func init() {
 			Description:  fmt.Sprintf("Controls how trace events are ingested into the event table. Valid options are: %v. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).", sdk.AsStringList(sdk.AllTraceLevels)),
 			ValidateDiag: StringInSlice(sdk.AsStringList(sdk.AllTraceLevels), true),
 			DiffSuppress: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.EqualFold(oldValue, newValue) && d.Get(k).(string) == string(sdk.TraceLevelOff) && newValue == ""
+				return strings.EqualFold(oldValue, newValue)
 			},
 		},
 		{
-			Name:        sdk.ObjectParameterMaxDataExtensionTimeInDays,
-			Type:        schema.TypeInt,
-			Description: "Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).",
+			Name:         sdk.ObjectParameterMaxDataExtensionTimeInDays,
+			Type:         schema.TypeInt,
+			Description:  "Object parameter that specifies the maximum number of days for which Snowflake can extend the data retention period for tables in the database to prevent streams on the tables from becoming stale. For a detailed description of this parameter, see [MAX_DATA_EXTENSION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters.html#label-max-data-extension-time-in-days).",
+			ValidateDiag: validation.ToDiagFunc(validation.IntBetween(0, 90)),
 		},
 		{
 			Name:        sdk.ObjectParameterReplaceInvalidCharacters,
@@ -126,18 +131,20 @@ func init() {
 			Description:  fmt.Sprintf("The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
 			ValidateDiag: StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true),
 			DiffSuppress: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.EqualFold(oldValue, newValue) && d.Get(k).(string) == string(sdk.StorageSerializationPolicyOptimized) && newValue == ""
+				return strings.EqualFold(oldValue, newValue)
 			},
 		},
 		{
-			Name:        sdk.ObjectParameterSuspendTaskAfterNumFailures,
-			Type:        schema.TypeInt,
-			Description: "How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.",
+			Name:         sdk.ObjectParameterSuspendTaskAfterNumFailures,
+			Type:         schema.TypeInt,
+			Description:  "How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.",
+			ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		{
-			Name:        sdk.ObjectParameterTaskAutoRetryAttempts,
-			Type:        schema.TypeInt,
-			Description: "Maximum automatic retries allowed for a user task.",
+			Name:         sdk.ObjectParameterTaskAutoRetryAttempts,
+			Type:         schema.TypeInt,
+			Description:  "Maximum automatic retries allowed for a user task.",
+			ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		{
 			Name:        sdk.ObjectParameterUserTaskManagedInitialWarehouseSize,
@@ -156,14 +163,16 @@ func init() {
 			},
 		},
 		{
-			Name:        sdk.ObjectParameterUserTaskTimeoutMs,
-			Type:        schema.TypeInt,
-			Description: "User task execution timeout in milliseconds.",
+			Name:         sdk.ObjectParameterUserTaskTimeoutMs,
+			Type:         schema.TypeInt,
+			Description:  "User task execution timeout in milliseconds.",
+			ValidateDiag: validation.ToDiagFunc(validation.IntBetween(0, 86400000)),
 		},
 		{
 			Name:        sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds,
 			Type:        schema.TypeInt,
 			Description: "Minimum amount of time between Triggered Task executions in seconds.",
+			// TODO(DOC-2511): ValidateDiag: Not documented
 		},
 		{
 			Name:        sdk.ObjectParameterQuotedIdentifiersIgnoreCase,

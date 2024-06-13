@@ -21,9 +21,41 @@ contains completely new implementation that follows our guidelines we set for V1
 When upgrading to the 0.93.0 version, the automatic state upgrader should cover the migration for databases that didn't have the following fields set:
 - `from_share` (now, the new `snowflake_shared_database` should be used instead)
 - `from_replica` (now, the new `snowflake_secondary_database` should be used instead)
-- [//]: # (- // TODO: check for cloning)
-- `from_database` (for now, we're dropping the possibility to create a database from other databases) 
+- `replication_configuration`
 
+For configurations containing `replication_configuraiton` like this one:
+```terraform
+resource "snowflake_database" "test" {
+  name = "<name>"
+  replication_configuration {
+    accounts = ["<account_locator>", "<account_locator_2>"]
+    ignore_edition_check = true
+  }
+}
+```
+
+You have to transform the configuration into the following format (notice the change from account locator into the new account identifier format):
+```terraform
+resource "snowflake_database" "test" {
+  name = "%s"
+  replication {
+    enable_to_account {
+      account_identifier = "<organization_name>.<account_name>"
+      with_failover      = false
+    }
+    enable_to_account {
+      account_identifier = "<organization_name_2>.<account_name_2>"
+      with_failover      = false
+    }
+  }
+  ignore_edition_check = true
+}
+```
+
+If you had `from_database` set, it should migrate automatically. 
+For now, we're dropping the possibility to create a clone database from other databases.
+The only way will be to clone a database manually and import it as `snowflake_database`, but if
+cloned databases diverge in behavior from standard databases, it may cause issues.
 
 For databases with one of the fields mentioned above, manual migration will be needed.
 Please refer to our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration.

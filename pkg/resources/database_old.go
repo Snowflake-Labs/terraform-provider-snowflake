@@ -88,10 +88,10 @@ var databaseOldSchema = map[string]*schema.Schema{
 // Database returns a pointer to the resource representing a database.
 func DatabaseOld() *schema.Resource {
 	return &schema.Resource{
-		Create:             CreateDatabase,
-		Read:               ReadDatabase,
-		Delete:             DeleteDatabase,
-		Update:             UpdateDatabase,
+		Create:             CreateDatabaseOld,
+		Read:               ReadDatabaseOld,
+		Delete:             DeleteDatabaseOld,
+		Update:             UpdateDatabaseOld,
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_database or snowflake_shared_database or snowflake_secondary_database instead.",
 
 		Schema: databaseOldSchema,
@@ -102,7 +102,7 @@ func DatabaseOld() *schema.Resource {
 }
 
 // CreateDatabase implements schema.CreateFunc.
-func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
+func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Get("name").(string)
@@ -122,7 +122,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating database %v: %w", name, err)
 		}
 		d.SetId(name)
-		return ReadDatabase(d, meta)
+		return ReadDatabaseOld(d, meta)
 	}
 	// Is it a Secondary Database?
 	if primaryName, ok := d.GetOk("from_replica"); ok {
@@ -137,7 +137,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.SetId(name)
 		// todo: add failover_configuration block
-		return ReadDatabase(d, meta)
+		return ReadDatabaseOld(d, meta)
 	}
 
 	// Otherwise it is a Standard Database
@@ -187,10 +187,10 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ReadDatabase(d, meta)
+	return ReadDatabaseOld(d, meta)
 }
 
-func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
+func ReadDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
@@ -231,7 +231,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
+func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
@@ -353,10 +353,10 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ReadDatabase(d, meta)
+	return ReadDatabaseOld(d, meta)
 }
 
-func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
+func DeleteDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
