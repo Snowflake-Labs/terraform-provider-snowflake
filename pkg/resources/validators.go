@@ -134,3 +134,13 @@ func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFun
 		return diag.Errorf("expected %v to be one of %q, got %s", path, valid, v)
 	}
 }
+
+func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
+	return func(val interface{}, _ cty.Path) diag.Diagnostics {
+		_, err := normalize(val.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
+	}
+}

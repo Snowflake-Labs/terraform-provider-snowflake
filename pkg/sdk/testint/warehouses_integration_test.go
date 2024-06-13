@@ -4,45 +4,66 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestInt_WarehousesShow(t *testing.T) {
+// TODO [SNOW-1348102 - next PR]: add resource monitor test
+// TODO [SNOW-1348102 - next PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
+// TODO [SNOW-1348102 - next PR]: test setting empty comment
+// TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
+func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	prefix := random.StringN(6)
+	precreatedWarehouseId := testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	precreatedWarehouseId2 := testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	// new warehouses created on purpose
-	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
-		WarehouseSize: &sdk.WarehouseSizeSmall,
-	})
-	t.Cleanup(warehouseCleanup)
-	_, warehouse2Cleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-	t.Cleanup(warehouse2Cleanup)
+	_, precreatedWarehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, precreatedWarehouseId, nil)
+	t.Cleanup(precreatedWarehouseCleanup)
+	_, precreatedWarehouse2Cleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, precreatedWarehouseId2, nil)
+	t.Cleanup(precreatedWarehouse2Cleanup)
 
-	t.Run("show without options", func(t *testing.T) {
+	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tag2Cleanup)
+
+	t.Run("show: without options", func(t *testing.T) {
 		warehouses, err := client.Warehouses.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(warehouses))
 	})
 
-	t.Run("show with options", func(t *testing.T) {
+	t.Run("show: like", func(t *testing.T) {
 		showOptions := &sdk.ShowWarehouseOptions{
 			Like: &sdk.Like{
-				Pattern: &warehouse.Name,
+				Pattern: sdk.Pointer(prefix + "%"),
+			},
+		}
+		warehouses, err := client.Warehouses.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Len(t, warehouses, 2)
+	})
+
+	t.Run("show: with options", func(t *testing.T) {
+		showOptions := &sdk.ShowWarehouseOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer(precreatedWarehouseId.Name()),
 			},
 		}
 		warehouses, err := client.Warehouses.Show(ctx, showOptions)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
-		assert.Equal(t, warehouse.Name, warehouses[0].Name)
-		assert.Equal(t, sdk.WarehouseSizeSmall, warehouses[0].Size)
+		assert.Equal(t, precreatedWarehouseId.Name(), warehouses[0].Name)
+		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouses[0].Size)
 		assert.Equal(t, "ROLE", warehouses[0].OwnerRoleType)
 	})
 
-	t.Run("when searching a non-existent password policy", func(t *testing.T) {
+	t.Run("show: when searching a non-existent warehouse", func(t *testing.T) {
 		showOptions := &sdk.ShowWarehouseOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String("non-existent"),
@@ -50,19 +71,10 @@ func TestInt_WarehousesShow(t *testing.T) {
 		}
 		warehouses, err := client.Warehouses.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Equal(t, 0, len(warehouses))
+		assert.Len(t, warehouses, 0)
 	})
-}
 
-func TestInt_WarehouseCreate(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
-	tag2Test, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tag2Cleanup)
-
-	t.Run("test complete", func(t *testing.T) {
+	t.Run("create: complete", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 			OrReplace:                       sdk.Bool(true),
@@ -82,22 +94,18 @@ func TestInt_WarehouseCreate(t *testing.T) {
 			StatementTimeoutInSeconds:       sdk.Int(3000),
 			Tag: []sdk.TagAssociation{
 				{
-					Name:  tagTest.ID(),
+					Name:  tag.ID(),
 					Value: "v1",
 				},
 				{
-					Name:  tag2Test.ID(),
+					Name:  tag2.ID(),
 					Value: "v2",
 				},
 			},
 		})
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &sdk.DropWarehouseOptions{
-				IfExists: sdk.Bool(true),
-			})
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+
 		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(id.Name()),
@@ -119,24 +127,20 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
-		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
+		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)
-		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
+		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
 		assert.Equal(t, "v2", tag2Value)
 	})
 
-	t.Run("test no options", func(t *testing.T) {
+	t.Run("create: no options", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &sdk.DropWarehouseOptions{
-				IfExists: sdk.Bool(true),
-			})
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+
 		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(id.Name()),
@@ -158,100 +162,29 @@ func TestInt_WarehouseCreate(t *testing.T) {
 		assert.Equal(t, false, result.EnableQueryAcceleration)
 		assert.Equal(t, 8, result.QueryAccelerationMaxScaleFactor)
 	})
-}
 
-func TestInt_WarehouseDescribe(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	// new warehouse created on purpose
-	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-	t.Cleanup(warehouseCleanup)
-
-	t.Run("when warehouse exists", func(t *testing.T) {
-		result, err := client.Warehouses.Describe(ctx, warehouse.ID())
+	t.Run("describe: when warehouse exists", func(t *testing.T) {
+		result, err := client.Warehouses.Describe(ctx, precreatedWarehouseId)
 		require.NoError(t, err)
-		assert.Equal(t, warehouse.Name, result.Name)
+		assert.Equal(t, precreatedWarehouseId.Name(), result.Name)
 		assert.Equal(t, "WAREHOUSE", result.Kind)
-		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
+		assert.WithinDuration(t, time.Now(), result.CreatedOn, 1*time.Minute)
 	})
 
-	t.Run("when warehouse does not exist", func(t *testing.T) {
+	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
 		id := NonExistingAccountObjectIdentifier
 		_, err := client.Warehouses.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
-}
 
-func TestInt_WarehouseAlter(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
-	tag2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup2)
-
-	t.Run("terraform acc test", func(t *testing.T) {
+	t.Run("alter: set and unset", func(t *testing.T) {
+		createOptions := &sdk.CreateWarehouseOptions{
+			Comment:         sdk.String("test comment"),
+			MaxClusterCount: sdk.Int(10),
+		}
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		opts := &sdk.CreateWarehouseOptions{
-			Comment:            sdk.String("test comment"),
-			WarehouseSize:      &sdk.WarehouseSizeXSmall,
-			AutoSuspend:        sdk.Int(60),
-			MaxClusterCount:    sdk.Int(1),
-			MinClusterCount:    sdk.Int(1),
-			ScalingPolicy:      &sdk.ScalingPolicyStandard,
-			AutoResume:         sdk.Bool(true),
-			InitiallySuspended: sdk.Bool(true),
-		}
-		err := client.Warehouses.Create(ctx, id, opts)
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Warehouses.Drop(ctx, id, &sdk.DropWarehouseOptions{
-				IfExists: sdk.Bool(true),
-			})
-			require.NoError(t, err)
-		})
-		warehouse, err := client.Warehouses.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, 1, warehouse.MaxClusterCount)
-		assert.Equal(t, 1, warehouse.MinClusterCount)
-		assert.Equal(t, sdk.ScalingPolicyStandard, warehouse.ScalingPolicy)
-		assert.Equal(t, 60, warehouse.AutoSuspend)
-		assert.Equal(t, true, warehouse.AutoResume)
-		assert.Equal(t, "test comment", warehouse.Comment)
-		assert.Equal(t, sdk.WarehouseStateSuspended, warehouse.State)
-		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
-
-		// rename
-		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		alterOptions := &sdk.AlterWarehouseOptions{
-			NewName: &newID,
-		}
-		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
-		require.NoError(t, err)
-		warehouse, err = client.Warehouses.ShowByID(ctx, newID)
-		require.NoError(t, err)
-		assert.Equal(t, newID.Name(), warehouse.Name)
-
-		// change props
-		alterOptions = &sdk.AlterWarehouseOptions{
-			Set: &sdk.WarehouseSet{
-				WarehouseSize: &sdk.WarehouseSizeSmall,
-				Comment:       sdk.String("test comment2"),
-			},
-		}
-		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
-		require.NoError(t, err)
-		warehouse, err = client.Warehouses.ShowByID(ctx, newID)
-		require.NoError(t, err)
-		assert.Equal(t, "test comment2", warehouse.Comment)
-		assert.Equal(t, sdk.WarehouseSizeSmall, warehouse.Size)
-	})
-
-	t.Run("set", func(t *testing.T) {
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, createOptions)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -274,12 +207,37 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
 		assert.Equal(t, true, result.EnableQueryAcceleration)
 		assert.Equal(t, 1234, result.AutoSuspend)
+		assert.Equal(t, "test comment", result.Comment)
+		assert.Equal(t, 10, result.MaxClusterCount)
+
+		alterOptions = &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{
+				Comment:         sdk.Bool(true),
+				MaxClusterCount: sdk.Bool(true),
+			},
+		}
+		err = client.Warehouses.Alter(ctx, id, alterOptions)
+		require.NoError(t, err)
+
+		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(warehouse.Name),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(warehouses))
+		result = warehouses[0]
+		assert.Equal(t, warehouse.Name, result.Name)
+		assert.Equal(t, "", result.Comment)
+		assert.Equal(t, 1, result.MaxClusterCount)
+		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
+		assert.Equal(t, true, result.EnableQueryAcceleration)
+		assert.Equal(t, 1234, result.AutoSuspend)
 	})
 
-	t.Run("rename", func(t *testing.T) {
+	t.Run("alter: rename", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
 		newID := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -288,50 +246,14 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, newID))
+
 		result, err := client.Warehouses.Describe(ctx, newID)
 		require.NoError(t, err)
 		assert.Equal(t, newID.Name(), result.Name)
-
-		// rename back to original name so it can be cleaned up
-		alterOptions = &sdk.AlterWarehouseOptions{
-			NewName: &oldID,
-		}
-		err = client.Warehouses.Alter(ctx, newID, alterOptions)
-		require.NoError(t, err)
 	})
 
-	t.Run("unset", func(t *testing.T) {
-		createOptions := &sdk.CreateWarehouseOptions{
-			Comment:         sdk.String("test comment"),
-			MaxClusterCount: sdk.Int(10),
-		}
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, createOptions)
-		t.Cleanup(warehouseCleanup)
-
-		alterOptions := &sdk.AlterWarehouseOptions{
-			Unset: &sdk.WarehouseUnset{
-				Comment:         sdk.Bool(true),
-				MaxClusterCount: sdk.Bool(true),
-			},
-		}
-		err := client.Warehouses.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
-		assert.Equal(t, warehouse.Name, result.Name)
-		assert.Equal(t, "", result.Comment)
-		assert.Equal(t, 1, result.MaxClusterCount)
-	})
-
-	t.Run("suspend & resume", func(t *testing.T) {
+	t.Run("alter: suspend and resume", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -367,7 +289,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateStarted, sdk.WarehouseStateResuming}, result.State)
 	})
 
-	t.Run("resume without suspending", func(t *testing.T) {
+	t.Run("alter: resume without suspending", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -389,7 +311,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateStarted, sdk.WarehouseStateResuming}, result.State)
 	})
 
-	t.Run("abort all queries", func(t *testing.T) {
+	t.Run("alter: abort all queries", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -436,7 +358,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, 0, result.Queued)
 	})
 
-	t.Run("set tags", func(t *testing.T) {
+	t.Run("alter: set tags and unset tags", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -459,33 +381,6 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
 		require.Equal(t, "val", val)
-		val, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.NoError(t, err)
-		require.Equal(t, "val2", val)
-	})
-
-	t.Run("unset tags", func(t *testing.T) {
-		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-		t.Cleanup(warehouseCleanup)
-
-		alterOptions := &sdk.AlterWarehouseOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "val1",
-				},
-				{
-					Name:  tag2.ID(),
-					Value: "val2",
-				},
-			},
-		}
-		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
-		require.NoError(t, err)
-		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.NoError(t, err)
-		require.Equal(t, "val1", val)
 		val2, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
 		require.Equal(t, "val2", val2)
@@ -506,13 +401,8 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, "", val2)
 	})
-}
 
-func TestInt_WarehouseDrop(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	t.Run("when warehouse exists", func(t *testing.T) {
+	t.Run("describe: when warehouse exists", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -523,13 +413,12 @@ func TestInt_WarehouseDrop(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("when warehouse does not exist", func(t *testing.T) {
-		id := NonExistingAccountObjectIdentifier
-		err := client.Warehouses.Drop(ctx, id, nil)
+	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
+		err := client.Warehouses.Drop(ctx, NonExistingAccountObjectIdentifier, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
+	t.Run("describe: when warehouse exists and if exists is true", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
