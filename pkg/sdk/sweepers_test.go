@@ -34,7 +34,6 @@ func TestSweepAll(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-955520]: consider adding this to some scheduled GH action (once a week or so)
 func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
 
