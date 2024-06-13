@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 )
 
 // TODO [SNOW-1348102 - next PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
-// TODO [SNOW-1348102 - next PR]: test setting empty comment
 // TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
@@ -167,6 +167,23 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 8, result.QueryAccelerationMaxScaleFactor)
 	})
 
+	t.Run("create: empty comment", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{Comment: sdk.String("")})
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+
+		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(id.Name()),
+			},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(warehouses))
+		result := warehouses[0]
+		assert.Equal(t, "", result.Comment)
+	})
+
 	t.Run("describe: when warehouse exists", func(t *testing.T) {
 		result, err := client.Warehouses.Describe(ctx, precreatedWarehouseId)
 		require.NoError(t, err)
@@ -257,6 +274,52 @@ func TestInt_Warehouses(t *testing.T) {
 		result, err := client.Warehouses.Describe(ctx, newID)
 		require.NoError(t, err)
 		assert.Equal(t, newID.Name(), result.Name)
+	})
+
+	// This proves that we don't have to handle empty comment inside the resource.
+	t.Run("alter: set empty comment versus unset", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{Comment: sdk.String("abc")})
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+
+		// can't use normal way, because of our SDK validation
+		_, err = client.ExecForTests(ctx, fmt.Sprintf("ALTER WAREHOUSE %s SET COMMENT = ''", id.FullyQualifiedName()))
+		require.NoError(t, err)
+
+		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(id.Name()),
+			},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(warehouses))
+		assert.Equal(t, "", warehouses[0].Comment)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Set: &sdk.WarehouseSet{
+				Comment: sdk.String("abc"),
+			},
+		}
+		err = client.Warehouses.Alter(ctx, id, alterOptions)
+		require.NoError(t, err)
+
+		alterOptions = &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{
+				Comment: sdk.Bool(true),
+			},
+		}
+		err = client.Warehouses.Alter(ctx, id, alterOptions)
+		require.NoError(t, err)
+
+		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(id.Name()),
+			},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(warehouses))
+		assert.Equal(t, "", warehouses[0].Comment)
 	})
 
 	t.Run("alter: suspend and resume", func(t *testing.T) {
