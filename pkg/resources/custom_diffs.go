@@ -66,3 +66,26 @@ func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.Accou
 		return def != strconv.FormatBool(stateValue)
 	})
 }
+
+// SetEmptyForceNewIfChange sets a ForceNew for a list field which was set to an empty value.
+func SetEmptyForceNewIfChange[T any](key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.([]T), newValue.([]T)
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+// SetEmptyForceNewIfChangeString sets a ForceNew for a string field which was set to an empty value.
+func SetEmptyForceNewIfChangeString(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldString, newString := oldValue.(string), newValue.(string)
+		return len(oldString) > 0 && len(newString) == 0
+	})
+}
+
+// SetForceNewIfNull sets a ForceNew for key missing in RawConfig.
+func SetForceNewIfNull(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+		return d.GetRawConfig().AsValueMap()[key].IsNull()
+	})
+}

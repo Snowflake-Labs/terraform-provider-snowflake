@@ -6,53 +6,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMatchAllStringsInOrderNonOverlapping(t *testing.T) {
-	testCases := map[string]struct {
-		parts     []string
-		text      string
-		wantMatch bool
+func TestEnumToTerraformStringList(t *testing.T) {
+	type customString string
+	tests := []struct {
+		name   string
+		values []customString
+		want   string
 	}{
-		"empty parts and text": {
-			parts:     []string{},
-			text:      "",
-			wantMatch: true,
-		},
-		"empty parts": {
-			parts:     []string{},
-			text:      "xyz",
-			wantMatch: true,
-		},
-		"empty text": {
-			parts: []string{"a", "b"},
-			text:  "",
-		},
-		"matching non empty": {
-			parts:     []string{"a", "b"},
-			text:      "xyaxyb",
-			wantMatch: true,
-		},
-		"partial matching": {
-			parts: []string{"a", "b"},
-			text:  "axyz",
-		},
-		"not matching": {
-			parts: []string{"a", "b"},
-			text:  "xyz",
-		},
-		"wrong order": {
-			parts: []string{"a", "b"},
-			text:  "ba",
-		},
-		"overlapping match": {
-			parts: []string{"abb", "bba"},
-			text:  "abba",
+		{
+			name:   "one element",
+			values: []customString{"a"},
+			want:   `["a"]`,
+		}, {
+			name:   "more elements",
+			values: []customString{"a", "b"},
+			want:   `["a" "b"]`,
 		},
 	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			regex := MatchAllStringsInOrderNonOverlapping(tc.parts)
-			require.Equal(t, tc.wantMatch, regex.Match([]byte(tc.text)))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, EnumToTerraformStringList(tt.values))
 		})
 	}
 }

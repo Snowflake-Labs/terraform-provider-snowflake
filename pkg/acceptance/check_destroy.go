@@ -133,6 +133,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.RowAccessPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.RowAccessPolicies.ShowByID)
 	},
+	resources.Saml2SecurityIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},

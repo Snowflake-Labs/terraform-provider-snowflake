@@ -2,7 +2,7 @@ package resources
 
 import "context"
 
-func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func v092ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return rawState, nil
 	}

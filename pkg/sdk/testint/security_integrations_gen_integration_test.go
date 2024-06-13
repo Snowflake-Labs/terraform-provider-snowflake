@@ -129,7 +129,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		issuer := testClientHelper().Ids.Alpha()
-		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, false, issuer, "https://example.com", "Custom", cert)
+		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, issuer, "https://example.com", sdk.Saml2SecurityIntegrationSaml2ProviderCustom, cert)
 		if with != nil {
 			with(saml2Req)
 		}
@@ -312,7 +312,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL", Type: "String", Value: d.spInitiatedLoginPageLabel, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SSO_URL", Type: "String", Value: d.ssoURL, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_ISSUER", Type: "String", Value: d.issuer, Default: ""})
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: d.requestedNameIDFormat, Default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: d.requestedNameIDFormat, Default: string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_FORCE_AUTHN", Type: "Boolean", Value: d.forceAuthn, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_POST_LOGOUT_REDIRECT_URL", Type: "String", Value: d.postLogoutRedirectUrl, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SIGN_REQUEST", Type: "Boolean", Value: d.signrequest, Default: "false"})
@@ -323,6 +323,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_SNOWFLAKE_ACS_URL", Type: "String", Value: d.snowflakeAcsURL, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_USER_DOMAINS", Type: "List", Value: d.allowedUserDomains, Default: "[]"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ALLOWED_EMAIL_PATTERNS", Type: "List", Value: d.allowedEmailPatterns, Default: "[]"})
+		// TODO(SNOW-1479617): assert SAML2_SNOWFLAKE_X509_CERT
 	}
 
 	t.Run("CreateApiAuthenticationWithClientCredentialsFlow", func(t *testing.T) {
@@ -541,24 +542,25 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 				WithSaml2EnableSpInitiated(true).
 				WithSaml2ForceAuthn(true).
 				WithSaml2PostLogoutRedirectUrl("http://example.com/logout").
-				WithSaml2RequestedNameidFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified").
+				WithSaml2RequestedNameidFormat(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified).
 				WithSaml2SignRequest(true).
 				WithSaml2SnowflakeAcsUrl(acsURL).
 				WithSaml2SnowflakeIssuerUrl(issuerURL).
-				WithSaml2SpInitiatedLoginPageLabel("label")
-			// TODO: fix after format clarification
+				WithSaml2SpInitiatedLoginPageLabel("label").
+				WithEnabled(true)
+			// TODO(SNOW-1479617): fix after format clarification
 			// WithSaml2SnowflakeX509Cert(sdk.Pointer(x509))
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
 		assertSAML2Describe(details, saml2Details{
-			provider:                  "Custom",
+			provider:                  string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom),
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
 			ssoURL:                    "https://example.com",
 			issuer:                    issuer,
-			requestedNameIDFormat:     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+			requestedNameIDFormat:     string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified),
 			forceAuthn:                "true",
 			postLogoutRedirectUrl:     "http://example.com/logout",
 			signrequest:               "true",
@@ -571,7 +573,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertSecurityIntegration(t, si, id, "SAML2", false, "a")
+		assertSecurityIntegration(t, si, id, "SAML2", true, "a")
 	})
 
 	t.Run("CreateScim", func(t *testing.T) {
@@ -1155,15 +1157,15 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSaml2EnableSpInitiated(true).
 					WithSaml2ForceAuthn(true).
 					WithSaml2PostLogoutRedirectUrl("http://example.com/logout").
-					WithSaml2RequestedNameidFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified").
+					WithSaml2RequestedNameidFormat(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified).
 					WithSaml2SignRequest(true).
 					WithSaml2SnowflakeAcsUrl(acsURL).
 					WithSaml2SnowflakeIssuerUrl(issuerURL).
 					WithSaml2SpInitiatedLoginPageLabel("label").
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
-				// TODO: fix after format clarification
-				// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
+			// TODO(SNOW-1479617): fix after format clarification
+			// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
 			)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
@@ -1172,12 +1174,12 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		assertSAML2Describe(details, saml2Details{
-			provider:                  "OKTA",
+			provider:                  string(sdk.Saml2SecurityIntegrationSaml2ProviderOkta),
 			enableSPInitiated:         "true",
 			spInitiatedLoginPageLabel: "label",
 			ssoURL:                    "http://example.com",
 			issuer:                    issuer,
-			requestedNameIDFormat:     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+			requestedNameIDFormat:     string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified),
 			forceAuthn:                "true",
 			postLogoutRedirectUrl:     "http://example.com/logout",
 			signrequest:               "true",
@@ -1202,7 +1204,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err = client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_FORCE_AUTHN", Type: "Boolean", Value: "false", Default: "false"})
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress", Default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_REQUESTED_NAMEID_FORMAT", Type: "String", Value: string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress), Default: string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SAML2_POST_LOGOUT_REDIRECT_URL", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -62,15 +61,6 @@ func hasGranteeName(grants []sdk.Grant, role sdk.AccountObjectIdentifier) bool {
 	return false
 }
 
-// MatchAllStringsInOrderNonOverlapping returns a regex matching every string in parts. Matchings are non overlapping.
-func MatchAllStringsInOrderNonOverlapping(parts []string) *regexp.Regexp {
-	escapedParts := make([]string, len(parts))
-	for i := range parts {
-		escapedParts[i] = regexp.QuoteMeta(parts[i])
-	}
-	return regexp.MustCompile(strings.Join(escapedParts, "((.|\n)*)"))
-}
-
 // AssertErrorContainsPartsFunc returns a function asserting error message contains each string in parts
 func AssertErrorContainsPartsFunc(t *testing.T, parts []string) resource.ErrorCheckFunc {
 	t.Helper()
@@ -80,4 +70,13 @@ func AssertErrorContainsPartsFunc(t *testing.T, parts []string) resource.ErrorCh
 		}
 		return nil
 	}
+}
+
+// EnumToTerraformStringList converts a list of enum values to the format represented in Terraform errors.
+func EnumToTerraformStringList[T ~string](values []T) string {
+	parts := make([]string, len(values))
+	for i := range values {
+		parts[i] = fmt.Sprintf(`"%s"`, values[i])
+	}
+	return fmt.Sprintf("[%s]", strings.Join(parts, " "))
 }
