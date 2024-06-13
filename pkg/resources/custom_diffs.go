@@ -5,6 +5,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -66,4 +68,33 @@ func ValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLev
 
 		return nil
 	}
+}
+
+func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.AccountObjectIdentifier) (string, error)) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+		configValue := d.GetRawConfig().AsValueMap()[key]
+		if !configValue.IsNull() {
+			return false
+		}
+
+		client := meta.(*provider.Context).Client
+
+		def, err := getDefault(client, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier))
+		if err != nil {
+			return false
+		}
+		stateValue := d.Get(key).(bool)
+		return def != strconv.FormatBool(stateValue)
+	})
+}
+
+// TODO [follow-up PR]: test
+func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		var result bool
+		for _, changedKey := range changedAttributeKeys {
+			result = result || diff.HasChange(changedKey)
+		}
+		return result
+	})
 }

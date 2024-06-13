@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 const (
@@ -110,21 +108,6 @@ func ValidateAccountIdentifier(i interface{}, k string) (s []string, errors []er
 	return
 }
 
-func ValidateWarehouseSize(i interface{}, k string) (s []string, errors []error) {
-	v, ok := i.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-	if v == "" { // The default value for Terraform
-		return
-	}
-	if !sdk.IsValidWarehouseSize(v) {
-		errors = append(errors, fmt.Errorf("not a valid warehouse size: %s", v))
-	}
-	return
-}
-
 func ValidateEmail(i interface{}, k string) (s []string, errors []error) {
 	v, ok := i.(string)
 	if !ok {
@@ -186,11 +169,6 @@ func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string 
 	}
 	n.WriteString(fmt.Sprintf(`."%v"`, objectName))
 	return n.String()
-}
-
-func ParseAndFormatFullyQualifiedObectID(s string) string {
-	dbName, schemaName, objectName := ParseFullyQualifiedObjectID(s)
-	return FormatFullyQualifiedObjectID(dbName, schemaName, objectName)
 }
 
 func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName string) {

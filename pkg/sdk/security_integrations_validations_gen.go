@@ -340,8 +340,8 @@ func (opts *AlterScimSecurityIntegrationOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.SyncPassword, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		if !anyValueSet(opts.Unset.Enabled, opts.Unset.NetworkPolicy, opts.Unset.SyncPassword) {
+			errs = append(errs, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword"))
 		}
 	}
 	return JoinErrors(errs...)

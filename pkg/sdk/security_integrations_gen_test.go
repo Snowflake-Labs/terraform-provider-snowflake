@@ -1,7 +1,10 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSecurityIntegrations_CreateApiAuthenticationWithClientCredentialsFlow(t *testing.T) {
@@ -395,7 +398,6 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	defaultOpts := func() *CreateScimSecurityIntegrationOptions {
 		return &CreateScimSecurityIntegrationOptions{
 			name:       id,
-			Enabled:    true,
 			ScimClient: "GENERIC",
 			RunAsRole:  "GENERIC_SCIM_PROVISIONER",
 		}
@@ -416,12 +418,13 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Pointer(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SCIM ENABLED = true SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SCIM SCIM_CLIENT = 'GENERIC' RUN_AS_ROLE = 'GENERIC_SCIM_PROVISIONER'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		networkPolicyID := randomAccountObjectIdentifier()
+		opts.Enabled = Pointer(true)
 		opts.IfNotExists = Pointer(true)
 		opts.NetworkPolicy = Pointer(networkPolicyID)
 		opts.SyncPassword = Pointer(true)
@@ -1282,7 +1285,7 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &ScimIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterScimSecurityIntegrationOptions.Unset", "Enabled", "NetworkPolicy", "SyncPassword"))
 	})
 
 	t.Run("all options - set", func(t *testing.T) {
@@ -1292,10 +1295,18 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(networkPolicyID),
 			SyncPassword:  Pointer(true),
-			Comment:       Pointer("test"),
+			Comment:       Pointer(StringAllowEmpty{Value: "test"}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, NETWORK_POLICY = %s, SYNC_PASSWORD = true, COMMENT = 'test'",
 			id.FullyQualifiedName(), networkPolicyID.FullyQualifiedName())
+	})
+
+	t.Run("set empty comment", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ScimIntegrationSet{
+			Comment: Pointer(StringAllowEmpty{Value: ""}),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET COMMENT = ''", id.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
@@ -1304,9 +1315,8 @@ func TestSecurityIntegrations_AlterScim(t *testing.T) {
 			Enabled:       Pointer(true),
 			NetworkPolicy: Pointer(true),
 			SyncPassword:  Pointer(true),
-			Comment:       Pointer(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD, COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, NETWORK_POLICY, SYNC_PASSWORD", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {
@@ -1412,4 +1422,37 @@ func TestSecurityIntegrations_Show(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW SECURITY INTEGRATIONS LIKE 'some pattern'")
 	})
+}
+
+func TestSecurityIntegration_SubType(t *testing.T) {
+	testCases := map[string]struct {
+		integration SecurityIntegration
+		subType     string
+		err         error
+	}{
+		"subtype for scim integration": {
+			integration: SecurityIntegration{IntegrationType: "SCIM - AZURE"},
+			subType:     "AZURE",
+		},
+		"invalid integration type": {
+			integration: SecurityIntegration{IntegrationType: "invalid"},
+			err:         errors.New("expected \"<type> - <subtype>\", got: invalid"),
+		},
+		"empty integration type": {
+			integration: SecurityIntegration{IntegrationType: ""},
+			err:         errors.New("expected \"<type> - <subtype>\", got: "),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			subType, err := tc.integration.SubType()
+			if err != nil {
+				require.Equal(t, tc.err, err)
+			} else {
+				require.NoError(t, tc.err)
+				require.Equal(t, tc.subType, subType)
+			}
+		})
+	}
 }

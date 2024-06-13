@@ -16,7 +16,7 @@ type expectComputedPlanCheck struct {
 	expectComputed  bool
 }
 
-// TODO: test
+// TODO [SNOW-1473409]: test
 func (e expectComputedPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	var result []error
 	var resourceFound bool
@@ -48,7 +48,7 @@ func (e expectComputedPlanCheck) CheckPlan(_ context.Context, req plancheck.Chec
 	resp.Error = errors.Join(result...)
 }
 
-// TODO: describe
+// TODO [SNOW-1473409]: describe
 func ExpectComputed(resourceAddress string, attribute string, expectComputed bool) plancheck.PlanCheck {
 	return expectComputedPlanCheck{
 		resourceAddress,

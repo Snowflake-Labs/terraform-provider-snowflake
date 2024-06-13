@@ -136,6 +136,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},
+	resources.ScimSecurityIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
 	resources.SecondaryDatabase: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},

@@ -1,8 +1,15 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+const SecurityIntegrationCategory = "SECURITY"
 
 type ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption string
 
@@ -64,6 +71,26 @@ const (
 	ScimSecurityIntegrationScimClientGeneric ScimSecurityIntegrationScimClientOption = "GENERIC"
 )
 
+var AllScimSecurityIntegrationScimClients = []ScimSecurityIntegrationScimClientOption{
+	ScimSecurityIntegrationScimClientOkta,
+	ScimSecurityIntegrationScimClientAzure,
+	ScimSecurityIntegrationScimClientGeneric,
+}
+
+func ToScimSecurityIntegrationScimClientOption(s string) (ScimSecurityIntegrationScimClientOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case "OKTA":
+		return ScimSecurityIntegrationScimClientOkta, nil
+	case "AZURE":
+		return ScimSecurityIntegrationScimClientAzure, nil
+	case "GENERIC":
+		return ScimSecurityIntegrationScimClientGeneric, nil
+	default:
+		return "", fmt.Errorf("invalid ScimSecurityIntegrationScimClientOption: %s", s)
+	}
+}
+
 type ScimSecurityIntegrationRunAsRoleOption string
 
 const (
@@ -71,6 +98,26 @@ const (
 	ScimSecurityIntegrationRunAsRoleAadProvisioner         ScimSecurityIntegrationRunAsRoleOption = "AAD_PROVISIONER"
 	ScimSecurityIntegrationRunAsRoleGenericScimProvisioner ScimSecurityIntegrationRunAsRoleOption = "GENERIC_SCIM_PROVISIONER"
 )
+
+var AllScimSecurityIntegrationRunAsRoles = []ScimSecurityIntegrationRunAsRoleOption{
+	ScimSecurityIntegrationRunAsRoleOktaProvisioner,
+	ScimSecurityIntegrationRunAsRoleAadProvisioner,
+	ScimSecurityIntegrationRunAsRoleGenericScimProvisioner,
+}
+
+func ToScimSecurityIntegrationRunAsRoleOption(s string) (ScimSecurityIntegrationRunAsRoleOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case "OKTA_PROVISIONER":
+		return ScimSecurityIntegrationRunAsRoleOktaProvisioner, nil
+	case "AAD_PROVISIONER":
+		return ScimSecurityIntegrationRunAsRoleAadProvisioner, nil
+	case "GENERIC_SCIM_PROVISIONER":
+		return ScimSecurityIntegrationRunAsRoleGenericScimProvisioner, nil
+	default:
+		return "", fmt.Errorf("invalid ScimSecurityIntegrationRunAsRoleOption: %s", s)
+	}
+}
 
 var (
 	allowedScopeDef           = g.NewQueryStruct("AllowedScope").Text("Scope", g.KeywordOptions().SingleQuotes().Required())
@@ -307,15 +354,15 @@ var scimIntegrationSetDef = g.NewQueryStruct("ScimIntegrationSet").
 	OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 	OptionalIdentifier("NetworkPolicy", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("NETWORK_POLICY")).
 	OptionalBooleanAssignment("SYNC_PASSWORD", g.ParameterOptions()).
-	OptionalComment().
+	// TODO(SNOW-1461780): use COMMENT in unset and here use OptionalComment
+	OptionalAssignment("COMMENT", "StringAllowEmpty", g.ParameterOptions()).
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
 
 var scimIntegrationUnsetDef = g.NewQueryStruct("ScimIntegrationUnset").
 	OptionalSQL("ENABLED").
 	OptionalSQL("NETWORK_POLICY").
 	OptionalSQL("SYNC_PASSWORD").
-	OptionalSQL("COMMENT").
-	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword", "Comment")
+	WithValidation(g.AtLeastOneValueSet, "Enabled", "NetworkPolicy", "SyncPassword")
 
 var SecurityIntegrationsDef = g.NewInterface(
 	"SecurityIntegrations",
@@ -520,7 +567,7 @@ var SecurityIntegrationsDef = g.NewInterface(
 		createSecurityIntegrationOperation("CreateScim", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
 				PredefinedQueryStructField("integrationType", "string", g.StaticOptions().SQL("TYPE = SCIM")).
-				BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
+				OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 				Assignment(
 					"SCIM_CLIENT",
 					g.KindOfT[ScimSecurityIntegrationScimClientOption](),

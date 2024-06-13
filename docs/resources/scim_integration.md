@@ -12,11 +12,22 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_scim_integration" "aad" {
-  name             = "AAD_PROVISIONING"
-  network_policy   = "AAD_NETWORK_POLICY"
-  provisioner_role = "AAD_PROVISIONER"
-  scim_client      = "AZURE"
+# basic resource
+resource "snowflake_scim_integration" "test" {
+  name          = "test"
+  enabled       = true
+  scim_client   = "GENERIC"
+  sync_password = true
+}
+# resource with all fields set
+resource "snowflake_scim_integration" "test" {
+  name           = "test"
+  enabled        = true
+  scim_client    = "GENERIC"
+  sync_password  = true
+  network_policy = "network_policy_test"
+  run_as_role    = "GENERIC_SCIM_PROVISIONER"
+  comment        = "foo"
 }
 ```
 
@@ -25,13 +36,16 @@ resource "snowflake_scim_integration" "aad" {
 
 ### Required
 
-- `name` (String) Specifies the name of the SCIM integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
-- `provisioner_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM.
-- `scim_client` (String) Specifies the client type for the scim integration
+- `enabled` (Boolean) Specify whether the security integration is enabled.
+- `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account.
+- `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Provider assumes that the specified role is already provided. Valid options are: [OKTA_PROVISIONER AAD_PROVISIONER GENERIC_SCIM_PROVISIONER].
+- `scim_client` (String) Specifies the client type for the scim integration. Valid options are: [OKTA AZURE GENERIC].
 
 ### Optional
 
-- `network_policy` (String) Specifies an existing network policy active for your account. The network policy restricts the list of user IP addresses when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access token. If this parameter is not set, the network policy for the account (if any) is used instead.
+- `comment` (String) Specifies a comment for the integration.
+- `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic.
+- `sync_password` (Boolean) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake.
 
 ### Read-Only
 

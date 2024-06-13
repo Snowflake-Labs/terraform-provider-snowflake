@@ -36,7 +36,7 @@ var shareSchema = map[string]*schema.Schema{
 		Optional: true,
 		Description: "A list of accounts to be added to the share. Values should not be the account locator, but " +
 			"in the form of 'organization_name.account_name",
-		DiffSuppressFunc: diffCaseInsensitive,
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
 }
 

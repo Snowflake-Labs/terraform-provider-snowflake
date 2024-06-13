@@ -192,6 +192,15 @@ func (itc *integrationTestContext) initialize() error {
 		return err
 	}
 
+	err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
+	if err != nil {
+		return err
+	}
+	err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

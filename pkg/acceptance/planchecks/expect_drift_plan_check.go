@@ -22,11 +22,11 @@ type expectDriftPlanCheck struct {
 	newValue        *string
 }
 
-// TODO: test
-// TODO: extract common logic with expectChangePlanCheck
-// TODO: extract traversal for the attribute path
-// TODO: verify that path to attribute results in nil or primitive
-// TODO: check if the nested attributes also have plan
+// TODO [SNOW-1473409]: test
+// TODO [SNOW-1473409]: extract common logic with expectChangePlanCheck
+// TODO [SNOW-1473409]: extract traversal for the attribute path
+// TODO [SNOW-1473409]: verify that path to attribute results in nil or primitive
+// TODO [SNOW-1473409]: check if the nested attributes also have plan
 func (e expectDriftPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	var result []error
 	var resourceFound bool
@@ -106,7 +106,7 @@ func (e expectDriftPlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPl
 	resp.Error = errors.Join(result...)
 }
 
-// TODO: describe
+// TODO [SNOW-1473409]: describe
 func ExpectDrift(resourceAddress string, attribute string, oldValue *string, newValue *string) plancheck.PlanCheck {
 	return expectDriftPlanCheck{
 		resourceAddress,

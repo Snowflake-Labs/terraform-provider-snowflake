@@ -257,3 +257,8 @@ var AllTraceLevels = []TraceLevel{
 	TraceLevelOnEvent,
 	TraceLevelOff,
 }
+
+// StringAllowEmpty is a wrapper on string to allow using empty strings in SQL.
+type StringAllowEmpty struct {
+	Value string `ddl:"keyword,single_quotes"`
+}

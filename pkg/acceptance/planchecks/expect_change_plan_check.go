@@ -23,7 +23,7 @@ type expectChangePlanCheck struct {
 	newValue        *string
 }
 
-// TODO: test
+// TODO [SNOW-1473409]: test
 func (e expectChangePlanCheck) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	var result []error
 	var resourceFound bool
@@ -103,7 +103,7 @@ func (e expectChangePlanCheck) CheckPlan(_ context.Context, req plancheck.CheckP
 	resp.Error = errors.Join(result...)
 }
 
-// TODO: describe
+// TODO [SNOW-1473409]: describe
 func ExpectChange(resourceAddress string, attribute string, action tfjson.Action, oldValue *string, newValue *string) plancheck.PlanCheck {
 	return expectChangePlanCheck{
 		resourceAddress,
