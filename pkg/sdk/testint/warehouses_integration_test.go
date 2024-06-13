@@ -11,8 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348102 - next PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
+// TODO [SNOW-1348102 - next PR]: more unset tests
 // TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
+// TODO [this PR]: show -> showbyid in multiple tests
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -184,20 +185,6 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, "", result.Comment)
 	})
 
-	t.Run("describe: when warehouse exists", func(t *testing.T) {
-		result, err := client.Warehouses.Describe(ctx, precreatedWarehouseId)
-		require.NoError(t, err)
-		assert.Equal(t, precreatedWarehouseId.Name(), result.Name)
-		assert.Equal(t, "WAREHOUSE", result.Kind)
-		assert.WithinDuration(t, time.Now(), result.CreatedOn, 1*time.Minute)
-	})
-
-	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
-		id := NonExistingAccountObjectIdentifier
-		_, err := client.Warehouses.Describe(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-	})
-
 	t.Run("alter: set and unset", func(t *testing.T) {
 		createOptions := &sdk.CreateWarehouseOptions{
 			Comment:         sdk.String("test comment"),
@@ -256,6 +243,38 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
 		assert.Equal(t, true, result.EnableQueryAcceleration)
 		assert.Equal(t, 1234, result.AutoSuspend)
+	})
+
+	t.Run("alter: prove problems with unset auto suspend", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{AutoSuspend: sdk.Bool(true)},
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default 600)
+		// assert.Equal(t, "600", returnedWarehouse.AutoSuspend)
+		assert.Equal(t, "0", returnedWarehouse.AutoSuspend)
+	})
+
+	t.Run("alter: prove problems with unset warehouse type", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{WarehouseType: sdk.Bool(true)},
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default type STANDARD)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid type of property 'null' for 'WAREHOUSE_TYPE'")
 	})
 
 	t.Run("alter: rename", func(t *testing.T) {
@@ -472,6 +491,20 @@ func TestInt_Warehouses(t *testing.T) {
 	})
 
 	t.Run("describe: when warehouse exists", func(t *testing.T) {
+		result, err := client.Warehouses.Describe(ctx, precreatedWarehouseId)
+		require.NoError(t, err)
+		assert.Equal(t, precreatedWarehouseId.Name(), result.Name)
+		assert.Equal(t, "WAREHOUSE", result.Kind)
+		assert.WithinDuration(t, time.Now(), result.CreatedOn, 1*time.Minute)
+	})
+
+	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
+		id := NonExistingAccountObjectIdentifier
+		_, err := client.Warehouses.Describe(ctx, id)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("drop: when warehouse exists", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
@@ -482,20 +515,8 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
+	t.Run("drop: when warehouse does not exist", func(t *testing.T) {
 		err := client.Warehouses.Drop(ctx, NonExistingAccountObjectIdentifier, nil)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-	})
-
-	t.Run("describe: when warehouse exists and if exists is true", func(t *testing.T) {
-		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-		t.Cleanup(warehouseCleanup)
-
-		dropOptions := &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)}
-		err := client.Warehouses.Drop(ctx, warehouse.ID(), dropOptions)
-		require.NoError(t, err)
-		_, err = client.Warehouses.Describe(ctx, warehouse.ID())
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

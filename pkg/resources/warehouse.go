@@ -441,7 +441,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		if v := d.Get("auto_suspend").(int); v != -1 {
 			set.AutoSuspend = sdk.Int(v)
 		} else {
-			// TODO [SNOW-1473453]: UNSET of type does not work
+			// TODO [SNOW-1473453]: UNSET of auto suspend does not work
 			// unset.AutoSuspend = sdk.Bool(true)
 			set.AutoSuspend = sdk.Int(600)
 		}
