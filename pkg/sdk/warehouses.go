@@ -397,9 +397,10 @@ type Warehouse struct {
 	Comment                         string
 	EnableQueryAcceleration         bool
 	QueryAccelerationMaxScaleFactor int
-	ResourceMonitor                 string
-	ScalingPolicy                   ScalingPolicy
-	OwnerRoleType                   string
+	// TODO [this PR]: change type to identifier
+	ResourceMonitor string
+	ScalingPolicy   ScalingPolicy
+	OwnerRoleType   string
 }
 
 type warehouseDBRow struct {

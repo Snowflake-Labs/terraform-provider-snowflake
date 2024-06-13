@@ -43,9 +43,14 @@ func (c *WarehouseClient) CreateWarehouse(t *testing.T) (*sdk.Warehouse, func())
 func (c *WarehouseClient) CreateWarehouseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
 	t.Helper()
 	ctx := context.Background()
+
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
-	return &sdk.Warehouse{Name: id.Name()}, c.DropWarehouseFunc(t, id)
+
+	warehouse, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return warehouse, c.DropWarehouseFunc(t, id)
 }
 
 func (c *WarehouseClient) DropWarehouseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {

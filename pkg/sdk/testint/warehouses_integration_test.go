@@ -11,9 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348102 - next PR]: more unset tests
 // TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
+// TODO [this PR]: set/unset parameters
+// TODO [this PR]: get rid of the precreated warehouses on the top level
 // TODO [this PR]: show -> showbyid in multiple tests
+// TODO [this PR]: test WaitForCompletion (which version we use inside the resource?)
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -186,63 +188,77 @@ func TestInt_Warehouses(t *testing.T) {
 	})
 
 	t.Run("alter: set and unset", func(t *testing.T) {
-		createOptions := &sdk.CreateWarehouseOptions{
-			Comment:         sdk.String("test comment"),
-			MaxClusterCount: sdk.Int(10),
-		}
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, createOptions)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
+		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
+		assert.Equal(t, 1, warehouse.MaxClusterCount)
+		assert.Equal(t, 1, warehouse.MinClusterCount)
+		assert.Equal(t, sdk.ScalingPolicyStandard, warehouse.ScalingPolicy)
+		assert.Equal(t, 600, warehouse.AutoSuspend)
+		assert.Equal(t, true, warehouse.AutoResume)
+		assert.Equal(t, "null", warehouse.ResourceMonitor)
+		assert.Equal(t, "", warehouse.Comment)
+		assert.Equal(t, false, warehouse.EnableQueryAcceleration)
+		assert.Equal(t, 8, warehouse.QueryAccelerationMaxScaleFactor)
+
 		alterOptions := &sdk.AlterWarehouseOptions{
+			// WarehouseType omitted on purpose - it requires suspending the warehouse (separate test cases)
+			// WaitForCompletion omitted on purpose - separate test case
 			Set: &sdk.WarehouseSet{
-				ResourceMonitor:         resourceMonitor.ID(),
-				WarehouseSize:           &sdk.WarehouseSizeMedium,
-				AutoSuspend:             sdk.Int(1234),
-				EnableQueryAcceleration: sdk.Bool(true),
+				WarehouseSize:                   &sdk.WarehouseSizeMedium,
+				MaxClusterCount:                 sdk.Int(3),
+				MinClusterCount:                 sdk.Int(2),
+				ScalingPolicy:                   sdk.Pointer(sdk.ScalingPolicyEconomy),
+				AutoSuspend:                     sdk.Int(1234),
+				AutoResume:                      sdk.Bool(false),
+				ResourceMonitor:                 resourceMonitor.ID(),
+				Comment:                         sdk.String("new comment"),
+				EnableQueryAcceleration:         sdk.Bool(true),
+				QueryAccelerationMaxScaleFactor: sdk.Int(2),
 			},
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
-		assert.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
+
+		warehouseAfterSet, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
-		assert.Equal(t, true, result.EnableQueryAcceleration)
-		assert.Equal(t, 1234, result.AutoSuspend)
-		assert.Equal(t, "test comment", result.Comment)
-		assert.Equal(t, 10, result.MaxClusterCount)
+		assert.Equal(t, sdk.WarehouseSizeMedium, warehouseAfterSet.Size)
+		assert.Equal(t, 3, warehouseAfterSet.MaxClusterCount)
+		assert.Equal(t, 2, warehouseAfterSet.MinClusterCount)
+		assert.Equal(t, sdk.ScalingPolicyEconomy, warehouseAfterSet.ScalingPolicy)
+		assert.Equal(t, 1234, warehouseAfterSet.AutoSuspend)
+		assert.Equal(t, false, warehouseAfterSet.AutoResume)
+		assert.Equal(t, resourceMonitor.ID().Name(), warehouseAfterSet.ResourceMonitor)
+		assert.Equal(t, "new comment", warehouseAfterSet.Comment)
+		assert.Equal(t, true, warehouseAfterSet.EnableQueryAcceleration)
+		assert.Equal(t, 2, warehouseAfterSet.QueryAccelerationMaxScaleFactor)
 
 		alterOptions = &sdk.AlterWarehouseOptions{
+			// WarehouseSize omitted on purpose - UNSET is not supported for warehouse size
+			// WarehouseType, ScalingPolicy, AutoSuspend, and AutoResume omitted on purpose - UNSET do not work correctly
+			// WaitForCompletion omitted on purpose - separate test case
 			Unset: &sdk.WarehouseUnset{
-				ResourceMonitor: sdk.Bool(true),
-				Comment:         sdk.Bool(true),
-				MaxClusterCount: sdk.Bool(true),
+				MaxClusterCount:                 sdk.Bool(true),
+				MinClusterCount:                 sdk.Bool(true),
+				ResourceMonitor:                 sdk.Bool(true),
+				Comment:                         sdk.Bool(true),
+				EnableQueryAcceleration:         sdk.Bool(true),
+				QueryAccelerationMaxScaleFactor: sdk.Bool(true),
 			},
 		}
-		err = client.Warehouses.Alter(ctx, id, alterOptions)
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
+		warehouseAfterUnset, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result = warehouses[0]
-		assert.Equal(t, warehouse.Name, result.Name)
-		assert.Equal(t, "", result.Comment)
-		assert.Equal(t, 1, result.MaxClusterCount)
-		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
-		assert.Equal(t, true, result.EnableQueryAcceleration)
-		assert.Equal(t, 1234, result.AutoSuspend)
+		assert.Equal(t, 1, warehouseAfterUnset.MaxClusterCount)
+		assert.Equal(t, 1, warehouseAfterUnset.MinClusterCount)
+		assert.Equal(t, "null", warehouseAfterUnset.ResourceMonitor)
+		assert.Equal(t, "", warehouseAfterUnset.Comment)
+		assert.Equal(t, false, warehouseAfterUnset.EnableQueryAcceleration)
+		assert.Equal(t, 8, warehouseAfterUnset.QueryAccelerationMaxScaleFactor)
 	})
 
 	t.Run("alter: prove problems with unset auto suspend", func(t *testing.T) {
@@ -275,6 +291,38 @@ func TestInt_Warehouses(t *testing.T) {
 		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default type STANDARD)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "invalid type of property 'null' for 'WAREHOUSE_TYPE'")
+	})
+
+	t.Run("alter: prove problems with unset scaling policy", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{ScalingPolicy: sdk.Bool(true)},
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default scaling policy STANDARD)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid type of property 'null' for 'SCALING_POLICY'")
+	})
+
+	t.Run("alter: prove problems with unset auto resume", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{AutoResume: sdk.Bool(true)},
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default auto resume TRUE)
+		//assert.Equal(t, true, returnedWarehouse.AutoResume)
+		assert.Equal(t, false, returnedWarehouse.AutoResume)
 	})
 
 	t.Run("alter: rename", func(t *testing.T) {
