@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348102 - next PR]: add resource monitor test
 // TODO [SNOW-1348102 - next PR]: add test for auto resume (proving SF bug; more unset tests? - yes)
 // TODO [SNOW-1348102 - next PR]: test setting empty comment
 // TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
@@ -31,6 +30,9 @@ func TestInt_Warehouses(t *testing.T) {
 	t.Cleanup(tagCleanup)
 	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tag2Cleanup)
+
+	resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
+	t.Cleanup(resourceMonitorCleanup)
 
 	t.Run("show: without options", func(t *testing.T) {
 		warehouses, err := client.Warehouses.Show(ctx, nil)
@@ -86,6 +88,7 @@ func TestInt_Warehouses(t *testing.T) {
 			AutoSuspend:                     sdk.Int(1000),
 			AutoResume:                      sdk.Bool(true),
 			InitiallySuspended:              sdk.Bool(false),
+			ResourceMonitor:                 sdk.Pointer(resourceMonitor.ID()),
 			Comment:                         sdk.String("comment"),
 			EnableQueryAcceleration:         sdk.Bool(true),
 			QueryAccelerationMaxScaleFactor: sdk.Int(90),
@@ -123,6 +126,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 1000, warehouse.AutoSuspend)
 		assert.Equal(t, true, warehouse.AutoResume)
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateResuming, sdk.WarehouseStateStarted}, warehouse.State)
+		assert.Equal(t, resourceMonitor.ID().Name(), warehouse.ResourceMonitor)
 		assert.Equal(t, "comment", warehouse.Comment)
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
@@ -189,6 +193,7 @@ func TestInt_Warehouses(t *testing.T) {
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			Set: &sdk.WarehouseSet{
+				ResourceMonitor:         resourceMonitor.ID(),
 				WarehouseSize:           &sdk.WarehouseSizeMedium,
 				AutoSuspend:             sdk.Int(1234),
 				EnableQueryAcceleration: sdk.Bool(true),
@@ -212,6 +217,7 @@ func TestInt_Warehouses(t *testing.T) {
 
 		alterOptions = &sdk.AlterWarehouseOptions{
 			Unset: &sdk.WarehouseUnset{
+				ResourceMonitor: sdk.Bool(true),
 				Comment:         sdk.Bool(true),
 				MaxClusterCount: sdk.Bool(true),
 			},
