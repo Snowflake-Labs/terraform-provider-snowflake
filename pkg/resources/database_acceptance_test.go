@@ -1107,8 +1107,8 @@ resource "snowflake_database" "test" {
 func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
-	shareExternalId := new(sdk.ExternalObjectIdentifier)
 
+	shareExternalId := sdk.Pointer(sdk.NewExternalObjectIdentifierFromFullyQualifiedName(""))
 	helpers.TfAccFunc(t, func() {
 		*shareExternalId = createShareableDatabase(t)
 	})
@@ -1127,7 +1127,7 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, *shareExternalId),
+				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, shareExternalId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
@@ -1153,7 +1153,7 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 	})
 }
 
-func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare sdk.ExternalObjectIdentifier) string {
+func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare *sdk.ExternalObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
@@ -1177,9 +1177,9 @@ resource "snowflake_database" "test" {
 
 func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	primaryDatabaseId := new(sdk.ExternalObjectIdentifier)
 
 	// This couldn't be done in any other way (except creating this setup with terraform configuration), because primaryDatabaseId is part of the configuration which is "static".
+	primaryDatabaseId := sdk.Pointer(sdk.NewExternalObjectIdentifierFromFullyQualifiedName(""))
 	helpers.TfAccFunc(t, func() {
 		_, externalId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 			acc.TestClient().Account.GetAccountIdentifier(t),
