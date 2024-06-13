@@ -1106,8 +1106,12 @@ resource "snowflake_database" "test" {
 
 func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareExternalId := createShareableDatabase(t)
 	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
+	shareExternalId := new(sdk.ExternalObjectIdentifier)
+
+	helpers.TfAccFunc(t, func() {
+		*shareExternalId = createShareableDatabase(t)
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1123,7 +1127,7 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, shareExternalId),
+				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, *shareExternalId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
@@ -1173,10 +1177,16 @@ resource "snowflake_database" "test" {
 
 func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	_, primaryDatabaseId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		acc.TestClient().Account.GetAccountIdentifier(t),
+	primaryDatabaseId := new(sdk.ExternalObjectIdentifier)
+
+	// This couldn't be done in any other way (except creating this setup with terraform configuration), because primaryDatabaseId is part of the configuration which is "static".
+	helpers.TfAccFunc(t, func() {
+		_, externalId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+			acc.TestClient().Account.GetAccountIdentifier(t),
+		})
+		t.Cleanup(databaseCleanup)
+		*primaryDatabaseId = externalId
 	})
-	t.Cleanup(databaseCleanup)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1192,7 +1202,7 @@ func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseStateUpgraderFromReplicaOld(id, primaryDatabaseId),
+				Config: databaseStateUpgraderFromReplicaOld(id, *primaryDatabaseId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),

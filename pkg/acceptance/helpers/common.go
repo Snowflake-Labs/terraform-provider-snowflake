@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -79,5 +80,14 @@ func AssertErrorContainsPartsFunc(t *testing.T, parts []string) resource.ErrorCh
 			assert.Contains(t, err.Error(), part)
 		}
 		return nil
+	}
+}
+
+// TfAccFunc wraps a function and executes it whenever TF_ACC environment variable is set.
+// Its main purpose is to run setup code before the actual terraform acceptance test.
+func TfAccFunc(t *testing.T, f func()) {
+	t.Helper()
+	if os.Getenv(resource.EnvTfAcc) != "" {
+		f()
 	}
 }
