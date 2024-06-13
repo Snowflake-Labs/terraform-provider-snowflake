@@ -480,7 +480,7 @@ const (
 	ObjectParameterPipeExecutionPaused                     ObjectParameter = "PIPE_EXECUTION_PAUSED"
 	ObjectParameterPreventUnloadToInternalStages           ObjectParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES" // also an account param
 	ObjectParameterStatementQueuedTimeoutInSeconds         ObjectParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
-	ObjectParameterStatementTimeoutInSeconds           ObjectParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	ObjectParameterStatementTimeoutInSeconds               ObjectParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	ObjectParameterNetworkPolicy                           ObjectParameter = "NETWORK_POLICY" // also an account param
 	ObjectParameterShareRestrictions                       ObjectParameter = "SHARE_RESTRICTIONS"
 	ObjectParameterSuspendTaskAfterNumFailures             ObjectParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
@@ -917,7 +917,7 @@ const (
 	ParameterTypeSession   ParameterType = "SESSION"
 	ParameterTypeObject    ParameterType = "OBJECT"
 	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
-	ParameterTypeDatabase ParameterType = "DATABASE"
+	ParameterTypeDatabase  ParameterType = "DATABASE"
 )
 
 type Parameter struct {
