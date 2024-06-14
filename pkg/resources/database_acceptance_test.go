@@ -2,9 +2,10 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"strconv"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
 
@@ -755,7 +756,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("25"), sdk.String("25")),
+						planchecks.ExpectDrift("snowflake_database.test", "data_retention_time_in_days", sdk.String("25"), sdk.String("50")),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), sdk.String("25")),
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
@@ -874,8 +876,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("50"), sdk.String("50")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), nil),
+						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(

@@ -2,9 +2,10 @@ package testenvs
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 type env string

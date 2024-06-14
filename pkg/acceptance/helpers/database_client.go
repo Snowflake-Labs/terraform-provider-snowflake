@@ -110,18 +110,16 @@ func (c *DatabaseClient) CreatePrimaryDatabase(t *testing.T, enableReplicationTo
 	return primaryDatabase, externalPrimaryId, primaryDatabaseCleanup
 }
 
-func (c *DatabaseClient) UpdateDataRetentionTime(t *testing.T, id sdk.AccountObjectIdentifier, days int) func() {
+func (c *DatabaseClient) UpdateDataRetentionTime(t *testing.T, id sdk.AccountObjectIdentifier, days int) {
 	t.Helper()
 	ctx := context.Background()
 
-	return func() {
-		err := c.client().Alter(ctx, id, &sdk.AlterDatabaseOptions{
-			Set: &sdk.DatabaseSet{
-				DataRetentionTimeInDays: sdk.Int(days),
-			},
-		})
-		require.NoError(t, err)
-	}
+	err := c.client().Alter(ctx, id, &sdk.AlterDatabaseOptions{
+		Set: &sdk.DatabaseSet{
+			DataRetentionTimeInDays: sdk.Int(days),
+		},
+	})
+	require.NoError(t, err)
 }
 
 func (c *DatabaseClient) UnsetCatalog(t *testing.T, id sdk.AccountObjectIdentifier) {

@@ -1,5 +1,5 @@
 resource "snowflake_shared_database" "test" {
-  name                        = var.shared_database_name
+  name       = var.shared_database_name
   from_share = var.external_share_name
 }
 
