@@ -10,10 +10,6 @@ variable "shared_database_name" {
   type = string
 }
 
-variable "share_name" {
-  type = string
-}
-
-variable "account_name" {
+variable "external_share_name" {
   type = string
 }

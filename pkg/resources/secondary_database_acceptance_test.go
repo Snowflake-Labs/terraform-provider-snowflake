@@ -326,13 +326,13 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 				ConfigVariables: unsetConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", ""),
 
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
 					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
 					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
@@ -399,27 +399,41 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
 	require.NoError(t, err)
 
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
 	configVariables := func(
 		id sdk.AccountObjectIdentifier,
 		primaryDatabaseName sdk.ExternalObjectIdentifier,
 		dataRetentionTimeInDays *int,
 	) config.Variables {
 		variables := config.Variables{
-			"name":                         config.StringVariable(id.Name()),
-			"as_replica_of":                config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"transient":                    config.BoolVariable(false),
-			"external_volume":              config.StringVariable(""),
-			"catalog":                      config.StringVariable(""),
-			"replace_invalid_characters":   config.StringVariable("false"),
-			"default_ddl_collation":        config.StringVariable(""),
-			"storage_serialization_policy": config.StringVariable("OPTIMIZED"),
-			"log_level":                    config.StringVariable("OFF"),
-			"trace_level":                  config.StringVariable("OFF"),
-			"comment":                      config.StringVariable(""),
+			"name":          config.StringVariable(id.Name()),
+			"as_replica_of": config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
+			"transient":     config.BoolVariable(false),
+			"comment":       config.StringVariable(""),
+
+			"max_data_extension_time_in_days":               config.IntegerVariable(10),
+			"external_volume":                               config.StringVariable(externalVolumeId.Name()),
+			"catalog":                                       config.StringVariable(catalogId.Name()),
+			"replace_invalid_characters":                    config.BoolVariable(true),
+			"default_ddl_collation":                         config.StringVariable("en_US"),
+			"storage_serialization_policy":                  config.StringVariable("OPTIMIZED"),
+			"log_level":                                     config.StringVariable("OFF"),
+			"trace_level":                                   config.StringVariable("OFF"),
+			"suspend_task_after_num_failures":               config.IntegerVariable(10),
+			"task_auto_retry_attempts":                      config.IntegerVariable(10),
+			"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeSmall)),
+			"user_task_timeout_ms":                          config.IntegerVariable(120000),
+			"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
+			"quoted_identifiers_ignore_case":                config.BoolVariable(true),
+			"enable_console_output":                         config.BoolVariable(true),
 		}
 		if dataRetentionTimeInDays != nil {
 			variables["data_retention_time_in_days"] = config.IntegerVariable(*dataRetentionTimeInDays)
-			variables["max_data_extension_time_in_days"] = config.IntegerVariable(10)
 		}
 		return variables
 	}

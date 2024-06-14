@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"strconv"
 	"testing"
 
@@ -276,7 +277,6 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
 					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", string(sdk.LogLevelInfo)),
 					resource.TestCheckResourceAttr("snowflake_database.test", "trace_level", string(sdk.TraceLevelOnEvent)),
@@ -1105,13 +1105,12 @@ resource "snowflake_database" "test" {
 }
 
 func TestAcc_Database_UpgradeFromShare(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
 
-	shareExternalId := sdk.Pointer(sdk.NewExternalObjectIdentifierFromFullyQualifiedName(""))
-	helpers.TfAccFunc(t, func() {
-		*shareExternalId = createShareableDatabase(t)
-	})
+	shareExternalId := createShareableDatabase(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1153,7 +1152,7 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 	})
 }
 
-func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare *sdk.ExternalObjectIdentifier) string {
+func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare sdk.ExternalObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
@@ -1176,17 +1175,13 @@ resource "snowflake_database" "test" {
 }
 
 func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 
-	// This couldn't be done in any other way (except creating this setup with terraform configuration), because primaryDatabaseId is part of the configuration which is "static".
-	primaryDatabaseId := sdk.Pointer(sdk.NewExternalObjectIdentifierFromFullyQualifiedName(""))
-	helpers.TfAccFunc(t, func() {
-		_, externalId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-			acc.TestClient().Account.GetAccountIdentifier(t),
-		})
-		t.Cleanup(databaseCleanup)
-		*primaryDatabaseId = externalId
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, primaryDatabaseId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		acc.TestClient().Account.GetAccountIdentifier(t),
 	})
+	t.Cleanup(databaseCleanup)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1202,7 +1197,7 @@ func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseStateUpgraderFromReplicaOld(id, *primaryDatabaseId),
+				Config: databaseStateUpgraderFromReplicaOld(id, primaryDatabaseId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),

@@ -41,7 +41,7 @@ func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectPar
 		// For cases where currently set value (in the config) is equal to the parameter, but not set on the right level.
 		// The parameter is set somewhere higher in the hierarchy, and we need to "forcefully" set the value to
 		// perform the actual set on Snowflake (and set the parameter on the correct level).
-		if ok && !configValue.IsNull() && parameter.Level != objectParameterLevel {
+		if ok && !configValue.IsNull() && parameter.Level != objectParameterLevel && parameter.Value == valueToString(d.Get(key)) {
 			return d.SetNewComputed(key)
 		}
 

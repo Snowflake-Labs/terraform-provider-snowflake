@@ -1004,14 +1004,14 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 	sharedDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	sharedDatabaseName := sharedDatabaseId.Name()
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := shareId.Name()
 	roleName := acc.TestClient().Ids.Alpha()
-	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
 		"shared_database_name": config.StringVariable(sharedDatabaseName),
-		"share_name":           config.StringVariable(shareName),
-		"account_name":         config.StringVariable(secondaryAccountName),
+		"external_share_name": config.StringVariable(sdk.NewExternalObjectIdentifier(
+			acc.SecondaryTestClient().Account.GetAccountIdentifier(t),
+			shareId,
+		).FullyQualifiedName()),
 		"privileges": config.ListVariable(
 			config.StringVariable(sdk.AccountObjectPrivilegeImportedPrivileges.String()),
 		),

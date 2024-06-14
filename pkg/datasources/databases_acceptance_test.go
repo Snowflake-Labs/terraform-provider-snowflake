@@ -43,7 +43,8 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.kind", "STANDARD"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_default", "false"),
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "true"),
+					// Commenting as this value depends on the currently used database, which is different when running as a single test and multiple tests (e.g., on CI)
+					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "true"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.origin", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.comment", comment),
@@ -75,7 +76,8 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.kind", "STANDARD"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_default", "false"),
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "false"),
+					// Commenting for the same reason as above
+					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.origin", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.comment", comment),
