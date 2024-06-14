@@ -279,6 +279,8 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 			return err
 		}
 		opts.Set.Parameters.ObjectParameters.EnableUnredactedQuerySyntaxError = b
+	case ObjectParameterCatalog:
+		opts.Set.Parameters.ObjectParameters.Catalog = &value
 	default:
 		return fmt.Errorf("Invalid object parameter: %v", string(parameter))
 	}
@@ -802,6 +804,7 @@ type ObjectParameters struct {
 	TraceLevel                          *TraceLevel    `ddl:"parameter" sql:"TRACE_LEVEL"`
 	UserTaskManagedInitialWarehouseSize *WarehouseSize `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	UserTaskTimeoutMs                   *int           `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	Catalog                             *string        `ddl:"parameter" sql:"CATALOG"`
 }
 
 func (v *ObjectParameters) validate() error {

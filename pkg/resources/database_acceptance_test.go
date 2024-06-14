@@ -907,6 +907,57 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 	})
 }
 
+func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
+	configVariables := config.Variables{
+		"name":    config.StringVariable(id.Name()),
+		"catalog": config.StringVariable(catalogId.Name()),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/catalog"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
+				),
+			},
+			{
+				PreConfig: func() {
+					require.Empty(t, acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterCatalog).Level)
+					acc.TestClient().Database.UnsetCatalog(t, id)
+					t.Cleanup(acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterCatalog, catalogId.Name()))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_database.test", "catalog"),
+						planchecks.ExpectChange("snowflake_database.test", "catalog", tfjson.ActionUpdate, sdk.String(catalogId.Name()), nil),
+						planchecks.ExpectComputed("snowflake_database.test", "catalog", true),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/catalog"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_Database_UpgradeWithTheSameFieldsAsInTheOldOne(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()

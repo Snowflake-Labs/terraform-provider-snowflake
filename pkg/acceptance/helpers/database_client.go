@@ -124,6 +124,18 @@ func (c *DatabaseClient) UpdateDataRetentionTime(t *testing.T, id sdk.AccountObj
 	}
 }
 
+func (c *DatabaseClient) UnsetCatalog(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterDatabaseOptions{
+		Unset: &sdk.DatabaseUnset{
+			Catalog: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
+}
+
 func (c *DatabaseClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, error) {
 	t.Helper()
 	ctx := context.Background()
