@@ -51,7 +51,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 		}), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
-		assert.False(t, diff.Attributes["value"].NewComputed)
+		assert.True(t, diff.Attributes["value"].NewComputed)
 	})
 
 	t.Run("config: true - state: true - level: same - value: same", func(t *testing.T) {

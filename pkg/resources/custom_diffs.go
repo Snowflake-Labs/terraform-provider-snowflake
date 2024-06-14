@@ -41,7 +41,7 @@ func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectPar
 		// For cases where currently set value (in the config) is equal to the parameter, but not set on the right level.
 		// The parameter is set somewhere higher in the hierarchy, and we need to "forcefully" set the value to
 		// perform the actual set on Snowflake (and set the parameter on the correct level).
-		if ok && !configValue.IsNull() && parameter.Level != objectParameterLevel && parameter.Value == valueToString(d.Get(key)) {
+		if ok && !configValue.IsNull() && parameter.Level != objectParameterLevel {
 			return d.SetNewComputed(key)
 		}
 
@@ -50,8 +50,10 @@ func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectPar
 			return nil
 		}
 
-		// Check if the parameter is set on the object level (if so, it means that it was set externally, and we have to unset it).
-		if parameter.Level == objectParameterLevel {
+		// If the configuration is not set, perform SetNewComputed for cases like:
+		// 1. Check if the parameter value differs from the one saved in state (if they differ, we'll update the computed value).
+		// 2. Check if the parameter is set on the object level (if so, it means that it was set externally, and we have to unset it).
+		if parameter.Value != valueToString(d.Get(key)) || parameter.Level == objectParameterLevel {
 			return d.SetNewComputed(key)
 		}
 
