@@ -110,7 +110,7 @@ resource "snowflake_table" "table" {
 Required:
 
 - `name` (String) Column name
-- `type` (String) Column type, e.g. VARIANT
+- `type` (String) Column type, e.g. VARIANT. For a full list of column types, see [Summary of Data Types](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).
 
 Optional:
 
