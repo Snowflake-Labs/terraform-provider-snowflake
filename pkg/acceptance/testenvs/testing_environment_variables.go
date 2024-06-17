@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 type env string
@@ -27,6 +29,7 @@ const (
 	SkipManagedAccountTest  env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
 	SkipSamlIntegrationTest env = "TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST"
 
+	EnableAcceptance         env = resource.EnvTfAcc
 	EnableSweep              env = "TEST_SF_TF_ENABLE_SWEEP"
 	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
 	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"

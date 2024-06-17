@@ -70,6 +70,7 @@ func TestDatabasesCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.Transient = Bool(true)
+
 		opts.DataRetentionTimeInDays = Int(1)
 		opts.MaxDataExtensionTimeInDays = Int(1)
 		opts.ExternalVolume = &externalVolumeId
@@ -79,6 +80,14 @@ func TestDatabasesCreate(t *testing.T) {
 		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyCompatible)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
+		opts.SuspendTaskAfterNumFailures = Int(10)
+		opts.TaskAutoRetryAttempts = Int(10)
+		opts.UserTaskManagedInitialWarehouseSize = Pointer(WarehouseSizeMedium)
+		opts.UserTaskTimeoutMs = Int(12000)
+		opts.UserTaskMinimumTriggerIntervalInSeconds = Int(30)
+		opts.QuotedIdentifiersIgnoreCase = Bool(true)
+		opts.EnableConsoleOutput = Bool(true)
+
 		opts.Comment = String("comment")
 		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
@@ -87,7 +96,7 @@ func TestDatabasesCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT DATABASE IF NOT EXISTS %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' SUSPEND_TASK_AFTER_NUM_FAILURES = 10 TASK_AUTO_RETRY_ATTEMPTS = 10 USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = MEDIUM USER_TASK_TIMEOUT_MS = 12000 USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS = 30 QUOTED_IDENTIFIERS_IGNORE_CASE = true ENABLE_CONSOLE_OUTPUT = true COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -142,13 +151,22 @@ func TestDatabasesCreateShared(t *testing.T) {
 		externalVolumeId := randomAccountObjectIdentifier()
 		catalogId := randomAccountObjectIdentifier()
 		opts.OrReplace = Bool(true)
+
 		opts.ExternalVolume = &externalVolumeId
 		opts.Catalog = &catalogId
-		opts.ReplaceInvalidCharacters = Bool(false)
+		opts.ReplaceInvalidCharacters = Bool(true)
 		opts.DefaultDDLCollation = String("en_US")
-		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyOptimized)
+		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyCompatible)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
+		opts.SuspendTaskAfterNumFailures = Int(10)
+		opts.TaskAutoRetryAttempts = Int(10)
+		opts.UserTaskManagedInitialWarehouseSize = Pointer(WarehouseSizeMedium)
+		opts.UserTaskTimeoutMs = Int(12000)
+		opts.UserTaskMinimumTriggerIntervalInSeconds = Int(30)
+		opts.QuotedIdentifiersIgnoreCase = Bool(true)
+		opts.EnableConsoleOutput = Bool(true)
+
 		opts.Comment = String("comment")
 		tagId := randomAccountObjectIdentifier()
 		opts.Tag = []TagAssociation{
@@ -157,7 +175,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = false DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DATABASE %s FROM SHARE %s EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' SUSPEND_TASK_AFTER_NUM_FAILURES = 10 TASK_AUTO_RETRY_ATTEMPTS = 10 USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = MEDIUM USER_TASK_TIMEOUT_MS = 12000 USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS = 30 QUOTED_IDENTIFIERS_IGNORE_CASE = true ENABLE_CONSOLE_OUTPUT = true COMMENT = 'comment' TAG (%s = 'v1')`, opts.name.FullyQualifiedName(), opts.fromShare.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -212,17 +230,26 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 		opts.OrReplace = Bool(true)
 		opts.Transient = Bool(true)
 		opts.primaryDatabase = primaryDatabaseId
+
 		opts.DataRetentionTimeInDays = Int(1)
-		opts.MaxDataExtensionTimeInDays = Int(10)
+		opts.MaxDataExtensionTimeInDays = Int(1)
 		opts.ExternalVolume = &externalVolumeId
 		opts.Catalog = &catalogId
 		opts.ReplaceInvalidCharacters = Bool(true)
 		opts.DefaultDDLCollation = String("en_US")
-		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyOptimized)
+		opts.StorageSerializationPolicy = Pointer(StorageSerializationPolicyCompatible)
 		opts.LogLevel = Pointer(LogLevelInfo)
 		opts.TraceLevel = Pointer(TraceLevelOnEvent)
+		opts.SuspendTaskAfterNumFailures = Int(10)
+		opts.TaskAutoRetryAttempts = Int(10)
+		opts.UserTaskManagedInitialWarehouseSize = Pointer(WarehouseSizeMedium)
+		opts.UserTaskTimeoutMs = Int(12000)
+		opts.UserTaskMinimumTriggerIntervalInSeconds = Int(30)
+		opts.QuotedIdentifiersIgnoreCase = Bool(true)
+		opts.EnableConsoleOutput = Bool(true)
+
 		opts.Comment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE %s AS REPLICA OF %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 10 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = OPTIMIZED LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' COMMENT = 'comment'`, opts.name.FullyQualifiedName(), primaryDatabaseId.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE %s AS REPLICA OF %s DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 EXTERNAL_VOLUME = %s CATALOG = %s REPLACE_INVALID_CHARACTERS = true DEFAULT_DDL_COLLATION = 'en_US' STORAGE_SERIALIZATION_POLICY = COMPATIBLE LOG_LEVEL = 'INFO' TRACE_LEVEL = 'ON_EVENT' SUSPEND_TASK_AFTER_NUM_FAILURES = 10 TASK_AUTO_RETRY_ATTEMPTS = 10 USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = MEDIUM USER_TASK_TIMEOUT_MS = 12000 USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS = 30 QUOTED_IDENTIFIERS_IGNORE_CASE = true ENABLE_CONSOLE_OUTPUT = true COMMENT = 'comment'`, opts.name.FullyQualifiedName(), primaryDatabaseId.FullyQualifiedName(), externalVolumeId.FullyQualifiedName(), catalogId.FullyQualifiedName())
 	})
 }
 
@@ -263,13 +290,51 @@ func TestDatabasesAlter(t *testing.T) {
 	t.Run("validation: at least one set option", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DatabaseSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf(
+			"DatabaseSet",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"Comment",
+		))
 	})
 
 	t.Run("validation: at least one unset option", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &DatabaseUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf(
+			"DatabaseUnset",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"Comment",
+		))
 	})
 
 	t.Run("validation: invalid external volume identifier", func(t *testing.T) {

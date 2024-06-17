@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -14,9 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
-	t.Skip("To be unskipped in the next database pr")
-
+func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -28,11 +28,24 @@ func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
 
-	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-	require.NoError(t, err)
-
-	accountMaxDataExtensionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterMaxDataExtensionTimeInDays)
-	require.NoError(t, err)
+	var (
+		accountDataRetentionTimeInDays                 = new(string)
+		accountMaxDataExtensionTimeInDays              = new(string)
+		accountExternalVolume                          = new(string)
+		accountCatalog                                 = new(string)
+		accountReplaceInvalidCharacters                = new(string)
+		accountDefaultDdlCollation                     = new(string)
+		accountStorageSerializationPolicy              = new(string)
+		accountLogLevel                                = new(string)
+		accountTraceLevel                              = new(string)
+		accountSuspendTaskAfterNumFailures             = new(string)
+		accountTaskAutoRetryAttempts                   = new(string)
+		accountUserTaskMangedInitialWarehouseSize      = new(string)
+		accountUserTaskTimeoutMs                       = new(string)
+		accountUserTaskMinimumTriggerIntervalInSeconds = new(string)
+		accountQuotedIdentifiersIgnoreCase             = new(string)
+		accountEnableConsoleOutput                     = new(string)
+	)
 
 	configVariables := func(id sdk.AccountObjectIdentifier, primaryDatabaseName sdk.ExternalObjectIdentifier, comment string) config.Variables {
 		return config.Variables{
@@ -51,21 +64,48 @@ func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					params := acc.TestClient().Parameter.ShowAccountParameters(t)
+					*accountDataRetentionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
+					*accountMaxDataExtensionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
+					*accountExternalVolume = helpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
+					*accountCatalog = helpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
+					*accountReplaceInvalidCharacters = helpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
+					*accountDefaultDdlCollation = helpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
+					*accountStorageSerializationPolicy = helpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
+					*accountLogLevel = helpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
+					*accountTraceLevel = helpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
+					*accountSuspendTaskAfterNumFailures = helpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
+					*accountTaskAutoRetryAttempts = helpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
+					*accountUserTaskMangedInitialWarehouseSize = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
+					*accountUserTaskTimeoutMs = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
+					*accountUserTaskMinimumTriggerIntervalInSeconds = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
+					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
+					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
+				},
 				ConfigVariables: configVariables(id, externalPrimaryId, comment),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", accountMaxDataExtensionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", "OPTIMIZED"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", "OFF"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", "OFF"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
+
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			// Rename + comment update
@@ -75,16 +115,24 @@ func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", accountMaxDataExtensionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", ""),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", "OPTIMIZED"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", "OFF"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", "OFF"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
+
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			// Import all values
@@ -100,8 +148,6 @@ func TestAcc_CreateSecondaryDatabase_minimal(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
-	t.Skip("To be unskipped in the next database pr")
-
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -125,47 +171,74 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 	newCatalogId, newCatalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(newCatalogCleanup)
 
-	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-	require.NoError(t, err)
+	var (
+		accountDataRetentionTimeInDays                 = new(string)
+		accountMaxDataExtensionTimeInDays              = new(string)
+		accountExternalVolume                          = new(string)
+		accountCatalog                                 = new(string)
+		accountReplaceInvalidCharacters                = new(string)
+		accountDefaultDdlCollation                     = new(string)
+		accountStorageSerializationPolicy              = new(string)
+		accountLogLevel                                = new(string)
+		accountTraceLevel                              = new(string)
+		accountSuspendTaskAfterNumFailures             = new(string)
+		accountTaskAutoRetryAttempts                   = new(string)
+		accountUserTaskMangedInitialWarehouseSize      = new(string)
+		accountUserTaskTimeoutMs                       = new(string)
+		accountUserTaskMinimumTriggerIntervalInSeconds = new(string)
+		accountQuotedIdentifiersIgnoreCase             = new(string)
+		accountEnableConsoleOutput                     = new(string)
+	)
 
-	accountMaxDataExtensionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterMaxDataExtensionTimeInDays)
-	require.NoError(t, err)
+	unsetConfigVariables := config.Variables{
+		"name":          config.StringVariable(id.Name()),
+		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
+	}
 
-	configVariables := func(
-		id sdk.AccountObjectIdentifier,
-		primaryDatabaseName sdk.ExternalObjectIdentifier,
-		transient bool,
-		dataRetentionTimeInDays *int,
-		maxDataExtensionTimeInDays *int,
-		externalVolume string,
-		catalog string,
-		replaceInvalidCharacters bool,
-		defaultDdlCollation string,
-		storageSerializationPolicy sdk.StorageSerializationPolicy,
-		logLevel sdk.LogLevel,
-		traceLevel sdk.TraceLevel,
-		comment string,
-	) config.Variables {
-		variables := config.Variables{
-			"name":                         config.StringVariable(id.Name()),
-			"as_replica_of":                config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"transient":                    config.BoolVariable(transient),
-			"external_volume":              config.StringVariable(externalVolume),
-			"catalog":                      config.StringVariable(catalog),
-			"replace_invalid_characters":   config.BoolVariable(replaceInvalidCharacters),
-			"default_ddl_collation":        config.StringVariable(defaultDdlCollation),
-			"storage_serialization_policy": config.StringVariable(string(storageSerializationPolicy)),
-			"log_level":                    config.StringVariable(string(logLevel)),
-			"trace_level":                  config.StringVariable(string(traceLevel)),
-			"comment":                      config.StringVariable(comment),
-		}
-		if dataRetentionTimeInDays != nil {
-			variables["data_retention_time_in_days"] = config.IntegerVariable(*dataRetentionTimeInDays)
-		}
-		if maxDataExtensionTimeInDays != nil {
-			variables["max_data_extension_time_in_days"] = config.IntegerVariable(*maxDataExtensionTimeInDays)
-		}
-		return variables
+	setConfigVariables := config.Variables{
+		"name":          config.StringVariable(id.Name()),
+		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
+		"comment":       config.StringVariable(comment),
+
+		"data_retention_time_in_days":                   config.IntegerVariable(20),
+		"max_data_extension_time_in_days":               config.IntegerVariable(25),
+		"external_volume":                               config.StringVariable(externalVolumeId.Name()),
+		"catalog":                                       config.StringVariable(catalogId.Name()),
+		"replace_invalid_characters":                    config.BoolVariable(true),
+		"default_ddl_collation":                         config.StringVariable("en_US"),
+		"storage_serialization_policy":                  config.StringVariable(string(sdk.StorageSerializationPolicyCompatible)),
+		"log_level":                                     config.StringVariable(string(sdk.LogLevelDebug)),
+		"trace_level":                                   config.StringVariable(string(sdk.TraceLevelAlways)),
+		"suspend_task_after_num_failures":               config.IntegerVariable(20),
+		"task_auto_retry_attempts":                      config.IntegerVariable(20),
+		"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeLarge)),
+		"user_task_timeout_ms":                          config.IntegerVariable(1200000),
+		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(60),
+		"quoted_identifiers_ignore_case":                config.BoolVariable(true),
+		"enable_console_output":                         config.BoolVariable(true),
+	}
+
+	updatedConfigVariables := config.Variables{
+		"name":          config.StringVariable(newId.Name()),
+		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
+		"comment":       config.StringVariable(newComment),
+
+		"data_retention_time_in_days":                   config.IntegerVariable(40),
+		"max_data_extension_time_in_days":               config.IntegerVariable(45),
+		"external_volume":                               config.StringVariable(newExternalVolumeId.Name()),
+		"catalog":                                       config.StringVariable(newCatalogId.Name()),
+		"replace_invalid_characters":                    config.BoolVariable(false),
+		"default_ddl_collation":                         config.StringVariable("en_GB"),
+		"storage_serialization_policy":                  config.StringVariable(string(sdk.StorageSerializationPolicyOptimized)),
+		"log_level":                                     config.StringVariable(string(sdk.LogLevelInfo)),
+		"trace_level":                                   config.StringVariable(string(sdk.TraceLevelOnEvent)),
+		"suspend_task_after_num_failures":               config.IntegerVariable(40),
+		"task_auto_retry_attempts":                      config.IntegerVariable(40),
+		"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeXLarge)),
+		"user_task_timeout_ms":                          config.IntegerVariable(2400000),
+		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
+		"quoted_identifiers_ignore_case":                config.BoolVariable(false),
+		"enable_console_output":                         config.BoolVariable(false),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -177,121 +250,135 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: configVariables(
-					id,
-					externalPrimaryId,
-					false,
-					sdk.Int(2),
-					sdk.Int(5),
-					externalVolumeId.Name(),
-					catalogId.Name(),
-					true,
-					"en_US",
-					sdk.StorageSerializationPolicyOptimized,
-					sdk.LogLevelInfo,
-					sdk.TraceLevelOnEvent,
-					comment,
-				),
+				PreConfig: func() {
+					params := acc.TestClient().Parameter.ShowAccountParameters(t)
+					*accountDataRetentionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
+					*accountMaxDataExtensionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
+					*accountExternalVolume = helpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
+					*accountCatalog = helpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
+					*accountReplaceInvalidCharacters = helpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
+					*accountDefaultDdlCollation = helpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
+					*accountStorageSerializationPolicy = helpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
+					*accountLogLevel = helpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
+					*accountTraceLevel = helpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
+					*accountSuspendTaskAfterNumFailures = helpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
+					*accountTaskAutoRetryAttempts = helpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
+					*accountUserTaskMangedInitialWarehouseSize = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
+					*accountUserTaskTimeoutMs = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
+					*accountUserTaskMinimumTriggerIntervalInSeconds = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
+					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
+					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
+				},
+				ConfigVariables: setConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "2"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", "5"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelInfo)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelOnEvent)),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
-				),
-			},
-			{
-				ConfigVariables: configVariables(
-					newId,
-					externalPrimaryId,
-					false,
-					nil,
-					nil,
-					newExternalVolumeId.Name(),
-					newCatalogId.Name(),
-					false,
-					"en_GB",
-					sdk.StorageSerializationPolicyOptimized,
-					sdk.LogLevelDebug,
-					sdk.TraceLevelAlways,
-					newComment,
-				),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", accountMaxDataExtensionTimeInDays.Value),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", newExternalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", newCatalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_GB"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelDebug)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelAlways)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
-				),
-			},
-			{
-				ConfigVariables: configVariables(
-					id,
-					externalPrimaryId,
-					false,
-					sdk.Int(2),
-					sdk.Int(5),
-					externalVolumeId.Name(),
-					catalogId.Name(),
-					true,
-					"en_US",
-					sdk.StorageSerializationPolicyCompatible,
-					sdk.LogLevelInfo,
-					sdk.TraceLevelOnEvent,
-					comment,
-				),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "2"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days.0.value", "5"),
+
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelDebug)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelAlways)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "LARGE"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "1200000"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "true"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "true"),
+				),
+			},
+			{
+				ConfigVariables: updatedConfigVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
+
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "40"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "45"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", newExternalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", newCatalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_GB"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelInfo)),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelOnEvent)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "40"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "40"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "XLARGE"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "2400000"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "false"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "false"),
+				),
+			},
+			{
+				ConfigVariables: unsetConfigVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", ""),
+
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
+				),
+			},
+			{
+				ConfigVariables: setConfigVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
+
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelDebug)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelAlways)),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "20"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "LARGE"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "1200000"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "true"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "true"),
 				),
 			},
 			// Import all values
 			{
-				ConfigVariables: configVariables(
-					id,
-					externalPrimaryId,
-					false,
-					sdk.Int(2),
-					sdk.Int(5),
-					externalVolumeId.Name(),
-					catalogId.Name(),
-					true,
-					"en_US",
-					sdk.StorageSerializationPolicyCompatible,
-					sdk.LogLevelInfo,
-					sdk.TraceLevelOnEvent,
-					comment,
-				),
+				ConfigVariables:   setConfigVariables,
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				ResourceName:      "snowflake_secondary_database.test",
 				ImportState:       true,
@@ -302,8 +389,6 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
-	t.Skip("To be unskipped in the next database pr")
-
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
@@ -314,27 +399,41 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
 	require.NoError(t, err)
 
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
 	configVariables := func(
 		id sdk.AccountObjectIdentifier,
 		primaryDatabaseName sdk.ExternalObjectIdentifier,
 		dataRetentionTimeInDays *int,
 	) config.Variables {
 		variables := config.Variables{
-			"name":                         config.StringVariable(id.Name()),
-			"as_replica_of":                config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"transient":                    config.BoolVariable(false),
-			"external_volume":              config.StringVariable(""),
-			"catalog":                      config.StringVariable(""),
-			"replace_invalid_characters":   config.StringVariable("false"),
-			"default_ddl_collation":        config.StringVariable(""),
-			"storage_serialization_policy": config.StringVariable("OPTIMIZED"),
-			"log_level":                    config.StringVariable("OFF"),
-			"trace_level":                  config.StringVariable("OFF"),
-			"comment":                      config.StringVariable(""),
+			"name":          config.StringVariable(id.Name()),
+			"as_replica_of": config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
+			"transient":     config.BoolVariable(false),
+			"comment":       config.StringVariable(""),
+
+			"max_data_extension_time_in_days":               config.IntegerVariable(10),
+			"external_volume":                               config.StringVariable(externalVolumeId.Name()),
+			"catalog":                                       config.StringVariable(catalogId.Name()),
+			"replace_invalid_characters":                    config.BoolVariable(true),
+			"default_ddl_collation":                         config.StringVariable("en_US"),
+			"storage_serialization_policy":                  config.StringVariable("OPTIMIZED"),
+			"log_level":                                     config.StringVariable("OFF"),
+			"trace_level":                                   config.StringVariable("OFF"),
+			"suspend_task_after_num_failures":               config.IntegerVariable(10),
+			"task_auto_retry_attempts":                      config.IntegerVariable(10),
+			"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeSmall)),
+			"user_task_timeout_ms":                          config.IntegerVariable(120000),
+			"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
+			"quoted_identifiers_ignore_case":                config.BoolVariable(true),
+			"enable_console_output":                         config.BoolVariable(true),
 		}
 		if dataRetentionTimeInDays != nil {
 			variables["data_retention_time_in_days"] = config.IntegerVariable(*dataRetentionTimeInDays)
-			variables["max_data_extension_time_in_days"] = config.IntegerVariable(10)
 		}
 		return variables
 	}
@@ -353,21 +452,21 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(2)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "2"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "2"),
 				),
 			},
 			{
 				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(1)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "1"),
 				),
 			},
 			{
 				ConfigVariables: configVariables(id, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
 			},
 			{
@@ -378,7 +477,7 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				ConfigVariables: configVariables(id, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "3"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "3"),
 				),
 			},
 			{
@@ -388,21 +487,21 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				ConfigVariables: configVariables(id, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
 			},
 			{
 				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(3)),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", "3"),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "3"),
 				),
 			},
 			{
 				ConfigVariables: configVariables(id, externalPrimaryId, nil),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days.0.value", accountDataRetentionTimeInDays.Value),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
 			},
 		},

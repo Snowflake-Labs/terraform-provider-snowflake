@@ -43,7 +43,7 @@ resource "snowflake_failover_group" "target_failover_group" {
   from_replica {
     organization_name   = "..."
     source_account_name = "..."
-    name                = snowflake_failover_group.fg.name
+    name                = snowflake_failover_group.source_failover_group.name
   }
 }
 ```

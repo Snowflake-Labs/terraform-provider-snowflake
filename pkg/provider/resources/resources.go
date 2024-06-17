@@ -6,6 +6,7 @@ const (
 	Account                      resource = "snowflake_account"
 	Alert                        resource = "snowflake_alert"
 	ApiIntegration               resource = "snowflake_api_integration"
+	DatabaseOld                  resource = "snowflake_database_old"
 	Database                     resource = "snowflake_database"
 	DatabaseRole                 resource = "snowflake_database_role"
 	DynamicTable                 resource = "snowflake_dynamic_table"

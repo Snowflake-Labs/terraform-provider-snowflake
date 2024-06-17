@@ -231,6 +231,7 @@ The Snowflake provider will use the following order of precedence when determini
 
 - [snowflake_account_grant](./docs/resources/account_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_database_grant](./docs/resources/database_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
+- [snowflake_database_old](./docs/resources/database_old)
 - [snowflake_external_table_grant](./docs/resources/external_table_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_failover_group_grant](./docs/resources/failover_group_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_file_format_grant](./docs/resources/file_format_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead

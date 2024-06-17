@@ -73,6 +73,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Database: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},
+	resources.DatabaseOld: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Databases.ShowByID)
+	},
 	resources.DatabaseRole: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.DatabaseRoles.ShowByID)
 	},

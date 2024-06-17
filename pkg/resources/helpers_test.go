@@ -228,3 +228,71 @@ func TestGetFirstNestedObjectByKey(t *testing.T) {
 	_, err = resources.GetPropertyOfFirstNestedObjectByKey[int](d, "string_property", "value")
 	assert.ErrorContains(t, err, "nested property string_property.value is not of type int, got: string")
 }
+
+func TestListDiff(t *testing.T) {
+	testCases := []struct {
+		Name    string
+		Before  []any
+		After   []any
+		Added   []any
+		Removed []any
+	}{
+		{
+			Name:    "no changes",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{},
+		},
+		{
+			Name:    "only removed",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{},
+			Removed: []any{1, 2, 3, 4},
+			Added:   []any{},
+		},
+		{
+			Name:    "only added",
+			Before:  []any{},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{1, 2, 3, 4},
+		},
+		{
+			Name:    "added repeated items",
+			Before:  []any{2},
+			After:   []any{1, 2, 1},
+			Removed: []any{},
+			Added:   []any{1, 1},
+		},
+		{
+			Name:    "removed repeated items",
+			Before:  []any{1, 2, 1},
+			After:   []any{2},
+			Removed: []any{1, 1},
+			Added:   []any{},
+		},
+		{
+			Name:    "simple diff: ints",
+			Before:  []any{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			After:   []any{1, 3, 5, 7, 9, 12, 13, 14},
+			Removed: []any{2, 4, 6, 8},
+			Added:   []any{12, 13, 14},
+		},
+		{
+			Name:    "simple diff: strings",
+			Before:  []any{"one", "two", "three", "four"},
+			After:   []any{"five", "two", "four", "six"},
+			Removed: []any{"one", "three"},
+			Added:   []any{"five", "six"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			added, removed := resources.ListDiff(tc.Before, tc.After)
+			assert.Equal(t, tc.Added, added)
+			assert.Equal(t, tc.Removed, removed)
+		})
+	}
+}

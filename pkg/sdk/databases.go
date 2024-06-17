@@ -151,24 +151,34 @@ var AllStorageSerializationPolicies = []StorageSerializationPolicy{
 
 // CreateDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateDatabaseOptions struct {
-	create                     bool                        `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                        `ddl:"static" sql:"DATABASE"`
-	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier     `ddl:"identifier"`
-	Clone                      *Clone                      `ddl:"-"`
-	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
-	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
-	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                        []TagAssociation            `ddl:"keyword,parentheses" sql:"TAG"`
+	create      bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	Transient   *bool                   `ddl:"keyword" sql:"TRANSIENT"`
+	database    bool                    `ddl:"static" sql:"DATABASE"`
+	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier `ddl:"identifier"`
+	Clone       *Clone                  `ddl:"-"`
+
+	// Parameters
+	DataRetentionTimeInDays                 *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag     []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateDatabaseOptions) validate() error {
@@ -214,22 +224,32 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 
 // CreateSharedDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSharedDatabaseOptions struct {
-	create                     bool                        `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                        `ddl:"static" sql:"DATABASE"`
-	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier     `ddl:"identifier"`
-	fromShare                  ExternalObjectIdentifier    `ddl:"identifier" sql:"FROM SHARE"`
-	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
-	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
-	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                        []TagAssociation            `ddl:"keyword,parentheses" sql:"TAG"`
+	create      bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace   *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient   *bool                    `ddl:"keyword" sql:"TRANSIENT"`
+	database    bool                     `ddl:"static" sql:"DATABASE"`
+	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier  `ddl:"identifier"`
+	fromShare   ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
+
+	// Parameters
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag     []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
@@ -276,23 +296,33 @@ func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier
 
 // CreateSecondaryDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSecondaryDatabaseOptions struct {
-	create                     bool                        `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                       `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                       `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                        `ddl:"static" sql:"DATABASE"`
-	IfNotExists                *bool                       `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier     `ddl:"identifier"`
-	primaryDatabase            ExternalObjectIdentifier    `ddl:"identifier" sql:"AS REPLICA OF"`
-	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
-	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
-	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create          bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace       *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient       *bool                    `ddl:"keyword" sql:"TRANSIENT"`
+	database        bool                     `ddl:"static" sql:"DATABASE"`
+	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name            AccountObjectIdentifier  `ddl:"identifier"`
+	primaryDatabase ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
+
+	// Parameters
+	DataRetentionTimeInDays                 *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
@@ -380,16 +410,25 @@ func (opts *AlterDatabaseOptions) validate() error {
 }
 
 type DatabaseSet struct {
-	DataRetentionTimeInDays    *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
-	ReplaceInvalidCharacters   *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
-	DefaultDDLCollation        *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	StorageSerializationPolicy *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
-	LogLevel                   *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	TraceLevel                 *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	// Parameters
+	DataRetentionTimeInDays                 *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *DatabaseSet) validate() error {
@@ -400,29 +439,112 @@ func (v *DatabaseSet) validate() error {
 	if v.Catalog != nil && !ValidObjectIdentifier(v.Catalog) {
 		errs = append(errs, errInvalidIdentifier("DatabaseSet", "Catalog"))
 	}
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.ReplaceInvalidCharacters, v.DefaultDDLCollation, v.StorageSerializationPolicy, v.LogLevel, v.TraceLevel, v.Comment) {
-		errs = append(errs, errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
+	if !anyValueSet(
+		v.DataRetentionTimeInDays,
+		v.MaxDataExtensionTimeInDays,
+		v.ExternalVolume,
+		v.Catalog,
+		v.ReplaceInvalidCharacters,
+		v.DefaultDDLCollation,
+		v.StorageSerializationPolicy,
+		v.LogLevel,
+		v.TraceLevel,
+		v.SuspendTaskAfterNumFailures,
+		v.TaskAutoRetryAttempts,
+		v.UserTaskManagedInitialWarehouseSize,
+		v.UserTaskTimeoutMs,
+		v.UserTaskMinimumTriggerIntervalInSeconds,
+		v.QuotedIdentifiersIgnoreCase,
+		v.EnableConsoleOutput,
+		v.Comment,
+	) {
+		errs = append(errs, errAtLeastOneOf(
+			"DatabaseSet",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"Comment",
+		))
 	}
 	return errors.Join(errs...)
 }
 
 type DatabaseUnset struct {
-	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ExternalVolume             *bool `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
-	Catalog                    *bool `ddl:"keyword" sql:"CATALOG"`
-	ReplaceInvalidCharacters   *bool `ddl:"keyword" sql:"REPLACE_INVALID_CHARACTERS"`
-	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
-	StorageSerializationPolicy *bool `ddl:"keyword" sql:"STORAGE_SERIALIZATION_POLICY"`
-	LogLevel                   *bool `ddl:"keyword" sql:"LOG_LEVEL"`
-	TraceLevel                 *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
-	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
+	// Parameters
+	DataRetentionTimeInDays                 *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *bool `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *bool `ddl:"keyword" sql:"CATALOG"`
+	ReplaceInvalidCharacters                *bool `ddl:"keyword" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *bool `ddl:"keyword" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	TraceLevel                              *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *bool `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *bool `ddl:"keyword" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *bool `ddl:"keyword" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *bool `ddl:"keyword" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *bool `ddl:"keyword" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool `ddl:"keyword" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *DatabaseUnset) validate() error {
 	var errs []error
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.ExternalVolume, v.Catalog, v.ReplaceInvalidCharacters, v.DefaultDDLCollation, v.StorageSerializationPolicy, v.LogLevel, v.TraceLevel, v.Comment) {
-		errs = append(errs, errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ExternalVolume", "Catalog", "ReplaceInvalidCharacters", "DefaultDDLCollation", "StorageSerializationPolicy", "LogLevel", "TraceLevel", "Comment"))
+	if !anyValueSet(
+		v.DataRetentionTimeInDays,
+		v.MaxDataExtensionTimeInDays,
+		v.ExternalVolume,
+		v.Catalog,
+		v.ReplaceInvalidCharacters,
+		v.DefaultDDLCollation,
+		v.StorageSerializationPolicy,
+		v.LogLevel,
+		v.TraceLevel,
+		v.SuspendTaskAfterNumFailures,
+		v.TaskAutoRetryAttempts,
+		v.UserTaskManagedInitialWarehouseSize,
+		v.UserTaskTimeoutMs,
+		v.UserTaskMinimumTriggerIntervalInSeconds,
+		v.QuotedIdentifiersIgnoreCase,
+		v.EnableConsoleOutput,
+		v.Comment,
+	) {
+		errs = append(errs, errAtLeastOneOf(
+			"DatabaseUnset",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"Comment",
+		))
 	}
 	return errors.Join(errs...)
 }
