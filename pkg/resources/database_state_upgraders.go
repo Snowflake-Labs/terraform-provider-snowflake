@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,7 +25,7 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 	}
 
 	if v, ok := rawState["from_database"]; ok && v != nil && len(v.(string)) > 0 {
-		return nil, fmt.Errorf("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead. Dislaimer: Right now, database cloning is not supported. They can be imported into mentioned resources, but any differetnce in behaviour from standard database won't be handled (and can result in errors)")
+		return nil, fmt.Errorf("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead. Dislaimer: Right now, database cloning is not supported. They can be imported into mentioned resources, but any differetnce in behavior from standard database won't be handled (and can result in errors)")
 	}
 
 	if replicationConfigurations, ok := rawState["replication_configuration"]; ok && len(replicationConfigurations.([]any)) == 1 {
@@ -46,7 +47,7 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 					return account.AccountLocator == accountLocator
 				})
 				if err != nil {
-					return nil, fmt.Errorf("couldn't find replication account locator '%s', err = %v", accountLocator, err)
+					return nil, fmt.Errorf("couldn't find replication account locator '%s', err = %w", accountLocator, err)
 				}
 				foundReplicationAccount := *replicationAccount
 				enableForAccounts[i] = map[string]any{

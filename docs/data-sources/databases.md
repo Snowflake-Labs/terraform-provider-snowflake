@@ -52,7 +52,7 @@ output "limit_output" {
 
 # Without additional data (to limit the number of calls make for every found database)
 data "snowflake_databases" "only_show" {
-  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.description field
+  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.describe_output field
   with_describe = false
 
   # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches its output to databases.*.parameters field
@@ -122,7 +122,7 @@ Read-Only:
 
 - `comment` (String)
 - `created_on` (String)
-- `description` (List of Object) (see [below for nested schema](#nestedobjatt--databases--description))
+- `describe_output` (List of Object) (see [below for nested schema](#nestedobjatt--databases--describe_output))
 - `is_current` (Boolean)
 - `is_default` (Boolean)
 - `is_transient` (Boolean)
@@ -136,8 +136,8 @@ Read-Only:
 - `resource_group` (String)
 - `retention_time` (Number)
 
-<a id="nestedobjatt--databases--description"></a>
-### Nested Schema for `databases.description`
+<a id="nestedobjatt--databases--describe_output"></a>
+### Nested Schema for `databases.describe_output`
 
 Read-Only:
 

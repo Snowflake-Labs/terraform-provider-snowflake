@@ -2,6 +2,8 @@ package datasources
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -54,7 +56,33 @@ var databasesSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"databases": schemas.DatabaseShowSchema,
+	"databases": {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Holds the output of SHOW DATABASES.",
+		Elem: &schema.Resource{
+			Schema: resources.MergeMaps(
+				schemas.DatabaseShowSchema,
+				map[string]*schema.Schema{
+					"describe_output": {
+						Type:        schema.TypeList,
+						Computed:    true,
+						Description: "Holds the output of DESCRIBE DATABASE.",
+						Elem: &schema.Resource{
+							Schema: schemas.DatabaseDescribeSchema,
+						},
+					},
+					"parameters": {
+						Type:        schema.TypeList,
+						Computed:    true,
+						Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
+						Elem: &schema.Resource{
+							Schema: schemas.ParameterSchema,
+						},
+					},
+				}),
+		},
+	},
 }
 
 // Databases the Snowflake current account resource.
