@@ -2,7 +2,10 @@ package resources
 
 import (
 	"fmt"
+	"slices"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -138,6 +141,10 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
+func GetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string) (*T, error) {
+	return GetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value")
+}
+
 // GetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
 // schema.TypeList with MaxItems set to one and inner schema with single value. To easily retrieve
 // the inner value, you can specify the top-level property with propertyKey and the nested value with nestedValueKey.
@@ -168,6 +175,21 @@ func GetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, property
 	}
 
 	return &typedNestedValue, nil
+}
+
+func SetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string, value T) error {
+	return SetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value", value)
+}
+
+// SetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
+// schema.TypeList with MaxItems set to one and inner schema with single value. To easily set
+// the inner value, you can specify top-level property with propertyKey, nested value with nestedValueKey and value at the end.
+func SetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string, value T) error {
+	return d.Set(propertyKey, []any{
+		map[string]any{
+			nestedValueKey: value,
+		},
+	})
 }
 
 type tags []tag
@@ -261,20 +283,46 @@ func getTags(from interface{}) (to tags) {
 	return to
 }
 
-func nestedProperty(innerType schema.ValueType, fieldDescription string) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     innerType,
-					Required: true,
-				},
-			},
-		},
-		Computed:    true,
-		Optional:    true,
-		Description: fieldDescription,
+func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
+	merged := make(M)
+	for _, m := range src {
+		for k, v := range m {
+			merged[k] = v
+		}
 	}
+	return merged
+}
+
+// TODO(SNOW-1479870): Test
+// JoinDiags iterates through passed diag.Diagnostics and joins them into one diag.Diagnostics.
+// If none of the passed diagnostics contained any element a nil reference will be returned.
+func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
+	var result diag.Diagnostics
+	for _, diagnostic := range diagnostics {
+		if len(diagnostic) > 0 {
+			result = append(result, diagnostic...)
+		}
+	}
+	return result
+}
+
+// ListDiff Compares two lists (before and after), then compares and returns two lists that include
+// added and removed items between those lists.
+func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
+	added = make([]T, 0)
+	removed = make([]T, 0)
+
+	for _, privilegeBeforeChange := range beforeList {
+		if !slices.Contains(afterList, privilegeBeforeChange) {
+			removed = append(removed, privilegeBeforeChange)
+		}
+	}
+
+	for _, privilegeAfterChange := range afterList {
+		if !slices.Contains(beforeList, privilegeAfterChange) {
+			added = append(added, privilegeAfterChange)
+		}
+	}
+
+	return added, removed
 }

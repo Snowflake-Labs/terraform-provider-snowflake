@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +23,28 @@ func NewParameterClient(context *TestClientContext) *ParameterClient {
 
 func (c *ParameterClient) client() sdk.Parameters {
 	return c.context.client.Parameters
+}
+
+func (c *ParameterClient) ShowAccountParameters(t *testing.T) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Account: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
+func (c *ParameterClient) ShowDatabaseParameters(t *testing.T, id sdk.AccountObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Database: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
 }
 
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
@@ -61,4 +85,11 @@ func (c *ParameterClient) UnsetAccountParameter(t *testing.T, parameter sdk.Acco
 
 	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER ACCOUNT UNSET %s", parameter))
 	require.NoError(t, err)
+}
+
+func FindParameter(t *testing.T, parameters []*sdk.Parameter, parameter sdk.AccountParameter) *sdk.Parameter {
+	t.Helper()
+	param, err := collections.FindOne(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
+	require.NoError(t, err)
+	return *param
 }

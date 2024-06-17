@@ -60,6 +60,106 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 #### *(note)* `resource_monitor` validation and diff suppression
 `resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 
+### new database resources
+As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
+- Standard database - can be used as `snowflake_database` (replaces the old one and is used to create databases with optional ability to become a primary database ready for replication)
+- Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
+- Secondary database - can be used as `snowflake_secondary_database` (used to create replicas of databases from external sources)
+
+All the field changes in comparison to the previous database resource are:
+- `is_transient`
+    - in `snowflake_shared_database`
+        - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
+- `from_database` - database cloning was entirely removed and is not possible by any of the new database resources.
+- `from_share` - the parameter was moved to the dedicated resource for databases created from shares `snowflake_shared_database`. Right now, it's a text field instead of a map. Additionally, instead of legacy account identifier format we're expecting the new one that with share looks like this: `<organization_name>.<account_name>.<share_name>`. For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
+- p, 
+- `from_replication` - the parameter was moved to the dedicated resource for databases created from primary databases `snowflake_secondary_database`
+- `replication_configuration` - renamed: was renamed to `configuration` and is only available in the `snowflake_database`. Its internal schema changed that instead of list of accounts, we expect a list of nested objects with accounts for which replication (and optionally failover) should be enabled. More information about converting between both versions [here](#resource-renamed-snowflake_database---snowflake_database_old). Additionally, instead of legacy account identifier format we're expecting the new one that looks like this: `<organization_name>.<account_name>`. For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
+- `data_retention_time_in_days` 
+  - in `snowflake_shared_database`
+      - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
+  - in `snowflake_database` and `snowflake_secondary_database`
+    - adjusted: now, it uses different approach that won't set it to -1 as a default value, but rather fills the field with the current value from Snowflake (this still can change).
+- added: The following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added to every database type:
+    - `max_data_extension_time_in_days`
+    - `external_volume`
+    - `catalog`
+    - `replace_invalid_characters`
+    - `default_ddl_collation`
+    - `storage_serialization_policy`
+    - `log_level`
+    - `trace_level`
+    - `suspend_task_after_num_failures`
+    - `task_auto_retry_attempts`
+    - `user_task_managed_initial_warehouse_size`
+    - `user_task_timeout_ms`
+    - `user_task_minimum_trigger_interval_in_seconds`
+    - `quoted_identifiers_ignore_case`
+    - `enable_console_output`
+
+The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level.
+Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
+
+### Resource renamed snowflake_database -> snowflake_database_old
+We made a decision to use the existing `snowflake_database` resource for redesigning it into a standard database.
+The previous `snowflake_database` was renamed to `snowflake_database_old` and the current `snowflake_database`
+contains completely new implementation that follows our guidelines we set for V1.
+When upgrading to the 0.93.0 version, the automatic state upgrader should cover the migration for databases that didn't have the following fields set:
+- `from_share` (now, the new `snowflake_shared_database` should be used instead)
+- `from_replica` (now, the new `snowflake_secondary_database` should be used instead)
+- `replication_configuration`
+
+For configurations containing `replication_configuraiton` like this one:
+```terraform
+resource "snowflake_database" "test" {
+  name = "<name>"
+  replication_configuration {
+    accounts = ["<account_locator>", "<account_locator_2>"]
+    ignore_edition_check = true
+  }
+}
+```
+
+You have to transform the configuration into the following format (notice the change from account locator into the new account identifier format):
+```terraform
+resource "snowflake_database" "test" {
+  name = "%s"
+  replication {
+    enable_to_account {
+      account_identifier = "<organization_name>.<account_name>"
+      with_failover      = false
+    }
+    enable_to_account {
+      account_identifier = "<organization_name_2>.<account_name_2>"
+      with_failover      = false
+    }
+  }
+  ignore_edition_check = true
+}
+```
+
+If you had `from_database` set, it should migrate automatically.
+For now, we're dropping the possibility to create a clone database from other databases.
+The only way will be to clone a database manually and import it as `snowflake_database`, but if
+cloned databases diverge in behavior from standard databases, it may cause issues.
+
+For databases with one of the fields mentioned above, manual migration will be needed.
+Please refer to our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration.
+
+If you would like to upgrade to the latest version and postpone the upgrade, you still have to perform the maunal migration
+to the `snowflake_database_old` resource by following the [zero downtime migrations document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+The only difference would be that instead of writing/generating new configurations you have to just rename the existing ones to contain `_old` suffix.
+
+### *(behavior change)* snowflake_databases datasource
+- `terse` and `history` fields were removed.
+- `replication_configuration` field was removed from `databases`.
+- `pattern` was replaced by `like` field.
+- Additional filtering options added (`limit`).
+- Added missing fields returned by SHOW DATABASES.
+- Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**). 
+The additional parameters call **DESC DATABASE** (with `with_describe` turned on) and **SHOW PARAMETERS IN DATABASE** (with `with_parameters` turned on) **per database** returned by **SHOW DATABASES**. 
+It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added
@@ -79,7 +179,7 @@ resource "snowflake_tag_masking_policy_association" "name" {
     masking_policy_id = snowflake_masking_policy.example_masking_policy.id
 }
 ```
-
+    
 After
 ```terraform
 resource "snowflake_tag_masking_policy_association" "name" {

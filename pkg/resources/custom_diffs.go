@@ -2,51 +2,63 @@ package resources
 
 import (
 	"context"
+	"log"
 	"strconv"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// NestedIntValueAccountObjectComputedIf is NestedValueComputedIf,
-// but dedicated for account level objects with integer-typed properties.
-func NestedIntValueAccountObjectComputedIf(key string, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
-	return NestedValueComputedIf(
-		key,
-		func(client *sdk.Client) (*sdk.Parameter, error) {
-			return client.Parameters.ShowAccountParameter(context.Background(), parameter)
-		},
-		func(v any) string { return strconv.Itoa(v.(int)) },
-	)
+func StringParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return value.(string) })
 }
 
-// NestedValueComputedIf internally calls schema.ResourceDiff.SetNewComputed whenever the inner function returns true.
-// It's main purpose was to use it with hierarchical values that are marked with Computed and Optional. Such values should
-// be recomputed whenever the value is not in the configuration and the remote value is not equal to the value in state.
-func NestedValueComputedIf(key string, showParam func(client *sdk.Client) (*sdk.Parameter, error), valueToString func(v any) string) schema.CustomizeDiffFunc {
-	return customdiff.ComputedIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-		configValue, ok := d.GetRawConfig().AsValueMap()[key]
-		if ok && len(configValue.AsValueSlice()) == 1 {
-			return false
-		}
+func IntParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.Itoa(value.(int)) })
+}
 
-		client := meta.(*provider.Context).Client
+func BoolParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
+}
 
-		param, err := showParam(client)
+func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, accountParameter sdk.AccountParameter, valueToString func(v any) string) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(accountParameter) })
 		if err != nil {
-			return false
+			log.Printf("[WARN] failed to find account parameter: %s", accountParameter)
+			return nil
+		}
+		parameter := *foundParameter
+
+		configValue, ok := d.GetRawConfig().AsValueMap()[key]
+
+		// For cases where currently set value (in the config) is equal to the parameter, but not set on the right level.
+		// The parameter is set somewhere higher in the hierarchy, and we need to "forcefully" set the value to
+		// perform the actual set on Snowflake (and set the parameter on the correct level).
+		if ok && !configValue.IsNull() && parameter.Level != objectParameterLevel && parameter.Value == valueToString(d.Get(key)) {
+			return d.SetNewComputed(key)
 		}
 
-		stateValue := d.Get(key).([]any)
-		if len(stateValue) != 1 {
-			return false
+		// For all other cases, if a parameter is set in the configuration, we can ignore parts needed for Computed fields.
+		if ok && !configValue.IsNull() {
+			return nil
 		}
 
-		return param.Value != valueToString(stateValue[0].(map[string]any)["value"])
-	})
+		// If the configuration is not set, perform SetNewComputed for cases like:
+		// 1. Check if the parameter value differs from the one saved in state (if they differ, we'll update the computed value).
+		// 2. Check if the parameter is set on the object level (if so, it means that it was set externally, and we have to unset it).
+		if parameter.Value != valueToString(d.Get(key)) || parameter.Level == objectParameterLevel {
+			return d.SetNewComputed(key)
+		}
+
+		return nil
+	}
 }
 
 func BoolComputedIf(key string, getDefault func(client *sdk.Client, id sdk.AccountObjectIdentifier) (string, error)) schema.CustomizeDiffFunc {

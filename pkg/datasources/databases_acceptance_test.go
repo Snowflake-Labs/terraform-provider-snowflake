@@ -1,105 +1,170 @@
 package datasources_test
 
 import (
-	"fmt"
+	"maps"
+	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Databases(t *testing.T) {
+func TestAcc_Databases_Complete(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
+
+	configVariables := config.Variables{
+		"name":               config.StringVariable(databaseName),
+		"comment":            config.StringVariable(comment),
+		"account_identifier": config.StringVariable(strconv.Quote(acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName())),
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				Config: databases(databaseName, comment),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_set"),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					checkDatabases(databaseName, comment),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.created_on"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.name", databaseName),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.kind", "STANDARD"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_transient", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_default", "false"),
+					// Commenting as this value depends on the currently used database, which is different when running as a single test and multiple tests (e.g., on CI)
+					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.origin", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.comment", comment),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.options", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.retention_time"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.resource_group", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner_role_type"),
+
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.#", "2"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.description.0.created_on"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.description.0.name"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.0.kind", "SCHEMA"),
+
+					resource.TestCheckResourceAttrWith("data.snowflake_databases.test", "databases.0.parameters.#", acc.IsGreaterOrEqualTo(10)),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.parameters.0.key"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.0.value", ""),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.0.default", ""),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.0.level", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.parameters.0.description"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_unset"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.created_on"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.name", databaseName),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.kind", "STANDARD"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_transient", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_default", "false"),
+					// Commenting for the same reason as above
+					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.origin", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.comment", comment),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.options", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.retention_time"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.resource_group", ""),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner_role_type"),
+
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.#", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func databases(databaseName, comment string) string {
-	return fmt.Sprintf(`
-		resource snowflake_database "test_database" {
-			name = "%v"
-			comment = "%v"
-		}
-		data snowflake_databases "t" {
-			depends_on = [snowflake_database.test_database]
-		}
-	`, databaseName, comment)
+func TestAcc_Databases_DifferentFiltering(t *testing.T) {
+	prefix := random.String()
+	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	commonVariables := config.Variables{
+		"name_1": config.StringVariable(idOne.Name()),
+		"name_2": config.StringVariable(idTwo.Name()),
+		"name_3": config.StringVariable(idThree.Name()),
+	}
+
+	likeConfig := config.Variables{
+		"like": config.StringVariable(idOne.Name()),
+	}
+	maps.Copy(likeConfig, commonVariables)
+
+	startsWithConfig := config.Variables{
+		"starts_with": config.StringVariable(prefix),
+	}
+	maps.Copy(startsWithConfig, commonVariables)
+
+	limitConfig := config.Variables{
+		"rows": config.IntegerVariable(1),
+		"from": config.StringVariable(prefix),
+	}
+	maps.Copy(limitConfig, commonVariables)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/like"),
+				ConfigVariables: likeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/starts_with"),
+				ConfigVariables: startsWithConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "2"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/limit"),
+				ConfigVariables: limitConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
+				),
+			},
+		},
+	})
 }
 
-func checkDatabases(databaseName string, comment string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resourceState := s.Modules[0].Resources["data.snowflake_databases.t"]
-		if resourceState == nil {
-			return fmt.Errorf("resource not found in state")
-		}
-		instanceState := resourceState.Primary
-		if instanceState == nil {
-			return fmt.Errorf("resource has no primary instance")
-		}
-		if instanceState.ID != "databases_read" {
-			return fmt.Errorf("expected ID to be 'databases_read', got %s", instanceState.ID)
-		}
-		nDbs, err := strconv.Atoi(instanceState.Attributes["databases.#"])
-		if err != nil {
-			return fmt.Errorf("expected a number for field 'databases', got %s", instanceState.Attributes["databases.#"])
-		}
-		if nDbs == 0 {
-			return fmt.Errorf("expected databases to be greater or equal to 1, got %s", instanceState.Attributes["databases.#"])
-		}
-		dbIdx := -1
-		for i := 0; i < nDbs; i++ {
-			idxName := fmt.Sprintf("databases.%d.name", i)
-			if instanceState.Attributes[idxName] == databaseName {
-				dbIdx = i
-				break
-			}
-		}
-		if dbIdx == -1 {
-			return fmt.Errorf("database %s not found", databaseName)
-		}
-		idxComment := fmt.Sprintf("databases.%d.comment", dbIdx)
-		if instanceState.Attributes[idxComment] != comment {
-			return fmt.Errorf("expected comment '%s', got '%s'", comment, instanceState.Attributes[idxComment])
-		}
-		idxCreatedOn := fmt.Sprintf("databases.%d.created_on", dbIdx)
-		if instanceState.Attributes[idxCreatedOn] == "" {
-			return fmt.Errorf("expected 'created_on' to be set")
-		}
-		idxOwner := fmt.Sprintf("databases.%d.owner", dbIdx)
-		if instanceState.Attributes[idxOwner] == "" {
-			return fmt.Errorf("expected 'owner' to be set")
-		}
-		idxRetentionTime := fmt.Sprintf("databases.%d.retention_time", dbIdx)
-		if instanceState.Attributes[idxRetentionTime] == "" {
-			return fmt.Errorf("expected 'retention_time' to be set")
-		}
-		idxIsCurrent := fmt.Sprintf("databases.%d.is_current", dbIdx)
-		if instanceState.Attributes[idxIsCurrent] == "" {
-			return fmt.Errorf("expected 'is_current' to be set")
-		}
-		idxIsDefault := fmt.Sprintf("databases.%d.is_default", dbIdx)
-		if instanceState.Attributes[idxIsDefault] == "" {
-			return fmt.Errorf("expected 'is_default' to be set")
-		}
-		return nil
-	}
+func TestAcc_Databases_DatabaseNotFound_WithPostConditions(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/without_database"),
+				ExpectError:     regexp.MustCompile("there should be at least one database"),
+			},
+		},
+	})
 }

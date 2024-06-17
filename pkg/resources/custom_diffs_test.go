@@ -16,116 +16,108 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNestedValueComputedIf(t *testing.T) {
-	customDiff := resources.NestedValueComputedIf(
-		"nested_value",
-		func(client *sdk.Client) (*sdk.Parameter, error) {
-			return &sdk.Parameter{
-				Key:   "Parameter",
-				Value: "snow-value",
-			}, nil
-		},
-		func(v any) string { return v.(string) },
-	)
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeString, customDiff)
+func TestParameterValueComputedIf(t *testing.T) {
+	createProviderConfig := func(parameterLevel sdk.ParameterType, parameterValue sdk.LogLevel) *schema.Provider {
+		customDiff := resources.ParameterValueComputedIf(
+			"value",
+			[]*sdk.Parameter{
+				{
+					Key:   string(sdk.AccountParameterLogLevel),
+					Level: parameterLevel,
+					Value: string(parameterValue),
+				},
+			},
+			sdk.ParameterTypeDatabase,
+			sdk.AccountParameterLogLevel,
+			func(v any) string { return v.(string) },
+		)
+		return createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
+	}
 
-	t.Run("value set in the configuration and state", func(t *testing.T) {
+	t.Run("config: true - state: true - level: different - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"nested_value": cty.ListVal([]cty.Value{
-				cty.MapVal(map[string]cty.Value{
-					"value": cty.NumberIntVal(123),
-				}),
-			}),
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": 123,
-				},
-			},
+			"value": string(sdk.LogLevelInfo),
 		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.True(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set only in the configuration", func(t *testing.T) {
+	t.Run("config: true - state: true - level: different - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
-			"nested_value": cty.ListVal([]cty.Value{
-				cty.MapVal(map[string]cty.Value{
-					"value": cty.NumberIntVal(123),
-				}),
-			}),
-		}), map[string]any{})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
+		}), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set in the state and not equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": "value-to-change",
-				},
-			},
+	t.Run("config: true - state: true - level: same - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
+		}), map[string]any{
+			"value": string(sdk.LogLevelInfo),
 		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
 
-	t.Run("value set in the state and equals with parameter", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": "snow-value",
-				},
-			},
+	t.Run("config: true - state: true - level: same - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelDebug)
+		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
+			"value": cty.StringVal(string(sdk.LogLevelInfo)),
+		}), map[string]any{
+			"value": string(sdk.LogLevelInfo),
 		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
+		assert.False(t, diff.Attributes["value"].NewComputed)
 	})
+
+	t.Run("config: false - state: true - level: different - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.False(t, diff.Attributes["value"].NewComputed)
+	})
+
+	t.Run("config: false - state: true - level: different - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.True(t, diff.Attributes["value"].NewComputed)
+	})
+
+	t.Run("config: false - state: true - level: same - value: same", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.False(t, diff.Attributes["value"].NewComputed)
+	})
+
+	t.Run("config: false - state: true - level: same - value: different", func(t *testing.T) {
+		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
+			"value": string(sdk.LogLevelInfo),
+		})
+		assert.True(t, diff.Attributes["value"].NewComputed)
+	})
+
+	// Tests for filled config and empty state were not added as the only way
+	// of getting into this situation would be in create operation for which custom diffs are skipped.
 }
 
-func TestNestedIntValueAccountObjectComputedIf(t *testing.T) {
-	providerConfig := createProviderWithNestedValueAndCustomDiff(t, schema.TypeInt, resources.NestedIntValueAccountObjectComputedIf("nested_value", sdk.AccountParameterDataRetentionTimeInDays))
-
-	t.Run("different value than on the Snowflake side", func(t *testing.T) {
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": 999, // value outside of valid range
-				},
-			},
-		})
-		assert.True(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-
-	t.Run("same value as in Snowflake", func(t *testing.T) {
-		dataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-		require.NoError(t, err)
-
-		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.Type{}), map[string]any{
-			"nested_value": []any{
-				map[string]any{
-					"value": dataRetentionTimeInDays.Value,
-				},
-			},
-		})
-		assert.False(t, diff.Attributes["nested_value.#"].NewComputed)
-	})
-}
-
-func createProviderWithNestedValueAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
+func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
 	t.Helper()
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"test": {
 				Schema: map[string]*schema.Schema{
-					"nested_value": {
-						Type:     schema.TypeList,
-						MaxItems: 1,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"value": {
-									Type:     valueType,
-									Required: true,
-								},
-							},
-						},
+					"value": {
+						Type:     valueType,
 						Computed: true,
 						Optional: true,
 					},

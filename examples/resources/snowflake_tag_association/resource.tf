@@ -1,25 +1,25 @@
-resource "snowflake_database" "database" {
+resource "snowflake_database" "test" {
   name = "database"
 }
 
-resource "snowflake_schema" "schema" {
+resource "snowflake_schema" "test" {
   name     = "schema"
-  database = snowflake_database.database.name
+  database = snowflake_database.test.name
 }
 
-resource "snowflake_tag" "tag" {
+resource "snowflake_tag" "test" {
   name           = "cost_center"
-  database       = snowflake_database.database.name
-  schema         = snowflake_schema.schema.name
+  database       = snowflake_database.test.name
+  schema         = snowflake_schema.test.name
   allowed_values = ["finance", "engineering"]
 }
 
 resource "snowflake_tag_association" "db_association" {
   object_identifier {
-    name = snowflake_database.database.name
+    name = snowflake_database.test.name
   }
   object_type = "DATABASE"
-  tag_id      = snowflake_tag.tag.id
+  tag_id      = snowflake_tag.test.id
   tag_value   = "finance"
 }
 

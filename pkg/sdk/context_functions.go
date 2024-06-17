@@ -35,19 +35,23 @@ type contextFunctions struct {
 }
 
 type currentSessionDetailsDBRow struct {
-	CurrentAccount string `db:"CURRENT_ACCOUNT"`
-	CurrentRole    string `db:"CURRENT_ROLE"`
-	CurrentRegion  string `db:"CURRENT_REGION"`
-	CurrentSession string `db:"CURRENT_SESSION"`
-	CurrentUser    string `db:"CURRENT_USER"`
+	CurrentAccount          string `db:"CURRENT_ACCOUNT"`
+	CurrentAccountName      string `db:"CURRENT_ACCOUNT_NAME"`
+	CurrentOrganizationName string `db:"CURRENT_ORGANIZATION_NAME"`
+	CurrentRole             string `db:"CURRENT_ROLE"`
+	CurrentRegion           string `db:"CURRENT_REGION"`
+	CurrentSession          string `db:"CURRENT_SESSION"`
+	CurrentUser             string `db:"CURRENT_USER"`
 }
 
 type CurrentSessionDetails struct {
-	Account string `db:"CURRENT_ACCOUNT"`
-	Role    string `db:"CURRENT_ROLE"`
-	Region  string `db:"CURRENT_REGION"`
-	Session string `db:"CURRENT_SESSION"`
-	User    string `db:"CURRENT_USER"`
+	Account          string `db:"CURRENT_ACCOUNT"`
+	AccountName      string `db:"CURRENT_ACCOUNT_NAME"`
+	OrganizationName string `db:"CURRENT_ORGANIZATION_NAME"`
+	Role             string `db:"CURRENT_ROLE"`
+	Region           string `db:"CURRENT_REGION"`
+	Session          string `db:"CURRENT_SESSION"`
+	User             string `db:"CURRENT_USER"`
 }
 
 func (acc *CurrentSessionDetails) AccountURL() (string, error) {
@@ -185,16 +189,18 @@ func (c *contextFunctions) CurrentUser(ctx context.Context) (AccountObjectIdenti
 
 func (c *contextFunctions) CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error) {
 	s := &currentSessionDetailsDBRow{}
-	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT() as CURRENT_ACCOUNT, CURRENT_ROLE() as CURRENT_ROLE, CURRENT_REGION() AS CURRENT_REGION, CURRENT_SESSION() as CURRENT_SESSION, CURRENT_USER() as CURRENT_USER")
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT() as CURRENT_ACCOUNT, CURRENT_ROLE() as CURRENT_ROLE, CURRENT_REGION() AS CURRENT_REGION, CURRENT_SESSION() as CURRENT_SESSION, CURRENT_USER() as CURRENT_USER, CURRENT_ACCOUNT_NAME() as CURRENT_ACCOUNT_NAME, CURRENT_ORGANIZATION_NAME() as CURRENT_ORGANIZATION_NAME")
 	if err != nil {
 		return nil, err
 	}
 	return &CurrentSessionDetails{
-		Account: s.CurrentAccount,
-		Role:    s.CurrentRole,
-		Region:  s.CurrentRegion,
-		Session: s.CurrentSession,
-		User:    s.CurrentUser,
+		Account:          s.CurrentAccount,
+		AccountName:      s.CurrentAccountName,
+		OrganizationName: s.CurrentOrganizationName,
+		Role:             s.CurrentRole,
+		Region:           s.CurrentRegion,
+		Session:          s.CurrentSession,
+		User:             s.CurrentUser,
 	}, nil
 }
 

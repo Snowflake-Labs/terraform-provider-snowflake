@@ -279,6 +279,8 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 			return err
 		}
 		opts.Set.Parameters.ObjectParameters.EnableUnredactedQuerySyntaxError = b
+	case ObjectParameterCatalog:
+		opts.Set.Parameters.ObjectParameters.Catalog = &value
 	default:
 		return fmt.Errorf("Invalid object parameter: %v", string(parameter))
 	}
@@ -399,18 +401,26 @@ const (
 	AccountParameterWeekStart                             AccountParameter = "WEEK_START"
 
 	// Object Parameters (inherited)
-	AccountParameterDataRetentionTimeInDays             AccountParameter = "DATA_RETENTION_TIME_IN_DAYS"
-	AccountParameterDefaultDDLCollation                 AccountParameter = "DEFAULT_DDL_COLLATION"
-	AccountParameterLogLevel                            AccountParameter = "LOG_LEVEL"
-	AccountParameterMaxConcurrencyLevel                 AccountParameter = "MAX_CONCURRENCY_LEVEL"
-	AccountParameterMaxDataExtensionTimeInDays          AccountParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
-	AccountParameterPipeExecutionPaused                 AccountParameter = "PIPE_EXECUTION_PAUSED"
-	AccountParameterStatementQueuedTimeoutInSeconds     AccountParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
-	AccountParameterShareRestrictions                   AccountParameter = "SHARE_RESTRICTIONS"
-	AccountParameterSuspendTaskAfterNumFailures         AccountParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
-	AccountParameterTraceLevel                          AccountParameter = "TRACE_LEVEL"
-	AccountParameterUserTaskManagedInitialWarehouseSize AccountParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
-	AccountParameterUserTaskTimeoutMs                   AccountParameter = "USER_TASK_TIMEOUT_MS"
+	AccountParameterCatalog                                 AccountParameter = "CATALOG"
+	AccountParameterDataRetentionTimeInDays                 AccountParameter = "DATA_RETENTION_TIME_IN_DAYS"
+	AccountParameterDefaultDDLCollation                     AccountParameter = "DEFAULT_DDL_COLLATION"
+	AccountParameterExternalVolume                          AccountParameter = "EXTERNAL_VOLUME"
+	AccountParameterLogLevel                                AccountParameter = "LOG_LEVEL"
+	AccountParameterMaxConcurrencyLevel                     AccountParameter = "MAX_CONCURRENCY_LEVEL"
+	AccountParameterMaxDataExtensionTimeInDays              AccountParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
+	AccountParameterPipeExecutionPaused                     AccountParameter = "PIPE_EXECUTION_PAUSED"
+	AccountParameterReplaceInvalidCharacters                AccountParameter = "REPLACE_INVALID_CHARACTERS"
+	AccountParameterStatementQueuedTimeoutInSeconds         AccountParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	AccountParameterStorageSerializationPolicy              AccountParameter = "STORAGE_SERIALIZATION_POLICY"
+	AccountParameterShareRestrictions                       AccountParameter = "SHARE_RESTRICTIONS"
+	AccountParameterSuspendTaskAfterNumFailures             AccountParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	AccountParameterTraceLevel                              AccountParameter = "TRACE_LEVEL"
+	AccountParameterUserTaskManagedInitialWarehouseSize     AccountParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	AccountParameterUserTaskTimeoutMs                       AccountParameter = "USER_TASK_TIMEOUT_MS"
+	AccountParameterTaskAutoRetryAttempts                   AccountParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	AccountParameterUserTaskMinimumTriggerIntervalInSeconds AccountParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	AccountParameterMetricLevel                             AccountParameter = "METRIC_LEVEL"
+	AccountParameterEnableConsoleOutput                     AccountParameter = "ENABLE_CONSOLE_OUTPUT"
 
 	// User Parameters (inherited)
 	AccountParameterEnableUnredactedQuerySyntaxError AccountParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
@@ -464,25 +474,30 @@ type ObjectParameter string
 
 const (
 	// Object Parameters
-	ObjectParameterDataRetentionTimeInDays             ObjectParameter = "DATA_RETENTION_TIME_IN_DAYS"
-	ObjectParameterDefaultDDLCollation                 ObjectParameter = "DEFAULT_DDL_COLLATION"
-	ObjectParameterLogLevel                            ObjectParameter = "LOG_LEVEL"
-	ObjectParameterMaxConcurrencyLevel                 ObjectParameter = "MAX_CONCURRENCY_LEVEL"
-	ObjectParameterMaxDataExtensionTimeInDays          ObjectParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
-	ObjectParameterPipeExecutionPaused                 ObjectParameter = "PIPE_EXECUTION_PAUSED"
-	ObjectParameterPreventUnloadToInternalStages       ObjectParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES" // also an account param
-	ObjectParameterStatementQueuedTimeoutInSeconds     ObjectParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
-	ObjectParameterStatementTimeoutInSeconds           ObjectParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
-	ObjectParameterNetworkPolicy                       ObjectParameter = "NETWORK_POLICY" // also an account param
-	ObjectParameterShareRestrictions                   ObjectParameter = "SHARE_RESTRICTIONS"
-	ObjectParameterSuspendTaskAfterNumFailures         ObjectParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
-	ObjectParameterTraceLevel                          ObjectParameter = "TRACE_LEVEL"
-	ObjectParameterUserTaskManagedInitialWarehouseSize ObjectParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
-	ObjectParameterUserTaskTimeoutMs                   ObjectParameter = "USER_TASK_TIMEOUT_MS"
-	ObjectParameterCatalog                             ObjectParameter = "CATALOG"
-	ObjectParameterExternalVolume                      ObjectParameter = "EXTERNAL_VOLUME"
-	ObjectParameterReplaceInvalidCharacters            ObjectParameter = "REPLACE_INVALID_CHARACTERS"
-	ObjectParameterStorageSerializationPolicy          ObjectParameter = "STORAGE_SERIALIZATION_POLICY"
+	ObjectParameterDataRetentionTimeInDays                 ObjectParameter = "DATA_RETENTION_TIME_IN_DAYS"
+	ObjectParameterDefaultDDLCollation                     ObjectParameter = "DEFAULT_DDL_COLLATION"
+	ObjectParameterLogLevel                                ObjectParameter = "LOG_LEVEL"
+	ObjectParameterMaxConcurrencyLevel                     ObjectParameter = "MAX_CONCURRENCY_LEVEL"
+	ObjectParameterMaxDataExtensionTimeInDays              ObjectParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
+	ObjectParameterPipeExecutionPaused                     ObjectParameter = "PIPE_EXECUTION_PAUSED"
+	ObjectParameterPreventUnloadToInternalStages           ObjectParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES" // also an account param
+	ObjectParameterStatementQueuedTimeoutInSeconds         ObjectParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	ObjectParameterStatementTimeoutInSeconds               ObjectParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	ObjectParameterNetworkPolicy                           ObjectParameter = "NETWORK_POLICY" // also an account param
+	ObjectParameterShareRestrictions                       ObjectParameter = "SHARE_RESTRICTIONS"
+	ObjectParameterSuspendTaskAfterNumFailures             ObjectParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	ObjectParameterTraceLevel                              ObjectParameter = "TRACE_LEVEL"
+	ObjectParameterUserTaskManagedInitialWarehouseSize     ObjectParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	ObjectParameterUserTaskTimeoutMs                       ObjectParameter = "USER_TASK_TIMEOUT_MS"
+	ObjectParameterCatalog                                 ObjectParameter = "CATALOG"
+	ObjectParameterExternalVolume                          ObjectParameter = "EXTERNAL_VOLUME"
+	ObjectParameterReplaceInvalidCharacters                ObjectParameter = "REPLACE_INVALID_CHARACTERS"
+	ObjectParameterStorageSerializationPolicy              ObjectParameter = "STORAGE_SERIALIZATION_POLICY"
+	ObjectParameterTaskAutoRetryAttempts                   ObjectParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	ObjectParameterUserTaskMinimumTriggerIntervalInSeconds ObjectParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	ObjectParameterQuotedIdentifiersIgnoreCase             ObjectParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	ObjectParameterMetricLevel                             ObjectParameter = "METRIC_LEVEL"
+	ObjectParameterEnableConsoleOutput                     ObjectParameter = "ENABLE_CONSOLE_OUTPUT"
 
 	// User Parameters
 	ObjectParameterEnableUnredactedQuerySyntaxError ObjectParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
@@ -789,6 +804,7 @@ type ObjectParameters struct {
 	TraceLevel                          *TraceLevel    `ddl:"parameter" sql:"TRACE_LEVEL"`
 	UserTaskManagedInitialWarehouseSize *WarehouseSize `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	UserTaskTimeoutMs                   *int           `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	Catalog                             *string        `ddl:"parameter" sql:"CATALOG"`
 }
 
 func (v *ObjectParameters) validate() error {
@@ -904,6 +920,7 @@ const (
 	ParameterTypeSession   ParameterType = "SESSION"
 	ParameterTypeObject    ParameterType = "OBJECT"
 	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
+	ParameterTypeDatabase  ParameterType = "DATABASE"
 )
 
 type Parameter struct {
