@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"slices"
 	"strconv"
 	"strings"
@@ -198,6 +199,17 @@ func init() {
 			}
 		}
 	}
+
+	parametersOutputSchema := &schema.Schema{
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN DATABASE` for the given database.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowWarehouseParametersSchema,
+		},
+	}
+	DatabaseParametersSchema[parametersAttributeName] = parametersOutputSchema
+	SharedDatabaseParametersSchema[parametersAttributeName] = parametersOutputSchema
 }
 
 // TODO(SNOW-1480106): Change to smaller and safer return type
