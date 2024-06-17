@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -53,117 +54,7 @@ var databasesSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"databases": {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Holds the output of SHOW DATABASES.",
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"created_on": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"kind": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"is_transient": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"is_default": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"is_current": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"origin": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"owner": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"comment": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"options": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"retention_time": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
-				"resource_group": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"owner_role_type": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"description": {
-					Type:        schema.TypeList,
-					Computed:    true,
-					Description: "Holds the output of DESCRIBE DATABASE.",
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"created_on": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"name": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"kind": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
-				"parameters": {
-					Type:        schema.TypeList,
-					Computed:    true,
-					Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"value": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"level": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"default": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"description": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
-			},
-		},
-	},
+	"databases": schemas.DatabaseShowSchema,
 }
 
 // Databases the Snowflake current account resource.
@@ -261,7 +152,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			"retention_time":  database.RetentionTime,
 			"resource_group":  database.ResourceGroup,
 			"owner_role_type": database.OwnerRoleType,
-			"description":     databaseDescription,
+			"describe_output": databaseDescription,
 			"parameters":      databaseParameters,
 		}
 	}

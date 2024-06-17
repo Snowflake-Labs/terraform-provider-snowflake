@@ -53,10 +53,10 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.resource_group", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner_role_type"),
 
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.#", "2"),
-					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.description.0.created_on"),
-					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.description.0.name"),
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.0.kind", "SCHEMA"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.describe_output.#", "2"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.describe_output.0.created_on"),
+					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.describe_output.0.name"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.describe_output.0.kind", "SCHEMA"),
 
 					resource.TestCheckResourceAttrWith("data.snowflake_databases.test", "databases.0.parameters.#", acc.IsGreaterOrEqualTo(10)),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.parameters.0.key"),
@@ -86,7 +86,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.resource_group", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.owner_role_type"),
 
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.description.#", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.describe_output.#", "0"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.parameters.#", "0"),
 				),
 			},
