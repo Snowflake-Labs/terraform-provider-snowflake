@@ -160,9 +160,9 @@ func SAML2Integration() *schema.Resource {
 		UpdateContext: UpdateContextSAML2Integration,
 		DeleteContext: DeleteContextSAM2LIntegration,
 		CustomizeDiff: customdiff.Sequence(
-			ForceNewIfChangeEmptySlice[any]("allowed_user_domains"),
-			ForceNewIfChangeEmptySlice[any]("allowed_email_patterns"),
-			ForceNewIfChangeEmptyString("saml2_sp_initiated_login_page_label"),
+			ForceNewIfChangeToEmptySlice[any]("allowed_user_domains"),
+			ForceNewIfChangeToEmptySlice[any]("allowed_email_patterns"),
+			ForceNewIfChangeToEmptyString("saml2_sp_initiated_login_page_label"),
 		),
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -193,13 +193,17 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		req.WithSaml2SpInitiatedLoginPageLabel(v.(string))
 	}
 
-	req.WithSaml2EnableSpInitiated(d.Get("saml2_enable_sp_initiated").(bool))
+	if !d.GetRawConfig().AsValueMap()["saml2_enable_sp_initiated"].IsNull() {
+		req.WithSaml2EnableSpInitiated(d.Get("saml2_enable_sp_initiated").(bool))
+	}
 
 	if v, ok := d.GetOk("saml2_snowflake_x509_cert"); ok {
 		req.WithSaml2SnowflakeX509Cert(v.(string))
 	}
 
-	req.WithSaml2SignRequest(d.Get("saml2_sign_request").(bool))
+	if !d.GetRawConfig().AsValueMap()["saml2_sign_request"].IsNull() {
+		req.WithSaml2SignRequest(d.Get("saml2_sign_request").(bool))
+	}
 
 	if v, ok := d.GetOk("saml2_requested_nameid_format"); ok {
 		formatRaw := v.(string)
@@ -214,7 +218,9 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		req.WithSaml2PostLogoutRedirectUrl(v.(string))
 	}
 
-	req.WithSaml2ForceAuthn(d.Get("saml2_force_authn").(bool))
+	if !d.GetRawConfig().AsValueMap()["saml2_force_authn"].IsNull() {
+		req.WithSaml2ForceAuthn(d.Get("saml2_force_authn").(bool))
+	}
 
 	if v, ok := d.GetOk("saml2_snowflake_issuer_url"); ok {
 		req.WithSaml2SnowflakeIssuerUrl(v.(string))

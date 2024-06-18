@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -31,7 +30,11 @@ func TestParameterValueComputedIf(t *testing.T) {
 			sdk.AccountParameterLogLevel,
 			func(v any) string { return v.(string) },
 		)
-		return createProviderWithValuePropertyAndCustomDiff(t, schema.TypeString, customDiff)
+		return createProviderWithValuePropertyAndCustomDiff(t, &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+			Optional: true,
+		}, customDiff)
 	}
 
 	t.Run("config: true - state: true - level: different - value: same", func(t *testing.T) {
@@ -110,17 +113,13 @@ func TestParameterValueComputedIf(t *testing.T) {
 	// of getting into this situation would be in create operation for which custom diffs are skipped.
 }
 
-func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueType schema.ValueType, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
+func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueSchema *schema.Schema, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
 	t.Helper()
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"test": {
 				Schema: map[string]*schema.Schema{
-					"value": {
-						Type:     valueType,
-						Computed: true,
-						Optional: true,
-					},
+					"value": valueSchema,
 				},
 				CustomizeDiff: customDiffFunc,
 			},
@@ -142,4 +141,140 @@ func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue
 	)
 	require.NoError(t, err)
 	return diff
+}
+
+func calculateDiffFromAttributes(t *testing.T, providerConfig *schema.Provider, oldValue map[string]string, newValue map[string]any) *terraform.InstanceDiff {
+	t.Helper()
+	diff, err := providerConfig.ResourcesMap["test"].Diff(
+		context.Background(),
+		&terraform.InstanceState{
+			Attributes: oldValue,
+		},
+		&terraform.ResourceConfig{
+			Config: newValue,
+		},
+		&provider.Context{Client: acc.Client(t)},
+	)
+	require.NoError(t, err)
+	return diff
+}
+
+func TestForceNewIfChangeToEmptyString(t *testing.T) {
+	tests := []struct {
+		name           string
+		stateValue     map[string]string
+		rawConfigValue map[string]any
+		wantForceNew   bool
+	}{
+		{
+			name:       "empty to non-empty",
+			stateValue: map[string]string{},
+			rawConfigValue: map[string]any{
+				"value": "foo",
+			},
+			wantForceNew: false,
+		}, {
+			name:           "empty to empty",
+			stateValue:     map[string]string{},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   false,
+		}, {
+			name: "non-empty to empty",
+			stateValue: map[string]string{
+				"value": "foo",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		}, {
+			name: "non-empty to non-empty",
+			stateValue: map[string]string{
+				"value": "bar",
+			},
+			rawConfigValue: map[string]any{
+				"value": "foo",
+			},
+			wantForceNew: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.ForceNewIfChangeToEmptyString(
+				"value",
+			)
+			provider := createProviderWithValuePropertyAndCustomDiff(t, &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			}, customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				provider,
+				tt.stateValue,
+				tt.rawConfigValue,
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func TestForceNewIfChangeToEmptySlice(t *testing.T) {
+	tests := []struct {
+		name           string
+		stateValue     map[string]string
+		rawConfigValue map[string]any
+		wantForceNew   bool
+	}{
+		{
+			name:       "empty to non-empty",
+			stateValue: map[string]string{},
+			rawConfigValue: map[string]any{
+				"value": []any{"foo"},
+			},
+			wantForceNew: false,
+		}, {
+			name:           "empty to empty",
+			stateValue:     map[string]string{},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   false,
+		}, {
+			name: "non-empty to empty",
+			stateValue: map[string]string{
+				"value.#": "1",
+				"value.0": "foo",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		}, {
+			name: "non-empty to non-empty",
+			stateValue: map[string]string{
+				"value.#": "2",
+				"value.0": "foo",
+				"value.1": "bar",
+			},
+			rawConfigValue: map[string]any{
+				"value": []any{"foo"},
+			},
+			wantForceNew: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.ForceNewIfChangeToEmptySlice[any](
+				"value",
+			)
+			provider := createProviderWithValuePropertyAndCustomDiff(t, &schema.Schema{
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			}, customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				provider,
+				tt.stateValue,
+				tt.rawConfigValue,
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
 }
