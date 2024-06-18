@@ -1052,9 +1052,9 @@ func TestAcc_Warehouse_InitiallySuspendedChangesPostCreation(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1348102 - next PR]: unskip - it fails currently because of other state upgraders missing
-func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
-	t.Skip("Skipped due to the missing state migrators for other props")
+// TODO: test with all other values set in config - even wait_for_provisioning deprecated field (to validate no change)
+// TODO: test with no entries in config in the previous version and full config after
+func TestAcc_Warehouse_migrateFromVersion092_withWarehouseSize(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1082,11 +1082,16 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeX4Large)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					PreApply: []plancheck.PlanCheck{
+						// add checks to all
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor", "warehouse_type", "max_concurrency_level", "statement_queued_timeout_in_seconds", "statement_timeout_in_seconds"),
+					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeX4Large)),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "wait_for_provisioning"),
 				),
 			},
 		},
@@ -1095,11 +1100,10 @@ func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 
 // TODO [SNOW-1348102 - next PR]: test defaults removal
 // TODO [SNOW-1348102 - next PR]: test basic creation (check previous defaults)
-// TODO [SNOW-1348102 - next PR]: test auto_suspend set to 0 (or NULL?)
+// TODO [SNOW-1348102 - next PR]: test auto_suspend set to 0 before migration
 // TODO [SNOW-1348102 - next PR]: do we care about drift in warehouse for is_current warehouse? (test)
 // TODO [SNOW-1348102 - next PR]: test boolean type change (with leaving boolean/int in config) and add migration
 // TODO [SNOW-1348102 - next PR]: test int, string, identifier changed externally
-// TODO [SNOW-1348102 - next PR]: test wait_for_provisioning removal
 // TODO [SNOW-1348102 - next PR]: unskip - it fails currently because of other state upograders missing
 func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
 	t.Skip("Skipped due to the missing state migrators for other props")
