@@ -305,8 +305,30 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	if err != nil {
 		return err
 	}
+
+	// Warehouse needs to be suspended to change its type.
+	if opts.warehouseTypeIsChanged() {
+		warehouse, err := c.ShowByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.State == WarehouseStateStarted {
+			err := c.Alter(ctx, id, &AlterWarehouseOptions{Suspend: Bool(true)})
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
+			}()
+		}
+	}
+
 	_, err = c.client.exec(ctx, sql)
 	return err
+}
+
+func (opts *AlterWarehouseOptions) warehouseTypeIsChanged() bool {
+	return opts.Set != nil && opts.Set.WarehouseType != nil
 }
 
 // DropWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-warehouse.

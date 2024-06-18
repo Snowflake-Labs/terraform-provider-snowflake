@@ -188,7 +188,6 @@ func TestInt_Warehouses(t *testing.T) {
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			// WarehouseType omitted on purpose - it requires suspending the warehouse (separate test cases)
-			// WaitForCompletion omitted on purpose - separate test case
 			Set: &sdk.WarehouseSet{
 				WarehouseSize:                   &sdk.WarehouseSizeMedium,
 				WaitForCompletion:               sdk.Bool(true),
@@ -222,7 +221,7 @@ func TestInt_Warehouses(t *testing.T) {
 		alterOptions = &sdk.AlterWarehouseOptions{
 			// WarehouseSize omitted on purpose - UNSET is not supported for warehouse size
 			// WarehouseType, ScalingPolicy, AutoSuspend, and AutoResume omitted on purpose - UNSET do not work correctly
-			// WaitForCompletion omitted on purpose - separate test case
+			// WaitForCompletion omitted on purpose - no unset
 			Unset: &sdk.WarehouseUnset{
 				MaxClusterCount:                 sdk.Bool(true),
 				MinClusterCount:                 sdk.Bool(true),
@@ -287,6 +286,81 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, "172800", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementTimeoutInSeconds).Value)
 	})
 
+	t.Run("alter: set and unset warehouse type with started warehouse", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		// new warehouse created on purpose - we need medium to be able to use snowpark-optimized type
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
+			WarehouseSize: sdk.Pointer(sdk.WarehouseSizeMedium),
+		})
+		t.Cleanup(warehouseCleanup)
+
+		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
+		assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Set: &sdk.WarehouseSet{WarehouseType: sdk.Pointer(sdk.WarehouseTypeSnowparkOptimized)},
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		returnedWarehouse, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, sdk.WarehouseTypeSnowparkOptimized, returnedWarehouse.Type)
+		assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+
+		// TODO [SNOW-1473453]: uncomment and test when UNSET starts working correctly (expecting to unset to default type STANDARD)
+		// alterOptions = &sdk.AlterWarehouseOptions{
+		//	Unset: &sdk.WarehouseUnset{WarehouseType: sdk.Bool(true)},
+		// }
+		// err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		// require.NoError(t, err)
+		//
+		// returnedWarehouse, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
+		// require.NoError(t, err)
+		// assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
+		// assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+	})
+
+	t.Run("alter: set and unset warehouse type with suspended warehouse", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		// new warehouse created on purpose - we need medium to be able to use snowpark-optimized type
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, id, &sdk.CreateWarehouseOptions{
+			WarehouseSize:      sdk.Pointer(sdk.WarehouseSizeMedium),
+			InitiallySuspended: sdk.Bool(true),
+		})
+		t.Cleanup(warehouseCleanup)
+
+		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
+		assert.Equal(t, sdk.WarehouseStateSuspended, returnedWarehouse.State)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Set: &sdk.WarehouseSet{WarehouseType: sdk.Pointer(sdk.WarehouseTypeSnowparkOptimized)},
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		returnedWarehouse, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, sdk.WarehouseTypeSnowparkOptimized, returnedWarehouse.Type)
+		assert.Equal(t, sdk.WarehouseStateSuspended, returnedWarehouse.State)
+
+		// TODO [SNOW-1473453]: uncomment and test when UNSET starts working correctly (expecting to unset to default type STANDARD)
+		// alterOptions = &sdk.AlterWarehouseOptions{
+		//	Unset: &sdk.WarehouseUnset{WarehouseType: sdk.Bool(true)},
+		// }
+		// err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		// require.NoError(t, err)
+		//
+		// returnedWarehouse, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
+		// require.NoError(t, err)
+		// assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
+		// assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+	})
+
 	t.Run("alter: prove problems with unset auto suspend", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
@@ -347,7 +421,7 @@ func TestInt_Warehouses(t *testing.T) {
 		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
 		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default auto resume TRUE)
-		//assert.Equal(t, true, returnedWarehouse.AutoResume)
+		// assert.Equal(t, true, returnedWarehouse.AutoResume)
 		assert.Equal(t, false, returnedWarehouse.AutoResume)
 	})
 

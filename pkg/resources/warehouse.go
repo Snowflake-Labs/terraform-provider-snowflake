@@ -19,7 +19,6 @@ import (
 )
 
 // TODO [SNOW-1348102 - if we choose this approach]: extract three-value logic; add better description for each field
-// TODO [SNOW-1348102 - next PR]: handle conditional suspension for some updates (additional optional field)
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -31,7 +30,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseType),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseType),
-		Description:      fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
+		Description:      fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s. Warehouse needs to be suspended to change its type. Provider will handle automatic suspension and resumption if needed.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
 	"warehouse_size": {
 		Type:             schema.TypeString,
@@ -436,14 +435,16 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			}
 			set.ScalingPolicy = &scalingPolicy
 		} else {
-			unset.ScalingPolicy = sdk.Bool(true)
+			// TODO [SNOW-1473453]: UNSET of scaling policy does not work
+			// unset.ScalingPolicy = sdk.Bool(true)
+			set.ScalingPolicy = &sdk.ScalingPolicyStandard
 		}
 	}
 	if d.HasChange("auto_suspend") {
 		if v := d.Get("auto_suspend").(int); v != -1 {
 			set.AutoSuspend = sdk.Int(v)
 		} else {
-			// TODO [SNOW-1473453]: UNSET of auto suspend does not work
+			// TODO [SNOW-1473453]: UNSET of auto suspend works incorrectly
 			// unset.AutoSuspend = sdk.Bool(true)
 			set.AutoSuspend = sdk.Int(600)
 		}
@@ -456,7 +457,9 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			}
 			set.AutoResume = sdk.Bool(parsed)
 		} else {
-			unset.AutoResume = sdk.Bool(true)
+			// TODO [SNOW-1473453]: UNSET of auto resume works incorrectly
+			// unset.AutoResume = sdk.Bool(true)
+			set.AutoResume = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("resource_monitor") {
