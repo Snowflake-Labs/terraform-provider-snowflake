@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"slices"
 	"strings"
 
@@ -87,7 +88,7 @@ func Database() *schema.Resource {
 		CustomizeDiff: DatabaseParametersCustomDiff,
 		Schema:        MergeMaps(databaseSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportDatabase,
 		},
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -99,6 +100,88 @@ func Database() *schema.Resource {
 			},
 		},
 	}
+}
+
+func ImportDatabase(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting warehouse import")
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	database, err := client.Databases.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = d.Set("name", database.Name); err != nil {
+		return nil, err
+	}
+	if err = d.Set("is_transient", database.Transient); err != nil {
+		return nil, err
+	}
+	if err = d.Set("comment", database.Name); err != nil {
+		return nil, err
+	}
+
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+	replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
+		WithPrimary: sdk.Pointer(sdk.NewExternalObjectIdentifier(currentAccountIdentifier, id)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(replicationDatabases) == 1 {
+		replicationAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+		failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].ReplicationAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			replicationAllowedToAccounts = append(replicationAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		for _, allowedAccount := range strings.Split(replicationDatabases[0].FailoverAllowedToAccounts, ",") {
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+				continue
+			}
+			failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+		}
+
+		enableToAccount := make([]map[string]any, 0)
+		for _, allowedAccount := range replicationAllowedToAccounts {
+			enableToAccount = append(enableToAccount, map[string]any{
+				"account_identifier": allowedAccount.FullyQualifiedName(),
+				"with_failover":      slices.Contains(failoverAllowedToAccounts, allowedAccount),
+			})
+		}
+
+		if len(enableToAccount) == 0 {
+			err := d.Set("replication", []any{})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err := d.Set("replication", []any{
+				map[string]any{
+					"enable_to_account":    enableToAccount,
+					"ignore_edition_check": false,
+				},
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
