@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348102 - next PR]: extract three-value logic; add better description for each field
+// TODO [SNOW-1348102 - if we choose this approach]: extract three-value logic; add better description for each field
 // TODO [SNOW-1348102 - next PR]: handle conditional suspension for some updates (additional optional field)
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
@@ -411,6 +411,8 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return diag.FromErr(err)
 		}
 		set.WarehouseSize = &size
+		// For now, we always want to wait for the resize completion. In the future, we may parametrize it.
+		set.WaitForCompletion = sdk.Bool(true)
 	}
 	if d.HasChange("max_cluster_count") {
 		if v, ok := d.GetOk("max_cluster_count"); ok {

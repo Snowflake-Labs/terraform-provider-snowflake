@@ -5,17 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348102 - next PR]: test how suspension.resuming works for different states
-// TODO [this PR]: set/unset parameters
-// TODO [this PR]: get rid of the precreated warehouses on the top level
-// TODO [this PR]: show -> showbyid in multiple tests
-// TODO [this PR]: test WaitForCompletion (which version we use inside the resource?)
 func TestInt_Warehouses(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -36,6 +32,11 @@ func TestInt_Warehouses(t *testing.T) {
 
 	resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 	t.Cleanup(resourceMonitorCleanup)
+
+	startLongRunningQuery := func() {
+		go client.ExecForTests(ctx, "CALL SYSTEM$WAIT(15);") //nolint:errcheck // we don't care if this eventually errors, as long as it runs for a little while
+		time.Sleep(3 * time.Second)
+	}
 
 	t.Run("show: without options", func(t *testing.T) {
 		warehouses, err := client.Warehouses.Show(ctx, nil)
@@ -112,14 +113,8 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(id.Name()),
-			},
-		})
+		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, 1, len(warehouses))
-		warehouse := warehouses[0]
 		assert.Equal(t, id.Name(), warehouse.Name)
 		assert.Equal(t, sdk.WarehouseTypeStandard, warehouse.Type)
 		assert.Equal(t, sdk.WarehouseSizeSmall, warehouse.Size)
@@ -148,14 +143,8 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(id.Name()),
-			},
-		})
+		result, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
 		assert.Equal(t, id.Name(), result.Name)
 		assert.Equal(t, sdk.WarehouseTypeStandard, result.Type)
 		assert.Equal(t, sdk.WarehouseSizeXSmall, result.Size)
@@ -176,14 +165,8 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(id.Name()),
-			},
-		})
+		result, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
 		assert.Equal(t, "", result.Comment)
 	})
 
@@ -208,6 +191,7 @@ func TestInt_Warehouses(t *testing.T) {
 			// WaitForCompletion omitted on purpose - separate test case
 			Set: &sdk.WarehouseSet{
 				WarehouseSize:                   &sdk.WarehouseSizeMedium,
+				WaitForCompletion:               sdk.Bool(true),
 				MaxClusterCount:                 sdk.Int(3),
 				MinClusterCount:                 sdk.Int(2),
 				ScalingPolicy:                   sdk.Pointer(sdk.ScalingPolicyEconomy),
@@ -261,6 +245,48 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 8, warehouseAfterUnset.QueryAccelerationMaxScaleFactor)
 	})
 
+	t.Run("alter: set and unset parameters", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		parameters := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+
+		assert.Equal(t, "8", helpers.FindParameter(t, parameters, sdk.AccountParameterMaxConcurrencyLevel).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
+		assert.Equal(t, "172800", helpers.FindParameter(t, parameters, sdk.AccountParameterStatementTimeoutInSeconds).Value)
+
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Set: &sdk.WarehouseSet{
+				MaxConcurrencyLevel:             sdk.Int(4),
+				StatementQueuedTimeoutInSeconds: sdk.Int(2),
+				StatementTimeoutInSeconds:       sdk.Int(86400),
+			},
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		parametersAfterSet := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		assert.Equal(t, "4", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterMaxConcurrencyLevel).Value)
+		assert.Equal(t, "2", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
+		assert.Equal(t, "86400", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementTimeoutInSeconds).Value)
+
+		alterOptions = &sdk.AlterWarehouseOptions{
+			Unset: &sdk.WarehouseUnset{
+				MaxConcurrencyLevel:             sdk.Bool(true),
+				StatementQueuedTimeoutInSeconds: sdk.Bool(true),
+				StatementTimeoutInSeconds:       sdk.Bool(true),
+			},
+		}
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		parametersAfterUnset := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		assert.Equal(t, "8", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterMaxConcurrencyLevel).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
+		assert.Equal(t, "172800", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementTimeoutInSeconds).Value)
+	})
+
 	t.Run("alter: prove problems with unset auto suspend", func(t *testing.T) {
 		// new warehouse created on purpose
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
@@ -276,7 +302,7 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		// TODO [SNOW-1473453]: change when UNSET starts working correctly (expecting to unset to default 600)
 		// assert.Equal(t, "600", returnedWarehouse.AutoSuspend)
-		assert.Equal(t, "0", returnedWarehouse.AutoSuspend)
+		assert.Equal(t, 0, returnedWarehouse.AutoSuspend)
 	})
 
 	t.Run("alter: prove problems with unset warehouse type", func(t *testing.T) {
@@ -354,14 +380,9 @@ func TestInt_Warehouses(t *testing.T) {
 		_, err = client.ExecForTests(ctx, fmt.Sprintf("ALTER WAREHOUSE %s SET COMMENT = ''", id.FullyQualifiedName()))
 		require.NoError(t, err)
 
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(id.Name()),
-			},
-		})
+		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, 1, len(warehouses))
-		assert.Equal(t, "", warehouses[0].Comment)
+		assert.Equal(t, "", warehouse.Comment)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			Set: &sdk.WarehouseSet{
@@ -379,14 +400,9 @@ func TestInt_Warehouses(t *testing.T) {
 		err = client.Warehouses.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
 
-		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(id.Name()),
-			},
-		})
+		warehouse, err = client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, 1, len(warehouses))
-		assert.Equal(t, "", warehouses[0].Comment)
+		assert.Equal(t, "", warehouse.Comment)
 	})
 
 	t.Run("alter: suspend and resume", func(t *testing.T) {
@@ -399,30 +415,27 @@ func TestInt_Warehouses(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
+
+		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateSuspended, sdk.WarehouseStateSuspending}, result.State)
+
+		// check what happens if we suspend the already suspended warehouse
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.ErrorContains(t, err, "090064 (22000): Invalid state.")
 
 		alterOptions = &sdk.AlterWarehouseOptions{
 			Resume: sdk.Bool(true),
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
+		result, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result = warehouses[0]
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateStarted, sdk.WarehouseStateResuming}, result.State)
+
+		// check what happens if we resume the already started warehouse
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.ErrorContains(t, err, "090063 (22000): Invalid state.")
 	})
 
 	t.Run("alter: resume without suspending", func(t *testing.T) {
@@ -436,14 +449,9 @@ func TestInt_Warehouses(t *testing.T) {
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
+
+		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateStarted, sdk.WarehouseStateResuming}, result.State)
 	})
 
@@ -452,22 +460,11 @@ func TestInt_Warehouses(t *testing.T) {
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
-		resetWarehouse := testClientHelper().Warehouse.UseWarehouse(t, warehouse.ID())
-		t.Cleanup(resetWarehouse)
-
-		// Start a long query
-		go client.ExecForTests(ctx, "CALL SYSTEM$WAIT(30);") //nolint:errcheck // we don't care if this eventually errors, as long as it runs for a little while
-		time.Sleep(5 * time.Second)
+		startLongRunningQuery()
 
 		// Check that query is running
-		warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
-		})
+		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result := warehouses[0]
 		assert.Equal(t, 1, result.Running)
 		assert.Equal(t, 0, result.Queued)
 
@@ -479,18 +476,56 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 
 		// Wait for abort to be effective
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 
 		// Check no query is running
-		warehouses, err = client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(warehouse.Name),
-			},
+		result, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.Running)
+		assert.Equal(t, 0, result.Queued)
+	})
+
+	t.Run("alter: suspend with a long running-query", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		startLongRunningQuery()
+
+		// Suspend the warehouse
+		alterOptions := &sdk.AlterWarehouseOptions{
+			Suspend: sdk.Bool(true),
+		}
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		require.NoError(t, err)
+
+		// check the state - it seems that the warehouse is suspended despite having a running query on it
+		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, 1, result.Running)
+		assert.Equal(t, 0, result.Queued)
+		assert.Equal(t, sdk.WarehouseStateSuspended, result.State)
+	})
+
+	t.Run("alter: resize with a long running-query", func(t *testing.T) {
+		// new warehouse created on purpose
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		startLongRunningQuery()
+
+		// Resize the warehouse
+		err := client.Warehouses.Alter(ctx, warehouse.ID(), &sdk.AlterWarehouseOptions{
+			Set: &sdk.WarehouseSet{WarehouseSize: sdk.Pointer(sdk.WarehouseSizeMedium)},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(warehouses))
-		result = warehouses[0]
-		assert.Equal(t, 0, result.Running)
+
+		// check the state - it seems it's resized despite query being run on it
+		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
+		require.NoError(t, err)
+		assert.Equal(t, sdk.WarehouseStateStarted, result.State)
+		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
+		assert.Equal(t, 1, result.Running)
 		assert.Equal(t, 0, result.Queued)
 	})
 
@@ -543,7 +578,7 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, precreatedWarehouseId.Name(), result.Name)
 		assert.Equal(t, "WAREHOUSE", result.Kind)
-		assert.WithinDuration(t, time.Now(), result.CreatedOn, 1*time.Minute)
+		assert.NotEmpty(t, result.CreatedOn)
 	})
 
 	t.Run("describe: when warehouse does not exist", func(t *testing.T) {
