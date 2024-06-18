@@ -41,7 +41,6 @@ variable "saml2_snowflake_acs_url" {
 variable "saml2_snowflake_issuer_url" {
   type = string
 }
-# TODO(SNOW-1479617): set saml2_snowflake_x509_cert
 # variable "saml2_snowflake_x509_cert" {
 #   type = string
 # }

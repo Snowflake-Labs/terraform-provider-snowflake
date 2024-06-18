@@ -95,6 +95,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
+					// TODO(SNOW-1479617): assert a proper value
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl2),
@@ -202,6 +203,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
+					// TODO(SNOW-1479617): assert a proper value
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
@@ -251,8 +253,8 @@ func TestAcc_Saml2Integration_invalid(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			fmt.Sprintf(`expected saml2_provider to be one of %s, got invalid`, helpers.EnumToTerraformStringList(sdk.AllSaml2SecurityIntegrationSaml2Providers)),
-			fmt.Sprintf(`expected saml2_requested_nameid_format to be one of %s, got invalid`, helpers.EnumToTerraformStringList(sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats)),
+			fmt.Sprintf(`expected saml2_provider to be one of %q, got invalid`, sdk.AsStringList(sdk.AllSaml2SecurityIntegrationSaml2Providers)),
+			fmt.Sprintf(`expected saml2_requested_nameid_format to be one of %q, got invalid`, sdk.AsStringList(sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats)),
 		}),
 
 		Steps: []resource.TestStep{

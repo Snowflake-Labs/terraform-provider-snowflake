@@ -165,8 +165,8 @@ func TestAcc_ScimIntegration_invalid(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			fmt.Sprintf(`expected scim_client to be one of %s, got invalid`, helpers.EnumToTerraformStringList(sdk.AllScimSecurityIntegrationScimClients)),
-			fmt.Sprintf(`expected run_as_role to be one of %s, got invalid`, helpers.EnumToTerraformStringList(sdk.AllScimSecurityIntegrationRunAsRoles)),
+			fmt.Sprintf(`expected scim_client to be one of %q, got invalid`, sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
+			fmt.Sprintf(`expected run_as_role to be one of %q, got invalid`, sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles)),
 		}),
 		Steps: []resource.TestStep{
 			{

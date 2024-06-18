@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
@@ -70,13 +69,4 @@ func AssertErrorContainsPartsFunc(t *testing.T, parts []string) resource.ErrorCh
 		}
 		return nil
 	}
-}
-
-// EnumToTerraformStringList converts a list of enum values to the format represented in Terraform errors.
-func EnumToTerraformStringList[T ~string](values []T) string {
-	parts := make([]string, len(values))
-	for i := range values {
-		parts[i] = fmt.Sprintf(`"%s"`, values[i])
-	}
-	return fmt.Sprintf("[%s]", strings.Join(parts, " "))
 }

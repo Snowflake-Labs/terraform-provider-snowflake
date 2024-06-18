@@ -1,1 +1,1 @@
-terraform import snowflake_saml2_integration.example name
+terraform import snowflake_saml2_integration.example "name"

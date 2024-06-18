@@ -56,9 +56,9 @@ var AllOauthSecurityIntegrationUseSecondaryRoles = []OauthSecurityIntegrationUse
 func ToOauthSecurityIntegrationUseSecondaryRolesOption(s string) (OauthSecurityIntegrationUseSecondaryRolesOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "IMPLICIT":
+	case string(OauthSecurityIntegrationUseSecondaryRolesImplicit):
 		return OauthSecurityIntegrationUseSecondaryRolesImplicit, nil
-	case "NONE":
+	case string(OauthSecurityIntegrationUseSecondaryRolesNone):
 		return OauthSecurityIntegrationUseSecondaryRolesNone, nil
 	default:
 		return "", fmt.Errorf("invalid OauthSecurityIntegrationUseSecondaryRolesOption: %s", s)
@@ -80,9 +80,9 @@ var AllOauthSecurityIntegrationClientTypes = []OauthSecurityIntegrationClientTyp
 func ToOauthSecurityIntegrationClientTypeOption(s string) (OauthSecurityIntegrationClientTypeOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "PUBLIC":
+	case string(OauthSecurityIntegrationClientTypePublic):
 		return OauthSecurityIntegrationClientTypePublic, nil
-	case "CONFIDENTIAL":
+	case string(OauthSecurityIntegrationClientTypeConfidential):
 		return OauthSecurityIntegrationClientTypeConfidential, nil
 	default:
 		return "", fmt.Errorf("invalid OauthSecurityIntegrationClientTypeOption: %s", s)
@@ -106,11 +106,11 @@ var AllOauthSecurityIntegrationClients = []OauthSecurityIntegrationClientOption{
 func ToOauthSecurityIntegrationClientOption(s string) (OauthSecurityIntegrationClientOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "LOOKER":
+	case string(OauthSecurityIntegrationClientLooker):
 		return OauthSecurityIntegrationClientLooker, nil
-	case "TABLEAU_DESKTOP":
+	case string(OauthSecurityIntegrationClientTableauDesktop):
 		return OauthSecurityIntegrationClientTableauDesktop, nil
-	case "TABLEAU_SERVER":
+	case string(OauthSecurityIntegrationClientTableauServer):
 		return OauthSecurityIntegrationClientTableauServer, nil
 	default:
 		return "", fmt.Errorf("invalid OauthSecurityIntegrationClientOption: %s", s)
@@ -134,11 +134,11 @@ var AllSaml2SecurityIntegrationSaml2Providers = []Saml2SecurityIntegrationSaml2P
 func ToSaml2SecurityIntegrationSaml2ProviderOption(s string) (Saml2SecurityIntegrationSaml2ProviderOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "OKTA":
+	case string(Saml2SecurityIntegrationSaml2ProviderOkta):
 		return Saml2SecurityIntegrationSaml2ProviderOkta, nil
-	case "ADFS":
+	case string(Saml2SecurityIntegrationSaml2ProviderAdfs):
 		return Saml2SecurityIntegrationSaml2ProviderAdfs, nil
-	case "CUSTOM":
+	case string(Saml2SecurityIntegrationSaml2ProviderCustom):
 		return Saml2SecurityIntegrationSaml2ProviderCustom, nil
 	default:
 		return "", fmt.Errorf("invalid Saml2SecurityIntegrationSaml2ProviderOption: %s", s)
@@ -169,19 +169,19 @@ var AllSaml2SecurityIntegrationSaml2RequestedNameidFormats = []Saml2SecurityInte
 
 func ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption(s string) (Saml2SecurityIntegrationSaml2RequestedNameidFormatOption, error) {
 	switch s {
-	case "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified, nil
-	case "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress, nil
-	case "urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatX509SubjectName):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatX509SubjectName, nil
-	case "urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatWindowsDomainQualifiedName):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatWindowsDomainQualifiedName, nil
-	case "urn:oasis:names:tc:SAML:2.0:nameid-format:kerberos":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatKerberos):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatKerberos, nil
-	case "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatPersistent):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatPersistent, nil
-	case "urn:oasis:names:tc:SAML:2.0:nameid-format:transient":
+	case string(Saml2SecurityIntegrationSaml2RequestedNameidFormatTransient):
 		return Saml2SecurityIntegrationSaml2RequestedNameidFormatTransient, nil
 	default:
 		return "", fmt.Errorf("invalid Saml2SecurityIntegrationSaml2RequestedNameidFormatOption: %s", s)
@@ -205,11 +205,11 @@ var AllScimSecurityIntegrationScimClients = []ScimSecurityIntegrationScimClientO
 func ToScimSecurityIntegrationScimClientOption(s string) (ScimSecurityIntegrationScimClientOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "OKTA":
+	case string(ScimSecurityIntegrationScimClientOkta):
 		return ScimSecurityIntegrationScimClientOkta, nil
-	case "AZURE":
+	case string(ScimSecurityIntegrationScimClientAzure):
 		return ScimSecurityIntegrationScimClientAzure, nil
-	case "GENERIC":
+	case string(ScimSecurityIntegrationScimClientGeneric):
 		return ScimSecurityIntegrationScimClientGeneric, nil
 	default:
 		return "", fmt.Errorf("invalid ScimSecurityIntegrationScimClientOption: %s", s)
@@ -233,11 +233,11 @@ var AllScimSecurityIntegrationRunAsRoles = []ScimSecurityIntegrationRunAsRoleOpt
 func ToScimSecurityIntegrationRunAsRoleOption(s string) (ScimSecurityIntegrationRunAsRoleOption, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case "OKTA_PROVISIONER":
+	case string(ScimSecurityIntegrationRunAsRoleOktaProvisioner):
 		return ScimSecurityIntegrationRunAsRoleOktaProvisioner, nil
-	case "AAD_PROVISIONER":
+	case string(ScimSecurityIntegrationRunAsRoleAadProvisioner):
 		return ScimSecurityIntegrationRunAsRoleAadProvisioner, nil
-	case "GENERIC_SCIM_PROVISIONER":
+	case string(ScimSecurityIntegrationRunAsRoleGenericScimProvisioner):
 		return ScimSecurityIntegrationRunAsRoleGenericScimProvisioner, nil
 	default:
 		return "", fmt.Errorf("invalid ScimSecurityIntegrationRunAsRoleOption: %s", s)

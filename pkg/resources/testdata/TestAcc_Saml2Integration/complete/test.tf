@@ -13,7 +13,6 @@ resource "snowflake_saml2_integration" "test" {
   saml2_sign_request             = var.saml2_sign_request
   saml2_snowflake_acs_url        = var.saml2_snowflake_acs_url
   saml2_snowflake_issuer_url     = var.saml2_snowflake_issuer_url
-  # TODO(SNOW-1479617): set saml2_snowflake_x509_cert
   # saml2_snowflake_x509_cert           = var.saml2_snowflake_x509_cert
   saml2_sp_initiated_login_page_label = var.saml2_sp_initiated_login_page_label
   saml2_sso_url                       = var.saml2_sso_url

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var saml2IntegrationSchema = map[string]*schema.Schema{
@@ -41,10 +40,10 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Description: "The string containing the IdP SSO URL, where the user should be redirected by Snowflake (the Service Provider) with a SAML AuthnRequest message.",
 	},
 	"saml2_provider": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  fmt.Sprintf("The string describing the IdP. Valid options are: %v.", sdk.AllSaml2SecurityIntegrationSaml2Providers),
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllSaml2SecurityIntegrationSaml2Providers), true),
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", sdk.AllSaml2SecurityIntegrationSaml2Providers),
+		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
 				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
@@ -60,12 +59,12 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_sp_initiated_login_page_label": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The string containing the label to display after the Log In With button on the login page.",
+		Description: "The string containing the label to display after the Log In With button on the login page.  If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.",
 	},
 	"saml2_enable_sp_initiated": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in WIth button on the login page.  FALSE: does not display the Log in With button on the login page.",
+		Description: "The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page.",
 	},
 	"saml2_snowflake_x509_cert": {
 		Type:        schema.TypeString,
@@ -79,11 +78,11 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Description: "The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed.",
 	},
 	"saml2_requested_nameid_format": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Computed:     true,
-		Description:  fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats), false),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Computed:         true,
+		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
+		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption),
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return strings.EqualFold(oldValue, newValue) || d.Get(k).(string) == string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress) && newValue == ""
 		},
@@ -131,7 +130,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 			Type: schema.TypeString,
 		},
 		Optional:    true,
-		Description: "A list of email domains that can authenticate with a SAML2 security integration.",
+		Description: "A list of email domains that can authenticate with a SAML2 security integration. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.",
 	},
 	"allowed_email_patterns": {
 		Type: schema.TypeList,
@@ -139,7 +138,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 			Type: schema.TypeString,
 		},
 		Optional:    true,
-		Description: "A list of regular expressions that email addresses are matched against to authenticate with a SAML2 security integration.",
+		Description: "A list of regular expressions that email addresses are matched against to authenticate with a SAML2 security integration. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -156,14 +155,14 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 // SAML2Integration returns a pointer to the resource representing a SAML2 security integration.
 func SAML2Integration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSAMLIntegration,
-		ReadContext:   ReadContextSAMLIntegration,
-		UpdateContext: UpdateContextSAMLIntegration,
-		DeleteContext: DeleteContextSAMLIntegration,
+		CreateContext: CreateContextSAML2Integration,
+		ReadContext:   ReadContextSAML2Integration,
+		UpdateContext: UpdateContextSAML2Integration,
+		DeleteContext: DeleteContextSAM2LIntegration,
 		CustomizeDiff: customdiff.Sequence(
-			SetEmptyForceNewIfChange[any]("allowed_user_domains"),
-			SetEmptyForceNewIfChange[any]("allowed_email_patterns"),
-			SetEmptyForceNewIfChangeString("saml2_sp_initiated_login_page_label"),
+			ForceNewIfChangeEmptySlice[any]("allowed_user_domains"),
+			ForceNewIfChangeEmptySlice[any]("allowed_email_patterns"),
+			ForceNewIfChangeEmptyString("saml2_sp_initiated_login_page_label"),
 		),
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -172,7 +171,7 @@ func SAML2Integration() *schema.Resource {
 	}
 }
 
-func CreateContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -257,10 +256,10 @@ func CreateContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(name)
 
-	return ReadContextSAMLIntegration(ctx, d, meta)
+	return ReadContextSAML2Integration(ctx, d, meta)
 }
 
-func ReadContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
@@ -401,7 +400,7 @@ func ReadContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func UpdateContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	set, unset := sdk.NewSaml2IntegrationSetRequest(), sdk.NewSaml2IntegrationUnsetRequest()
@@ -520,10 +519,10 @@ func UpdateContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, m
 			return diag.FromErr(err)
 		}
 	}
-	return ReadContextSAMLIntegration(ctx, d, meta)
+	return ReadContextSAML2Integration(ctx, d, meta)
 }
 
-func DeleteContextSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSAM2LIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
