@@ -197,10 +197,6 @@ func TestAcc_Warehouse_WarehouseType(t *testing.T) {
 			},
 			// change type in config
 			{
-				PreConfig: func() {
-					// TODO [SNOW-1348102 - next PR]: currently just for tests, later add suspension to the resource (additional field state to allow escaping from the bad situation?)
-					acc.TestClient().Warehouse.Suspend(t, id)
-				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "warehouse_type", "show_output"),
@@ -1001,6 +997,61 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 	})
 }
 
+func TestAcc_Warehouse_InitiallySuspendedChangesPostCreation(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			{
+				Config: warehouseWithInitiallySuspendedConfig(id.Name(), true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "initially_suspended", "true"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.state", string(sdk.WarehouseStateSuspended)),
+
+					// TODO [SNOW-1348102 - next PR]: snowflake checks?
+					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: warehouseWithInitiallySuspendedConfig(id.Name(), false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "initially_suspended", "true"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.state", string(sdk.WarehouseStateSuspended)),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "initially_suspended", "true"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.state", string(sdk.WarehouseStateSuspended)),
+				),
+			},
+		},
+	})
+}
+
 // TODO [SNOW-1348102 - next PR]: unskip - it fails currently because of other state upgraders missing
 func TestAcc_Warehouse_migrateFromVersion091_withWarehouseSize(t *testing.T) {
 	t.Skip("Skipped due to the missing state migrators for other props")
@@ -1145,4 +1196,13 @@ resource "snowflake_warehouse" "w" {
     statement_timeout_in_seconds        = %d
 }
 `, name, value)
+}
+
+func warehouseWithInitiallySuspendedConfig(name string, initiallySuspened bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                = "%s"
+	initially_suspended = %t
+}
+`, name, initiallySuspened)
 }

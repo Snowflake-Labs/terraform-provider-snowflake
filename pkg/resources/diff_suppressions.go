@@ -15,3 +15,13 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 		return oldNormalized == newNormalized
 	}
 }
+
+// IgnoreAfterCreation should be used to ignore changes to the given attribute post creation.
+func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
+	// For new resources always show the diff
+	if d.Id() == "" {
+		return false
+	}
+	// In every other case we do not want to use this attribute
+	return true
+}

@@ -57,6 +57,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 #### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
 Previously, the `query_acceleration_max_scale_factor` was depending on `enable_query_acceleration` parameter, but it is not required on Snowflake side. After migration, `terraform plan` should suggest changes if `enable_query_acceleration` was earlier set to false (manually or from default) and if `query_acceleration_max_scale_factor` was set in config.
 
+#### *(behavior change)* `initially_suspended` forceNew removed
+Previously, the `initially_suspended` attribute change caused the resource recreation. This attribute is used only during creation (to create suspended warehouse). There is no reason to recreate the whole object just to have initial state changed.
+
 #### *(behavior change)* Boolean type changes
 To easily handle three-value logic (true, false, unknown) in provider's configs, type of `auto_resume` and `enable_query_acceleration` was changed from boolean to string. This should not require updating existing configs (boolean/int value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings. Terraform should perform an action for configs lacking `auto_resume` or `enable_query_acceleration` (`ALTER WAREHOUSE UNSET AUTO_RESUME` and/or `ALTER WAREHOUSE UNSET ENABLE_QUERY_ACCELERATION` will be run underneath which should not affect the Snowflake object, because `auto_resume` and `enable_query_acceleration` are false by default).
 

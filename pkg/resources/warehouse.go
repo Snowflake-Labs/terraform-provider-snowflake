@@ -72,12 +72,11 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      "unknown",
 	},
-	// TODO [SNOW-1348102 - next PR]: do we really need forceNew for this?
 	"initially_suspended": {
-		Type:        schema.TypeBool,
-		Description: "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
-		Optional:    true,
-		ForceNew:    true,
+		Type:             schema.TypeBool,
+		Description:      "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
+		Optional:         true,
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"resource_monitor": {
 		Type:             schema.TypeString,
@@ -161,7 +160,7 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "initially_suspended", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
+			ComputedIfAnyAttributeChanged(showOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(parametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
