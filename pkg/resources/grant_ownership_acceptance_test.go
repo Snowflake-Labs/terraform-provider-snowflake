@@ -7,17 +7,16 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/stretchr/testify/assert"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
@@ -1047,6 +1046,93 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 							},
 						},
 					}, sdk.ObjectTypeTask, accountRoleId.Name(), taskId.FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantOwnership_OnTask_Discussion2877(t *testing.T) {
+	taskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	configVariables := config.Variables{
+		"account_role_name": config.StringVariable(accountRoleId.Name()),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"task":              config.StringVariable(taskId.Name()),
+		"child":             config.StringVariable(childId.Name()),
+		"warehouse":         config.StringVariable(acc.TestWarehouseName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnTask_Discussion2877/1"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "name", taskId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|TASK|%s", accountRoleId.FullyQualifiedName(), taskId.FullyQualifiedName())),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeTask,
+								Name:       taskId,
+							},
+						},
+					}, sdk.ObjectTypeTask, accountRoleId.Name(), taskId.FullyQualifiedName()),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnTask_Discussion2877/2"),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("cannot have the given predecessor since they do not share the same owner role"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnTask_Discussion2877/3"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "name", taskId.Name()),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeTask,
+								Name:       taskId,
+							},
+						},
+					}, sdk.ObjectTypeTask, "ACCOUNTADMIN", taskId.FullyQualifiedName()),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnTask_Discussion2877/4"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "name", taskId.Name()),
+					resource.TestCheckResourceAttr("snowflake_task.child", "name", childId.Name()),
+					resource.TestCheckResourceAttr("snowflake_task.child", "after.0", taskId.Name()),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeTask,
+								Name:       taskId,
+							},
+						},
+					}, sdk.ObjectTypeTask, accountRoleId.Name(), taskId.FullyQualifiedName()),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeTask,
+								Name:       childId,
+							},
+						},
+					}, sdk.ObjectTypeTask, accountRoleId.Name(), childId.FullyQualifiedName()),
 				),
 			},
 		},
