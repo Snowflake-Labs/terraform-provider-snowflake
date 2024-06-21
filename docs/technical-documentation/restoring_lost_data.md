@@ -3,6 +3,10 @@
 If you've ever accidentally deleted important data either by using Terraform or by hand, there's still hope to recover the data.
 By using the Snowflake's Time-Travel feature, you can restore lost data and undo those accidental deletions.
 
+> Note: Currently, the recovery process is predominantly manual, relying on SQL commands and the Terraform CLI. 
+We made a strategic decision not to integrate it as a provider feature at this time, as demand for this functionality was not significant.
+Following the release of V1, we intend to reassess the topic of data recovery and UNDROP functionality to explore potential integration into the provider, evaluating its necessity and feasibility.
+
 You should be prepared beforehand by specifying how much of the historical data Snowflake should keep by setting the [DATA_RETENTION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters#data-retention-time-in-days) parameter.
 When using our provider, you can set this by using one of our parameter-setting resources (like [snowflake_account_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account_parameter) or [snowflake_object_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/object_parameter))
 or set it on the resource level (e.g. `data_retention_time_in_days` in [snowflake_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database)).
