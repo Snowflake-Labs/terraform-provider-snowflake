@@ -6,8 +6,6 @@ description: |-
   
 ---
 
-~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
-
 # snowflake_grant_privileges_to_share (Resource)
 
 

@@ -13,22 +13,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 )
-
-func mergeSchemas(schemaCollections ...map[string]*schema.Resource) map[string]*schema.Resource {
-	out := map[string]*schema.Resource{}
-	for _, schemaCollection := range schemaCollections {
-		for name, s := range schemaCollection {
-			out[name] = s
-		}
-	}
-	return out
-}
 
 func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
 	privateKeyBytes := []byte(privateKeyString)

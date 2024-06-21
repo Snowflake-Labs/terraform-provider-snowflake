@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"encoding/csv"
 	"fmt"
 	"log"
 	"reflect"
@@ -14,36 +13,13 @@ import (
 )
 
 const (
-	IDDelimiter          = "|"
-	ParameterIDDelimiter = '.'
+	IDDelimiter = "|"
 )
-
-// ToDo: We can merge these two functions together and also add more functions here with similar functionality
-
-// This function converts list of string into snowflake formated string like 'ele1', 'ele2'.
-func ListToSnowflakeString(list []string) string {
-	for index, element := range list {
-		list[index] = fmt.Sprintf(`'%v'`, strings.ReplaceAll(element, "'", "\\'"))
-	}
-
-	return fmt.Sprintf("%v", strings.Join(list, ", "))
-}
 
 // ListContentToString strips list elements of double quotes or brackets.
 func ListContentToString(listString string) string {
 	re := regexp.MustCompile(`[\"\[\]]`)
 	return re.ReplaceAllString(listString, "")
-}
-
-// StringListToList splits a string into a slice of strings, separated by a separator. It also removes empty strings and trims whitespace.
-func StringListToList(s string) []string {
-	var v []string
-	for _, elem := range strings.Split(s, ",") {
-		if strings.TrimSpace(elem) != "" {
-			v = append(v, strings.TrimSpace(elem))
-		}
-	}
-	return v
 }
 
 // StringToBool converts a string to a bool.
@@ -128,16 +104,10 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 // The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
 // inside database called "db", not a database called "db.name". In this case quotes should be used.
 func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
-	reader := csv.NewReader(strings.NewReader(identifier))
-	reader.Comma = ParameterIDDelimiter
-	lines, err := reader.ReadAll()
+	parts, err := ParseIdentifierString(identifier)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
+		return nil, err
 	}
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
-	}
-	parts := lines[0]
 	switch len(parts) {
 	case 1:
 		return sdk.NewAccountObjectIdentifier(parts[0]), nil
@@ -149,6 +119,23 @@ func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error)
 		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
 	default:
 		return nil, fmt.Errorf("unable to classify identifier: %s", identifier)
+	}
+}
+
+// DecodeSnowflakeAccountIdentifier decodes account identifier (usually passed as one of the parameter in tf configuration) into sdk.AccountIdentifier.
+// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-account#required-parameters.
+func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier, error) {
+	parts, err := ParseIdentifierString(identifier)
+	if err != nil {
+		return sdk.AccountIdentifier{}, err
+	}
+	switch len(parts) {
+	case 1:
+		return sdk.AccountIdentifier{}, fmt.Errorf("identifier: %s seems to be account locator and these are not allowed - please use <organization_name>.<account_name>", identifier)
+	case 2:
+		return sdk.NewAccountIdentifier(parts[0], parts[1]), nil
+	default:
+		return sdk.AccountIdentifier{}, fmt.Errorf("unable to classify account identifier: %s, expected format: <organization_name>.<account_name>", identifier)
 	}
 }
 
