@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -33,12 +30,11 @@ var managedAccountSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"admin_password": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Sensitive:    true,
-		Description:  "Password for the initial user in the managed account.",
-		ValidateFunc: snowflakeValidation.ValidatePassword,
-		ForceNew:     true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Sensitive:   true,
+		Description: "Password for the initial user in the managed account. Check [Snowflake-provided password policy](https://docs.snowflake.com/en/user-guide/admin-user-management#snowflake-provided-password-policy).",
+		ForceNew:    true,
 	},
 	"type": {
 		Type:         schema.TypeString,
