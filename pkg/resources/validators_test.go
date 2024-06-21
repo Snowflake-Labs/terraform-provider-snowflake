@@ -255,3 +255,51 @@ func Test_sdkValidation(t *testing.T) {
 		assert.Contains(t, diag[0].Summary, fmt.Sprintf("invalid warehouse size: %s", invalid))
 	})
 }
+
+func Test_IsValidAccountIdentifier(t *testing.T) {
+	testCases := []struct {
+		Name  string
+		Value any
+		Error string
+	}{
+		{
+			Name:  "validation: invalid value type",
+			Value: 123,
+			Error: "Expected schema string type, but got: int",
+		},
+		{
+			Name:  "validation: account locator",
+			Value: "ABC12345",
+			Error: "Unable to parse the account identifier: ABC12345. Make sure you are using the correct form of the fully qualified account name: <organization_name>.<account_name>.",
+		},
+		{
+			Name:  "validation: identifier too long",
+			Value: "a.b.c",
+			Error: "Unable to parse the account identifier: a.b.c. Make sure you are using the correct form of the fully qualified account name: <organization_name>.<account_name>.",
+		},
+		{
+			Name:  "correct account object identifier",
+			Value: "a.b",
+		},
+		{
+			Name:  "correct account object identifier - quoted",
+			Value: `"a"."b"`,
+		},
+		{
+			Name:  "correct account object identifier - mixed quotes",
+			Value: `a."b"`,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			diag := IsValidAccountIdentifier()(tt.Value, cty.IndexStringPath("path"))
+			if tt.Error != "" {
+				assert.Len(t, diag, 1)
+				assert.Contains(t, diag[0].Detail, tt.Error)
+			} else {
+				assert.Len(t, diag, 0)
+			}
+		})
+	}
+}
