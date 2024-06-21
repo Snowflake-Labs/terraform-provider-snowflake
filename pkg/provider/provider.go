@@ -419,38 +419,8 @@ func Provider() *schema.Provider {
 	}
 }
 
-func GetGrantResources() resources.TerraformGrantResources {
-	grants := resources.TerraformGrantResources{
-		"snowflake_account_grant":           resources.AccountGrant(),
-		"snowflake_database_grant":          resources.DatabaseGrant(),
-		"snowflake_external_table_grant":    resources.ExternalTableGrant(),
-		"snowflake_failover_group_grant":    resources.FailoverGroupGrant(),
-		"snowflake_file_format_grant":       resources.FileFormatGrant(),
-		"snowflake_function_grant":          resources.FunctionGrant(),
-		"snowflake_integration_grant":       resources.IntegrationGrant(),
-		"snowflake_masking_policy_grant":    resources.MaskingPolicyGrant(),
-		"snowflake_materialized_view_grant": resources.MaterializedViewGrant(),
-		"snowflake_pipe_grant":              resources.PipeGrant(),
-		"snowflake_procedure_grant":         resources.ProcedureGrant(),
-		"snowflake_resource_monitor_grant":  resources.ResourceMonitorGrant(),
-		"snowflake_row_access_policy_grant": resources.RowAccessPolicyGrant(),
-		"snowflake_schema_grant":            resources.SchemaGrant(),
-		"snowflake_sequence_grant":          resources.SequenceGrant(),
-		"snowflake_stage_grant":             resources.StageGrant(),
-		"snowflake_stream_grant":            resources.StreamGrant(),
-		"snowflake_table_grant":             resources.TableGrant(),
-		"snowflake_tag_grant":               resources.TagGrant(),
-		"snowflake_task_grant":              resources.TaskGrant(),
-		"snowflake_user_grant":              resources.UserGrant(),
-		"snowflake_view_grant":              resources.ViewGrant(),
-		"snowflake_warehouse_grant":         resources.WarehouseGrant(),
-	}
-	return grants
-}
-
 func getResources() map[string]*schema.Resource {
-	// NOTE(): do not add grant resources here
-	others := map[string]*schema.Resource{
+	return map[string]*schema.Resource{
 		"snowflake_account":                                 resources.Account(),
 		"snowflake_account_password_policy_attachment":      resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                       resources.AccountParameter(),
@@ -471,7 +441,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_grant_application_role":                  resources.GrantApplicationRole(),
 		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
 		"snowflake_grant_ownership":                         resources.GrantOwnership(),
-		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_grant_privileges_to_account_role":        resources.GrantPrivilegesToAccountRole(),
 		"snowflake_grant_privileges_to_database_role":       resources.GrantPrivilegesToDatabaseRole(),
 		"snowflake_grant_privileges_to_share":               resources.GrantPrivilegesToShare(),
@@ -489,8 +458,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_procedure":                               resources.Procedure(),
 		"snowflake_resource_monitor":                        resources.ResourceMonitor(),
 		"snowflake_role":                                    resources.Role(),
-		"snowflake_role_grants":                             resources.RoleGrants(),
-		"snowflake_role_ownership_grant":                    resources.RoleOwnershipGrant(),
 		"snowflake_row_access_policy":                       resources.RowAccessPolicy(),
 		"snowflake_saml_integration":                        resources.SAMLIntegration(),
 		"snowflake_schema":                                  resources.Schema(),
@@ -512,21 +479,15 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_task":                                    resources.Task(),
 		"snowflake_unsafe_execute":                          resources.UnsafeExecute(),
 		"snowflake_user":                                    resources.User(),
-		"snowflake_user_ownership_grant":                    resources.UserOwnershipGrant(),
 		"snowflake_user_password_policy_attachment":         resources.UserPasswordPolicyAttachment(),
 		"snowflake_user_public_keys":                        resources.UserPublicKeys(),
 		"snowflake_view":                                    resources.View(),
 		"snowflake_warehouse":                               resources.Warehouse(),
 	}
-
-	return mergeSchemas(
-		others,
-		GetGrantResources().GetTfSchemas(),
-	)
 }
 
 func getDataSources() map[string]*schema.Resource {
-	dataSources := map[string]*schema.Resource{
+	return map[string]*schema.Resource{
 		"snowflake_accounts":                           datasources.Accounts(),
 		"snowflake_alerts":                             datasources.Alerts(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
@@ -567,8 +528,6 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_views":                              datasources.Views(),
 		"snowflake_warehouses":                         datasources.Warehouses(),
 	}
-
-	return dataSources
 }
 
 var (

@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,8 +29,8 @@ var shareSchema = map[string]*schema.Schema{
 		// Changed from Set to List to use DiffSuppressFunc: https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 		Type: schema.TypeList,
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validation.ValidateIsNotAccountLocator,
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidAccountIdentifier(),
 		},
 		Optional: true,
 		Description: "A list of accounts to be added to the share. Values should not be the account locator, but " +

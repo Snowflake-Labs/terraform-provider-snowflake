@@ -58,19 +58,19 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 	t.Run("identifier with too many parts", func(t *testing.T) {
 		id := `this.identifier.is.too.long.to.be.decoded`
 		_, err := DecodeSnowflakeParameterID(id)
-		require.Errorf(t, err, "unable to classify identifier: %s", id)
+		require.ErrorContains(t, err, fmt.Sprintf("unable to classify identifier: %s", id))
 	})
 
 	t.Run("incompatible empty identifier", func(t *testing.T) {
 		id := ""
 		_, err := DecodeSnowflakeParameterID(id)
-		require.Errorf(t, err, "incompatible identifier: %s", id)
+		require.ErrorContains(t, err, fmt.Sprintf("incompatible identifier: %s", id))
 	})
 
 	t.Run("incompatible multiline identifier", func(t *testing.T) {
 		id := "db.\nname"
 		_, err := DecodeSnowflakeParameterID(id)
-		require.Errorf(t, err, "incompatible identifier: %s", id)
+		require.ErrorContains(t, err, fmt.Sprintf("unable to read identifier: %s", id))
 	})
 }
 
@@ -184,4 +184,40 @@ func (i unsupportedObjectIdentifier) Name() string {
 
 func (i unsupportedObjectIdentifier) FullyQualifiedName() string {
 	return "fully qualified name"
+}
+
+func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
+	t.Run("decodes account identifier", func(t *testing.T) {
+		id, err := DecodeSnowflakeAccountIdentifier("abc.def")
+
+		require.NoError(t, err)
+		require.Equal(t, sdk.NewAccountIdentifier("abc", "def"), id)
+	})
+
+	t.Run("does not accept account locator", func(t *testing.T) {
+		_, err := DecodeSnowflakeAccountIdentifier("ABC12345")
+
+		require.ErrorContains(t, err, "identifier: ABC12345 seems to be account locator and these are not allowed - please use <organization_name>.<account_name>")
+	})
+
+	t.Run("identifier with too many parts", func(t *testing.T) {
+		id := `this.identifier.is.too.long.to.be.decoded`
+		_, err := DecodeSnowflakeAccountIdentifier(id)
+
+		require.ErrorContains(t, err, fmt.Sprintf("unable to classify account identifier: %s", id))
+	})
+
+	t.Run("empty identifier", func(t *testing.T) {
+		id := ""
+		_, err := DecodeSnowflakeAccountIdentifier(id)
+
+		require.ErrorContains(t, err, fmt.Sprintf("incompatible identifier: %s", id))
+	})
+
+	t.Run("multiline identifier", func(t *testing.T) {
+		id := "db.\nname"
+		_, err := DecodeSnowflakeAccountIdentifier(id)
+
+		require.ErrorContains(t, err, fmt.Sprintf("unable to read identifier: %s", id))
+	})
 }

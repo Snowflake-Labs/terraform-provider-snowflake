@@ -10,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -20,20 +19,19 @@ import (
 
 var accountSchema = map[string]*schema.Schema{
 	"name": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the identifier (i.e. name) for the account; must be unique within an organization, regardless of which Snowflake Region the account is in. In addition, the identifier must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
-		ValidateFunc: snowflakeValidation.ValidateAccountIdentifier,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier (i.e. name) for the account; must be unique within an organization, regardless of which Snowflake Region the account is in. In addition, the identifier must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 		// Name is automatically uppercase by Snowflake
 		StateFunc: func(val interface{}) string {
 			return strings.ToUpper(val.(string))
 		},
+		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"admin_name": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.",
-		ValidateFunc: snowflakeValidation.ValidateAdminName,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.",
 		// We have no way of assuming a role into this account to change the admin user name so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
@@ -83,11 +81,10 @@ var accountSchema = map[string]*schema.Schema{
 		},
 	},
 	"email": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Sensitive:    true,
-		Description:  "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
-		ValidateFunc: snowflakeValidation.ValidateEmail,
+		Type:        schema.TypeString,
+		Required:    true,
+		Sensitive:   true,
+		Description: "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
 		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though it's not ideal
 		ForceNew:              true,
 		DiffSuppressOnRefresh: true,
