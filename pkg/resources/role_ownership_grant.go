@@ -9,8 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,19 +19,11 @@ var roleOwnershipGrantSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the role ownership is granted on.",
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
 	},
 	"to_role_name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
 	},
 	"current_grants": {
 		Type:        schema.TypeString,
@@ -50,10 +40,6 @@ var roleOwnershipGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The name of the role to revert ownership to on destroy.",
 		Default:     "ACCOUNTADMIN",
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
 	},
 }
 

@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -93,10 +91,6 @@ var viewGrantSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The name of the role to revert ownership to on destroy. Has no effect unless `privilege` is set to `OWNERSHIP`",
 		Default:     "",
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
 	},
 }
 

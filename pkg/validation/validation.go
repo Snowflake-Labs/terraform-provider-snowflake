@@ -2,7 +2,6 @@ package validation
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"unicode"
 )
@@ -37,49 +36,6 @@ func ValidateIsNotAccountLocator(i interface{}, k string) (s []string, errors []
 		if isAccountLocator {
 			errors = append(errors, fmt.Errorf("account locators are not allowed - please use 'organization_name.account_name"))
 		}
-	}
-	return
-}
-
-func ValidateAccountIdentifier(i interface{}, k string) (s []string, errors []error) {
-	v, ok := i.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	match, _ := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9_]*$`, v)
-	if !match {
-		errors = append(errors, fmt.Errorf("must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_)"))
-	}
-	return
-}
-
-func ValidateEmail(i interface{}, k string) (s []string, errors []error) {
-	v, ok := i.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	match, _ := regexp.MatchString(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`, v)
-	if !match {
-		errors = append(errors, fmt.Errorf("must be a valid email address"))
-	}
-	return
-}
-
-// ValidateAdminName: A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.
-func ValidateAdminName(i interface{}, k string) (s []string, errors []error) {
-	v, ok := i.(string)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	match, _ := regexp.MatchString(`^[a-zA-Z0-9_]+$`, v)
-	if !match {
-		errors = append(errors, fmt.Errorf("must be a valid admin name"))
 	}
 	return
 }

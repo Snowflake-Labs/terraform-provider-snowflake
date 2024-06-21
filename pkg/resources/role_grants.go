@@ -33,10 +33,6 @@ func RoleGrants() *schema.Resource {
 				Required:    true,
 				Description: "The name of the role we are granting.",
 				ForceNew:    true,
-				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-					additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-					return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-				},
 			},
 			"roles": {
 				Type:        schema.TypeSet,
