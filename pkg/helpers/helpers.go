@@ -131,11 +131,11 @@ func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier,
 	}
 	switch len(parts) {
 	case 1:
-		return sdk.AccountIdentifier{}, fmt.Errorf("identifier: %s seems to be account locator and these are not allowed - please use <organization_name.account_name>", identifier)
+		return sdk.AccountIdentifier{}, fmt.Errorf("identifier: %s seems to be account locator and these are not allowed - please use <organization_name>.<account_name>", identifier)
 	case 2:
 		return sdk.NewAccountIdentifier(parts[0], parts[1]), nil
 	default:
-		return sdk.AccountIdentifier{}, fmt.Errorf("unable to classify account identifier: %s", identifier)
+		return sdk.AccountIdentifier{}, fmt.Errorf("unable to classify account identifier: %s, expected format: <organization_name>.<account_name>", identifier)
 	}
 }
 

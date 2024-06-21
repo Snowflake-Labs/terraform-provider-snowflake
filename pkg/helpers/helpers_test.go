@@ -197,7 +197,7 @@ func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
 	t.Run("does not accept account locator", func(t *testing.T) {
 		_, err := DecodeSnowflakeAccountIdentifier("ABC12345")
 
-		require.ErrorContains(t, err, "identifier: ABC12345 seems to be account locator and these are not allowed - please use <organization_name.account_name>")
+		require.ErrorContains(t, err, "identifier: ABC12345 seems to be account locator and these are not allowed - please use <organization_name>.<account_name>")
 	})
 
 	t.Run("identifier with too many parts", func(t *testing.T) {

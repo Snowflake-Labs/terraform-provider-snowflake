@@ -289,6 +289,10 @@ func Test_IsValidAccountIdentifier(t *testing.T) {
 			Name:  "correct account object identifier - mixed quotes",
 			Value: `a."b"`,
 		},
+		{
+			Name:  "correct account object identifier - dot inside",
+			Value: `a."b.c"`,
+		},
 	}
 
 	for _, tt := range testCases {

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-999049]: add more fancy cases
 func Test_ParseIdentifierString(t *testing.T) {
 	containsAll := func(t *testing.T, parts, expectedParts []string) {
 		t.Helper()
@@ -74,6 +75,16 @@ func Test_ParseIdentifierString(t *testing.T) {
 	t.Run("returns parts correctly with quote inside", func(t *testing.T) {
 		input := `"ab""c".def`
 		expected := []string{`ab"c`, "def"}
+
+		parts, err := ParseIdentifierString(input)
+
+		require.NoError(t, err)
+		containsAll(t, parts, expected)
+	})
+
+	t.Run("returns parts correctly with dots inside", func(t *testing.T) {
+		input := `"ab.c".def`
+		expected := []string{`ab.c`, "def"}
 
 		parts, err := ParseIdentifierString(input)
 
