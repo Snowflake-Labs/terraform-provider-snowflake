@@ -58,7 +58,7 @@ var stageSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Description:      "Specifies the copy options for the stage.",
-		DiffSuppressFunc: suppressCopyOptionsQuoting,
+		DiffSuppressFunc: suppressQuoting,
 	},
 	"encryption": {
 		Type:        schema.TypeString,
