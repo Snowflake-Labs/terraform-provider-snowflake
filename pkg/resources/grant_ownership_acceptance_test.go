@@ -1107,7 +1107,7 @@ func TestAcc_GrantOwnership_OnTask_Discussion2877(t *testing.T) {
 								Name:       taskId,
 							},
 						},
-					}, sdk.ObjectTypeTask, "ACCOUNTADMIN", taskId.FullyQualifiedName()),
+					}, sdk.ObjectTypeTask, acc.TestClient().Context.CurrentRole(t).Name(), taskId.FullyQualifiedName()),
 				),
 			},
 			{
