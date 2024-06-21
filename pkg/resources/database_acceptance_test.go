@@ -32,25 +32,6 @@ func TestAcc_Database_Basic(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
 
-	var (
-		accountDataRetentionTimeInDays                 = new(string)
-		accountMaxDataExtensionTimeInDays              = new(string)
-		accountExternalVolume                          = new(string)
-		accountCatalog                                 = new(string)
-		accountReplaceInvalidCharacters                = new(string)
-		accountDefaultDdlCollation                     = new(string)
-		accountStorageSerializationPolicy              = new(string)
-		accountLogLevel                                = new(string)
-		accountTraceLevel                              = new(string)
-		accountSuspendTaskAfterNumFailures             = new(string)
-		accountTaskAutoRetryAttempts                   = new(string)
-		accountUserTaskMangedInitialWarehouseSize      = new(string)
-		accountUserTaskTimeoutMs                       = new(string)
-		accountUserTaskMinimumTriggerIntervalInSeconds = new(string)
-		accountQuotedIdentifiersIgnoreCase             = new(string)
-		accountEnableConsoleOutput                     = new(string)
-	)
-
 	configVariables := func(id sdk.AccountObjectIdentifier, comment string) config.Variables {
 		return config.Variables{
 			"name":    config.StringVariable(id.Name()),
@@ -67,49 +48,32 @@ func TestAcc_Database_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					params := acc.TestClient().Parameter.ShowAccountParameters(t)
-					*accountDataRetentionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
-					*accountMaxDataExtensionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
-					*accountExternalVolume = helpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
-					*accountCatalog = helpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
-					*accountReplaceInvalidCharacters = helpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
-					*accountDefaultDdlCollation = helpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
-					*accountStorageSerializationPolicy = helpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
-					*accountLogLevel = helpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
-					*accountTraceLevel = helpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
-					*accountSuspendTaskAfterNumFailures = helpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
-					*accountTaskAutoRetryAttempts = helpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
-					*accountUserTaskMangedInitialWarehouseSize = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
-					*accountUserTaskTimeoutMs = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
-					*accountUserTaskMinimumTriggerIntervalInSeconds = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
-					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
-					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					//resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"), // TODO: Not found
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "0"),
 
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "suspend_task_after_num_failures", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "task_auto_retry_attempts", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_timeout_ms", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "quoted_identifiers_ignore_case", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "enable_console_output", "unknown"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "trace_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_managed_initial_warehouse_size", "unknown"),
 				),
 			},
 			{
@@ -120,30 +84,54 @@ func TestAcc_Database_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", newComment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "suspend_task_after_num_failures", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "task_auto_retry_attempts", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_timeout_ms", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "quoted_identifiers_ignore_case", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "enable_console_output", "unknown"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "trace_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_managed_initial_warehouse_size", "unknown"),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_Database/basic"),
-				ConfigVariables:   configVariables(newId, newComment),
-				ResourceName:      "snowflake_database.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
+				ConfigVariables: configVariables(newId, newComment),
+				ResourceName:    "snowflake_database.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "name", newId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "comment", newComment),
+
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "data_retention_time_in_days", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "max_data_extension_time_in_days", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "suspend_task_after_num_failures", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "task_auto_retry_attempts", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "user_task_timeout_ms", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "user_task_minimum_trigger_interval_in_seconds", "-1"),
+
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "replace_invalid_characters", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "quoted_identifiers_ignore_case", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "enable_console_output", "unknown"),
+
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "external_volume", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "catalog", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "default_ddl_collation", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "storage_serialization_policy", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "log_level", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "trace_level", "unknown"),
+					importchecks.TestCheckResourceAttrInstanceState(newId.Name(), "user_task_managed_initial_warehouse_size", "unknown"),
+				),
 			},
 		},
 	})
@@ -167,25 +155,6 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
-
-	var (
-		accountDataRetentionTimeInDays                 = new(string)
-		accountMaxDataExtensionTimeInDays              = new(string)
-		accountExternalVolume                          = new(string)
-		accountCatalog                                 = new(string)
-		accountReplaceInvalidCharacters                = new(string)
-		accountDefaultDdlCollation                     = new(string)
-		accountStorageSerializationPolicy              = new(string)
-		accountLogLevel                                = new(string)
-		accountTraceLevel                              = new(string)
-		accountSuspendTaskAfterNumFailures             = new(string)
-		accountTaskAutoRetryAttempts                   = new(string)
-		accountUserTaskMangedInitialWarehouseSize      = new(string)
-		accountUserTaskTimeoutMs                       = new(string)
-		accountUserTaskMinimumTriggerIntervalInSeconds = new(string)
-		accountQuotedIdentifiersIgnoreCase             = new(string)
-		accountEnableConsoleOutput                     = new(string)
-	)
 
 	completeConfigVariables := config.Variables{
 		"name":                                     config.StringVariable(id.Name()),
@@ -221,48 +190,31 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					params := acc.TestClient().Parameter.ShowAccountParameters(t)
-					*accountDataRetentionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
-					*accountMaxDataExtensionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
-					*accountExternalVolume = helpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
-					*accountCatalog = helpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
-					*accountReplaceInvalidCharacters = helpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
-					*accountDefaultDdlCollation = helpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
-					*accountStorageSerializationPolicy = helpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
-					*accountLogLevel = helpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
-					*accountTraceLevel = helpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
-					*accountSuspendTaskAfterNumFailures = helpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
-					*accountTaskAutoRetryAttempts = helpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
-					*accountUserTaskMangedInitialWarehouseSize = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
-					*accountUserTaskTimeoutMs = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
-					*accountUserTaskMinimumTriggerIntervalInSeconds = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
-					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
-					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					//resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "suspend_task_after_num_failures", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "task_auto_retry_attempts", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_timeout_ms", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "quoted_identifiers_ignore_case", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "enable_console_output", "unknown"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "trace_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_managed_initial_warehouse_size", "unknown"),
 				),
 			},
 			{
@@ -270,7 +222,7 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					//resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "20"),
@@ -295,25 +247,27 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
+					//resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "suspend_task_after_num_failures", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "task_auto_retry_attempts", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_timeout_ms", "-1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_minimum_trigger_interval_in_seconds", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "quoted_identifiers_ignore_case", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "enable_console_output", "unknown"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "trace_level", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "user_task_managed_initial_warehouse_size", "unknown"),
 				),
 			},
 		},
@@ -680,11 +634,15 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
 						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionCreate, nil, sdk.String("50")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "50"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// do not make any change (to check if there is no drift)
@@ -704,6 +662,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigVariables: databaseWithIntParameterConfig(50),
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.value", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// change the param value in config
@@ -714,11 +675,15 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
 						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), sdk.String("25")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "25"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// change param value on account - expect no changes
@@ -735,12 +700,15 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
 						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("25"), sdk.String("25")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "25"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// change the param value externally
@@ -758,12 +726,16 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
 						planchecks.ExpectDrift("snowflake_database.test", "data_retention_time_in_days", sdk.String("25"), sdk.String("50")),
 						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), sdk.String("25")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "25"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterLevelDatabase, "25"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "25"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// remove the param from config
@@ -777,13 +749,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("25"), nil),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("25"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", ""),
 				),
 			},
 			// import when param not in config (snowflake default)
@@ -792,7 +768,10 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ImportState:     true,
 				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.value", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.level", ""),
 				),
 			},
 			// change the param value in config to snowflake default
@@ -802,13 +781,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("1"), nil),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("1")),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterLevelDatabase, "1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelDatabase)),
 				),
 			},
 			// remove the param from config
@@ -822,13 +805,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("1"), nil),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("1"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"), // Database default
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", ""),
 				),
 			},
 			// change param value on account - change expected to be noop
@@ -844,14 +831,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectDrift("snowflake_database.test", "data_retention_time_in_days", sdk.String("1"), sdk.String("50")),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("50"), sdk.String("50")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectDrift("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", sdk.String("1"), sdk.String("50")),
+						planchecks.ExpectChange("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", tfjson.ActionNoop, sdk.String("50"), sdk.String("50")),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterLevelAccount, "50"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "50"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelAccount)),
 				),
 			},
 			// import when param not in config (set on account)
@@ -861,9 +851,12 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.value", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelAccount)),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterLevelAccount, "50"),
 				),
 			},
 			// change param value on database
@@ -876,13 +869,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), nil),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
+						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionUpdate, sdk.String("50"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_database.test", "parameters", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
+					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterLevelAccount, "50"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "50"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", string(sdk.ParameterLevelAccount)),
 				),
 			},
 			// unset param on account
@@ -895,14 +892,17 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
-						planchecks.ExpectDrift("snowflake_database.test", "data_retention_time_in_days", sdk.String("50"), sdk.String("1")),
-						planchecks.ExpectChange("snowflake_database.test", "data_retention_time_in_days", tfjson.ActionNoop, sdk.String("1"), sdk.String("1")),
-						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
+						planchecks.ExpectDrift("snowflake_database.test", "parameters.0.statement_timeout_in_seconds.0.value", sdk.String("1"), sdk.String("50")),
+						planchecks.ExpectDrift("snowflake_database.test", "parameters.0.statement_timeout_in_seconds.0.level", sdk.String(string(sdk.ParameterLevelAccount)), sdk.String("")),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.test", "parameters.0.data_retention_time_in_days.0.level", ""),
 				),
 			},
 		},

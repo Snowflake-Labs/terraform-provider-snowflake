@@ -351,9 +351,9 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				return diag.FromErr(err)
 			}
 
-			if err = markChangedParameters(sdk.WarehouseParameters, warehouseParameters, d, sdk.ParameterTypeWarehouse); err != nil {
-				return diag.FromErr(err)
-			}
+			//if err = markChangedParameters(sdk.WarehouseParameters, warehouseParameters, d, sdk.ParameterLevelWarehouse); err != nil {
+			//	return diag.FromErr(err)
+			//}
 		}
 
 		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.WarehouseToSchema(w)}); err != nil {

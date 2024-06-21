@@ -631,9 +631,9 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 
 					// TODO [SNOW-1348102 - next PR]: snowflake checks?
 					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
@@ -694,9 +694,9 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 		},
@@ -729,7 +729,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 
 					// TODO [SNOW-1348102 - next PR]: snowflake checks?
 					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
@@ -752,7 +752,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "86400"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 			// change the param value in config
@@ -770,7 +770,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 			// change param value on account - expect no changes
@@ -794,7 +794,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 			// change the param value externally
@@ -819,7 +819,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "43200"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 			// remove the param from config
@@ -870,7 +870,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelWarehouse)),
 				),
 			},
 			// remove the param from config
@@ -916,7 +916,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelAccount)),
 				),
 			},
 			// import when param not in config (set on account)
@@ -927,7 +927,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "-1"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelAccount)),
 				),
 			},
 			// change param value on warehouse
@@ -948,7 +948,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterLevelAccount)),
 				),
 			},
 			// unset param on account
@@ -961,7 +961,7 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "statement_timeout_in_seconds", "parameters"),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", sdk.String("86400"), sdk.String("172800")),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", sdk.String(string(sdk.ParameterTypeAccount)), sdk.String("")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", sdk.String(string(sdk.ParameterLevelAccount)), sdk.String("")),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(

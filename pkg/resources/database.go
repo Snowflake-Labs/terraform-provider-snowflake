@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"slices"
 	"strings"
 
@@ -73,6 +75,109 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
+	// TODO: Add validations and descriptions
+	strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+	strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+	strings.ToLower(string(sdk.ObjectParameterSuspendTaskAfterNumFailures)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+	strings.ToLower(string(sdk.ObjectParameterTaskAutoRetryAttempts)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+	strings.ToLower(string(sdk.ObjectParameterUserTaskTimeoutMs)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+	strings.ToLower(string(sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds)): {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  -1,
+	},
+
+	strings.ToLower(string(sdk.ObjectParameterReplaceInvalidCharacters)): {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, true),
+		Default:          "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterQuotedIdentifiersIgnoreCase)): {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, true),
+		Default:          "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)): {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, true),
+		Default:          "unknown",
+	},
+
+	strings.ToLower(string(sdk.ObjectParameterExternalVolume)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterCatalog)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterDefaultDDLCollation)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterStorageSerializationPolicy)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterLogLevel)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterTraceLevel)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+	strings.ToLower(string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize)): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "unknown",
+	},
+
+	showOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW DATABASE` for the given warehouse.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowDatabaseSchema,
+		},
+	},
+	parametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN DATABASE` for the given database.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowDatabaseParametersSchema,
+		},
+	},
 }
 
 func Database() *schema.Resource {
@@ -80,13 +185,36 @@ func Database() *schema.Resource {
 		SchemaVersion: 1,
 
 		CreateContext: CreateDatabase,
-		ReadContext:   ReadDatabase,
+		ReadContext:   GetReadDatabaseFunc(true),
 		DeleteContext: DeleteDatabase,
 		UpdateContext: UpdateDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        MergeMaps(databaseSchema, DatabaseParametersSchema),
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(showOutputAttributeName, "comment"),
+			ComputedIfAnyAttributeChanged(
+				parametersAttributeName,
+				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
+				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
+				strings.ToLower(string(sdk.ObjectParameterSuspendTaskAfterNumFailures)),
+				strings.ToLower(string(sdk.ObjectParameterTaskAutoRetryAttempts)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskTimeoutMs)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds)),
+
+				strings.ToLower(string(sdk.ObjectParameterReplaceInvalidCharacters)),
+				strings.ToLower(string(sdk.ObjectParameterQuotedIdentifiersIgnoreCase)),
+				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
+
+				strings.ToLower(string(sdk.ObjectParameterExternalVolume)),
+				strings.ToLower(string(sdk.ObjectParameterCatalog)),
+				strings.ToLower(string(sdk.ObjectParameterDefaultDDLCollation)),
+				strings.ToLower(string(sdk.ObjectParameterStorageSerializationPolicy)),
+				strings.ToLower(string(sdk.ObjectParameterLogLevel)),
+				strings.ToLower(string(sdk.ObjectParameterTraceLevel)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize)),
+			),
+		),
+		Schema: databaseSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportDatabase,
 		},
@@ -118,7 +246,7 @@ func ImportDatabase(ctx context.Context, d *schema.ResourceData, meta any) ([]*s
 	if err = d.Set("is_transient", database.Transient); err != nil {
 		return nil, err
 	}
-	if err = d.Set("comment", database.Name); err != nil {
+	if err = d.Set("comment", database.Comment); err != nil {
 		return nil, err
 	}
 
@@ -295,7 +423,7 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		}
 	}
 
-	return append(diags, ReadDatabase(ctx, d, meta)...)
+	return append(diags, GetReadDatabaseFunc(false)(ctx, d, meta)...)
 }
 
 func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -424,118 +552,129 @@ func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		}
 	}
 
-	return ReadDatabase(ctx, d, meta)
+	return GetReadDatabaseFunc(false)(ctx, d, meta)
 }
 
-func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+func GetReadDatabaseFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	database, err := client.Databases.ShowByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query secondary database. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
-				},
+		database, err := client.Databases.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query secondary database. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
 			}
-		}
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("name", database.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("is_transient", database.Transient); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("comment", database.Comment); err != nil {
-		return diag.FromErr(err)
-	}
-
-	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
-	replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
-		WithPrimary: sdk.Pointer(sdk.NewExternalObjectIdentifier(currentAccountIdentifier, id)),
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if len(replicationDatabases) == 1 {
-		replicationAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
-		failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
-
-		for _, allowedAccount := range strings.Split(replicationDatabases[0].ReplicationAllowedToAccounts, ",") {
-			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
-			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
-				continue
-			}
-			replicationAllowedToAccounts = append(replicationAllowedToAccounts, allowedAccountIdentifier)
+			return diag.FromErr(err)
 		}
 
-		for _, allowedAccount := range strings.Split(replicationDatabases[0].FailoverAllowedToAccounts, ",") {
-			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
-			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
-				continue
-			}
-			failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+		databaseParameters, err := client.Parameters.ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				Database: helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier),
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
 		}
 
-		enableToAccount := make([]map[string]any, 0)
-		for _, allowedAccount := range replicationAllowedToAccounts {
-			enableToAccount = append(enableToAccount, map[string]any{
-				"account_identifier": allowedAccount.FullyQualifiedName(),
-				"with_failover":      slices.Contains(failoverAllowedToAccounts, allowedAccount),
-			})
+		if err := d.Set("name", database.Name); err != nil {
+			return diag.FromErr(err)
 		}
 
-		var ignoreEditionCheck bool
-		if v, ok := d.GetOk("replication.0.ignore_edition_check"); ok {
-			ignoreEditionCheck = v.(bool)
-		}
-
-		if len(enableToAccount) == 0 {
-			err := d.Set("replication", []any{})
-			if err != nil {
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObject(d,
+				showMapping{"comment", "comment", database.Comment, database.Comment, nil},
+				showMapping{"options", "is_transient", database.Transient, database.Transient, nil},
+			); err != nil {
 				return diag.FromErr(err)
 			}
-		} else {
-			err := d.Set("replication", []any{
-				map[string]any{
-					"enable_to_account":    enableToAccount,
-					"ignore_edition_check": ignoreEditionCheck,
-				},
-			})
-			if err != nil {
+
+			if err = markChangedParameters(sdk.DatabaseParameters, databaseParameters, d, sdk.ParameterLevelDatabase); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
+		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.DatabaseToSchema(database)}); err != nil {
+			return diag.FromErr(err)
+		}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
-		return diags
-	}
+		if err = d.Set(parametersAttributeName, []map[string]any{schemas.DatabaseParametersToSchema(databaseParameters)}); err != nil {
+			return diag.FromErr(err)
+		}
 
-	return nil
+		sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, &sdk.ShowReplicationDatabasesOptions{
+			WithPrimary: sdk.Pointer(sdk.NewExternalObjectIdentifier(currentAccountIdentifier, id)),
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if len(replicationDatabases) == 1 {
+			replicationAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+			failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+
+			for _, allowedAccount := range strings.Split(replicationDatabases[0].ReplicationAllowedToAccounts, ",") {
+				allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+				if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+					continue
+				}
+				replicationAllowedToAccounts = append(replicationAllowedToAccounts, allowedAccountIdentifier)
+			}
+
+			for _, allowedAccount := range strings.Split(replicationDatabases[0].FailoverAllowedToAccounts, ",") {
+				allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+				if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+					continue
+				}
+				failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+			}
+
+			enableToAccount := make([]map[string]any, 0)
+			for _, allowedAccount := range replicationAllowedToAccounts {
+				enableToAccount = append(enableToAccount, map[string]any{
+					"account_identifier": allowedAccount.FullyQualifiedName(),
+					"with_failover":      slices.Contains(failoverAllowedToAccounts, allowedAccount),
+				})
+			}
+
+			var ignoreEditionCheck bool
+			if v, ok := d.GetOk("replication.0.ignore_edition_check"); ok {
+				ignoreEditionCheck = v.(bool)
+			}
+
+			if len(enableToAccount) == 0 {
+				err := d.Set("replication", []any{})
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				err := d.Set("replication", []any{
+					map[string]any{
+						"enable_to_account":    enableToAccount,
+						"ignore_edition_check": ignoreEditionCheck,
+					},
+				})
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+
+		return nil
+	}
 }
 
 func DeleteDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

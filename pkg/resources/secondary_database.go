@@ -45,8 +45,7 @@ func SecondaryDatabase() *schema.Resource {
 		DeleteContext: DeleteSecondaryDatabase,
 		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        MergeMaps(secondaryDatabaseSchema, DatabaseParametersSchema),
+		Schema: secondaryDatabaseSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

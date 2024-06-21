@@ -15,19 +15,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func StringParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func StringParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterLevel, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return value.(string) })
 }
 
-func IntParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func IntParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterLevel, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.Itoa(value.(int)) })
 }
 
-func BoolParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func BoolParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterLevel, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
 }
 
-func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, accountParameter sdk.AccountParameter, valueToString func(v any) string) schema.CustomizeDiffFunc {
+func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterLevel, accountParameter sdk.AccountParameter, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(accountParameter) })
 		if err != nil {

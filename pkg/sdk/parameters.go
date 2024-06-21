@@ -912,27 +912,37 @@ func (v *ParametersIn) validate() error {
 	return nil
 }
 
+type ParameterLevel string
+
+const (
+	ParameterLevelAccount   ParameterLevel = "ACCOUNT"
+	ParameterLevelUser      ParameterLevel = "USER"
+	ParameterLevelSession   ParameterLevel = "SESSION"
+	ParameterLevelObject    ParameterLevel = "OBJECT"
+	ParameterLevelWarehouse ParameterLevel = "WAREHOUSE"
+	ParameterLevelDatabase  ParameterLevel = "DATABASE"
+)
+
 type ParameterType string
 
 const (
-	ParameterTypeAccount   ParameterType = "ACCOUNT"
-	ParameterTypeUser      ParameterType = "USER"
-	ParameterTypeSession   ParameterType = "SESSION"
-	ParameterTypeObject    ParameterType = "OBJECT"
-	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
-	ParameterTypeDatabase  ParameterType = "DATABASE"
+	ParameterTypeString  ParameterType = "STRING"
+	ParameterTypeBoolean ParameterType = "BOOLEAN"
+	ParameterTypeNumber  ParameterType = "NUMBER"
 )
 
 type Parameter struct {
 	Key         string
+	Type        ParameterType
 	Value       string
 	Default     string
-	Level       ParameterType
+	Level       ParameterLevel
 	Description string
 }
 
 type parameterRow struct {
 	Key         sql.NullString `db:"key"`
+	Type        sql.NullString `db:"type"`
 	Value       sql.NullString `db:"value"`
 	Default     sql.NullString `db:"default"`
 	Level       sql.NullString `db:"level"`
@@ -942,9 +952,10 @@ type parameterRow struct {
 func (row *parameterRow) toParameter() *Parameter {
 	return &Parameter{
 		Key:         row.Key.String,
+		Type:        ParameterType(row.Type.String),
 		Value:       row.Value.String,
 		Default:     row.Default.String,
-		Level:       ParameterType(row.Level.String),
+		Level:       ParameterLevel(row.Level.String),
 		Description: row.Description.String,
 	}
 }

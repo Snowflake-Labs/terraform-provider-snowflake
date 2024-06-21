@@ -15,10 +15,10 @@ const parametersAttributeName = "parameters"
 // TODO [after discussion/next PR]: test (unit and acceptance)
 // TODO [after discussion/next PR]: more readable errors
 // TODO [after discussion/next PR]: handle different types than int
-func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParameters []*sdk.Parameter, d *schema.ResourceData, level sdk.ParameterType) error {
+func markChangedParameters(objectParameters []sdk.ParameterWithType, currentParameters []*sdk.Parameter, d *schema.ResourceData, level sdk.ParameterLevel) error {
 	for _, param := range objectParameters {
 		currentSnowflakeParameter, err := collections.FindOne(currentParameters, func(p *sdk.Parameter) bool {
-			return p.Key == string(param)
+			return p.Key == string(param.Key)
 		})
 		if err != nil {
 			return err
@@ -29,12 +29,27 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 2. if it had different non-empty value, then the drift will be reported and the value will be set during update
 		// 3. if it had empty value, then the drift will be reported and the value will be unset during update
 		if (*currentSnowflakeParameter).Level == level {
-			intValue, err := strconv.Atoi((*currentSnowflakeParameter).Value)
-			if err != nil {
-				return err
-			}
-			if err = d.Set(strings.ToLower(string(param)), intValue); err != nil {
-				return err
+			switch (*currentSnowflakeParameter).Type {
+			case sdk.ParameterTypeString:
+				if err = d.Set(strings.ToLower(string(param.Key)), (*currentSnowflakeParameter).Value); err != nil {
+					return err
+				}
+			case sdk.ParameterTypeNumber:
+				intValue, err := strconv.Atoi((*currentSnowflakeParameter).Value)
+				if err != nil {
+					return err
+				}
+				if err = d.Set(strings.ToLower(string(param.Key)), intValue); err != nil {
+					return err
+				}
+			case sdk.ParameterTypeBoolean:
+				boolValue, err := strconv.ParseBool((*currentSnowflakeParameter).Value)
+				if err != nil {
+					return err
+				}
+				if err = d.Set(strings.ToLower(string(param.Key)), strconv.FormatBool(boolValue)); err != nil {
+					return err
+				}
 			}
 		}
 		// this handles situations in which parameter was unset from the object
@@ -43,8 +58,19 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 2. if it had a non-empty value, then the drift will be reported and the value will be set during update
 		if (*currentSnowflakeParameter).Level != level {
 			// TODO [after discussion/next PR]: this is currently set to an artificial default
-			if err = d.Set(strings.ToLower(string(param)), -1); err != nil {
-				return err
+			switch (*currentSnowflakeParameter).Type {
+			case sdk.ParameterTypeString:
+				if err = d.Set(strings.ToLower(string(param.Key)), "unknown"); err != nil {
+					return err
+				}
+			case sdk.ParameterTypeNumber:
+				if err = d.Set(strings.ToLower(string(param.Key)), -1); err != nil {
+					return err
+				}
+			case sdk.ParameterTypeBoolean:
+				if err = d.Set(strings.ToLower(string(param.Key)), "unknown"); err != nil {
+					return err
+				}
 			}
 		}
 	}

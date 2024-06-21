@@ -17,7 +17,7 @@ import (
 )
 
 func TestParameterValueComputedIf(t *testing.T) {
-	createProviderConfig := func(parameterLevel sdk.ParameterType, parameterValue sdk.LogLevel) *schema.Provider {
+	createProviderConfig := func(parameterLevel sdk.ParameterLevel, parameterValue sdk.LogLevel) *schema.Provider {
 		customDiff := resources.ParameterValueComputedIf(
 			"value",
 			[]*sdk.Parameter{
@@ -27,7 +27,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 					Value: string(parameterValue),
 				},
 			},
-			sdk.ParameterTypeDatabase,
+			sdk.ParameterLevelDatabase,
 			sdk.AccountParameterLogLevel,
 			func(v any) string { return v.(string) },
 		)
@@ -35,7 +35,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	}
 
 	t.Run("config: true - state: true - level: different - value: same", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -45,7 +45,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: true - state: true - level: different - value: different", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -55,7 +55,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: true - state: true - level: same - value: same", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelInfo)
+		providerConfig := createProviderConfig(sdk.ParameterLevelDatabase, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -65,7 +65,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: true - state: true - level: same - value: different", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeDatabase, sdk.LogLevelDebug)
+		providerConfig := createProviderConfig(sdk.ParameterLevelDatabase, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapVal(map[string]cty.Value{
 			"value": cty.StringVal(string(sdk.LogLevelInfo)),
 		}), map[string]any{
@@ -75,7 +75,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: false - state: true - level: different - value: same", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
@@ -83,7 +83,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: false - state: true - level: different - value: different", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
@@ -91,7 +91,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: false - state: true - level: same - value: same", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelInfo)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelInfo)
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
@@ -99,7 +99,7 @@ func TestParameterValueComputedIf(t *testing.T) {
 	})
 
 	t.Run("config: false - state: true - level: same - value: different", func(t *testing.T) {
-		providerConfig := createProviderConfig(sdk.ParameterTypeAccount, sdk.LogLevelDebug)
+		providerConfig := createProviderConfig(sdk.ParameterLevelAccount, sdk.LogLevelDebug)
 		diff := calculateDiff(t, providerConfig, cty.MapValEmpty(cty.String), map[string]any{
 			"value": string(sdk.LogLevelInfo),
 		})
