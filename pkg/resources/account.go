@@ -26,6 +26,7 @@ var accountSchema = map[string]*schema.Schema{
 		StateFunc: func(val interface{}) string {
 			return strings.ToUpper(val.(string))
 		},
+		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"admin_name": {
 		Type:        schema.TypeString,

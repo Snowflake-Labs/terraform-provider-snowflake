@@ -7,8 +7,8 @@ import (
 )
 
 func Test_ParseIdentifierString(t *testing.T) {
-
 	containsAll := func(t *testing.T, parts, expectedParts []string) {
+		t.Helper()
 		require.Len(t, parts, len(expectedParts))
 		for _, part := range expectedParts {
 			require.Contains(t, parts, part)

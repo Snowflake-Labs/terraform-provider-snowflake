@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -67,6 +68,29 @@ func TestAcc_Share(t *testing.T) {
 	})
 }
 
+func TestAcc_Share_validateAccounts(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.Share),
+		Steps: []resource.TestStep{
+			{
+				Config:      shareConfigOneAccount(name, "any comment", "incorrect"),
+				ExpectError: regexp.MustCompile("Unable to parse the account identifier"),
+			},
+			{
+				Config:      shareConfigTwoAccounts(name, "any comment", "correct.one", "incorrect"),
+				ExpectError: regexp.MustCompile("Unable to parse the account identifier"),
+			},
+		},
+	})
+}
+
 func shareConfig(name string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
@@ -76,22 +100,22 @@ resource "snowflake_share" "test" {
 `, name, comment)
 }
 
-func shareConfigOneAccount(name string, comment string, account2 string) string {
+func shareConfigOneAccount(name string, comment string, account string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
 	accounts       = ["%v"]
 }
-`, name, comment, account2)
+`, name, comment, account)
 }
 
-func shareConfigTwoAccounts(name string, comment string, account2 string, account3 string) string {
+func shareConfigTwoAccounts(name string, comment string, account string, account2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
 	name           = "%v"
 	comment        = "%v"
 	accounts       = ["%v", "%v"]
 }
-`, name, comment, account2, account3)
+`, name, comment, account, account2)
 }
