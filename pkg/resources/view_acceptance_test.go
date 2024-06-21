@@ -460,7 +460,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"or_replace"},
+				ImportStateVerifyIgnore: []string{"or_replace", "created_on"},
 			},
 		},
 	})

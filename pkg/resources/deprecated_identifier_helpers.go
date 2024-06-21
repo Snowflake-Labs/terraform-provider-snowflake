@@ -1,10 +1,11 @@
-package validation
+package resources
 
 import (
 	"fmt"
 	"strings"
 )
 
+// TODO [SNOW-999049]: replace during identifiers rework
 func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string {
 	var n strings.Builder
 
@@ -39,6 +40,7 @@ func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string 
 	return n.String()
 }
 
+// TODO [SNOW-999049]: replace during identifiers rework
 func ParseFullyQualifiedObjectID(s string) (dbName, schemaName, objectName string) {
 	parsedString := strings.ReplaceAll(s, "\"", "")
 
