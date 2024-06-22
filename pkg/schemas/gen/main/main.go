@@ -114,7 +114,7 @@ func printFields(s any) {
 		}
 		underlyingType += kind.String()
 
-		gen.TabularOutput(40, currentName, currentType, underlyingType)
+		fmt.Println(gen.ColumnOutput(40, currentName, currentType, underlyingType))
 	}
 	fmt.Println()
 }

@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -15,23 +14,13 @@ func ToSnakeCase(str string) string {
 }
 
 // TODO: test and describe
-func TabularOutput(columnWidth int, columns ...string) {
+func ColumnOutput(columnWidth int, columns ...string) string {
 	var sb strings.Builder
 	for i, column := range columns {
-		d, rem := DivWithRemainder(columnWidth-len(column), 8)
-		tabs := d
-		if rem != 0 {
-			tabs++
-		}
 		sb.WriteString(column)
 		if i != len(columns) {
-			sb.WriteString(strings.Repeat("\t", tabs))
+			sb.WriteString(strings.Repeat(" ", columnWidth-len(column)))
 		}
 	}
-	fmt.Println(sb.String())
-}
-
-// TODO: test and describe
-func DivWithRemainder(numerator int, denominator int) (int, int) {
-	return numerator / denominator, numerator % denominator
+	return sb.String()
 }
