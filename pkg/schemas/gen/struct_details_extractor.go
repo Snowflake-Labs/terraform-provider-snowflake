@@ -15,17 +15,6 @@ type Field struct {
 	UnderlyingType string
 }
 
-// TODO: test completely new struct with:
-//   - basic type fields (string, int, float, bool)
-//   - pointer to basic types fields
-//   - time.Time, *time.Time
-//   - enum (string and int)
-//   - slice (string, enum)
-//   - identifier (each type)
-//   - slice (identifier)
-//   - (?) slice of pointers
-//   - (?) pointer to slice
-//   - (?) struct
 func ExtractStructDetails(s any) Struct {
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Pointer {
