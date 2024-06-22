@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: test completely new struct with:
-//   - slice (string, enum)
-//   - slice (identifier)
-//   - sdk.FileFormatTypeOptions (sql builder struct)
-//   - sdk.ObjectIdentifier (interface)
-//   - (?) slice of pointers
+// TODO: do we need any of:
+//   - (?) slice of pointers to interface
+//   - (?) slice of pointers to structs
+//   - (?) slice of pointers to basic
 //   - (?) pointer to slice
+//
+// TODO: test type of slice fields
 func Test_ExtractStructDetails(t *testing.T) {
 
 	type testStruct struct {
@@ -47,6 +47,14 @@ func Test_ExtractStructDetails(t *testing.T) {
 		unexportedDatabaseObjectIdentifierPtr *sdk.DatabaseObjectIdentifier
 		unexportedSchemaObjectIdentifierPtr   *sdk.SchemaObjectIdentifier
 		unexportedTableColumnIdentifierPtr    *sdk.TableColumnIdentifier
+
+		unexportedStringSlice     []string
+		unexportedIntSlice        []int
+		unexportedStringEnumSlice []sdk.WarehouseType
+		unexportedIdentifierSlice []sdk.SchemaObjectIdentifier
+
+		unexportedInterface sdk.ObjectIdentifier
+		unexportedStruct    sdk.FileFormatTypeOptions
 
 		ExportedString     string
 		ExportedInt        int
@@ -98,5 +106,13 @@ func Test_ExtractStructDetails(t *testing.T) {
 		assertFieldExtracted(structDetails.Fields[23], "unexportedDatabaseObjectIdentifierPtr", "*sdk.DatabaseObjectIdentifier", "*struct")
 		assertFieldExtracted(structDetails.Fields[24], "unexportedSchemaObjectIdentifierPtr", "*sdk.SchemaObjectIdentifier", "*struct")
 		assertFieldExtracted(structDetails.Fields[25], "unexportedTableColumnIdentifierPtr", "*sdk.TableColumnIdentifier", "*struct")
+
+		assertFieldExtracted(structDetails.Fields[26], "unexportedStringSlice", "[]string", "slice")
+		assertFieldExtracted(structDetails.Fields[27], "unexportedIntSlice", "[]int", "slice")
+		assertFieldExtracted(structDetails.Fields[28], "unexportedStringEnumSlice", "[]sdk.WarehouseType", "slice")
+		assertFieldExtracted(structDetails.Fields[29], "unexportedIdentifierSlice", "[]sdk.SchemaObjectIdentifier", "slice")
+
+		assertFieldExtracted(structDetails.Fields[30], "unexportedInterface", "sdk.ObjectIdentifier", "interface")
+		assertFieldExtracted(structDetails.Fields[31], "unexportedStruct", "sdk.FileFormatTypeOptions", "struct")
 	})
 }
