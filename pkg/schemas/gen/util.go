@@ -18,7 +18,7 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 	var sb strings.Builder
 	for i, column := range columns {
 		sb.WriteString(column)
-		if i != len(columns) {
+		if i != len(columns)-1 {
 			sb.WriteString(strings.Repeat(" ", columnWidth-len(column)))
 		}
 	}
