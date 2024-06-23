@@ -2,6 +2,7 @@ package gen
 
 import (
 	"reflect"
+	"strings"
 )
 
 type Struct struct {
@@ -13,6 +14,16 @@ type Field struct {
 	Name           string
 	ConcreteType   string
 	UnderlyingType string
+}
+
+// TODO: test
+func (f *Field) IsPointer() bool {
+	return strings.HasPrefix(f.ConcreteType, "*")
+}
+
+// TODO: test
+func (f *Field) IsSlice() bool {
+	return strings.HasPrefix(f.ConcreteType, "[]")
 }
 
 func ExtractStructDetails(s any) Struct {
