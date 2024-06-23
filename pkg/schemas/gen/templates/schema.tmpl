@@ -1,0 +1,11 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen.ShowResultSchemaModel*/ -}}
+
+// Show{{ .Name }}Schema represents output of SHOW {{ uppercase .Name }}S query for the single {{ .Name }}.
+var Show{{ .Name }}Schema = map[string]*schema.Schema{
+    {{- range .SchemaFields }}
+    "{{ .Name }}": {
+        Type:     schema.{{ .SchemaType }},
+        Computed: true,
+    },
+    {{- end }}
+}

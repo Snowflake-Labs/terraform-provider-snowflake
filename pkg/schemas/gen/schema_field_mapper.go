@@ -12,6 +12,7 @@ type Mapper func(string) string
 type SchemaField struct {
 	Name                  string
 	SchemaType            schema.ValueType
+	OriginalName          string
 	IsOriginalTypePointer bool
 	Mapper                Mapper
 }
@@ -32,29 +33,29 @@ func MapToSchemaField(field Field) SchemaField {
 	name := ToSnakeCase(field.Name)
 	switch concreteTypeWithoutPtr {
 	case "string":
-		return SchemaField{name, schema.TypeString, isPointer, Identity}
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, Identity}
 	case "int":
-		return SchemaField{name, schema.TypeInt, isPointer, Identity}
+		return SchemaField{name, schema.TypeInt, field.Name, isPointer, Identity}
 	case "float64":
-		return SchemaField{name, schema.TypeFloat, isPointer, Identity}
+		return SchemaField{name, schema.TypeFloat, field.Name, isPointer, Identity}
 	case "bool":
-		return SchemaField{name, schema.TypeBool, isPointer, Identity}
+		return SchemaField{name, schema.TypeBool, field.Name, isPointer, Identity}
 	case "time.Time":
-		return SchemaField{name, schema.TypeString, isPointer, ToString}
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, ToString}
 	case "sdk.AccountIdentifier", "sdk.ExternalObjectIdentifier",
 		"sdk.AccountObjectIdentifier", "sdk.DatabaseObjectIdentifier",
 		"sdk.SchemaObjectIdentifier", "sdk.TableColumnIdentifier":
-		return SchemaField{name, schema.TypeString, isPointer, FullyQualifiedName}
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, FullyQualifiedName}
 	case "sdk.ObjectIdentifier":
-		return SchemaField{name, schema.TypeString, isPointer, FullyQualifiedName}
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, FullyQualifiedName}
 	}
 
 	underlyingTypeWithoutPtr, _ := strings.CutPrefix(field.UnderlyingType, "*")
 	switch {
 	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk.") && underlyingTypeWithoutPtr == "string":
-		return SchemaField{name, schema.TypeString, isPointer, CastToString}
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, CastToString}
 	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk.") && underlyingTypeWithoutPtr == "int":
-		return SchemaField{name, schema.TypeInt, isPointer, CastToInt}
+		return SchemaField{name, schema.TypeInt, field.Name, isPointer, CastToInt}
 	}
-	return SchemaField{name, schema.TypeInvalid, isPointer, Identity}
+	return SchemaField{name, schema.TypeInvalid, field.Name, isPointer, Identity}
 }

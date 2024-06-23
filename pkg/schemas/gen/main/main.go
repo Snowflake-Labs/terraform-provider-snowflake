@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"slices"
 
@@ -33,6 +34,21 @@ func main() {
 	slices.Sort(keys)
 	for _, k := range keys {
 		fmt.Println(k)
+	}
+
+	fmt.Println("===========================")
+	fmt.Println("Generated")
+	fmt.Println("===========================")
+	for _, details := range allStructsDetails {
+		model := gen.ModelFromStructDetails(details)
+		err := gen.SchemaTemplate.Execute(os.Stdout, model)
+		if err != nil {
+			log.Panicln(err)
+		}
+		err = gen.ToSchemaMapperTemplate.Execute(os.Stdout, model)
+		if err != nil {
+			log.Panicln(err)
+		}
 	}
 }
 

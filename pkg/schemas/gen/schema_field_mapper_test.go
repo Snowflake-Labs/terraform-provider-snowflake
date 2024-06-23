@@ -132,9 +132,10 @@ func Test_MapToSchemaField(t *testing.T) {
 		},
 	}
 
-	assertSchemaFieldMapped := func(schemaField SchemaField, expected expectedValues) {
+	assertSchemaFieldMapped := func(schemaField SchemaField, originalField Field, expected expectedValues) {
 		assert.Equal(t, expected.name, schemaField.Name)
 		assert.Equal(t, expected.schemaType, schemaField.SchemaType)
+		assert.Equal(t, originalField.Name, schemaField.OriginalName)
 		assert.Equal(t, expected.isPointer, schemaField.IsOriginalTypePointer)
 		// TODO: ugly comparison of functions with the current implementation of mapper
 		assert.Equal(t, reflect.ValueOf(expected.mapper).Pointer(), reflect.ValueOf(schemaField.Mapper).Pointer())
@@ -144,7 +145,7 @@ func Test_MapToSchemaField(t *testing.T) {
 		t.Run(fmt.Sprintf("%s", tc.field.Name), func(t *testing.T) {
 			schemaField := MapToSchemaField(tc.field)
 
-			assertSchemaFieldMapped(schemaField, tc.expected)
+			assertSchemaFieldMapped(schemaField, tc.field, tc.expected)
 		})
 	}
 }
