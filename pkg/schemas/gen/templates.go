@@ -9,6 +9,10 @@ import (
 
 // TODO: extract common funcs
 var (
+	//go:embed templates/preamble.tmpl
+	preambleTemplateContent string
+	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
+
 	//go:embed templates/schema.tmpl
 	schemaTemplateContent string
 	SchemaTemplate, _     = template.New("schemaTemplate").Funcs(template.FuncMap{
