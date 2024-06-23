@@ -9,3 +9,5 @@ func {{ .Name }}ToSchema({{ $nameLowerCase }} *{{ .SdkType }}) map[string]any {
     {{- end }}
     return {{ $nameLowerCase }}Schema
 }
+
+var _ = {{ .Name }}ToSchema

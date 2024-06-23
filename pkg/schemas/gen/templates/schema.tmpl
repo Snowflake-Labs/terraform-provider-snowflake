@@ -9,3 +9,5 @@ var Show{{ .Name }}Schema = map[string]*schema.Schema{
     },
     {{- end }}
 }
+
+var _ = Show{{ .Name }}Schema
