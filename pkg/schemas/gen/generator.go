@@ -7,8 +7,7 @@ import (
 
 // TODO: handle panics better
 // TODO: test and describe
-func Generate(structDetails Struct, writer io.Writer) {
-	model := ModelFromStructDetails(structDetails)
+func Generate(model ShowResultSchemaModel, writer io.Writer) {
 	err := SchemaTemplate.Execute(writer, model)
 	if err != nil {
 		log.Panicln(err)

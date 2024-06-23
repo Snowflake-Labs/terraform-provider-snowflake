@@ -3,8 +3,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
+	"log"
 	"os"
+	"path/filepath"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
@@ -23,6 +27,7 @@ func main() {
 	printAllStructsFields(allStructsDetails)
 	printUniqueTypes(allStructsDetails)
 	generateAllStructsToStdOut(allStructsDetails)
+	saveAllGeneratedSchemas(allStructsDetails)
 }
 
 func printAllStructsFields(allStructs []gen.Struct) {
@@ -59,6 +64,33 @@ func generateAllStructsToStdOut(allStructs []gen.Struct) {
 		fmt.Println("===========================")
 		fmt.Printf("Generated for %s\n", s.Name)
 		fmt.Println("===========================")
-		gen.Generate(s, os.Stdout)
+		model := gen.ModelFromStructDetails(s)
+		gen.Generate(model, os.Stdout)
+	}
+}
+
+func saveAllGeneratedSchemas(allStructs []gen.Struct) {
+	for _, s := range allStructs {
+		buffer := bytes.Buffer{}
+		model := gen.ModelFromStructDetails(s)
+		gen.Generate(model, &buffer)
+		filename := gen.ToSnakeCase(model.Name) + "_gen.go"
+		writeCodeToFile(&buffer, filename)
+	}
+}
+
+// TODO: this is copied, extract some generator helpers
+func writeCodeToFile(buffer *bytes.Buffer, fileName string) {
+	wd, errWd := os.Getwd()
+	if errWd != nil {
+		log.Panicln(errWd)
+	}
+	outputPath := filepath.Join(wd, fileName)
+	src, errSrcFormat := format.Source(buffer.Bytes())
+	if errSrcFormat != nil {
+		log.Panicln(errSrcFormat)
+	}
+	if err := os.WriteFile(outputPath, src, 0o600); err != nil {
+		log.Panicln(err)
 	}
 }
