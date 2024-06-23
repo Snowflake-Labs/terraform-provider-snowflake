@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"slices"
 
@@ -16,14 +15,32 @@ func main() {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	uniqueTypes := make(map[string]bool)
 	allStructsDetails := make([]gen.Struct, len(gen.SdkShowResultStructs))
 	for idx, s := range gen.SdkShowResultStructs {
-		details := gen.ExtractStructDetails(s)
-		allStructsDetails[idx] = details
-		printFields(details)
+		allStructsDetails[idx] = gen.ExtractStructDetails(s)
+	}
 
-		for _, f := range details.Fields {
+	printAllStructsFields(allStructsDetails)
+	printUniqueTypes(allStructsDetails)
+	generateAllStructsToStdOut(allStructsDetails)
+}
+
+func printAllStructsFields(allStructs []gen.Struct) {
+	for _, s := range allStructs {
+		fmt.Println("===========================")
+		fmt.Printf("%s\n", s.Name)
+		fmt.Println("===========================")
+		for _, field := range s.Fields {
+			fmt.Println(gen.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
+		}
+		fmt.Println()
+	}
+}
+
+func printUniqueTypes(allStructs []gen.Struct) {
+	uniqueTypes := make(map[string]bool)
+	for _, s := range allStructs {
+		for _, f := range s.Fields {
 			uniqueTypes[f.ConcreteType] = true
 		}
 	}
@@ -35,30 +52,13 @@ func main() {
 	for _, k := range keys {
 		fmt.Println(k)
 	}
-
-	fmt.Println("===========================")
-	fmt.Println("Generated")
-	fmt.Println("===========================")
-	for _, details := range allStructsDetails {
-		model := gen.ModelFromStructDetails(details)
-		err := gen.SchemaTemplate.Execute(os.Stdout, model)
-		if err != nil {
-			log.Panicln(err)
-		}
-		err = gen.ToSchemaMapperTemplate.Execute(os.Stdout, model)
-		if err != nil {
-			log.Panicln(err)
-		}
-	}
 }
 
-func printFields(s gen.Struct) {
-	fmt.Println("===========================")
-	fmt.Printf("%s\n", s.Name)
-	fmt.Println("===========================")
-
-	for _, field := range s.Fields {
-		fmt.Println(gen.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
+func generateAllStructsToStdOut(allStructs []gen.Struct) {
+	for _, s := range allStructs {
+		fmt.Println("===========================")
+		fmt.Printf("Generated for %s\n", s.Name)
+		fmt.Println("===========================")
+		gen.Generate(s, os.Stdout)
 	}
-	fmt.Println()
 }
