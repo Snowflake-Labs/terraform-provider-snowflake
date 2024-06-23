@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -24,8 +23,6 @@ var (
 		"uppercase":            func(in string) string { return strings.ToUpper(in) },
 		"lowercase":            func(in string) string { return strings.ToLower(in) },
 		"firstLetterLowercase": func(in string) string { return strings.ToLower(in[:1]) + in[1:] },
-		"mapSdkFieldValue": func(in SchemaField, name string) string {
-			return in.Mapper(fmt.Sprintf("%s.%s", name, in.OriginalName))
-		},
+		"runMapper":            func(mapper Mapper, in ...string) string { return mapper(strings.Join(in, "")) },
 	}).Parse(toSchemaMapperTemplateContent)
 )

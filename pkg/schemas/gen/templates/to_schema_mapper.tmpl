@@ -1,11 +1,11 @@
 {{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen.ShowResultSchemaModel*/ -}}
 
-{{ $name := .Name }}
 {{ $nameLowerCase := firstLetterLowercase .Name }}
+{{ $schemaName := $nameLowerCase | printf "%sSchema" }}
 func {{ .Name }}ToSchema({{ $nameLowerCase }} *{{ .SdkType }}) map[string]any {
-    {{ $nameLowerCase }}Schema := make(map[string]any)
+    {{ $schemaName }} := make(map[string]any)
     {{- range .SchemaFields }}
-    {{ $nameLowerCase }}Schema["{{ .Name }}"] = {{ mapSdkFieldValue . $nameLowerCase }}
+    {{ $schemaName }}["{{ .Name }}"] = {{ runMapper .Mapper $nameLowerCase "." .OriginalName }}
     {{- end }}
     return {{ $nameLowerCase }}Schema
 }
