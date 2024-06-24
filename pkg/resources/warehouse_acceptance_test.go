@@ -13,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,13 +22,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: test import for empty config
 func TestAcc_Warehouse(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	name := warehouseId.Name()
 	name2 := warehouseId2.Name()
 	comment := random.Comment()
 	newComment := random.Comment()
+
+	resourceMonitor, resourceMonitorCleanup := acc.TestClient().ResourceMonitor.CreateResourceMonitor(t)
+	t.Cleanup(resourceMonitorCleanup)
+	resourceMonitorId := resourceMonitor.ID()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -101,7 +108,6 @@ func TestAcc_Warehouse(t *testing.T) {
 						planchecks.ExpectChange("snowflake_warehouse.w", "scaling_policy", tfjson.ActionUpdate, nil, sdk.String(string(sdk.ScalingPolicyStandard))),
 						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("600")),
 						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("unknown"), sdk.String("true")),
-						//planchecks.ExpectChange("snowflake_warehouse.w", "resource_monitor", tfjson.ActionUpdate, sdk.String("null"), sdk.String(string(sdk.WarehouseTypeStandard))),
 						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("unknown"), sdk.String("false")),
 						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("8")),
 
@@ -131,7 +137,7 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: warehouseFullConfigNoDefaults(name2, newComment),
+				Config: warehouseFullConfigNoDefaults(name2, newComment, resourceMonitorId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeSnowparkOptimized)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeMedium)),
@@ -141,7 +147,7 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "1200"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "false"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", resourceMonitorId.Name()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "4"),
@@ -160,7 +166,7 @@ func TestAcc_Warehouse(t *testing.T) {
 						planchecks.ExpectChange("snowflake_warehouse.w", "max_concurrency_level", tfjson.ActionUpdate, sdk.String("10"), sdk.String("4")),
 					},
 				},
-				Config: warehouseFullConfigNoDefaults(name2, newComment),
+				Config: warehouseFullConfigNoDefaults(name2, newComment, resourceMonitorId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "4"),
@@ -169,7 +175,6 @@ func TestAcc_Warehouse(t *testing.T) {
 				),
 			},
 			// IMPORT
-			// [SNOW-1348102 - next PR]: fox import (resource_monitor) and adjust the expected fields here
 			{
 				ResourceName:      "snowflake_warehouse.w",
 				ImportState:       true,
@@ -178,7 +183,7 @@ func TestAcc_Warehouse(t *testing.T) {
 					"resource_monitor",
 				},
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId2.Name(), "resource_monitor", "null"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId2.Name(), "resource_monitor", resourceMonitorId.Name()),
 				),
 			},
 		},
@@ -1191,11 +1196,6 @@ resource "snowflake_warehouse" "w" {
 }
 
 func warehouseFullDefaultConfig(name string, comment string) string {
-	return warehouseFullConfig(name, comment)
-}
-
-// TODO: add resource monitor
-func warehouseFullConfig(name string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name                                = "%[1]s"
@@ -1218,7 +1218,7 @@ resource "snowflake_warehouse" "w" {
 `, name, comment)
 }
 
-func warehouseFullConfigNoDefaults(name string, comment string) string {
+func warehouseFullConfigNoDefaults(name string, comment string, id sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name                                = "%[1]s"
@@ -1230,6 +1230,7 @@ resource "snowflake_warehouse" "w" {
 	auto_suspend                        = 1200
 	auto_resume                         = false
 	initially_suspended                 = false
+	resource_monitor                    = "%[3]s"
 	comment                             = "%[2]s"
     enable_query_acceleration           = true
     query_acceleration_max_scale_factor = 4
@@ -1238,7 +1239,7 @@ resource "snowflake_warehouse" "w" {
     statement_queued_timeout_in_seconds = 5
     statement_timeout_in_seconds        = 86400
 }
-`, name, comment)
+`, name, comment, id.Name())
 }
 
 func warehouseWithSizeConfig(name string, size string) string {
