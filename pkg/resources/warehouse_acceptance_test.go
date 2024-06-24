@@ -551,6 +551,61 @@ func TestAcc_Warehouse_Validations(t *testing.T) {
 	})
 }
 
+// Just for the experimental purposes
+func TestAcc_Warehouse_ValidateDriftForCurrentWarehouse(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			{
+				Config: warehouseBasicConfig(id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.is_current", "true"),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_warehouse.w2", plancheck.ResourceActionCreate),
+					},
+				},
+				Config: warehouseBasicConfig(id.Name()) + secondWarehouseBasicConfig(secondId.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.is_current", "true"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w2", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w2", "show_output.0.is_current", "true"),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.is_current", sdk.String("true"), sdk.String("false")),
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_warehouse.w2", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: warehouseBasicConfig(id.Name()) + secondWarehouseBasicConfig(secondId.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.is_current", "false"),
+				),
+			},
+		},
+	})
+}
+
 // TestAcc_Warehouse_AutoResume validates behavior for falling back to Snowflake default for boolean attribute
 func TestAcc_Warehouse_AutoResume(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -1305,8 +1360,6 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 	})
 }
 
-// TODO [SNOW-1348102 - next PR]: test auto_suspend set to 0 before migration
-// TODO [SNOW-1348102 - next PR]: do we care about drift in warehouse for is_current warehouse? (test)
 // TODO [SNOW-1348102 - next PR]: test int, string, identifier changed externally
 func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -1418,6 +1471,14 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 func warehouseBasicConfig(name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
+	name           = "%s"
+}
+`, name)
+}
+
+func secondWarehouseBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w2" {
 	name           = "%s"
 }
 `, name)
