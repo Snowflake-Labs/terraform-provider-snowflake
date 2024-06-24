@@ -39,6 +39,14 @@ The following types are supported currently in the generator (schema and mapping
     - `sdk.TableColumnIdentifier`
 - `sdk.ObjectIdentifier` interface
 
+##### To schema mappings
+
+Given SDK struct field can be mapped to the generated schema depending on its type:
+- no mapping (`Identity`) - used for `string` and other basic types
+- string value mapping (`ToString`) - used e.g. for `time.Time`
+- fully qualified name mapping (`FullyQualifiedName`) - used for all identifiers and `sdk.ObjectIdentifier` interface
+- casting (`CastToString` and `CastToInt`) - used for enums with underlying type `string` or `int`
+
 ##### Changing the SDK object's show output
 
 If you change the show output struct in the SDK:
@@ -60,6 +68,7 @@ If you change the show output struct in the SDK:
 
 - The following types (already existing in the SDK show output structs) are not yet supported (for all of them the
   schema will be generated with `schema.TypeInvalid`:
+    - other basic types (e.g. `int8`, etc.)
     - slices of basic types (`[]int`, `[]string`)
     - slices of identifiers (`[]sdk.AccountIdentifier`, `[]sdk.SchemaObjectIdentifier`)
     - slices of enums (`[]sdk.IntegrationType`, `[]sdk.PluralObjectType`)
