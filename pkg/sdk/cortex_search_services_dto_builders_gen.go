@@ -125,3 +125,8 @@ func NewDropCortexSearchServiceRequest(
 	s.name = name
 	return &s
 }
+
+func (s *DropCortexSearchServiceRequest) WithIfExists(IfExists bool) *DropCortexSearchServiceRequest {
+	s.IfExists = &IfExists
+	return s
+}

@@ -69,11 +69,13 @@ func (r *CreateCortexSearchServiceRequest) toOpts() *CreateCortexSearchServiceOp
 		Comment:         r.Comment,
 		QueryDefinition: r.QueryDefinition,
 	}
+
 	if r.Attributes != nil {
 		opts.Attributes = &Attributes{
 			Columns: r.Attributes.Columns,
 		}
 	}
+
 	return opts
 }
 
@@ -82,6 +84,7 @@ func (r *AlterCortexSearchServiceRequest) toOpts() *AlterCortexSearchServiceOpti
 		IfExists: r.IfExists,
 		name:     r.name,
 	}
+
 	if r.Set != nil {
 		opts.Set = &CortexSearchServiceSet{
 			TargetLag: r.Set.TargetLag,
@@ -89,6 +92,7 @@ func (r *AlterCortexSearchServiceRequest) toOpts() *AlterCortexSearchServiceOpti
 			Comment:   r.Set.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -121,7 +125,8 @@ func (r cortexSearchServiceDetailsRow) convert() *CortexSearchServiceDetails {
 
 func (r *DropCortexSearchServiceRequest) toOpts() *DropCortexSearchServiceOptions {
 	opts := &DropCortexSearchServiceOptions{
-		name: r.name,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	return opts
 }

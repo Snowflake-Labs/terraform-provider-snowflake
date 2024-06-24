@@ -40,7 +40,6 @@ var CortexSearchServiceDef = g.NewInterface(
 		PredefinedQueryStructField("QueryDefinition", "string", g.ParameterOptions().NoEquals().NoQuotes().Required().SQL("AS")).
 		// Validations
 		WithValidation(g.ValidIdentifier, "name").
-		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "On").
 		WithValidation(g.ValidateValueSet, "TargetLag").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -102,7 +101,7 @@ var CortexSearchServiceDef = g.NewInterface(
 		Field("Attributes", "[]string").
 		Field("ServiceUrl", "string").
 		Field("NumRowsIndexed", "*int").
-		Field("Comment", "string"),
+		OptionalText("Comment"),
 	g.NewQueryStruct("DescribeCortexSearchService").
 		Describe().
 		SQL("CORTEX SEARCH SERVICE").
@@ -114,6 +113,7 @@ var CortexSearchServiceDef = g.NewInterface(
 		// Fields
 		Drop().
 		SQL("CORTEX SEARCH SERVICE").
+		IfExists().
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
 )

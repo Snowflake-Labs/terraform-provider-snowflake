@@ -53,7 +53,7 @@ func (c *CortexSearchServiceClient) DropCortexSearchServiceFunc(t *testing.T, id
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropCortexSearchServiceRequest(id))
+		err := c.client().Drop(ctx, sdk.NewDropCortexSearchServiceRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
 }

@@ -28,7 +28,6 @@ type CreateCortexSearchServiceOptions struct {
 	Comment             *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	QueryDefinition     string                  `ddl:"parameter,no_quotes,no_equals" sql:"AS"`
 }
-
 type Attributes struct {
 	attributes bool     `ddl:"static" sql:"ATTRIBUTES"`
 	Columns    []string `ddl:"list,no_parentheses,no_equals"`
@@ -42,7 +41,6 @@ type AlterCortexSearchServiceOptions struct {
 	name                SchemaObjectIdentifier  `ddl:"identifier"`
 	Set                 *CortexSearchServiceSet `ddl:"keyword" sql:"SET"`
 }
-
 type CortexSearchServiceSet struct {
 	TargetLag *string                  `ddl:"parameter,single_quotes" sql:"TARGET_LAG"`
 	Warehouse *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
@@ -58,7 +56,6 @@ type ShowCortexSearchServiceOptions struct {
 	StartsWith           *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	Limit                *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
-
 type cortexSearchServiceRow struct {
 	CreatedOn    time.Time `db:"created_on"`
 	Name         string    `db:"name"`
@@ -66,7 +63,6 @@ type cortexSearchServiceRow struct {
 	SchemaName   string    `db:"schema_name"`
 	Comment      string    `db:"comment"`
 }
-
 type CortexSearchService struct {
 	CreatedOn    time.Time
 	Name         string
@@ -85,7 +81,6 @@ type DescribeCortexSearchServiceOptions struct {
 	cortexSearchService bool                   `ddl:"static" sql:"CORTEX SEARCH SERVICE"`
 	name                SchemaObjectIdentifier `ddl:"identifier"`
 }
-
 type cortexSearchServiceDetailsRow struct {
 	Name            string  `db:"name"`
 	Schema          string  `db:"schema"`
@@ -98,7 +93,6 @@ type cortexSearchServiceDetailsRow struct {
 	NumRowsIndexed  int     `db:"num_rows_indexed"`
 	Comment         string  `db:"comment"`
 }
-
 type CortexSearchServiceDetails struct {
 	Name           string
 	Schema         string
@@ -109,12 +103,13 @@ type CortexSearchServiceDetails struct {
 	Attributes     []string
 	ServiceUrl     string
 	NumRowsIndexed *int
-	Comment        string
+	Comment        *string
 }
 
 // DropCortexSearchServiceOptions is based on https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/drop-cortex-search.
 type DropCortexSearchServiceOptions struct {
 	drop                bool                   `ddl:"static" sql:"DROP"`
 	cortexSearchService bool                   `ddl:"static" sql:"CORTEX SEARCH SERVICE"`
+	IfExists            *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name                SchemaObjectIdentifier `ddl:"identifier"`
 }

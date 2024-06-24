@@ -188,7 +188,7 @@ func UpdateCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 func DeleteCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	request := sdk.NewDropCortexSearchServiceRequest(id)
+	request := sdk.NewDropCortexSearchServiceRequest(id).WithIfExists(true)
 
 	if err := client.CortexSearchServices.Drop(context.Background(), request); err != nil {
 		return err

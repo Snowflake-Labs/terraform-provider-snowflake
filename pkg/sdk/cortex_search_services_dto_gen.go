@@ -50,5 +50,6 @@ type DescribeCortexSearchServiceRequest struct {
 }
 
 type DropCortexSearchServiceRequest struct {
-	name SchemaObjectIdentifier // required
+	IfExists *bool
+	name     SchemaObjectIdentifier // required
 }

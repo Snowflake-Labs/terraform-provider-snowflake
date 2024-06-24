@@ -16,9 +16,6 @@ func (opts *CreateCortexSearchServiceOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
-	}
 	if !valueSet(opts.On) {
 		errs = append(errs, errNotSet("CreateCortexSearchServiceOptions", "On"))
 	}
