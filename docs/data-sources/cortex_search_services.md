@@ -17,14 +17,14 @@ description: |-
 ### Optional
 
 - `in` (Block List, Max: 1) IN clause to filter the list of cortex search services. (see [below for nested schema](#nestedblock--in))
-- `like` (Block List, Max: 1) LIKE clause to filter the list of cortex search services. (see [below for nested schema](#nestedblock--like))
-- `limit` (Block List, Max: 1) Optionally limits the maximum number of rows returned, while also enabling “pagination” of the results. Note that the actual number of rows returned might be less than the specified limit (e.g. the number of existing objects is less than the specified limit). (see [below for nested schema](#nestedblock--limit))
-- `starts_with` (String) Optionally filters the command output based on the characters that appear at the beginning of the object name. The string is case-sensitive.
+- `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
+- `limit` (Block List, Max: 1) Limits the number of rows returned. If the `limit.from` is set, then the limit wll start from the first element matched by the expression. The expression is only used to match with the first element, later on the elements are not matched by the prefix, but you can enforce a certain pattern with `starts_with` or `like`. (see [below for nested schema](#nestedblock--limit))
+- `starts_with` (String) Filters the output with **case-sensitive** characters indicating the beginning of the object name.
 
 ### Read-Only
 
+- `cortexSearchServices` (List of Object) Holds the output of SHOW CORTEX SEARCH SERVICES. (see [below for nested schema](#nestedatt--cortexSearchServices))
 - `id` (String) The ID of this resource.
-- `records` (List of Object) The list of cortex search services. (see [below for nested schema](#nestedatt--records))
 
 <a id="nestedblock--in"></a>
 ### Nested Schema for `in`
@@ -36,25 +36,20 @@ Optional:
 - `schema` (String) Returns records for the current schema in use or a specified schema (schema_name).
 
 
-<a id="nestedblock--like"></a>
-### Nested Schema for `like`
-
-Required:
-
-- `pattern` (String) Filters the command output by object name. The filter uses case-insensitive pattern matching with support for SQL wildcard characters (% and _).
-
-
 <a id="nestedblock--limit"></a>
 ### Nested Schema for `limit`
 
+Required:
+
+- `rows` (Number) The maximum number of rows to return.
+
 Optional:
 
-- `from` (String) The optional FROM 'name_string' subclause effectively serves as a “cursor” for the results. This enables fetching the specified number of rows following the first row whose object name matches the specified string
-- `rows` (Number) Specifies the maximum number of rows to return.
+- `from` (String) Specifies a **case-sensitive** pattern that is used to match object name. After the first match, the limit on the number of rows will be applied.
 
 
-<a id="nestedatt--records"></a>
-### Nested Schema for `records`
+<a id="nestedatt--cortexSearchServices"></a>
+### Nested Schema for `cortexSearchServices`
 
 Read-Only:
 

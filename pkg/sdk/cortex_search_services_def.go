@@ -87,10 +87,10 @@ var CortexSearchServiceDef = g.NewInterface(
 		Field("warehouse", "string").
 		Field("target_lag", "string").
 		Field("search_column", "string").
-		Field("included_columns", "*string").
+		Field("included_columns", "[]string").
 		Field("service_url", "string").
 		Field("num_rows_indexed", "int").
-		Field("comment", "string"),
+		OptionalText("comment"),
 	g.PlainStruct("CortexSearchServiceDetails").
 		Field("Name", "string").
 		Field("Schema", "string").

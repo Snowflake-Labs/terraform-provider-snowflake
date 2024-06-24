@@ -127,12 +127,6 @@ func CreateCortexSearchService(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
-	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		request.WithOrReplace(true)
-	}
-	if v, ok := d.GetOk("if_not_exists"); ok && v.(bool) {
-		request.WithIfNotExists(true)
-	}
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]string)) > 0 {
 		attributes := sdk.AttributesRequest{
 			Columns: v.([]string),

@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -82,16 +83,16 @@ type DescribeCortexSearchServiceOptions struct {
 	name                SchemaObjectIdentifier `ddl:"identifier"`
 }
 type cortexSearchServiceDetailsRow struct {
-	Name            string  `db:"name"`
-	Schema          string  `db:"schema"`
-	Database        string  `db:"database"`
-	Warehouse       string  `db:"warehouse"`
-	TargetLag       string  `db:"target_lag"`
-	SearchColumn    string  `db:"search_column"`
-	IncludedColumns *string `db:"included_columns"`
-	ServiceUrl      string  `db:"service_url"`
-	NumRowsIndexed  int     `db:"num_rows_indexed"`
-	Comment         string  `db:"comment"`
+	Name            string         `db:"name"`
+	Schema          string         `db:"schema"`
+	Database        string         `db:"database"`
+	Warehouse       string         `db:"warehouse"`
+	TargetLag       string         `db:"target_lag"`
+	SearchColumn    string         `db:"search_column"`
+	IncludedColumns []string       `db:"included_columns"`
+	ServiceUrl      string         `db:"service_url"`
+	NumRowsIndexed  int            `db:"num_rows_indexed"`
+	Comment         sql.NullString `db:"comment"`
 }
 type CortexSearchServiceDetails struct {
 	Name           string
