@@ -7,26 +7,32 @@ import (
 
 // ParameterSchema represents Snowflake parameter object.
 // TODO [SNOW-1473425]: should be generated later based on the sdk.Parameter
-var ParameterSchema = map[string]*schema.Schema{
-	"key": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"value": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"default": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"level": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"description": {
-		Type:     schema.TypeString,
-		Computed: true,
+var ParameterSchema = &schema.Schema{
+	Type:     schema.TypeList,
+	Computed: true,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"level": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
 	},
 }
 

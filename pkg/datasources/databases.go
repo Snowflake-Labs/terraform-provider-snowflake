@@ -77,7 +77,7 @@ var databasesSchema = map[string]*schema.Schema{
 						Computed:    true,
 						Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
 						Elem: &schema.Resource{
-							Schema: schemas.ParameterSchema,
+							Schema: schemas.ShowDatabaseParametersSchema,
 						},
 					},
 				}),
@@ -136,13 +136,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, description := range describeResult.Rows {
-				databaseDescription = append(databaseDescription, map[string]any{
-					"created_on": description.CreatedOn.String(),
-					"name":       description.Name,
-					"kind":       description.Kind,
-				})
-			}
+			databaseDescription = schemas.DatabaseDescriptionToSchema(*describeResult)
 		}
 
 		var databaseParameters []map[string]any
@@ -155,34 +149,12 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, parameter := range parameters {
-				databaseParameters = append(databaseParameters, map[string]any{
-					"key":         parameter.Key,
-					"value":       parameter.Value,
-					"default":     parameter.Default,
-					"level":       string(parameter.Level),
-					"description": parameter.Description,
-				})
-			}
+			databaseParameters = []map[string]any{schemas.DatabaseParametersToSchema(parameters)}
 		}
 
-		flattenedDatabases[i] = map[string]any{
-			"created_on":      database.CreatedOn.String(),
-			"name":            database.Name,
-			"kind":            database.Kind,
-			"is_transient":    database.Transient,
-			"is_default":      database.IsDefault,
-			"is_current":      database.IsCurrent,
-			"origin":          database.Origin,
-			"owner":           database.Owner,
-			"comment":         database.Comment,
-			"options":         database.Options,
-			"retention_time":  database.RetentionTime,
-			"resource_group":  database.ResourceGroup,
-			"owner_role_type": database.OwnerRoleType,
-			"describe_output": databaseDescription,
-			"parameters":      databaseParameters,
-		}
+		flattenedDatabases[i] = schemas.DatabaseToSchema(database)
+		flattenedDatabases[i]["describe_output"] = databaseDescription
+		flattenedDatabases[i]["parameters"] = databaseParameters
 	}
 
 	err = d.Set("databases", flattenedDatabases)
