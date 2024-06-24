@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-// TODO: handle panics better
-// TODO: test and describe
+// TODO [SNOW-1501905]: handle panics better
+// TODO [SNOW-1501905]: test and describe
 func Generate(model ShowResultSchemaModel, writer io.Writer) {
 	err := PreambleTemplate.Execute(writer, model)
 	if err != nil {

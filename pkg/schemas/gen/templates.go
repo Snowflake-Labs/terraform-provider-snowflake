@@ -7,7 +7,7 @@ import (
 	_ "embed"
 )
 
-// TODO: extract common funcs
+// TODO [SNOW-1501905]: extract common funcs
 var (
 	//go:embed templates/preamble.tmpl
 	preambleTemplateContent string

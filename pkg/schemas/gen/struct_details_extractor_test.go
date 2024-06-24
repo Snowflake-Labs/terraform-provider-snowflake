@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: do we need any of:
+// TODO [SNOW-1501905]: do we need any of:
 //   - (?) slice of pointers to interface
 //   - (?) slice of pointers to structs
 //   - (?) slice of pointers to basic
 //   - (?) pointer to slice
 //
-// TODO: test type of slice fields
+// TODO [SNOW-1501905]: test type of slice fields
 func Test_ExtractStructDetails(t *testing.T) {
 
 	type testStruct struct {
@@ -114,5 +114,49 @@ func Test_ExtractStructDetails(t *testing.T) {
 
 		assertFieldExtracted(structDetails.Fields[30], "unexportedInterface", "sdk.ObjectIdentifier", "interface")
 		assertFieldExtracted(structDetails.Fields[31], "unexportedStruct", "sdk.FileFormatTypeOptions", "struct")
+	})
+}
+
+func Test_Field_IsSlice(t *testing.T) {
+	t.Run("is a slice", func(t *testing.T) {
+		field := Field{ConcreteType: "[]any_type"}
+
+		assert.True(t, field.IsSlice())
+	})
+
+	t.Run("is not a slice", func(t *testing.T) {
+		field := Field{ConcreteType: "*any_type"}
+
+		assert.False(t, field.IsSlice())
+
+		field = Field{ConcreteType: "*[]any_type"}
+
+		assert.False(t, field.IsSlice())
+
+		field = Field{ConcreteType: "any_type"}
+
+		assert.False(t, field.IsSlice())
+	})
+}
+
+func Test_Field_IsPointer(t *testing.T) {
+	t.Run("is a pointer", func(t *testing.T) {
+		field := Field{ConcreteType: "*any_type"}
+
+		assert.True(t, field.IsPointer())
+	})
+
+	t.Run("is not a pointer", func(t *testing.T) {
+		field := Field{ConcreteType: "[]any_type"}
+
+		assert.False(t, field.IsPointer())
+
+		field = Field{ConcreteType: "[]*any_type"}
+
+		assert.False(t, field.IsPointer())
+
+		field = Field{ConcreteType: "any_type"}
+
+		assert.False(t, field.IsPointer())
 	})
 }

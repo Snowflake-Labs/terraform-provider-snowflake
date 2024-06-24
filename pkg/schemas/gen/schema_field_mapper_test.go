@@ -137,7 +137,7 @@ func Test_MapToSchemaField(t *testing.T) {
 		assert.Equal(t, expected.schemaType, schemaField.SchemaType)
 		assert.Equal(t, originalField.Name, schemaField.OriginalName)
 		assert.Equal(t, expected.isPointer, schemaField.IsOriginalTypePointer)
-		// TODO: ugly comparison of functions with the current implementation of mapper
+		// TODO [SNOW-1501905]: ugly comparison of functions with the current implementation of mapper
 		assert.Equal(t, reflect.ValueOf(expected.mapper).Pointer(), reflect.ValueOf(schemaField.Mapper).Pointer())
 	}
 

@@ -16,12 +16,10 @@ type Field struct {
 	UnderlyingType string
 }
 
-// TODO: test
 func (f *Field) IsPointer() bool {
 	return strings.HasPrefix(f.ConcreteType, "*")
 }
 
-// TODO: test
 func (f *Field) IsSlice() bool {
 	return strings.HasPrefix(f.ConcreteType, "[]")
 }

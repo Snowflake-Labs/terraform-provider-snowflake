@@ -23,10 +23,10 @@ var FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.Full
 var CastToString = func(field string) string { return fmt.Sprintf("string(%s)", field) }
 var CastToInt = func(field string) string { return fmt.Sprintf("int(%s)", field) }
 
-// TODO: handle other basic type variants
-// TODO: handle any other interface (error)
-// TODO: handle slices
-// TODO: handle structs (chosen one or all)
+// TODO [SNOW-1501905]: handle other basic type variants
+// TODO [SNOW-1501905]: handle any other interface (error)
+// TODO [SNOW-1501905]: handle slices
+// TODO [SNOW-1501905]: handle structs (chosen one or all)
 func MapToSchemaField(field Field) SchemaField {
 	isPointer := field.IsPointer()
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")

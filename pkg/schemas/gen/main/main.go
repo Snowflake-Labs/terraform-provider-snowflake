@@ -79,7 +79,7 @@ func saveAllGeneratedSchemas(allStructs []gen.Struct) {
 	}
 }
 
-// TODO: this is copied, extract some generator helpers
+// TODO [SNOW-1501905]: this is copied, extract some generator helpers
 func writeCodeToFile(buffer *bytes.Buffer, fileName string) {
 	wd, errWd := os.Getwd()
 	if errWd != nil {
