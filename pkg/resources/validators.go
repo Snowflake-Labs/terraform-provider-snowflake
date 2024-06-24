@@ -117,6 +117,44 @@ func getExpectedIdentifierForm(id any) string {
 	return ""
 }
 
+// IsValidAccountIdentifier is a validator that can be used for validating account identifiers passed in resources and data sources.
+//
+// Provider supported both account locators and organization name + account name pairs.
+// The account locators are deprecated, so this function accepts only the new format.
+func IsValidAccountIdentifier() schema.SchemaValidateDiagFunc {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		if _, ok := value.(string); !ok {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Invalid schema identifier type",
+					Detail:        fmt.Sprintf("Expected schema string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
+					AttributePath: path,
+				},
+			}
+		}
+
+		stringValue := value.(string)
+		_, err := helpers.DecodeSnowflakeAccountIdentifier(stringValue)
+		if err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to parse the account identifier",
+					Detail: fmt.Sprintf(
+						"Unable to parse the account identifier: %s. Make sure you are using the correct form of the fully qualified account name: <organization_name>.<account_name>.\nOriginal Error: %s",
+						stringValue,
+						err.Error(),
+					),
+					AttributePath: path,
+				},
+			}
+		}
+
+		return nil
+	}
+}
+
 // StringInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
 func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {

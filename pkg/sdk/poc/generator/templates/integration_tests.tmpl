@@ -1,0 +1,13 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator.Interface*/ -}}
+
+import "testing"
+
+func TestInt_{{ .Name }}(t *testing.T) {
+// TODO: prepare common resources
+
+{{ range .Operations }}
+    t.Run("{{ .Name }}", func(t *testing.T) {
+    // TODO: fill me
+    })
+{{ end -}}
+}

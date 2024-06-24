@@ -8,7 +8,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -93,7 +92,7 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	o := sdk.Object{}
 	if v, ok := d.GetOk("object_identifier"); ok {
 		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
-		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier := FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
 		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
 		o.Name = sdk.NewObjectIdentifierFromFullyQualifiedName(fullyQualifierObjectIdentifier)
 		o.ObjectType = sdk.ObjectType(d.Get("object_type").(string))
@@ -197,7 +196,7 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		v := d.Get("object_identifier")
 		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
-		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier := FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
 		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
 		o := sdk.Object{
 			ObjectType: sdk.ObjectType(d.Get("object_type").(string)),

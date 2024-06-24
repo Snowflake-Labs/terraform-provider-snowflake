@@ -30,7 +30,7 @@ resource "snowflake_managed_account" "account" {
 ### Required
 
 - `admin_name` (String) Identifier, as well as login name, for the initial user in the managed account. This user serves as the account administrator for the account.
-- `admin_password` (String, Sensitive) Password for the initial user in the managed account.
+- `admin_password` (String, Sensitive) Password for the initial user in the managed account. Check [Snowflake-provided password policy](https://docs.snowflake.com/en/user-guide/admin-user-management#snowflake-provided-password-policy).
 - `name` (String) Identifier for the managed account; must be unique for your account.
 
 ### Optional

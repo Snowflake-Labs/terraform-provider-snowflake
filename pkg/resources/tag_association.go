@@ -16,7 +16,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
 
 var tagAssociationSchema = map[string]*schema.Schema{
@@ -104,7 +103,7 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 	tag := d.Get("tag_id").(string)
 	objectType := sdk.ObjectType(d.Get("object_type").(string))
 
-	tagDatabase, tagSchema, tagName := snowflakeValidation.ParseFullyQualifiedObjectID(tag)
+	tagDatabase, tagSchema, tagName := ParseFullyQualifiedObjectID(tag)
 	tid := sdk.NewSchemaObjectIdentifier(tagDatabase, tagSchema, tagName)
 
 	var identifiers []sdk.ObjectIdentifier
