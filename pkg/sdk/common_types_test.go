@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -115,35 +116,19 @@ func TestToStorageSerializationPolicy(t *testing.T) {
 		Expected StorageSerializationPolicy
 		Error    string
 	}{
-		{
-			Name:     "optimized storage serialization policy",
-			Input:    string(StorageSerializationPolicyOptimized),
-			Expected: StorageSerializationPolicyOptimized,
-		},
-		{
-			Name:     "compatible storage serialization policy",
-			Input:    string(StorageSerializationPolicyCompatible),
-			Expected: StorageSerializationPolicyCompatible,
-		},
-		{
-			Name:  "validation: incorrect storage serialization policy",
-			Input: "incorrect",
-			Error: "unknown storage serialization policy: incorrect",
-		},
-		{
-			Name:  "validation: empty input",
-			Input: "",
-			Error: "unknown storage serialization policy: ",
-		},
-		{
-			Name:     "validation: lower case input",
-			Input:    "optimized",
-			Expected: StorageSerializationPolicyOptimized,
-		},
+		{Input: string(StorageSerializationPolicyOptimized), Expected: StorageSerializationPolicyOptimized},
+		{Input: string(StorageSerializationPolicyCompatible), Expected: StorageSerializationPolicyCompatible},
+		{Name: "validation: incorrect storage serialization policy", Input: "incorrect", Error: "unknown storage serialization policy: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "unknown storage serialization policy: "},
+		{Name: "validation: lower case input", Input: "optimized", Expected: StorageSerializationPolicyOptimized},
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v storage serialization policy", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
 			value, err := ToStorageSerializationPolicy(testCase.Input)
 			if testCase.Error != "" {
 				assert.Empty(t, value)
@@ -163,60 +148,24 @@ func TestToLogLevel(t *testing.T) {
 		Expected LogLevel
 		Error    string
 	}{
-		{
-			Name:     "trace log level",
-			Input:    string(LogLevelTrace),
-			Expected: LogLevelTrace,
-		},
-		{
-			Name:     "debug log level",
-			Input:    string(LogLevelDebug),
-			Expected: LogLevelDebug,
-		},
-		{
-			Name:     "info log level",
-			Input:    string(LogLevelInfo),
-			Expected: LogLevelInfo,
-		},
-		{
-			Name:     "warn log level",
-			Input:    string(LogLevelWarn),
-			Expected: LogLevelWarn,
-		},
-		{
-			Name:     "error log level",
-			Input:    string(LogLevelError),
-			Expected: LogLevelError,
-		},
-		{
-			Name:     "fatal log level",
-			Input:    string(LogLevelFatal),
-			Expected: LogLevelFatal,
-		},
-		{
-			Name:     "off log level",
-			Input:    string(LogLevelOff),
-			Expected: LogLevelOff,
-		},
-		{
-			Name:  "validation: incorrect log level",
-			Input: "incorrect",
-			Error: "unknown log level: incorrect",
-		},
-		{
-			Name:  "validation: empty input",
-			Input: "",
-			Error: "unknown log level: ",
-		},
-		{
-			Name:     "validation: lower case input",
-			Input:    "info",
-			Expected: LogLevelInfo,
-		},
+		{Input: string(LogLevelTrace), Expected: LogLevelTrace},
+		{Input: string(LogLevelDebug), Expected: LogLevelDebug},
+		{Input: string(LogLevelInfo), Expected: LogLevelInfo},
+		{Input: string(LogLevelWarn), Expected: LogLevelWarn},
+		{Input: string(LogLevelError), Expected: LogLevelError},
+		{Input: string(LogLevelFatal), Expected: LogLevelFatal},
+		{Input: string(LogLevelOff), Expected: LogLevelOff},
+		{Name: "validation: incorrect log level", Input: "incorrect", Error: "unknown log level: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "unknown log level: "},
+		{Name: "validation: lower case input", Input: "info", Expected: LogLevelInfo},
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v log level", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
 			value, err := ToLogLevel(testCase.Input)
 			if testCase.Error != "" {
 				assert.Empty(t, value)
@@ -236,40 +185,20 @@ func TestToTraceLevel(t *testing.T) {
 		Expected TraceLevel
 		Error    string
 	}{
-		{
-			Name:     "always trace level",
-			Input:    string(TraceLevelAlways),
-			Expected: TraceLevelAlways,
-		},
-		{
-			Name:     "on event trace level",
-			Input:    string(TraceLevelOnEvent),
-			Expected: TraceLevelOnEvent,
-		},
-		{
-			Name:     "off trace level",
-			Input:    string(TraceLevelOff),
-			Expected: TraceLevelOff,
-		},
-		{
-			Name:  "validation: incorrect trace level",
-			Input: "incorrect",
-			Error: "unknown trace level: incorrect",
-		},
-		{
-			Name:  "validation: empty input",
-			Input: "",
-			Error: "unknown trace level: ",
-		},
-		{
-			Name:     "validation: lower case input",
-			Input:    "always",
-			Expected: TraceLevelAlways,
-		},
+		{Input: string(TraceLevelAlways), Expected: TraceLevelAlways},
+		{Input: string(TraceLevelOnEvent), Expected: TraceLevelOnEvent},
+		{Input: string(TraceLevelOff), Expected: TraceLevelOff},
+		{Name: "validation: incorrect trace level", Input: "incorrect", Error: "unknown trace level: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "unknown trace level: "},
+		{Name: "validation: lower case input", Input: "always", Expected: TraceLevelAlways},
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v trace level", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
 			value, err := ToTraceLevel(testCase.Input)
 			if testCase.Error != "" {
 				assert.Empty(t, value)

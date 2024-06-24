@@ -96,15 +96,11 @@ var DatabaseDescribeSchema = map[string]*schema.Schema{
 func DatabaseDescriptionToSchema(description sdk.DatabaseDetails) []map[string]any {
 	result := make([]map[string]any, len(description.Rows))
 	for i, row := range description.Rows {
-		result[i] = databaseDescriptionRowToSchema(row)
+		result[i] = map[string]any{
+			"created_on": row.CreatedOn.String(),
+			"name":       row.Name,
+			"kind":       row.Kind,
+		}
 	}
 	return result
-}
-
-func databaseDescriptionRowToSchema(description sdk.DatabaseDetailsRow) map[string]any {
-	return map[string]any{
-		"created_on": description.CreatedOn.String(),
-		"name":       description.Name,
-		"kind":       description.Kind,
-	}
 }

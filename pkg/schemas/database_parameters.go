@@ -1,10 +1,11 @@
 package schemas
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"slices"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var (
@@ -36,11 +37,11 @@ func init() {
 }
 
 func DatabaseParametersToSchema(parameters []*sdk.Parameter) map[string]any {
-	databaseParametersSchema := make(map[string]any)
+	databaseParametersValue := make(map[string]any)
 	for _, param := range parameters {
 		if slices.Contains(databaseParameters, sdk.AccountParameter(param.Key)) {
-			databaseParametersSchema[strings.ToLower(param.Key)] = []map[string]any{ParameterToSchema(param)}
+			databaseParametersValue[strings.ToLower(param.Key)] = []map[string]any{ParameterToSchema(param)}
 		}
 	}
-	return databaseParametersSchema
+	return databaseParametersValue
 }
