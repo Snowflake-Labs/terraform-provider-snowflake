@@ -22,8 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: test import for empty config
-func TestAcc_Warehouse(t *testing.T) {
+func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -82,6 +81,29 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "8"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+				),
+			},
+			// IMPORT after empty config (in this method, most of the attributes will be filled with the defaults acquired from Snowflake)
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "max_cluster_count", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "min_cluster_count", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "scaling_policy", string(sdk.ScalingPolicyStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "auto_suspend", "600"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "resource_monitor", "null"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "comment", comment),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "enable_query_acceleration", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "query_acceleration_max_scale_factor", "8"),
+
+					// parameters are not set on the object level, so they won't be imported
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "max_concurrency_level", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "statement_queued_timeout_in_seconds", "-1"),
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "statement_timeout_in_seconds", "-1"),
 				),
 			},
 			// RENAME
@@ -179,12 +201,6 @@ func TestAcc_Warehouse(t *testing.T) {
 				ResourceName:      "snowflake_warehouse.w",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"resource_monitor",
-				},
-				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId2.Name(), "resource_monitor", resourceMonitorId.Name()),
-				),
 			},
 		},
 	})
