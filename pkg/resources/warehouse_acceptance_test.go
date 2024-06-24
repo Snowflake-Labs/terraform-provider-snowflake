@@ -508,8 +508,7 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 	})
 }
 
-// [SNOW-1348102 - next PR]: add more validations
-func TestAcc_Warehouse_SizeValidation(t *testing.T) {
+func TestAcc_Warehouse_Validations(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -521,8 +520,32 @@ func TestAcc_Warehouse_SizeValidation(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
+				Config:      warehouseWithTypeConfig(id.Name(), "unknown", sdk.WarehouseSizeXSmall),
+				ExpectError: regexp.MustCompile("invalid warehouse type: unknown"),
+			},
+			{
 				Config:      warehouseWithSizeConfig(id.Name(), "SMALLa"),
 				ExpectError: regexp.MustCompile("invalid warehouse size: SMALLa"),
+			},
+			{
+				Config:      warehouseConfigWithMaxClusterCount(id.Name(), 100),
+				ExpectError: regexp.MustCompile(`expected max_cluster_count to be in the range \(1 - 10\), got 100`),
+			},
+			{
+				Config:      warehouseConfigWithMinClusterCount(id.Name(), 100),
+				ExpectError: regexp.MustCompile(`expected min_cluster_count to be in the range \(1 - 10\), got 100`),
+			},
+			{
+				Config:      warehouseConfigWithScalingPolicy(id.Name(), "unknown"),
+				ExpectError: regexp.MustCompile("invalid scaling policy: unknown"),
+			},
+			{
+				Config:      warehouseWithAutoResumeConfig(id.Name(), "other"),
+				ExpectError: regexp.MustCompile(`expected auto_resume to be one of \["true" "false"], got other`),
+			},
+			{
+				Config:      warehouseConfigWithMaxConcurrencyLevel(id.Name(), -1),
+				ExpectError: regexp.MustCompile(`expected max_concurrency_level to be at least \(1\), got -1`),
 			},
 		},
 	})
@@ -549,7 +572,7 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
-				Config: warehouseWithAutoResumeConfig(id.Name(), true),
+				Config: warehouseWithAutoResumeConfig(id.Name(), "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
@@ -576,7 +599,7 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
-				Config: warehouseWithAutoResumeConfig(id.Name(), false),
+				Config: warehouseWithAutoResumeConfig(id.Name(), "false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "false"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
@@ -1517,11 +1540,11 @@ resource "snowflake_warehouse" "w" {
 `, name, warehouseType, size)
 }
 
-func warehouseWithAutoResumeConfig(name string, autoResume bool) string {
+func warehouseWithAutoResumeConfig(name string, autoResume string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name        = "%s"
-	auto_resume = "%t"
+	auto_resume = "%s"
 }
 `, name, autoResume)
 }
@@ -1547,13 +1570,13 @@ resource "snowflake_warehouse" "w" {
 `, name, value)
 }
 
-func warehouseWithInitiallySuspendedConfig(name string, initiallySuspened bool) string {
+func warehouseWithInitiallySuspendedConfig(name string, initiallySuspended bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
 	name                = "%s"
 	initially_suspended = %t
 }
-`, name, initiallySuspened)
+`, name, initiallySuspended)
 }
 
 func warehouseFullMigrationConfigWithSize(name string, comment string, size sdk.WarehouseSize) string {
@@ -1577,4 +1600,40 @@ resource "snowflake_warehouse" "w" {
     statement_timeout_in_seconds        = 172800
 }
 `, name, comment, size)
+}
+
+func warehouseConfigWithMaxClusterCount(name string, count int) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name              = "%s"
+	max_cluster_count = "%d"
+}
+`, name, count)
+}
+
+func warehouseConfigWithMinClusterCount(name string, count int) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name              = "%s"
+	min_cluster_count = "%d"
+}
+`, name, count)
+}
+
+func warehouseConfigWithScalingPolicy(name string, policy sdk.ScalingPolicy) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name           = "%s"
+	scaling_policy = "%s"
+}
+`, name, policy)
+}
+
+func warehouseConfigWithMaxConcurrencyLevel(name string, level int) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                  = "%s"
+	max_concurrency_level = "%d"
+}
+`, name, level)
 }
