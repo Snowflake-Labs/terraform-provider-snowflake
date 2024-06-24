@@ -119,6 +119,15 @@ func (c *WarehouseClient) UpdateAutoResume(t *testing.T, id sdk.AccountObjectIde
 	require.NoError(t, err)
 }
 
+func (c *WarehouseClient) UpdateAutoSuspend(t *testing.T, id sdk.AccountObjectIdentifier, newAutoSuspend int) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{AutoSuspend: sdk.Int(newAutoSuspend)}})
+	require.NoError(t, err)
+}
+
 func (c *WarehouseClient) Suspend(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 

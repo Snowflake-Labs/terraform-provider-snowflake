@@ -718,6 +718,118 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 	})
 }
 
+// TestAcc_Warehouse_AutoSuspend validates behavior for falling back to Snowflake default for the integer attribute
+func TestAcc_Warehouse_AutoSuspend(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+		Steps: []resource.TestStep{
+			// set up with auto suspend set in config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionCreate, nil, sdk.String("1200")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Config: warehouseConfigWithAutoSuspend(id.Name(), 1200),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "1200"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "1200"),
+					snowflakechecks.CheckAutoSuspendCount(t, id, 1200),
+				),
+			},
+			// import when auto suspend in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_suspend", "1200"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_suspend", "1200"),
+				),
+			},
+			// change value in config to Snowflake default
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("1200"), sdk.String("600")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Config: warehouseConfigWithAutoSuspend(id.Name(), 600),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "600"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
+					snowflakechecks.CheckAutoSuspendCount(t, id, 600),
+				),
+			},
+			// remove auto suspend from config (expecting non-empty plan because we do not know the default)
+			{
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
+					snowflakechecks.CheckAutoSuspendCount(t, id, 600),
+				),
+			},
+			// change auto suspend externally
+			{
+				PreConfig: func() {
+					// we change the max cluster count to the type different from default, expecting action
+					acc.TestClient().Warehouse.UpdateAutoSuspend(t, id, 2400)
+				},
+				Config: warehouseBasicConfig(id.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_suspend", sdk.String("-1"), sdk.String("2400")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_suspend", sdk.String("600"), sdk.String("2400")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("2400"), sdk.String("-1")),
+						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
+					snowflakechecks.CheckAutoSuspendCount(t, id, 600),
+				),
+			},
+			// import when no type in config
+			{
+				ResourceName: "snowflake_warehouse.w",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_suspend", "600"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_suspend", "600"),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -1351,7 +1463,6 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 	})
 }
 
-// TODO [SNOW-1348102 - next PR]: test int, string, identifier changed externally
 func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -1688,4 +1799,13 @@ resource "snowflake_warehouse" "w" {
 	max_concurrency_level = "%d"
 }
 `, name, level)
+}
+
+func warehouseConfigWithAutoSuspend(name string, autoSuspend int) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name              = "%s"
+	auto_suspend      = "%d"
+}
+`, name, autoSuspend)
 }
