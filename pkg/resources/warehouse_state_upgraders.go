@@ -43,6 +43,7 @@ func v092ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
 //   - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889#issuecomment-1631149585
 //
 // - deprecated wait_for_provisioning attribute was removed
+// - clear the old resource monitor representation
 func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return rawState, nil
@@ -59,6 +60,12 @@ func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]inter
 
 	// remove deprecated attribute
 	delete(rawState, "wait_for_provisioning")
+
+	// clear the old resource monitor representation
+	oldResourceMonitor := rawState["resource_monitor"].(string)
+	if oldResourceMonitor == "null" {
+		delete(rawState, "resource_monitor")
+	}
 
 	return rawState, nil
 }
