@@ -35,7 +35,6 @@ func ExtractStructDetails(s any) Struct {
 		currentField := v.Field(i)
 		currentName := v.Type().Field(i).Name
 		currentType := v.Type().Field(i).Type.String()
-		//currentValue := currentField.Interface()
 
 		var kind reflect.Kind
 		var isPtr bool

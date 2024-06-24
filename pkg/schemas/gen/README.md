@@ -82,6 +82,7 @@ Functional improvements:
   - generate only given object(s) - now all are always generated
   - manage the output - currently, the output consists of all structs displayed with fields, unique types grouped, and schemas generated
   - (optional) parametrize the output directory - currently, it's always written to `schemas` package
+- discover a change and generate as part of a `make pre-push`
 
 Implementation improvements:
 - add acceptance test for a `testStruct` (the one from [struct_details_extractor_test.go](./struct_details_extractor_test.go)) for the whole generation flow

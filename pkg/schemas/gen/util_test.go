@@ -9,7 +9,6 @@ import (
 )
 
 func Test_ToSnakeCase(t *testing.T) {
-
 	type test struct {
 		input    string
 		expected string

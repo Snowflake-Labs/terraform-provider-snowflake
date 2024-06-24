@@ -17,11 +17,13 @@ type SchemaField struct {
 	Mapper                Mapper
 }
 
-var Identity = func(field string) string { return field }
-var ToString = func(field string) string { return fmt.Sprintf("%s.String()", field) }
-var FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }
-var CastToString = func(field string) string { return fmt.Sprintf("string(%s)", field) }
-var CastToInt = func(field string) string { return fmt.Sprintf("int(%s)", field) }
+var (
+	Identity           = func(field string) string { return field }
+	ToString           = func(field string) string { return fmt.Sprintf("%s.String()", field) }
+	FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }
+	CastToString       = func(field string) string { return fmt.Sprintf("string(%s)", field) }
+	CastToInt          = func(field string) string { return fmt.Sprintf("int(%s)", field) }
+)
 
 // TODO [SNOW-1501905]: handle other basic type variants
 // TODO [SNOW-1501905]: handle any other interface (error)

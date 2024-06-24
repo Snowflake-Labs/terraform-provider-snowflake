@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
-var splitOnTheWordsBeginnings = regexp.MustCompile(`(.)([A-Z][a-z]+)`)
-var splitRemainingWordBreaks = regexp.MustCompile("([a-z0-9])([A-Z]+)")
+var (
+	splitOnTheWordsBeginnings = regexp.MustCompile(`(.)([A-Z][a-z]+)`)
+	splitRemainingWordBreaks  = regexp.MustCompile("([a-z0-9])([A-Z]+)")
+)
 
 // ToSnakeCase allows converting a CamelCase text to camel_case one (needed for schema attribute names). Examples:
 // - CamelCase -> camel_case

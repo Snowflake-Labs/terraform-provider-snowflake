@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -10,7 +9,6 @@ import (
 )
 
 func Test_MapToSchemaField(t *testing.T) {
-
 	type expectedValues struct {
 		name       string
 		schemaType schema.ValueType
@@ -142,7 +140,7 @@ func Test_MapToSchemaField(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("%s", tc.field.Name), func(t *testing.T) {
+		t.Run(tc.field.Name, func(t *testing.T) {
 			schemaField := MapToSchemaField(tc.field)
 
 			assertSchemaFieldMapped(schemaField, tc.field, tc.expected)

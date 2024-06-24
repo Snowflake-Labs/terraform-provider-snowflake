@@ -16,7 +16,6 @@ import (
 //
 // TODO [SNOW-1501905]: test type of slice fields
 func Test_ExtractStructDetails(t *testing.T) {
-
 	type testStruct struct {
 		unexportedString     string
 		unexportedInt        int
