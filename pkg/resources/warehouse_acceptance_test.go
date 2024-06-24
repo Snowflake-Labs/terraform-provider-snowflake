@@ -1282,15 +1282,78 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 	})
 }
 
-// TODO [SNOW-1348102 - next PR]: test defaults removal
-// TODO [SNOW-1348102 - next PR]: test basic creation (check previous defaults)
 // TODO [SNOW-1348102 - next PR]: test auto_suspend set to 0 before migration
 // TODO [SNOW-1348102 - next PR]: do we care about drift in warehouse for is_current warehouse? (test)
-// TODO [SNOW-1348102 - next PR]: test boolean type change (with leaving boolean/int in config) and add migration
 // TODO [SNOW-1348102 - next PR]: test int, string, identifier changed externally
-// TODO [SNOW-1348102 - next PR]: unskip - it fails currently because of other state upograders missing
-func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) {
-	t.Skip("Skipped due to the missing state migrators for other props")
+func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeXSmall)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "scaling_policy", string(sdk.ScalingPolicyStandard)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "600"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", "null"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", ""),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeXSmall)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_type", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseTypeStandard)), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "max_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "min_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "scaling_policy", tfjson.ActionUpdate, sdk.String(string(sdk.ScalingPolicyStandard)), nil),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("unknown")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("false"), sdk.String("unknown")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, nil, sdk.String("-1")),
+
+						planchecks.ExpectChange("snowflake_warehouse.w", "max_concurrency_level", tfjson.ActionUpdate, sdk.String("8"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("0"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("172800"), sdk.String("-1")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1311,18 +1374,18 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 				Config: warehouseBasicConfig(id.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionDestroyBeforeCreate),
+					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 		},

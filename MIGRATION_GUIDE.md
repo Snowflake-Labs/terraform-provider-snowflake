@@ -44,6 +44,8 @@ All previous defaults were aligned with the current Snowflake ones, however it's
 
 [//]: # (TODO [SNOW-1348102 - next PR]: describe the new state approach if decided)
 
+[//]: # (TODO: warehouse size force new logic)
+
 #### *(behavior change)* Validation changes
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:
 - `max_cluster_count` - adjusted: added higher bound (10) according to Snowflake docs
