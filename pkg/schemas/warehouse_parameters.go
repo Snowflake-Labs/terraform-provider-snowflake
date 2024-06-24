@@ -15,21 +15,21 @@ var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
 		Elem: &schema.Resource{
-			Schema: ParameterSchema,
+			Schema: ShowParameterSchema,
 		},
 	},
 	"statement_queued_timeout_in_seconds": {
 		Type:     schema.TypeList,
 		Computed: true,
 		Elem: &schema.Resource{
-			Schema: ParameterSchema,
+			Schema: ShowParameterSchema,
 		},
 	},
 	"statement_timeout_in_seconds": {
 		Type:     schema.TypeList,
 		Computed: true,
 		Elem: &schema.Resource{
-			Schema: ParameterSchema,
+			Schema: ShowParameterSchema,
 		},
 	},
 }
