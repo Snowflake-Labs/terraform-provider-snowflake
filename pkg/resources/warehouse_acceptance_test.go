@@ -757,9 +757,6 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "0"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
-
-					// TODO [SNOW-1348102 - next PR]: snowflake checks?
-					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
 			// remove all from config (to validate that unset is run correctly)
@@ -853,9 +850,6 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
-
-					// TODO [SNOW-1348102 - next PR]: snowflake checks?
-					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
 			// do not make any change (to check if there is no drift)
@@ -1142,9 +1136,6 @@ func TestAcc_Warehouse_InitiallySuspendedChangesPostCreation(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.state", string(sdk.WarehouseStateSuspended)),
-
-					// TODO [SNOW-1348102 - next PR]: snowflake checks?
-					// snowflakechecks.CheckWarehouseSize(t, id, sdk.WarehouseSizeSmall),
 				),
 			},
 			{
