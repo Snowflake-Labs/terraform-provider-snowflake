@@ -21,12 +21,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// [SNOW-1348102 - next PR]: merge this test with others added
 func TestAcc_Warehouse(t *testing.T) {
 	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	prefix := warehouseId.Name()
-	prefix2 := warehouseId2.Name()
+	name := warehouseId.Name()
+	name2 := warehouseId2.Name()
 	comment := random.Comment()
 	newComment := random.Comment()
 
@@ -39,122 +38,151 @@ func TestAcc_Warehouse(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: wConfig(prefix, comment),
+				Config: warehouseBasicConfigWithComment(name, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_type"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_size"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "max_cluster_count"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "min_cluster_count"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "scaling_policy"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "unknown"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "-1"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "-1"),
+
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.type", string(sdk.WarehouseTypeStandard)),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.max_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.min_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.scaling_policy", string(sdk.ScalingPolicyStandard)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "true"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.resource_monitor", "null"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.comment", comment),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.enable_query_acceleration", "false"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
+
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "8"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
 				),
 			},
 			// RENAME
 			{
-				Config: wConfig(prefix2, newComment),
+				Config: warehouseBasicConfigWithComment(name2, comment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name2),
 				),
 			},
-			// CHANGE PROPERTIES (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2652)
+			// Change config but use defaults for every attribute (expecting changes in the current approach) - ideally it should result in no changes
 			{
-				Config: wConfig2(prefix2, string(sdk.WarehouseSizeXLarge), 20, 2, newComment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXLarge)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "2"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "20"),
-				),
-			},
-			// CHANGE JUST max_concurrency_level
-			{
-				Config: wConfig2(prefix2, string(sdk.WarehouseSizeXLarge), 16, 2, newComment),
+				Config: warehouseFullDefaultConfig(name2, comment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_type", tfjson.ActionUpdate, nil, sdk.String(string(sdk.WarehouseTypeStandard))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, nil, sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "max_cluster_count", tfjson.ActionUpdate, nil, sdk.String("1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "min_cluster_count", tfjson.ActionUpdate, nil, sdk.String("1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "scaling_policy", tfjson.ActionUpdate, nil, sdk.String(string(sdk.ScalingPolicyStandard))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("600")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("unknown"), sdk.String("true")),
+						//planchecks.ExpectChange("snowflake_warehouse.w", "resource_monitor", tfjson.ActionUpdate, sdk.String("null"), sdk.String(string(sdk.WarehouseTypeStandard))),
+						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("unknown"), sdk.String("false")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("8")),
+
+						planchecks.ExpectChange("snowflake_warehouse.w", "max_concurrency_level", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("8")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("0")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("172800")),
+					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "scaling_policy", string(sdk.ScalingPolicyStandard)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "600"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "8"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
+				),
+			},
+			// CHANGE PROPERTIES
+			{
+				Config: warehouseFullConfigNoDefaults(name2, newComment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeSnowparkOptimized)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeMedium)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_cluster_count", "4"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "scaling_policy", string(sdk.ScalingPolicyEconomy)),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "1200"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "false"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
+					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXLarge)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "16"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "4"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "4"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "5"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "86400"),
 				),
 			},
 			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
 				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, warehouseId2, 10) },
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectDrift("snowflake_warehouse.w", "max_concurrency_level", sdk.String("4"), sdk.String("10")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "max_concurrency_level", tfjson.ActionUpdate, sdk.String("10"), sdk.String("4")),
+					},
 				},
-				Config: wConfig2(prefix2, string(sdk.WarehouseSizeXLarge), 16, 2, newComment),
+				Config: warehouseFullConfigNoDefaults(name2, newComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", newComment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXLarge)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "16"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "4"),
+
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "4"),
 				),
 			},
 			// IMPORT
 			// [SNOW-1348102 - next PR]: fox import (resource_monitor) and adjust the expected fields here
 			{
-				ResourceName: "snowflake_warehouse.w",
-				ImportState:  true,
-				// ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{
-				//	"initially_suspended",
-				//	"query_acceleration_max_scale_factor",
-				//	"max_concurrency_level",
-				//	"statement_queued_timeout_in_seconds",
-				//	"statement_timeout_in_seconds",
-				// },
+				ResourceName:      "snowflake_warehouse.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"resource_monitor",
+				},
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(warehouseId2.Name(), "resource_monitor", "null"),
+				),
 			},
 		},
 	})
-}
-
-func wConfig(prefix string, comment string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name    = "%s"
-	comment = "%s"
-
-	auto_suspend          = 60
-	max_cluster_count     = 4
-	min_cluster_count     = 1
-	scaling_policy        = "STANDARD"
-	auto_resume           = true
-	initially_suspended   = true
-}
-`, prefix, comment)
-}
-
-func wConfig2(prefix string, size string, maxConcurrencyLevel int, minClusterCount int, comment string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name           = "%[1]s"
-	comment        = "%[5]s"
-	warehouse_size = "%[2]s"
-
-	auto_suspend          = 60
-	max_cluster_count     = 4
-	min_cluster_count     = %[4]d
-	scaling_policy        = "STANDARD"
-	auto_resume           = true
-	initially_suspended   = true
-	max_concurrency_level = %[3]d
-}
-`, prefix, size, maxConcurrencyLevel, minClusterCount, comment)
 }
 
 func TestAcc_Warehouse_WarehouseType(t *testing.T) {
@@ -1145,6 +1173,74 @@ func TestAcc_Warehouse_migrateFromVersion091_withoutWarehouseSize(t *testing.T) 
 	})
 }
 
+func warehouseBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name           = "%s"
+}
+`, name)
+}
+
+func warehouseBasicConfigWithComment(name string, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name           = "%s"
+	comment        = "%s"
+}
+`, name, comment)
+}
+
+func warehouseFullDefaultConfig(name string, comment string) string {
+	return warehouseFullConfig(name, comment)
+}
+
+// TODO: add resource monitor
+func warehouseFullConfig(name string, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                                = "%[1]s"
+	warehouse_type                      = "STANDARD"
+	warehouse_size                      = "XSMALL"
+	max_cluster_count                   = 1
+	min_cluster_count                   = 1
+	scaling_policy                      = "STANDARD"
+	auto_suspend                        = 600
+	auto_resume                         = true
+	initially_suspended                 = false
+	comment                             = "%[2]s"
+    enable_query_acceleration           = false
+    query_acceleration_max_scale_factor = 8
+
+    max_concurrency_level               = 8
+    statement_queued_timeout_in_seconds = 0
+    statement_timeout_in_seconds        = 172800
+}
+`, name, comment)
+}
+
+func warehouseFullConfigNoDefaults(name string, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                                = "%[1]s"
+	warehouse_type                      = "SNOWPARK-OPTIMIZED"
+	warehouse_size                      = "MEDIUM"
+	max_cluster_count                   = 4
+	min_cluster_count                   = 2
+	scaling_policy                      = "ECONOMY"
+	auto_suspend                        = 1200
+	auto_resume                         = false
+	initially_suspended                 = false
+	comment                             = "%[2]s"
+    enable_query_acceleration           = true
+    query_acceleration_max_scale_factor = 4
+
+    max_concurrency_level               = 4
+    statement_queued_timeout_in_seconds = 5
+    statement_timeout_in_seconds        = 86400
+}
+`, name, comment)
+}
+
 func warehouseWithSizeConfig(name string, size string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {
@@ -1171,14 +1267,6 @@ resource "snowflake_warehouse" "w" {
 	auto_resume = "%t"
 }
 `, name, autoResume)
-}
-
-func warehouseBasicConfig(name string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name           = "%s"
-}
-`, name)
 }
 
 func warehouseWithAllValidZeroValuesConfig(name string) string {
