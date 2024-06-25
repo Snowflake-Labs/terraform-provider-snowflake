@@ -11,30 +11,9 @@ import (
 // TODO [SNOW-1473425]: descriptions (take from .Description; tool to validate changes later)
 // TODO [SNOW-1473425]: should be generated later based on sdk.WarehouseParameters
 var ShowWarehouseParametersSchema = map[string]*schema.Schema{
-	"max_concurrency_level": {
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: ShowParameterSchema,
-		},
-	},
-	"statement_queued_timeout_in_seconds": {
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: ShowParameterSchema,
-		},
-	},
-	"statement_timeout_in_seconds": {
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: ShowParameterSchema,
-		},
-	},
-	//"max_concurrency_level":               ParameterSchema,
-	//"statement_queued_timeout_in_seconds": ParameterSchema,
-	//"statement_timeout_in_seconds":        ParameterSchema,
+	"max_concurrency_level":               ParameterListSchema,
+	"statement_queued_timeout_in_seconds": ParameterListSchema,
+	"statement_timeout_in_seconds":        ParameterListSchema,
 }
 
 // TODO [SNOW-1473425]: validate all present?

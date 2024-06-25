@@ -356,9 +356,9 @@ Read-Only:
 
 - `comment` (String)
 - `created_on` (String)
+- `dropped_on` (String)
 - `is_current` (Boolean)
 - `is_default` (Boolean)
-- `is_transient` (Boolean)
 - `kind` (String)
 - `name` (String)
 - `options` (String)
@@ -367,3 +367,4 @@ Read-Only:
 - `owner_role_type` (String)
 - `resource_group` (String)
 - `retention_time` (Number)
+- `transient` (Boolean)
