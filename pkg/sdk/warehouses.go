@@ -321,7 +321,7 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 			defer func() {
 				err := c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
 				if err != nil {
-					log.Printf("[DEBUG] error occured during warehouse resumption, err=%v", err)
+					log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
 				}
 			}()
 		}
