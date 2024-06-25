@@ -53,10 +53,11 @@ func MapToSchemaField(field Field) SchemaField {
 	}
 
 	underlyingTypeWithoutPtr, _ := strings.CutPrefix(field.UnderlyingType, "*")
+	isSdkDeclaredObject := strings.HasPrefix(concreteTypeWithoutPtr, "sdk.")
 	switch {
-	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk.") && underlyingTypeWithoutPtr == "string":
+	case isSdkDeclaredObject && underlyingTypeWithoutPtr == "string":
 		return SchemaField{name, schema.TypeString, field.Name, isPointer, CastToString}
-	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk.") && underlyingTypeWithoutPtr == "int":
+	case isSdkDeclaredObject && underlyingTypeWithoutPtr == "int":
 		return SchemaField{name, schema.TypeInt, field.Name, isPointer, CastToInt}
 	}
 	return SchemaField{name, schema.TypeInvalid, field.Name, isPointer, Identity}

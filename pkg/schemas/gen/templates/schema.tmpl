@@ -3,10 +3,10 @@
 // Show{{ .Name }}Schema represents output of SHOW query for the single {{ .Name }}.
 var Show{{ .Name }}Schema = map[string]*schema.Schema{
     {{- range .SchemaFields }}
-    "{{ .Name }}": {
-        Type:     schema.{{ .SchemaType }},
-        Computed: true,
-    },
+        "{{ .Name }}": {
+            Type:     schema.{{ .SchemaType }},
+            Computed: true,
+        },
     {{- end }}
 }
 

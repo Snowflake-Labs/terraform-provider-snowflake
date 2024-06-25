@@ -5,15 +5,15 @@
 func {{ .Name }}ToSchema({{ $nameLowerCase }} *{{ .SdkType }}) map[string]any {
     {{ $schemaName }} := make(map[string]any)
     {{- range .SchemaFields }}
-    {{ if .IsOriginalTypePointer -}}
-    if {{ $nameLowerCase }}.{{ .OriginalName }} != nil {
-        {{ $schemaName }}["{{ .Name }}"] = {{ runMapper .Mapper $nameLowerCase "." .OriginalName }}
-    }
-    {{- else -}}
-    {{ $schemaName }}["{{ .Name }}"] = {{ runMapper .Mapper $nameLowerCase "." .OriginalName }}
-    {{- end -}}
+        {{ if .IsOriginalTypePointer -}}
+            if {{ $nameLowerCase }}.{{ .OriginalName }} != nil {
+                {{ $schemaName }}["{{ .Name }}"] = {{ runMapper .Mapper $nameLowerCase "." .OriginalName }}
+            }
+        {{- else -}}
+            {{ $schemaName }}["{{ .Name }}"] = {{ runMapper .Mapper $nameLowerCase "." .OriginalName }}
+        {{- end -}}
     {{- end }}
-    return {{ $nameLowerCase }}Schema
+    return {{ $schemaName }}
 }
 
 var _ = {{ .Name }}ToSchema
