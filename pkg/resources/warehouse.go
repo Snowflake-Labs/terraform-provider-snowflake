@@ -29,61 +29,65 @@ var warehouseSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseType),
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseType),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToWarehouseType), IgnoreChangeToCurrentSnowflakeValue("type")),
 		Description:      fmt.Sprintf("Specifies warehouse type. Valid values are (case-insensitive): %s. Warehouse needs to be suspended to change its type. Provider will handle automatic suspension and resumption if needed.", possibleValuesListed(sdk.ValidWarehouseTypesString)),
 	},
 	"warehouse_size": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseSize),
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToWarehouseSize), IgnoreChangeToCurrentSnowflakeValue("size")),
 		Description:      fmt.Sprintf("Specifies the size of the virtual warehouse. Valid values are (case-insensitive): %s. Consult [warehouse documentation](https://docs.snowflake.com/en/sql-reference/sql/create-warehouse#optional-properties-objectproperties) for the details. Note: removing the size from config will result in the resource recreation.", possibleValuesListed(sdk.ValidWarehouseSizesString)),
 	},
 	"max_cluster_count": {
-		Type:         schema.TypeInt,
-		Description:  "Specifies the maximum number of server clusters for the warehouse.",
-		Optional:     true,
-		ValidateFunc: validation.IntBetween(1, 10),
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntBetween(1, 10),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("max_cluster_count"),
+		Description:      "Specifies the maximum number of server clusters for the warehouse.",
 	},
 	"min_cluster_count": {
-		Type:         schema.TypeInt,
-		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
-		Optional:     true,
-		ValidateFunc: validation.IntBetween(1, 10),
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntBetween(1, 10),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("min_cluster_count"),
+		Description:      "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 	},
 	"scaling_policy": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToScalingPolicy),
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToScalingPolicy),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToWarehouseType), IgnoreChangeToCurrentSnowflakeValue("scaling_policy")),
 		Description:      fmt.Sprintf("Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidWarehouseScalingPoliciesString)),
 	},
 	"auto_suspend": {
-		Type:         schema.TypeInt,
-		Description:  "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
-		Optional:     true,
-		ValidateFunc: validation.IntAtLeast(0),
-		Default:      -1,
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntAtLeast(0),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("auto_suspend"),
+		Description:      "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
+		Default:          -1,
 	},
 	"auto_resume": {
-		Type:         schema.TypeString,
-		Description:  "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
-		ValidateFunc: validation.StringInSlice([]string{"true", "false"}, true),
-		Optional:     true,
-		Default:      "unknown",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateFunc:     validation.StringInSlice([]string{"true", "false"}, true),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("auto_resume"),
+		Description:      "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
+		Default:          "unknown",
 	},
 	"initially_suspended": {
 		Type:             schema.TypeBool,
-		Description:      "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 		Optional:         true,
 		DiffSuppressFunc: IgnoreAfterCreation,
+		Description:      "Specifies whether the warehouse is created initially in the ‘Suspended’ state.",
 	},
 	"resource_monitor": {
 		Type:             schema.TypeString,
-		Description:      "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-		DiffSuppressFunc: suppressIdentifierQuoting,
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValue("resource_monitor")),
+		Description:      "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -91,18 +95,20 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the warehouse.",
 	},
 	"enable_query_acceleration": {
-		Type:         schema.TypeString,
-		Description:  "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
-		ValidateFunc: validation.StringInSlice([]string{"true", "false"}, true),
-		Optional:     true,
-		Default:      "unknown",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateFunc:     validation.StringInSlice([]string{"true", "false"}, true),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("enable_query_acceleration"),
+		Description:      "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
+		Default:          "unknown",
 	},
 	"query_acceleration_max_scale_factor": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		ValidateFunc: validation.IntBetween(0, 100),
-		Description:  "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
-		Default:      -1,
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntBetween(0, 100),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValue("query_acceleration_max_scale_factor"),
+		Description:      "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
+		Default:          -1,
 	},
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
 		Type:         schema.TypeInt,
@@ -349,6 +355,71 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 			if err = markChangedParameters(sdk.WarehouseParameters, warehouseParameters, d, sdk.ParameterTypeWarehouse); err != nil {
 				return diag.FromErr(err)
+			}
+		}
+
+		// These are all identity sets, needed for the case where:
+		// - previous config was empty (therefore Snowflake defaults had been used)
+		// - new config have the same values that are already in SF
+		if !d.GetRawConfig().IsNull() {
+			if v := d.GetRawConfig().AsValueMap()["warehouse_type"]; !v.IsNull() {
+				if err = d.Set("warehouse_type", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["warehouse_size"]; !v.IsNull() {
+				if err = d.Set("warehouse_size", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["max_cluster_count"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("max_cluster_count", intVal); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["min_cluster_count"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("min_cluster_count", intVal); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["scaling_policy"]; !v.IsNull() {
+				if err = d.Set("scaling_policy", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["auto_suspend"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("auto_suspend", intVal); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["auto_resume"]; !v.IsNull() {
+				if err = d.Set("auto_resume", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["resource_monitor"]; !v.IsNull() {
+				if err = d.Set("resource_monitor", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
+				if err = d.Set("comment", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["enable_query_acceleration"]; !v.IsNull() {
+				if err = d.Set("enable_query_acceleration", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["query_acceleration_max_scale_factor"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("query_acceleration_max_scale_factor", intVal); err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 

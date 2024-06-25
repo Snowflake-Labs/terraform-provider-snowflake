@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -44,7 +46,8 @@ func v092ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
 //
 // - deprecated wait_for_provisioning attribute was removed
 // - clear the old resource monitor representation
-func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+// - set query_acceleration_max_scale_factor
+func v092WarehouseSizeStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return rawState, nil
 	}
@@ -65,6 +68,24 @@ func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]inter
 	oldResourceMonitor := rawState["resource_monitor"].(string)
 	if oldResourceMonitor == "null" {
 		delete(rawState, "resource_monitor")
+	}
+
+	// get the warehouse from Snowflake
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(rawState["id"].(string)).(sdk.AccountObjectIdentifier)
+
+	w, err := client.Warehouses.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// fill out query_acceleration_max_scale_factor in state if it was disabled before (old coupling logic that was removed)
+	// - if config have no value, then we should have a UNSET after migration
+	// - if config have the same value, then we should have a no-op after migration
+	// - if config have different value, then we will have SET after migration
+	previousEnableQueryAcceleration := rawState["enable_query_acceleration"].(bool)
+	if !previousEnableQueryAcceleration {
+		rawState["query_acceleration_max_scale_factor"] = w.QueryAccelerationMaxScaleFactor
 	}
 
 	return rawState, nil

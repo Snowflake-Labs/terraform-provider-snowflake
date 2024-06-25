@@ -123,8 +123,8 @@ var ShowWarehouseSchema = map[string]*schema.Schema{
 func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema := make(map[string]any)
 	warehouseSchema["name"] = warehouse.Name
-	warehouseSchema["state"] = warehouse.State
-	warehouseSchema["type"] = warehouse.Type
+	warehouseSchema["state"] = string(warehouse.State)
+	warehouseSchema["type"] = string(warehouse.Type)
 	warehouseSchema["size"] = warehouse.Size
 	warehouseSchema["min_cluster_count"] = warehouse.MinClusterCount
 	warehouseSchema["max_cluster_count"] = warehouse.MaxClusterCount
@@ -147,7 +147,7 @@ func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema["enable_query_acceleration"] = warehouse.EnableQueryAcceleration
 	warehouseSchema["query_acceleration_max_scale_factor"] = warehouse.QueryAccelerationMaxScaleFactor
 	warehouseSchema["resource_monitor"] = warehouse.ResourceMonitor.Name()
-	warehouseSchema["scaling_policy"] = warehouse.ScalingPolicy
+	warehouseSchema["scaling_policy"] = string(warehouse.ScalingPolicy)
 	warehouseSchema["owner_role_type"] = warehouse.OwnerRoleType
 	return warehouseSchema
 }
