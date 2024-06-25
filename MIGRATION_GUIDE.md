@@ -23,6 +23,9 @@ Force new was added for the following attributes (because no usable SQL alter st
 - `run_as_role`
 
 ### snowflake_warehouse resource changes
+
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping.
+
 #### *(potential behavior change)* Default values removed
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider. Because of that the following defaults were removed:
 - `comment` (previously `""`)
@@ -37,14 +40,17 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 
 All previous defaults were aligned with the current Snowflake ones, however it's not possible to distinguish between filled out value and no value in the automatic state upgrader. Therefore, if the given attribute is not filled out in your configuration, terraform will try to perform update after the change (to UNSET the given attribute to the Snowflake default); it should result in no changes on Snowflake object side, but it is required to make Terraform state aligned with your config. **All** other optional fields that were not set inside the config at all (because of the change in handling state logic on our provider side) will follow the same logic. To avoid the need for the changes, fill out the default fields in your config. Alternatively run apply; no further changes should be shown as a part of the plan.
 
-[//]: # (TODO [SNOW-1348102 - next PR]: add alternative as remove from state and import)
+#### *(note)* Automatic state migrations
+There are three migrations that should happen automatically with the version bump:
+- incorrect `2XLARGE`, `3XLARGE`, `4XLARGE`, `5XLARGE`, `6XLARGE` values for warehouse size are changed to the proper ones
+- deprecated `wait_for_provisioning` attribute is removed from the state
+- old empty resource monitor attribute is cleaned (earlier it was set to `"null"` string) 
 
-[//]: # (TODO [SNOW-1348102 - next PR]: state migrator?)
-- if the given parameter was changed on the account level, terraform will try to update it
+[//]: # (TODO [SNOW-1348102 - after discussion]: describe the new state approach if decided)
 
-[//]: # (TODO [SNOW-1348102 - next PR]: describe the new state approach if decided)
+#### *(fix)* Warehouse size UNSET
 
-[//]: # (TODO: warehouse size force new logic)
+Before the changes, removing warehouse size from the config was not handled properly. Because UNSET is not supported for warehouse size (check the [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-warehouse#properties-parameters) - usage notes for unset) and there are multiple defaults possible, removing the size from config will result in the resource recreation.
 
 #### *(behavior change)* Validation changes
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:

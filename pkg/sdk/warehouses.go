@@ -419,7 +419,7 @@ type Warehouse struct {
 	Comment                         string
 	EnableQueryAcceleration         bool
 	QueryAccelerationMaxScaleFactor int
-	// TODO [this PR]: change type to identifier
+	// TODO [next PR]: change type to identifier
 	ResourceMonitor string
 	ScalingPolicy   ScalingPolicy
 	OwnerRoleType   string
