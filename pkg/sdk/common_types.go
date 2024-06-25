@@ -2,7 +2,9 @@ package sdk
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -234,6 +236,27 @@ const (
 	LogLevelOff   LogLevel = "OFF"
 )
 
+func ToLogLevel(value string) (LogLevel, error) {
+	switch strings.ToUpper(value) {
+	case string(LogLevelTrace):
+		return LogLevelTrace, nil
+	case string(LogLevelDebug):
+		return LogLevelDebug, nil
+	case string(LogLevelInfo):
+		return LogLevelInfo, nil
+	case string(LogLevelWarn):
+		return LogLevelWarn, nil
+	case string(LogLevelError):
+		return LogLevelError, nil
+	case string(LogLevelFatal):
+		return LogLevelFatal, nil
+	case string(LogLevelOff):
+		return LogLevelOff, nil
+	default:
+		return "", fmt.Errorf("unknown log level: %s", value)
+	}
+}
+
 var AllLogLevels = []LogLevel{
 	LogLevelTrace,
 	LogLevelDebug,
@@ -251,6 +274,19 @@ const (
 	TraceLevelOnEvent TraceLevel = "ON_EVENT"
 	TraceLevelOff     TraceLevel = "OFF"
 )
+
+func ToTraceLevel(value string) (TraceLevel, error) {
+	switch strings.ToUpper(value) {
+	case string(TraceLevelAlways):
+		return TraceLevelAlways, nil
+	case string(TraceLevelOnEvent):
+		return TraceLevelOnEvent, nil
+	case string(TraceLevelOff):
+		return TraceLevelOff, nil
+	default:
+		return "", fmt.Errorf("unknown trace level: %s", value)
+	}
+}
 
 var AllTraceLevels = []TraceLevel{
 	TraceLevelAlways,

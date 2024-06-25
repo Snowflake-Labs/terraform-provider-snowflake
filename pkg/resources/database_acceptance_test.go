@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -1112,7 +1113,10 @@ func TestAcc_Database_WithReplication(t *testing.T) {
 				Config:                   databaseStateUpgraderWithReplicationNew(id, secondaryAccountIdentifier),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						// plancheck.ExpectNonEmptyPlan(), // Account locators have to be changed to the new account identifier format
+						planchecks.PrintPlanDetails("snowflake_database.test", "replication"),
+						// Updates in place (no ALTER DATABASE is called)
+						planchecks.ExpectChange("snowflake_database.test", "replication.0.ignore_edition_check", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectChange("snowflake_database.test", "replication.0.enable_to_account", tfjson.ActionUpdate, sdk.String(fmt.Sprintf("[map[account_identifier:%s with_failover:false]]", secondaryAccountIdentifier)), sdk.String(fmt.Sprintf("[map[account_identifier:%s with_failover:false]]", secondaryAccountIdentifier))),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -1170,7 +1174,6 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1189,17 +1192,15 @@ func TestAcc_Database_UpgradeFromShare(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromShareNew(id),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_database.test", "from_share"),
-				),
+				Config:                   databaseStateUpgraderFromShareNewAfterUpgrade(id),
+				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromShareNew(id, shareExternalId),
+				ResourceName:             "snowflake_shared_database.test",
+				ImportStateId:            id.FullyQualifiedName(),
+				ImportState:              true,
 			},
 		},
 	})
@@ -1218,13 +1219,22 @@ resource "snowflake_database" "test" {
 `, id.Name(), secondaryClientLocator, externalShare.Name())
 }
 
-func databaseStateUpgraderFromShareNew(id sdk.AccountObjectIdentifier) string {
+func databaseStateUpgraderFromShareNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
-	data_retention_time_in_days = 0
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
 }
 `, id.Name())
+}
+
+func databaseStateUpgraderFromShareNew(id sdk.AccountObjectIdentifier, externalShare sdk.ExternalObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_shared_database" "test" {
+	name = "%s"
+	from_share = %s
+}
+`, id.Name(), strconv.Quote(externalShare.FullyQualifiedName()))
 }
 
 func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
@@ -1241,7 +1251,6 @@ func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1259,17 +1268,15 @@ func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromReplicaNew(id),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_database.test", "from_replica"),
-				),
+				Config:                   databaseStateUpgraderFromReplicaNewAfterUpgrade(id),
+				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromReplicaNew(id, primaryDatabaseId),
+				ResourceName:             "snowflake_secondary_database.test",
+				ImportStateId:            id.FullyQualifiedName(),
+				ImportState:              true,
 			},
 		},
 	})
@@ -1285,13 +1292,22 @@ resource "snowflake_database" "test" {
 `, id.Name(), strconv.Quote(primaryDatabaseId.FullyQualifiedName()))
 }
 
-func databaseStateUpgraderFromReplicaNew(id sdk.AccountObjectIdentifier) string {
+func databaseStateUpgraderFromReplicaNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
 	data_retention_time_in_days = 0
 }
 `, id.Name())
+}
+
+func databaseStateUpgraderFromReplicaNew(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_secondary_database" "test" {
+	name = "%s"
+	as_replica_of = %s
+}
+`, id.Name(), strconv.Quote(id.FullyQualifiedName()))
 }
 
 func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
@@ -1321,17 +1337,15 @@ func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderFromDatabaseNewAfterUpgrade(id, cloneId),
+				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   databaseStateUpgraderFromDatabaseNew(id, cloneId),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "id", cloneId.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "name", cloneId.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_database.cloned", "from_database"),
-				),
+				ResourceName:             "snowflake_database.cloned",
+				ImportStateId:            cloneId.FullyQualifiedName(),
+				ImportState:              true,
 			},
 		},
 	})
@@ -1352,7 +1366,7 @@ resource "snowflake_database" "cloned" {
 `, id.Name(), secondId.Name())
 }
 
-func databaseStateUpgraderFromDatabaseNew(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
+func databaseStateUpgraderFromDatabaseNewAfterUpgrade(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
@@ -1362,6 +1376,18 @@ resource "snowflake_database" "test" {
 resource "snowflake_database" "cloned" {
 	name = "%s"
 	data_retention_time_in_days = 0
+}
+`, id.Name(), secondId.Name())
+}
+
+func databaseStateUpgraderFromDatabaseNew(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+	name = "%s"
+}
+
+resource "snowflake_database" "cloned" {
+	name = "%s"
 }
 `, id.Name(), secondId.Name())
 }
