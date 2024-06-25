@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	acsURL := testClientHelper().Context.ACSURL(t)
 	issuerURL := testClientHelper().Context.IssuerURL(t)
 	cert := random.GenerateX509(t)
-	rsaKey := random.GenerateRSAPublicKey(t)
+	rsaKey, rsaKeyHash := random.GenerateRSAPublicKey(t)
 
 	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
 	t.Cleanup(revertParameter)
@@ -266,18 +267,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertFieldContainsList(details, "BLOCKED_ROLES_LIST", d.blockedRolesList, ",")
 	}
 
-	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce string) {
+	assertOauthCustom := func(details []sdk.SecurityIntegrationProperty, d oauthPartnerDetails, allowNonTlsRedirectUri, clientType, enforcePkce, key1Hash, key2Hash string) {
 		assertOauthPartner(details, d)
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ALLOW_NON_TLS_REDIRECT_URI", Type: "Boolean", Value: allowNonTlsRedirectUri, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_TYPE", Type: "String", Value: clientType, Default: "CONFIDENTIAL"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_ENFORCE_PKCE", Type: "Boolean", Value: enforcePkce, Default: "false"})
-		// Keys are hashed in snowflake, so we check only if these fields are present
-		keys := make(map[string]struct{})
-		for _, detail := range details {
-			keys[detail.Name] = struct{}{}
-		}
-		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP")
-		assert.Contains(t, keys, "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP")
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP", Type: "String", Value: fmt.Sprintf("SHA256:%s", key1Hash), Default: ""})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP", Type: "String", Value: fmt.Sprintf("SHA256:%s", key2Hash), Default: ""})
 	}
 
 	assertSCIMDescribe := func(details []sdk.SecurityIntegrationProperty, enabled, networkPolicy, runAsRole, syncPassword, comment string) {
@@ -529,7 +525,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			blockedRolesList:        role1.Name,
 			networkPolicy:           networkPolicy.Name,
 			comment:                 "a",
-		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true", rsaKeyHash, rsaKeyHash)
 
 		assertSecurityIntegration(t, integration, id, "OAUTH - CUSTOM", true, "a")
 	})
@@ -1083,7 +1079,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			blockedRolesList:        role1.Name,
 			networkPolicy:           networkPolicy.Name,
 			comment:                 "a",
-		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true")
+		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true", rsaKeyHash, rsaKeyHash)
 
 		unsetRequest := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).
 			WithUnset(

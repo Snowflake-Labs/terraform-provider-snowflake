@@ -4,7 +4,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const showOutputAttributeName = "show_output"
+const (
+	showOutputAttributeName     = "show_output"
+	describeOutputAttributeName = "describe_output"
+)
 
 // handleExternalChangesToObject assumes that show output is kept in showOutputAttributeName attribute
 func handleExternalChangesToObject(d *schema.ResourceData, mappings ...showMapping) error {

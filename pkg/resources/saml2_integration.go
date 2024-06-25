@@ -10,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -150,13 +151,29 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Date and time when the SAML2 integration was created.",
 	},
+	showOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowSecurityIntegrationSchema,
+		},
+	},
+	describeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.DescribeSaml2IntegrationSchema,
+		},
+	},
 }
 
 // SAML2Integration returns a pointer to the resource representing a SAML2 security integration.
 func SAML2Integration() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextSAML2Integration,
-		ReadContext:   ReadContextSAML2Integration,
+		ReadContext:   ReadContextSAML2Integration(true),
 		UpdateContext: UpdateContextSAML2Integration,
 		DeleteContext: DeleteContextSAM2LIntegration,
 		CustomizeDiff: customdiff.Sequence(
@@ -171,7 +188,7 @@ func SAML2Integration() *schema.Resource {
 	}
 }
 
-func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -262,151 +279,153 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(name)
 
-	return ReadContextSAML2Integration(ctx, d, meta)
+	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
 
-func ReadContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query security integration. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
-				},
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query security integration. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
+		}
+
+		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
+			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
+		}
+
+		if err := d.Set("name", integration.Name); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("comment", integration.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("enabled", integration.Enabled); err != nil {
+			return diag.FromErr(err)
+		}
+
+		integrationProperties, err := client.SecurityIntegrations.Describe(ctx, id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		for _, property := range integrationProperties {
+			name := property.Name
+			value := property.Value
+			switch name {
+			case "ENABLED", "COMMENT":
+				// set using the SHOW INTEGRATION, ignoring here
+			case "SAML2_ISSUER":
+				if err := d.Set("saml2_issuer", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SSO_URL":
+				if err := d.Set("saml2_sso_url", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_PROVIDER":
+				if err := d.Set("saml2_provider", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_X509_CERT":
+				if err := d.Set("saml2_x509_cert", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL":
+				if err := d.Set("saml2_sp_initiated_login_page_label", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_ENABLE_SP_INITIATED":
+				if err := d.Set("saml2_enable_sp_initiated", helpers.StringToBool(value)); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SNOWFLAKE_X509_CERT":
+				if err := d.Set("saml2_snowflake_x509_cert", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SIGN_REQUEST":
+				if err := d.Set("saml2_sign_request", helpers.StringToBool(value)); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_REQUESTED_NAMEID_FORMAT":
+				if err := d.Set("saml2_requested_nameid_format", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_POST_LOGOUT_REDIRECT_URL":
+				if err := d.Set("saml2_post_logout_redirect_url", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_FORCE_AUTHN":
+				if err := d.Set("saml2_force_authn", helpers.StringToBool(value)); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SNOWFLAKE_ISSUER_URL":
+				if err := d.Set("saml2_snowflake_issuer_url", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SNOWFLAKE_ACS_URL":
+				if err := d.Set("saml2_snowflake_acs_url", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SNOWFLAKE_METADATA":
+				if err := d.Set("saml2_snowflake_metadata", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_DIGEST_METHODS_USED":
+				if err := d.Set("saml2_digest_methods_used", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "SAML2_SIGNATURE_METHODS_USED":
+				if err := d.Set("saml2_signature_methods_used", value); err != nil {
+					return diag.FromErr(err)
+				}
+			case "ALLOWED_USER_DOMAINS":
+				value = strings.TrimLeft(value, "[")
+				value = strings.TrimRight(value, "]")
+				elems := strings.Split(value, ",")
+				if value == "" {
+					elems = nil
+				}
+				if err := d.Set("allowed_user_domains", elems); err != nil {
+					return diag.FromErr(err)
+				}
+			case "ALLOWED_EMAIL_PATTERNS":
+				value = strings.TrimLeft(value, "[")
+				value = strings.TrimRight(value, "]")
+				elems := strings.Split(value, ",")
+				if value == "" {
+					elems = nil
+				}
+				if err := d.Set("allowed_email_patterns", elems); err != nil {
+					return diag.FromErr(err)
+				}
+			default:
+				log.Printf("[WARN] unexpected property %v returned from Snowflake", name)
 			}
 		}
-		return diag.FromErr(err)
-	}
 
-	if c := integration.Category; c != sdk.SecurityIntegrationCategory {
-		return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
+		return nil
 	}
-
-	if err := d.Set("name", integration.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("comment", integration.Comment); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("enabled", integration.Enabled); err != nil {
-		return diag.FromErr(err)
-	}
-
-	integrationProperties, err := client.SecurityIntegrations.Describe(ctx, id)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	for _, property := range integrationProperties {
-		name := property.Name
-		value := property.Value
-		switch name {
-		case "ENABLED", "COMMENT":
-			// set using the SHOW INTEGRATION, ignoring here
-		case "SAML2_ISSUER":
-			if err := d.Set("saml2_issuer", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SSO_URL":
-			if err := d.Set("saml2_sso_url", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_PROVIDER":
-			if err := d.Set("saml2_provider", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_X509_CERT":
-			if err := d.Set("saml2_x509_cert", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL":
-			if err := d.Set("saml2_sp_initiated_login_page_label", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_ENABLE_SP_INITIATED":
-			if err := d.Set("saml2_enable_sp_initiated", helpers.StringToBool(value)); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SNOWFLAKE_X509_CERT":
-			if err := d.Set("saml2_snowflake_x509_cert", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SIGN_REQUEST":
-			if err := d.Set("saml2_sign_request", helpers.StringToBool(value)); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_REQUESTED_NAMEID_FORMAT":
-			if err := d.Set("saml2_requested_nameid_format", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_POST_LOGOUT_REDIRECT_URL":
-			if err := d.Set("saml2_post_logout_redirect_url", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_FORCE_AUTHN":
-			if err := d.Set("saml2_force_authn", helpers.StringToBool(value)); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SNOWFLAKE_ISSUER_URL":
-			if err := d.Set("saml2_snowflake_issuer_url", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SNOWFLAKE_ACS_URL":
-			if err := d.Set("saml2_snowflake_acs_url", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SNOWFLAKE_METADATA":
-			if err := d.Set("saml2_snowflake_metadata", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_DIGEST_METHODS_USED":
-			if err := d.Set("saml2_digest_methods_used", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "SAML2_SIGNATURE_METHODS_USED":
-			if err := d.Set("saml2_signature_methods_used", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "ALLOWED_USER_DOMAINS":
-			value = strings.TrimLeft(value, "[")
-			value = strings.TrimRight(value, "]")
-			elems := strings.Split(value, ",")
-			if value == "" {
-				elems = nil
-			}
-			if err := d.Set("allowed_user_domains", elems); err != nil {
-				return diag.FromErr(err)
-			}
-		case "ALLOWED_EMAIL_PATTERNS":
-			value = strings.TrimLeft(value, "[")
-			value = strings.TrimRight(value, "]")
-			elems := strings.Split(value, ",")
-			if value == "" {
-				elems = nil
-			}
-			if err := d.Set("allowed_email_patterns", elems); err != nil {
-				return diag.FromErr(err)
-			}
-		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", name)
-		}
-	}
-
-	return nil
 }
 
-func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	set, unset := sdk.NewSaml2IntegrationSetRequest(), sdk.NewSaml2IntegrationUnsetRequest()
@@ -525,10 +544,10 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(err)
 		}
 	}
-	return ReadContextSAML2Integration(ctx, d, meta)
+	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
 
-func DeleteContextSAM2LIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSAM2LIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
