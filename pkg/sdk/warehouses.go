@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -318,7 +319,10 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 				return err
 			}
 			defer func() {
-				_ = c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
+				err := c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
+				if err != nil {
+					log.Printf("[DEBUG] error occured during warehouse resumption, err=%v", err)
+				}
 			}()
 		}
 	}
