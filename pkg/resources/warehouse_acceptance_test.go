@@ -676,31 +676,31 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
-					snowflakechecks.CheckAutoResume(t, id, false),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "true"),
+					snowflakechecks.CheckAutoResume(t, id, true),
 				),
 			},
 			// change auto resume externally
 			{
 				PreConfig: func() {
 					// we change the auto resume to the type different from default, expecting action
-					acc.TestClient().Warehouse.UpdateAutoResume(t, id, true)
+					acc.TestClient().Warehouse.UpdateAutoResume(t, id, false)
 				},
 				Config: warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_resume", "show_output"),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_resume", sdk.String("unknown"), sdk.String("true")),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_resume", sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("unknown")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_resume", sdk.String("unknown"), sdk.String("false")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_resume", sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("false"), sdk.String("unknown")),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "false"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "true"),
 					snowflakechecks.CheckWarehouseType(t, id, sdk.WarehouseTypeStandard),
 				),
 			},
@@ -709,9 +709,9 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "true"),
 				),
 			},
 		},
