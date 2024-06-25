@@ -419,10 +419,9 @@ type Warehouse struct {
 	Comment                         string
 	EnableQueryAcceleration         bool
 	QueryAccelerationMaxScaleFactor int
-	// TODO [next PR]: change type to identifier
-	ResourceMonitor string
-	ScalingPolicy   ScalingPolicy
-	OwnerRoleType   string
+	ResourceMonitor                 AccountObjectIdentifier
+	ScalingPolicy                   ScalingPolicy
+	OwnerRoleType                   string
 }
 
 type warehouseDBRow struct {
@@ -485,7 +484,6 @@ func (row warehouseDBRow) convert() *Warehouse {
 		Comment:                         row.Comment,
 		EnableQueryAcceleration:         row.EnableQueryAcceleration,
 		QueryAccelerationMaxScaleFactor: row.QueryAccelerationMaxScaleFactor,
-		ResourceMonitor:                 row.ResourceMonitor,
 		ScalingPolicy:                   ScalingPolicy(row.ScalingPolicy),
 	}
 	if val, err := strconv.ParseFloat(row.Available, 64); err != nil {
@@ -505,6 +503,9 @@ func (row warehouseDBRow) convert() *Warehouse {
 	}
 	if row.OwnerRoleType.Valid {
 		wh.OwnerRoleType = row.OwnerRoleType.String
+	}
+	if row.ResourceMonitor != "null" {
+		wh.ResourceMonitor = NewAccountObjectIdentifierFromFullyQualifiedName(row.ResourceMonitor)
 	}
 	return wh
 }
