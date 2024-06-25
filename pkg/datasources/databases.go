@@ -62,7 +62,7 @@ var databasesSchema = map[string]*schema.Schema{
 		Description: "Holds the output of SHOW DATABASES.",
 		Elem: &schema.Resource{
 			Schema: resources.MergeMaps(
-				schemas.DatabaseShowSchema,
+				schemas.ShowDatabaseSchema,
 				map[string]*schema.Schema{
 					"describe_output": {
 						Type:        schema.TypeList,
@@ -152,7 +152,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			databaseParameters = []map[string]any{schemas.DatabaseParametersToSchema(parameters)}
 		}
 
-		flattenedDatabases[i] = schemas.DatabaseToSchema(database)
+		flattenedDatabases[i] = schemas.DatabaseShowToSchema(database)
 		flattenedDatabases[i]["describe_output"] = databaseDescription
 		flattenedDatabases[i]["parameters"] = databaseParameters
 	}

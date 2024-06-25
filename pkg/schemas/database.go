@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var DatabaseShowSchema = map[string]*schema.Schema{
+var ShowDatabaseSchema = map[string]*schema.Schema{
 	"created_on": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -60,7 +60,7 @@ var DatabaseShowSchema = map[string]*schema.Schema{
 	},
 }
 
-func DatabaseToSchema(database sdk.Database) map[string]any {
+func DatabaseShowToSchema(database sdk.Database) map[string]any {
 	return map[string]any{
 		"created_on":      database.CreatedOn.String(),
 		"name":            database.Name,
