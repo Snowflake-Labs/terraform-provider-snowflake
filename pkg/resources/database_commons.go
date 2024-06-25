@@ -259,16 +259,20 @@ func HandleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSe
 	return JoinDiags(
 		handleValuePropertyChange[int](d, "data_retention_time_in_days", &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
 		handleValuePropertyChange[int](d, "max_data_extension_time_in_days", &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
-		handleValuePropertyChangeWithMapping[string](d, "external_volume", &set.ExternalVolume, &unset.ExternalVolume, sdk.NewAccountObjectIdentifier),
-		handleValuePropertyChangeWithMapping[string](d, "catalog", &set.Catalog, &unset.Catalog, sdk.NewAccountObjectIdentifier),
+		handleValuePropertyChangeWithMapping[string](d, "external_volume", &set.ExternalVolume, &unset.ExternalVolume, func(value string) (sdk.AccountObjectIdentifier, error) {
+			return sdk.NewAccountObjectIdentifier(value), nil
+		}),
+		handleValuePropertyChangeWithMapping[string](d, "catalog", &set.Catalog, &unset.Catalog, func(value string) (sdk.AccountObjectIdentifier, error) {
+			return sdk.NewAccountObjectIdentifier(value), nil
+		}),
 		handleValuePropertyChange[bool](d, "replace_invalid_characters", &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
 		handleValuePropertyChange[string](d, "default_ddl_collation", &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
-		handleValuePropertyChangeWithMapping[string](d, "storage_serialization_policy", &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, func(value string) sdk.StorageSerializationPolicy { return sdk.StorageSerializationPolicy(value) }),
-		handleValuePropertyChangeWithMapping[string](d, "log_level", &set.LogLevel, &unset.LogLevel, func(value string) sdk.LogLevel { return sdk.LogLevel(value) }),
-		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, func(value string) sdk.TraceLevel { return sdk.TraceLevel(value) }),
+		handleValuePropertyChangeWithMapping[string](d, "storage_serialization_policy", &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleValuePropertyChangeWithMapping[string](d, "log_level", &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
+		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
 		handleValuePropertyChange[int](d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
 		handleValuePropertyChange[int](d, "task_auto_retry_attempts", &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
-		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, func(value string) sdk.WarehouseSize { return sdk.WarehouseSize(value) }),
+		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
 		handleValuePropertyChange[int](d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
 		handleValuePropertyChange[int](d, "user_task_minimum_trigger_interval_in_seconds", &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
 		handleValuePropertyChange[bool](d, "quoted_identifiers_ignore_case", &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
@@ -278,17 +282,21 @@ func HandleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSe
 
 // handleValuePropertyChange calls internally handleValuePropertyChangeWithMapping with identity mapping
 func handleValuePropertyChange[T any](d *schema.ResourceData, key string, setField **T, unsetField **bool) diag.Diagnostics {
-	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) T { return value })
+	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) (T, error) { return value, nil })
 }
 
 // handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected
 // (or unknown value that basically indicates diff.SetNewComputed was called on the key), it checks if the value is set in the configuration.
 // If the value is set, setField (representing setter for a value) is set to the new planned value applying mapping beforehand in cases where enum values,
 // identifiers, etc. have to be set. Otherwise, unsetField is populated.
-func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) R) diag.Diagnostics {
+func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) (R, error)) diag.Diagnostics {
 	if d.HasChange(key) || !d.GetRawPlan().AsValueMap()[key].IsKnown() {
 		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
-			*setField = sdk.Pointer(mapping(d.Get(key).(T)))
+			mappedValue, err := mapping(d.Get(key).(T))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			*setField = sdk.Pointer(mappedValue)
 		} else {
 			*unsetField = sdk.Bool(true)
 		}

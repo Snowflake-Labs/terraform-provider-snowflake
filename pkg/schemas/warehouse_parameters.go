@@ -32,6 +32,9 @@ var ShowWarehouseParametersSchema = map[string]*schema.Schema{
 			Schema: ShowParameterSchema,
 		},
 	},
+	//"max_concurrency_level":               ParameterSchema,
+	//"statement_queued_timeout_in_seconds": ParameterSchema,
+	//"statement_timeout_in_seconds":        ParameterSchema,
 }
 
 // TODO [SNOW-1473425]: validate all present?
@@ -39,13 +42,11 @@ func WarehouseParametersToSchema(parameters []*sdk.Parameter) map[string]any {
 	warehouseParameters := make(map[string]any)
 	for _, param := range parameters {
 		parameterSchema := ParameterToSchema(param)
-		switch strings.ToUpper(param.Key) {
-		case string(sdk.ObjectParameterMaxConcurrencyLevel):
-			warehouseParameters["max_concurrency_level"] = []map[string]any{parameterSchema}
-		case string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds):
-			warehouseParameters["statement_queued_timeout_in_seconds"] = []map[string]any{parameterSchema}
-		case string(sdk.ObjectParameterStatementTimeoutInSeconds):
-			warehouseParameters["statement_timeout_in_seconds"] = []map[string]any{parameterSchema}
+		switch key := strings.ToUpper(param.Key); key {
+		case string(sdk.ObjectParameterMaxConcurrencyLevel),
+			string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds),
+			string(sdk.ObjectParameterStatementTimeoutInSeconds):
+			warehouseParameters[strings.ToLower(key)] = []map[string]any{parameterSchema}
 		}
 	}
 	return warehouseParameters

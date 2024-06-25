@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -59,77 +61,20 @@ var databasesSchema = map[string]*schema.Schema{
 		Description: "Holds the output of SHOW DATABASES.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"created_on": {
-					Type:     schema.TypeString,
-					Computed: true,
+				"show_output": {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW DATABASES.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowDatabaseSchema,
+					},
 				},
-				"name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"kind": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"is_transient": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"is_default": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"is_current": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"origin": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"owner": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"comment": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"options": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"retention_time": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
-				"resource_group": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"owner_role_type": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"description": {
+				"describe_output": {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of DESCRIBE DATABASE.",
 					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"created_on": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"name": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"kind": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
+						Schema: schemas.DatabaseDescribeSchema,
 					},
 				},
 				"parameters": {
@@ -137,28 +82,7 @@ var databasesSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
 					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"value": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"level": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"default": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"description": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
+						Schema: schemas.ShowDatabaseParametersSchema,
 					},
 				},
 			},
@@ -217,13 +141,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, description := range describeResult.Rows {
-				databaseDescription = append(databaseDescription, map[string]any{
-					"created_on": description.CreatedOn.String(),
-					"name":       description.Name,
-					"kind":       description.Kind,
-				})
-			}
+			databaseDescription = schemas.DatabaseDescriptionToSchema(*describeResult)
 		}
 
 		var databaseParameters []map[string]any
@@ -236,32 +154,12 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, parameter := range parameters {
-				databaseParameters = append(databaseParameters, map[string]any{
-					"key":         parameter.Key,
-					"value":       parameter.Value,
-					"default":     parameter.Default,
-					"level":       string(parameter.Level),
-					"description": parameter.Description,
-				})
-			}
+			databaseParameters = []map[string]any{schemas.DatabaseParametersToSchema(parameters)}
 		}
 
 		flattenedDatabases[i] = map[string]any{
-			"created_on":      database.CreatedOn.String(),
-			"name":            database.Name,
-			"kind":            database.Kind,
-			"is_transient":    database.Transient,
-			"is_default":      database.IsDefault,
-			"is_current":      database.IsCurrent,
-			"origin":          database.Origin,
-			"owner":           database.Owner,
-			"comment":         database.Comment,
-			"options":         database.Options,
-			"retention_time":  database.RetentionTime,
-			"resource_group":  database.ResourceGroup,
-			"owner_role_type": database.OwnerRoleType,
-			"description":     databaseDescription,
+			"show_output":     []map[string]any{schemas.DatabaseShowToSchema(database)},
+			"describe_output": databaseDescription,
 			"parameters":      databaseParameters,
 		}
 	}
