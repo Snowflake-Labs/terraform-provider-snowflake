@@ -3,7 +3,6 @@ package datasources
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -61,26 +60,32 @@ var databasesSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Holds the output of SHOW DATABASES.",
 		Elem: &schema.Resource{
-			Schema: resources.MergeMaps(
-				schemas.ShowDatabaseSchema,
-				map[string]*schema.Schema{
-					"describe_output": {
-						Type:        schema.TypeList,
-						Computed:    true,
-						Description: "Holds the output of DESCRIBE DATABASE.",
-						Elem: &schema.Resource{
-							Schema: schemas.DatabaseDescribeSchema,
-						},
+			Schema: map[string]*schema.Schema{
+				"show_output": {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW DATABASES.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowDatabaseSchema,
 					},
-					"parameters": {
-						Type:        schema.TypeList,
-						Computed:    true,
-						Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
-						Elem: &schema.Resource{
-							Schema: schemas.ShowDatabaseParametersSchema,
-						},
+				},
+				"describe_output": {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of DESCRIBE DATABASE.",
+					Elem: &schema.Resource{
+						Schema: schemas.DatabaseDescribeSchema,
 					},
-				}),
+				},
+				"parameters": {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowDatabaseParametersSchema,
+					},
+				},
+			},
 		},
 	},
 }
@@ -152,9 +157,11 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 			databaseParameters = []map[string]any{schemas.DatabaseParametersToSchema(parameters)}
 		}
 
-		flattenedDatabases[i] = schemas.DatabaseShowToSchema(database)
-		flattenedDatabases[i]["describe_output"] = databaseDescription
-		flattenedDatabases[i]["parameters"] = databaseParameters
+		flattenedDatabases[i] = map[string]any{
+			"show_output":     []map[string]any{schemas.DatabaseShowToSchema(database)},
+			"describe_output": databaseDescription,
+			"parameters":      databaseParameters,
+		}
 	}
 
 	err = d.Set("databases", flattenedDatabases)

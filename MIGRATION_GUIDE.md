@@ -158,7 +158,7 @@ The only difference would be that instead of writing/generating new configuratio
 - `replication_configuration` field was removed from `databases`.
 - `pattern` was replaced by `like` field.
 - Additional filtering options added (`limit`).
-- Added missing fields returned by SHOW DATABASES.
+- Added missing fields returned by SHOW DATABASES and enclosed its output in `show_output` field.
 - Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**). 
 The additional parameters call **DESC DATABASE** (with `with_describe` turned on) and **SHOW PARAMETERS IN DATABASE** (with `with_parameters` turned on) **per database** returned by **SHOW DATABASES**.
 The outputs of both commands are held in `databases` entry, where **DESC DATABASE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN DATABASE** in the `parameters` field.

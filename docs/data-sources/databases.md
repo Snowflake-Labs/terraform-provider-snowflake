@@ -120,21 +120,9 @@ Optional:
 
 Read-Only:
 
-- `comment` (String)
-- `created_on` (String)
 - `describe_output` (List of Object) (see [below for nested schema](#nestedobjatt--databases--describe_output))
-- `is_current` (Boolean)
-- `is_default` (Boolean)
-- `is_transient` (Boolean)
-- `kind` (String)
-- `name` (String)
-- `options` (String)
-- `origin` (String)
-- `owner` (String)
-- `owner_role_type` (String)
 - `parameters` (List of Object) (see [below for nested schema](#nestedobjatt--databases--parameters))
-- `resource_group` (String)
-- `retention_time` (Number)
+- `show_output` (List of Object) (see [below for nested schema](#nestedobjatt--databases--show_output))
 
 <a id="nestedobjatt--databases--describe_output"></a>
 ### Nested Schema for `databases.describe_output`
@@ -358,3 +346,24 @@ Read-Only:
 - `key` (String)
 - `level` (String)
 - `value` (String)
+
+
+
+<a id="nestedobjatt--databases--show_output"></a>
+### Nested Schema for `databases.show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `is_transient` (Boolean)
+- `kind` (String)
+- `name` (String)
+- `options` (String)
+- `origin` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `resource_group` (String)
+- `retention_time` (Number)
