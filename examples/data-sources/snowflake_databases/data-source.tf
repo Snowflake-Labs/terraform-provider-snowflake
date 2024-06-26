@@ -38,7 +38,7 @@ output "limit_output" {
 
 # Without additional data (to limit the number of calls make for every found database)
 data "snowflake_databases" "only_show" {
-  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.description field
+  # with_describe is turned on by default and it calls DESCRIBE DATABASE for every database found and attaches its output to databases.*.describe_output field
   with_describe = false
 
   # with_parameters is turned on by default and it calls SHOW PARAMETERS FOR DATABASE for every database found and attaches its output to databases.*.parameters field

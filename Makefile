@@ -117,4 +117,10 @@ generate-docs-additional-files: ## generate docs additional files
 generate-docs-additional-files-check: generate-docs-additional-files ## check that docs additional files have been generated
 	git diff --exit-code -- examples/additional
 
+generate-show-output-schemas: ## Generate show output schemas with mappers
+	go generate ./pkg/schemas/generate.go
+
+clean-show-output-schemas: ## Clean generated show output schemas
+	rm -f ./pkg/schemas/*_gen.go
+
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
