@@ -39,9 +39,11 @@ func TestInt_CortexSearchServiceCreateAndDrop(t *testing.T) {
 		cortexSearchServiceById, err := client.CortexSearchServices.ShowByID(ctx, name)
 		require.NoError(t, err)
 		require.NotNil(t, cortexSearchServiceById)
+		require.NotEmpty(t, cortexSearchServiceById.CreatedOn)
 		require.Equal(t, name.Name(), cortexSearchServiceById.Name)
 		require.Equal(t, name.DatabaseName(), cortexSearchServiceById.DatabaseName)
 		require.Equal(t, name.SchemaName(), cortexSearchServiceById.SchemaName)
+		require.Equal(t, comment, cortexSearchServiceById.Comment)
 	})
 }
 
@@ -56,8 +58,18 @@ func TestInt_CortexSearchServiceDescribe(t *testing.T) {
 	t.Cleanup(cortexSearchServiceCleanup)
 
 	t.Run("when cortex search service exists", func(t *testing.T) {
-		_, err := client.CortexSearchServices.Describe(ctx, cortexSearchService.ID())
+		cortexSearchServiceDetails, err := client.CortexSearchServices.Describe(ctx, cortexSearchService.ID())
 		require.NoError(t, err)
+		assert.Equal(t, cortexSearchService.Name, cortexSearchServiceDetails.Name)
+		assert.Equal(t, cortexSearchService.SchemaName, cortexSearchServiceDetails.Schema)
+		assert.Equal(t, cortexSearchService.DatabaseName, cortexSearchServiceDetails.Database)
+		assert.NotEmpty(t, cortexSearchServiceDetails.Warehouse)
+		assert.Equal(t, "2 minutes", cortexSearchServiceDetails.TargetLag)
+		assert.Equal(t, "ID", cortexSearchServiceDetails.On)
+		assert.NotEmpty(t, cortexSearchServiceDetails.ServiceUrl)
+		assert.NotEmpty(t, cortexSearchServiceDetails.RefreshedOn)
+		assert.NotEmpty(t, cortexSearchServiceDetails.NumRowsIndexed)
+		assert.NotEmpty(t, cortexSearchServiceDetails.Comment)
 	})
 
 	t.Run("when cortex search service does not exist", func(t *testing.T) {
