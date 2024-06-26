@@ -23,7 +23,6 @@ var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypeAlert,
 	ObjectTypeAuthenticationPolicy,
 	ObjectTypeComputePool,
-	ObjectTypeCortexSearchService,
 	ObjectTypeDataMetricFunction,
 	ObjectTypeDatabase,
 	ObjectTypeDatabaseRole,

@@ -185,9 +185,7 @@ const (
 	// SchemaObjectPrivilegeSelect  SchemaObjectPrivilege = "SELECT" (duplicate)
 
 	// For CORTEX SEARCH SERVICE
-	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
-	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
-	// SchemaObjectPrivilegeSelect  SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "USAGE" (duplicate)
 
 	// For EVENT TABLE
 	SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT"
