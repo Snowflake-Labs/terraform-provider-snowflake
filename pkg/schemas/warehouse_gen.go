@@ -147,7 +147,7 @@ func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema["comment"] = warehouse.Comment
 	warehouseSchema["enable_query_acceleration"] = warehouse.EnableQueryAcceleration
 	warehouseSchema["query_acceleration_max_scale_factor"] = warehouse.QueryAccelerationMaxScaleFactor
-	warehouseSchema["resource_monitor"] = warehouse.ResourceMonitor.Name()
+	warehouseSchema["resource_monitor"] = warehouse.ResourceMonitor.FullyQualifiedName()
 	warehouseSchema["scaling_policy"] = string(warehouse.ScalingPolicy)
 	warehouseSchema["owner_role_type"] = warehouse.OwnerRoleType
 	return warehouseSchema
