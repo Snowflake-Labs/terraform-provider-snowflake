@@ -89,9 +89,10 @@ type cortexSearchServiceDetailsRow struct {
 	Warehouse       string         `db:"warehouse"`
 	TargetLag       string         `db:"target_lag"`
 	SearchColumn    string         `db:"search_column"`
-	IncludedColumns []string       `db:"included_columns"`
+	IncludedColumns sql.NullString `db:"included_columns"`
 	ServiceUrl      string         `db:"service_url"`
-	NumRowsIndexed  int            `db:"num_rows_indexed"`
+	RefreshedOn     sql.NullString `db:"refreshed_on"`
+	NumRowsIndexed  sql.NullInt64  `db:"num_rows_indexed"`
 	Comment         sql.NullString `db:"comment"`
 }
 type CortexSearchServiceDetails struct {
@@ -103,8 +104,9 @@ type CortexSearchServiceDetails struct {
 	On             string
 	Attributes     []string
 	ServiceUrl     string
-	NumRowsIndexed *int
-	Comment        *string
+	RefreshedOn    string
+	NumRowsIndexed int
+	Comment        string
 }
 
 // DropCortexSearchServiceOptions is based on https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/drop-cortex-search.

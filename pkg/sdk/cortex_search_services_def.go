@@ -87,9 +87,10 @@ var CortexSearchServiceDef = g.NewInterface(
 		Field("warehouse", "string").
 		Field("target_lag", "string").
 		Field("search_column", "string").
-		Field("included_columns", "[]string").
+		OptionalText("included_columns").
 		Field("service_url", "string").
-		Field("num_rows_indexed", "int").
+		OptionalText("refreshed_on").
+		OptionalNumber("num_rows_indexed").
 		OptionalText("comment"),
 	g.PlainStruct("CortexSearchServiceDetails").
 		Field("Name", "string").
@@ -100,8 +101,9 @@ var CortexSearchServiceDef = g.NewInterface(
 		Field("On", "string").
 		Field("Attributes", "[]string").
 		Field("ServiceUrl", "string").
-		Field("NumRowsIndexed", "*int").
-		OptionalText("Comment"),
+		Field("RefreshedOn", "string").
+		Field("NumRowsIndexed", "int").
+		Field("Comment", "string"),
 	g.NewQueryStruct("DescribeCortexSearchService").
 		Describe().
 		SQL("CORTEX SEARCH SERVICE").

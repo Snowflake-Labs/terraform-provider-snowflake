@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -33,8 +34,10 @@ func (v *cortexSearchServices) Show(ctx context.Context, request *ShowCortexSear
 }
 
 func (v *cortexSearchServices) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	cortexSearchServices, err := v.Show(ctx, NewShowCortexSearchServiceRequest())
+	request := NewShowCortexSearchServiceRequest().
+		WithIn(In{Schema: id.SchemaId()}).
+		WithLike(Like{Pattern: String(id.Name())})
+	cortexSearchServices, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +110,14 @@ func (r *ShowCortexSearchServiceRequest) toOpts() *ShowCortexSearchServiceOption
 }
 
 func (r cortexSearchServiceRow) convert() *CortexSearchService {
-	// TODO: Mapping
-	return &CortexSearchService{}
+	cortexSearchService := &CortexSearchService{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
+		Comment:      r.Comment,
+	}
+	return cortexSearchService
 }
 
 func (r *DescribeCortexSearchServiceRequest) toOpts() *DescribeCortexSearchServiceOptions {
@@ -119,8 +128,29 @@ func (r *DescribeCortexSearchServiceRequest) toOpts() *DescribeCortexSearchServi
 }
 
 func (r cortexSearchServiceDetailsRow) convert() *CortexSearchServiceDetails {
-	// TODO: Mapping
-	return &CortexSearchServiceDetails{}
+	row := &CortexSearchServiceDetails{
+		Name:       r.Name,
+		Schema:     r.Schema,
+		Database:   r.Database,
+		Warehouse:  r.Warehouse,
+		TargetLag:  r.TargetLag,
+		On:         r.SearchColumn,
+		ServiceUrl: r.ServiceUrl,
+	}
+	if r.IncludedColumns.Valid {
+		row.Attributes = strings.Split(r.IncludedColumns.String, ",")
+	}
+	if r.NumRowsIndexed.Valid {
+		row.NumRowsIndexed = int(r.NumRowsIndexed.Int64)
+	}
+	if r.RefreshedOn.Valid {
+		row.RefreshedOn = r.RefreshedOn.String
+	}
+	if r.Comment.Valid {
+		row.Comment = r.Comment.String
+	}
+
+	return row
 }
 
 func (r *DropCortexSearchServiceRequest) toOpts() *DropCortexSearchServiceOptions {
