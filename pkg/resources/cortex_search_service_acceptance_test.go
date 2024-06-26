@@ -50,13 +50,14 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "on", "id"),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "on", "id"),
+					resource.TestCheckNoResourceAttr(resourceName, "attributes"),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag", "2 minutes"),
-					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
 
 					// computed attributes
 					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
@@ -71,13 +72,14 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 				ConfigVariables: variableSet2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "on", "id"),
-					resource.TestCheckResourceAttr(resourceName, "attributes", "type"),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "on", "id"),
+					resource.TestCheckResourceAttr(resourceName, "attributes", "type"),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
 
 					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
 						if value != createdOn {

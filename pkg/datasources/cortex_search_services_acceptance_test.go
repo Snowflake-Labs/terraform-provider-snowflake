@@ -53,9 +53,10 @@ func TestAcc_CortexSearchServices_complete(t *testing.T) {
 					// computed attributes
 					resource.TestCheckResourceAttr(dataSourceName, "records.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.created_on"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.database_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.schema_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.comment"),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.name", name),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.schema_name", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.comment", "Terraform acceptance test"),
 				),
 			},
 			{
@@ -63,6 +64,13 @@ func TestAcc_CortexSearchServices_complete(t *testing.T) {
 				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "records.#", "1"),
+
+					// re-check computed attributes to ensure we're getting the same record
+					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.created_on"),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.name", name),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.schema_name", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(dataSourceName, "records.0.comment", "Terraform acceptance test"),
 				),
 			},
 		},

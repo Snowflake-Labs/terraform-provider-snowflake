@@ -41,7 +41,7 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"attributes": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Optional:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Description: "Specifies the list of columns in the base table to enable filtering on when issuing queries to the service.",
