@@ -135,6 +135,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	flattenedDatabases := make([]map[string]any, len(databases))
 
 	for i, database := range databases {
+		database := database
 		var databaseDescription []map[string]any
 		if d.Get("with_describe").(bool) {
 			describeResult, err := client.Databases.Describe(ctx, database.ID())
@@ -158,7 +159,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		}
 
 		flattenedDatabases[i] = map[string]any{
-			"show_output":     []map[string]any{schemas.DatabaseShowToSchema(database)},
+			"show_output":     []map[string]any{schemas.DatabaseToSchema(&database)},
 			"describe_output": databaseDescription,
 			"parameters":      databaseParameters,
 		}

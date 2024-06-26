@@ -32,7 +32,7 @@ var (
 
 func init() {
 	for _, param := range databaseParameters {
-		ShowDatabaseParametersSchema[strings.ToLower(string(param))] = ParameterSchema
+		ShowDatabaseParametersSchema[strings.ToLower(string(param))] = ParameterListSchema
 	}
 }
 
