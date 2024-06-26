@@ -40,7 +40,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.name", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.kind", "STANDARD"),
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_transient", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_default", "false"),
 					// Commenting as this value depends on the currently used database, which is different when running as a single test and multiple tests (e.g., on CI)
 					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "true"),
@@ -83,7 +83,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.name", databaseName),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.kind", "STANDARD"),
-					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_transient", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_default", "false"),
 					// Commenting for the same reason as above
 					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "false"),
