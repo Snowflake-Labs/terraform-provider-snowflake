@@ -61,6 +61,14 @@ func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request 
 	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
 }
 
+func (c *SecurityIntegrationClient) UpdateOauthForClients(t *testing.T, request *sdk.AlterOauthForCustomClientsSecurityIntegrationRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterOauthForCustomClients(ctx, request)
+	require.NoError(t, err)
+}
+
 func (c *SecurityIntegrationClient) DropSecurityIntegrationFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

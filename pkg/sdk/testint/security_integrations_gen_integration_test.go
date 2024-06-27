@@ -18,7 +18,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	acsURL := testClientHelper().Context.ACSURL(t)
 	issuerURL := testClientHelper().Context.IssuerURL(t)
 	cert := random.GenerateX509(t)
-	rsaKey := random.GenerateRSAPublicKey(t)
+	rsaKey, _ := random.GenerateRSAPublicKey(t)
 
 	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
 	t.Cleanup(revertParameter)
@@ -135,7 +135,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		}
 		err := client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
 		require.NoError(t, err)
-		cleanupSecurityIntegration(t, id)
+		// cleanupSecurityIntegration(t, id)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 
