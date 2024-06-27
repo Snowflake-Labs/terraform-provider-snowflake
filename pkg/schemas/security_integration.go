@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO: multiple PRs touching the security integrations are in progress, this should be filled by all the possible properties (the mapping method below should be too)
+// TODO [SNOW-1348100]: multiple PRs touching the security integrations are in progress, this should be filled by all the possible properties (the mapping method below should be too)
 var SecurityIntegrationDescribeSchema = map[string]*schema.Schema{
 	"todo": SecurityIntegrationListSchema,
 }

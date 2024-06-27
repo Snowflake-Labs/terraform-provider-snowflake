@@ -77,18 +77,19 @@ func ReadSecurityIntegrations(ctx context.Context, d *schema.ResourceData, meta 
 
 	for i, securityIntegration := range securityIntegrations {
 		securityIntegration := securityIntegration
-		var securityIntegrationDescription map[string]any
+		var securityIntegrationDescriptions []map[string]any
 		if d.Get("with_describe").(bool) {
 			descriptions, err := client.SecurityIntegrations.Describe(ctx, securityIntegration.ID())
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			securityIntegrationDescription = schemas.SecurityIntegrationsDescriptionsToSchema(descriptions)
+			securityIntegrationDescriptions = make([]map[string]any, 1)
+			securityIntegrationDescriptions[0] = schemas.SecurityIntegrationsDescriptionsToSchema(descriptions)
 		}
 
 		flattenedSecurityIntegrations[i] = map[string]any{
 			"show_output":     []map[string]any{schemas.SecurityIntegrationToSchema(&securityIntegration)},
-			"describe_output": []map[string]any{securityIntegrationDescription},
+			"describe_output": securityIntegrationDescriptions,
 		}
 	}
 
