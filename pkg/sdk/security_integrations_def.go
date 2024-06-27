@@ -17,6 +17,20 @@ const (
 	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = "CLIENT_SECRET_POST"
 )
 
+var AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = []ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption{
+	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost,
+}
+
+func ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption(s string) (ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost):
+		return ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost, nil
+	default:
+		return "", fmt.Errorf("invalid ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption: %s", s)
+	}
+}
+
 type ExternalOauthSecurityIntegrationTypeOption string
 
 const (

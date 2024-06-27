@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
@@ -102,4 +103,55 @@ func RSAKeyHash(key string) (string, error) {
 
 	hash := sha256.Sum256(pubKeyBytes)
 	return fmt.Sprintf("SHA256:%s", base64.StdEncoding.EncodeToString(hash[:])), nil
+}
+
+var apiAuthCommonSchema = map[string]*schema.Schema{
+	"name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
+	},
+	"enabled": {
+		Type:        schema.TypeBool,
+		Required:    true,
+		Description: "Specifies whether this security integration is enabled or disabled.",
+	},
+	"oauth_token_endpoint": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).",
+	},
+	"oauth_client_auth_method": {
+		Type:     schema.TypeString,
+		Optional: true,
+		// ValidateDiagFunc: sdk,
+		Description: "Specifies the client ID for the OAuth application in the external service.",
+	},
+	"oauth_client_id": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the client ID for the OAuth application in the external service.",
+	},
+	"oauth_client_secret": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the client secret for the OAuth application in the ServiceNow instance from the previous step. The connector uses this to request an access token from the ServiceNow instance.",
+	},
+	"oauth_access_token_validity": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(1),
+		Description:  "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
+	},
+	"comment": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies a comment for the integration.",
+	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Date and time when the integration was created.",
+	},
 }
