@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DescribeSecurityIntegrationSchema represents output of DESCRIBE query for the single SecurityIntegration.
-var DescribeSecurityIntegrationSchema = map[string]*schema.Schema{
+// DescribeScimSecurityIntegrationSchema represents output of DESCRIBE query for the single SecurityIntegration.
+var DescribeScimSecurityIntegrationSchema = map[string]*schema.Schema{
 	"enabled":        DescribePropertyListSchema,
 	"network_policy": DescribePropertyListSchema,
 	"run_as_role":    DescribePropertyListSchema,
@@ -16,9 +16,9 @@ var DescribeSecurityIntegrationSchema = map[string]*schema.Schema{
 	"comment":        DescribePropertyListSchema,
 }
 
-var _ = DescribeSecurityIntegrationSchema
+var _ = DescribeScimSecurityIntegrationSchema
 
-func SecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
+func ScimSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
 		switch securityIntegrationProperty.Name {
@@ -40,4 +40,4 @@ func SecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.S
 	return securityIntegrationSchema
 }
 
-var _ = SecurityIntegrationPropertiesToSchema
+var _ = ScimSecurityIntegrationPropertiesToSchema

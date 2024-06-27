@@ -88,9 +88,9 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	describeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
+		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
 		Elem: &schema.Resource{
-			Schema: schemas.DescribeSecurityIntegrationSchema,
+			Schema: schemas.DescribeScimSecurityIntegrationSchema,
 		},
 	},
 }
@@ -331,7 +331,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.SecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
+		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.ScimSecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
 
