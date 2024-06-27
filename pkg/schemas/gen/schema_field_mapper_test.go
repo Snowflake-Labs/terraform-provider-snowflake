@@ -86,7 +86,7 @@ func Test_MapToSchemaField(t *testing.T) {
 		},
 		{
 			field:    Field{"unexportedAccountObjectIdentifier", "sdk.AccountObjectIdentifier", "struct"},
-			expected: expectedValues{"unexported_account_object_identifier", schema.TypeString, false, FullyQualifiedName},
+			expected: expectedValues{"unexported_account_object_identifier", schema.TypeString, false, Name},
 		},
 		{
 			field:    Field{"unexportedDatabaseObjectIdentifier", "sdk.DatabaseObjectIdentifier", "struct"},
@@ -110,7 +110,7 @@ func Test_MapToSchemaField(t *testing.T) {
 		},
 		{
 			field:    Field{"unexportedAccountObjectIdentifierPtr", "*sdk.AccountObjectIdentifier", "*struct"},
-			expected: expectedValues{"unexported_account_object_identifier_ptr", schema.TypeString, true, FullyQualifiedName},
+			expected: expectedValues{"unexported_account_object_identifier_ptr", schema.TypeString, true, Name},
 		},
 		{
 			field:    Field{"unexportedDatabaseObjectIdentifierPtr", "*sdk.DatabaseObjectIdentifier", "*struct"},

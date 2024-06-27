@@ -23,22 +23,34 @@ Force new was added for the following attributes (because no usable SQL alter st
 - `run_as_role`
 
 ### snowflake_warehouse resource changes
+
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping.
+
 #### *(potential behavior change)* Default values removed
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider. Because of that the following defaults were removed:
-- `comment`
-- `statement_timeout_in_seconds`
-- `statement_queued_timeout_in_seconds`
-- `max_concurrency_level`
-- `enable_query_acceleration`
-- `query_acceleration_max_scale_factor`
-- `warehouse_type`
+- `comment` (previously `""`)
+- `enable_query_acceleration` (previously `false`)
+- `query_acceleration_max_scale_factor` (previously `8`)
+- `warehouse_type` (previously `"STANDARD"`)
+- `max_concurrency_level` (previously `8`)
+- `statement_queued_timeout_in_seconds` (previously `0`)
+- `statement_timeout_in_seconds` (previously `172800`)
 
-All previous defaults were aligned with the current Snowflake ones, however:
+**Beware!** For attributes being Snowflake parameters (in case of warehouse: `max_concurrency_level`, `statement_queued_timeout_in_seconds`, and `statement_timeout_in_seconds`), this is a breaking change. Previously, not setting a value for them was treated as a fallback to values hardcoded on the provider side. This caused warehouse creation with these parameters set on the warehouse level (and not using the Snowflake default from hierarchy; read more in the [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters)). To keep the previous values, fill in your configs to the default values listed above.
 
-[//]: # (TODO [SNOW-1348102 - next PR]: state migrator?)
-- if the given parameter was changed on the account level, terraform will try to update it
+All previous defaults were aligned with the current Snowflake ones, however it's not possible to distinguish between filled out value and no value in the automatic state upgrader. Therefore, if the given attribute is not filled out in your configuration, terraform will try to perform update after the change (to UNSET the given attribute to the Snowflake default); it should result in no changes on Snowflake object side, but it is required to make Terraform state aligned with your config. **All** other optional fields that were not set inside the config at all (because of the change in handling state logic on our provider side) will follow the same logic. To avoid the need for the changes, fill out the default fields in your config. Alternatively run apply; no further changes should be shown as a part of the plan.
 
-[//]: # (- TODO [SNOW-1348102 - next PR]: describe the new state approach if decided)
+#### *(note)* Automatic state migrations
+There are three migrations that should happen automatically with the version bump:
+- incorrect `2XLARGE`, `3XLARGE`, `4XLARGE`, `5XLARGE`, `6XLARGE` values for warehouse size are changed to the proper ones
+- deprecated `wait_for_provisioning` attribute is removed from the state
+- old empty resource monitor attribute is cleaned (earlier it was set to `"null"` string) 
+
+[//]: # (TODO [SNOW-1348102 - after discussion]: describe the new state approach if decided)
+
+#### *(fix)* Warehouse size UNSET
+
+Before the changes, removing warehouse size from the config was not handled properly. Because UNSET is not supported for warehouse size (check the [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-warehouse#properties-parameters) - usage notes for unset) and there are multiple defaults possible, removing the size from config will result in the resource recreation.
 
 #### *(behavior change)* Validation changes
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are adjusting validations or removing them to reduce coupling between Snowflake and the provider. Because of that the following validations were removed/adjusted/added:
@@ -56,6 +68,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 
 #### *(behavior change)* `query_acceleration_max_scale_factor` conditional logic removed
 Previously, the `query_acceleration_max_scale_factor` was depending on `enable_query_acceleration` parameter, but it is not required on Snowflake side. After migration, `terraform plan` should suggest changes if `enable_query_acceleration` was earlier set to false (manually or from default) and if `query_acceleration_max_scale_factor` was set in config.
+
+#### *(behavior change)* `initially_suspended` forceNew removed
+Previously, the `initially_suspended` attribute change caused the resource recreation. This attribute is used only during creation (to create suspended warehouse). There is no reason to recreate the whole object just to have initial state changed.
 
 #### *(behavior change)* Boolean type changes
 To easily handle three-value logic (true, false, unknown) in provider's configs, type of `auto_resume` and `enable_query_acceleration` was changed from boolean to string. This should not require updating existing configs (boolean/int value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings. Terraform should perform an action for configs lacking `auto_resume` or `enable_query_acceleration` (`ALTER WAREHOUSE UNSET AUTO_RESUME` and/or `ALTER WAREHOUSE UNSET ENABLE_QUERY_ACCELERATION` will be run underneath which should not affect the Snowflake object, because `auto_resume` and `enable_query_acceleration` are false by default).

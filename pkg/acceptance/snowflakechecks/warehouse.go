@@ -52,3 +52,17 @@ func CheckAutoResume(t *testing.T, id sdk.AccountObjectIdentifier, expectedAutoR
 		return nil
 	}
 }
+
+func CheckAutoSuspendCount(t *testing.T, id sdk.AccountObjectIdentifier, expectedAutoSuspend int) func(state *terraform.State) error {
+	t.Helper()
+	return func(_ *terraform.State) error {
+		warehouse, err := acc.TestClient().Warehouse.Show(t, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.AutoSuspend != expectedAutoSuspend {
+			return fmt.Errorf("expected auto suspend: %d; got: %d", expectedAutoSuspend, warehouse.AutoSuspend)
+		}
+		return nil
+	}
+}

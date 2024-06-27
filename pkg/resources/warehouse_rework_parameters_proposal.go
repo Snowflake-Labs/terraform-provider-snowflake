@@ -12,9 +12,9 @@ import (
 const parametersAttributeName = "parameters"
 
 // markChangedParameters assumes that the snowflake parameter name is mirrored in schema (as lower-cased name)
-// TODO [after discussion/next PR]: test (unit and acceptance)
-// TODO [after discussion/next PR]: more readable errors
-// TODO [after discussion/next PR]: handle different types than int
+// TODO [SNOW-1348102 - after discussion]: test (unit and acceptance)
+// TODO [SNOW-1348102 - after discussion]: more readable errors
+// TODO [SNOW-1348102 - after discussion]: handle different types than int
 func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParameters []*sdk.Parameter, d *schema.ResourceData, level sdk.ParameterType) error {
 	for _, param := range objectParameters {
 		currentSnowflakeParameter, err := collections.FindOne(currentParameters, func(p *sdk.Parameter) bool {
@@ -42,7 +42,7 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 1. if it was missing in config before, then no drift will be reported
 		// 2. if it had a non-empty value, then the drift will be reported and the value will be set during update
 		if (*currentSnowflakeParameter).Level != level {
-			// TODO [after discussion/next PR]: this is currently set to an artificial default
+			// TODO [SNOW-1348102 - after discussion]: this is currently set to an artificial default
 			if err = d.Set(strings.ToLower(string(param)), -1); err != nil {
 				return err
 			}

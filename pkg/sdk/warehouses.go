@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -305,8 +306,33 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	if err != nil {
 		return err
 	}
+
+	// Warehouse needs to be suspended to change its type.
+	if opts.warehouseTypeIsChanged() {
+		warehouse, err := c.ShowByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if warehouse.State == WarehouseStateStarted {
+			err := c.Alter(ctx, id, &AlterWarehouseOptions{Suspend: Bool(true)})
+			if err != nil {
+				return err
+			}
+			defer func() {
+				err := c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
+				if err != nil {
+					log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
+				}
+			}()
+		}
+	}
+
 	_, err = c.client.exec(ctx, sql)
 	return err
+}
+
+func (opts *AlterWarehouseOptions) warehouseTypeIsChanged() bool {
+	return opts.Set != nil && opts.Set.WarehouseType != nil
 }
 
 // DropWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-warehouse.
@@ -397,7 +423,7 @@ type Warehouse struct {
 	Comment                         string
 	EnableQueryAcceleration         bool
 	QueryAccelerationMaxScaleFactor int
-	ResourceMonitor                 string
+	ResourceMonitor                 AccountObjectIdentifier
 	ScalingPolicy                   ScalingPolicy
 	OwnerRoleType                   string
 }
@@ -462,7 +488,6 @@ func (row warehouseDBRow) convert() *Warehouse {
 		Comment:                         row.Comment,
 		EnableQueryAcceleration:         row.EnableQueryAcceleration,
 		QueryAccelerationMaxScaleFactor: row.QueryAccelerationMaxScaleFactor,
-		ResourceMonitor:                 row.ResourceMonitor,
 		ScalingPolicy:                   ScalingPolicy(row.ScalingPolicy),
 	}
 	if val, err := strconv.ParseFloat(row.Available, 64); err != nil {
@@ -482,6 +507,9 @@ func (row warehouseDBRow) convert() *Warehouse {
 	}
 	if row.OwnerRoleType.Valid {
 		wh.OwnerRoleType = row.OwnerRoleType.String
+	}
+	if row.ResourceMonitor != "null" {
+		wh.ResourceMonitor = NewAccountObjectIdentifierFromFullyQualifiedName(row.ResourceMonitor)
 	}
 	return wh
 }
