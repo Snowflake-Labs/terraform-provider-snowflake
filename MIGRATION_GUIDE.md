@@ -78,7 +78,7 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 #### *(note)* `resource_monitor` validation and diff suppression
 `resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 
-#### *(behavior change)* snowflake_databases datasource
+#### *(behavior change)* snowflake_warehouses datasource
 - Added `like` field to enable warehouse filtering
 - Added missing fields returned by SHOW WAREHOUSES and enclosed its output in `show_output` field.
 - Added outputs from **DESC WAREHOUSE** and **SHOW PARAMETERS IN WAREHOUSE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
