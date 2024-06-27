@@ -1,9 +1,19 @@
 package resources
 
 import (
+	"context"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,4 +61,45 @@ func suppressCopyOptionsQuoting(_, oldValue, newValue string, _ *schema.Resource
 		newWithoutQuotes := strings.ReplaceAll(newValue, "'", "")
 		return oldWithoutQuotes == newWithoutQuotes
 	}
+}
+
+func DeleteContextSecurityIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	client := meta.(*provider.Context).Client
+
+	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Error deleting integration",
+				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
+			},
+		}
+	}
+
+	d.SetId("")
+	return nil
+}
+
+func RSAKeyHash(key string) (string, error) {
+	keyBytes := []byte(fmt.Sprintf("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----", key))
+
+	block, _ := pem.Decode(keyBytes)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return "", errors.New("Failed to decode PEM block containing public key")
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("Unable to parse public key: %w", err)
+	}
+
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return "", fmt.Errorf("Unable to marshal public key: %w", err)
+	}
+
+	hash := sha256.Sum256(pubKeyBytes)
+	return fmt.Sprintf("SHA256:%s", base64.StdEncoding.EncodeToString(hash[:])), nil
 }
