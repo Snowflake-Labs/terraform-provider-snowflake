@@ -218,7 +218,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("auto_resume", fmt.Sprintf("%t", w.AutoResume)); err != nil {
 		return nil, err
 	}
-	if err = d.Set("resource_monitor", w.ResourceMonitor.FullyQualifiedName()); err != nil {
+	if err = d.Set("resource_monitor", w.ResourceMonitor.Name()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("comment", w.Comment); err != nil {
@@ -345,7 +345,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				showMapping{"scaling_policy", "scaling_policy", string(w.ScalingPolicy), w.ScalingPolicy, nil},
 				showMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
 				showMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
-				showMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.FullyQualifiedName(), w.ResourceMonitor.FullyQualifiedName(), nil},
+				showMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.Name(), w.ResourceMonitor.Name(), nil},
 				showMapping{"comment", "comment", w.Comment, w.Comment, nil},
 				showMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
 				showMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},

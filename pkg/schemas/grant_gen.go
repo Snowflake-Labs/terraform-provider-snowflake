@@ -64,7 +64,7 @@ func GrantToSchema(grant *sdk.Grant) map[string]any {
 	grantSchema["grant_to"] = string(grant.GrantTo)
 	grantSchema["grantee_name"] = grant.GranteeName.FullyQualifiedName()
 	grantSchema["grant_option"] = grant.GrantOption
-	grantSchema["granted_by"] = grant.GrantedBy.FullyQualifiedName()
+	grantSchema["granted_by"] = grant.GrantedBy.Name()
 	return grantSchema
 }
 
