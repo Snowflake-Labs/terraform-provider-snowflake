@@ -5,17 +5,18 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/config"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Databases_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
 	databaseName := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
 
@@ -42,8 +43,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.kind", "STANDARD"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_default", "false"),
-					// Commenting as this value depends on the currently used database, which is different when running as a single test and multiple tests (e.g., on CI)
-					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_current", "true"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.origin", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.owner"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.comment", comment),
@@ -85,8 +85,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.kind", "STANDARD"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.transient", "false"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_default", "false"),
-					// Commenting for the same reason as above
-					// resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.is_current", "false"),
+					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.is_current", "true"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.origin", ""),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.owner"),
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.0.show_output.0.comment", comment),
@@ -104,7 +103,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 }
 
 func TestAcc_Databases_DifferentFiltering(t *testing.T) {
-	prefix := random.String()
+	prefix := random.AlphaN(4)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()

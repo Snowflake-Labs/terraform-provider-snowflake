@@ -78,6 +78,14 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 #### *(note)* `resource_monitor` validation and diff suppression
 `resource_monitor` is an identifier and handling logic may be still slightly changed as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework. It should be handled automatically (without needed manual actions on user side), though, but it is not guaranteed.
 
+#### *(behavior change)* snowflake_databases datasource
+- Added `like` field to enable warehouse filtering
+- Added missing fields returned by SHOW WAREHOUSES and enclosed its output in `show_output` field.
+- Added outputs from **DESC WAREHOUSE** and **SHOW PARAMETERS IN WAREHOUSE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
+  The additional parameters call **DESC WAREHOUSE** (with `with_describe` turned on) and **SHOW PARAMETERS IN WAREHOUSE** (with `with_parameters` turned on) **per warehouse** returned by **SHOW WAREHOUSES**.
+  The outputs of both commands are held in `warehouses` entry, where **DESC WAREHOUSE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN WAREHOUSE** in the `parameters` field.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ### new database resources
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
 - Standard database - can be used as `snowflake_database` (replaces the old one and is used to create databases with optional ability to become a primary database ready for replication)
