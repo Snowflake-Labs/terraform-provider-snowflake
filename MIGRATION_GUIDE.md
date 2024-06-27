@@ -8,6 +8,16 @@ across different versions.
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
+### *(new feature)* snowflake_security_integrations datasource
+Added a new datasource enabling querying and filtering all types of security integrations. Notes:
+- all results are stored in `security_integrations` field.
+- `like` field enables security integrations filtering.
+- SHOW SECURITY INTEGRATIONS output is enclosed in `show_output` field inside `security_integrations`.
+- Output from **DESC SECURITY INTEGRATION** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `security_integrations`.
+  **DESC SECURITY INTEGRATION** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.
+  The additional parameters call **DESC SECURITY INTEGRATION** (with `with_describe` turned on) **per security integration** returned by **SHOW SECURITY INTEGRATIONS**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Renamed fields
 
