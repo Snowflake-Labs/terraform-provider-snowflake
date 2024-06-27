@@ -64,6 +64,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	changedStorageIntegration := ids.PrecreatedS3StorageIntegration
 	changedEncryption := "TYPE = 'AWS_SSE_S3'"
 	changedFileFormat := "TYPE = JSON NULL_IF = []"
+	changedFileFormatWithQuotes := "FIELD_DELIMITER = '|' PARSE_HEADER = true"
 	changedComment := random.Comment()
 	copyOptionsWithoutQuotes := "ON_ERROR = CONTINUE"
 
@@ -121,6 +122,25 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
 					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormat),
+					resource.TestCheckResourceAttr(resourceName, "copy_options", copyOptionsWithoutQuotes),
+					resource.TestCheckResourceAttr(resourceName, "url", changedUrl),
+					resource.TestCheckResourceAttr(resourceName, "comment", changedComment),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration.Name(), credentials, changedEncryption, changedFileFormatWithQuotes, changedComment, copyOptionsWithoutQuotes),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
+					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
+					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
+					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormatWithQuotes),
 					resource.TestCheckResourceAttr(resourceName, "copy_options", copyOptionsWithoutQuotes),
 					resource.TestCheckResourceAttr(resourceName, "url", changedUrl),
 					resource.TestCheckResourceAttr(resourceName, "comment", changedComment),
