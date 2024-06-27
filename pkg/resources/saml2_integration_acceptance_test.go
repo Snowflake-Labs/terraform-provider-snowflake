@@ -2,15 +2,20 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -63,13 +68,17 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_x509_cert", cert),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_acs_url"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_digest_methods_used"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_signature_methods_used"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "created_on"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_issuer_url"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_acs_url"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_metadata"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_digest_methods_used"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_signature_methods_used"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_x509_cert"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "show_output.0.created_on"),
 				),
 			},
 			{
@@ -83,7 +92,6 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_digest_methods_used"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_enable_sp_initiated", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer2),
@@ -91,16 +99,21 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sign_request", "true"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_signature_methods_used"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
-					// TODO(SNOW-1479617): assert a proper value
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl2),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_x509_cert", cert2),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "created_on"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_metadata"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_digest_methods_used"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_signature_methods_used"),
+					// TODO(SNOW-1479617): assert a proper value
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_x509_cert"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "show_output.0.created_on"),
 				),
 			},
 			{
@@ -109,7 +122,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ResourceName:            "snowflake_saml2_integration.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"saml2_snowflake_metadata"},
+				ImportStateVerifyIgnore: []string{"saml2_snowflake_metadata", "saml2_snowflake_x509_cert", "describe_output"},
 			},
 			// unset
 			{
@@ -118,26 +131,201 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "allowed_email_patterns.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "allowed_user_domains.#", "0"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "comment", ""),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_digest_methods_used"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_enable_sp_initiated", "false"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "false"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_enable_sp_initiated", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "unknown"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer2),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_post_logout_redirect_url", ""),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_requested_nameid_format", ""),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sign_request", "false"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_signature_methods_used"),
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_acs_url"),
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
 					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", ""),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl2),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_x509_cert", cert2),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "created_on"),
+				),
+			},
+		},
+	})
+}
+
+func saml2ConfigWithAuthn(name, issuer, provider, ssoUrl, x509Cert string, forceAuthn bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_saml2_integration" "test" {
+	name           = "%s"
+	saml2_issuer = "%s"
+	saml2_provider = "%s"
+	saml2_sso_url = "%s"
+	saml2_x509_cert = <<EOT
+%s
+EOT
+	saml2_force_authn = %t
+}
+`, name, issuer, provider, ssoUrl, x509Cert, forceAuthn)
+}
+
+func saml2Config(name, issuer, provider, ssoUrl, x509Cert string) string {
+	return fmt.Sprintf(`
+resource "snowflake_saml2_integration" "test" {
+	name           = "%s"
+	saml2_issuer = "%s"
+	saml2_provider = "%s"
+	saml2_sso_url = "%s"
+	saml2_x509_cert = <<EOT
+%s
+EOT
+}
+`, name, issuer, provider, ssoUrl, x509Cert)
+}
+
+func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := acc.TestClient().Ids.Alpha()
+	cert := random.GenerateX509(t)
+	validUrl := "http://example.com"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			// set up with concrete type
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionCreate, nil, sdk.String(fmt.Sprintf("%t", true))),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", fmt.Sprintf("%t", true)),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
+				),
+			},
+			// import when type in config
+			{
+				ResourceName: "snowflake_saml2_integration.test",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", fmt.Sprintf("%t", true)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
+				),
+			},
+			// change type in config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(fmt.Sprintf("%t", true)), sdk.String(fmt.Sprintf("%t", false))),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", fmt.Sprintf("%t", false)),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", false)),
+				),
+			},
+			// change back to non-default
+			{
+				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, true),
+			},
+			// remove non-default type from config
+			{
+				Config: saml2Config(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_saml2_integration.test", plancheck.ResourceActionUpdate),
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String("true"), nil),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", ""),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
+				),
+			},
+			// add config
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, nil, sdk.String(strings.ToLower(fmt.Sprintf("%t", false)))),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", strings.ToLower(fmt.Sprintf("%t", false))),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", false)),
+				),
+			},
+			// remove type from config but update externally to default (still expecting non-empty plan because we do not know the default)
+			{
+				PreConfig: func() {
+					acc.TestClient().SecurityIntegration.UpdateSaml2ForceAuthn(t, id, false)
+				},
+				Config: saml2Config(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectDrift("snowflake_saml2_integration.test", "saml2_force_authn", sdk.String(strings.ToLower(fmt.Sprintf("%t", false))), sdk.String(fmt.Sprintf("%t", true))),
+						planchecks.ExpectDrift("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", sdk.String(fmt.Sprintf("%t", false)), sdk.String(fmt.Sprintf("%t", true))),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(fmt.Sprintf("%t", true)), nil),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", ""),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
+				),
+			},
+			// change the size externally
+			{
+				PreConfig: func() {
+					// we change the type to the type different from default, expecting action
+					acc.TestClient().SecurityIntegration.UpdateSaml2ForceAuthn(t, id, true)
+				},
+				Config: saml2Config(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
+						planchecks.ExpectDrift("snowflake_saml2_integration.test", "saml2_force_authn", nil, sdk.String(fmt.Sprintf("%t", false))),
+						planchecks.ExpectDrift("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", sdk.String(fmt.Sprintf("%t", true)), sdk.String(fmt.Sprintf("%t", false))),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(fmt.Sprintf("%t", true)), nil),
+						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", ""),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
+				),
+			},
+			// import when no type in config
+			{
+				ResourceName: "snowflake_saml2_integration.test",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", fmt.Sprintf("%t", true)),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_force_authn", fmt.Sprintf("%t", true)),
 				),
 			},
 		},
@@ -191,7 +379,6 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_digest_methods_used"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_enable_sp_initiated", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer),
@@ -199,16 +386,16 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sign_request", "true"),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_signature_methods_used"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_metadata"),
-					// TODO(SNOW-1479617): assert a proper value
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "saml2_snowflake_x509_cert"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "foo"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_x509_cert", cert),
-					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "created_on"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_digest_methods_used"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_metadata"),
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_signature_methods_used"),
+					// TODO(SNOW-1479617): assert a proper value
+					resource.TestCheckResourceAttrSet("snowflake_saml2_integration.test", "describe_output.0.saml2_snowflake_x509_cert"),
 				),
 			},
 			{
@@ -217,7 +404,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ResourceName:            "snowflake_saml2_integration.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"saml2_snowflake_metadata"},
+				ImportStateVerifyIgnore: []string{"describe_output", "show_output", "saml2_snowflake_x509_cert"},
 			},
 		},
 	})

@@ -48,6 +48,14 @@ func (c *SecurityIntegrationClient) CreateScim(t *testing.T) (*sdk.SecurityInteg
 	return c.CreateScimWithRequest(t, sdk.NewCreateScimSecurityIntegrationRequest(c.ids.RandomAccountObjectIdentifier(), sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner))
 }
 
+func (c *SecurityIntegrationClient) UpdateSaml2ForceAuthn(t *testing.T, id sdk.AccountObjectIdentifier, forceAuthn bool) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterSaml2(ctx, sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSet(*sdk.NewSaml2IntegrationSetRequest().WithSaml2ForceAuthn(forceAuthn)))
+	require.NoError(t, err)
+}
+
 func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request *sdk.CreateScimSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
 	ctx := context.Background()
