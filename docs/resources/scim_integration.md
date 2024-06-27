@@ -45,12 +45,92 @@ resource "snowflake_scim_integration" "test" {
 
 - `comment` (String) Specifies a comment for the integration.
 - `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic.
-- `sync_password` (Boolean) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake.
+- `sync_password` (String) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.
 
 ### Read-Only
 
-- `created_on` (String) Date and time when the SCIM integration was created.
+- `describe_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--comment))
+- `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--enabled))
+- `network_policy` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--network_policy))
+- `run_as_role` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--run_as_role))
+- `sync_password` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--sync_password))
+
+<a id="nestedobjatt--describe_output--comment"></a>
+### Nested Schema for `describe_output.comment`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--enabled"></a>
+### Nested Schema for `describe_output.enabled`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--network_policy"></a>
+### Nested Schema for `describe_output.network_policy`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--run_as_role"></a>
+### Nested Schema for `describe_output.run_as_role`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--sync_password"></a>
+### Nested Schema for `describe_output.sync_password`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `category` (String)
+- `comment` (String)
+- `created_on` (String)
+- `enabled` (Boolean)
+- `integration_type` (String)
+- `name` (String)
 
 ## Import
 
