@@ -90,7 +90,6 @@ var databasesSchema = map[string]*schema.Schema{
 	},
 }
 
-// Databases the Snowflake current account resource.
 func Databases() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadDatabases,
