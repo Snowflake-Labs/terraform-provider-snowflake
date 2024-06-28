@@ -21,20 +21,14 @@ var _ = DescribeScimSecurityIntegrationSchema
 func ScimSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
+		securityIntegrationProperty := securityIntegrationProperty
 		switch securityIntegrationProperty.Name {
 		case "ENABLED",
 			"NETWORK_POLICY",
 			"RUN_AS_ROLE",
 			"SYNC_PASSWORD",
 			"COMMENT":
-			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{
-				{
-					"name":    securityIntegrationProperty.Name,
-					"type":    securityIntegrationProperty.Type,
-					"value":   securityIntegrationProperty.Value,
-					"default": securityIntegrationProperty.Default,
-				},
-			}
+			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
 		}
 	}
 	return securityIntegrationSchema
