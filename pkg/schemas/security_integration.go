@@ -7,16 +7,7 @@ import (
 
 // TODO [SNOW-1348100]: multiple PRs touching the security integrations are in progress, this should be filled by all the possible properties (the mapping method below should be too)
 var SecurityIntegrationDescribeSchema = map[string]*schema.Schema{
-	"todo": SecurityIntegrationListSchema,
-}
-
-// SecurityIntegrationListSchema represents Snowflake security integration property object.
-var SecurityIntegrationListSchema = &schema.Schema{
-	Type:     schema.TypeList,
-	Computed: true,
-	Elem: &schema.Resource{
-		Schema: ShowSecurityIntegrationPropertySchema,
-	},
+	"todo": DescribePropertyListSchema,
 }
 
 func SecurityIntegrationsDescriptionsToSchema(descriptions []sdk.SecurityIntegrationProperty) map[string]any {
