@@ -171,6 +171,26 @@ func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.Warehouse
 	)
 }
 
+func handleWarehouseParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
+	for _, parameter := range warehouseParameters {
+		switch parameter.Key {
+		case
+			string(sdk.ObjectParameterMaxConcurrencyLevel),
+			string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds),
+			string(sdk.ObjectParameterStatementTimeoutInSeconds):
+			value, err := strconv.Atoi(parameter.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set(strings.ToLower(parameter.Key), value); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // Warehouse returns a pointer to the resource representing a warehouse.
 func Warehouse() *schema.Resource {
 	return &schema.Resource{
@@ -391,70 +411,25 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 		}
 
-		// These are all identity sets, needed for the case where:
-		// - previous config was empty (therefore Snowflake defaults had been used)
-		// - new config have the same values that are already in SF
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["warehouse_type"]; !v.IsNull() {
-				if err = d.Set("warehouse_type", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["warehouse_size"]; !v.IsNull() {
-				if err = d.Set("warehouse_size", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["max_cluster_count"]; !v.IsNull() {
-				intVal, _ := v.AsBigFloat().Int64()
-				if err = d.Set("max_cluster_count", intVal); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["min_cluster_count"]; !v.IsNull() {
-				intVal, _ := v.AsBigFloat().Int64()
-				if err = d.Set("min_cluster_count", intVal); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["scaling_policy"]; !v.IsNull() {
-				if err = d.Set("scaling_policy", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["auto_suspend"]; !v.IsNull() {
-				intVal, _ := v.AsBigFloat().Int64()
-				if err = d.Set("auto_suspend", intVal); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["auto_resume"]; !v.IsNull() {
-				if err = d.Set("auto_resume", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["resource_monitor"]; !v.IsNull() {
-				if err = d.Set("resource_monitor", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["enable_query_acceleration"]; !v.IsNull() {
-				if err = d.Set("enable_query_acceleration", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["query_acceleration_max_scale_factor"]; !v.IsNull() {
-				intVal, _ := v.AsBigFloat().Int64()
-				if err = d.Set("query_acceleration_max_scale_factor", intVal); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-		}
-
 		if err = d.Set("name", w.Name); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("comment", w.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err = setStateToValuesFromConfig(d, warehouseSchema, []string{
+			"warehouse_type",
+			"warehouse_size",
+			"max_cluster_count",
+			"min_cluster_count",
+			"scaling_policy",
+			"auto_suspend",
+			"auto_resume",
+			"resource_monitor",
+			"enable_query_acceleration",
+			"query_acceleration_max_scale_factor",
+		}); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -472,26 +447,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		return nil
 	}
-}
-
-func handleWarehouseParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
-	for _, parameter := range warehouseParameters {
-		switch parameter.Key {
-		case
-			string(sdk.ObjectParameterMaxConcurrencyLevel),
-			string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds),
-			string(sdk.ObjectParameterStatementTimeoutInSeconds):
-			value, err := strconv.Atoi(parameter.Value)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set(strings.ToLower(parameter.Key), value); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-
-	return nil
 }
 
 // UpdateWarehouse implements schema.UpdateFunc.
