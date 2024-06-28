@@ -19,6 +19,10 @@ Added a new datasource enabling querying and filtering all types of security int
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 ### snowflake_scim_integration resource changes
+#### *(behavior change)* Changed behavior of `sync_password`
+
+Now, the `sync_password` field will set the state value to `unknown` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
 #### *(behavior change)* Renamed fields
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
