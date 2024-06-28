@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -61,7 +61,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
 					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "network_policy"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", r.BooleanDefault),
 					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "comment"),
 
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.#", "1"),
@@ -151,7 +151,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", ""),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "unknown"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", ""),
 				),
 			},
@@ -299,7 +299,7 @@ func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
 						planchecks.ExpectChange("snowflake_scim_integration.test", "scim_client", tfjson.ActionUpdate, sdk.String("GENERIC"), sdk.String("GENERIC")),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "run_as_role", tfjson.ActionUpdate, sdk.String(role.Name()), sdk.String(role.Name())),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "network_policy", tfjson.ActionUpdate, sdk.String(""), sdk.String("")),
-						planchecks.ExpectChange("snowflake_scim_integration.test", "sync_password", tfjson.ActionUpdate, nil, sdk.String("unknown")),
+						planchecks.ExpectChange("snowflake_scim_integration.test", "sync_password", tfjson.ActionUpdate, nil, sdk.String(r.BooleanDefault)),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "comment", tfjson.ActionUpdate, nil, nil),
 					},
 				},

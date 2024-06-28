@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348102 - if we choose this approach]: extract three-value logic; add better description for each field
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -43,14 +42,14 @@ var warehouseSchema = map[string]*schema.Schema{
 	"max_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateFunc:     validation.IntBetween(1, 10),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("max_cluster_count"),
 		Description:      "Specifies the maximum number of server clusters for the warehouse.",
 	},
 	"min_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateFunc:     validation.IntBetween(1, 10),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("min_cluster_count"),
 		Description:      "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 	},
@@ -64,7 +63,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"auto_suspend": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateFunc:     validation.IntAtLeast(0),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("auto_suspend"),
 		Description:      "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
 		Default:          -1,
@@ -72,10 +71,10 @@ var warehouseSchema = map[string]*schema.Schema{
 	"auto_resume": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateFunc:     validation.StringInSlice([]string{"true", "false"}, true),
+		ValidateDiagFunc: validateBooleanString,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("auto_resume"),
-		Description:      "Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it.",
-		Default:          "unknown",
+		Description:      booleanStringFieldDescription("Specifies whether to automatically resume a warehouse when a SQL statement (e.g. query) is submitted to it."),
+		Default:          BooleanDefault,
 	},
 	"initially_suspended": {
 		Type:             schema.TypeBool,
@@ -98,39 +97,39 @@ var warehouseSchema = map[string]*schema.Schema{
 	"enable_query_acceleration": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateFunc:     validation.StringInSlice([]string{"true", "false"}, true),
+		ValidateDiagFunc: validateBooleanString,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("enable_query_acceleration"),
-		Description:      "Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources.",
-		Default:          "unknown",
+		Description:      booleanStringFieldDescription("Specifies whether to enable the query acceleration service for queries that rely on this warehouse for compute resources."),
+		Default:          BooleanDefault,
 	},
 	"query_acceleration_max_scale_factor": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateFunc:     validation.IntBetween(0, 100),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 100)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("query_acceleration_max_scale_factor"),
 		Description:      "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
 		Default:          -1,
 	},
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(1),
-		Description:  "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+		Description:      "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
 	},
 	strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)): {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(0),
-		Description:  "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		Description:      "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
 	},
 	strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)): {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.IntBetween(0, 604800),
-		Description:  "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 604800)),
+		Description:      "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
 	},
 	showOutputAttributeName: {
 		Type:        schema.TypeList,
@@ -240,7 +239,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("auto_suspend", w.AutoSuspend); err != nil {
 		return nil, err
 	}
-	if err = d.Set("auto_resume", fmt.Sprintf("%t", w.AutoResume)); err != nil {
+	if err = d.Set("auto_resume", booleanStringFromBool(w.AutoResume)); err != nil {
 		return nil, err
 	}
 	if err = d.Set("resource_monitor", w.ResourceMonitor.Name()); err != nil {
@@ -249,7 +248,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("comment", w.Comment); err != nil {
 		return nil, err
 	}
-	if err = d.Set("enable_query_acceleration", fmt.Sprintf("%t", w.EnableQueryAcceleration)); err != nil {
+	if err = d.Set("enable_query_acceleration", booleanStringFromBool(w.EnableQueryAcceleration)); err != nil {
 		return nil, err
 	}
 	if err = d.Set("query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor); err != nil {
@@ -297,8 +296,8 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v := d.Get("auto_suspend").(int); v != -1 {
 		createOptions.AutoSuspend = sdk.Int(v)
 	}
-	if v := d.Get("auto_resume").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("auto_resume").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -313,8 +312,8 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v, ok := d.GetOk("comment"); ok {
 		createOptions.Comment = sdk.String(v.(string))
 	}
-	if v := d.Get("enable_query_acceleration").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("enable_query_acceleration").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -587,8 +586,8 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("auto_resume") {
-		if v := d.Get("auto_resume").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("auto_resume").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -614,8 +613,8 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("enable_query_acceleration") {
-		if v := d.Get("enable_query_acceleration").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("enable_query_acceleration").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
