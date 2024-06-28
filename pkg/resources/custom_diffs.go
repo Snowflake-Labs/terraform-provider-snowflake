@@ -2,10 +2,13 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
@@ -71,4 +74,46 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 		}
 		return result
 	})
+}
+
+// ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
+func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldString, newString := oldValue.(string), newValue.(string)
+		return len(oldString) > 0 && len(newString) == 0
+	})
+}
+
+// ForceNewIfChangeToEmptySet sets a ForceNew for a set field which was set to an empty value.
+func ForceNewIfChangeToEmptySet[T any](key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.(*schema.Set).List(), newValue.(*schema.Set).List()
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+func ModifyStateIfParameterSet(key, param string, modify func(*schema.ResourceDiff) error) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		client := meta.(*provider.Context).Client
+		params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer(param),
+			},
+			In: &sdk.ParametersIn{
+				Account: sdk.Pointer(true),
+			},
+		})
+		if err != nil {
+			return err
+		}
+		found, err := collections.FindOne(params, func(p *sdk.Parameter) bool { return p.Key == param })
+		if err != nil {
+			return fmt.Errorf("parameter %s not found", param)
+		}
+		param := helpers.StringToBool((*found).Value)
+		if !param {
+			return nil
+		}
+		return modify(d)
+	}
 }

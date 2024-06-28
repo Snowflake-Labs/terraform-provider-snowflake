@@ -1,6 +1,12 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -51,4 +57,26 @@ func suppressCopyOptionsQuoting(_, oldValue, newValue string, _ *schema.Resource
 		newWithoutQuotes := strings.ReplaceAll(newValue, "'", "")
 		return oldWithoutQuotes == newWithoutQuotes
 	}
+}
+
+func RSAKeyHash(key string) (string, error) {
+	keyBytes := []byte(fmt.Sprintf("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----", key))
+
+	block, _ := pem.Decode(keyBytes)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return "", errors.New("Failed to decode PEM block containing public key")
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("Unable to parse public key: %w", err)
+	}
+
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return "", fmt.Errorf("Unable to marshal public key: %w", err)
+	}
+
+	hash := sha256.Sum256(pubKeyBytes)
+	return fmt.Sprintf("SHA256:%s", base64.StdEncoding.EncodeToString(hash[:])), nil
 }
