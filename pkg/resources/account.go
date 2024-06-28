@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -289,7 +289,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var account *sdk.Account
-	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		account, err = client.Accounts.ShowByID(ctx, objectIdentifier)
 		if err != nil {
 			return nil, false
@@ -313,7 +313,7 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 
 	var acc *sdk.Account
 	var err error
-	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		acc, err = client.Accounts.ShowByID(ctx, id)
 		if err != nil {
 			return nil, false

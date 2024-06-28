@@ -357,7 +357,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				showMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
 				showMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
 				showMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.Name(), w.ResourceMonitor.Name(), nil},
-				showMapping{"comment", "comment", w.Comment, w.Comment, nil},
 				showMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
 				showMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},
 			); err != nil {
@@ -416,11 +415,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 					return diag.FromErr(err)
 				}
 			}
-			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
-				if err = d.Set("comment", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
 			if v := d.GetRawConfig().AsValueMap()["enable_query_acceleration"]; !v.IsNull() {
 				if err = d.Set("enable_query_acceleration", v.AsString()); err != nil {
 					return diag.FromErr(err)
@@ -432,6 +426,13 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 					return diag.FromErr(err)
 				}
 			}
+		}
+
+		if err = d.Set("name", w.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("comment", w.Comment); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.WarehouseToSchema(w)}); err != nil {

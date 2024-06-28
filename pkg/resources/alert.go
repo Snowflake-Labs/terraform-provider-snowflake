@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -383,7 +383,7 @@ func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjec
 		}
 		return nil, alert.State == sdk.AlertStateStarted
 	}
-	return helpers.Retry(5, 10*time.Second, resumeAlert)
+	return util.Retry(5, 10*time.Second, resumeAlert)
 }
 
 func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
@@ -399,5 +399,5 @@ func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 		}
 		return nil, alert.State == sdk.AlertStateSuspended
 	}
-	return helpers.Retry(5, 10*time.Second, suspendAlert)
+	return util.Retry(5, 10*time.Second, suspendAlert)
 }
