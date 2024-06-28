@@ -74,7 +74,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the integration.",
 	},
-	showOutputAttributeName: {
+	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
@@ -82,7 +82,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowSecurityIntegrationSchema,
 		},
 	},
-	describeOutputAttributeName: {
+	DescribeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
@@ -107,8 +107,8 @@ func SCIMIntegration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, "enabled", "scim_client", "comment"),
-			ComputedIfAnyAttributeChanged(describeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "scim_client", "comment"),
+			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -324,11 +324,11 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 		}
 
-		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.ScimSecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
+		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.ScimSecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
 

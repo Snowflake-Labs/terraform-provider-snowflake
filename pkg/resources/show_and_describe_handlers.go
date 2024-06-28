@@ -5,13 +5,14 @@ import (
 )
 
 const (
-	showOutputAttributeName     = "show_output"
-	describeOutputAttributeName = "describe_output"
+	ShowOutputAttributeName     = "show_output"
+	DescribeOutputAttributeName = "describe_output"
+	ParametersAttributeName     = "parameters"
 )
 
-// handleExternalChangesToObjectInShow assumes that show output is kept in showOutputAttributeName attribute
+// handleExternalChangesToObjectInShow assumes that show output is kept in ShowOutputAttributeName attribute
 func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...showMapping) error {
-	if showOutput, ok := d.GetOk(showOutputAttributeName); ok {
+	if showOutput, ok := d.GetOk(ShowOutputAttributeName); ok {
 		showOutputList := showOutput.([]any)
 		if len(showOutputList) == 1 {
 			result := showOutputList[0].(map[string]any)
@@ -39,9 +40,9 @@ type showMapping struct {
 	normalizeFunc  func(any) any
 }
 
-// handleExternalChangesToObjectInDescribe assumes that show output is kept in describeOutputAttributeName attribute
+// handleExternalChangesToObjectInDescribe assumes that show output is kept in DescribeOutputAttributeName attribute
 func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ...describeMapping) error {
-	if describeOutput, ok := d.GetOk(describeOutputAttributeName); ok {
+	if describeOutput, ok := d.GetOk(DescribeOutputAttributeName); ok {
 		describeOutputList := describeOutput.([]any)
 		if len(describeOutputList) == 1 {
 			result := describeOutputList[0].(map[string]any)
