@@ -62,7 +62,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 		fi;
 
 test: test-client ## run unit and integration tests
-	go test -v -cover -timeout=30m ./...
+	go test -v -cover -timeout=45m ./...
 
 test-acceptance: ## run acceptance tests
 	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestAcc_" -v -cover -timeout=60m ./...
@@ -75,6 +75,9 @@ test-architecture: ## check architecture constraints between packages
 
 test-client: ## runs test that checks sdk.Client without instrumentedsql
 	SF_TF_NO_INSTRUMENTED_SQL=1 SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug go test ./pkg/sdk/internal/client/... -v
+
+test-acceptance-%: ## run acceptance tests for the given resource only, e.g. test-acceptance-Warehouse
+	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true go test -run ^TestAcc_$*_ -v -timeout=20m ./...
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
@@ -113,5 +116,11 @@ generate-docs-additional-files: ## generate docs additional files
 
 generate-docs-additional-files-check: generate-docs-additional-files ## check that docs additional files have been generated
 	git diff --exit-code -- examples/additional
+
+generate-show-output-schemas: ## Generate show output schemas with mappers
+	go generate ./pkg/schemas/generate.go
+
+clean-show-output-schemas: ## Clean generated show output schemas
+	rm -f ./pkg/schemas/*_gen.go
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf

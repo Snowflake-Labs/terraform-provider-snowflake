@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +144,17 @@ const (
 	StorageSerializationPolicyCompatible StorageSerializationPolicy = "COMPATIBLE"
 	StorageSerializationPolicyOptimized  StorageSerializationPolicy = "OPTIMIZED"
 )
+
+func ToStorageSerializationPolicy(value string) (StorageSerializationPolicy, error) {
+	switch strings.ToUpper(value) {
+	case string(StorageSerializationPolicyCompatible):
+		return StorageSerializationPolicyCompatible, nil
+	case string(StorageSerializationPolicyOptimized):
+		return StorageSerializationPolicyOptimized, nil
+	default:
+		return "", fmt.Errorf("unknown storage serialization policy: %s", value)
+	}
+}
 
 var AllStorageSerializationPolicies = []StorageSerializationPolicy{
 	StorageSerializationPolicyCompatible,

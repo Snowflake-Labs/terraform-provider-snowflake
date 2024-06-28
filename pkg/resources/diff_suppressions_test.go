@@ -6,6 +6,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,5 +52,31 @@ func Test_NormalizeAndCompare(t *testing.T) {
 
 		result = resources.NormalizeAndCompare(sdk.ToWarehouseSize)("", "", string(sdk.WarehouseSizeX4Large), nil)
 		assert.False(t, result)
+	})
+}
+
+func Test_IgnoreAfterCreation(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"value": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	t.Run("without id", func(t *testing.T) {
+		in := map[string]any{}
+		d := schema.TestResourceDataRaw(t, testSchema, in)
+
+		result := resources.IgnoreAfterCreation("", "", "", d)
+		assert.False(t, result)
+	})
+
+	t.Run("with id", func(t *testing.T) {
+		in := map[string]any{}
+		d := schema.TestResourceDataRaw(t, testSchema, in)
+		d.SetId("something")
+
+		result := resources.IgnoreAfterCreation("", "", "", d)
+		assert.True(t, result)
 	})
 }
