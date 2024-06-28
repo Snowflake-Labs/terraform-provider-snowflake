@@ -216,38 +216,38 @@ func GetAllDatabaseParameters(d *schema.ResourceData) (
 	enableConsoleOutput *bool,
 	err error,
 ) {
-	dataRetentionTimeInDays = GetPropertyAsPointer[int](d, "data_retention_time_in_days")
-	maxDataExtensionTimeInDays = GetPropertyAsPointer[int](d, "max_data_extension_time_in_days")
-	if externalVolumeRaw := GetPropertyAsPointer[string](d, "external_volume"); externalVolumeRaw != nil {
+	dataRetentionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "data_retention_time_in_days")
+	maxDataExtensionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "max_data_extension_time_in_days")
+	if externalVolumeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "external_volume"); externalVolumeRaw != nil {
 		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(*externalVolumeRaw))
 	}
-	if catalogRaw := GetPropertyAsPointer[string](d, "catalog"); catalogRaw != nil {
+	if catalogRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "catalog"); catalogRaw != nil {
 		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(*catalogRaw))
 	}
-	replaceInvalidCharacters = GetPropertyAsPointer[bool](d, "replace_invalid_characters")
-	defaultDDLCollation = GetPropertyAsPointer[string](d, "default_ddl_collation")
-	if storageSerializationPolicyRaw := GetPropertyAsPointer[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
+	replaceInvalidCharacters = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "replace_invalid_characters")
+	defaultDDLCollation = GetConfigPropertyAsPointerAllowingZeroValue[string](d, "default_ddl_collation")
+	if storageSerializationPolicyRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
 		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(*storageSerializationPolicyRaw))
 	}
-	if logLevelRaw := GetPropertyAsPointer[string](d, "log_level"); logLevelRaw != nil {
+	if logLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "log_level"); logLevelRaw != nil {
 		logLevel = sdk.Pointer(sdk.LogLevel(*logLevelRaw))
 	}
-	if traceLevelRaw := GetPropertyAsPointer[string](d, "trace_level"); traceLevelRaw != nil {
+	if traceLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "trace_level"); traceLevelRaw != nil {
 		traceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevelRaw))
 	}
-	suspendTaskAfterNumFailures = GetPropertyAsPointer[int](d, "suspend_task_after_num_failures")
-	taskAutoRetryAttempts = GetPropertyAsPointer[int](d, "task_auto_retry_attempts")
-	if userTaskManagedInitialWarehouseSizeRaw := GetPropertyAsPointer[string](d, "user_task_managed_initial_warehouse_size"); userTaskManagedInitialWarehouseSizeRaw != nil {
+	suspendTaskAfterNumFailures = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "suspend_task_after_num_failures")
+	taskAutoRetryAttempts = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "task_auto_retry_attempts")
+	if userTaskManagedInitialWarehouseSizeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "user_task_managed_initial_warehouse_size"); userTaskManagedInitialWarehouseSizeRaw != nil {
 		var warehouseSize sdk.WarehouseSize
 		if warehouseSize, err = sdk.ToWarehouseSize(*userTaskManagedInitialWarehouseSizeRaw); err != nil {
 			return
 		}
 		userTaskManagedInitialWarehouseSize = sdk.Pointer(warehouseSize)
 	}
-	userTaskTimeoutMs = GetPropertyAsPointer[int](d, "user_task_timeout_ms")
-	userTaskMinimumTriggerIntervalInSeconds = GetPropertyAsPointer[int](d, "user_task_minimum_trigger_interval_in_seconds")
-	quotedIdentifiersIgnoreCase = GetPropertyAsPointer[bool](d, "quoted_identifiers_ignore_case")
-	enableConsoleOutput = GetPropertyAsPointer[bool](d, "enable_console_output")
+	userTaskTimeoutMs = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_timeout_ms")
+	userTaskMinimumTriggerIntervalInSeconds = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_minimum_trigger_interval_in_seconds")
+	quotedIdentifiersIgnoreCase = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "quoted_identifiers_ignore_case")
+	enableConsoleOutput = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "enable_console_output")
 	return
 }
 

@@ -24,6 +24,7 @@ const (
 	onAll
 )
 
+// TODO: add tests for GetConfigPropertyAsPointerAllowingZeroValue
 func TestGetPropertyAsPointer(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"integer": {

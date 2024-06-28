@@ -326,13 +326,13 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v := d.Get("query_acceleration_max_scale_factor").(int); v != IntDefault {
 		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 	}
-	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "max_concurrency_level"); v != nil {
+	if v := GetConfigPropertyAsPointerAllowingZeroValue[int](d, "max_concurrency_level"); v != nil {
 		createOptions.MaxConcurrencyLevel = v
 	}
-	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "statement_queued_timeout_in_seconds"); v != nil {
+	if v := GetConfigPropertyAsPointerAllowingZeroValue[int](d, "statement_queued_timeout_in_seconds"); v != nil {
 		createOptions.StatementQueuedTimeoutInSeconds = v
 	}
-	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "statement_timeout_in_seconds"); v != nil {
+	if v := GetConfigPropertyAsPointerAllowingZeroValue[int](d, "statement_timeout_in_seconds"); v != nil {
 		createOptions.StatementTimeoutInSeconds = v
 	}
 
@@ -343,19 +343,6 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
-}
-
-// TODO: move
-func GetPropertyAsPointerWithPossibleZeroValues[T any](d *schema.ResourceData, property string) *T {
-	if d.GetRawConfig().AsValueMap()[property].IsNull() {
-		return nil
-	}
-	value := d.Get(property)
-	typedValue, ok := value.(T)
-	if !ok {
-		return nil
-	}
-	return &typedValue
 }
 
 func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
