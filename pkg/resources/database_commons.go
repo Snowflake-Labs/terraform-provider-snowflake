@@ -7,15 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var (
@@ -25,41 +22,40 @@ var (
 		sdk.ObjectParameterDataRetentionTimeInDays,
 		sdk.ObjectParameterMaxDataExtensionTimeInDays,
 	}
-	DatabaseParametersCustomDiff = func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		if d.Id() == "" {
-			return nil
-		}
-
-		client := meta.(*provider.Context).Client
-		params, err := client.Parameters.ShowParameters(context.Background(), &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Database: helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier),
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		return customdiff.All(
-			IntParameterValueComputedIf("data_retention_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDataRetentionTimeInDays),
-			IntParameterValueComputedIf("max_data_extension_time_in_days", params, sdk.ParameterTypeDatabase, sdk.AccountParameterMaxDataExtensionTimeInDays),
-			StringParameterValueComputedIf("external_volume", params, sdk.ParameterTypeDatabase, sdk.AccountParameterExternalVolume),
-			StringParameterValueComputedIf("catalog", params, sdk.ParameterTypeDatabase, sdk.AccountParameterCatalog),
-			BoolParameterValueComputedIf("replace_invalid_characters", params, sdk.ParameterTypeDatabase, sdk.AccountParameterReplaceInvalidCharacters),
-			StringParameterValueComputedIf("default_ddl_collation", params, sdk.ParameterTypeDatabase, sdk.AccountParameterDefaultDDLCollation),
-			StringParameterValueComputedIf("storage_serialization_policy", params, sdk.ParameterTypeDatabase, sdk.AccountParameterStorageSerializationPolicy),
-			StringParameterValueComputedIf("log_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterLogLevel),
-			StringParameterValueComputedIf("trace_level", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTraceLevel),
-			IntParameterValueComputedIf("suspend_task_after_num_failures", params, sdk.ParameterTypeDatabase, sdk.AccountParameterSuspendTaskAfterNumFailures),
-			IntParameterValueComputedIf("task_auto_retry_attempts", params, sdk.ParameterTypeDatabase, sdk.AccountParameterTaskAutoRetryAttempts),
-			StringParameterValueComputedIf("user_task_managed_initial_warehouse_size", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskManagedInitialWarehouseSize),
-			IntParameterValueComputedIf("user_task_timeout_ms", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskTimeoutMs),
-			IntParameterValueComputedIf("user_task_minimum_trigger_interval_in_seconds", params, sdk.ParameterTypeDatabase, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds),
-			BoolParameterValueComputedIf("quoted_identifiers_ignore_case", params, sdk.ParameterTypeDatabase, sdk.AccountParameterQuotedIdentifiersIgnoreCase),
-			BoolParameterValueComputedIf("enable_console_output", params, sdk.ParameterTypeDatabase, sdk.AccountParameterEnableConsoleOutput),
-		)(ctx, d, meta)
-	}
+	DatabaseParametersCustomDiff = ParametersCustomDiff(
+		databaseParametersProvider,
+		parameter{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterExternalVolume, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterCatalog, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterLogLevel, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterTraceLevel, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeDatabase},
+		parameter{sdk.AccountParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeDatabase},
+	)
 )
+
+func databaseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Database: id,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return databaseParameters, nil
+}
 
 func init() {
 	databaseParameterFields := []struct {

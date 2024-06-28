@@ -149,27 +149,26 @@ var warehouseSchema = map[string]*schema.Schema{
 	},
 }
 
-// TODO: merge with DatabaseParametersCustomDiff and extract common
-var warehouseParametersCustomDiff = func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if d.Id() == "" {
-		return nil
-	}
-
+func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
 	client := meta.(*provider.Context).Client
-	params, err := client.Parameters.ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
 		In: &sdk.ParametersIn{
-			Warehouse: helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier),
+			Warehouse: id,
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return warehouseParameters, nil
+}
 
-	return customdiff.All(
-		IntParameterValueComputedIf("max_concurrency_level", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterMaxConcurrencyLevel),
-		IntParameterValueComputedIf("statement_queued_timeout_in_seconds", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterStatementQueuedTimeoutInSeconds),
-		IntParameterValueComputedIf("statement_timeout_in_seconds", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterStatementTimeoutInSeconds),
-	)(ctx, d, meta)
+func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {
+	return JoinDiags(
+		handleValuePropertyChange[int](d, "max_concurrency_level", &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
+		handleValuePropertyChange[int](d, "statement_queued_timeout_in_seconds", &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
+		handleValuePropertyChange[int](d, "statement_timeout_in_seconds", &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
+	)
 }
 
 // Warehouse returns a pointer to the resource representing a warehouse.
@@ -194,7 +193,12 @@ func Warehouse() *schema.Resource {
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
-			warehouseParametersCustomDiff,
+			ParametersCustomDiff(
+				warehouseParametersProvider,
+				parameter{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+			),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -668,14 +672,6 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
-}
-
-func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {
-	return JoinDiags(
-		handleValuePropertyChange[int](d, "max_concurrency_level", &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
-		handleValuePropertyChange[int](d, "statement_queued_timeout_in_seconds", &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
-		handleValuePropertyChange[int](d, "statement_timeout_in_seconds", &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
-	)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc.
