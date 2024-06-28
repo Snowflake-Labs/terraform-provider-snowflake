@@ -58,7 +58,7 @@ var databasesSchema = map[string]*schema.Schema{
 	"databases": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Holds the output of SHOW DATABASES.",
+		Description: "Holds the aggregated output of all database details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"show_output": {
@@ -95,6 +95,7 @@ func Databases() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadDatabases,
 		Schema:      databasesSchema,
+		Description: "Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for [SHOW DATABASES]((https://docs.snowflake.com/en/sql-reference/sql/show-databases) query (`like`, 'starts_with', and `limit` are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
 	}
 }
 

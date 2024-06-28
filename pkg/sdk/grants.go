@@ -266,7 +266,7 @@ func (row grantRow) convert() *Grant {
 	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
 	name, err := ParseObjectIdentifier(row.Name)
 	if err != nil {
-		log.Printf("Failed to parse identifier: %s", err)
+		log.Printf("Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
 		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)
 	}
 

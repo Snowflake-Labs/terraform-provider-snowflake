@@ -54,7 +54,7 @@ func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceD
 }
 
 // TODO [SNOW-1325214]: address during stage resource rework
-func suppressCopyOptionsQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {
 		return false
 	} else {

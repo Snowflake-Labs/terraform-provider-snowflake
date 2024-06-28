@@ -43,9 +43,14 @@ func (c *WarehouseClient) CreateWarehouse(t *testing.T) (*sdk.Warehouse, func())
 func (c *WarehouseClient) CreateWarehouseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
 	t.Helper()
 	ctx := context.Background()
+
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
-	return &sdk.Warehouse{Name: id.Name()}, c.DropWarehouseFunc(t, id)
+
+	warehouse, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return warehouse, c.DropWarehouseFunc(t, id)
 }
 
 func (c *WarehouseClient) DropWarehouseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
@@ -96,12 +101,30 @@ func (c *WarehouseClient) UpdateStatementTimeoutInSeconds(t *testing.T, id sdk.A
 	require.NoError(t, err)
 }
 
+func (c *WarehouseClient) UnsetStatementTimeoutInSeconds(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Unset: &sdk.WarehouseUnset{StatementTimeoutInSeconds: sdk.Bool(true)}})
+	require.NoError(t, err)
+}
+
 func (c *WarehouseClient) UpdateAutoResume(t *testing.T, id sdk.AccountObjectIdentifier, newAutoResume bool) {
 	t.Helper()
 
 	ctx := context.Background()
 
 	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{AutoResume: sdk.Pointer(newAutoResume)}})
+	require.NoError(t, err)
+}
+
+func (c *WarehouseClient) UpdateAutoSuspend(t *testing.T, id sdk.AccountObjectIdentifier, newAutoSuspend int) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{AutoSuspend: sdk.Int(newAutoSuspend)}})
 	require.NoError(t, err)
 }
 

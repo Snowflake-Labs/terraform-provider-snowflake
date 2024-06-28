@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func v091ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
+func v092ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
 	s = strings.ToUpper(s)
 	switch s {
 	case "XSMALL", "X-SMALL":
@@ -36,30 +38,55 @@ func v091ToWarehouseSize(s string) (sdk.WarehouseSize, error) {
 	}
 }
 
-// v092WarehouseSizeStateUpgrader is needed because we are removing incorrect mapped values from sdk.ToWarehouseSize (like 2XLARGE, 3XLARGE, ...)
-// Result of:
-// - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1873
-// - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1946
-// - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889#issuecomment-1631149585
-func v092WarehouseSizeStateUpgrader(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+// v092WarehouseSizeStateUpgrader is needed because:
+// - we are removing incorrect mapped values from sdk.ToWarehouseSize (like 2XLARGE, 3XLARGE, ...); result of:
+//   - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1873
+//   - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/1946
+//   - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1889#issuecomment-1631149585
+//
+// - deprecated wait_for_provisioning attribute was removed
+// - clear the old resource monitor representation
+// - set query_acceleration_max_scale_factor
+func v092WarehouseSizeStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return rawState, nil
 	}
 
 	oldWarehouseSize := rawState["warehouse_size"].(string)
-	if oldWarehouseSize == "" {
-		return rawState, nil
+	if oldWarehouseSize != "" {
+		warehouseSize, err := v092ToWarehouseSize(oldWarehouseSize)
+		if err != nil {
+			return nil, err
+		}
+		rawState["warehouse_size"] = string(warehouseSize)
 	}
 
-	warehouseSize, err := v091ToWarehouseSize(oldWarehouseSize)
+	// remove deprecated attribute
+	delete(rawState, "wait_for_provisioning")
+
+	// clear the old resource monitor representation
+	oldResourceMonitor := rawState["resource_monitor"].(string)
+	if oldResourceMonitor == "null" {
+		delete(rawState, "resource_monitor")
+	}
+
+	// get the warehouse from Snowflake
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(rawState["id"].(string)).(sdk.AccountObjectIdentifier)
+
+	w, err := client.Warehouses.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	rawState["warehouse_size"] = string(warehouseSize)
 
-	// TODO [this PR]: clear wait_for_provisioning and test
-	// TODO [this PR]: adjust other fields if needed
-	// TODO [this PR]: adjust description of the upgrader
+	// fill out query_acceleration_max_scale_factor in state if it was disabled before (old coupling logic that was removed)
+	// - if config have no value, then we should have a UNSET after migration
+	// - if config have the same value, then we should have a no-op after migration
+	// - if config have different value, then we will have SET after migration
+	previousEnableQueryAcceleration := rawState["enable_query_acceleration"].(bool)
+	if !previousEnableQueryAcceleration {
+		rawState["query_acceleration_max_scale_factor"] = w.QueryAccelerationMaxScaleFactor
+	}
 
 	return rawState, nil
 }

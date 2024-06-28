@@ -21,6 +21,7 @@ var (
 	Identity           = func(field string) string { return field }
 	ToString           = func(field string) string { return fmt.Sprintf("%s.String()", field) }
 	FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }
+	Name               = func(field string) string { return fmt.Sprintf("%s.Name()", field) }
 	CastToString       = func(field string) string { return fmt.Sprintf("string(%s)", field) }
 	CastToInt          = func(field string) string { return fmt.Sprintf("int(%s)", field) }
 )
@@ -44,8 +45,9 @@ func MapToSchemaField(field Field) SchemaField {
 		return SchemaField{name, schema.TypeBool, field.Name, isPointer, Identity}
 	case "time.Time":
 		return SchemaField{name, schema.TypeString, field.Name, isPointer, ToString}
-	case "sdk.AccountIdentifier", "sdk.ExternalObjectIdentifier",
-		"sdk.AccountObjectIdentifier", "sdk.DatabaseObjectIdentifier",
+	case "sdk.AccountObjectIdentifier":
+		return SchemaField{name, schema.TypeString, field.Name, isPointer, Name}
+	case "sdk.AccountIdentifier", "sdk.ExternalObjectIdentifier", "sdk.DatabaseObjectIdentifier",
 		"sdk.SchemaObjectIdentifier", "sdk.TableColumnIdentifier":
 		return SchemaField{name, schema.TypeString, field.Name, isPointer, FullyQualifiedName}
 	case "sdk.ObjectIdentifier":

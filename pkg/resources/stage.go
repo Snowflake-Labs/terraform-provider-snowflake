@@ -50,15 +50,16 @@ var stageSchema = map[string]*schema.Schema{
 		Description: "Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.",
 	},
 	"file_format": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the file format for the stage.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Specifies the file format for the stage.",
+		DiffSuppressFunc: suppressQuoting,
 	},
 	"copy_options": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Description:      "Specifies the copy options for the stage.",
-		DiffSuppressFunc: suppressCopyOptionsQuoting,
+		DiffSuppressFunc: suppressQuoting,
 	},
 	"encryption": {
 		Type:        schema.TypeString,

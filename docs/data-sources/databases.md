@@ -2,12 +2,12 @@
 page_title: "snowflake_databases Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for SHOW DATABASES (https://docs.snowflake.com/en/sql-reference/sql/show-databases) query (`like`, 'starts_with', and `limit` are all supported. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 ---
 
 # snowflake_databases (Data Source)
 
-
+Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for [SHOW DATABASES]((https://docs.snowflake.com/en/sql-reference/sql/show-databases) query (`like`, 'starts_with', and `limit` are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 
 ## Example Usage
 
@@ -81,8 +81,8 @@ check "database_check" {
   }
 
   assert {
-    condition     = length(data.snowflake_databases.test.databases) == 1
-    error_message = "Databases filtered by '${data.snowflake_databases.test.like}' returned ${length(data.snowflake_databases.test.databases)} databases where one was expected"
+    condition     = length(data.snowflake_databases.assert_with_check_block.databases) == 1
+    error_message = "Databases filtered by '${data.snowflake_databases.assert_with_check_block.like}' returned ${length(data.snowflake_databases.assert_with_check_block.databases)} databases where one was expected"
   }
 }
 ```
@@ -100,7 +100,7 @@ check "database_check" {
 
 ### Read-Only
 
-- `databases` (List of Object) Holds the output of SHOW DATABASES. (see [below for nested schema](#nestedatt--databases))
+- `databases` (List of Object) Holds the aggregated output of all database details queries. (see [below for nested schema](#nestedatt--databases))
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--limit"></a>

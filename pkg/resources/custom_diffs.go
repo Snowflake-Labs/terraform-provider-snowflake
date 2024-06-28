@@ -84,6 +84,9 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		var result bool
 		for _, changedKey := range changedAttributeKeys {
+			if diff.HasChange(changedKey) {
+				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s\n", changedKey)
+			}
 			result = result || diff.HasChange(changedKey)
 		}
 		return result
