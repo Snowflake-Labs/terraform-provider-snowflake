@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -137,20 +136,4 @@ func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier,
 	default:
 		return sdk.AccountIdentifier{}, fmt.Errorf("unable to classify account identifier: %s, expected format: <organization_name>.<account_name>", identifier)
 	}
-}
-
-func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
-	for i := 0; i < attempts; i++ {
-		err, done := f()
-		if err != nil {
-			return err
-		}
-		if done {
-			return nil
-		} else {
-			log.Printf("[INFO] operation not finished yet, retrying in %v seconds\n", sleepDuration.Seconds())
-			time.Sleep(sleepDuration)
-		}
-	}
-	return fmt.Errorf("giving up after %v attempts", attempts)
 }

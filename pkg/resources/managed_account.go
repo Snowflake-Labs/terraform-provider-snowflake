@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -131,7 +132,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	// TODO [SNOW-1003380]: discuss it as a provider-wide topic during resources redesign.
 	var managedAccount *sdk.ManagedAccount
 	var err error
-	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		managedAccount, err = client.ManagedAccounts.ShowByID(ctx, objectIdentifier)
 		if err != nil {
 			return nil, false
