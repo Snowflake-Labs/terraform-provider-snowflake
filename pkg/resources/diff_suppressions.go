@@ -27,19 +27,43 @@ func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 	return d.Id() != ""
 }
 
-func IgnoreChangeToCurrentSnowflakeValue(keyInShowOutput string) schema.SchemaDiffSuppressFunc {
+func IgnoreChangeToCurrentSnowflakeValueInShow(keyInShowOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {
 			return false
 		}
 
-		if showOutput, ok := d.GetOk(showOutputAttributeName); ok {
-			showOutputList := showOutput.([]any)
-			if len(showOutputList) == 1 {
-				result := showOutputList[0].(map[string]any)
-				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValue: value for key %s is %v, new value is %s, comparison result is: %t", keyInShowOutput, result[keyInShowOutput], new, new == fmt.Sprintf("%v", result[keyInShowOutput]))
+		if queryOutput, ok := d.GetOk(showOutputAttributeName); ok {
+			queryOutputList := queryOutput.([]any)
+			if len(queryOutputList) == 1 {
+				result := queryOutputList[0].(map[string]any)
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValueInShow: value for key %s is %v, new value is %s, comparison result is: %t", keyInShowOutput, result[keyInShowOutput], new, new == fmt.Sprintf("%v", result[keyInShowOutput]))
 				if new == fmt.Sprintf("%v", result[keyInShowOutput]) {
 					return true
+				}
+			}
+		}
+		return false
+	}
+}
+
+func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInDescribeOutput string) schema.SchemaDiffSuppressFunc {
+	return func(_, _, new string, d *schema.ResourceData) bool {
+		if d.Id() == "" {
+			return false
+		}
+
+		if queryOutput, ok := d.GetOk(describeOutputAttributeName); ok {
+			queryOutputList := queryOutput.([]any)
+			if len(queryOutputList) == 1 {
+				result := queryOutputList[0].(map[string]any)
+				newValueInDescribeList := result[keyInDescribeOutput].([]any)
+				if len(newValueInDescribeList) == 1 {
+					newValueInDescribe := newValueInDescribeList[0].(map[string]any)["value"]
+					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValueInDescribe: value for key %s is %v, new value is %s, comparison result is: %t", keyInDescribeOutput, newValueInDescribe, new, new == fmt.Sprintf("%v", newValueInDescribe))
+					if new == fmt.Sprintf("%v", newValueInDescribe) {
+						return true
+					}
 				}
 			}
 		}
