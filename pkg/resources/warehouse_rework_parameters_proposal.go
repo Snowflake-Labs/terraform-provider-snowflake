@@ -43,7 +43,7 @@ func markChangedParameters(objectParameters []sdk.ObjectParameter, currentParame
 		// 2. if it had a non-empty value, then the drift will be reported and the value will be set during update
 		if (*currentSnowflakeParameter).Level != level {
 			// TODO [SNOW-1348102 - after discussion]: this is currently set to an artificial default
-			if err = d.Set(strings.ToLower(string(param)), -1); err != nil {
+			if err = d.Set(strings.ToLower(string(param)), IntDefault); err != nil {
 				return err
 			}
 		}

@@ -53,13 +53,13 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "max_cluster_count"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "min_cluster_count"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "scaling_policy"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", r.IntDefaultString),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", r.BooleanDefault),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", r.BooleanDefault),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
@@ -624,8 +624,8 @@ func TestAcc_Warehouse_Validations(t *testing.T) {
 				ExpectError: regexp.MustCompile(`expected auto_resume to be one of \["true" "false"], got other`),
 			},
 			{
-				Config:      warehouseConfigWithMaxConcurrencyLevel(id.Name(), -1),
-				ExpectError: regexp.MustCompile(`expected max_concurrency_level to be at least \(1\), got -1`),
+				Config:      warehouseConfigWithMaxConcurrencyLevel(id.Name(), -2),
+				ExpectError: regexp.MustCompile(`expected max_concurrency_level to be at least \(1\), got -2`),
 			},
 		},
 	})
@@ -864,12 +864,12 @@ func TestAcc_Warehouse_AutoSuspend(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String(r.IntDefaultString)),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", r.IntDefaultString),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
 					snowflakechecks.CheckAutoSuspendCount(t, id, 600),
@@ -886,14 +886,14 @@ func TestAcc_Warehouse_AutoSuspend(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "show_output"),
-						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_suspend", sdk.String("-1"), sdk.String("2400")),
+						planchecks.ExpectDrift("snowflake_warehouse.w", "auto_suspend", sdk.String(r.IntDefaultString), sdk.String("2400")),
 						planchecks.ExpectDrift("snowflake_warehouse.w", "show_output.0.auto_suspend", sdk.String("600"), sdk.String("2400")),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("2400"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("2400"), sdk.String(r.IntDefaultString)),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", r.IntDefaultString),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
 					snowflakechecks.CheckAutoSuspendCount(t, id, 600),
@@ -961,16 +961,16 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "query_acceleration_max_scale_factor", "statement_queued_timeout_in_seconds", "statement_timeout_in_seconds", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("0"), sdk.String("-1")),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("0"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("0"), sdk.String(r.IntDefaultString)),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("0"), sdk.String(r.IntDefaultString)),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", true),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_timeout_in_seconds", true),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "-1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
 
@@ -991,8 +991,8 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "auto_suspend", "query_acceleration_max_scale_factor", "statement_queued_timeout_in_seconds", "statement_timeout_in_seconds", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("0")),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("-1"), sdk.String("0")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String(r.IntDefaultString), sdk.String("0")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String(r.IntDefaultString), sdk.String("0")),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", true),
 						planchecks.ExpectChange("snowflake_warehouse.w", "statement_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("172800"), sdk.String("0")),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "show_output", true),
@@ -1556,12 +1556,12 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "show_output"),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "-1"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
@@ -1722,10 +1722,10 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 						planchecks.ExpectChange("snowflake_warehouse.w", "max_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
 						planchecks.ExpectChange("snowflake_warehouse.w", "min_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
 						planchecks.ExpectChange("snowflake_warehouse.w", "scaling_policy", tfjson.ActionUpdate, sdk.String(string(sdk.ScalingPolicyStandard)), nil),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String(r.IntDefaultString)),
 						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String(r.BooleanDefault)),
 						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("false"), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String("-1")),
+						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
 
 						planchecks.ExpectComputed("snowflake_warehouse.w", "max_concurrency_level", true),
 						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", true),

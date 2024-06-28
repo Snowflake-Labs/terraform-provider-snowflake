@@ -8,6 +8,9 @@ const (
 	BooleanTrue    = "true"
 	BooleanFalse   = "false"
 	BooleanDefault = "default"
+
+	IntDefault       = -1
+	IntDefaultString = "-1"
 )
 
 var validateBooleanString = StringInSlice([]string{BooleanTrue, BooleanFalse}, false)

@@ -66,7 +66,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("auto_suspend"),
 		Description:      "Specifies the number of seconds of inactivity after which a warehouse is automatically suspended.",
-		Default:          -1,
+		Default:          IntDefault,
 	},
 	"auto_resume": {
 		Type:             schema.TypeString,
@@ -108,7 +108,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 100)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("query_acceleration_max_scale_factor"),
 		Description:      "Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.",
-		Default:          -1,
+		Default:          IntDefault,
 	},
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
 		Type:             schema.TypeInt,
@@ -293,7 +293,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 		createOptions.ScalingPolicy = &scalingPolicy
 	}
-	if v := d.Get("auto_suspend").(int); v != -1 {
+	if v := d.Get("auto_suspend").(int); v != IntDefault {
 		createOptions.AutoSuspend = sdk.Int(v)
 	}
 	if v := d.Get("auto_resume").(string); v != BooleanDefault {
@@ -319,7 +319,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 		createOptions.EnableQueryAcceleration = sdk.Bool(parsed)
 	}
-	if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
+	if v := d.Get("query_acceleration_max_scale_factor").(int); v != IntDefault {
 		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 	}
 	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "max_concurrency_level"); v != nil {
@@ -577,7 +577,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("auto_suspend") {
-		if v := d.Get("auto_suspend").(int); v != -1 {
+		if v := d.Get("auto_suspend").(int); v != IntDefault {
 			set.AutoSuspend = sdk.Int(v)
 		} else {
 			// TODO [SNOW-1473453]: UNSET of auto suspend works incorrectly
@@ -624,21 +624,21 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 	if d.HasChange("query_acceleration_max_scale_factor") {
-		if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
+		if v := d.Get("query_acceleration_max_scale_factor").(int); v != IntDefault {
 			set.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 		} else {
 			unset.QueryAccelerationMaxScaleFactor = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("max_concurrency_level") {
-		if v := d.Get("max_concurrency_level").(int); v != -1 {
+		if v := d.Get("max_concurrency_level").(int); v != IntDefault {
 			set.MaxConcurrencyLevel = sdk.Int(v)
 		} else {
 			unset.MaxConcurrencyLevel = sdk.Bool(true)
 		}
 	}
 	if d.HasChange("statement_queued_timeout_in_seconds") {
-		if v := d.Get("statement_queued_timeout_in_seconds").(int); v != -1 {
+		if v := d.Get("statement_queued_timeout_in_seconds").(int); v != IntDefault {
 			set.StatementQueuedTimeoutInSeconds = sdk.Int(v)
 		} else {
 			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
