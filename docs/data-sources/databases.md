@@ -2,12 +2,12 @@
 page_title: "snowflake_databases Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for SHOW DATABASES https://docs.snowflake.com/en/sql-reference/sql/show-databases query (like, 'starts_with', and limit are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
+  Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for SHOW DATABASES https://docs.snowflake.com/en/sql-reference/sql/show-databases query (like, starts_with, and limit are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 ---
 
 # snowflake_databases (Data Source)
 
-Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for [SHOW DATABASES](https://docs.snowflake.com/en/sql-reference/sql/show-databases) query (`like`, 'starts_with', and `limit` are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
+Datasource used to get details of filtered databases. Filtering is aligned with the current possibilities for [SHOW DATABASES](https://docs.snowflake.com/en/sql-reference/sql/show-databases) query (`like`, `starts_with`, and `limit` are all supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 
 ## Example Usage
 
