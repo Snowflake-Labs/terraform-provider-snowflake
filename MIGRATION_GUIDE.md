@@ -9,6 +9,10 @@ across different versions.
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
 ### snowflake_scim_integration resource changes
+#### *(behavior change)* Changed behavior of `sync_password`
+
+Now, the `sync_password` field will set the state value to `unknown` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
 #### *(behavior change)* Renamed fields
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
