@@ -621,7 +621,7 @@ func TestAcc_Warehouse_Validations(t *testing.T) {
 			},
 			{
 				Config:      warehouseWithAutoResumeConfig(id.Name(), "other"),
-				ExpectError: regexp.MustCompile(`expected auto_resume to be one of \["true" "false"], got other`),
+				ExpectError: regexp.MustCompile(`expected \[\{\{} auto_resume}] to be one of \["true" "false"], got other`),
 			},
 			{
 				Config:      warehouseConfigWithMaxConcurrencyLevel(id.Name(), -2),

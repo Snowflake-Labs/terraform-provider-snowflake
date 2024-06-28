@@ -231,8 +231,8 @@ func TestAcc_ScimIntegration_invalid(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(),
 				ExpectError: helpers.MatchAllStringsInOrderNonOverlapping([]string{
-					`expected scim_client to be one of ["OKTA" "AZURE" "GENERIC"], got invalid`,
-					`expected run_as_role to be one of ["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`,
+					`expected [{{} scim_client}] to be one of ["OKTA" "AZURE" "GENERIC"], got invalid`,
+					`expected [{{} run_as_role}] to be one of ["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`,
 				}),
 			},
 		},
