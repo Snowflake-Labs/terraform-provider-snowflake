@@ -73,10 +73,10 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	})
 }
 
-// ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
-func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
+// ForceNewIfChangeToDefaultString sets a ForceNew for a string field which was set to an empty value.
+func ForceNewIfChangeToDefaultString(key string) schema.CustomizeDiffFunc {
 	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
 		oldString, newString := oldValue.(string), newValue.(string)
-		return len(oldString) > 0 && len(newString) == 0
+		return len(oldString) > 0 && newString == "unknown"
 	})
 }

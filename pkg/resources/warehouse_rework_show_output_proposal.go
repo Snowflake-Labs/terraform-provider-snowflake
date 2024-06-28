@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -77,4 +79,20 @@ type describeMapping struct {
 	valueToCompare any
 	valueToSet     any
 	normalizeFunc  func(any) any
+}
+
+func stringToIntNormalizer(x any) any {
+	xInt, err := strconv.Atoi(x.(string))
+	if err != nil {
+		xInt = 0
+	}
+	return xInt
+}
+
+func stringToSliceNormalizer(x any) any {
+	xInt, err := strconv.Atoi(x.(string))
+	if err != nil {
+		xInt = 0
+	}
+	return xInt
 }

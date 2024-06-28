@@ -46,9 +46,9 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithJwtBearer,
 		Schema:        apiAuthJwtBearerSchema,
 		CustomizeDiff: customdiff.All(
-			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
-			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
-			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
+			ForceNewIfChangeToDefaultString("oauth_token_endpoint"),
+			ForceNewIfChangeToDefaultString("oauth_authorization_endpoint"),
+			ForceNewIfChangeToDefaultString("oauth_client_auth_method"),
 		),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

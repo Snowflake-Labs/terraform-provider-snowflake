@@ -38,8 +38,8 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithClientCredentials,
 		Schema:        apiAuthClientCredentialsSchema,
 		CustomizeDiff: customdiff.All(
-			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
-			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
+			ForceNewIfChangeToDefaultString("oauth_token_endpoint"),
+			ForceNewIfChangeToDefaultString("oauth_client_auth_method"),
 		),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

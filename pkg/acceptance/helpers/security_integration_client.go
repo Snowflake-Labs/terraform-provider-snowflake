@@ -27,7 +27,7 @@ func (c *SecurityIntegrationClient) client() sdk.SecurityIntegrations {
 
 func (c *SecurityIntegrationClient) CreateSaml2(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
-	return c.CreateSaml2WithRequest(t, sdk.NewCreateSaml2SecurityIntegrationRequest(id, false, c.ids.Alpha(), "https://example.com", "Custom", random.GenerateX509(t)))
+	return c.CreateSaml2WithRequest(t, sdk.NewCreateSaml2SecurityIntegrationRequest(id, c.ids.Alpha(), "https://example.com", "Custom", random.GenerateX509(t)))
 }
 
 func (c *SecurityIntegrationClient) CreateSaml2WithRequest(t *testing.T, request *sdk.CreateSaml2SecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {

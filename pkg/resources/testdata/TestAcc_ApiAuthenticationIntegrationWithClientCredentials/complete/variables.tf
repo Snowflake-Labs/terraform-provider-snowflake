@@ -23,3 +23,6 @@ variable "oauth_client_secret" {
 variable "oauth_token_endpoint" {
   type = string
 }
+variable "oauth_allowed_scopes" {
+  type = set(string)
+}

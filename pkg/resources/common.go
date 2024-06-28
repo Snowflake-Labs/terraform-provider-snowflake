@@ -12,7 +12,9 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -120,13 +122,15 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 	"oauth_token_endpoint": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Default:     "unknown",
 		Description: "Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).",
 	},
 	"oauth_client_auth_method": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// ValidateDiagFunc: sdk,
-		Description: "Specifies the client ID for the OAuth application in the external service.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
+		Default:          "unknown",
+		Description:      fmt.Sprintf("Specifies the client ID for the OAuth application in the external service. Valid options are: %v", sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption)),
 	},
 	"oauth_client_id": {
 		Type:        schema.TypeString,
@@ -139,19 +143,58 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Description: "Specifies the client secret for the OAuth application in the ServiceNow instance from the previous step. The connector uses this to request an access token from the ServiceNow instance.",
 	},
 	"oauth_access_token_validity": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		ValidateFunc: validation.IntAtLeast(1),
-		Description:  "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntAtLeast(0),
+		Default:          -1,
+		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_access_token_validity"),
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the integration.",
 	},
-	"created_on": {
-		Type:        schema.TypeString,
+	showOutputAttributeName: {
+		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Date and time when the integration was created.",
+		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowSecurityIntegrationSchema,
+		},
 	},
+	describeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.DescribeApiAuthSecurityIntegrationSchema,
+		},
+	},
+}
+
+func listValueToSlice(value string, trimBrackets bool, trimQuotes bool) []string {
+	if trimBrackets {
+		value = strings.TrimLeft(value, "[")
+		value = strings.TrimRight(value, "]")
+	}
+	if value == "" {
+		return nil
+	}
+	elems := strings.Split(value, ",")
+	for i := range elems {
+		if trimQuotes {
+			elems[i] = strings.Trim(elems[i], " '")
+		}
+	}
+	return elems
+}
+
+func ctyValToSliceString(val cty.Value) []string {
+	valueElems := val.AsValueSlice()
+	elems := make([]string, len(valueElems))
+	for i, v := range valueElems {
+		elems[i] = v.AsString()
+	}
+	return elems
 }

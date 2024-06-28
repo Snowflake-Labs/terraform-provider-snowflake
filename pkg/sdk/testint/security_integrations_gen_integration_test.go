@@ -96,7 +96,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	createOauthCustom := func(t *testing.T, with func(*sdk.CreateOauthForCustomClientsSecurityIntegrationRequest)) (*sdk.SecurityIntegration, sdk.AccountObjectIdentifier) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientTypePublic, "https://example.com")
+		req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientTypePublic)
 		if with != nil {
 			with(req)
 		}
@@ -129,7 +129,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		issuer := testClientHelper().Ids.Alpha()
-		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, false, issuer, "https://example.com", "Custom", cert)
+		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, issuer, "https://example.com", "Custom", cert)
 		if with != nil {
 			with(saml2Req)
 		}

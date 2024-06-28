@@ -53,6 +53,7 @@ type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationReq
 	OauthGrantAuthorizationCode *bool
 	OauthAccessTokenValidity    *int
 	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
 	Comment                     *string
 }
 
@@ -120,16 +121,12 @@ type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	Comment                   *string
 }
 
-func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
-	return r.name
-}
-
 type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	OrReplace                   *bool
 	IfNotExists                 *bool
 	name                        AccountObjectIdentifier                  // required
 	OauthClientType             OauthSecurityIntegrationClientTypeOption // required
-	OauthRedirectUri            string                                   // required
+	OauthRedirectUri            *string
 	Enabled                     *bool
 	OauthAllowNonTlsRedirectUri *bool
 	OauthEnforcePkce            *bool
@@ -156,18 +153,18 @@ type CreateSaml2SecurityIntegrationRequest struct {
 	OrReplace                      *bool
 	IfNotExists                    *bool
 	name                           AccountObjectIdentifier // required
-	Enabled                        bool                    // required
-	Saml2Issuer                    string                  // required
-	Saml2SsoUrl                    string                  // required
-	Saml2Provider                  string                  // required
-	Saml2X509Cert                  string                  // required
+	Enabled                        *bool
+	Saml2Issuer                    string                                      // required
+	Saml2SsoUrl                    string                                      // required
+	Saml2Provider                  Saml2SecurityIntegrationSaml2ProviderOption // required
+	Saml2X509Cert                  string                                      // required
 	AllowedUserDomains             []UserDomain
 	AllowedEmailPatterns           []EmailPattern
 	Saml2SpInitiatedLoginPageLabel *string
 	Saml2EnableSpInitiated         *bool
 	Saml2SnowflakeX509Cert         *string
 	Saml2SignRequest               *bool
-	Saml2RequestedNameidFormat     *string
+	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption
 	Saml2PostLogoutRedirectUrl     *string
 	Saml2ForceAuthn                *bool
 	Saml2SnowflakeIssuerUrl        *string
@@ -241,6 +238,7 @@ type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest struct
 	OauthGrantAuthorizationCode *bool
 	OauthAccessTokenValidity    *int
 	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
 	Comment                     *string
 }
 
@@ -378,7 +376,7 @@ type Saml2IntegrationSetRequest struct {
 	Enabled                        *bool
 	Saml2Issuer                    *string
 	Saml2SsoUrl                    *string
-	Saml2Provider                  *string
+	Saml2Provider                  *Saml2SecurityIntegrationSaml2ProviderOption
 	Saml2X509Cert                  *string
 	AllowedUserDomains             []UserDomain
 	AllowedEmailPatterns           []EmailPattern
@@ -386,7 +384,7 @@ type Saml2IntegrationSetRequest struct {
 	Saml2EnableSpInitiated         *bool
 	Saml2SnowflakeX509Cert         *string
 	Saml2SignRequest               *bool
-	Saml2RequestedNameidFormat     *string
+	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption
 	Saml2PostLogoutRedirectUrl     *string
 	Saml2ForceAuthn                *bool
 	Saml2SnowflakeIssuerUrl        *string
