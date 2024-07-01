@@ -67,7 +67,7 @@ func Warehouses() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadWarehouses,
 		Schema:      warehousesSchema,
-		Description: "Datasource used to get details of filtered warehouses. Filtering is aligned with the current possibilities for [SHOW WAREHOUSES]((https://docs.snowflake.com/en/sql-reference/sql/show-warehouses) query (only `like` is supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
+		Description: "Datasource used to get details of filtered warehouses. Filtering is aligned with the current possibilities for [SHOW WAREHOUSES](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses) query (only `like` is supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
 	}
 }
 

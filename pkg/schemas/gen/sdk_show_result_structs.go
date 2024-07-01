@@ -52,3 +52,9 @@ var SdkShowResultStructs = []any{
 	sdk.View{},
 	sdk.Warehouse{},
 }
+
+// TODO [SNOW-1501905]: currently all this structs have the "Show" added to the schema, while these are not show outputs
+// TODO [SNOW-1501905]: temporary struct, may be refactored with addition to generation of describe results; for now used to some structs needing a schema representation
+var AdditionalStructs = []any{
+	sdk.SecurityIntegrationProperty{},
+}

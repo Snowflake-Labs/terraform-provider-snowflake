@@ -18,25 +18,6 @@ var DescribePropertyListSchema = &schema.Schema{
 	Type:     schema.TypeList,
 	Computed: true,
 	Elem: &schema.Resource{
-		Schema: DescribePropertySchema,
-	},
-}
-
-var DescribePropertySchema = map[string]*schema.Schema{
-	"name": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"type": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"value": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"default": {
-		Type:     schema.TypeString,
-		Computed: true,
+		Schema: ShowSecurityIntegrationPropertySchema,
 	},
 }
