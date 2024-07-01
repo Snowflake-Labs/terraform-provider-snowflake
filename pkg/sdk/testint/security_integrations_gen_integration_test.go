@@ -18,7 +18,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	acsURL := testClientHelper().Context.ACSURL(t)
 	issuerURL := testClientHelper().Context.IssuerURL(t)
 	cert := random.GenerateX509(t)
-	rsaKey, _ := random.GenerateRSAPublicKey(t)
+	rsaKey := random.GenerateRSAPublicKey(t)
 
 	revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterEnableIdentifierFirstLogin, "true")
 	t.Cleanup(revertParameter)
