@@ -166,6 +166,8 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_invalidIncomplete(t *test
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
 			`The argument "enabled" is required, but no definition was found.`,
+			// this one is trimmed because of inconsistent \n behavior in error message
+			`The argument "oauth_assertion_issuer" is required, but no definition`,
 			`The argument "oauth_client_id" is required, but no definition was found.`,
 			`The argument "oauth_client_secret" is required, but no definition was found.`,
 		}),

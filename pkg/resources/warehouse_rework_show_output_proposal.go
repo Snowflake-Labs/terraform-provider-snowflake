@@ -20,7 +20,11 @@ func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...sho
 			for _, mapping := range mappings {
 				valueToCompareFrom := result[mapping.nameInShow]
 				if mapping.normalizeFunc != nil {
-					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
+					var err error
+					valueToCompareFrom, err = mapping.normalizeFunc(valueToCompareFrom)
+					if err != nil {
+						return err
+					}
 				}
 				if valueToCompareFrom != mapping.valueToCompare {
 					if err := d.Set(mapping.nameInConfig, mapping.valueToSet); err != nil {
@@ -38,7 +42,7 @@ type showMapping struct {
 	nameInConfig   string
 	valueToCompare any
 	valueToSet     any
-	normalizeFunc  func(any) any
+	normalizeFunc  func(any) (any, error)
 }
 
 // handleExternalChangesToObjectInDescribe assumes that show output is kept in describeOutputAttributeName attribute
@@ -60,7 +64,11 @@ func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ..
 
 				valueToCompareFrom := valueToCompareFromList[0].(map[string]any)["value"]
 				if mapping.normalizeFunc != nil {
-					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
+					var err error
+					valueToCompareFrom, err = mapping.normalizeFunc(valueToCompareFrom)
+					if err != nil {
+						return err
+					}
 				}
 				if valueToCompareFrom != mapping.valueToCompare {
 					if err := d.Set(mapping.nameInConfig, mapping.valueToSet); err != nil {
@@ -78,21 +86,9 @@ type describeMapping struct {
 	nameInConfig   string
 	valueToCompare any
 	valueToSet     any
-	normalizeFunc  func(any) any
+	normalizeFunc  func(any) (any, error)
 }
 
-func stringToIntNormalizer(x any) any {
-	xInt, err := strconv.Atoi(x.(string))
-	if err != nil {
-		xInt = 0
-	}
-	return xInt
-}
-
-func stringToSliceNormalizer(x any) any {
-	xInt, err := strconv.Atoi(x.(string))
-	if err != nil {
-		xInt = 0
-	}
-	return xInt
+func stringToIntNormalizer(x any) (any, error) {
+	return strconv.Atoi(x.(string))
 }

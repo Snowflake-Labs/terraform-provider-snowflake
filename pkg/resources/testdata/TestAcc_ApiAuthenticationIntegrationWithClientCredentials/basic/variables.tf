@@ -1,4 +1,3 @@
-
 variable "enabled" {
   type = bool
 }

@@ -130,7 +130,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
 		Default:          "unknown",
-		Description:      fmt.Sprintf("Specifies the client ID for the OAuth application in the external service. Valid options are: %v", sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption)),
+		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. Valid options are: %v", sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption)),
 	},
 	"oauth_client_id": {
 		Type:        schema.TypeString,

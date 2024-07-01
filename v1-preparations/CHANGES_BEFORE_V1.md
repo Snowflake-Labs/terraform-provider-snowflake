@@ -16,7 +16,7 @@ create a resource with slightly different configuration in Snowflake (depending 
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 
-## v0.91.0 ➞ v0.92.0
+## v0.92.0 ➞ v0.93.0
 ### new resources for API Authentication security integrations
 New resources are introduced for each type of oauth flow:
 - `snowflake_api_authentication_integration_with_authorization_code_grant`

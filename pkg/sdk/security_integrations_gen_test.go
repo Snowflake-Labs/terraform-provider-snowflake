@@ -569,7 +569,7 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t 
 		opts := defaultOpts()
 		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint",
-			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {

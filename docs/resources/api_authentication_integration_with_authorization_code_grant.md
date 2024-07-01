@@ -48,15 +48,181 @@ resource "snowflake_api_authentication_integration_with_authorization_code_grant
 
 - `comment` (String) Specifies a comment for the integration.
 - `oauth_access_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
+- `oauth_allowed_scopes` (Set of String) Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.
 - `oauth_authorization_endpoint` (String) Specifies the URL for authenticating to the external service.
-- `oauth_client_auth_method` (String) Specifies the client ID for the OAuth application in the external service.
-- `oauth_refresh_token_validity` (Number) Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.
+- `oauth_client_auth_method` (String) Specifies the client ID for the OAuth application in the external service. Valid options are: [CLIENT_SECRET_POST]
+- `oauth_grant` (String) Specifies the type of OAuth flow.
+- `oauth_refresh_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
 - `oauth_token_endpoint` (String) Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).
 
 ### Read-Only
 
-- `created_on` (String) Date and time when the integration was created.
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `auth_type` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--auth_type))
+- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--comment))
+- `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--enabled))
+- `oauth_access_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_access_token_validity))
+- `oauth_allowed_scopes` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_allowed_scopes))
+- `oauth_authorization_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_authorization_endpoint))
+- `oauth_client_auth_method` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_client_auth_method))
+- `oauth_client_id` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_client_id))
+- `oauth_grant` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_grant))
+- `oauth_refresh_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_refresh_token_validity))
+- `oauth_token_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--oauth_token_endpoint))
+- `parent_integration` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--parent_integration))
+
+<a id="nestedobjatt--describe_output--auth_type"></a>
+### Nested Schema for `describe_output.auth_type`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--comment"></a>
+### Nested Schema for `describe_output.comment`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--enabled"></a>
+### Nested Schema for `describe_output.enabled`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_access_token_validity"></a>
+### Nested Schema for `describe_output.oauth_access_token_validity`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_allowed_scopes"></a>
+### Nested Schema for `describe_output.oauth_allowed_scopes`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_authorization_endpoint"></a>
+### Nested Schema for `describe_output.oauth_authorization_endpoint`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_client_auth_method"></a>
+### Nested Schema for `describe_output.oauth_client_auth_method`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_client_id"></a>
+### Nested Schema for `describe_output.oauth_client_id`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_grant"></a>
+### Nested Schema for `describe_output.oauth_grant`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_refresh_token_validity"></a>
+### Nested Schema for `describe_output.oauth_refresh_token_validity`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--oauth_token_endpoint"></a>
+### Nested Schema for `describe_output.oauth_token_endpoint`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--parent_integration"></a>
+### Nested Schema for `describe_output.parent_integration`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `category` (String)
+- `comment` (String)
+- `created_on` (String)
+- `enabled` (Boolean)
+- `integration_type` (String)
+- `name` (String)
 
 ## Import
 

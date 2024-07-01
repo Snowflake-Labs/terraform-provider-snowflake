@@ -1,4 +1,3 @@
-
 variable "comment" {
   type = string
 }

@@ -135,7 +135,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		}
 		err := client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
 		require.NoError(t, err)
-		// cleanupSecurityIntegration(t, id)
+		cleanupSecurityIntegration(t, id)
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
 

@@ -1,4 +1,3 @@
-
 variable "comment" {
   type = string
 }
@@ -27,5 +26,8 @@ variable "oauth_refresh_token_validity" {
   type = number
 }
 variable "oauth_token_endpoint" {
+  type = string
+}
+variable "oauth_assertion_issuer" {
   type = string
 }
