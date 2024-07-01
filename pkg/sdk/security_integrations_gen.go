@@ -532,6 +532,10 @@ type SecurityIntegration struct {
 	CreatedOn       time.Time
 }
 
+func (s *SecurityIntegration) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(s.Name)
+}
+
 func (s *SecurityIntegration) SubType() (string, error) {
 	typeParts := strings.Split(s.IntegrationType, "-")
 	if len(typeParts) < 2 {

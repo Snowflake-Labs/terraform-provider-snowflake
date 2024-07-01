@@ -77,7 +77,7 @@ test-client: ## runs test that checks sdk.Client without instrumentedsql
 	SF_TF_NO_INSTRUMENTED_SQL=1 SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug go test ./pkg/sdk/internal/client/... -v
 
 test-acceptance-%: ## run acceptance tests for the given resource only, e.g. test-acceptance-Warehouse
-	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true go test -run ^TestAcc_$*_ -v -timeout=20m ./...
+	TF_ACC=1 TF_LOG=DEBUG SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true go test -run ^TestAcc_$*_ -v -timeout=20m ./pkg/resources
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
