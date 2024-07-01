@@ -265,7 +265,7 @@ func TestAcc_ScimIntegration_InvalidIncomplete(t *testing.T) {
 	})
 }
 
-func TestAcc_ScimIntegration_migrateFromVersion092EnabledTrue(t *testing.T) {
+func TestAcc_ScimIntegration_migrateFromVersion093EnabledTrue(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	role := snowflakeroles.GenericScimProvisioner
 	resourceName := "snowflake_scim_integration.test"

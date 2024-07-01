@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var scimIntegrationSchema = map[string]*schema.Schema{
@@ -40,7 +39,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
-		ValidateFunc:     validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
 		DiffSuppressFunc: ignoreCaseAndTrimSpaceSuppressFunc,
 	},
 	"run_as_role": {
@@ -49,7 +48,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		ForceNew: true,
 		Description: fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM."+
 			" Provider assumes that the specified role is already provided. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
+		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
 				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
@@ -68,8 +67,8 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          "unknown",
-		ValidateFunc:     validation.StringInSlice([]string{"true", "false"}, true),
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("sync_password"),
+		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, false),
+		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInDescribe("sync_password")),
 		Description:      "Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.",
 	},
 	"comment": {
@@ -281,13 +280,11 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(err)
 		}
 
-		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"comment", "comment", integration.Comment, integration.Comment, nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
+		if err = d.Set("comment", integration.Comment); err != nil {
+			return diag.FromErr(err)
+		}
 
+		if withExternalChangesMarking {
 			networkPolicyProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" })
 			if err != nil {
 				return diag.FromErr(err)
@@ -317,11 +314,6 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 			if v := d.GetRawConfig().AsValueMap()["sync_password"]; !v.IsNull() {
 				if err = d.Set("sync_password", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
-				if err = d.Set("comment", v.AsString()); err != nil {
 					return diag.FromErr(err)
 				}
 			}

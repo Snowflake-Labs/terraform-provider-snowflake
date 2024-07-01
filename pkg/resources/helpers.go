@@ -141,55 +141,25 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
-func GetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string) (*T, error) {
-	return GetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value")
-}
-
-// GetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
-// schema.TypeList with MaxItems set to one and inner schema with single value. To easily retrieve
-// the inner value, you can specify the top-level property with propertyKey and the nested value with nestedValueKey.
-func GetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string) (*T, error) {
-	value, ok := d.GetOk(propertyKey)
-	if !ok {
-		return nil, fmt.Errorf("nested property %s not found", propertyKey)
+// ParseCommaSeparatedStringArray can be used to parse Snowflake output containing a list in the format of "[item1, item2, ...]",
+// the assumptions are that:
+// 1. The list is enclosed by [] brackets, and they shouldn't be a part of any item's value
+// 2. Items are separated by commas, and they shouldn't be a part of any item's value
+// 3. items can have as many spaces in between, but after separation they will be trimmed and shouldn't be a part of any item's value
+func ParseCommaSeparatedStringArray(value string) []string {
+	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
+		if value == "[]" {
+			return make([]string, 0)
+		}
+		list := strings.Trim(value, "[]")
+		listItems := strings.Split(list, ",")
+		trimmedListItems := make([]string, len(listItems))
+		for i, item := range listItems {
+			trimmedListItems[i] = strings.TrimSpace(item)
+		}
+		return trimmedListItems
 	}
-
-	typedValue, ok := value.([]any)
-	if !ok || len(typedValue) != 1 {
-		return nil, fmt.Errorf("nested property %s is not an array or has incorrect number of values: %d, expected: 1", propertyKey, len(typedValue))
-	}
-
-	typedNestedMap, ok := typedValue[0].(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("nested property %s is not of type map[string]any, got: %T", propertyKey, typedValue[0])
-	}
-
-	_, ok = typedNestedMap[nestedValueKey]
-	if !ok {
-		return nil, fmt.Errorf("nested value key %s couldn't be found in the nested property map %s", nestedValueKey, propertyKey)
-	}
-
-	typedNestedValue, ok := typedNestedMap[nestedValueKey].(T)
-	if !ok {
-		return nil, fmt.Errorf("nested property %s.%s is not of type %T, got: %T", propertyKey, nestedValueKey, *new(T), typedNestedMap[nestedValueKey])
-	}
-
-	return &typedNestedValue, nil
-}
-
-func SetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string, value T) error {
-	return SetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value", value)
-}
-
-// SetPropertyOfFirstNestedObjectByKey should be used for single objects defined in the Terraform schema as
-// schema.TypeList with MaxItems set to one and inner schema with single value. To easily set
-// the inner value, you can specify top-level property with propertyKey, nested value with nestedValueKey and value at the end.
-func SetPropertyOfFirstNestedObjectByKey[T any](d *schema.ResourceData, propertyKey string, nestedValueKey string, value T) error {
-	return d.Set(propertyKey, []any{
-		map[string]any{
-			nestedValueKey: value,
-		},
-	})
+	return make([]string, 0)
 }
 
 type tags []tag

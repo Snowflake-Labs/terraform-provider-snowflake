@@ -13,12 +13,13 @@ description: |-
 
 ```terraform
 # basic resource
+# each pem file contains a base64 encoded IdP signing certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
 resource "snowflake_saml2_integration" "saml_integration" {
   name            = "saml_integration"
   saml2_provider  = "CUSTOM"
   saml2_issuer    = "test_issuer"
   saml2_sso_url   = "https://example.com"
-  saml2_x509_cert = "MIICYzCCAcygAwIBAgIBADANBgkqhkiG9w0BAQUFADAuMQswCQYDVQQGEwJVUzEMMAoGA1UEChMDSUJNMREwDwYDVQQLEwhMb2NhbCBDQTAeFw05OTEyMjIwNTAwMDBaFw0wMDEyMjMwNDU5NTlaMC4xCzAJBgNVBAYTAlVTMQwwCgYDVQQKEwNJQk0xETAPBgNVBAsTCExvY2FsIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD2bZEo7xGaX2/0GHkrNFZvlxBou9v1Jmt/PDiTMPve8r9FeJAQ0QdvFST/0JPQYD20rH0bimdDLgNdNynmyRoS2S/IInfpmf69iyc2G0TPyRvmHIiOZbdCd+YBHQi1adkj17NDcWj6S14tVurFX73zx0sNoMS79q3tuXKrDsxeuwIDAQABo4GQMIGNMEsGCVUdDwGG+EIBDQQ+EzxHZW5lcmF0ZWQgYnkgdGhlIFNlY3VyZVdheSBTZWN1cml0eSBTZXJ2ZXIgZm9yIE9TLzM5MCAoUkFDRikwDgYDVR0PAQH/BAQDAgAGMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFJ3+ocRyCTJw067dLSwr/nalx6YMMA0GCSqGSIb3DQEBBQUAA4GBAMaQzt+zaj1GU77yzlr8iiMBXgdQrwsZZWJo5exnAucJAEYQZmOfyLiMD6oYq+ZnfvM0n8G/Y79q8nhwvuxpYOnRSAXFp6xSkrIOeZtJMY1h00LKp/JX3Ng1svZ2agE126JHsQ0bhzN5TKsYfbwfTwfjdWAGy6Vf1nYi/rO+ryMO"
+  saml2_x509_cert = file("cert.pem")
 }
 # resource with all fields set
 resource "snowflake_saml2_integration" "test" {
@@ -36,10 +37,10 @@ resource "snowflake_saml2_integration" "test" {
   saml2_sign_request                  = true
   saml2_snowflake_acs_url             = "example.snowflakecomputing.com/fed/login"
   saml2_snowflake_issuer_url          = "example.snowflakecomputing.com/fed/login"
-  saml2_snowflake_x509_cert           = "MIICYzCCAcygAwIBAgIBADANBgkqhkiG9w0BAQUFADAuMQswCQYDVQQGEwJVUzEMMAoGA1UEChMDSUJNMREwDwYDVQQLEwhMb2NhbCBDQTAeFw05OTEyMjIwNTAwMDBaFw0wMDEyMjMwNDU5NTlaMC4xCzAJBgNVBAYTAlVTMQwwCgYDVQQKEwNJQk0xETAPBgNVBAsTCExvY2FsIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD2bZEo7xGaX2/0GHkrNFZvlxBou9v1Jmt/PDiTMPve8r9FeJAQ0QdvFST/0JPQYD20rH0bimdDLgNdNynmyRoS2S/IInfpmf69iyc2G0TPyRvmHIiOZbdCd+YBHQi1adkj17NDcWj6S14tVurFX73zx0sNoMS79q3tuXKrDsxeuwIDAQABo4GQMIGNMEsGCVUdDwGG+EIBDQQ+EzxHZW5lcmF0ZWQgYnkgdGhlIFNlY3VyZVdheSBTZWN1cml0eSBTZXJ2ZXIgZm9yIE9TLzM5MCAoUkFDRikwDgYDVR0PAQH/BAQDAgAGMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFJ3+ocRyCTJw067dLSwr/nalx6YMMA0GCSqGSIb3DQEBBQUAA4GBAMaQzt+zaj1GU77yzlr8iiMBXgdQrwsZZWJo5exnAucJAEYQZmOfyLiMD6oYq+ZnfvM0n8G/Y79q8nhwvuxpYOnRSAXFp6xSkrIOeZtJMY1h00LKp/JX3Ng1svZ2agE126JHsQ0bhzN5TKsYfbwfTwfjdWAGy6Vf1nYi/rO+ryMO"
+  saml2_snowflake_x509_cert           = file("snowflake_cert.pem")
   saml2_sp_initiated_login_page_label = "foo"
   saml2_sso_url                       = "https://example.com"
-  saml2_x509_cert                     = "MIICYzCCAcygAwIBAgIBADANBgkqhkiG9w0BAQUFADAuMQswCQYDVQQGEwJVUzEMMAoGA1UEChMDSUJNMREwDwYDVQQLEwhMb2NhbCBDQTAeFw05OTEyMjIwNTAwMDBaFw0wMDEyMjMwNDU5NTlaMC4xCzAJBgNVBAYTAlVTMQwwCgYDVQQKEwNJQk0xETAPBgNVBAsTCExvY2FsIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD2bZEo7xGaX2/0GHkrNFZvlxBou9v1Jmt/PDiTMPve8r9FeJAQ0QdvFST/0JPQYD20rH0bimdDLgNdNynmyRoS2S/IInfpmf69iyc2G0TPyRvmHIiOZbdCd+YBHQi1adkj17NDcWj6S14tVurFX73zx0sNoMS79q3tuXKrDsxeuwIDAQABo4GQMIGNMEsGCVUdDwGG+EIBDQQ+EzxHZW5lcmF0ZWQgYnkgdGhlIFNlY3VyZVdheSBTZWN1cml0eSBTZXJ2ZXIgZm9yIE9TLzM5MCAoUkFDRikwDgYDVR0PAQH/BAQDAgAGMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFJ3+ocRyCTJw067dLSwr/nalx6YMMA0GCSqGSIb3DQEBBQUAA4GBAMaQzt+zaj1GU77yzlr8iiMBXgdQrwsZZWJo5exnAucJAEYQZmOfyLiMD6oYq+ZnfvM0n8G/Y79q8nhwvuxpYOnRSAXFp6xSkrIOeZtJMY1h00LKp/JX3Ng1svZ2agE126JHsQ0bhzN5TKsYfbwfTwfjdWAGy6Vf1nYi/rO+ryMO"
+  saml2_x509_cert                     = file("cert.pem")
 }
 ```
 
@@ -56,32 +57,277 @@ resource "snowflake_saml2_integration" "test" {
 
 ### Optional
 
-- `allowed_email_patterns` (List of String) A list of regular expressions that email addresses are matched against to authenticate with a SAML2 security integration.
-- `allowed_user_domains` (List of String) A list of email domains that can authenticate with a SAML2 security integration.
+- `allowed_email_patterns` (Set of String) A list of regular expressions that email addresses are matched against to authenticate with a SAML2 security integration. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.
+- `allowed_user_domains` (Set of String) A list of email domains that can authenticate with a SAML2 security integration. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.
 - `comment` (String) Specifies a comment for the integration.
-- `enabled` (Boolean) Specifies whether this security integration is enabled or disabled.
-- `saml2_enable_sp_initiated` (Boolean) The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in WIth button on the login page.  FALSE: does not display the Log in With button on the login page.
-- `saml2_force_authn` (Boolean) The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake.
+- `enabled` (String) Specifies whether this security integration is enabled or disabled. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.
+- `saml2_enable_sp_initiated` (String) The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.
+- `saml2_force_authn` (String) The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.
 - `saml2_post_logout_redirect_url` (String) The endpoint to which Snowflake redirects users after clicking the Log Out button in the classic Snowflake web interface. Snowflake terminates the Snowflake session upon redirecting to the specified endpoint.
 - `saml2_requested_nameid_format` (String) The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: [urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName urn:oasis:names:tc:SAML:2.0:nameid-format:kerberos urn:oasis:names:tc:SAML:2.0:nameid-format:persistent urn:oasis:names:tc:SAML:2.0:nameid-format:transient]
-- `saml2_sign_request` (Boolean) The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed.
+- `saml2_sign_request` (String) The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.
 - `saml2_snowflake_acs_url` (String) The string containing the Snowflake Assertion Consumer Service URL to which the IdP will send its SAML authentication response back to Snowflake. This property will be set in the SAML authentication request generated by Snowflake when initiating a SAML SSO operation with the IdP. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use.
 - `saml2_snowflake_issuer_url` (String) The string containing the EntityID / Issuer for the Snowflake service provider. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use.
 - `saml2_snowflake_x509_cert` (String) The Base64 encoded self-signed certificate generated by Snowflake for use with Encrypting SAML Assertions and Signed SAML Requests. You must have at least one of these features (encrypted SAML assertions or signed SAML responses) enabled in your Snowflake account to access the certificate value.
-- `saml2_sp_initiated_login_page_label` (String) The string containing the label to display after the Log In With button on the login page.
+- `saml2_sp_initiated_login_page_label` (String) The string containing the label to display after the Log In With button on the login page. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.
 
 ### Read-Only
 
-- `created_on` (String) Date and time when the SAML2 integration was created.
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
-- `saml2_digest_methods_used` (String) Digest methods used for this integration.
-- `saml2_signature_methods_used` (String) Signature methods used for this integration.
-- `saml2_snowflake_metadata` (String) Metadata created by Snowflake to provide to SAML2 provider.
+- `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `allowed_email_patterns` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--allowed_email_patterns))
+- `allowed_user_domains` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--allowed_user_domains))
+- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--comment))
+- `saml2_digest_methods_used` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_digest_methods_used))
+- `saml2_enable_sp_initiated` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_enable_sp_initiated))
+- `saml2_force_authn` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_force_authn))
+- `saml2_issuer` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_issuer))
+- `saml2_post_logout_redirect_url` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_post_logout_redirect_url))
+- `saml2_provider` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_provider))
+- `saml2_requested_nameid_format` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_requested_nameid_format))
+- `saml2_sign_request` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_sign_request))
+- `saml2_signature_methods_used` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_signature_methods_used))
+- `saml2_snowflake_acs_url` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_snowflake_acs_url))
+- `saml2_snowflake_issuer_url` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_snowflake_issuer_url))
+- `saml2_snowflake_metadata` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_snowflake_metadata))
+- `saml2_snowflake_x509_cert` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_snowflake_x509_cert))
+- `saml2_sp_initiated_login_page_label` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_sp_initiated_login_page_label))
+- `saml2_sso_url` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_sso_url))
+- `saml2_x509_cert` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--saml2_x509_cert))
+
+<a id="nestedobjatt--describe_output--allowed_email_patterns"></a>
+### Nested Schema for `describe_output.allowed_email_patterns`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--allowed_user_domains"></a>
+### Nested Schema for `describe_output.allowed_user_domains`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--comment"></a>
+### Nested Schema for `describe_output.comment`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_digest_methods_used"></a>
+### Nested Schema for `describe_output.saml2_digest_methods_used`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_enable_sp_initiated"></a>
+### Nested Schema for `describe_output.saml2_enable_sp_initiated`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_force_authn"></a>
+### Nested Schema for `describe_output.saml2_force_authn`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_issuer"></a>
+### Nested Schema for `describe_output.saml2_issuer`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_post_logout_redirect_url"></a>
+### Nested Schema for `describe_output.saml2_post_logout_redirect_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_provider"></a>
+### Nested Schema for `describe_output.saml2_provider`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_requested_nameid_format"></a>
+### Nested Schema for `describe_output.saml2_requested_nameid_format`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_sign_request"></a>
+### Nested Schema for `describe_output.saml2_sign_request`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_signature_methods_used"></a>
+### Nested Schema for `describe_output.saml2_signature_methods_used`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_snowflake_acs_url"></a>
+### Nested Schema for `describe_output.saml2_snowflake_acs_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_snowflake_issuer_url"></a>
+### Nested Schema for `describe_output.saml2_snowflake_issuer_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_snowflake_metadata"></a>
+### Nested Schema for `describe_output.saml2_snowflake_metadata`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_snowflake_x509_cert"></a>
+### Nested Schema for `describe_output.saml2_snowflake_x509_cert`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_sp_initiated_login_page_label"></a>
+### Nested Schema for `describe_output.saml2_sp_initiated_login_page_label`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_sso_url"></a>
+### Nested Schema for `describe_output.saml2_sso_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--saml2_x509_cert"></a>
+### Nested Schema for `describe_output.saml2_x509_cert`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `category` (String)
+- `comment` (String)
+- `created_on` (String)
+- `enabled` (Boolean)
+- `integration_type` (String)
+- `name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_saml2_integration.example name
+terraform import snowflake_saml2_integration.example "name"
 ```

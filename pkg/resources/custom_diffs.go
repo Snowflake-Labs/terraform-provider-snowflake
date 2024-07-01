@@ -67,6 +67,14 @@ func ForceNewIfChangeToEmptySlice[T any](key string) schema.CustomizeDiffFunc {
 	})
 }
 
+// ForceNewIfChangeToEmptySet sets a ForceNew for a list field which was set to an empty value.
+func ForceNewIfChangeToEmptySet(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.(*schema.Set).List(), newValue.(*schema.Set).List()
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
 // ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
 func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
 	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {

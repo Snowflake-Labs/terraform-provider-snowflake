@@ -31,28 +31,6 @@ func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...sho
 	return nil
 }
 
-// TODO: merge with above
-func handleExternalChangesToObjectDescribe(d *schema.ResourceData, mappings ...showMapping) error {
-	if showOutput, ok := d.GetOk(describeOutputAttributeName); ok {
-		showOutputList := showOutput.([]any)
-		if len(showOutputList) == 1 {
-			result := showOutputList[0].(map[string]any)
-			for _, mapping := range mappings {
-				valueToCompareFrom := result[mapping.nameInShow]
-				if mapping.normalizeFunc != nil {
-					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
-				}
-				if valueToCompareFrom != mapping.valueToCompare {
-					if err := d.Set(mapping.nameInConfig, mapping.valueToSet); err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
 type showMapping struct {
 	nameInShow     string
 	nameInConfig   string

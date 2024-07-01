@@ -278,3 +278,66 @@ func TestForceNewIfChangeToEmptySlice(t *testing.T) {
 		})
 	}
 }
+
+func TestForceNewIfChangeToEmptySet(t *testing.T) {
+	tests := []struct {
+		name           string
+		stateValue     map[string]string
+		rawConfigValue map[string]any
+		wantForceNew   bool
+	}{
+		{
+			name:       "empty to non-empty",
+			stateValue: map[string]string{},
+			rawConfigValue: map[string]any{
+				"value": []any{"foo"},
+			},
+			wantForceNew: false,
+		}, {
+			name:           "empty to empty",
+			stateValue:     map[string]string{},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   false,
+		}, {
+			name: "non-empty to empty",
+			stateValue: map[string]string{
+				"value.#": "1",
+				"value.0": "foo",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		}, {
+			name: "non-empty to non-empty",
+			stateValue: map[string]string{
+				"value.#": "2",
+				"value.0": "foo",
+				"value.1": "bar",
+			},
+			rawConfigValue: map[string]any{
+				"value": []any{"foo"},
+			},
+			wantForceNew: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			diff := calculateDiffFromAttributes(t,
+				createProviderWithValuePropertyAndCustomDiff(t,
+					&schema.Schema{
+						Type: schema.TypeList,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+						Optional: true,
+					},
+					resources.ForceNewIfChangeToEmptySet(
+						"value",
+					),
+				),
+				tt.stateValue,
+				tt.rawConfigValue,
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
