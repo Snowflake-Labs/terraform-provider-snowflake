@@ -14,10 +14,11 @@ description: |-
 ```terraform
 # basic resource
 resource "snowflake_api_authentication_integration_with_jwt_bearer" "test" {
-  enabled             = true
-  name                = "foo"
-  oauth_client_id     = "foo"
-  oauth_client_secret = "foo"
+  enabled                = true
+  name                   = "foo"
+  oauth_client_id        = "foo"
+  oauth_client_secret    = "foo"
+  oauth_assertion_issuer = "foo"
 }
 # resource with all fields set
 resource "snowflake_api_authentication_integration_with_jwt_bearer" "test" {
@@ -31,6 +32,7 @@ resource "snowflake_api_authentication_integration_with_jwt_bearer" "test" {
   oauth_client_secret          = "foo"
   oauth_refresh_token_validity = 42
   oauth_token_endpoint         = "https://example.com"
+  oauth_assertion_issuer       = "foo"
 }
 ```
 
@@ -50,7 +52,7 @@ resource "snowflake_api_authentication_integration_with_jwt_bearer" "test" {
 - `comment` (String) Specifies a comment for the integration.
 - `oauth_access_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
 - `oauth_authorization_endpoint` (String) Specifies the URL for authenticating to the external service.
-- `oauth_client_auth_method` (String) Specifies the client ID for the OAuth application in the external service. Valid options are: [CLIENT_SECRET_POST]
+- `oauth_client_auth_method` (String) Specifies that POST is used as the authentication method to the external service. Valid options are: [CLIENT_SECRET_POST]
 - `oauth_grant` (String) Specifies the type of OAuth flow.
 - `oauth_refresh_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
 - `oauth_token_endpoint` (String) Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).

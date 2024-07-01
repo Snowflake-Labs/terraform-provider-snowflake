@@ -438,7 +438,6 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &ExternalOauthIntegrationSet{
 			Enabled:                            r.Set.Enabled,
 			ExternalOauthType:                  r.Set.ExternalOauthType,
@@ -472,7 +471,6 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 				AudienceList: r.Set.ExternalOauthAudienceList.AudienceList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {
@@ -494,7 +492,6 @@ func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *A
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled:                   r.Set.Enabled,
 			OauthIssueRefreshTokens:   r.Set.OauthIssueRefreshTokens,
@@ -510,7 +507,6 @@ func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *A
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {
@@ -532,7 +528,6 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled:                     r.Set.Enabled,
 			OauthRedirectUri:            r.Set.OauthRedirectUri,
@@ -559,7 +554,6 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {

@@ -501,6 +501,14 @@ type SecurityIntegrationProperty struct {
 	Default string
 }
 
+func (s SecurityIntegrationProperty) GetName() string {
+	return s.Name
+}
+
+func (s SecurityIntegrationProperty) GetDefault() string {
+	return s.Default
+}
+
 // ShowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-integrations.
 type ShowSecurityIntegrationOptions struct {
 	show                 bool  `ddl:"static" sql:"SHOW"`

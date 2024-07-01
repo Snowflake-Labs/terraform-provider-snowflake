@@ -121,6 +121,10 @@ type CreateOauthForPartnerApplicationsSecurityIntegrationRequest struct {
 	Comment                   *string
 }
 
+func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	OrReplace                   *bool
 	IfNotExists                 *bool
@@ -139,6 +143,10 @@ type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	OauthClientRsaPublicKey     *string
 	OauthClientRsaPublicKey2    *string
 	Comment                     *string
+}
+
+func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
 }
 
 type PreAuthorizedRolesListRequest struct {
@@ -168,6 +176,10 @@ type CreateSaml2SecurityIntegrationRequest struct {
 	Comment                        *string
 }
 
+func (r *CreateSaml2SecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type CreateScimSecurityIntegrationRequest struct {
 	OrReplace     *bool
 	IfNotExists   *bool
@@ -178,6 +190,10 @@ type CreateScimSecurityIntegrationRequest struct {
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
 	Comment       *string
+}
+
+func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
 }
 
 type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest struct {
