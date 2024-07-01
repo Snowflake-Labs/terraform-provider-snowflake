@@ -69,6 +69,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeAggregationPolicy,
 	ObjectTypeAlert,
 	ObjectTypeAuthenticationPolicy,
+	ObjectTypeCortexSearchService,
 	ObjectTypeDataMetricFunction,
 	ObjectTypeDynamicTable,
 	ObjectTypeEventTable,
