@@ -213,6 +213,20 @@ The additional parameters call **DESC DATABASE** (with `with_describe` turned on
 The outputs of both commands are held in `databases` entry, where **DESC DATABASE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN DATABASE** in the `parameters` field.
 It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
+## v0.91.0 ➞ v0.92.0
+### snowflake_scim_integration resource changes
+
+New fields:
+- `enabled`
+- `sync_password`
+- `comment`
+
+Changed fields:
+- `provisioner_role` renamed to `run_as_role`
+
+Other changes:
+- `scim_client` and `run_as_role` marked as `ForceNew`
+
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
 #### *(behavior change)* Validation to column type added

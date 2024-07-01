@@ -1,7 +1,6 @@
-# Changes before v1
+# Design decisions before v1
 
-This document is a changelog of resources and datasources as part of the https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1.
-Each provider version lists changes made in resources and datasources definitions during v1 preparations, like added, modified and removed fields.
+This document is a supplement to all the resource changes described in the [migration guide](../MIGRATION_GUIDE.md) on our road to V1 (check the [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#05052024-roadmap-overview)). Its purpose is to give explanation/context for the decisions spanning multiple resources. It will be updated with more findings/conventions.
 
 ## Default values
 For any resource that went through the rework as part of the [resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1),
@@ -35,9 +34,9 @@ It won't be possible to use the above values directly (it will be for the string
 
 ## Config values in the state
 Currently, not setting a value for the given attribute inside the config results in populating this field in state with the value extracted from Snowflake (usually by running `SHOW`/`DESCRIBE`). This poses a challenge to identify if the change happened externally or is it just a default Snowflake value (multiple issues reported describe the issue with the infinite plans or weird drifts - this is one of the main reasons). With getting rid of the Snowflake defaults from the provider, it's not an easy thing to do in the currently used [Terraform SDK v2](https://github.com/hashicorp/terraform-plugin-sdk). We have considered and tested a variety of options, including custom diff suppression, setting these fields as optional and computed, and others, but there were smaller or bigger problems with these approaches. What we ended up with, and what will be a guideline for the V1 is:
-- we do not fill the given attribute in the state if it is not present inside a config
+- we do not fill the given attribute in the state if it is not present inside a config (for the optional attributes; the required ones are always present)
 - we encourage to always use the value directly if you don't want to depend on the Snowflake default (consult [default values](#default-values) section)
-- this may result in change detection with migrations to the newer versions of the provider (because currently, the value was is independently of being present in the config or not and there is no way to deduce its presence in the automatic state migrations we can provide) - alternative would be to follow our [resource migration guide](../docs/technical-documentation/resource_migration.md)
+- this may result in change detection with migrations to the newer versions of the provider (because currently, the value is stored independently of being present in the config or not and there is no way to deduce its presence in the automatic state migrations we can provide) - alternative would be to follow our [resource migration guide](../docs/technical-documentation/resource_migration.md)
 - we will provide a `show_output` and `describe_output` in each resource (more in [Raw Snowflake output](#raw-snowflake-output) section)
 
 ## Raw Snowflake output
@@ -47,17 +46,3 @@ Because of the changes regarding [Config values in the state](#config-values-in-
 - `parameters` computed field, containing all the values and levels of Snowflake parameters (the result of `SHOW PARAMETERS IN <object> <name>`)
 
 This way, it is still possible to obtain the values in your configs, even without setting them directly for the given managed object.
-
-## v0.91.0 ➞ v0.92.0
-### snowflake_scim_integration resource changes
-
-New fields:
-- `enabled`
-- `sync_password`
-- `comment`
-
-Changed fields:
-- `provisioner_role` renamed to `run_as_role`
-
-Other changes:
-- `scim_client` and `run_as_role` marked as `ForceNew`
