@@ -1473,6 +1473,69 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "wait_for_provisioning"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
+				),
+			},
+			// let's try to change the value of the parameter that was earlier a bool and now is a string
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+					},
+				},
+				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_booleanChangeRightAfter(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: warehouseFullMigrationConfig(id.Name(), true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "wait_for_provisioning", "true"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", "null"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
+				),
+			},
+			// let's try to change the value of the parameter that was earlier a bool and now is a string
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+					},
+				},
+				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
 				),
 			},
 		},
