@@ -232,8 +232,9 @@ func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 	// Minimal valid CreateOauthForCustomClientsSecurityIntegrationOptions
 	defaultOpts := func() *CreateOauthForCustomClientsSecurityIntegrationOptions {
 		return &CreateOauthForCustomClientsSecurityIntegrationOptions{
-			name:            id,
-			OauthClientType: OauthSecurityIntegrationClientTypePublic,
+			name:             id,
+			OauthClientType:  OauthSecurityIntegrationClientTypePublic,
+			OauthRedirectUri: "uri",
 		}
 	}
 
@@ -252,7 +253,7 @@ func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = OAUTH OAUTH_CLIENT = CUSTOM OAUTH_CLIENT_TYPE = 'PUBLIC'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = OAUTH OAUTH_CLIENT = CUSTOM OAUTH_CLIENT_TYPE = 'PUBLIC' OAUTH_REDIRECT_URI = 'uri'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -260,7 +261,6 @@ func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 		roleID, role2ID, npID := randomAccountObjectIdentifier(), randomAccountObjectIdentifier(), randomAccountObjectIdentifier()
 		opts.IfNotExists = Bool(true)
 		opts.OauthClientType = OauthSecurityIntegrationClientTypePublic
-		opts.OauthRedirectUri = Pointer("uri")
 		opts.Enabled = Pointer(true)
 		opts.OauthAllowNonTlsRedirectUri = Pointer(true)
 		opts.OauthEnforcePkce = Pointer(true)
@@ -345,6 +345,7 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 			Saml2SsoUrl:   "url",
 			Saml2Provider: "provider",
 			Saml2X509Cert: "cert",
+			Enabled:       true,
 		}
 	}
 
@@ -363,20 +364,19 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SAML2 SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SECURITY INTEGRATION %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
-		opts.Enabled = Bool(true)
 		opts.AllowedEmailPatterns = []EmailPattern{{Pattern: "pattern"}}
 		opts.AllowedUserDomains = []UserDomain{{Domain: "domain"}}
 		opts.Comment = Pointer("a")
 		opts.Saml2EnableSpInitiated = Pointer(true)
 		opts.Saml2ForceAuthn = Pointer(true)
 		opts.Saml2PostLogoutRedirectUrl = Pointer("redirect")
-		opts.Saml2RequestedNameidFormat = Pointer(Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)
+		opts.Saml2RequestedNameidFormat = Pointer("format")
 		opts.Saml2SignRequest = Pointer(true)
 		opts.Saml2SnowflakeAcsUrl = Pointer("acs")
 		opts.Saml2SnowflakeIssuerUrl = Pointer("issuer")
@@ -385,8 +385,8 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = SAML2 ENABLED = true SAML2_ISSUER = 'issuer' SAML2_SSO_URL = 'url' SAML2_PROVIDER = 'provider' SAML2_X509_CERT = 'cert'"+
 			" ALLOWED_USER_DOMAINS = ('domain') ALLOWED_EMAIL_PATTERNS = ('pattern') SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label' SAML2_ENABLE_SP_INITIATED = true SAML2_SNOWFLAKE_X509_CERT = 'cert' SAML2_SIGN_REQUEST = true"+
-			" SAML2_REQUESTED_NAMEID_FORMAT = '%s' SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect' SAML2_FORCE_AUTHN = true SAML2_SNOWFLAKE_ISSUER_URL = 'issuer' SAML2_SNOWFLAKE_ACS_URL = 'acs'"+
-			" COMMENT = 'a'", id.FullyQualifiedName(), Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)
+			" SAML2_REQUESTED_NAMEID_FORMAT = 'format' SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect' SAML2_FORCE_AUTHN = true SAML2_SNOWFLAKE_ISSUER_URL = 'issuer' SAML2_SNOWFLAKE_ACS_URL = 'acs'"+
+			" COMMENT = 'a'", id.FullyQualifiedName())
 	})
 }
 
@@ -1176,7 +1176,7 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 			Enabled:                        Pointer(true),
 			Saml2Issuer:                    Pointer("issuer"),
 			Saml2SsoUrl:                    Pointer("url"),
-			Saml2Provider:                  Pointer(Saml2SecurityIntegrationSaml2ProviderCustom),
+			Saml2Provider:                  Pointer("provider"),
 			Saml2X509Cert:                  Pointer("cert"),
 			AllowedUserDomains:             []UserDomain{{Domain: "domain"}},
 			AllowedEmailPatterns:           []EmailPattern{{Pattern: "pattern"}},
@@ -1184,17 +1184,17 @@ func TestSecurityIntegrations_AlterSaml2(t *testing.T) {
 			Saml2EnableSpInitiated:         Pointer(true),
 			Saml2SnowflakeX509Cert:         Pointer("cert"),
 			Saml2SignRequest:               Pointer(true),
-			Saml2RequestedNameidFormat:     Pointer(Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress),
+			Saml2RequestedNameidFormat:     Pointer("format"),
 			Saml2PostLogoutRedirectUrl:     Pointer("redirect"),
 			Saml2ForceAuthn:                Pointer(true),
 			Saml2SnowflakeIssuerUrl:        Pointer("issuer"),
 			Saml2SnowflakeAcsUrl:           Pointer("acs"),
 			Comment:                        Pointer("a"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, SAML2_ISSUER = 'issuer', SAML2_SSO_URL = 'url', SAML2_PROVIDER = '%s', SAML2_X509_CERT = 'cert',"+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, SAML2_ISSUER = 'issuer', SAML2_SSO_URL = 'url', SAML2_PROVIDER = 'provider', SAML2_X509_CERT = 'cert',"+
 			" ALLOWED_USER_DOMAINS = ('domain'), ALLOWED_EMAIL_PATTERNS = ('pattern'), SAML2_SP_INITIATED_LOGIN_PAGE_LABEL = 'label', SAML2_ENABLE_SP_INITIATED = true, SAML2_SNOWFLAKE_X509_CERT = 'cert', SAML2_SIGN_REQUEST = true,"+
-			" SAML2_REQUESTED_NAMEID_FORMAT = '%s', SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect', SAML2_FORCE_AUTHN = true, SAML2_SNOWFLAKE_ISSUER_URL = 'issuer', SAML2_SNOWFLAKE_ACS_URL = 'acs',"+
-			" COMMENT = 'a'", id.FullyQualifiedName(), Saml2SecurityIntegrationSaml2ProviderCustom, Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)
+			" SAML2_REQUESTED_NAMEID_FORMAT = 'format', SAML2_POST_LOGOUT_REDIRECT_URL = 'redirect', SAML2_FORCE_AUTHN = true, SAML2_SNOWFLAKE_ISSUER_URL = 'issuer', SAML2_SNOWFLAKE_ACS_URL = 'acs',"+
+			" COMMENT = 'a'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {

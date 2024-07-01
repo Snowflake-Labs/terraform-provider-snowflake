@@ -51,7 +51,6 @@ type CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions 
 	OauthAllowedScopes          []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
 	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type AllowedScope struct {
 	Scope string `ddl:"keyword,single_quotes"`
 }
@@ -124,27 +123,21 @@ type CreateExternalOauthSecurityIntegrationOptions struct {
 	ExternalOauthScopeMappingAttribute         *string                                                             `ddl:"parameter,single_quotes" sql:"EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE"`
 	Comment                                    *string                                                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type AllowedRolesList struct {
 	AllowedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
-
 type BlockedRolesList struct {
 	BlockedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
-
 type JwsKeysUrl struct {
 	JwsKeyUrl string `ddl:"keyword,single_quotes"`
 }
-
 type AudienceList struct {
 	AudienceList []AudienceListItem `ddl:"list,must_parentheses"`
 }
-
 type AudienceListItem struct {
 	Item string `ddl:"keyword,single_quotes"`
 }
-
 type TokenUserMappingClaim struct {
 	Claim string `ddl:"keyword,single_quotes"`
 }
@@ -166,7 +159,6 @@ type CreateOauthForPartnerApplicationsSecurityIntegrationOptions struct {
 	BlockedRolesList          *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
 	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type PreAuthorizedRolesList struct {
 	PreAuthorizedRolesList []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
@@ -181,7 +173,7 @@ type CreateOauthForCustomClientsSecurityIntegrationOptions struct {
 	integrationType             string                                           `ddl:"static" sql:"TYPE = OAUTH"`
 	oauthClient                 string                                           `ddl:"static" sql:"OAUTH_CLIENT = CUSTOM"`
 	OauthClientType             OauthSecurityIntegrationClientTypeOption         `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_TYPE"`
-	OauthRedirectUri            *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
+	OauthRedirectUri            string                                           `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
 	Enabled                     *bool                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthAllowNonTlsRedirectUri *bool                                            `ddl:"parameter" sql:"OAUTH_ALLOW_NON_TLS_REDIRECT_URI"`
 	OauthEnforcePkce            *bool                                            `ddl:"parameter" sql:"OAUTH_ENFORCE_PKCE"`
@@ -198,35 +190,33 @@ type CreateOauthForCustomClientsSecurityIntegrationOptions struct {
 
 // CreateSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
 type CreateSaml2SecurityIntegrationOptions struct {
-	create                         bool                                                      `ddl:"static" sql:"CREATE"`
-	OrReplace                      *bool                                                     `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration            bool                                                      `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists                    *bool                                                     `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                           AccountObjectIdentifier                                   `ddl:"identifier"`
-	integrationType                string                                                    `ddl:"static" sql:"TYPE = SAML2"`
-	Enabled                        *bool                                                     `ddl:"parameter" sql:"ENABLED"`
-	Saml2Issuer                    string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
-	Saml2SsoUrl                    string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
-	Saml2Provider                  Saml2SecurityIntegrationSaml2ProviderOption               `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
-	Saml2X509Cert                  string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
-	AllowedUserDomains             []UserDomain                                              `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
-	AllowedEmailPatterns           []EmailPattern                                            `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
-	Saml2SpInitiatedLoginPageLabel *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
-	Saml2EnableSpInitiated         *bool                                                     `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
-	Saml2SnowflakeX509Cert         *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
-	Saml2SignRequest               *bool                                                     `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
-	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
-	Saml2PostLogoutRedirectUrl     *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
-	Saml2ForceAuthn                *bool                                                     `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
-	Saml2SnowflakeIssuerUrl        *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
-	Saml2SnowflakeAcsUrl           *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
-	Comment                        *string                                                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                         bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace                      *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration            bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists                    *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                           AccountObjectIdentifier `ddl:"identifier"`
+	integrationType                string                  `ddl:"static" sql:"TYPE = SAML2"`
+	Enabled                        bool                    `ddl:"parameter" sql:"ENABLED"`
+	Saml2Issuer                    string                  `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
+	Saml2SsoUrl                    string                  `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
+	Saml2Provider                  string                  `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
+	Saml2X509Cert                  string                  `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
+	AllowedUserDomains             []UserDomain            `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
+	AllowedEmailPatterns           []EmailPattern          `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
+	Saml2SpInitiatedLoginPageLabel *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
+	Saml2EnableSpInitiated         *bool                   `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
+	Saml2SnowflakeX509Cert         *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
+	Saml2SignRequest               *bool                   `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
+	Saml2RequestedNameidFormat     *string                 `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
+	Saml2PostLogoutRedirectUrl     *string                 `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
+	Saml2ForceAuthn                *bool                   `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
+	Saml2SnowflakeIssuerUrl        *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
+	Saml2SnowflakeAcsUrl           *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
+	Comment                        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type UserDomain struct {
 	Domain string `ddl:"keyword,single_quotes"`
 }
-
 type EmailPattern struct {
 	Pattern string `ddl:"keyword,single_quotes"`
 }
@@ -258,7 +248,6 @@ type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions s
 	Set                 *ApiAuthenticationWithClientCredentialsFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithClientCredentialsFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type ApiAuthenticationWithClientCredentialsFlowIntegrationSet struct {
 	Enabled                     *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthTokenEndpoint          *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_TOKEN_ENDPOINT"`
@@ -271,7 +260,6 @@ type ApiAuthenticationWithClientCredentialsFlowIntegrationSet struct {
 	OauthAllowedScopes          []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
 	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type ApiAuthenticationWithClientCredentialsFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
@@ -288,7 +276,6 @@ type AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOpti
 	Set                 *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet struct {
 	Enabled                     *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthAuthorizationEndpoint  *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
@@ -302,7 +289,6 @@ type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet struct {
 	OauthAllowedScopes          []AllowedScope                                                   `ddl:"parameter,parentheses" sql:"OAUTH_ALLOWED_SCOPES"`
 	Comment                     *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
@@ -319,7 +305,6 @@ type AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationOptions struct {
 	Set                 *ApiAuthenticationWithJwtBearerFlowIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ApiAuthenticationWithJwtBearerFlowIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type ApiAuthenticationWithJwtBearerFlowIntegrationSet struct {
 	Enabled                    *bool                                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthAuthorizationEndpoint *string                                                          `ddl:"parameter,single_quotes" sql:"OAUTH_AUTHORIZATION_ENDPOINT"`
@@ -332,7 +317,6 @@ type ApiAuthenticationWithJwtBearerFlowIntegrationSet struct {
 	OauthRefreshTokenValidity  *int                                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
 	Comment                    *string                                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type ApiAuthenticationWithJwtBearerFlowIntegrationUnset struct {
 	Enabled *bool `ddl:"keyword" sql:"ENABLED"`
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
@@ -349,7 +333,6 @@ type AlterExternalOauthSecurityIntegrationOptions struct {
 	Set                 *ExternalOauthIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *ExternalOauthIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type ExternalOauthIntegrationSet struct {
 	Enabled                                    *bool                                                                `ddl:"parameter" sql:"ENABLED"`
 	ExternalOauthType                          *ExternalOauthSecurityIntegrationTypeOption                          `ddl:"parameter" sql:"EXTERNAL_OAUTH_TYPE"`
@@ -366,7 +349,6 @@ type ExternalOauthIntegrationSet struct {
 	ExternalOauthScopeDelimiter                *string                                                              `ddl:"parameter,single_quotes" sql:"EXTERNAL_OAUTH_SCOPE_DELIMITER"`
 	Comment                                    *string                                                              `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type ExternalOauthIntegrationUnset struct {
 	Enabled                   *bool `ddl:"keyword" sql:"ENABLED"`
 	ExternalOauthAudienceList *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_AUDIENCE_LIST"`
@@ -383,7 +365,6 @@ type AlterOauthForPartnerApplicationsSecurityIntegrationOptions struct {
 	Set                 *OauthForPartnerApplicationsIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *OauthForPartnerApplicationsIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type OauthForPartnerApplicationsIntegrationSet struct {
 	Enabled                   *bool                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthIssueRefreshTokens   *bool                                            `ddl:"parameter" sql:"OAUTH_ISSUE_REFRESH_TOKENS"`
@@ -393,7 +374,6 @@ type OauthForPartnerApplicationsIntegrationSet struct {
 	BlockedRolesList          *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
 	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type OauthForPartnerApplicationsIntegrationUnset struct {
 	Enabled                *bool `ddl:"keyword" sql:"ENABLED"`
 	OauthUseSecondaryRoles *bool `ddl:"keyword" sql:"OAUTH_USE_SECONDARY_ROLES"`
@@ -410,7 +390,6 @@ type AlterOauthForCustomClientsSecurityIntegrationOptions struct {
 	Set                 *OauthForCustomClientsIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset               *OauthForCustomClientsIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
-
 type OauthForCustomClientsIntegrationSet struct {
 	Enabled                     *bool                                            `ddl:"parameter" sql:"ENABLED"`
 	OauthRedirectUri            *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_REDIRECT_URI"`
@@ -426,7 +405,6 @@ type OauthForCustomClientsIntegrationSet struct {
 	OauthClientRsaPublicKey2    *string                                          `ddl:"parameter,single_quotes" sql:"OAUTH_CLIENT_RSA_PUBLIC_KEY_2"`
 	Comment                     *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type OauthForCustomClientsIntegrationUnset struct {
 	Enabled                  *bool `ddl:"keyword" sql:"ENABLED"`
 	NetworkPolicy            *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
@@ -447,27 +425,25 @@ type AlterSaml2SecurityIntegrationOptions struct {
 	Unset                           *Saml2IntegrationUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	RefreshSaml2SnowflakePrivateKey *bool                   `ddl:"keyword" sql:"REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY"`
 }
-
 type Saml2IntegrationSet struct {
-	Enabled                        *bool                                                     `ddl:"parameter" sql:"ENABLED"`
-	Saml2Issuer                    *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
-	Saml2SsoUrl                    *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
-	Saml2Provider                  *Saml2SecurityIntegrationSaml2ProviderOption              `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
-	Saml2X509Cert                  *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
-	AllowedUserDomains             []UserDomain                                              `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
-	AllowedEmailPatterns           []EmailPattern                                            `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
-	Saml2SpInitiatedLoginPageLabel *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
-	Saml2EnableSpInitiated         *bool                                                     `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
-	Saml2SnowflakeX509Cert         *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
-	Saml2SignRequest               *bool                                                     `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
-	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
-	Saml2PostLogoutRedirectUrl     *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
-	Saml2ForceAuthn                *bool                                                     `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
-	Saml2SnowflakeIssuerUrl        *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
-	Saml2SnowflakeAcsUrl           *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
-	Comment                        *string                                                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Enabled                        *bool          `ddl:"parameter" sql:"ENABLED"`
+	Saml2Issuer                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
+	Saml2SsoUrl                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
+	Saml2Provider                  *string        `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
+	Saml2X509Cert                  *string        `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
+	AllowedUserDomains             []UserDomain   `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
+	AllowedEmailPatterns           []EmailPattern `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
+	Saml2SpInitiatedLoginPageLabel *string        `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
+	Saml2EnableSpInitiated         *bool          `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
+	Saml2SnowflakeX509Cert         *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
+	Saml2SignRequest               *bool          `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
+	Saml2RequestedNameidFormat     *string        `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
+	Saml2PostLogoutRedirectUrl     *string        `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
+	Saml2ForceAuthn                *bool          `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
+	Saml2SnowflakeIssuerUrl        *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
+	Saml2SnowflakeAcsUrl           *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
+	Comment                        *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-
 type Saml2IntegrationUnset struct {
 	Saml2ForceAuthn            *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`
 	Saml2RequestedNameidFormat *bool `ddl:"keyword" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
@@ -512,27 +488,17 @@ type DescribeSecurityIntegrationOptions struct {
 	securityIntegration bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
 	name                AccountObjectIdentifier `ddl:"identifier"`
 }
-
 type securityIntegrationDescRow struct {
 	Property        string `db:"property"`
 	PropertyType    string `db:"property_type"`
 	PropertyValue   string `db:"property_value"`
 	PropertyDefault string `db:"property_default"`
 }
-
 type SecurityIntegrationProperty struct {
 	Name    string
 	Type    string
 	Value   string
 	Default string
-}
-
-func (s SecurityIntegrationProperty) GetName() string {
-	return s.Name
-}
-
-func (s SecurityIntegrationProperty) GetDefault() string {
-	return s.Default
 }
 
 // ShowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-integrations.
@@ -541,7 +507,6 @@ type ShowSecurityIntegrationOptions struct {
 	securityIntegrations bool  `ddl:"static" sql:"SECURITY INTEGRATIONS"`
 	Like                 *Like `ddl:"keyword" sql:"LIKE"`
 }
-
 type securityIntegrationShowRow struct {
 	Name      string         `db:"name"`
 	Type      string         `db:"type"`
@@ -550,7 +515,6 @@ type securityIntegrationShowRow struct {
 	Comment   sql.NullString `db:"comment"`
 	CreatedOn time.Time      `db:"created_on"`
 }
-
 type SecurityIntegration struct {
 	Name            string
 	IntegrationType string

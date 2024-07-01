@@ -348,10 +348,12 @@ func (s *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) WithCommen
 func NewCreateOauthForCustomClientsSecurityIntegrationRequest(
 	name AccountObjectIdentifier,
 	OauthClientType OauthSecurityIntegrationClientTypeOption,
+	OauthRedirectUri string,
 ) *CreateOauthForCustomClientsSecurityIntegrationRequest {
 	s := CreateOauthForCustomClientsSecurityIntegrationRequest{}
 	s.name = name
 	s.OauthClientType = OauthClientType
+	s.OauthRedirectUri = OauthRedirectUri
 	return &s
 }
 
@@ -362,11 +364,6 @@ func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOrReplace(Or
 
 func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateOauthForCustomClientsSecurityIntegrationRequest {
 	s.IfNotExists = &IfNotExists
-	return s
-}
-
-func (s *CreateOauthForCustomClientsSecurityIntegrationRequest) WithOauthRedirectUri(OauthRedirectUri string) *CreateOauthForCustomClientsSecurityIntegrationRequest {
-	s.OauthRedirectUri = &OauthRedirectUri
 	return s
 }
 
@@ -441,13 +438,15 @@ func (s *PreAuthorizedRolesListRequest) WithPreAuthorizedRolesList(PreAuthorized
 
 func NewCreateSaml2SecurityIntegrationRequest(
 	name AccountObjectIdentifier,
+	Enabled bool,
 	Saml2Issuer string,
 	Saml2SsoUrl string,
-	Saml2Provider Saml2SecurityIntegrationSaml2ProviderOption,
+	Saml2Provider string,
 	Saml2X509Cert string,
 ) *CreateSaml2SecurityIntegrationRequest {
 	s := CreateSaml2SecurityIntegrationRequest{}
 	s.name = name
+	s.Enabled = Enabled
 	s.Saml2Issuer = Saml2Issuer
 	s.Saml2SsoUrl = Saml2SsoUrl
 	s.Saml2Provider = Saml2Provider
@@ -462,11 +461,6 @@ func (s *CreateSaml2SecurityIntegrationRequest) WithOrReplace(OrReplace bool) *C
 
 func (s *CreateSaml2SecurityIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateSaml2SecurityIntegrationRequest {
 	s.IfNotExists = &IfNotExists
-	return s
-}
-
-func (s *CreateSaml2SecurityIntegrationRequest) WithEnabled(Enabled bool) *CreateSaml2SecurityIntegrationRequest {
-	s.Enabled = &Enabled
 	return s
 }
 
@@ -500,7 +494,7 @@ func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2SignRequest(Saml2SignRe
 	return s
 }
 
-func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat Saml2SecurityIntegrationSaml2RequestedNameidFormatOption) *CreateSaml2SecurityIntegrationRequest {
+func (s *CreateSaml2SecurityIntegrationRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat string) *CreateSaml2SecurityIntegrationRequest {
 	s.Saml2RequestedNameidFormat = &Saml2RequestedNameidFormat
 	return s
 }
@@ -1275,7 +1269,7 @@ func (s *Saml2IntegrationSetRequest) WithSaml2SsoUrl(Saml2SsoUrl string) *Saml2I
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2Provider(Saml2Provider Saml2SecurityIntegrationSaml2ProviderOption) *Saml2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2Provider(Saml2Provider string) *Saml2IntegrationSetRequest {
 	s.Saml2Provider = &Saml2Provider
 	return s
 }
@@ -1315,7 +1309,7 @@ func (s *Saml2IntegrationSetRequest) WithSaml2SignRequest(Saml2SignRequest bool)
 	return s
 }
 
-func (s *Saml2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat Saml2SecurityIntegrationSaml2RequestedNameidFormatOption) *Saml2IntegrationSetRequest {
+func (s *Saml2IntegrationSetRequest) WithSaml2RequestedNameidFormat(Saml2RequestedNameidFormat string) *Saml2IntegrationSetRequest {
 	s.Saml2RequestedNameidFormat = &Saml2RequestedNameidFormat
 	return s
 }

@@ -126,7 +126,7 @@ type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	IfNotExists                 *bool
 	name                        AccountObjectIdentifier                  // required
 	OauthClientType             OauthSecurityIntegrationClientTypeOption // required
-	OauthRedirectUri            *string
+	OauthRedirectUri            string                                   // required
 	Enabled                     *bool
 	OauthAllowNonTlsRedirectUri *bool
 	OauthEnforcePkce            *bool
@@ -141,10 +141,6 @@ type CreateOauthForCustomClientsSecurityIntegrationRequest struct {
 	Comment                     *string
 }
 
-func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
-	return r.name
-}
-
 type PreAuthorizedRolesListRequest struct {
 	PreAuthorizedRolesList []AccountObjectIdentifier
 }
@@ -153,27 +149,23 @@ type CreateSaml2SecurityIntegrationRequest struct {
 	OrReplace                      *bool
 	IfNotExists                    *bool
 	name                           AccountObjectIdentifier // required
-	Enabled                        *bool
-	Saml2Issuer                    string                                      // required
-	Saml2SsoUrl                    string                                      // required
-	Saml2Provider                  Saml2SecurityIntegrationSaml2ProviderOption // required
-	Saml2X509Cert                  string                                      // required
+	Enabled                        bool                    // required
+	Saml2Issuer                    string                  // required
+	Saml2SsoUrl                    string                  // required
+	Saml2Provider                  string                  // required
+	Saml2X509Cert                  string                  // required
 	AllowedUserDomains             []UserDomain
 	AllowedEmailPatterns           []EmailPattern
 	Saml2SpInitiatedLoginPageLabel *string
 	Saml2EnableSpInitiated         *bool
 	Saml2SnowflakeX509Cert         *string
 	Saml2SignRequest               *bool
-	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption
+	Saml2RequestedNameidFormat     *string
 	Saml2PostLogoutRedirectUrl     *string
 	Saml2ForceAuthn                *bool
 	Saml2SnowflakeIssuerUrl        *string
 	Saml2SnowflakeAcsUrl           *string
 	Comment                        *string
-}
-
-func (r *CreateSaml2SecurityIntegrationRequest) GetName() AccountObjectIdentifier {
-	return r.name
 }
 
 type CreateScimSecurityIntegrationRequest struct {
@@ -186,10 +178,6 @@ type CreateScimSecurityIntegrationRequest struct {
 	NetworkPolicy *AccountObjectIdentifier
 	SyncPassword  *bool
 	Comment       *string
-}
-
-func (r *CreateScimSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
-	return r.name
 }
 
 type AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest struct {
@@ -376,7 +364,7 @@ type Saml2IntegrationSetRequest struct {
 	Enabled                        *bool
 	Saml2Issuer                    *string
 	Saml2SsoUrl                    *string
-	Saml2Provider                  *Saml2SecurityIntegrationSaml2ProviderOption
+	Saml2Provider                  *string
 	Saml2X509Cert                  *string
 	AllowedUserDomains             []UserDomain
 	AllowedEmailPatterns           []EmailPattern
@@ -384,7 +372,7 @@ type Saml2IntegrationSetRequest struct {
 	Saml2EnableSpInitiated         *bool
 	Saml2SnowflakeX509Cert         *string
 	Saml2SignRequest               *bool
-	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption
+	Saml2RequestedNameidFormat     *string
 	Saml2PostLogoutRedirectUrl     *string
 	Saml2ForceAuthn                *bool
 	Saml2SnowflakeIssuerUrl        *string
