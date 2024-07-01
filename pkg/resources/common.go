@@ -150,6 +150,14 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_access_token_validity"),
 	},
+	"oauth_refresh_token_validity": {
+		Type:             schema.TypeInt,
+		Optional:         true,
+		ValidateFunc:     validation.IntAtLeast(1),
+		Default:          -1,
+		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_refresh_token_validity"),
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,

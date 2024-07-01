@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
@@ -26,6 +28,13 @@ var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.",
 		},
+		"oauth_grant": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringInSlice([]string{"unknown", "CLIENT_CREDENTIALS"}, true),
+			Description:  "Specifies the type of OAuth flow.",
+			Default:      "unknown",
+		},
 	}
 	return MergeMaps(apiAuthCommonSchema, uniq)
 }()
@@ -33,18 +42,107 @@ var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
 func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextApiAuthenticationIntegrationWithClientCredentials,
-		ReadContext:   ReadContextApiAuthenticationIntegrationWithClientCredentials,
+		ReadContext:   ReadContextApiAuthenticationIntegrationWithClientCredentials(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithClientCredentials,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithClientCredentials,
 		Schema:        apiAuthClientCredentialsSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToDefaultString("oauth_token_endpoint"),
 			ForceNewIfChangeToDefaultString("oauth_client_auth_method"),
+			ForceNewIfChangeToDefaultString("oauth_grant"),
+			ComputedIfAnyAttributeChanged(showOutputAttributeName, "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(describeOutputAttributeName, "enabled", "comment", "oauth_refresh_token_validity", "oauth_refresh_token_validity",
+				"oauth_client_id", "oauth_client_auth_method", "oauth_token_endpoint", "oauth_allowed_scopes", "oauth_grant"),
 		),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportApiAuthenticationWithClientCredentials,
 		},
 	}
+}
+
+func ImportApiAuthenticationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with client credentials import")
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	properties, err := client.SecurityIntegrations.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = d.Set("name", integration.Name); err != nil {
+		return nil, err
+	}
+	if err = d.Set("enabled", integration.Enabled); err != nil {
+		return nil, err
+	}
+	if err = d.Set("comment", integration.Comment); err != nil {
+		return nil, err
+	}
+
+	oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
+	})
+	if err == nil {
+		value, err := strconv.Atoi(oauthAccessTokenValidity.Value)
+		if err != nil {
+			return nil, err
+		}
+		if err = d.Set("oauth_access_token_validity", value); err != nil {
+			return nil, err
+		}
+	}
+	oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
+	})
+	if err == nil {
+		value, err := strconv.Atoi(oauthRefreshTokenValidity.Value)
+		if err != nil {
+			return nil, err
+		}
+		if err = d.Set("oauth_refresh_token_validity", value); err != nil {
+			return nil, err
+		}
+	}
+	oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+	if err == nil {
+		if err = d.Set("oauth_client_id", oauthClientId.Value); err != nil {
+			return nil, err
+		}
+	}
+	oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
+	})
+	if err == nil {
+		if err = d.Set("oauth_client_auth_method", oauthClientAuthMethod.Value); err != nil {
+			return nil, err
+		}
+	}
+	oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+	if err == nil {
+		if err = d.Set("oauth_token_endpoint", oauthTokenEndpoint.Value); err != nil {
+			return nil, err
+		}
+	}
+	oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+	if err == nil {
+		if err = d.Set("oauth_allowed_scopes", listValueToSlice(oauthAllowedScopes.Value, true, false)); err != nil {
+			return nil, err
+		}
+	}
+	oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
+	if err == nil {
+		if err = d.Set("oauth_grant", oauthGrant.Value); err != nil {
+			return nil, err
+		}
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func CreateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -60,10 +158,31 @@ func CreateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 		req.WithComment(v.(string))
 	}
 
-	if v, ok := d.GetOk("oauth_access_token_validity"); ok {
-		req.WithOauthAccessTokenValidity(v.(int))
+	if v := d.Get("oauth_access_token_validity").(int); v != -1 {
+		req.WithOauthAccessTokenValidity(v)
 	}
 
+	if v := d.Get("oauth_client_auth_method").(string); v != "unknown" {
+		value, err := sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		req.WithOauthClientAuthMethod(value)
+	}
+
+	if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
+		req.WithOauthRefreshTokenValidity(v)
+	}
+
+	if v := d.Get("oauth_grant").(string); v != "unknown" {
+		if v == "CLIENT_CREDENTIALS" {
+			req.WithOauthGrantClientCredentials(true)
+		}
+	}
+
+	if v := d.Get("oauth_token_endpoint").(string); v != "unknown" {
+		req.WithOauthTokenEndpoint(v)
+	}
 	if v, ok := d.GetOk("oauth_allowed_scopes"); ok {
 		elems := expandStringList(v.(*schema.Set).List())
 		allowedScopes := make([]sdk.AllowedScope, len(elems))
@@ -73,127 +192,184 @@ func CreateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 		req.WithOauthAllowedScopes(allowedScopes)
 	}
 
-	if v, ok := d.GetOk("oauth_client_auth_method"); ok {
-		valueRaw := v.(string)
-		value, err := sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption(valueRaw)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		req.WithOauthClientAuthMethod(value)
-	}
-
-	if v, ok := d.GetOk("oauth_token_endpoint"); ok {
-		req.WithOauthTokenEndpoint(v.(string))
-	}
-
 	if err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(name)
 
-	return ReadContextApiAuthenticationIntegrationWithClientCredentials(ctx, d, meta)
+	return ReadContextApiAuthenticationIntegrationWithClientCredentials(false)(ctx, d, meta)
 }
 
-func ReadContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-
-	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query security integration. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
-				},
+func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query security integration. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
 			}
+			return diag.FromErr(err)
 		}
-		return diag.FromErr(err)
-	}
+		properties, err := client.SecurityIntegrations.Describe(ctx, id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-	if c := integration.Category; c != sdk.SecurityIntegrationCategory {
-		return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
-	}
-
-	if err := d.Set("name", integration.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("comment", integration.Comment); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("enabled", integration.Enabled); err != nil {
-		return diag.FromErr(err)
-	}
-
-	properties, err := client.SecurityIntegrations.Describe(ctx, id)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	for _, property := range properties {
-		name := property.Name
-		value := property.Value
-		switch name {
-		case "COMMENT":
-			if err := d.Set("comment", value); err != nil {
+		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
+			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
+		}
+		if err := d.Set("name", integration.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("comment", integration.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("enabled", integration.Enabled); err != nil {
+			return diag.FromErr(err)
+		}
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObjectInShow(d,
+				showMapping{"comment", "comment", integration.Comment, integration.Comment, nil},
+				showMapping{"enabled", "enabled", integration.Enabled, integration.Enabled, nil},
+			); err != nil {
 				return diag.FromErr(err)
 			}
-		case "CREATED_ON":
-			if err := d.Set("created_on", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "ENABLED":
-			if err := d.Set("enabled", helpers.StringToBool(value)); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_ACCESS_TOKEN_VALIDITY":
-			valueInt, err := strconv.Atoi(value)
+
+			enabled, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "ENABLED" })
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if err := d.Set("oauth_access_token_validity", valueInt); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_ALLOWED_SCOPES":
-			value = strings.TrimLeft(value, "[")
-			value = strings.TrimRight(value, "]")
-			elems := strings.Split(value, ",")
-			if value == "" {
-				elems = nil
-			}
-			if err := d.Set("oauth_allowed_scopes", elems); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_CLIENT_AUTH_METHOD":
-			if err := d.Set("oauth_client_auth_method", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_CLIENT_ID":
-			if err := d.Set("oauth_client_id", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_CLIENT_SECRET":
-			if err := d.Set("oauth_client_secret", value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "OAUTH_TOKEN_ENDPOINT":
-			if err := d.Set("oauth_token_endpoint", value); err != nil {
-				return diag.FromErr(err)
-			}
-		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", name)
-		}
-	}
 
-	return nil
+			oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			oauthAccessTokenValidityInt, err := strconv.Atoi(oauthAccessTokenValidity.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			oauthRefreshTokenValidityInt, err := strconv.Atoi(oauthRefreshTokenValidity.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err = handleExternalChangesToObjectInDescribe(d,
+				describeMapping{"enabled", "enabled", enabled.Value, enabled.Value, nil},
+				describeMapping{"oauth_access_token_validity", "oauth_access_token_validity", oauthAccessTokenValidityInt, oauthAccessTokenValidityInt, stringToIntNormalizer},
+				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidityInt, oauthRefreshTokenValidityInt, stringToIntNormalizer},
+				describeMapping{"oauth_client_id", "oauth_client_id", oauthClientId.Value, oauthClientId.Value, nil},
+				describeMapping{"oauth_client_auth_method", "oauth_client_auth_method", oauthClientAuthMethod.Value, oauthClientAuthMethod.Value, nil},
+				describeMapping{"oauth_token_endpoint", "oauth_token_endpoint", oauthTokenEndpoint.Value, oauthTokenEndpoint.Value, nil},
+				describeMapping{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, listValueToSlice(oauthAllowedScopes.Value, true, false), nil},
+				describeMapping{"oauth_grant", "oauth_grant", oauthGrant.Value, oauthGrant.Value, nil},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if !d.GetRawConfig().IsNull() {
+			if v := d.GetRawConfig().AsValueMap()["enabled"]; !v.IsNull() {
+				if err = d.Set("enabled", v.True()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_access_token_validity"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("oauth_access_token_validity", intVal); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_refresh_token_validity"]; !v.IsNull() {
+				intVal, _ := v.AsBigFloat().Int64()
+				if err = d.Set("oauth_refresh_token_validity", intVal); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_client_id"]; !v.IsNull() {
+				if err = d.Set("oauth_client_id", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_client_auth_method"]; !v.IsNull() {
+				if err = d.Set("oauth_client_auth_method", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_token_endpoint"]; !v.IsNull() {
+				if err = d.Set("oauth_token_endpoint", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_allowed_scopes"]; !v.IsNull() {
+				if err = d.Set("oauth_allowed_scopes", ctyValToSliceString(v)); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["oauth_grant"]; !v.IsNull() {
+				if err = d.Set("oauth_grant", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
+				if err = d.Set("comment", v.AsString()); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+
+		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.ApiAuthSecurityIntegrationPropertiesToSchema(properties)}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		return nil
+	}
 }
 
 func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -202,24 +378,32 @@ func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 	set, unset := sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest(), sdk.NewApiAuthenticationWithClientCredentialsFlowIntegrationUnsetRequest()
 
 	if d.HasChange("comment") {
-		set.WithComment(d.Get("comment").(string))
+		if v, ok := d.GetOk("comment"); ok {
+			set.WithComment(v.(string))
+		} else {
+			unset.WithComment(true)
+		}
 	}
 
 	if d.HasChange("enabled") {
-		set.WithEnabled(d.Get("enabled").(bool))
+		if v := d.Get("comment").(string); v != "unknown" {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.WithEnabled(parsed)
+		} else {
+			unset.WithEnabled(true)
+		}
 	}
 
 	if d.HasChange("oauth_access_token_validity") {
-		set.WithOauthAccessTokenValidity(d.Get("oauth_access_token_validity").(int))
-	}
-
-	if d.HasChange("oauth_allowed_scopes") {
-		elems := expandStringList(d.Get("oauth_allowed_scopes").(*schema.Set).List())
-		allowedScopes := make([]sdk.AllowedScope, len(elems))
-		for i := range elems {
-			allowedScopes[i] = sdk.AllowedScope{Scope: elems[i]}
+		if v := d.Get("oauth_access_token_validity").(int); v != -1 {
+			set.WithOauthAccessTokenValidity(v)
+		} else {
+			// TODO: use UNSET
+			set.WithOauthAccessTokenValidity(0)
 		}
-		set.WithOauthAllowedScopes(allowedScopes)
 	}
 
 	if d.HasChange("oauth_client_auth_method") {
@@ -236,13 +420,36 @@ func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 	if d.HasChange("oauth_client_id") {
 		set.WithOauthClientId(d.Get("oauth_client_id").(string))
 	}
+	if d.HasChange("oauth_grant") {
+		if v := d.Get("oauth_grant").(string); v == "CLIENT_CREDENTIALS" {
+			set.WithOauthGrantClientCredentials(true)
+		}
+	}
 
 	if d.HasChange("oauth_client_secret") {
 		set.WithOauthClientSecret(d.Get("oauth_client_secret").(string))
 	}
 
+	if d.HasChange("oauth_refresh_token_validity") {
+		if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
+			set.WithOauthRefreshTokenValidity(v)
+		} else {
+			// TODO: use UNSET
+			set.WithOauthRefreshTokenValidity(7776000)
+		}
+	}
+
 	if d.HasChange("oauth_token_endpoint") {
 		set.WithOauthTokenEndpoint(d.Get("oauth_token_endpoint").(string))
+	}
+
+	if d.HasChange("oauth_allowed_scopes") {
+		elems := expandStringList(d.Get("oauth_allowed_scopes").(*schema.Set).List())
+		allowedScopes := make([]sdk.AllowedScope, len(elems))
+		for i := range elems {
+			allowedScopes[i] = sdk.AllowedScope{Scope: elems[i]}
+		}
+		set.WithOauthAllowedScopes(allowedScopes)
 	}
 
 	if !reflect.DeepEqual(*set, sdk.ApiAuthenticationWithClientCredentialsFlowIntegrationSetRequest{}) {
@@ -255,7 +462,8 @@ func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 			return diag.FromErr(err)
 		}
 	}
-	return ReadContextApiAuthenticationIntegrationWithClientCredentials(ctx, d, meta)
+
+	return ReadContextApiAuthenticationIntegrationWithClientCredentials(false)(ctx, d, meta)
 }
 
 func DeleteContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

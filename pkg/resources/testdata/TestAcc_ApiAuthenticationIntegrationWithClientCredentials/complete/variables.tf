@@ -11,6 +11,9 @@ variable "name" {
 variable "oauth_access_token_validity" {
   type = number
 }
+variable "oauth_refresh_token_validity" {
+  type = number
+}
 variable "oauth_client_auth_method" {
   type = string
 }
@@ -25,4 +28,7 @@ variable "oauth_token_endpoint" {
 }
 variable "oauth_allowed_scopes" {
   type = set(string)
+}
+variable "oauth_grant" {
+  type = string
 }

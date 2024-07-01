@@ -22,14 +22,6 @@ import (
 
 var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 	uniq := map[string]*schema.Schema{
-		"oauth_refresh_token_validity": {
-			Type:             schema.TypeInt,
-			Optional:         true,
-			ValidateFunc:     validation.IntAtLeast(0),
-			Default:          -1,
-			Description:      "Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.",
-			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_validity"),
-		},
 		"oauth_authorization_endpoint": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -46,7 +38,7 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringInSlice([]string{"unknown", "AUTHORIZATION_CODE"}, true),
-			Description:  "Specifies the client ID for the OAuth application in the external service.",
+			Description:  "Specifies the type of OAuth flow.",
 			Default:      "unknown",
 		},
 	}
@@ -487,6 +479,15 @@ func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 
 	if d.HasChange("oauth_token_endpoint") {
 		set.WithOauthTokenEndpoint(d.Get("oauth_token_endpoint").(string))
+	}
+
+	if d.HasChange("oauth_allowed_scopes") {
+		elems := expandStringList(d.Get("oauth_allowed_scopes").(*schema.Set).List())
+		allowedScopes := make([]sdk.AllowedScope, len(elems))
+		for i := range elems {
+			allowedScopes[i] = sdk.AllowedScope{Scope: elems[i]}
+		}
+		set.WithOauthAllowedScopes(allowedScopes)
 	}
 
 	if !reflect.DeepEqual(*set, sdk.ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest{}) {
