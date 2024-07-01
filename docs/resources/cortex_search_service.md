@@ -26,7 +26,7 @@ description: |-
 
 ### Optional
 
-- `attributes` (List of String) Specifies the list of columns in the base table to enable filtering on when issuing queries to the service.
+- `attributes` (Set of String) Specifies the list of columns in the base table to enable filtering on when issuing queries to the service.
 - `comment` (String) Specifies a comment for the Cortex search service.
 
 ### Read-Only
