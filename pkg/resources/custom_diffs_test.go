@@ -301,8 +301,8 @@ func TestForceNewIfChangeToEmptySet(t *testing.T) {
 		}, {
 			name: "non-empty to empty",
 			stateValue: map[string]string{
-				"value.#": "1",
-				"value.0": "foo",
+				"value.#":          "1",
+				"value.2577344683": "CREATE DATABASE",
 			},
 			rawConfigValue: map[string]any{},
 			wantForceNew:   true,
@@ -324,7 +324,7 @@ func TestForceNewIfChangeToEmptySet(t *testing.T) {
 			diff := calculateDiffFromAttributes(t,
 				createProviderWithValuePropertyAndCustomDiff(t,
 					&schema.Schema{
-						Type: schema.TypeList,
+						Type: schema.TypeSet,
 						Elem: &schema.Schema{
 							Type: schema.TypeString,
 						},
