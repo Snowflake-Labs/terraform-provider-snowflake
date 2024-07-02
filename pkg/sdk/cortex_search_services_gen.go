@@ -58,11 +58,11 @@ type ShowCortexSearchServiceOptions struct {
 	Limit                *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
 type cortexSearchServiceRow struct {
-	CreatedOn    time.Time `db:"created_on"`
-	Name         string    `db:"name"`
-	DatabaseName string    `db:"database_name"`
-	SchemaName   string    `db:"schema_name"`
-	Comment      string    `db:"comment"`
+	CreatedOn    time.Time      `db:"created_on"`
+	Name         string         `db:"name"`
+	DatabaseName string         `db:"database_name"`
+	SchemaName   string         `db:"schema_name"`
+	Comment      sql.NullString `db:"comment"`
 }
 type CortexSearchService struct {
 	CreatedOn    time.Time

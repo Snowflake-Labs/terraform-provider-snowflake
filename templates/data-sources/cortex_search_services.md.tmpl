@@ -9,6 +9,8 @@ description: |-
 {{- end }}
 ---
 
+!> **Disclaimer for Cortex Search service** Note that Cortex Search is a Private Preview feature as such, should be used only with non-production data even when using Snowflake's Terraform Provider. Also, note that the Terraform Provider is not covered by Snowflake's support team; the Product and Engineering teams are available for any questions. However, please contact the Cortex Search team for any issues with this object.
+
 # {{.Name}} ({{.Type}})
 
 {{ .Description | trimspace }}
@@ -20,11 +22,3 @@ description: |-
 {{- end }}
 
 {{ .SchemaMarkdown | trimspace }}
-{{- if .HasImport }}
-
-## Import
-
-Import is supported using the following syntax:
-
-{{ codefile "shell" (printf "examples/data-sources/%s/import.sh" .Name)}}
-{{- end }}
