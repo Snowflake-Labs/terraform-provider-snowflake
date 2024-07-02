@@ -118,6 +118,10 @@ var invalidGrantToFutureObjectTypes = []ObjectType{
 	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
+var invalidGrantPluralObjectTypes = []ObjectType{
+	ObjectTypeCortexSearchService, // added because it is not working currently
+}
+
 var (
 	ValidGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
 	ValidGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
@@ -134,7 +138,7 @@ func init() {
 	for i, objectType := range validGrantToObjectTypes {
 		ValidGrantToObjectTypesString[i] = objectType.String()
 		ValidGrantToPluralObjectTypesString[i] = objectType.Plural().String()
-		if !slices.Contains(invalidGrantToFutureObjectTypes, objectType) {
+		if !slices.Contains(invalidGrantToFutureObjectTypes, objectType) && !slices.Contains(invalidGrantPluralObjectTypes, objectType) {
 			ValidGrantToFuturePluralObjectTypesString = append(ValidGrantToFuturePluralObjectTypesString, objectType.Plural().String())
 		}
 	}
