@@ -43,6 +43,7 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Description: "Specifies the list of columns in the base table to enable filtering on when issuing queries to the service.",
+		ForceNew:    true,
 	},
 	"warehouse": {
 		Type:             schema.TypeString,
@@ -90,7 +91,7 @@ func CortexSearchService() *schema.Resource {
 }
 
 // ReadCortexSearchServicee implements schema.ReadFunc.
-func ReadCortexSearchService(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadCortexSearchService(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
@@ -129,7 +130,7 @@ func ReadCortexSearchService(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 // CreateCortexSearchService implements schema.CreateFunc.
-func CreateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
@@ -162,33 +163,29 @@ func CreateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta
 }
 
 // UpdateCortexSearchService implements schema.UpdateFunc.
-func UpdateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewAlterCortexSearchServiceRequest(id)
 
-	runSet := false
 	set := sdk.NewCortexSearchServiceSetRequest()
 	if d.HasChange("target_lag") {
 		tl := d.Get("target_lag").(string)
 		set.WithTargetLag(tl)
-		runSet = true
 	}
 
 	if d.HasChange("warehouse") {
 		warehouseName := d.Get("warehouse").(string)
 		set.WithWarehouse(sdk.NewAccountObjectIdentifier(warehouseName))
-		runSet = true
 	}
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
 		set.WithComment(comment)
-		runSet = true
 	}
 
 	var diags diag.Diagnostics
-	if runSet {
+	if *set != *sdk.NewCortexSearchServiceSetRequest() {
 		request.WithSet(*set)
 		if err := client.CortexSearchServices.Alter(ctx, request); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
@@ -199,7 +196,7 @@ func UpdateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta
 }
 
 // DeleteCortexSearchService implements schema.DeleteFunc.
-func DeleteCortexSearchService(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteCortexSearchService(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewDropCortexSearchServiceRequest(id).WithIfExists(true)

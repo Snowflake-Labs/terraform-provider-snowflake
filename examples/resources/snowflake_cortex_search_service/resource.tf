@@ -1,16 +1,17 @@
+## Basic
 resource "snowflake_database" "test" {
-  name = var.database
+  name = "some_database"
 }
 
 resource "snowflake_schema" "test" {
   database = snowflake_database.test.name
-  name     = var.schema
+  name     = "some_schema"
 }
 
 resource "snowflake_table" "test" {
   database        = snowflake_database.test.name
   schema          = snowflake_schema.test.name
-  name            = var.table
+  name            = "some_table"
   change_tracking = true
   column {
     name = "ID"
@@ -28,21 +29,10 @@ resource "snowflake_cortex_search_service" "test" {
 
   database   = snowflake_database.test.name
   schema     = snowflake_schema.test.name
-  name       = var.name
-  on         = var.on
+  name       = "some_name"
+  on         = "SOME_TEXT"
   target_lag = "2 minutes"
-  warehouse  = var.warehouse
-  query      = var.query
-  comment    = var.comment
-}
-
-data "snowflake_cortex_search_services" "test" {
-  like = snowflake_cortex_search_service.test.name
-  in {
-    database = snowflake_cortex_search_service.test.database
-  }
-  starts_with = snowflake_cortex_search_service.test.name
-  limit {
-    rows = 1
-  }
+  warehouse  = "some_warehouse"
+  query      = "SELECT SOME_TEXT FROM \"some_database\".\"some_schema\".\"some_table\""
+  comment    = "some comment"
 }

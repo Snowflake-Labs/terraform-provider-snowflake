@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **Disclaimer for Cortex Search service** Note that Cortex Search is a Private Preview feature as such, should be used only with non-production data even when using Snowflake's Terraform Provider. Also, note that the Terraform Provider is not covered by Snowflake's support team; the Product and Engineering teams are available for any questions. However, please contact the Cortex Search team for any issues with this object.
+
 # snowflake_cortex_search_services (Data Source)
 
 
@@ -23,7 +25,7 @@ description: |-
 
 ### Read-Only
 
-- `cortexSearchServices` (List of Object) Holds the output of SHOW CORTEX SEARCH SERVICES. (see [below for nested schema](#nestedatt--cortexSearchServices))
+- `cortex_search_services` (List of Object) Holds the output of SHOW CORTEX SEARCH SERVICES. (see [below for nested schema](#nestedatt--cortex_search_services))
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--in"></a>
@@ -48,8 +50,8 @@ Optional:
 - `from` (String) Specifies a **case-sensitive** pattern that is used to match object name. After the first match, the limit on the number of rows will be applied.
 
 
-<a id="nestedatt--cortexSearchServices"></a>
-### Nested Schema for `cortexSearchServices`
+<a id="nestedatt--cortex_search_services"></a>
+### Nested Schema for `cortex_search_services`
 
 Read-Only:
 
