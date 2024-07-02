@@ -40,7 +40,7 @@ Currently, not setting a value for the given attribute inside the config results
 - we will provide a `show_output` and `describe_output` in each resource (more in [Raw Snowflake output](#raw-snowflake-output) section)
 
 ## Raw Snowflake output
-Because of the changes regarding [Config values in the state](#config-values-in-the-state) we want to still allow our users to get the value of the given attrobute, even when it is not set in the config. For each resource (and datasource) we will provide:
+Because of the changes regarding [Config values in the state](#config-values-in-the-state) we want to still allow our users to get the value of the given attribute, even when it is not set in the config. For each resource (and datasource) we will provide:
 - `show_output` computed field, containing the response of `SHOW <object>` for the given managed object
 - `describe_output` computed field, containing the response of `DESCRIBE <object> <name>` for the given managed object
 - `parameters` computed field, containing all the values and levels of Snowflake parameters (the result of `SHOW PARAMETERS IN <object> <name>`)

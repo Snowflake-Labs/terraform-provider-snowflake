@@ -39,9 +39,14 @@ Now, the `sync_password` field will set the state value to `unknown` whenever th
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
-#### *(behavior change)* Changed behavior of `enabled`
+#### *(feature)* New fields
+Fields added to the resource:
+- `enabled`
+- `sync_password`
+- `comment`
 
-Field `enabled` is now required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
+#### *(behavior change)* Changed behavior of `enabled`
+New field `enabled` is required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
 
 #### *(behavior change)* Force new for multiple attributes
 Force new was added for the following attributes (because no usable SQL alter statements for them):
@@ -212,20 +217,6 @@ The only difference would be that instead of writing/generating new configuratio
 The additional parameters call **DESC DATABASE** (with `with_describe` turned on) and **SHOW PARAMETERS IN DATABASE** (with `with_parameters` turned on) **per database** returned by **SHOW DATABASES**.
 The outputs of both commands are held in `databases` entry, where **DESC DATABASE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN DATABASE** in the `parameters` field.
 It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
-
-## v0.91.0 ➞ v0.92.0
-### snowflake_scim_integration resource changes
-
-New fields:
-- `enabled`
-- `sync_password`
-- `comment`
-
-Changed fields:
-- `provisioner_role` renamed to `run_as_role`
-
-Other changes:
-- `scim_client` and `run_as_role` marked as `ForceNew`
 
 ## v0.89.0 ➞ v0.90.0
 ### snowflake_table resource changes
