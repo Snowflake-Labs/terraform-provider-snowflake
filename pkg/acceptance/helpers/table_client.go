@@ -56,6 +56,18 @@ func (c *TableClient) CreateTableWithColumns(t *testing.T, columns []sdk.TableCo
 	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifier(), columns)
 }
 
+func (c *TableClient) CreateTableWithPredefinedColumns(t *testing.T) (*sdk.Table, func()) {
+	t.Helper()
+
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", "NUMBER"),
+		*sdk.NewTableColumnRequest("some_text_column", "VARCHAR"),
+		*sdk.NewTableColumnRequest("some_other_text_column", "VARCHAR"),
+	}
+
+	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifier(), columns)
+}
+
 func (c *TableClient) CreateTableWithIdAndColumns(t *testing.T, id sdk.SchemaObjectIdentifier, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
 	t.Helper()
 	ctx := context.Background()
