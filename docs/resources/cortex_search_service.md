@@ -42,4 +42,6 @@ description: |-
 
 Import is supported using the following syntax:
 
-{{codefile "shell" "/Users/asawicki/Projects/terraform-provider-snowflake/examples/resources/snowflake_cortex_search_service/import.sh"}}
+```shell
+terraform import snowflake_cortex_search_service.example 'dbName|schemaName|fileFormatName'
+```

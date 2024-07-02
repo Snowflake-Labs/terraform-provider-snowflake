@@ -28,5 +28,5 @@ description: |-
 
 Import is supported using the following syntax:
 
-{{ printf "{{codefile \"shell\" %q}}" .ImportFile }}
+{{ codefile "shell" (printf "examples/resources/%s/import.sh" .Name)}}
 {{- end }}
