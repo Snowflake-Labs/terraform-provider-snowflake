@@ -141,6 +141,18 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
+func GetConfigPropertyAsPointerAllowingZeroValue[T any](d *schema.ResourceData, property string) *T {
+	if d.GetRawConfig().AsValueMap()[property].IsNull() {
+		return nil
+	}
+	value := d.Get(property)
+	typedValue, ok := value.(T)
+	if !ok {
+		return nil
+	}
+	return &typedValue
+}
+
 func GetPropertyOfFirstNestedObjectByValueKey[T any](d *schema.ResourceData, propertyKey string) (*T, error) {
 	return GetPropertyOfFirstNestedObjectByKey[T](d, propertyKey, "value")
 }

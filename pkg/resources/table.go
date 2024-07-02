@@ -186,7 +186,7 @@ var tableSchema = map[string]*schema.Schema{
 	"data_retention_time_in_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      -1,
+		Default:      IntDefault,
 		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. If you wish to inherit the parent schema setting then pass in the schema attribute to this argument or do not fill this parameter at all; the default value for this field is -1, which is a fallback to use Snowflake default - in this case the schema value",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
@@ -596,7 +596,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault {
 		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	}
 
@@ -674,7 +674,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"change_tracking": table.ChangeTracking,
 		"qualified_name":  id.FullyQualifiedName(),
 	}
-	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 || int64(table.RetentionTime) != schemaRetentionTime {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault || int64(table.RetentionTime) != schemaRetentionTime {
 		toSet["data_retention_time_in_days"] = table.RetentionTime
 	}
 
@@ -727,7 +727,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_time_in_days") {
-		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
+		if days := d.Get("data_retention_time_in_days"); days.(int) != IntDefault {
 			runSetStatement = true
 			setRequest.WithDataRetentionTimeInDays(sdk.Int(days.(int)))
 		} else {
