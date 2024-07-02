@@ -92,7 +92,7 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 	}
 	oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 	if err == nil {
-		if err = d.Set("oauth_allowed_scopes", listValueToSlice(oauthAllowedScopes.Value, true, false)); err != nil {
+		if err = d.Set("oauth_allowed_scopes", listValueToSlice(oauthAllowedScopes.Value, false)); err != nil {
 			return nil, err
 		}
 	}
@@ -192,7 +192,7 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 		}
 		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
-			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, listValueToSlice(oauthAllowedScopes.Value, true, false), nil},
+			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, listValueToSlice(oauthAllowedScopes.Value, false), nil},
 			{"oauth_grant", "oauth_grant", oauthGrant.Value, oauthGrant.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)

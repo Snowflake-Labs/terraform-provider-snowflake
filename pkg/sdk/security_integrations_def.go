@@ -12,7 +12,7 @@ import (
 const (
 	SecurityIntegrationCategory                                     = "SECURITY"
 	ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode = "AUTHORIZATION_CODE"
-	ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials = "CLIENT_CREDENTIALS"
+	ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials = "CLIENT_CREDENTIALS" //nolint:gosec
 	ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer         = "JWT_BEARER"
 )
 

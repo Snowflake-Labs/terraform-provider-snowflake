@@ -15,20 +15,21 @@ description: |-
 # basic resource
 resource "snowflake_api_authentication_integration_with_authorization_code_grant" "test" {
   enabled             = true
-  name                = "foo"
-  oauth_client_id     = "foo"
-  oauth_client_secret = "foo"
+  name                = "test"
+  oauth_client_id     = "sn-oauth-134o9erqfedlc"
+  oauth_client_secret = "eb9vaXsrcEvrFdfcvCaoijhilj4fc"
 }
 # resource with all fields set
 resource "snowflake_api_authentication_integration_with_authorization_code_grant" "test" {
-  comment                      = "foo"
+  comment                      = "comment"
   enabled                      = true
-  name                         = "foo"
+  name                         = "test"
   oauth_access_token_validity  = 42
+  oauth_allowed_scopes         = ["useraccount"]
   oauth_authorization_endpoint = "https://example.com"
   oauth_client_auth_method     = "CLIENT_SECRET_POST"
-  oauth_client_id              = "foo"
-  oauth_client_secret          = "foo"
+  oauth_client_id              = "sn-oauth-134o9erqfedlc"
+  oauth_client_secret          = "eb9vaXsrcEvrFdfcvCaoijhilj4fc"
   oauth_refresh_token_validity = 42
   oauth_token_endpoint         = "https://example.com"
 }
@@ -52,7 +53,7 @@ resource "snowflake_api_authentication_integration_with_authorization_code_grant
 - `oauth_authorization_endpoint` (String) Specifies the URL for authenticating to the external service.
 - `oauth_client_auth_method` (String) Specifies that POST is used as the authentication method to the external service. Valid options are: [CLIENT_SECRET_POST]
 - `oauth_grant` (String) Specifies the type of OAuth flow.
-- `oauth_refresh_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
+- `oauth_refresh_token_validity` (Number) Specifies the value to determine the validity of the refresh token obtained from the OAuth server.
 - `oauth_token_endpoint` (String) Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).
 
 ### Read-Only

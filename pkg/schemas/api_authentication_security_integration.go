@@ -29,6 +29,7 @@ var _ = DescribeApiAuthSecurityIntegrationSchema
 func ApiAuthSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
+		securityIntegrationProperty := securityIntegrationProperty
 		switch securityIntegrationProperty.Name {
 		case "ENABLED",
 			"OAUTH_ACCESS_TOKEN_VALIDITY",
