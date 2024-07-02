@@ -145,7 +145,7 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 // the assumptions are that:
 // 1. The list is enclosed by [] brackets, and they shouldn't be a part of any item's value
 // 2. Items are separated by commas, and they shouldn't be a part of any item's value
-// 3. items can have as many spaces in between, but after separation they will be trimmed and shouldn't be a part of any item's value
+// 3. Items can have as many spaces in between, but after separation they will be trimmed and shouldn't be a part of any item's value
 func ParseCommaSeparatedStringArray(value string) []string {
 	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
 		if value == "[]" {
