@@ -63,7 +63,7 @@ var CortexSearchServiceDef = g.NewInterface(
 		Field("name", "string").
 		Field("database_name", "string").
 		Field("schema_name", "string").
-		Field("comment", "string"),
+		OptionalText("comment"),
 	g.PlainStruct("CortexSearchService").
 		Field("CreatedOn", "time.Time").
 		Field("Name", "string").

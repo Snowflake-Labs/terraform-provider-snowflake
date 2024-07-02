@@ -5,6 +5,18 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.92.0 ➞ v0.93.0
+
+### general changes
+
+With this change we introduce the first resources redesigned for the V1. We have made a few design choices that will be reflected in these and in the further reworked resources. This includes:
+- Handling the [default values](./v1-preparations/CHANGES_BEFORE_V1.md#default-values).
+- Handling the ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values).
+- Handling the [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters).
+- Saving the [config values in the state](./v1-preparations/CHANGES_BEFORE_V1.md#config-values-in-the-state).
+- Providing a ["raw Snowflake output"](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values) for the managed resources.
+
+They are all described in short in the [changes before v1 doc](./v1-preparations/CHANGES_BEFORE_V1.md). Please familiarize yourself with these changes before the upgrade.
+
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
@@ -27,9 +39,14 @@ Now, the `sync_password` field will set the state value to `unknown` whenever th
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
-#### *(behavior change)* Changed behavior of `enabled`
+#### *(feature)* New fields
+Fields added to the resource:
+- `enabled`
+- `sync_password`
+- `comment`
 
-Field `enabled` is now required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
+#### *(behavior change)* Changed behavior of `enabled`
+New field `enabled` is required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
 
 #### *(behavior change)* Force new for multiple attributes
 Force new was added for the following attributes (because no usable SQL alter statements for them):
@@ -38,10 +55,10 @@ Force new was added for the following attributes (because no usable SQL alter st
 
 ### snowflake_warehouse resource changes
 
-Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping.
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
 
 #### *(potential behavior change)* Default values removed
-As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider. Because of that the following defaults were removed:
+As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider (read more in [default values](./v1-preparations/CHANGES_BEFORE_V1.md#default-values)). Because of that the following defaults were removed:
 - `comment` (previously `""`)
 - `enable_query_acceleration` (previously `false`)
 - `query_acceleration_max_scale_factor` (previously `8`)
@@ -50,7 +67,7 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 - `statement_queued_timeout_in_seconds` (previously `0`)
 - `statement_timeout_in_seconds` (previously `172800`)
 
-**Beware!** For attributes being Snowflake parameters (in case of warehouse: `max_concurrency_level`, `statement_queued_timeout_in_seconds`, and `statement_timeout_in_seconds`), this is a breaking change. Previously, not setting a value for them was treated as a fallback to values hardcoded on the provider side. This caused warehouse creation with these parameters set on the warehouse level (and not using the Snowflake default from hierarchy; read more in the [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters)). To keep the previous values, fill in your configs to the default values listed above.
+**Beware!** For attributes being Snowflake parameters (in case of warehouse: `max_concurrency_level`, `statement_queued_timeout_in_seconds`, and `statement_timeout_in_seconds`), this is a breaking change (read more in  [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). Previously, not setting a value for them was treated as a fallback to values hardcoded on the provider side. This caused warehouse creation with these parameters set on the warehouse level (and not using the Snowflake default from hierarchy; read more in the [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters)). To keep the previous values, fill in your configs to the default values listed above.
 
 All previous defaults were aligned with the current Snowflake ones, however it's not possible to distinguish between filled out value and no value in the automatic state upgrader. Therefore, if the given attribute is not filled out in your configuration, terraform will try to perform update after the change (to UNSET the given attribute to the Snowflake default); it should result in no changes on Snowflake object side, but it is required to make Terraform state aligned with your config. **All** other optional fields that were not set inside the config at all (because of the change in handling state logic on our provider side) will follow the same logic. To avoid the need for the changes, fill out the default fields in your config. Alternatively run apply; no further changes should be shown as a part of the plan.
 
@@ -58,9 +75,7 @@ All previous defaults were aligned with the current Snowflake ones, however it's
 There are three migrations that should happen automatically with the version bump:
 - incorrect `2XLARGE`, `3XLARGE`, `4XLARGE`, `5XLARGE`, `6XLARGE` values for warehouse size are changed to the proper ones
 - deprecated `wait_for_provisioning` attribute is removed from the state
-- old empty resource monitor attribute is cleaned (earlier it was set to `"null"` string) 
-
-[//]: # (TODO [SNOW-1348102 - after discussion]: describe the new state approach if decided)
+- old empty resource monitor attribute is cleaned (earlier it was set to `"null"` string)
 
 #### *(fix)* Warehouse size UNSET
 
@@ -99,6 +114,8 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
   The additional parameters call **DESC WAREHOUSE** (with `with_describe` turned on) and **SHOW PARAMETERS IN WAREHOUSE** (with `with_parameters` turned on) **per warehouse** returned by **SHOW WAREHOUSES**.
   The outputs of both commands are held in `warehouses` entry, where **DESC WAREHOUSE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN WAREHOUSE** in the `parameters` field.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+You can read more in ["raw Snowflake output"](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values).
 
 ### new database resources
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
