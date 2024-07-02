@@ -9,7 +9,12 @@ import (
 
 //go:generate go run ./poc/main.go
 
-const SecurityIntegrationCategory = "SECURITY"
+const (
+	SecurityIntegrationCategory                                     = "SECURITY"
+	ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode = "AUTHORIZATION_CODE"
+	ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials = "CLIENT_CREDENTIALS"
+	ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer         = "JWT_BEARER"
+)
 
 type ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption string
 

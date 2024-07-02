@@ -5,6 +5,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -48,6 +49,37 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_client_id", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_client_secret", "foo"),
 					resource.TestCheckResourceAttrSet("snowflake_api_authentication_integration_with_jwt_bearer.test", "created_on"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ApiAuthenticationIntegrationWithJwtBearer/basic"),
+				ConfigVariables: m(false),
+				ResourceName:    "snowflake_api_authentication_integration_with_jwt_bearer.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_client_id", "foo"),
+
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.integration_type", "API_AUTHENTICATION"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.category", "SECURITY"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.comment", ""),
+
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.enabled.0.value", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_access_token_validity.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_refresh_token_validity.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_client_id.0.value", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_client_auth_method.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_token_endpoint.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_allowed_scopes.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_grant.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.parent_integration.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.auth_type.0.value", "OAUTH2"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.comment.0.value", ""),
 				),
 			},
 			{

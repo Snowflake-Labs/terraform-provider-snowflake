@@ -1,15 +1,11 @@
 package resources
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
@@ -58,80 +54,6 @@ func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool 
 	}
 }
 
-var apiAuthCommonSchema = map[string]*schema.Schema{
-	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
-	},
-	"enabled": {
-		Type:        schema.TypeBool,
-		Required:    true,
-		Description: "Specifies whether this security integration is enabled or disabled.",
-	},
-	"oauth_token_endpoint": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "unknown",
-		Description: "Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).",
-	},
-	"oauth_client_auth_method": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
-		Default:          "unknown",
-		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. Valid options are: %v", sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption)),
-	},
-	"oauth_client_id": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the client ID for the OAuth application in the external service.",
-	},
-	"oauth_client_secret": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the client secret for the OAuth application in the ServiceNow instance from the previous step. The connector uses this to request an access token from the ServiceNow instance.",
-	},
-	"oauth_access_token_validity": {
-		Type:             schema.TypeInt,
-		Optional:         true,
-		ValidateFunc:     validation.IntAtLeast(0),
-		Default:          -1,
-		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_access_token_validity"),
-	},
-	"oauth_refresh_token_validity": {
-		Type:             schema.TypeInt,
-		Optional:         true,
-		ValidateFunc:     validation.IntAtLeast(1),
-		Default:          -1,
-		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_refresh_token_validity"),
-	},
-	"comment": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies a comment for the integration.",
-	},
-	showOutputAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
-		Elem: &schema.Resource{
-			Schema: schemas.ShowSecurityIntegrationSchema,
-		},
-	},
-	describeOutputAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
-		Elem: &schema.Resource{
-			Schema: schemas.DescribeApiAuthSecurityIntegrationSchema,
-		},
-	},
-}
-
 func listValueToSlice(value string, trimBrackets bool, trimQuotes bool) []string {
 	if trimBrackets {
 		value = strings.TrimLeft(value, "[")
@@ -149,8 +71,7 @@ func listValueToSlice(value string, trimBrackets bool, trimQuotes bool) []string
 	return elems
 }
 
-func ctyValToSliceString(val cty.Value) []string {
-	valueElems := val.AsValueSlice()
+func ctyValToSliceString(valueElems []cty.Value) []string {
 	elems := make([]string, len(valueElems))
 	for i, v := range valueElems {
 		elems[i] = v.AsString()

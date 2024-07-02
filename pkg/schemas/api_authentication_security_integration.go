@@ -42,14 +42,7 @@ func ApiAuthSecurityIntegrationPropertiesToSchema(securityIntegrationProperties 
 			"PARENT_INTEGRATION",
 			"AUTH_TYPE",
 			"COMMENT":
-			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{
-				{
-					"name":    securityIntegrationProperty.Name,
-					"type":    securityIntegrationProperty.Type,
-					"value":   securityIntegrationProperty.Value,
-					"default": securityIntegrationProperty.Default,
-				},
-			}
+			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
 		default:
 			log.Printf("unknown field from DESCRIBE: %v", securityIntegrationProperty.Name)
 		}

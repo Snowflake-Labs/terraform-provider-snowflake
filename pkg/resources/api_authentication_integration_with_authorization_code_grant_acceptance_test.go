@@ -5,6 +5,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -29,7 +30,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 			c["oauth_refresh_token_validity"] = config.IntegerVariable(12345)
 			c["oauth_token_endpoint"] = config.StringVariable("https://example.com")
 			c["oauth_allowed_scopes"] = config.SetVariable(config.StringVariable("foo"))
-			c["oauth_grant"] = config.StringVariable("AUTHORIZATION_CODE")
+			c["oauth_grant"] = config.StringVariable(sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode)
 		}
 		return c
 	}
@@ -73,6 +74,37 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 				),
 			},
 			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant/basic"),
+				ConfigVariables: m(false),
+				ResourceName:    "snowflake_api_authentication_integration_with_authorization_code_grant.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_client_id", "foo"),
+
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.integration_type", "API_AUTHENTICATION"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.category", "SECURITY"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.comment", ""),
+
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.enabled.0.value", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_access_token_validity.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_refresh_token_validity.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_client_id.0.value", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_client_auth_method.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_token_endpoint.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_allowed_scopes.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_grant.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.parent_integration.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.auth_type.0.value", "OAUTH2"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.comment.0.value", ""),
+				),
+			},
+			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant/complete"),
 				ConfigVariables: m(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -86,7 +118,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_secret", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_refresh_token_validity", "12345"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_token_endpoint", "https://example.com"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_grant", "AUTHORIZATION_CODE"),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_grant", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_allowed_scopes.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_allowed_scopes.0", "foo"),
 
@@ -107,7 +139,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_authorization_endpoint.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_token_endpoint.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_allowed_scopes.0.value", "[foo]"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_grant.0.value", "AUTHORIZATION_CODE"),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.parent_integration.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.auth_type.0.value", "OAUTH2"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.comment.0.value", "foo")),
@@ -129,12 +161,12 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_access_token_validity", "-1"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint", "unknown"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_auth_method", "unknown"),
+					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint"),
+					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_auth_method"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_id", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_secret", "foo"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_refresh_token_validity", "-1"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_token_endpoint", "unknown"),
+					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_refresh_token_validity"),
+					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_token_endpoint"),
 				),
 			},
 		},
@@ -155,7 +187,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_complete(t *
 			"oauth_client_secret":          config.StringVariable("foo"),
 			"oauth_refresh_token_validity": config.IntegerVariable(12345),
 			"oauth_token_endpoint":         config.StringVariable("https://example.com"),
-			"oauth_grant":                  config.StringVariable("AUTHORIZATION_CODE"),
+			"oauth_grant":                  config.StringVariable(sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 			"oauth_allowed_scopes":         config.SetVariable(config.StringVariable("foo")),
 		}
 	}
