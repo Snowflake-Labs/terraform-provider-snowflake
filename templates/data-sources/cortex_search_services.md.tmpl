@@ -22,11 +22,3 @@ description: |-
 {{- end }}
 
 {{ .SchemaMarkdown | trimspace }}
-{{- if .HasImport }}
-
-## Import
-
-Import is supported using the following syntax:
-
-{{ printf "{{codefile \"shell\" %q}}" .ImportFile }}
-{{- end }}
