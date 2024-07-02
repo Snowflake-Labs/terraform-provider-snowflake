@@ -117,10 +117,11 @@ func CortexSearchServices() *schema.Resource {
 func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	request := sdk.NewShowCortexSearchServiceRequest()
-	if v, ok := d.GetOk("like"); ok {
-		like := v.([]interface{})[0].(map[string]interface{})
-		pattern := like["pattern"].(string)
-		request.WithLike(sdk.Like{Pattern: sdk.String(pattern)})
+
+	if likePattern, ok := d.GetOk("like"); ok {
+		request.WithLike(sdk.Like{
+			Pattern: sdk.String(likePattern.(string)),
+		})
 	}
 
 	if v, ok := d.GetOk("in"); ok {
@@ -172,20 +173,14 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 	records := make([]map[string]any, 0, len(dts))
 	for _, dt := range dts {
 		record := map[string]any{}
-		/*
-			guides on time formatting
-			https://docs.snowflake.com/en/user-guide/date-time-input-output
-			https://pkg.go.dev/time
-			note: format may depend on what the account parameter for TIMESTAMP_OUTPUT_FORMAT is set to. Perhaps we should return this as a string rather than a time.Time?
-		*/
-		record["created_on"] = dt.CreatedOn.Format("2006-01-02T16:04:05.000 -0700")
+		record["created_on"] = dt.CreatedOn.String()
 		record["name"] = dt.Name
 		record["database_name"] = dt.DatabaseName
 		record["schema_name"] = dt.SchemaName
 		record["comment"] = dt.Comment
 		records = append(records, record)
 	}
-	if err := d.Set("records", records); err != nil {
+	if err := d.Set("cortex_search_services", records); err != nil {
 		return err
 	}
 	return nil

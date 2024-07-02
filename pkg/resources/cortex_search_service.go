@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -69,6 +67,11 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 		Description:      "Specifies the query to use to populate the Cortex search service.",
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Creation date for the given Cortex search service.",
+	},
 }
 
 // CortexSearchService returns a pointer to the resource representing a Cortex search service.
@@ -118,7 +121,7 @@ func ReadCortexSearchService(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("comment", cortexSearchService.Comment); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("created_on", cortexSearchService.CreatedOn.Format(time.RFC3339)); err != nil {
+	if err := d.Set("created_on", cortexSearchService.CreatedOn.String()); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -1,18 +1,20 @@
+variable "database" {
+  type = string
+}
 
+variable "schema" {
+  type = string
+}
+
+variable "table" {
+  type = string
+}
 
 variable "name" {
   type = string
 }
 
 variable "on" {
-  type = string
-}
-
-variable "database" {
-  type = string
-}
-
-variable "schema" {
   type = string
 }
 
@@ -25,9 +27,5 @@ variable "query" {
 }
 
 variable "comment" {
-  type = string
-}
-
-variable "table_name" {
   type = string
 }
