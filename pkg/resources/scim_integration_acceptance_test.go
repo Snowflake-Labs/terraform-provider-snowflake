@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	tfjson "github.com/hashicorp/terraform-json"
 
@@ -49,6 +51,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
+			// create with empty optionals
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
 				ConfigVariables: m(false, sdk.ScimSecurityIntegrationScimClientGeneric, role, false),
@@ -57,9 +60,43 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
-					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "sync_password"),
+					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "network_policy"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "unknown"),
+					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "comment"),
+
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.integration_type", "SCIM - GENERIC"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.comment", ""),
+					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.enabled.0.value", "false"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.network_policy.0.value", ""),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.run_as_role.0.value", role.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.sync_password.0.value", "true"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.comment.0.value", ""),
 				),
 			},
+			// import - without optionals
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
+				ConfigVariables: m(false, sdk.ScimSecurityIntegrationScimClientGeneric, role, false),
+				ResourceName:    "snowflake_scim_integration.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "GENERIC"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "sync_password", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+				),
+			},
+			// set optionals
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(true, sdk.ScimSecurityIntegrationScimClientOkta, role2, true),
@@ -71,14 +108,38 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
+
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.integration_type", "SCIM - OKTA"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttrSet("snowflake_scim_integration.test", "show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.run_as_role.0.value", role2.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.sync_password.0.value", "false"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.comment.0.value", "foo"),
 				),
 			},
+			// import - complete
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
-				ConfigVariables:   m(true, sdk.ScimSecurityIntegrationScimClientOkta, role2, true),
-				ResourceName:      "snowflake_scim_integration.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables: m(true, sdk.ScimSecurityIntegrationScimClientOkta, role2, true),
+				ResourceName:    "snowflake_scim_integration.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "OKTA"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role2.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "sync_password", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", "foo"),
+				),
 			},
 			// unset
 			{
@@ -236,7 +297,7 @@ func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange("snowflake_scim_integration.test", "name", tfjson.ActionUpdate, sdk.String(id.Name()), sdk.String(id.Name())),
-						planchecks.ExpectChange("snowflake_scim_integration.test", "enabled", tfjson.ActionUpdate, nil, nil),
+						planchecks.ExpectChange("snowflake_scim_integration.test", "enabled", tfjson.ActionUpdate, sdk.String("true"), sdk.String("true")),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "scim_client", tfjson.ActionUpdate, sdk.String("GENERIC"), sdk.String("GENERIC")),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "run_as_role", tfjson.ActionUpdate, sdk.String(role.Name()), sdk.String(role.Name())),
 						planchecks.ExpectChange("snowflake_scim_integration.test", "network_policy", tfjson.ActionUpdate, sdk.String(""), sdk.String("")),

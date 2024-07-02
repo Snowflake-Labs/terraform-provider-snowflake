@@ -88,9 +88,9 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 	describeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
+		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
 		Elem: &schema.Resource{
-			Schema: schemas.DescribeSecurityIntegrationSchema,
+			Schema: schemas.DescribeScimSecurityIntegrationSchema,
 		},
 	},
 }
@@ -110,8 +110,8 @@ func SCIMIntegration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, schemas.ShowSecurityIntegrationSchemaKeys...),
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, schemas.DescribeSecurityIntegrationSchemaKeys...),
+			ComputedIfAnyAttributeChanged(showOutputAttributeName, "enabled", "scim_client", "comment"),
+			ComputedIfAnyAttributeChanged(describeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -255,15 +255,35 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
 		}
 
-		if withExternalChangesMarking {
-			scimClient, err := integration.SubType()
-			if err != nil {
-				return diag.FromErr(err)
-			}
+		if err := d.Set("name", integration.Name); err != nil {
+			return diag.FromErr(err)
+		}
 
+		if err := d.Set("enabled", integration.Enabled); err != nil {
+			return diag.FromErr(err)
+		}
+
+		scimClient, err := integration.SubType()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("scim_client", scimClient); err != nil {
+			return diag.FromErr(err)
+		}
+
+		runAsRoleProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" })
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("run_as_role", runAsRoleProperty.Value); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
 				showMapping{"comment", "comment", integration.Comment, integration.Comment, nil},
-				showMapping{"type", "scim_client", integration.IntegrationType, scimClient, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -286,6 +306,9 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 		}
 
+		// These are all identity sets, needed for the case where:
+		// - previous config was empty (therefore Snowflake defaults had been used)
+		// - new config have the same values that are already in SF
 		if !d.GetRawConfig().IsNull() {
 			if v := d.GetRawConfig().AsValueMap()["network_policy"]; !v.IsNull() {
 				if err = d.Set("network_policy", v.AsString()); err != nil {
@@ -308,7 +331,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.SecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
+		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.ScimSecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
 

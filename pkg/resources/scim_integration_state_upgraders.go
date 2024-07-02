@@ -1,6 +1,9 @@
 package resources
 
-import "context"
+import (
+	"context"
+	"strconv"
+)
 
 func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
@@ -9,5 +12,10 @@ func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]a
 
 	rawState["run_as_role"] = rawState["provisioner_role"]
 	delete(rawState, "provisioner_role")
+
+	if v, ok := rawState["enabled"]; ok {
+		rawState["enabled"] = strconv.FormatBool(v.(bool))
+	}
+
 	return rawState, nil
 }

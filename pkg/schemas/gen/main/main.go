@@ -19,8 +19,9 @@ func main() {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	allStructsDetails := make([]gen.Struct, len(gen.SdkShowResultStructs))
-	for idx, s := range gen.SdkShowResultStructs {
+	allObjects := append(gen.SdkShowResultStructs, gen.AdditionalStructs...)
+	allStructsDetails := make([]gen.Struct, len(allObjects))
+	for idx, s := range allObjects {
 		allStructsDetails[idx] = gen.ExtractStructDetails(s)
 	}
 

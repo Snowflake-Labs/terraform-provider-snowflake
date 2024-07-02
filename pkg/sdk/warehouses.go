@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 )
 
 var (
@@ -324,6 +326,18 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 					log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
 				}
 			}()
+
+			// needed to make sure that warehouse is suspended
+			err = util.Retry(3, 1*time.Second, func() (error, bool) {
+				warehouse, err = c.ShowByID(ctx, id)
+				if err != nil || warehouse.State != WarehouseStateSuspended {
+					return nil, false
+				}
+				return nil, true
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

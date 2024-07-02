@@ -41,7 +41,7 @@ type showMapping struct {
 
 // handleExternalChangesToObjectInDescribe assumes that show output is kept in describeOutputAttributeName attribute
 func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ...describeMapping) error {
-	if describeOutput, ok := d.GetOk(showOutputAttributeName); ok {
+	if describeOutput, ok := d.GetOk(describeOutputAttributeName); ok {
 		describeOutputList := describeOutput.([]any)
 		if len(describeOutputList) == 1 {
 			result := describeOutputList[0].(map[string]any)
@@ -51,12 +51,12 @@ func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ..
 					continue
 				}
 
-				valueToCompareFromList := result[mapping.nameInDescribe].([]map[string]any)
+				valueToCompareFromList := result[mapping.nameInDescribe].([]any)
 				if len(valueToCompareFromList) != 1 {
 					continue
 				}
 
-				valueToCompareFrom := valueToCompareFromList[0]["value"]
+				valueToCompareFrom := valueToCompareFromList[0].(map[string]any)["value"]
 				if mapping.normalizeFunc != nil {
 					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
 				}

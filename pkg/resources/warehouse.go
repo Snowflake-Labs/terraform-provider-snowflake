@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -113,23 +114,23 @@ var warehouseSchema = map[string]*schema.Schema{
 	strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)): {
 		Type:         schema.TypeInt,
 		Optional:     true,
+		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(1),
 		Description:  "Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.",
-		Default:      -1,
 	},
 	strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)): {
 		Type:         schema.TypeInt,
 		Optional:     true,
+		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 		Description:  "Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.",
-		Default:      -1,
 	},
 	strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)): {
 		Type:         schema.TypeInt,
 		Optional:     true,
+		Computed:     true,
 		ValidateFunc: validation.IntBetween(0, 604800),
 		Description:  "Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system",
-		Default:      -1,
 	},
 	showOutputAttributeName: {
 		Type:        schema.TypeList,
@@ -147,6 +148,29 @@ var warehouseSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowWarehouseParametersSchema,
 		},
 	},
+}
+
+// TODO: merge with DatabaseParametersCustomDiff and extract common
+var warehouseParametersCustomDiff = func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	if d.Id() == "" {
+		return nil
+	}
+
+	client := meta.(*provider.Context).Client
+	params, err := client.Parameters.ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Warehouse: helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return customdiff.All(
+		IntParameterValueComputedIf("max_concurrency_level", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterMaxConcurrencyLevel),
+		IntParameterValueComputedIf("statement_queued_timeout_in_seconds", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterStatementQueuedTimeoutInSeconds),
+		IntParameterValueComputedIf("statement_timeout_in_seconds", params, sdk.ParameterTypeWarehouse, sdk.AccountParameterStatementTimeoutInSeconds),
+	)(ctx, d, meta)
 }
 
 // Warehouse returns a pointer to the resource representing a warehouse.
@@ -171,6 +195,7 @@ func Warehouse() *schema.Resource {
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
+			warehouseParametersCustomDiff,
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -298,14 +323,14 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v := d.Get("query_acceleration_max_scale_factor").(int); v != -1 {
 		createOptions.QueryAccelerationMaxScaleFactor = sdk.Int(v)
 	}
-	if v := d.Get("max_concurrency_level").(int); v != -1 {
-		createOptions.MaxConcurrencyLevel = sdk.Int(v)
+	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "max_concurrency_level"); v != nil {
+		createOptions.MaxConcurrencyLevel = v
 	}
-	if v := d.Get("statement_queued_timeout_in_seconds").(int); v != -1 {
-		createOptions.StatementQueuedTimeoutInSeconds = sdk.Int(v)
+	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "statement_queued_timeout_in_seconds"); v != nil {
+		createOptions.StatementQueuedTimeoutInSeconds = v
 	}
-	if v := d.Get("statement_timeout_in_seconds").(int); v != -1 {
-		createOptions.StatementTimeoutInSeconds = sdk.Int(v)
+	if v := GetPropertyAsPointerWithPossibleZeroValues[int](d, "statement_timeout_in_seconds"); v != nil {
+		createOptions.StatementTimeoutInSeconds = v
 	}
 
 	err := client.Warehouses.Create(ctx, id, createOptions)
@@ -317,6 +342,19 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
 
+// TODO: move
+func GetPropertyAsPointerWithPossibleZeroValues[T any](d *schema.ResourceData, property string) *T {
+	if d.GetRawConfig().AsValueMap()[property].IsNull() {
+		return nil
+	}
+	value := d.Get(property)
+	typedValue, ok := value.(T)
+	if !ok {
+		return nil
+	}
+	return &typedValue
+}
+
 func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
@@ -324,6 +362,16 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		w, err := client.Warehouses.ShowByID(ctx, id)
 		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query warehouse. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Warehouse: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
 			return diag.FromErr(err)
 		}
 
@@ -346,14 +394,9 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				showMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
 				showMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
 				showMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.Name(), w.ResourceMonitor.Name(), nil},
-				showMapping{"comment", "comment", w.Comment, w.Comment, nil},
 				showMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
 				showMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},
 			); err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err = markChangedParameters(sdk.WarehouseParameters, warehouseParameters, d, sdk.ParameterTypeWarehouse); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -405,11 +448,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 					return diag.FromErr(err)
 				}
 			}
-			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
-				if err = d.Set("comment", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
 			if v := d.GetRawConfig().AsValueMap()["enable_query_acceleration"]; !v.IsNull() {
 				if err = d.Set("enable_query_acceleration", v.AsString()); err != nil {
 					return diag.FromErr(err)
@@ -423,6 +461,17 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			}
 		}
 
+		if err = d.Set("name", w.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("comment", w.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if diags := handleWarehouseParameterRead(d, warehouseParameters); diags != nil {
+			return diags
+		}
+
 		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.WarehouseToSchema(w)}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -433,6 +482,26 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		return nil
 	}
+}
+
+func handleWarehouseParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
+	for _, parameter := range warehouseParameters {
+		switch parameter.Key {
+		case
+			string(sdk.ObjectParameterMaxConcurrencyLevel),
+			string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds),
+			string(sdk.ObjectParameterStatementTimeoutInSeconds):
+			value, err := strconv.Atoi(parameter.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set(strings.ToLower(parameter.Key), value); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // UpdateWarehouse implements schema.UpdateFunc.
@@ -576,12 +645,9 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			unset.StatementQueuedTimeoutInSeconds = sdk.Bool(true)
 		}
 	}
-	if d.HasChange("statement_timeout_in_seconds") {
-		if v := d.Get("statement_timeout_in_seconds").(int); v != -1 {
-			set.StatementTimeoutInSeconds = sdk.Int(v)
-		} else {
-			unset.StatementTimeoutInSeconds = sdk.Bool(true)
-		}
+
+	if updateParamDiags := handleWarehouseParametersChanges(d, &set, &unset); len(updateParamDiags) > 0 {
+		return updateParamDiags
 	}
 
 	// Apply SET and UNSET changes
@@ -603,6 +669,14 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
+}
+
+func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {
+	return JoinDiags(
+		handleValuePropertyChange[int](d, "max_concurrency_level", &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
+		handleValuePropertyChange[int](d, "statement_queued_timeout_in_seconds", &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
+		handleValuePropertyChange[int](d, "statement_timeout_in_seconds", &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
+	)
 }
 
 // DeleteWarehouse implements schema.DeleteFunc.

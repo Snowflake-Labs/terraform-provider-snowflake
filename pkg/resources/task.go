@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -388,7 +388,7 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 	if err != nil {
 		return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err)
 	}
-	return helpers.Retry(5, 5*time.Second, func() (error, bool) {
+	return util.Retry(5, 5*time.Second, func() (error, bool) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 		if err != nil {
 			return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err), false
