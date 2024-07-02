@@ -1,11 +1,19 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// TODO: move to special values
+const SnowflakeDefaultStringValuePlaceholder = "Snowflake default value"
+
+func SnowflakeDefaultStringValueDescription(description string) string {
+	return fmt.Sprintf("%s When the value is not set in the configuration the provider will put `%s` in the state which is a placeholder that means to use the Snowflake default for this value.", description, SnowflakeDefaultStringValuePlaceholder)
+}
 
 // DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
 // runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully

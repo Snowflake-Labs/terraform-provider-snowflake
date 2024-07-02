@@ -16,6 +16,15 @@ create a resource with slightly different configuration in Snowflake (depending 
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 
+## v0.92.0 -> v0.93.0
+### snowflake_saml_integration deprecation
+Resource deprecated in favor of snowflake_saml2_integration.
+
+This new resource has new fields:
+- `allowed_user_domains`
+- `allowed_email_patterns`
+- `comment`
+
 ## v0.91.0 ➞ v0.92.0
 ### snowflake_scim_integration resource changes
 

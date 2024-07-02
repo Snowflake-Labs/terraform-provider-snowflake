@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
@@ -60,15 +58,6 @@ func hasGranteeName(grants []sdk.Grant, role sdk.AccountObjectIdentifier) bool {
 		}
 	}
 	return false
-}
-
-// MatchAllStringsInOrderNonOverlapping returns a regex matching every string in parts. Matchings are non overlapping.
-func MatchAllStringsInOrderNonOverlapping(parts []string) *regexp.Regexp {
-	escapedParts := make([]string, len(parts))
-	for i := range parts {
-		escapedParts[i] = regexp.QuoteMeta(parts[i])
-	}
-	return regexp.MustCompile(strings.Join(escapedParts, "((.|\n)*)"))
 }
 
 // AssertErrorContainsPartsFunc returns a function asserting error message contains each string in parts

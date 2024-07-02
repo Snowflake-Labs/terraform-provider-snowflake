@@ -137,5 +137,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_scim_integration.example name
+terraform import snowflake_scim_integration.example "name"
 ```
