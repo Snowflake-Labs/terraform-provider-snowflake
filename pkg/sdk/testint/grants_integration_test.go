@@ -1269,6 +1269,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		t.Cleanup(roleCleanup)
 		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
 		t.Cleanup(tableTestCleanup)
+		testClientHelper().Schema.UseDefaultSchema(t)
 		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
 		t.Cleanup(cortexCleanup)
 
