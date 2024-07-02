@@ -69,7 +69,7 @@ var cortexSearchServicesSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"cortexSearchServices": {
+	"cortex_search_services": {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Holds the output of SHOW CORTEX SEARCH SERVICES.",
