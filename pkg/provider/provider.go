@@ -429,6 +429,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_authentication_integration_with_client_credentials":       resources.ApiAuthenticationIntegrationWithClientCredentials(),
 		"snowflake_api_authentication_integration_with_jwt_bearer":               resources.ApiAuthenticationIntegrationWithJwtBearer(),
 		"snowflake_api_integration":                                              resources.APIIntegration(),
+		"snowflake_cortex_search_service":                                        resources.CortexSearchService(),
 		"snowflake_database_old":                                                 resources.DatabaseOld(),
 		"snowflake_database":                                                     resources.Database(),
 		"snowflake_database_role":                                                resources.DatabaseRole(),
@@ -493,6 +494,7 @@ func getDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"snowflake_accounts":                           datasources.Accounts(),
 		"snowflake_alerts":                             datasources.Alerts(),
+		"snowflake_cortex_search_services":             datasources.CortexSearchServices(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),
 		"snowflake_database":                           datasources.Database(),
