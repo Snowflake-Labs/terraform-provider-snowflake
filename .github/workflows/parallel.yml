@@ -1,0 +1,49 @@
+on:
+  pull_request:
+
+name: Parallel tests investigation
+
+env:
+  PARALLELISM: 5
+
+# Inspired by https://gist.github.com/imhoffd/b4ca0a94c2496d81303ebb00063a863d
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      TEST_CHUNKS: ${{ steps['set-test-chunks'].outputs['TEST_CHUNKS'] }}
+      TEST_CHUNKS_IDS: ${{ steps['set-test-chunks-ids'].outputs['TEST_CHUNKS_IDS'] }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+      - name: Install dependencies
+        run: make setup
+      - id: set-test-chunks
+        name: Set Chunks
+        run: echo "TEST_CHUNKS=$(go test ./... -list=. -json | jq '.|select((.Action=="output") and (.Output|startswith("ok ")|not) and (.Output|startswith("? ")|not))|{Package, Output}' | jq -scM '[.|_nwise(length/(env.PARALLELISM|tonumber)|ceil)]')" >> $GITHUB_OUTPUT
+      - id: set-test-chunks-ids
+        name: Set Chunk IDs
+        run: echo "TEST_CHUNKS_IDS=$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')"  >> $GITHUB_OUTPUT
+        env:
+          CHUNKS: ${{ steps['set-test-chunks'].outputs['TEST_CHUNKS'] }}
+
+  test:
+    runs-on: ubuntu-latest
+    name: test (chunk ${{ matrix.chunk }})
+    needs:
+      - setup
+    strategy:
+      matrix:
+        chunk: ${{ fromJson(needs.setup.outputs['TEST_CHUNKS_IDS']) }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: test
+        run:
+          echo $CHUNKS | jq -r '.[${{matrix.chunk}}][]|"^\(.Output|rtrimstr("\n"))$ \(.Package)"' | xargs -t -n 2 go test -timeout 1200s -v -coverprofile=coverage.txt -covermode=atomic -run
+        env:
+          CHUNKS: ${{ needs.setup.outputs['TEST_CHUNKS'] }}
+          SKIP_MANAGED_ACCOUNT_TEST: 1
+          SKIP_EMAIL_INTEGRATION_TESTS: 1
+          TF_ACC: 1
