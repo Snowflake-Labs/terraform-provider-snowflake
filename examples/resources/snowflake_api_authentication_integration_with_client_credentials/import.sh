@@ -1,0 +1,1 @@
+terraform import snowflake_api_authentication_integration_with_client_credentials.example "name"
