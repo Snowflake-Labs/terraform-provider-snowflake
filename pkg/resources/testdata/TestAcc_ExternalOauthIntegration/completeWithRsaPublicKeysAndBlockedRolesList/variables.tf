@@ -31,7 +31,7 @@ variable "external_oauth_token_user_mapping_claim" {
 variable "name" {
   type = string
 }
-variable "type" {
+variable "external_oauth_type" {
   type = string
 }
 variable "external_oauth_rsa_public_key" {

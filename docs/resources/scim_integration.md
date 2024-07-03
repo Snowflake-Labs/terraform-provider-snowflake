@@ -2,7 +2,7 @@
 page_title: "snowflake_scim_integration Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_scim_integration (Resource)

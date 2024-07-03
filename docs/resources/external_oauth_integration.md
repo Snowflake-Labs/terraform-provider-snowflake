@@ -2,25 +2,57 @@
 page_title: "snowflake_external_oauth_integration Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  An External OAuth security integration allows a client to use a third-party authorization server to obtain the access tokens needed to interact with Snowflake.
+  
 ---
 
 # snowflake_external_oauth_integration (Resource)
 
-An External OAuth security integration allows a client to use a third-party authorization server to obtain the access tokens needed to interact with Snowflake.
+
 
 ## Example Usage
 
 ```terraform
-resource "snowflake_external_oauth_integration" "azure" {
-  name                             = "AZURE_POWERBI"
-  type                             = "AZURE"
-  enabled                          = true
-  issuer                           = "https://sts.windows.net/00000000-0000-0000-0000-000000000000"
-  snowflake_user_mapping_attribute = "LOGIN_NAME"
-  jws_keys_urls                    = ["https://login.windows.net/common/discovery/keys"]
-  audience_urls                    = ["https://analysis.windows.net/powerbi/connector/Snowflake"]
-  token_user_mapping_claims        = ["upn"]
+# basic resource
+resource "snowflake_external_oauth_integration" "test" {
+  enabled                                         = true
+  external_oauth_issuer                           = "issuer"
+  external_oauth_snowflake_user_mapping_attribute = "LOGIN_NAME"
+  external_oauth_token_user_mapping_claim         = ["upn"]
+  name                                            = "test"
+  external_oauth_type                             = "CUSTOM"
+}
+# resource with all fields set (jws keys url and allowed roles)
+resource "snowflake_external_oauth_integration" "test" {
+  comment                                         = "comment"
+  enabled                                         = true
+  external_oauth_allowed_roles_list               = ["user1"]
+  external_oauth_any_role_mode                    = "ENABLED"
+  external_oauth_audience_list                    = ["https://example.com"]
+  external_oauth_issuer                           = "issuer"
+  external_oauth_jws_keys_url                     = ["https://example.com"]
+  external_oauth_scope_delimiter                  = ","
+  external_oauth_scope_mapping_attribute          = "scope"
+  external_oauth_snowflake_user_mapping_attribute = "LOGIN_NAME"
+  external_oauth_token_user_mapping_claim         = ["upn"]
+  name                                            = "test"
+  external_oauth_type                             = "CUSTOM"
+}
+# resource with all fields set (rsa public keys and blocked roles)
+resource "snowflake_external_oauth_integration" "test" {
+  comment                                         = "comment"
+  enabled                                         = true
+  external_oauth_any_role_mode                    = "ENABLED"
+  external_oauth_audience_list                    = ["https://example.com"]
+  external_oauth_blocked_roles_list               = ["user1"]
+  external_oauth_issuer                           = "issuer"
+  external_oauth_rsa_public_key                   = file("key.pem")
+  external_oauth_rsa_public_key_2                 = file("key2.pem")
+  external_oauth_scope_delimiter                  = ","
+  external_oauth_scope_mapping_attribute          = "scope"
+  external_oauth_snowflake_user_mapping_attribute = "LOGIN_NAME"
+  external_oauth_token_user_mapping_claim         = ["upn"]
+  name                                            = "test"
+  external_oauth_type                             = "CUSTOM"
 }
 ```
 
@@ -30,34 +62,231 @@ resource "snowflake_external_oauth_integration" "azure" {
 ### Required
 
 - `enabled` (Boolean) Specifies whether to initiate operation of the integration or suspend it.
-- `issuer` (String) Specifies the URL to define the OAuth 2.0 authorization server.
+- `external_oauth_issuer` (String) Specifies the URL to define the OAuth 2.0 authorization server.
+- `external_oauth_snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid options are: [LOGIN_NAME EMAIL_ADDRESS]
+- `external_oauth_token_user_mapping_claim` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.
+- `external_oauth_type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid options are: [OKTA AZURE PING_FEDERATE CUSTOM]
 - `name` (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
-- `snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record.
-- `token_user_mapping_claims` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.
-- `type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server.
 
 ### Optional
 
-- `allowed_roles` (Set of String) Specifies the list of roles that the client can set as the primary role.
-- `any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token.
-- `audience_urls` (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
-- `blocked_roles` (Set of String) Specifies the list of roles that a client cannot set as the primary role. Do not include ACCOUNTADMIN, ORGADMIN or SECURITYADMIN as they are already implicitly enforced and will cause in-place updates.
 - `comment` (String) Specifies a comment for the OAuth integration.
-- `jws_keys_urls` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.
-- `rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
-- `rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
-- `scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
-- `scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role.
+- `external_oauth_allowed_roles_list` (Set of String) Specifies the list of roles that the client can set as the primary role.
+- `external_oauth_any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid options are: [DISABLE ENABLE ENABLE_FOR_PRIVILEGE]
+- `external_oauth_audience_list` (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
+- `external_oauth_blocked_roles_list` (Set of String) Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.
+- `external_oauth_jws_keys_url` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.
+- `external_oauth_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
+- `external_oauth_rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
+- `external_oauth_scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
+- `external_oauth_scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role.
 
 ### Read-Only
 
-- `created_on` (String) Date and time when the External OAUTH integration was created.
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
+- `parameters` (List of Object) Paramteres related to this security integration. (see [below for nested schema](#nestedatt--parameters))
+- `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--comment))
+- `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--enabled))
+- `external_oauth_allowed_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_allowed_roles_list))
+- `external_oauth_any_role_mode` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_any_role_mode))
+- `external_oauth_audience_list` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_audience_list))
+- `external_oauth_blocked_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_blocked_roles_list))
+- `external_oauth_issuer` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_issuer))
+- `external_oauth_jws_keys_url` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_jws_keys_url))
+- `external_oauth_rsa_public_key` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_rsa_public_key))
+- `external_oauth_rsa_public_key_2` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_rsa_public_key_2))
+- `external_oauth_scope_delimiter` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_scope_delimiter))
+- `external_oauth_snowflake_user_mapping_attribute` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_snowflake_user_mapping_attribute))
+- `external_oauth_token_user_mapping_claim` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--external_oauth_token_user_mapping_claim))
+
+<a id="nestedobjatt--describe_output--comment"></a>
+### Nested Schema for `describe_output.comment`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--enabled"></a>
+### Nested Schema for `describe_output.enabled`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_allowed_roles_list"></a>
+### Nested Schema for `describe_output.external_oauth_allowed_roles_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_any_role_mode"></a>
+### Nested Schema for `describe_output.external_oauth_any_role_mode`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_audience_list"></a>
+### Nested Schema for `describe_output.external_oauth_audience_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_blocked_roles_list"></a>
+### Nested Schema for `describe_output.external_oauth_blocked_roles_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_issuer"></a>
+### Nested Schema for `describe_output.external_oauth_issuer`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_jws_keys_url"></a>
+### Nested Schema for `describe_output.external_oauth_jws_keys_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_rsa_public_key"></a>
+### Nested Schema for `describe_output.external_oauth_rsa_public_key`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_rsa_public_key_2"></a>
+### Nested Schema for `describe_output.external_oauth_rsa_public_key_2`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_scope_delimiter"></a>
+### Nested Schema for `describe_output.external_oauth_scope_delimiter`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_snowflake_user_mapping_attribute"></a>
+### Nested Schema for `describe_output.external_oauth_snowflake_user_mapping_attribute`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--describe_output--external_oauth_token_user_mapping_claim"></a>
+### Nested Schema for `describe_output.external_oauth_token_user_mapping_claim`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--parameters"></a>
+### Nested Schema for `parameters`
+
+Read-Only:
+
+- `external_oauth_add_privileged_roles_to_blocked_list` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--external_oauth_add_privileged_roles_to_blocked_list))
+
+<a id="nestedobjatt--parameters--external_oauth_add_privileged_roles_to_blocked_list"></a>
+### Nested Schema for `parameters.external_oauth_add_privileged_roles_to_blocked_list`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `category` (String)
+- `comment` (String)
+- `created_on` (String)
+- `enabled` (Boolean)
+- `integration_type` (String)
+- `name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_external_oauth_integration.example name
+terraform import snowflake_external_oauth_integration.example "name"
 ```

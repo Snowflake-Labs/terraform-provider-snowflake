@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -91,7 +92,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
+		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			params := d.Get(ParametersAttributeName).([]any)
 			var found *sdk.Parameter
@@ -183,7 +184,6 @@ func ExternalOauthIntegration() *schema.Resource {
 		DeleteContext: DeleteContextExternalOauthIntegration,
 		Schema:        oauthExternalIntegrationSchema,
 		CustomizeDiff: customdiff.All(
-			ForceNewIfChangeToEmptyString("external_oauth_snowflake_user_mapping_attribute"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
 			ForceNewIfChangeToEmptyString("external_oauth_scope_mapping_attribute"),
@@ -234,7 +234,7 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_JWS_KEYS_URL"
 	}); err == nil {
-		if err = d.Set("external_oauth_jws_keys_url", listValueToSlice(prop.Value, true)); err != nil {
+		if err = d.Set("external_oauth_jws_keys_url", listValueToSlice(prop.Value, false)); err != nil {
 			return nil, err
 		}
 	}
@@ -259,10 +259,36 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 			return nil, err
 		}
 	}
+
 	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST"
 	}); err == nil {
-		if err = d.Set("external_oauth_blocked_roles_list", listValueToSlice(prop.Value, false)); err != nil {
+		// handle blocked_roles_list
+		params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer("%%EXTERNAL_OAUTH%%"),
+			},
+			In: &sdk.ParametersIn{
+				Account: sdk.Pointer(true),
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		var roles []string
+		found, err := collections.FindOne(params, func(p *sdk.Parameter) bool { return p.Key == "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST" })
+		if err == nil && (*found).Value == "true" {
+			unfilteredRoels := listValueToSlice(prop.Value, false)
+			for _, role := range unfilteredRoels {
+				if !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN"}, role) {
+					roles = append(roles, role)
+				}
+			}
+		} else {
+			roles = listValueToSlice(prop.Value, false)
+		}
+
+		if err = d.Set("external_oauth_blocked_roles_list", roles); err != nil {
 			return nil, err
 		}
 	}
@@ -276,7 +302,7 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_AUDIENCE_LIST"
 	}); err == nil {
-		if err = d.Set("external_oauth_audience_list", listValueToSlice(prop.Value, true)); err != nil {
+		if err = d.Set("external_oauth_audience_list", listValueToSlice(prop.Value, false)); err != nil {
 			return nil, err
 		}
 	}
@@ -509,7 +535,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			}
 			if err = handleExternalChangesToObjectInDescribe(d,
 				describeMapping{"external_oauth_issuer", "external_oauth_issuer", externalOauthIssuer.Value, externalOauthIssuer.Value, nil},
-				describeMapping{"external_oauth_jws_keys_url", "external_oauth_jws_keys_url", externalOauthJwsKeysUrl.Value, listValueToSlice(externalOauthJwsKeysUrl.Value, true), nil},
+				describeMapping{"external_oauth_jws_keys_url", "external_oauth_jws_keys_url", externalOauthJwsKeysUrl.Value, listValueToSlice(externalOauthJwsKeysUrl.Value, false), nil},
 				describeMapping{"external_oauth_any_role_mode", "external_oauth_any_role_mode", externalOauthAnyRoleMode.Value, externalOauthAnyRoleMode.Value, nil},
 				describeMapping{"external_oauth_rsa_public_key", "external_oauth_rsa_public_key", externalOauthRsaPublicKey.Value, externalOauthRsaPublicKey.Value, nil},
 				describeMapping{"external_oauth_rsa_public_key_2", "external_oauth_rsa_public_key_2", externalOauthRsaPublicKey2.Value, externalOauthRsaPublicKey2.Value, nil},
@@ -599,23 +625,6 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 		if err = d.Set(ParametersAttributeName, []map[string]any{schemas.ExternalOauthParametersToSchema(params)}); err != nil {
 			return diag.FromErr(err)
 		}
-		// handle blocked_roles_list
-		found, err := collections.FindOne(params, func(p *sdk.Parameter) bool { return p.Key == "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST" })
-		if err == nil && (*found).Value == "true" {
-			externalOauthBlockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-				return property.Name == "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST"
-			})
-			x := d.Get("external_oauth_blocked_roles_list")
-			fmt.Println(x)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("external_oauth_blocked_roles_list", listValueToSlice(externalOauthBlockedRolesList.Value, false)); err != nil {
-				return diag.FromErr(err)
-			}
-			x = d.Get("external_oauth_blocked_roles_list")
-			fmt.Println(x)
-		}
 		return nil
 	}
 }
@@ -635,10 +644,10 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_allowed_roles_list") {
-		v := d.Get("external_oauth_allowed_roles_list").([]any)
+		v := expandStringList(d.Get("external_oauth_allowed_roles_list").(*schema.Set).List())
 		allowedRoles := make([]sdk.AccountObjectIdentifier, len(v))
 		for i := range v {
-			allowedRoles[i] = sdk.NewAccountObjectIdentifier(v[i].(string))
+			allowedRoles[i] = sdk.NewAccountObjectIdentifier(v[i])
 		}
 		set.WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: allowedRoles})
 	}
@@ -658,11 +667,11 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_audience_list") {
-		v := d.Get("external_oauth_audience_list").([]any)
+		v := expandStringList(d.Get("external_oauth_audience_list").(*schema.Set).List())
 		if len(v) > 0 {
 			audienceList := make([]sdk.AudienceListItem, len(v))
 			for i := range v {
-				audienceList[i] = sdk.AudienceListItem{Item: v[i].(string)}
+				audienceList[i] = sdk.AudienceListItem{Item: v[i]}
 			}
 			set.WithExternalOauthAudienceList(sdk.AudienceListRequest{AudienceList: audienceList})
 		} else {
@@ -671,10 +680,11 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_blocked_roles_list") {
-		v := d.Get("external_oauth_blocked_roles_list").([]any)
+		vRaw := d.Get("external_oauth_blocked_roles_list")
+		v := expandStringList(vRaw.(*schema.Set).List())
 		blockedRoles := make([]sdk.AccountObjectIdentifier, len(v))
 		for i := range v {
-			blockedRoles[i] = sdk.NewAccountObjectIdentifier(v[i].(string))
+			blockedRoles[i] = sdk.NewAccountObjectIdentifier(v[i])
 		}
 		set.WithExternalOauthBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: blockedRoles})
 	}
@@ -685,11 +695,11 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_jws_keys_url") {
-		v := d.Get("external_oauth_jws_keys_url").([]any)
+		v := expandStringList(d.Get("external_oauth_jws_keys_url").(*schema.Set).List())
 		if len(v) > 0 {
 			urls := make([]sdk.JwsKeysUrl, len(v))
 			for i := range v {
-				urls[i] = sdk.JwsKeysUrl{JwsKeyUrl: v[i].(string)}
+				urls[i] = sdk.JwsKeysUrl{JwsKeyUrl: v[i]}
 			}
 			set.WithExternalOauthJwsKeysUrl(urls)
 		}
@@ -720,10 +730,12 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_scope_mapping_attribute") {
+		// this field is required
 		set.WithExternalOauthScopeMappingAttribute(d.Get("external_oauth_scope_mapping_attribute").(string))
 	}
 
 	if d.HasChange("external_oauth_snowflake_user_mapping_attribute") {
+		// this field is required
 		if v, ok := d.GetOk("external_oauth_snowflake_user_mapping_attribute"); ok {
 			value, err := sdk.ToExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption(v.(string))
 			if err != nil {
@@ -731,21 +743,21 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 			}
 			set.WithExternalOauthSnowflakeUserMappingAttribute(value)
 		}
-		// else: force new
 	}
 
 	if d.HasChange("external_oauth_token_user_mapping_claim") {
-		v := d.Get("external_oauth_token_user_mapping_claim").([]any)
+		v := expandStringList(d.Get("external_oauth_token_user_mapping_claim").(*schema.Set).List())
 		claims := make([]sdk.TokenUserMappingClaim, len(v))
 		for i := range v {
 			claims[i] = sdk.TokenUserMappingClaim{
-				Claim: v[i].(string),
+				Claim: v[i],
 			}
 		}
 		set.WithExternalOauthTokenUserMappingClaim(claims)
 	}
 
 	if d.HasChange("external_oauth_type") {
+		// this field is required
 		if v, ok := d.GetOk("external_oauth_type"); ok {
 			value, err := sdk.ToExternalOauthSecurityIntegrationTypeOption(v.(string))
 			if err != nil {

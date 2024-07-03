@@ -470,7 +470,6 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 				AudienceList: r.Set.ExternalOauthAudienceList.AudienceList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {
@@ -507,7 +506,6 @@ func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *A
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {
@@ -555,7 +553,6 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {

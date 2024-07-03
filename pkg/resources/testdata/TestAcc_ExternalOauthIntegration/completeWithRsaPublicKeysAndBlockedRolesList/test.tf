@@ -12,5 +12,5 @@ resource "snowflake_external_oauth_integration" "test" {
   external_oauth_snowflake_user_mapping_attribute = var.external_oauth_snowflake_user_mapping_attribute
   external_oauth_token_user_mapping_claim         = var.external_oauth_token_user_mapping_claim
   name                                            = var.name
-  external_oauth_type                             = var.type
+  external_oauth_type                             = var.external_oauth_type
 }

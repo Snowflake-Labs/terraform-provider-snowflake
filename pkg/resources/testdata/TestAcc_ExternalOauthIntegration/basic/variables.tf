@@ -1,7 +1,7 @@
 variable "name" {
   type = string
 }
-variable "type" {
+variable "external_oauth_type" {
   type = string
 }
 variable "enabled" {
@@ -14,5 +14,8 @@ variable "external_oauth_snowflake_user_mapping_attribute" {
   type = string
 }
 variable "external_oauth_token_user_mapping_claim" {
-  type = set(any)
+  type = set(string)
+}
+variable "external_oauth_jws_keys_url" {
+  type = set(string)
 }
