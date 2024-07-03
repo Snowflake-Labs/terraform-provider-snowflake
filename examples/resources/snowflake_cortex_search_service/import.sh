@@ -1,0 +1,1 @@
+terraform import snowflake_cortex_search_service.example 'dbName|schemaName|fileFormatName'

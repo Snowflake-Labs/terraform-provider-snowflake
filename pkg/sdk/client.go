@@ -46,6 +46,7 @@ type Client struct {
 	ApplicationRoles         ApplicationRoles
 	Applications             Applications
 	Comments                 Comments
+	CortexSearchServices     CortexSearchServices
 	DatabaseRoles            DatabaseRoles
 	Databases                Databases
 	DynamicTables            DynamicTables
@@ -201,6 +202,7 @@ func (c *Client) initialize() {
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
+	c.CortexSearchServices = &cortexSearchServices{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
 	c.Databases = &databases{client: c}
 	c.DynamicTables = &dynamicTables{client: c}

@@ -151,6 +151,7 @@ const (
 	SchemaPrivilegeCreateSnowflakeMlAnomalyDetection SchemaPrivilege = "CREATE SNOWFLAKE.ML.ANOMALY_DETECTION"
 	SchemaPrivilegeCreateSnowflakeMlForecast         SchemaPrivilege = "CREATE SNOWFLAKE.ML.FORECAST"
 	SchemaPrivilegeCreateDynamicTable                SchemaPrivilege = "CREATE DYNAMIC TABLE"
+	SchemaPrivilegeCreateCortexSearchService         SchemaPrivilege = "CREATE CORTEX SEARCH SERVICE"
 	SchemaPrivilegeCreateExternalTable               SchemaPrivilege = "CREATE EXTERNAL TABLE"
 	SchemaPrivilegeCreateHybridTable                 SchemaPrivilege = "CREATE HYBRID TABLE"
 	SchemaPrivilegeCreateIcebergTable                SchemaPrivilege = "CREATE ICEBERG TABLE"
@@ -182,6 +183,9 @@ const (
 	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
 	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
 	// SchemaObjectPrivilegeSelect  SchemaObjectPrivilege = "SELECT" (duplicate)
+
+	// For CORTEX SEARCH SERVICE
+	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "USAGE" (duplicate)
 
 	// For EVENT TABLE
 	SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT"

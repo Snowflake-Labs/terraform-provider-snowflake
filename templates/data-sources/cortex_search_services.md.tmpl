@@ -1,0 +1,24 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ if gt (len (split .Description "<deprecation>")) 1 -}}
+{{ index (split .Description "<deprecation>") 1 | plainmarkdown | trimspace | prefixlines "  " }}
+{{- else -}}
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+{{- end }}
+---
+
+!> **Disclaimer for Cortex Search service** Note that Cortex Search is a Private Preview feature as such, should be used only with non-production data even when using Snowflake's Terraform Provider. Also, note that the Terraform Provider is not covered by Snowflake's support team; the Product and Engineering teams are available for any questions. However, please contact the Cortex Search team for any issues with this object.
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{ tffile (printf "examples/data-sources/%s/data-source.tf" .Name)}}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}

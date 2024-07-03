@@ -15,6 +15,7 @@ type TestClient struct {
 	Application         *ApplicationClient
 	ApplicationPackage  *ApplicationPackageClient
 	Context             *ContextClient
+	CortexSearchService *CortexSearchServiceClient
 	CatalogIntegration  *CatalogIntegrationClient
 	Database            *DatabaseClient
 	DatabaseRole        *DatabaseRoleClient
@@ -64,6 +65,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Application:         NewApplicationClient(context, idsGenerator),
 		ApplicationPackage:  NewApplicationPackageClient(context, idsGenerator),
 		Context:             NewContextClient(context),
+		CortexSearchService: NewCortexSearchServiceClient(context, idsGenerator),
 		CatalogIntegration:  NewCatalogIntegrationClient(context, idsGenerator),
 		Database:            NewDatabaseClient(context, idsGenerator),
 		DatabaseRole:        NewDatabaseRoleClient(context, idsGenerator),

@@ -4,12 +4,11 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -95,4 +94,51 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 		}
 		return result
 	})
+}
+
+type parameter struct {
+	parameterName sdk.AccountParameter
+	valueType     valueType
+	parameterType sdk.ParameterType
+}
+
+type valueType string
+
+const (
+	valueTypeInt    valueType = "int"
+	valueTypeBool   valueType = "bool"
+	valueTypeString valueType = "string"
+)
+
+type ResourceIdProvider interface {
+	Id() string
+}
+
+func ParametersCustomDiff(parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		if d.Id() == "" {
+			return nil
+		}
+
+		params, err := parametersProvider(ctx, d, meta)
+		if err != nil {
+			return err
+		}
+
+		diffFunctions := make([]schema.CustomizeDiffFunc, len(parameters))
+		for idx, p := range parameters {
+			var diffFunction schema.CustomizeDiffFunc
+			switch p.valueType {
+			case valueTypeInt:
+				diffFunction = IntParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			case valueTypeBool:
+				diffFunction = BoolParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			case valueTypeString:
+				diffFunction = StringParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			}
+			diffFunctions[idx] = diffFunction
+		}
+
+		return customdiff.All(diffFunctions...)(ctx, d, meta)
+	}
 }

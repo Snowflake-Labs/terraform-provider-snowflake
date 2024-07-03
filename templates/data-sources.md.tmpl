@@ -16,7 +16,7 @@ description: |-
 {{ if .HasExample -}}
 ## Example Usage
 
-{{ printf "{{tffile %q}}" .ExampleFile }}
+{{ tffile (printf "examples/data-sources/%s/data-source.tf" .Name)}}
 {{- end }}
 
 {{ .SchemaMarkdown | trimspace }}
@@ -26,5 +26,5 @@ description: |-
 
 Import is supported using the following syntax:
 
-{{ printf "{{codefile \"shell\" %q}}" .ImportFile }}
+{{ codefile "shell" (printf "examples/data-sources/%s/import.sh" .Name)}}
 {{- end }}

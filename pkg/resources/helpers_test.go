@@ -16,39 +16,131 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type grantType int
-
-const (
-	normal grantType = iota
-	onFuture
-	onAll
-)
-
-func TestGetPropertyAsPointer(t *testing.T) {
+func Test_GetPropertyAsPointer(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"integer": {
 			Type:     schema.TypeInt,
 			Required: true,
 		},
+		"second_integer": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"third_integer": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
 		"string": {
 			Type:     schema.TypeString,
 			Required: true,
+		},
+		"second_string": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"third_string": {
+			Type:     schema.TypeInt,
+			Optional: true,
 		},
 		"boolean": {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
+		"second_boolean": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"third_boolean": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
 	}, map[string]interface{}{
-		"integer": 123,
-		"string":  "some string",
-		"boolean": true,
-		"invalid": true,
+		"integer":        123,
+		"second_integer": 0,
+		"string":         "some string",
+		"second_string":  "",
+		"boolean":        true,
+		"second_boolean": false,
+		"invalid":        true,
 	})
 
 	assert.Equal(t, 123, *resources.GetPropertyAsPointer[int](d, "integer"))
 	assert.Equal(t, "some string", *resources.GetPropertyAsPointer[string](d, "string"))
 	assert.Equal(t, true, *resources.GetPropertyAsPointer[bool](d, "boolean"))
 	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "invalid"))
+
+	assert.Equal(t, 123, *resources.GetPropertyAsPointer[int](d, "integer"))
+	assert.Nil(t, resources.GetPropertyAsPointer[int](d, "second_integer"))
+	assert.Nil(t, resources.GetPropertyAsPointer[int](d, "third_integer"))
+	assert.Equal(t, "some string", *resources.GetPropertyAsPointer[string](d, "string"))
+	assert.Nil(t, resources.GetPropertyAsPointer[string](d, "second_integer"))
+	assert.Nil(t, resources.GetPropertyAsPointer[string](d, "third_string"))
+	assert.Equal(t, true, *resources.GetPropertyAsPointer[bool](d, "boolean"))
+	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "second_boolean"))
+	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "third_boolean"))
+	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "invalid"))
+}
+
+// TODO [SNOW-1511594]: provide TestResourceDataRaw with working GetRawConfig()
+func Test_GetConfigPropertyAsPointerAllowingZeroValue(t *testing.T) {
+	t.Skip("TestResourceDataRaw does not set up the ResourceData correctly - GetRawConfig is nil")
+	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"integer": {
+			Type:     schema.TypeInt,
+			Required: true,
+		},
+		"second_integer": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"third_integer": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"string": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"second_string": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"third_string": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"boolean": {
+			Type:     schema.TypeBool,
+			Required: true,
+		},
+		"second_boolean": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"third_boolean": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+	}, map[string]interface{}{
+		"integer":        123,
+		"second_integer": 0,
+		"string":         "some string",
+		"second_string":  "",
+		"boolean":        true,
+		"second_boolean": false,
+		"invalid":        true,
+	})
+
+	assert.Equal(t, 123, *resources.GetConfigPropertyAsPointerAllowingZeroValue[int](d, "integer"))
+	assert.Equal(t, 0, *resources.GetConfigPropertyAsPointerAllowingZeroValue[int](d, "second_integer"))
+	assert.Nil(t, resources.GetConfigPropertyAsPointerAllowingZeroValue[int](d, "third_integer"))
+	assert.Equal(t, "some string", *resources.GetConfigPropertyAsPointerAllowingZeroValue[string](d, "string"))
+	assert.Equal(t, "", *resources.GetConfigPropertyAsPointerAllowingZeroValue[string](d, "second_integer"))
+	assert.Nil(t, resources.GetConfigPropertyAsPointerAllowingZeroValue[string](d, "third_string"))
+	assert.Equal(t, true, *resources.GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "boolean"))
+	assert.Equal(t, false, *resources.GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "second_boolean"))
+	assert.Nil(t, resources.GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "third_boolean"))
+	assert.Nil(t, resources.GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "invalid"))
 }
 
 // queriedAccountRolePrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.

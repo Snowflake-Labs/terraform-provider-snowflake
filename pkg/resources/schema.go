@@ -50,7 +50,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      -1,
+		Default:      IntDefault,
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema. Default value for this field is set to -1, which is a fallback to use Snowflake default.",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
@@ -87,7 +87,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	dataRetentionTimeInDays := GetPropertyAsPointer[int](d, "data_retention_days")
-	if dataRetentionTimeInDays != nil && *dataRetentionTimeInDays != -1 {
+	if dataRetentionTimeInDays != nil && *dataRetentionTimeInDays != IntDefault {
 		createReq.DataRetentionTimeInDays = dataRetentionTimeInDays
 	}
 
@@ -133,7 +133,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != -1 || int64(database.RetentionTime) != retentionTime {
+	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != IntDefault || int64(database.RetentionTime) != retentionTime {
 		if err := d.Set("data_retention_days", retentionTime); err != nil {
 			return err
 		}
@@ -235,7 +235,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		if days := d.Get("data_retention_days"); days.(int) != -1 {
+		if days := d.Get("data_retention_days"); days.(int) != IntDefault {
 			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 				Set: &sdk.SchemaSet{
 					DataRetentionTimeInDays: sdk.Int(days.(int)),

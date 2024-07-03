@@ -36,7 +36,7 @@ var databaseOldSchema = map[string]*schema.Schema{
 	"data_retention_time_in_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      -1,
+		Default:      IntDefault,
 		Description:  "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
@@ -128,7 +128,7 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	if primaryName, ok := d.GetOk("from_replica"); ok {
 		primaryID := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(primaryName.(string))
 		opts := &sdk.CreateSecondaryDatabaseOptions{}
-		if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
+		if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault {
 			opts.DataRetentionTimeInDays = sdk.Int(v.(int))
 		}
 		err := client.Databases.CreateSecondary(ctx, id, primaryID, opts)
@@ -156,7 +156,7 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault {
 		opts.DataRetentionTimeInDays = sdk.Int(v.(int))
 	}
 
@@ -218,7 +218,7 @@ func ReadDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if dataRetentionDays := d.Get("data_retention_time_in_days"); dataRetentionDays.(int) != -1 || database.RetentionTime != paramDataRetention {
+	if dataRetentionDays := d.Get("data_retention_time_in_days"); dataRetentionDays.(int) != IntDefault || database.RetentionTime != paramDataRetention {
 		if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
 			return err
 		}
@@ -267,7 +267,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_time_in_days") {
-		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
+		if days := d.Get("data_retention_time_in_days"); days.(int) != IntDefault {
 			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 				Set: &sdk.DatabaseSet{
 					DataRetentionTimeInDays: sdk.Int(days.(int)),

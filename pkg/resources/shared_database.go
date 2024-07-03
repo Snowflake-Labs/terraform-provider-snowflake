@@ -95,7 +95,7 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
 		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
 		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetPropertyAsPointer[string](d, "comment"),
+		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
 	})
 	if err != nil {
 		return diag.FromErr(err)
