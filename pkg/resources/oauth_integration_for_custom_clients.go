@@ -99,14 +99,10 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Description:  "Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.",
 	},
 	"network_policy": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Description: "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization " +
-			"code for an access or refresh token or to use a refresh token to obtain a new access token.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-		DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-			return sdk.NewAccountObjectIdentifierFromFullyQualifiedName(old) == sdk.NewAccountObjectIdentifierFromFullyQualifiedName(new)
-		},
 	},
 	"oauth_client_rsa_public_key": {
 		Type:        schema.TypeString,
