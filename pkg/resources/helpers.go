@@ -141,27 +141,6 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
-// ParseCommaSeparatedStringArray can be used to parse Snowflake output containing a list in the format of "[item1, item2, ...]",
-// the assumptions are that:
-// 1. The list is enclosed by [] brackets, and they shouldn't be a part of any item's value
-// 2. Items are separated by commas, and they shouldn't be a part of any item's value
-// 3. Items can have as many spaces in between, but after separation they will be trimmed and shouldn't be a part of any item's value
-func ParseCommaSeparatedStringArray(value string) []string {
-	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
-		if value == "[]" {
-			return make([]string, 0)
-		}
-		list := strings.Trim(value, "[]")
-		listItems := strings.Split(list, ",")
-		trimmedListItems := make([]string, len(listItems))
-		for i, item := range listItems {
-			trimmedListItems[i] = strings.TrimSpace(item)
-		}
-		return trimmedListItems
-	}
-	return make([]string, 0)
-}
-
 type tags []tag
 
 func (t tags) toSnowflakeTagValues() []snowflake.TagValue {

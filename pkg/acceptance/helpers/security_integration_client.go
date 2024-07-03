@@ -48,12 +48,17 @@ func (c *SecurityIntegrationClient) CreateScim(t *testing.T) (*sdk.SecurityInteg
 	return c.CreateScimWithRequest(t, sdk.NewCreateScimSecurityIntegrationRequest(c.ids.RandomAccountObjectIdentifier(), sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner))
 }
 
-func (c *SecurityIntegrationClient) UpdateSaml2ForceAuthn(t *testing.T, id sdk.AccountObjectIdentifier, forceAuthn bool) {
+func (c *SecurityIntegrationClient) UpdateSaml2(t *testing.T, request *sdk.AlterSaml2SecurityIntegrationRequest) {
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().AlterSaml2(ctx, sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSet(*sdk.NewSaml2IntegrationSetRequest().WithSaml2ForceAuthn(forceAuthn)))
+	err := c.client().AlterSaml2(ctx, request)
 	require.NoError(t, err)
+}
+
+func (c *SecurityIntegrationClient) UpdateSaml2ForceAuthn(t *testing.T, id sdk.AccountObjectIdentifier, forceAuthn bool) {
+	t.Helper()
+	c.UpdateSaml2(t, sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSet(*sdk.NewSaml2IntegrationSetRequest().WithSaml2ForceAuthn(forceAuthn)))
 }
 
 func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request *sdk.CreateScimSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {

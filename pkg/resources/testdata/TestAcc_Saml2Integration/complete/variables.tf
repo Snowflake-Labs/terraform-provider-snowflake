@@ -41,9 +41,6 @@ variable "saml2_snowflake_acs_url" {
 variable "saml2_snowflake_issuer_url" {
   type = string
 }
-# variable "saml2_snowflake_x509_cert" {
-#   type = string
-# }
 variable "saml2_sp_initiated_login_page_label" {
   type = string
 }
