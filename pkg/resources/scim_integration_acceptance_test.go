@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -207,13 +208,42 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 	})
 }
 
-func TestAcc_ScimIntegration_invalid(t *testing.T) {
+func TestAcc_ScimIntegration_InvalidScimClient(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":                config.StringVariable(id.Name()),
 			"enabled":             config.BoolVariable(false),
 			"scim_client":         config.StringVariable("invalid"),
+			"sync_password":       config.BoolVariable(false),
+			"network_policy_name": config.StringVariable("foo"),
+			"run_as_role":         config.StringVariable(snowflakeroles.GenericScimProvisioner.Name()),
+			"comment":             config.StringVariable("foo"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables: m(),
+				ExpectError:     regexp.MustCompile(`expected \[{{} scim_client}] to be one of \["OKTA" "AZURE" "GENERIC"], got invalid`),
+			},
+		},
+	})
+}
+
+func TestAcc_ScimIntegration_InvalidRunAsRole(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":                config.StringVariable(id.Name()),
+			"enabled":             config.BoolVariable(false),
+			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientGeneric)),
 			"sync_password":       config.BoolVariable(false),
 			"network_policy_name": config.StringVariable("foo"),
 			"run_as_role":         config.StringVariable("invalid"),
@@ -226,18 +256,11 @@ func TestAcc_ScimIntegration_invalid(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			fmt.Sprintf(`expected scim_client to be one of %q, got invalid`, sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
-			fmt.Sprintf(`expected run_as_role to be one of %q, got invalid`, sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles)),
-		}),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(),
-				ExpectError: helpers.MatchAllStringsInOrderNonOverlapping([]string{
-					`expected [{{} scim_client}] to be one of ["OKTA" "AZURE" "GENERIC"], got invalid`,
-					`expected [{{} run_as_role}] to be one of ["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`,
-				}),
+				ExpectError:     regexp.MustCompile(`expected \[{{} run_as_role}] to be one of \["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`),
 			},
 		},
 	})

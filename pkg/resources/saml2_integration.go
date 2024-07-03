@@ -132,7 +132,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the integration.",
 	},
-	showOutputAttributeName: {
+	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration.",
@@ -140,7 +140,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowSecurityIntegrationSchema,
 		},
 	},
-	describeOutputAttributeName: {
+	DescribeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration.",
@@ -168,8 +168,8 @@ func SAML2Integration() *schema.Resource {
 			ForceNewIfChangeToEmptyString("saml2_snowflake_issuer_url"),
 			ForceNewIfChangeToEmptyString("saml2_snowflake_acs_url"),
 			ForceNewIfChangeToEmptyString("saml2_sp_initiated_login_page_label"),
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, "name", "enabled", "comment"),
-			ComputedIfAnyAttributeChanged(describeOutputAttributeName, "saml2_issuer", "saml2_sso_url", "saml2_provider", "saml2_x509_cert",
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "saml2_issuer", "saml2_sso_url", "saml2_provider", "saml2_x509_cert",
 				"saml2_sp_initiated_login_page_label", "saml2_enable_sp_initiated", "saml2_sign_request", "saml2_requtedted_nameid_format",
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
 				"allowed_email_patterns"),
@@ -658,11 +658,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			}
 		}
 
-		if err = d.Set(showOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(describeOutputAttributeName, []map[string]any{schemas.DescribeSaml2IntegrationToSchema(integrationProperties)}); err != nil {
+		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.DescribeSaml2IntegrationToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
 
