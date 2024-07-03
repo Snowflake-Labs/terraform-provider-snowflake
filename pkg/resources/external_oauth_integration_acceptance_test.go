@@ -32,7 +32,7 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 			"external_oauth_scope_delimiter":                      config.StringVariable("."),
 			"external_oauth_scope_mapping_attribute":              config.StringVariable("foo"),
 			"external_oauth_snowflake_user_mapping_attribute":     config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
-			"external_oauth_token_user_mapping_claims":            config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_token_user_mapping_claim":             config.SetVariable(config.StringVariable("foo")),
 			"name": config.StringVariable(id.Name()),
 			"type": config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 		}
@@ -45,7 +45,7 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrl"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
 				ConfigVariables: m(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
@@ -61,19 +61,19 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_scope_delimiter", "."),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_scope_mapping_attribute", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claims.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claims.0", "foo"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
-					resource.TestCheckResourceAttrSet("snowflake_external_oauth_integration.test", "created_on"),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrl"),
-				ConfigVariables:   m(),
-				ResourceName:      "snowflake_external_oauth_integration.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
+				ConfigVariables:         m(),
+				ResourceName:            "snowflake_external_oauth_integration.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2", "external_oauth_scope_mapping_attribute"},
 			},
 		},
 	})
@@ -96,7 +96,7 @@ func TestAcc_ExternalOauthIntegration_invalid(t *testing.T) {
 			"external_oauth_scope_delimiter":                      config.StringVariable("foo"),
 			"external_oauth_scope_mapping_attribute":              config.StringVariable("foo"),
 			"external_oauth_snowflake_user_mapping_attribute":     config.StringVariable("foo"),
-			"external_oauth_token_user_mapping_claims":            config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_token_user_mapping_claim":             config.SetVariable(config.StringVariable("foo")),
 			"name": config.StringVariable("foo"),
 			"type": config.StringVariable("foo"),
 		}

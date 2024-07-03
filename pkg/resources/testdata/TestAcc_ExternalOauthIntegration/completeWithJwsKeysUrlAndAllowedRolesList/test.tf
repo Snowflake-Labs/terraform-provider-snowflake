@@ -9,7 +9,7 @@ resource "snowflake_external_oauth_integration" "test" {
   external_oauth_scope_delimiter                  = var.external_oauth_scope_delimiter
   external_oauth_scope_mapping_attribute          = var.external_oauth_scope_mapping_attribute
   external_oauth_snowflake_user_mapping_attribute = var.external_oauth_snowflake_user_mapping_attribute
-  external_oauth_token_user_mapping_claims        = var.external_oauth_token_user_mapping_claims
+  external_oauth_token_user_mapping_claim         = var.external_oauth_token_user_mapping_claim
   name                                            = var.name
   external_oauth_type                             = var.type
 }
