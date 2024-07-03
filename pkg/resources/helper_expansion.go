@@ -2,8 +2,6 @@ package resources
 
 import (
 	"slices"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
@@ -24,18 +22,6 @@ func expandStringList(configured []interface{}) []string {
 		val, ok := v.(string)
 		if ok && val != "" {
 			vs = append(vs, val)
-		}
-	}
-	return vs
-}
-
-// TODO: unit tests, maybe do with transform func
-func expandObjectIdentifierList(configured []interface{}) []sdk.AccountObjectIdentifier {
-	vs := make([]sdk.AccountObjectIdentifier, 0, len(configured))
-	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, sdk.NewAccountObjectIdentifier(val))
 		}
 	}
 	return vs

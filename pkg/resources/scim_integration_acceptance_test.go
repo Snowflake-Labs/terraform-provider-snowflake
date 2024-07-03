@@ -292,8 +292,6 @@ func TestAcc_ScimIntegration_migrateFromVersion091(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationv092(id.Name(), role.Name()),
-				// TODO: Remove (?)
-				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange("snowflake_scim_integration.test", "name", tfjson.ActionUpdate, sdk.String(id.Name()), sdk.String(id.Name())),

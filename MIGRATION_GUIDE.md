@@ -30,6 +30,42 @@ Added a new datasource enabling querying and filtering all types of security int
   The additional parameters call **DESC SECURITY INTEGRATION** (with `with_describe` turned on) **per security integration** returned by **SHOW SECURITY INTEGRATIONS**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
+### snowflake_external_oauth_integration resource changes
+#### *(behavior change)* Changed behavior of `sync_password`
+
+Now, the `sync_password` field will set the state value to `unknown` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
+#### *(behavior change)* Renamed fields
+
+Renamed fields:
+- `type` to `external_oauth_type`
+- `issuer` to `external_oauth_issuer`
+- `token_user_mapping_claims` to `external_oauth_token_user_mapping_claim`
+- `snowflake_user_mapping_attribute` to `external_oauth_snowflake_user_mapping_attribute`
+- `scope_mapping_attribute` to `external_oauth_scope_mapping_attribute`
+- `jws_keys_urls` to `external_oauth_jws_keys_url`
+- `rsa_public_key` to `external_oauth_rsa_public_key`
+- `rsa_public_key_2` to `external_oauth_rsa_public_key_2`
+- `blocked_roles` to `external_oauth_blocked_roles_list`
+- `allowed_roles` to `external_oauth_allowed_roles_list`
+- `audience_urls` to `external_oauth_audience_list`
+- `any_role_mode` to `external_oauth_any_role_mode`
+- `scope_delimiter` to `external_oauth_scope_delimiter`
+to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+
+#### *(feature)* New fields
+Fields added to the resource:
+- `enabled`
+- `sync_password`
+- `comment`
+
+#### *(behavior change)* Force new for multiple attributes after removing from config
+Force new was added for the following attributes (because no usable SQL alter statements for them):
+- `external_oauth_rsa_public_key`
+- `external_oauth_rsa_public_key_2`
+- `external_oauth_scope_mapping_attribute`
+- `external_oauth_jws_keys_url`
+
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`
 
@@ -129,10 +165,10 @@ All the field changes in comparison to the previous database resource are:
         - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
 - `from_database` - database cloning was entirely removed and is not possible by any of the new database resources.
 - `from_share` - the parameter was moved to the dedicated resource for databases created from shares `snowflake_shared_database`. Right now, it's a text field instead of a map. Additionally, instead of legacy account identifier format we're expecting the new one that with share looks like this: `<organization_name>.<account_name>.<share_name>`. For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
-- p, 
+- p,
 - `from_replication` - the parameter was moved to the dedicated resource for databases created from primary databases `snowflake_secondary_database`
 - `replication_configuration` - renamed: was renamed to `configuration` and is only available in the `snowflake_database`. Its internal schema changed that instead of list of accounts, we expect a list of nested objects with accounts for which replication (and optionally failover) should be enabled. More information about converting between both versions [here](#resource-renamed-snowflake_database---snowflake_database_old). Additionally, instead of legacy account identifier format we're expecting the new one that looks like this: `<organization_name>.<account_name>` (it will be automatically migrated to the recommended format by the state upgrader). For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
-- `data_retention_time_in_days` 
+- `data_retention_time_in_days`
   - in `snowflake_shared_database`
       - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
   - in `snowflake_database` and `snowflake_secondary_database`
@@ -213,7 +249,7 @@ The only difference would be that instead of writing/generating new configuratio
 - `pattern` was replaced by `like` field.
 - Additional filtering options added (`limit`).
 - Added missing fields returned by SHOW DATABASES and enclosed its output in `show_output` field.
-- Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**). 
+- Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
 The additional parameters call **DESC DATABASE** (with `with_describe` turned on) and **SHOW PARAMETERS IN DATABASE** (with `with_parameters` turned on) **per database** returned by **SHOW DATABASES**.
 The outputs of both commands are held in `databases` entry, where **DESC DATABASE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN DATABASE** in the `parameters` field.
 It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
@@ -237,7 +273,7 @@ resource "snowflake_tag_masking_policy_association" "name" {
     masking_policy_id = snowflake_masking_policy.example_masking_policy.id
 }
 ```
-    
+
 After
 ```terraform
 resource "snowflake_tag_masking_policy_association" "name" {

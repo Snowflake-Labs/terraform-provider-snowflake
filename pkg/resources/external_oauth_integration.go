@@ -187,7 +187,7 @@ func ExternalOauthIntegration() *schema.Resource {
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
 			ForceNewIfChangeToEmptyString("external_oauth_scope_mapping_attribute"),
-			ForceNewIfChangeToEmptySet[any]("external_oauth_jws_keys_url"),
+			ForceNewIfChangeToEmptySet("external_oauth_jws_keys_url"),
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "external_oauth_type", "comment"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "external_oauth_issuer", "external_oauth_jws_keys_url", "external_oauth_any_role_mode",
 				"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2", "external_oauth_blocked_roles_list", "external_oauth_allowed_roles_list",
@@ -363,7 +363,12 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if v, ok := d.GetOk("external_oauth_allowed_roles_list"); ok {
-		req.WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: expandObjectIdentifierList(v.(*schema.Set).List())})
+		vList := expandStringList(v.(*schema.Set).List())
+		allowedRoles := make([]sdk.AccountObjectIdentifier, len(vList))
+		for i := range vList {
+			allowedRoles[i] = sdk.NewAccountObjectIdentifier(vList[i])
+		}
+		req.WithExternalOauthAllowedRolesList(sdk.AllowedRolesListRequest{AllowedRolesList: allowedRoles})
 	}
 
 	if v, ok := d.GetOk("external_oauth_any_role_mode"); ok {
@@ -385,9 +390,12 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if v, ok := d.GetOk("external_oauth_blocked_roles_list"); ok {
-		if _, okAllowed := d.GetOk("external_oauth_allowed_roles_list"); !okAllowed {
-			req.WithExternalOauthBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: expandObjectIdentifierList(v.(*schema.Set).List())})
+		vList := expandStringList(v.(*schema.Set).List())
+		blockedRoles := make([]sdk.AccountObjectIdentifier, len(vList))
+		for i := range vList {
+			blockedRoles[i] = sdk.NewAccountObjectIdentifier(vList[i])
 		}
+		req.WithExternalOauthBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: blockedRoles})
 	}
 
 	if v, ok := d.GetOk("external_oauth_jws_keys_url"); ok {
