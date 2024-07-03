@@ -206,21 +206,25 @@ func (r *CreateExternalOauthSecurityIntegrationRequest) toOpts() *CreateExternal
 		ExternalOauthScopeMappingAttribute: r.ExternalOauthScopeMappingAttribute,
 		Comment:                            r.Comment,
 	}
+
 	if r.ExternalOauthBlockedRolesList != nil {
 		opts.ExternalOauthBlockedRolesList = &BlockedRolesList{
 			BlockedRolesList: r.ExternalOauthBlockedRolesList.BlockedRolesList,
 		}
 	}
+
 	if r.ExternalOauthAllowedRolesList != nil {
 		opts.ExternalOauthAllowedRolesList = &AllowedRolesList{
 			AllowedRolesList: r.ExternalOauthAllowedRolesList.AllowedRolesList,
 		}
 	}
+
 	if r.ExternalOauthAudienceList != nil {
 		opts.ExternalOauthAudienceList = &AudienceList{
 			AudienceList: r.ExternalOauthAudienceList.AudienceList,
 		}
 	}
+
 	return opts
 }
 
@@ -238,11 +242,13 @@ func (r *CreateOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *
 
 		Comment: r.Comment,
 	}
+
 	if r.BlockedRolesList != nil {
 		opts.BlockedRolesList = &BlockedRolesList{
 			BlockedRolesList: r.BlockedRolesList.BlockedRolesList,
 		}
 	}
+
 	return opts
 }
 
@@ -265,16 +271,19 @@ func (r *CreateOauthForCustomClientsSecurityIntegrationRequest) toOpts() *Create
 		OauthClientRsaPublicKey2:  r.OauthClientRsaPublicKey2,
 		Comment:                   r.Comment,
 	}
+
 	if r.PreAuthorizedRolesList != nil {
 		opts.PreAuthorizedRolesList = &PreAuthorizedRolesList{
 			PreAuthorizedRolesList: r.PreAuthorizedRolesList.PreAuthorizedRolesList,
 		}
 	}
+
 	if r.BlockedRolesList != nil {
 		opts.BlockedRolesList = &BlockedRolesList{
 			BlockedRolesList: r.BlockedRolesList.BlockedRolesList,
 		}
 	}
+
 	return opts
 }
 
@@ -326,6 +335,7 @@ func (r *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationReque
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &ApiAuthenticationWithClientCredentialsFlowIntegrationSet{
 			Enabled:                     r.Set.Enabled,
@@ -340,12 +350,14 @@ func (r *AlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationReque
 			Comment:                     r.Set.Comment,
 		}
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &ApiAuthenticationWithClientCredentialsFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -356,6 +368,7 @@ func (r *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegration
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{
 			Enabled:                     r.Set.Enabled,
@@ -370,12 +383,14 @@ func (r *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegration
 			Comment:                     r.Set.Comment,
 		}
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -386,6 +401,7 @@ func (r *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) toOp
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &ApiAuthenticationWithJwtBearerFlowIntegrationSet{
 			Enabled:                    r.Set.Enabled,
@@ -400,12 +416,14 @@ func (r *AlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) toOp
 			Comment:                    r.Set.Comment,
 		}
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &ApiAuthenticationWithJwtBearerFlowIntegrationUnset{
 			Enabled: r.Unset.Enabled,
 			Comment: r.Unset.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -416,6 +434,7 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &ExternalOauthIntegrationSet{
 			Enabled:                            r.Set.Enabled,
@@ -428,32 +447,39 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 			ExternalOauthRsaPublicKey:  r.Set.ExternalOauthRsaPublicKey,
 			ExternalOauthRsaPublicKey2: r.Set.ExternalOauthRsaPublicKey2,
 
-			ExternalOauthAnyRoleMode:    r.Set.ExternalOauthAnyRoleMode,
-			ExternalOauthScopeDelimiter: r.Set.ExternalOauthScopeDelimiter,
-			Comment:                     r.Set.Comment,
+			ExternalOauthAnyRoleMode:           r.Set.ExternalOauthAnyRoleMode,
+			ExternalOauthScopeDelimiter:        r.Set.ExternalOauthScopeDelimiter,
+			ExternalOauthScopeMappingAttribute: r.Set.ExternalOauthScopeMappingAttribute,
+			Comment:                            r.Set.Comment,
 		}
+
 		if r.Set.ExternalOauthBlockedRolesList != nil {
 			opts.Set.ExternalOauthBlockedRolesList = &BlockedRolesList{
 				BlockedRolesList: r.Set.ExternalOauthBlockedRolesList.BlockedRolesList,
 			}
 		}
+
 		if r.Set.ExternalOauthAllowedRolesList != nil {
 			opts.Set.ExternalOauthAllowedRolesList = &AllowedRolesList{
 				AllowedRolesList: r.Set.ExternalOauthAllowedRolesList.AllowedRolesList,
 			}
 		}
+
 		if r.Set.ExternalOauthAudienceList != nil {
 			opts.Set.ExternalOauthAudienceList = &AudienceList{
 				AudienceList: r.Set.ExternalOauthAudienceList.AudienceList,
 			}
 		}
+
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &ExternalOauthIntegrationUnset{
 			Enabled:                   r.Unset.Enabled,
 			ExternalOauthAudienceList: r.Unset.ExternalOauthAudienceList,
 		}
 	}
+
 	return opts
 }
 
@@ -464,6 +490,7 @@ func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *A
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &OauthForPartnerApplicationsIntegrationSet{
 			Enabled:                   r.Set.Enabled,
@@ -474,18 +501,22 @@ func (r *AlterOauthForPartnerApplicationsSecurityIntegrationRequest) toOpts() *A
 
 			Comment: r.Set.Comment,
 		}
+
 		if r.Set.BlockedRolesList != nil {
 			opts.Set.BlockedRolesList = &BlockedRolesList{
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
+
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &OauthForPartnerApplicationsIntegrationUnset{
 			Enabled:                r.Unset.Enabled,
 			OauthUseSecondaryRoles: r.Unset.OauthUseSecondaryRoles,
 		}
 	}
+
 	return opts
 }
 
@@ -496,6 +527,7 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &OauthForCustomClientsIntegrationSet{
 			Enabled:                     r.Set.Enabled,
@@ -511,17 +543,21 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 			OauthClientRsaPublicKey2:  r.Set.OauthClientRsaPublicKey2,
 			Comment:                   r.Set.Comment,
 		}
+
 		if r.Set.PreAuthorizedRolesList != nil {
 			opts.Set.PreAuthorizedRolesList = &PreAuthorizedRolesList{
 				PreAuthorizedRolesList: r.Set.PreAuthorizedRolesList.PreAuthorizedRolesList,
 			}
 		}
+
 		if r.Set.BlockedRolesList != nil {
 			opts.Set.BlockedRolesList = &BlockedRolesList{
 				BlockedRolesList: r.Set.BlockedRolesList.BlockedRolesList,
 			}
 		}
+
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &OauthForCustomClientsIntegrationUnset{
 			Enabled:                  r.Unset.Enabled,
@@ -531,6 +567,7 @@ func (r *AlterOauthForCustomClientsSecurityIntegrationRequest) toOpts() *AlterOa
 			OauthUseSecondaryRoles:   r.Unset.OauthUseSecondaryRoles,
 		}
 	}
+
 	return opts
 }
 
@@ -543,6 +580,7 @@ func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityInteg
 
 		RefreshSaml2SnowflakePrivateKey: r.RefreshSaml2SnowflakePrivateKey,
 	}
+
 	if r.Set != nil {
 		opts.Set = &Saml2IntegrationSet{
 			Enabled:                        r.Set.Enabled,
@@ -564,6 +602,7 @@ func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityInteg
 			Comment:                        r.Set.Comment,
 		}
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &Saml2IntegrationUnset{
 			Saml2ForceAuthn:            r.Unset.Saml2ForceAuthn,
@@ -572,6 +611,7 @@ func (r *AlterSaml2SecurityIntegrationRequest) toOpts() *AlterSaml2SecurityInteg
 			Comment:                    r.Unset.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -582,6 +622,7 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
+
 	if r.Set != nil {
 		opts.Set = &ScimIntegrationSet{
 			Enabled:       r.Set.Enabled,
@@ -590,6 +631,7 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			Comment:       r.Set.Comment,
 		}
 	}
+
 	if r.Unset != nil {
 		opts.Unset = &ScimIntegrationUnset{
 			Enabled:       r.Unset.Enabled,
@@ -597,6 +639,7 @@ func (r *AlterScimSecurityIntegrationRequest) toOpts() *AlterScimSecurityIntegra
 			SyncPassword:  r.Unset.SyncPassword,
 		}
 	}
+
 	return opts
 }
 

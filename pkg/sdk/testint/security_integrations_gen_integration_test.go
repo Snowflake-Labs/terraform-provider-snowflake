@@ -878,7 +878,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithExternalOauthAudienceList(sdk.AudienceListRequest{AudienceList: []sdk.AudienceListItem{{Item: "foo"}}}).
 					WithExternalOauthAnyRoleMode(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable).
 					WithExternalOauthScopeDelimiter(" ").
-					WithComment("foo"),
+					WithComment(sdk.StringAllowEmpty{Value: "foo"}),
 			)
 		err := client.SecurityIntegrations.AlterExternalOauth(ctx, setRequest)
 		require.NoError(t, err)

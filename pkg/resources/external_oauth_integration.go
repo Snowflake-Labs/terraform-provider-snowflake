@@ -93,10 +93,18 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			value := d.Get("external_oauth_add_privileged_roles_to_blocked_list").(bool)
-			if !value {
-				return old == new
+			params := d.Get(ParametersAttributeName).([]any)
+			var found *sdk.Parameter
+			for _, v := range params {
+				param := v.(sdk.Parameter)
+				if param.Key == "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST" {
+					found = &param
+				}
 			}
+			if found == nil || !helpers.StringToBool(found.Value) {
+				return false
+			}
+
 			return old == "ACCOUNTADMIN" || old == "SECURITYADMIN"
 		},
 		ConflictsWith: []string{"external_oauth_allowed_roles_list"},
@@ -157,6 +165,14 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeExternalOauthSecurityIntegrationSchema,
 		},
 	},
+	ParametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Paramteres related to this security integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowExternalOauthParametersSchema,
+		},
+	},
 }
 
 func ExternalOauthIntegration() *schema.Resource {
@@ -172,16 +188,6 @@ func ExternalOauthIntegration() *schema.Resource {
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
 			ForceNewIfChangeToEmptyString("external_oauth_scope_mapping_attribute"),
 			ForceNewIfChangeToEmptySet[any]("external_oauth_jws_keys_url"),
-			// ModifyStateIfParameterSet("external_oauth_blocked_roles_list", "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", func(d *schema.ResourceDiff) error {
-			// 	allowed := d.Get("external_oauth_allowed_roles_list").(*schema.Set)
-			// 	if allowed.Len() > 0 {
-			// 		return nil
-			// 	}
-			// 	set := d.Get("external_oauth_blocked_roles_list").(*schema.Set)
-			// 	set.Add("ACCOUNTADMIN")
-			// 	set.Add("SECURITYADMIN")
-			// 	return d.SetNew("external_oauth_blocked_roles_list", set)
-			// }),
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "external_oauth_type", "comment"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "external_oauth_issuer", "external_oauth_jws_keys_url", "external_oauth_any_role_mode",
 				"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2", "external_oauth_blocked_roles_list", "external_oauth_allowed_roles_list",
@@ -503,20 +509,21 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			}
 			if err = handleExternalChangesToObjectInDescribe(d,
 				describeMapping{"external_oauth_issuer", "external_oauth_issuer", externalOauthIssuer.Value, externalOauthIssuer.Value, nil},
-				describeMapping{"external_oauth_jws_keys_url", "external_oauth_jws_keys_url", externalOauthJwsKeysUrl.Value, externalOauthJwsKeysUrl.Value, nil},
+				describeMapping{"external_oauth_jws_keys_url", "external_oauth_jws_keys_url", externalOauthJwsKeysUrl.Value, listValueToSlice(externalOauthJwsKeysUrl.Value, true), nil},
 				describeMapping{"external_oauth_any_role_mode", "external_oauth_any_role_mode", externalOauthAnyRoleMode.Value, externalOauthAnyRoleMode.Value, nil},
 				describeMapping{"external_oauth_rsa_public_key", "external_oauth_rsa_public_key", externalOauthRsaPublicKey.Value, externalOauthRsaPublicKey.Value, nil},
 				describeMapping{"external_oauth_rsa_public_key_2", "external_oauth_rsa_public_key_2", externalOauthRsaPublicKey2.Value, externalOauthRsaPublicKey2.Value, nil},
-				describeMapping{"external_oauth_blocked_roles_list", "external_oauth_blocked_roles_list", externalOauthBlockedRolesList.Value, externalOauthBlockedRolesList.Value, nil},
-				describeMapping{"external_oauth_allowed_roles_list", "external_oauth_allowed_roles_list", externalOauthAllowedRolesList.Value, externalOauthAllowedRolesList.Value, nil},
-				describeMapping{"external_oauth_audience_list", "external_oauth_audience_list", externalOauthAudienceList.Value, externalOauthAudienceList.Value, nil},
-				describeMapping{"external_oauth_token_user_mapping_claim", "external_oauth_token_user_mapping_claim", externalOauthTokenUserMappingClaim.Value, externalOauthTokenUserMappingClaim.Value, nil},
+				describeMapping{"external_oauth_blocked_roles_list", "external_oauth_blocked_roles_list", externalOauthBlockedRolesList.Value, listValueToSlice(externalOauthBlockedRolesList.Value, false), nil},
+				describeMapping{"external_oauth_allowed_roles_list", "external_oauth_allowed_roles_list", externalOauthAllowedRolesList.Value, listValueToSlice(externalOauthAllowedRolesList.Value, false), nil},
+				describeMapping{"external_oauth_audience_list", "external_oauth_audience_list", externalOauthAudienceList.Value, listValueToSlice(externalOauthAudienceList.Value, false), nil},
+				describeMapping{"external_oauth_token_user_mapping_claim", "external_oauth_token_user_mapping_claim", externalOauthTokenUserMappingClaim.Value, listValueToSlice(externalOauthTokenUserMappingClaim.Value, true), nil},
 				describeMapping{"external_oauth_snowflake_user_mapping_attribute", "external_oauth_snowflake_user_mapping_attribute", externalOauthSnowflakeUserMappingAttribute.Value, externalOauthSnowflakeUserMappingAttribute.Value, nil},
 				describeMapping{"external_oauth_scope_delimiter", "external_oauth_scope_delimiter", externalOauthScopeDelimiter.Value, externalOauthScopeDelimiter.Value, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		}
+
 		if !d.GetRawConfig().IsNull() {
 			if v := d.GetRawConfig().AsValueMap()["external_oauth_jws_keys_url"]; !v.IsNull() {
 				if err = d.Set("external_oauth_jws_keys_url", ctyValToSliceString(v.AsValueSlice())); err != nil {
@@ -577,35 +584,38 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.ExternalOauthSecurityIntegrationPropertiesToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
-		// param := "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"
-		// params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		// 	Like: &sdk.Like{
-		// 		Pattern: sdk.Pointer(param),
-		// 	},
-		// 	In: &sdk.ParametersIn{
-		// 		Account: sdk.Pointer(true),
-		// 	},
-		// })
-		// if err != nil {
-		// 	return diag.FromErr(err)
-		// }
-		// var found *sdk.Parameter
-		// for _, v := range params {
-		// 	if v.Key == param {
-		// 		found = v
-		// 		break
-		// 	}
-		// }
-		// if found == nil {
-		// 	return diag.FromErr(fmt.Errorf("parameter %s not found", param))
-		// }
-		// paramVal := helpers.StringToBool(found.Value)
-		// if !paramVal {
-		// 	return nil
-		// }
-		// if err := d.Set("external_oauth_add_privileged_roles_to_blocked_list", paramVal); err != nil {
-		// 	return diag.FromErr(err)
-		// }
+
+		params, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer("%%EXTERNAL_OAUTH%%"),
+			},
+			In: &sdk.ParametersIn{
+				Account: sdk.Pointer(true),
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set(ParametersAttributeName, []map[string]any{schemas.ExternalOauthParametersToSchema(params)}); err != nil {
+			return diag.FromErr(err)
+		}
+		// handle blocked_roles_list
+		found, err := collections.FindOne(params, func(p *sdk.Parameter) bool { return p.Key == "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST" })
+		if err == nil && (*found).Value == "true" {
+			externalOauthBlockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST"
+			})
+			x := d.Get("external_oauth_blocked_roles_list")
+			fmt.Println(x)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("external_oauth_blocked_roles_list", listValueToSlice(externalOauthBlockedRolesList.Value, false)); err != nil {
+				return diag.FromErr(err)
+			}
+			x = d.Get("external_oauth_blocked_roles_list")
+			fmt.Println(x)
+		}
 		return nil
 	}
 }
@@ -616,8 +626,7 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	set, unset := sdk.NewExternalOauthIntegrationSetRequest(), sdk.NewExternalOauthIntegrationUnsetRequest()
 
 	if d.HasChange("comment") {
-		// TODO(this pr) add to sdk
-		// set.WithComment(sdk.StringAllowEmpty{Value: d.Get("comment").(string)})
+		set.WithComment(sdk.StringAllowEmpty{Value: d.Get("comment").(string)})
 	}
 
 	if d.HasChange("enabled") {
@@ -711,8 +720,7 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("external_oauth_scope_mapping_attribute") {
-		// TODO(this pr) add to sdk
-		// set.WithExternalOauthScopeMappingAttribute(d.Get("external_oauth_scope_mapping_attribute").(string))
+		set.WithExternalOauthScopeMappingAttribute(d.Get("external_oauth_scope_mapping_attribute").(string))
 	}
 
 	if d.HasChange("external_oauth_snowflake_user_mapping_attribute") {

@@ -318,13 +318,15 @@ var externalOauthIntegrationSetDef = g.NewQueryStruct("ExternalOauthIntegrationS
 		g.ParameterOptions(),
 	).
 	OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_DELIMITER", g.ParameterOptions().SingleQuotes()).
-	OptionalComment().
+	OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE", g.ParameterOptions().SingleQuotes()).
+	// TODO(SNOW-1461780): use COMMENT in unset and here use OptionalComment
+	OptionalAssignment("COMMENT", "StringAllowEmpty", g.ParameterOptions()).
 	WithValidation(g.ConflictingFields, "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList").
 	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey").
 	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute",
 		"ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2",
-		"ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment")
+		"ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "ExternalOauthScopeMappingAttribute", "Comment")
 
 var externalOauthIntegrationUnsetDef = g.NewQueryStruct("ExternalOauthIntegrationUnset").
 	OptionalSQL("ENABLED").

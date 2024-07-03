@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -51,3 +52,17 @@ func ExternalOauthSecurityIntegrationPropertiesToSchema(securityIntegrationPrope
 }
 
 var _ = ExternalOauthSecurityIntegrationPropertiesToSchema
+
+var ShowExternalOauthParametersSchema = map[string]*schema.Schema{
+	strings.ToLower(string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)): ParameterListSchema,
+}
+
+func ExternalOauthParametersToSchema(parameters []*sdk.Parameter) map[string]any {
+	schemaMap := make(map[string]any)
+	for _, param := range parameters {
+		if slices.Contains([]sdk.AccountParameter{sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList}, sdk.AccountParameter(param.Key)) {
+			schemaMap[strings.ToLower(param.Key)] = []map[string]any{ParameterToSchema(param)}
+		}
+	}
+	return schemaMap
+}
