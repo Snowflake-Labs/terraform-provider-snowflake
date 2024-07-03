@@ -683,7 +683,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 			}
 			set.WithEnabled(parsed)
 		} else {
-			// TODO(SNOW-1517559): UNSET is not implemented
+			// TODO(SNOW-1515781): UNSET is not implemented
 			set.WithEnabled(false)
 		}
 	}
@@ -710,7 +710,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("saml2_sp_initiated_login_page_label") {
-		// TODO(SNOW-1517559): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
+		// TODO(SNOW-1515781): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
 		set.WithSaml2SpInitiatedLoginPageLabel(d.Get("saml2_sp_initiated_login_page_label").(string))
 	}
 
@@ -722,7 +722,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 			}
 			set.WithSaml2EnableSpInitiated(parsed)
 		} else {
-			// TODO(SNOW-1517559): UNSET is not implemented
+			// TODO(SNOW-1515781): UNSET is not implemented
 			set.WithSaml2EnableSpInitiated(false)
 		}
 	}
@@ -735,7 +735,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 			}
 			set.WithSaml2SignRequest(parsed)
 		} else {
-			// TODO(SNOW-1517559): UNSET is not implemented
+			// TODO(SNOW-1515781): UNSET is not implemented
 			set.WithSaml2SignRequest(false)
 		}
 	}
@@ -768,23 +768,23 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 			}
 			set.WithSaml2ForceAuthn(parsed)
 		} else {
-			// TODO(SNOW-1517559): UNSET is not implemented
+			// TODO(SNOW-1515781): UNSET is not implemented
 			set.WithSaml2ForceAuthn(false)
 		}
 	}
 
 	if d.HasChange("saml2_snowflake_issuer_url") {
-		// TODO(SNOW-1517559): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
+		// TODO(SNOW-1515781): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
 		set.WithSaml2SnowflakeIssuerUrl(d.Get("saml2_snowflake_issuer_url").(string))
 	}
 
 	if d.HasChange("saml2_snowflake_acs_url") {
-		// TODO(SNOW-1517559): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
+		// TODO(SNOW-1515781): UNSET is not implemented and SET with empty value is invalid (conditional ForceNew on unset)
 		set.WithSaml2SnowflakeAcsUrl(d.Get("saml2_snowflake_acs_url").(string))
 	}
 
 	if d.HasChange("allowed_user_domains") {
-		// TODO(SNOW-1517559): UNSET is not implemented and SET with empty list is invalid (conditional ForceNew on non-empty to empty set)
+		// TODO(SNOW-1515781): UNSET is not implemented and SET with empty list is invalid (conditional ForceNew on non-empty to empty set)
 		v := d.Get("allowed_user_domains").(*schema.Set).List()
 		userDomains := make([]sdk.UserDomain, len(v))
 		for i := range v {
@@ -796,7 +796,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("allowed_email_patterns") {
-		// TODO(SNOW-1517559): UNSET is not implemented and SET with empty list is invalid (conditional ForceNew on non-empty to empty set)
+		// TODO(SNOW-SNOW-1515781): UNSET is not implemented and SET with empty list is invalid (conditional ForceNew on non-empty to empty set)
 		v := d.Get("allowed_email_patterns").(*schema.Set).List()
 		emailPatterns := make([]sdk.EmailPattern, len(v))
 		for i := range v {

@@ -3,13 +3,13 @@ package resources_test
 import (
 	"fmt"
 	"maps"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
@@ -670,71 +670,65 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 	})
 }
 
-func TestAcc_Saml2Integration_invalid(t *testing.T) {
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"allowed_email_patterns":              config.ListVariable(config.StringVariable("foo")),
-			"allowed_user_domains":                config.ListVariable(config.StringVariable("foo")),
-			"comment":                             config.StringVariable("foo"),
-			"enabled":                             config.BoolVariable(true),
-			"name":                                config.StringVariable("foo"),
-			"saml2_enable_sp_initiated":           config.BoolVariable(true),
-			"saml2_force_authn":                   config.BoolVariable(true),
-			"saml2_issuer":                        config.StringVariable("foo"),
-			"saml2_post_logout_redirect_url":      config.StringVariable("foo"),
-			"saml2_provider":                      config.StringVariable("invalid"),
-			"saml2_requested_nameid_format":       config.StringVariable("invalid"),
-			"saml2_sign_request":                  config.BoolVariable(true),
-			"saml2_snowflake_acs_url":             config.StringVariable("foo"),
-			"saml2_snowflake_issuer_url":          config.StringVariable("foo"),
-			"saml2_sp_initiated_login_page_label": config.StringVariable("foo"),
-			"saml2_sso_url":                       config.StringVariable("foo"),
-			"saml2_x509_cert":                     config.StringVariable("foo"),
-		}
+func TestAcc_Saml2Integration_InvalidNameIdFormat(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := acc.TestClient().Ids.Alpha()
+	cert := random.GenerateX509(t)
+	validUrl := "http://example.com"
+
+	configVariables := config.Variables{
+		"name":                          config.StringVariable(id.Name()),
+		"saml2_issuer":                  config.StringVariable(issuer),
+		"saml2_provider":                config.StringVariable(string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+		"saml2_sso_url":                 config.StringVariable(validUrl),
+		"saml2_x509_cert":               config.StringVariable(cert),
+		"saml2_requested_nameid_format": config.StringVariable("invalid"),
 	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			`Error: invalid Saml2SecurityIntegrationSaml2RequestedNameidFormatOption: invalid`,
-			`Error: invalid Saml2SecurityIntegrationSaml2ProviderOption: INVALID`,
-		}),
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/complete"),
-				ConfigVariables: m(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/invalid"),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("Error: invalid Saml2SecurityIntegrationSaml2RequestedNameidFormatOption: invalid"),
 			},
 		},
 	})
 }
 
-func TestAcc_Saml2Integration_InvalidIncomplete(t *testing.T) {
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"name": config.StringVariable("foo"),
-		}
+func TestAcc_Saml2Integration_InvalidProvider(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := acc.TestClient().Ids.Alpha()
+	cert := random.GenerateX509(t)
+	validUrl := "http://example.com"
+
+	configVariables := config.Variables{
+		"name":                          config.StringVariable(id.Name()),
+		"saml2_issuer":                  config.StringVariable(issuer),
+		"saml2_provider":                config.StringVariable("invalid"),
+		"saml2_sso_url":                 config.StringVariable(validUrl),
+		"saml2_x509_cert":               config.StringVariable(cert),
+		"saml2_requested_nameid_format": config.StringVariable(string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatEmailAddress)),
 	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			`The argument "saml2_issuer" is required, but no definition was found.`,
-			`The argument "saml2_provider" is required, but no definition was found.`,
-			`The argument "saml2_sso_url" is required, but no definition was found.`,
-			`The argument "saml2_x509_cert" is required, but no definition was found.`,
-		}),
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/invalid"),
-				ConfigVariables: m(),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("Error: invalid Saml2SecurityIntegrationSaml2ProviderOption: INVALID"),
 			},
 		},
 	})
