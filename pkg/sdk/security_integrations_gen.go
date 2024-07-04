@@ -389,7 +389,7 @@ type OauthForPartnerApplicationsIntegrationSet struct {
 	OauthRefreshTokenValidity *int                                             `ddl:"parameter" sql:"OAUTH_REFRESH_TOKEN_VALIDITY"`
 	OauthUseSecondaryRoles    *OauthSecurityIntegrationUseSecondaryRolesOption `ddl:"parameter" sql:"OAUTH_USE_SECONDARY_ROLES"`
 	BlockedRolesList          *BlockedRolesList                                `ddl:"parameter,parentheses" sql:"BLOCKED_ROLES_LIST"`
-	Comment                   *string                                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Comment                   *StringAllowEmpty                                `ddl:"parameter" sql:"COMMENT"`
 }
 
 type OauthForPartnerApplicationsIntegrationUnset struct {

@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"reflect"
-	"strconv"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -20,14 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO: Check all descriptions and the whole schema
-
 var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Description: "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
 	},
 	"oauth_client": {
 		Type:             schema.TypeString,
@@ -38,10 +37,9 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationClientOption),
 	},
 	"oauth_redirect_uri": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// TODO: Desc this value is not returned by snowflake and the changes for this field won't be detected.
-		Description: "Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI.",
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: externalChangesNotDetectedFieldDescription("Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI. The field should be only set when OAUTH_CLIENT = LOOKER. In any other case the field should be left out empty."),
 	},
 	"enabled": {
 		Type:             schema.TypeString,
@@ -62,7 +60,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	"oauth_refresh_token_validity": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		Default:          -1,
+		Default:          IntDefault,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_validity"),
 		Description:      "Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.",
@@ -76,10 +74,13 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	},
 	"blocked_roles_list": {
 		Type: schema.TypeSet,
-		Elem: &schema.Schema{Type: schema.TypeString},
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
 		// TODO(SNOW-1517937): Check if can make optional
 		Required:         true,
-		Description:      "Comma-separated list of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
+		Description:      "A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("blocked_roles_list"),
 	},
 	"comment": {
@@ -101,7 +102,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration.",
 		Elem: &schema.Resource{
-			Schema: schemas.SecurityIntegrationDescribeSchema,
+			Schema: schemas.DescribeOauthIntegrationForPartnerApplications,
 		},
 	},
 }
@@ -155,7 +156,7 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		return nil, err
 	}
 
-	if err = d.Set("enabled", strconv.FormatBool(integration.Enabled)); err != nil {
+	if err = d.Set("enabled", booleanStringFromBool(integration.Enabled)); err != nil {
 		return nil, err
 	}
 
@@ -224,7 +225,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 		req.WithOauthIssueRefreshTokens(parsedBool)
 	}
 
-	if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
+	if v := d.Get("oauth_refresh_token_validity").(int); v != IntDefault {
 		req.WithOauthRefreshTokenValidity(v)
 	}
 
@@ -236,7 +237,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 		req.WithOauthUseSecondaryRoles(useSecondaryRolesOption)
 	}
 
-	if v, ok := d.GetOk("blocked_roles_list"); ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := d.GetOk("blocked_roles_list"); ok {
 		elems := expandStringList(v.(*schema.Set).List())
 		blockedRoles := make([]sdk.AccountObjectIdentifier, len(elems))
 		for i := range elems {
@@ -337,6 +338,10 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 			if err != nil {
 				return diag.FromErr(err)
 			}
+			oauthRefreshTokenValidityValue, err := strconv.ParseInt(oauthRefreshTokenValidity.Value, 10, 64)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
 			oauthUseSecondaryRoles, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_USE_SECONDARY_ROLES"
@@ -347,14 +352,14 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 
 			if err = handleExternalChangesToObjectInDescribe(d,
 				describeMapping{"oauth_issue_refresh_tokens", "oauth_issue_refresh_tokens", oauthIssueRefreshTokens.Value, oauthIssueRefreshTokens.Value, nil},
-				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidity.Value, oauthRefreshTokenValidity.Value, nil},
+				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidity.Value, oauthRefreshTokenValidityValue, nil},
 				describeMapping{"oauth_use_secondary_roles", "oauth_use_secondary_roles", oauthUseSecondaryRoles.Value, oauthUseSecondaryRoles.Value, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err = setStateToValuesFromConfig(d, oauthIntegrationForPartnerApplicationsSchema, []string{
 			"enabled",
 			"oauth_issue_refresh_tokens",
 			"oauth_refresh_token_validity",
@@ -367,7 +372,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecurityIntegrationsDescriptionsToSchema(integrationProperties)}); err != nil {
+		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.DescribeOauthIntegrationForPartnerApplicationsToSchema(integrationProperties)}); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -387,10 +392,12 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 			blockedRoles[i] = sdk.NewAccountObjectIdentifier(elems[i])
 		}
 		set.WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: blockedRoles})
+		// can call SET with an empty list
 	}
 
 	if d.HasChange("comment") {
 		set.WithComment(d.Get("comment").(string))
+		// TODO(SNOW-1515781): No UNSET
 	}
 
 	if d.HasChange("enabled") {
@@ -413,21 +420,22 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 			}
 			set.WithOauthIssueRefreshTokens(parsedBool)
 		} else {
-			// TODO: Not UNSET
+			// TODO(SNOW-1515781): No UNSET
 			set.WithOauthIssueRefreshTokens(true)
 		}
 	}
 
 	if d.HasChange("oauth_redirect_uri") {
+		// Field can only be set when oauth_client = LOOKER and is required (shouldn't be UNSET in those cases).
+		// With any other case oauth_client, the field shouldn't be set.
 		set.WithOauthRedirectUri(d.Get("oauth_redirect_uri").(string))
-		// TODO: ForceNew on empty set
 	}
 
 	if d.HasChange("oauth_refresh_token_validity") {
 		if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
 			set.WithOauthRefreshTokenValidity(v)
 		} else {
-			// TODO: No UNSET
+			// TODO(SNOW-1515781): No UNSET
 			set.WithOauthRefreshTokenValidity(7776000)
 		}
 	}
@@ -443,16 +451,19 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 			unset.WithOauthUseSecondaryRoles(true)
 		}
 	}
+
 	if !reflect.DeepEqual(*set, sdk.OauthForPartnerApplicationsIntegrationSetRequest{}) {
 		if err := client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSet(*set)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+
 	if !reflect.DeepEqual(*unset, sdk.OauthForPartnerApplicationsIntegrationUnsetRequest{}) {
 		if err := client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+
 	return ReadContextOauthIntegrationForPartnerApplications(false)(ctx, d, meta)
 }
 
@@ -465,7 +476,7 @@ func DeleteContextSecurityIntegration(ctx context.Context, d *schema.ResourceDat
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Error deleting integration",
+				Summary:  "Error deleting oauth integration for partner applications",
 				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
 			},
 		}

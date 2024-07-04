@@ -960,10 +960,10 @@ func TestSecurityIntegrations_AlterOauthForPartnerApplications(t *testing.T) {
 			OauthRefreshTokenValidity: Pointer(42),
 			OauthUseSecondaryRoles:    Pointer(OauthSecurityIntegrationUseSecondaryRolesNone),
 			BlockedRolesList:          &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
-			Comment:                   Pointer("a"),
+			Comment:                   Pointer(StringAllowEmpty{""}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
-			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = 'a'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = ''", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {

@@ -36,22 +36,6 @@ func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.Impor
 	}
 }
 
-// ComposeAggregateImportStateCheck does the same as ComposeImportStateCheck, but it aggregates all the occurred errors,
-// instead of returning the first encountered one.
-func ComposeAggregateImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		var result []error
-
-		for i, f := range fs {
-			if err := f(s); err != nil {
-				result = append(result, fmt.Errorf("check %d/%d error: %w", i+1, len(fs), err))
-			}
-		}
-
-		return errors.Join(result...)
-	}
-}
-
 // TestCheckResourceAttrInstanceState is based on unexported testCheckResourceAttrInstanceState from teststep_providers_test.go
 func TestCheckResourceAttrInstanceState(id string, attributeName, attributeValue string) resource.ImportStateCheckFunc {
 	return func(is []*terraform.InstanceState) error {

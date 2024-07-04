@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO [SNOW-1348100]: multiple PRs touching the security integrations are in progress, this should be filled by all the possible properties (the mapping method below should be too)
-var SecurityIntegrationDescribeSchema = map[string]*schema.Schema{
+var DescribeOauthIntegrationForPartnerApplications = map[string]*schema.Schema{
 	"oauth_client_type":                     DescribePropertyListSchema,
 	"oauth_redirect_uri":                    DescribePropertyListSchema,
 	"enabled":                               DescribePropertyListSchema,
@@ -31,7 +30,7 @@ var SecurityIntegrationDescribeSchema = map[string]*schema.Schema{
 	"oauth_allowed_token_endpoints":         DescribePropertyListSchema,
 }
 
-func SecurityIntegrationsDescriptionsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
+func DescribeOauthIntegrationForPartnerApplicationsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationProperties := make(map[string]any)
 	for _, property := range integrationProperties {
 		property := property
