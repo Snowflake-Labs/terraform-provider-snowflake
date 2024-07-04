@@ -5,6 +5,8 @@ description: |-
   A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see Introduction to Secure Data Sharing https://docs.snowflake.com/en/user-guide/data-sharing-intro.
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
+
 # snowflake_shared_database (Resource)
 
 A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).

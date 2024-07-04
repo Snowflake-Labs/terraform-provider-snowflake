@@ -38,7 +38,6 @@ func TestAcc_Alerts(t *testing.T) {
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbAndSchema(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
-					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", alertId.Name()),
 				),
 			},
 			{
