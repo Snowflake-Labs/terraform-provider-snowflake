@@ -121,6 +121,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.NotificationIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.NotificationIntegrations.ShowByID)
 	},
+	resources.OauthIntegrationForPartnerApplications: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
 	resources.PasswordPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.PasswordPolicies.ShowByID)
 	},
