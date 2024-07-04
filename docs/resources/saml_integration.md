@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_saml_integration (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_saml2_integration](./saml2_integration) instead. <deprecation>
 
 ## Example Usage
 

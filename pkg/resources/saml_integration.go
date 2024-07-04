@@ -141,10 +141,11 @@ var samlIntegrationSchema = map[string]*schema.Schema{
 // SAMLIntegration returns a pointer to the resource representing a SAML2 security integration.
 func SAMLIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateSAMLIntegration,
-		Read:   ReadSAMLIntegration,
-		Update: UpdateSAMLIntegration,
-		Delete: DeleteSAMLIntegration,
+		Create:             CreateSAMLIntegration,
+		Read:               ReadSAMLIntegration,
+		Update:             UpdateSAMLIntegration,
+		Delete:             DeleteSAMLIntegration,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_saml2_integration instead.",
 
 		Schema: samlIntegrationSchema,
 		Importer: &schema.ResourceImporter{

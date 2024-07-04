@@ -116,7 +116,7 @@ func SCIMIntegration() *schema.Resource {
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
-				Upgrade: v091ScimIntegrationStateUpgrader,
+				Upgrade: v092ScimIntegrationStateUpgrader,
 			},
 		},
 	}
@@ -278,13 +278,11 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(err)
 		}
 
-		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"comment", "comment", integration.Comment, integration.Comment, nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
+		if err = d.Set("comment", integration.Comment); err != nil {
+			return diag.FromErr(err)
+		}
 
+		if withExternalChangesMarking {
 			networkPolicyProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" })
 			if err != nil {
 				return diag.FromErr(err)
@@ -314,11 +312,6 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 			if v := d.GetRawConfig().AsValueMap()["sync_password"]; !v.IsNull() {
 				if err = d.Set("sync_password", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["comment"]; !v.IsNull() {
-				if err = d.Set("comment", v.AsString()); err != nil {
 					return diag.FromErr(err)
 				}
 			}
