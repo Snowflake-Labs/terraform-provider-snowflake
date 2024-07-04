@@ -29,6 +29,7 @@ const (
 	ResourceMonitor              resource = "snowflake_resource_monitor"
 	Role                         resource = "snowflake_role"
 	RowAccessPolicy              resource = "snowflake_row_access_policy"
+	Saml2SecurityIntegration     resource = "snowflake_saml2_integration"
 	Schema                       resource = "snowflake_schema"
 	ScimSecurityIntegration      resource = "snowflake_scim_integration"
 	SecondaryDatabase            resource = "snowflake_secondary_database"

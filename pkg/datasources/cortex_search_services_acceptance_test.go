@@ -13,19 +13,21 @@ import (
 )
 
 func TestAcc_CortexSearchServices_complete(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	dataSourceName := "data.snowflake_cortex_search_services.csss"
-	tableName := name + "_table"
+	dataSourceName := "data.snowflake_cortex_search_services.test"
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
-			"on":         config.StringVariable("id"),
-			"database":   config.StringVariable(acc.TestDatabaseName),
-			"schema":     config.StringVariable(acc.TestSchemaName),
-			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
-			"comment":    config.StringVariable("Terraform acceptance test"),
-			"table_name": config.StringVariable(tableName),
+			"database":  config.StringVariable(databaseId.Name()),
+			"schema":    config.StringVariable(schemaId.Name()),
+			"table":     config.StringVariable(tableId.Name()),
+			"name":      config.StringVariable(id.Name()),
+			"on":        config.StringVariable("SOME_TEXT"),
+			"warehouse": config.StringVariable(acc.TestWarehouseName),
+			"query":     config.StringVariable(fmt.Sprintf("select SOME_TEXT from %s", tableId.FullyQualifiedName())),
+			"comment":   config.StringVariable("Terraform acceptance test"),
 		}
 	}
 	variableSet1 := m()
@@ -42,35 +44,24 @@ func TestAcc_CortexSearchServices_complete(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "like.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "like.0.pattern", name),
-					resource.TestCheckResourceAttr(dataSourceName, "in.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "in.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(dataSourceName, "starts_with", name),
-					resource.TestCheckResourceAttr(dataSourceName, "limit.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "limit.0.rows", "1"),
-
-					// computed attributes
-					resource.TestCheckResourceAttr(dataSourceName, "records.#", "1"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.created_on"),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.name", name),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.database_name", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.schema_name", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "cortex_search_services.0.created_on"),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.name", id.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.database_name", databaseId.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.schema_name", schemaId.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.comment", "Terraform acceptance test"),
 				),
 			},
 			{
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "records.#", "1"),
-
-					// re-check computed attributes to ensure we're getting the same record
-					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.created_on"),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.name", name),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.database_name", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.schema_name", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(dataSourceName, "records.0.comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "cortex_search_services.0.created_on"),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.name", id.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.database_name", databaseId.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.schema_name", schemaId.Name()),
+					resource.TestCheckResourceAttr(dataSourceName, "cortex_search_services.0.comment", "Terraform acceptance test"),
 				),
 			},
 		},
@@ -113,7 +104,7 @@ func TestAcc_CortexSearchServices_emptyIn(t *testing.T) {
 
 func cortexSearchServicesDatasourceConfigDbAndSchema() string {
 	return fmt.Sprintf(`
-data "snowflake_cortex_search_services" "csss" {
+data "snowflake_cortex_search_services" "test" {
   in {
     database = "%s"
     schema   = "%s"
@@ -124,7 +115,7 @@ data "snowflake_cortex_search_services" "csss" {
 
 func cortexSearchServicesDatasourceEmptyIn() string {
 	return `
-data "snowflake_cortex_search_services" "csss" {
+data "snowflake_cortex_search_services" "test" {
   in {
   }
 }

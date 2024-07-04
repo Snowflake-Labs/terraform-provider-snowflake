@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,7 +29,7 @@ var securityIntegrationsSchema = map[string]*schema.Schema{
 		Description: "Holds the aggregated output of all security integrations details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"show_output": {
+				resources.ShowOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of SHOW SECURITY INTEGRATIONS.",
@@ -36,7 +37,7 @@ var securityIntegrationsSchema = map[string]*schema.Schema{
 						Schema: schemas.ShowSecurityIntegrationSchema,
 					},
 				},
-				"describe_output": {
+				resources.DescribeOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of DESCRIBE SECURITY INTEGRATIONS.",
@@ -88,8 +89,8 @@ func ReadSecurityIntegrations(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		flattenedSecurityIntegrations[i] = map[string]any{
-			"show_output":     []map[string]any{schemas.SecurityIntegrationToSchema(&securityIntegration)},
-			"describe_output": securityIntegrationDescriptions,
+			resources.ShowOutputAttributeName:     []map[string]any{schemas.SecurityIntegrationToSchema(&securityIntegration)},
+			resources.DescribeOutputAttributeName: securityIntegrationDescriptions,
 		}
 	}
 

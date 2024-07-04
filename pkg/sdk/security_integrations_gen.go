@@ -190,29 +190,29 @@ type CreateOauthForCustomClientsSecurityIntegrationOptions struct {
 
 // CreateSaml2SecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
 type CreateSaml2SecurityIntegrationOptions struct {
-	create                         bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace                      *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	securityIntegration            bool                    `ddl:"static" sql:"SECURITY INTEGRATION"`
-	IfNotExists                    *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                           AccountObjectIdentifier `ddl:"identifier"`
-	integrationType                string                  `ddl:"static" sql:"TYPE = SAML2"`
-	Enabled                        bool                    `ddl:"parameter" sql:"ENABLED"`
-	Saml2Issuer                    string                  `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
-	Saml2SsoUrl                    string                  `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
-	Saml2Provider                  string                  `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
-	Saml2X509Cert                  string                  `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
-	AllowedUserDomains             []UserDomain            `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
-	AllowedEmailPatterns           []EmailPattern          `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
-	Saml2SpInitiatedLoginPageLabel *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
-	Saml2EnableSpInitiated         *bool                   `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
-	Saml2SnowflakeX509Cert         *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
-	Saml2SignRequest               *bool                   `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
-	Saml2RequestedNameidFormat     *string                 `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
-	Saml2PostLogoutRedirectUrl     *string                 `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
-	Saml2ForceAuthn                *bool                   `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
-	Saml2SnowflakeIssuerUrl        *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
-	Saml2SnowflakeAcsUrl           *string                 `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
-	Comment                        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                         bool                                                      `ddl:"static" sql:"CREATE"`
+	OrReplace                      *bool                                                     `ddl:"keyword" sql:"OR REPLACE"`
+	securityIntegration            bool                                                      `ddl:"static" sql:"SECURITY INTEGRATION"`
+	IfNotExists                    *bool                                                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                           AccountObjectIdentifier                                   `ddl:"identifier"`
+	integrationType                string                                                    `ddl:"static" sql:"TYPE = SAML2"`
+	Enabled                        *bool                                                     `ddl:"parameter" sql:"ENABLED"`
+	Saml2Issuer                    string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
+	Saml2SsoUrl                    string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
+	Saml2Provider                  Saml2SecurityIntegrationSaml2ProviderOption               `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
+	Saml2X509Cert                  string                                                    `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
+	AllowedUserDomains             []UserDomain                                              `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
+	AllowedEmailPatterns           []EmailPattern                                            `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
+	Saml2SpInitiatedLoginPageLabel *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
+	Saml2EnableSpInitiated         *bool                                                     `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
+	Saml2SnowflakeX509Cert         *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
+	Saml2SignRequest               *bool                                                     `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
+	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
+	Saml2PostLogoutRedirectUrl     *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
+	Saml2ForceAuthn                *bool                                                     `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
+	Saml2SnowflakeIssuerUrl        *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
+	Saml2SnowflakeAcsUrl           *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
+	Comment                        *string                                                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 type UserDomain struct {
 	Domain string `ddl:"keyword,single_quotes"`
@@ -426,23 +426,23 @@ type AlterSaml2SecurityIntegrationOptions struct {
 	RefreshSaml2SnowflakePrivateKey *bool                   `ddl:"keyword" sql:"REFRESH SAML2_SNOWFLAKE_PRIVATE_KEY"`
 }
 type Saml2IntegrationSet struct {
-	Enabled                        *bool          `ddl:"parameter" sql:"ENABLED"`
-	Saml2Issuer                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
-	Saml2SsoUrl                    *string        `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
-	Saml2Provider                  *string        `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
-	Saml2X509Cert                  *string        `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
-	AllowedUserDomains             []UserDomain   `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
-	AllowedEmailPatterns           []EmailPattern `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
-	Saml2SpInitiatedLoginPageLabel *string        `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
-	Saml2EnableSpInitiated         *bool          `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
-	Saml2SnowflakeX509Cert         *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
-	Saml2SignRequest               *bool          `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
-	Saml2RequestedNameidFormat     *string        `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
-	Saml2PostLogoutRedirectUrl     *string        `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
-	Saml2ForceAuthn                *bool          `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
-	Saml2SnowflakeIssuerUrl        *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
-	Saml2SnowflakeAcsUrl           *string        `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
-	Comment                        *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Enabled                        *bool                                                     `ddl:"parameter" sql:"ENABLED"`
+	Saml2Issuer                    *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_ISSUER"`
+	Saml2SsoUrl                    *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SSO_URL"`
+	Saml2Provider                  *Saml2SecurityIntegrationSaml2ProviderOption              `ddl:"parameter,single_quotes" sql:"SAML2_PROVIDER"`
+	Saml2X509Cert                  *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_X509_CERT"`
+	AllowedUserDomains             []UserDomain                                              `ddl:"parameter,parentheses" sql:"ALLOWED_USER_DOMAINS"`
+	AllowedEmailPatterns           []EmailPattern                                            `ddl:"parameter,parentheses" sql:"ALLOWED_EMAIL_PATTERNS"`
+	Saml2SpInitiatedLoginPageLabel *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"`
+	Saml2EnableSpInitiated         *bool                                                     `ddl:"parameter" sql:"SAML2_ENABLE_SP_INITIATED"`
+	Saml2SnowflakeX509Cert         *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_X509_CERT"`
+	Saml2SignRequest               *bool                                                     `ddl:"parameter" sql:"SAML2_SIGN_REQUEST"`
+	Saml2RequestedNameidFormat     *Saml2SecurityIntegrationSaml2RequestedNameidFormatOption `ddl:"parameter,single_quotes" sql:"SAML2_REQUESTED_NAMEID_FORMAT"`
+	Saml2PostLogoutRedirectUrl     *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_POST_LOGOUT_REDIRECT_URL"`
+	Saml2ForceAuthn                *bool                                                     `ddl:"parameter" sql:"SAML2_FORCE_AUTHN"`
+	Saml2SnowflakeIssuerUrl        *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ISSUER_URL"`
+	Saml2SnowflakeAcsUrl           *string                                                   `ddl:"parameter,single_quotes" sql:"SAML2_SNOWFLAKE_ACS_URL"`
+	Comment                        *string                                                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 type Saml2IntegrationUnset struct {
 	Saml2ForceAuthn            *bool `ddl:"keyword" sql:"SAML2_FORCE_AUTHN"`

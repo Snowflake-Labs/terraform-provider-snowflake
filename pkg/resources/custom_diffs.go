@@ -4,12 +4,11 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,6 +58,30 @@ func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectPar
 	}
 }
 
+// ForceNewIfChangeToEmptySlice sets a ForceNew for a list field which was set to an empty value.
+func ForceNewIfChangeToEmptySlice[T any](key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.([]T), newValue.([]T)
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+// ForceNewIfChangeToEmptySet sets a ForceNew for a list field which was set to an empty value.
+func ForceNewIfChangeToEmptySet(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.(*schema.Set).List(), newValue.(*schema.Set).List()
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+// ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
+func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldString, newString := oldValue.(string), newValue.(string)
+		return len(oldString) > 0 && len(newString) == 0
+	})
+}
+
 // TODO [follow-up PR]: test
 func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
@@ -73,10 +96,49 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	})
 }
 
-// ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
-func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
-	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
-		oldString, newString := oldValue.(string), newValue.(string)
-		return len(oldString) > 0 && len(newString) == 0
-	})
+type parameter struct {
+	parameterName sdk.AccountParameter
+	valueType     valueType
+	parameterType sdk.ParameterType
+}
+
+type valueType string
+
+const (
+	valueTypeInt    valueType = "int"
+	valueTypeBool   valueType = "bool"
+	valueTypeString valueType = "string"
+)
+
+type ResourceIdProvider interface {
+	Id() string
+}
+
+func ParametersCustomDiff(parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		if d.Id() == "" {
+			return nil
+		}
+
+		params, err := parametersProvider(ctx, d, meta)
+		if err != nil {
+			return err
+		}
+
+		diffFunctions := make([]schema.CustomizeDiffFunc, len(parameters))
+		for idx, p := range parameters {
+			var diffFunction schema.CustomizeDiffFunc
+			switch p.valueType {
+			case valueTypeInt:
+				diffFunction = IntParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			case valueTypeBool:
+				diffFunction = BoolParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			case valueTypeString:
+				diffFunction = StringParameterValueComputedIf(strings.ToLower(string(p.parameterName)), params, p.parameterType, p.parameterName)
+			}
+			diffFunctions[idx] = diffFunction
+		}
+
+		return customdiff.All(diffFunctions...)(ctx, d, meta)
+	}
 }

@@ -62,6 +62,14 @@ func (c *SchemaClient) DropSchemaFunc(t *testing.T, id sdk.DatabaseObjectIdentif
 	}
 }
 
+func (c *SchemaClient) UseDefaultSchema(t *testing.T) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
+	require.NoError(t, err)
+}
+
 func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) func() {
 	t.Helper()
 	ctx := context.Background()

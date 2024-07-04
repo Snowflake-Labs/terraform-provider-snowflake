@@ -79,16 +79,17 @@ func Database() *schema.Resource {
 		SchemaVersion: 1,
 
 		CreateContext: CreateDatabase,
+		UpdateContext: UpdateDatabase,
 		ReadContext:   ReadDatabase,
 		DeleteContext: DeleteDatabase,
-		UpdateContext: UpdateDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        MergeMaps(databaseSchema, DatabaseParametersSchema),
+		Schema: MergeMaps(databaseSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: DatabaseParametersCustomDiff,
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -128,7 +129,7 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	}
 
 	err = client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
-		Transient:                               GetPropertyAsPointer[bool](d, "is_transient"),
+		Transient:                               GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
 		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
 		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
 		ExternalVolume:                          externalVolume,
@@ -145,7 +146,7 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
 		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
 		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetPropertyAsPointer[string](d, "comment"),
+		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
 	})
 	if err != nil {
 		return diag.FromErr(err)

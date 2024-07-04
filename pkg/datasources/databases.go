@@ -3,12 +3,11 @@ package datasources
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -61,7 +60,7 @@ var databasesSchema = map[string]*schema.Schema{
 		Description: "Holds the aggregated output of all database details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"show_output": {
+				resources.ShowOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of SHOW DATABASES.",
@@ -69,7 +68,7 @@ var databasesSchema = map[string]*schema.Schema{
 						Schema: schemas.ShowDatabaseSchema,
 					},
 				},
-				"describe_output": {
+				resources.DescribeOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of DESCRIBE DATABASE.",
@@ -77,7 +76,7 @@ var databasesSchema = map[string]*schema.Schema{
 						Schema: schemas.DatabaseDescribeSchema,
 					},
 				},
-				"parameters": {
+				resources.ParametersAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of SHOW PARAMETERS FOR DATABASE.",
@@ -159,9 +158,9 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		}
 
 		flattenedDatabases[i] = map[string]any{
-			"show_output":     []map[string]any{schemas.DatabaseToSchema(&database)},
-			"describe_output": databaseDescription,
-			"parameters":      databaseParameters,
+			resources.ShowOutputAttributeName:     []map[string]any{schemas.DatabaseToSchema(&database)},
+			resources.DescribeOutputAttributeName: databaseDescription,
+			resources.ParametersAttributeName:     databaseParameters,
 		}
 	}
 

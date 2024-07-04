@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -34,7 +35,7 @@ var warehousesSchema = map[string]*schema.Schema{
 		Description: "Holds the aggregated output of all warehouse details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"show_output": {
+				resources.ShowOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of SHOW WAREHOUSES.",
@@ -42,7 +43,7 @@ var warehousesSchema = map[string]*schema.Schema{
 						Schema: schemas.ShowWarehouseSchema,
 					},
 				},
-				"describe_output": {
+				resources.DescribeOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of DESCRIBE WAREHOUSE.",
@@ -50,7 +51,7 @@ var warehousesSchema = map[string]*schema.Schema{
 						Schema: schemas.WarehouseDescribeSchema,
 					},
 				},
-				"parameters": {
+				resources.ParametersAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
 					Description: "Holds the output of SHOW PARAMETERS FOR WAREHOUSE.",
@@ -114,9 +115,9 @@ func ReadWarehouses(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		}
 
 		flattenedWarehouses[i] = map[string]any{
-			"show_output":     []map[string]any{schemas.WarehouseToSchema(&warehouse)},
-			"describe_output": warehouseDescription,
-			"parameters":      warehouseParameters,
+			resources.ShowOutputAttributeName:     []map[string]any{schemas.WarehouseToSchema(&warehouse)},
+			resources.DescribeOutputAttributeName: warehouseDescription,
+			resources.ParametersAttributeName:     warehouseParameters,
 		}
 	}
 

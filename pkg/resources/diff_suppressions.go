@@ -33,7 +33,7 @@ func IgnoreChangeToCurrentSnowflakeValueInShow(keyInShowOutput string) schema.Sc
 			return false
 		}
 
-		if queryOutput, ok := d.GetOk(showOutputAttributeName); ok {
+		if queryOutput, ok := d.GetOk(ShowOutputAttributeName); ok {
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)
@@ -53,7 +53,7 @@ func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInDescribeOutput string) s
 			return false
 		}
 
-		if queryOutput, ok := d.GetOk(describeOutputAttributeName); ok {
+		if queryOutput, ok := d.GetOk(DescribeOutputAttributeName); ok {
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)

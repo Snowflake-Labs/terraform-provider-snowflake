@@ -115,7 +115,9 @@ func (r cortexSearchServiceRow) convert() *CortexSearchService {
 		Name:         r.Name,
 		DatabaseName: r.DatabaseName,
 		SchemaName:   r.SchemaName,
-		Comment:      r.Comment,
+	}
+	if r.Comment.Valid {
+		cortexSearchService.Comment = r.Comment.String
 	}
 	return cortexSearchService
 }
