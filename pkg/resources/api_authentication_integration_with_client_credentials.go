@@ -47,8 +47,8 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
 			ForceNewIfChangeToEmptyString("oauth_grant"),
-			ComputedIfAnyAttributeChanged(showOutputAttributeName, "enabled", "comment"),
-			ComputedIfAnyAttributeChanged(describeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_token_endpoint", "oauth_allowed_scopes", "oauth_grant"),
 		),
 		Importer: &schema.ResourceImporter{

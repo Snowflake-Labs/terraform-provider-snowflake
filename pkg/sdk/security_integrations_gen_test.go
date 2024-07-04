@@ -346,7 +346,6 @@ func TestSecurityIntegrations_CreateSaml2(t *testing.T) {
 			Saml2SsoUrl:   "url",
 			Saml2Provider: "provider",
 			Saml2X509Cert: "cert",
-			Enabled:       true,
 		}
 	}
 

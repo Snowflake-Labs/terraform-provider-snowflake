@@ -65,7 +65,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the integration.",
 	},
-	showOutputAttributeName: {
+	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration.",
@@ -73,7 +73,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowSecurityIntegrationSchema,
 		},
 	},
-	describeOutputAttributeName: {
+	DescribeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration.",
@@ -325,8 +325,8 @@ func handleApiAuthRead(d *schema.ResourceData,
 
 		if err = handleExternalChangesToObjectInDescribe(d,
 			append(extraFieldsDescribeMappings,
-				describeMapping{"oauth_access_token_validity", "oauth_access_token_validity", oauthAccessTokenValidityInt, oauthAccessTokenValidityInt, stringToIntNormalizer},
-				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidityInt, oauthRefreshTokenValidityInt, stringToIntNormalizer},
+				describeMapping{"oauth_access_token_validity", "oauth_access_token_validity", oauthAccessTokenValidityInt, oauthAccessTokenValidityInt, nil},
+				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidityInt, oauthRefreshTokenValidityInt, nil},
 				describeMapping{"oauth_client_id", "oauth_client_id", oauthClientId.Value, oauthClientId.Value, nil},
 				describeMapping{"oauth_client_auth_method", "oauth_client_auth_method", oauthClientAuthMethod.Value, oauthClientAuthMethod.Value, nil},
 				describeMapping{"oauth_token_endpoint", "oauth_token_endpoint", oauthTokenEndpoint.Value, oauthTokenEndpoint.Value, nil},
@@ -365,11 +365,11 @@ func handleApiAuthRead(d *schema.ResourceData,
 		}
 	}
 
-	if err := d.Set(showOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
+	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
 		return err
 	}
 
-	if err := d.Set(describeOutputAttributeName, []map[string]any{schemas.ApiAuthSecurityIntegrationPropertiesToSchema(properties)}); err != nil {
+	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.ApiAuthSecurityIntegrationPropertiesToSchema(properties)}); err != nil {
 		return err
 	}
 	return nil
