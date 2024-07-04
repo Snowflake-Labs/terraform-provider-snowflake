@@ -31,12 +31,8 @@ Added a new datasource enabling querying and filtering all types of security int
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 ### snowflake_external_oauth_integration resource changes
-#### *(behavior change)* Changed behavior of `sync_password`
-
-Now, the `sync_password` field will set the state value to `unknown` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
 
 #### *(behavior change)* Renamed fields
-
 Renamed fields:
 - `type` to `external_oauth_type`
 - `issuer` to `external_oauth_issuer`
@@ -52,12 +48,6 @@ Renamed fields:
 - `any_role_mode` to `external_oauth_any_role_mode`
 - `scope_delimiter` to `external_oauth_scope_delimiter`
 to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
-
-#### *(feature)* New fields
-Fields added to the resource:
-- `enabled`
-- `sync_password`
-- `comment`
 
 #### *(behavior change)* Force new for multiple attributes after removing from config
 Force new was added for the following attributes (because no usable SQL alter statements for them):

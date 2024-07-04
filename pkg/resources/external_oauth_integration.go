@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -77,16 +78,18 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Description:   "Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.",
 	},
 	"external_oauth_rsa_public_key": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		ConflictsWith: []string{"external_oauth_jws_keys_url"},
-		Description:   "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
+		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		ConflictsWith:    []string{"external_oauth_jws_keys_url"},
 	},
 	"external_oauth_rsa_public_key_2": {
-		Type:          schema.TypeString,
-		Optional:      true,
-		Description:   "Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.",
-		ConflictsWith: []string{"external_oauth_jws_keys_url"},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.",
+		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		ConflictsWith:    []string{"external_oauth_jws_keys_url"},
 	},
 	"external_oauth_blocked_roles_list": {
 		Type:        schema.TypeSet,
@@ -178,6 +181,8 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextExternalOauthIntegration,
 		ReadContext:   ReadContextExternalOauthIntegration(true),
 		UpdateContext: UpdateContextExternalOauthIntegration,
@@ -196,6 +201,15 @@ func ExternalOauthIntegration() *schema.Resource {
 		),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportExternalOauthIntegration,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v092ExternalOauthIntegrationStateUpgrader,
+			},
 		},
 	}
 }
