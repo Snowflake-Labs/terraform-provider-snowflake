@@ -71,12 +71,12 @@ func ImportApiAuthenticationWithClientCredentials(ctx context.Context, d *schema
 	if err != nil {
 		return nil, err
 	}
-	if err := handleApiAuthImport(ctx, d, integration, properties); err != nil {
+	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
 	oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 	if err == nil {
-		if err = d.Set("oauth_allowed_scopes", listValueToSlice(oauthAllowedScopes.Value, false)); err != nil {
+		if err = d.Set("oauth_allowed_scopes", sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false)); err != nil {
 			return nil, err
 		}
 	}
@@ -164,23 +164,18 @@ func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalCh
 		}
 
 		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
-			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, listValueToSlice(oauthAllowedScopes.Value, false), nil},
+			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
 			{"oauth_grant", "oauth_grant", oauthGrant.Value, oauthGrant.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["oauth_allowed_scopes"]; !v.IsNull() {
-				if err := d.Set("oauth_allowed_scopes", ctyValToSliceString(v.AsValueSlice())); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["oauth_grant"]; !v.IsNull() {
-				if err := d.Set("oauth_grant", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+			"oauth_allowed_scopes",
+			"oauth_grant",
+		}); err != nil {
+			return diag.FromErr(err)
 		}
+
 		return nil
 	}
 }

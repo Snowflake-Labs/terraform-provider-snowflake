@@ -76,7 +76,7 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return nil, err
 	}
-	if err := handleApiAuthImport(ctx, d, integration, properties); err != nil {
+	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
 	oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
@@ -184,24 +184,13 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["oauth_authorization_endpoint"]; !v.IsNull() {
-				if err = d.Set("oauth_authorization_endpoint", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["oauth_assertion_issuer"]; !v.IsNull() {
-				if err = d.Set("oauth_assertion_issuer", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["oauth_grant"]; !v.IsNull() {
-				if err = d.Set("oauth_grant", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+			"oauth_authorization_endpoint",
+			"oauth_assertion_issuer",
+			"oauth_grant",
+		}); err != nil {
+			return diag.FromErr(err)
 		}
-
 		return nil
 	}
 }

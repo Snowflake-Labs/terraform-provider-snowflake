@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -43,7 +42,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
-		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. Valid options are: %v", sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption)),
+		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption))),
 	},
 	"oauth_access_token_validity": {
 		Type:             schema.TypeInt,
@@ -206,7 +205,7 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 	return create, nil
 }
 
-func handleApiAuthImport(ctx context.Context, d *schema.ResourceData, integration *sdk.SecurityIntegration,
+func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 ) error {
 	if err := d.Set("name", integration.Name); err != nil {
@@ -335,34 +334,14 @@ func handleApiAuthRead(d *schema.ResourceData,
 			return err
 		}
 	}
-	if !d.GetRawConfig().IsNull() {
-		if v := d.GetRawConfig().AsValueMap()["oauth_access_token_validity"]; !v.IsNull() {
-			intVal, _ := v.AsBigFloat().Int64()
-			if err := d.Set("oauth_access_token_validity", intVal); err != nil {
-				return err
-			}
-		}
-		if v := d.GetRawConfig().AsValueMap()["oauth_refresh_token_validity"]; !v.IsNull() {
-			intVal, _ := v.AsBigFloat().Int64()
-			if err := d.Set("oauth_refresh_token_validity", intVal); err != nil {
-				return err
-			}
-		}
-		if v := d.GetRawConfig().AsValueMap()["oauth_client_id"]; !v.IsNull() {
-			if err := d.Set("oauth_client_id", v.AsString()); err != nil {
-				return err
-			}
-		}
-		if v := d.GetRawConfig().AsValueMap()["oauth_client_auth_method"]; !v.IsNull() {
-			if err := d.Set("oauth_client_auth_method", v.AsString()); err != nil {
-				return err
-			}
-		}
-		if v := d.GetRawConfig().AsValueMap()["oauth_token_endpoint"]; !v.IsNull() {
-			if err := d.Set("oauth_token_endpoint", v.AsString()); err != nil {
-				return err
-			}
-		}
+	if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		"oauth_access_token_validity",
+		"oauth_refresh_token_validity",
+		"oauth_client_id",
+		"oauth_client_auth_method",
+		"oauth_token_endpoint",
+	}); err != nil {
+		return err
 	}
 
 	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {

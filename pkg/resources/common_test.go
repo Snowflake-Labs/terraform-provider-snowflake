@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -47,74 +46,4 @@ func Test_suppressIdentifierQuoting(t *testing.T) {
 		result := suppressIdentifierQuoting("", firstId, secondId, nil)
 		require.False(t, result)
 	})
-}
-
-func Test_listValueToSlice(t *testing.T) {
-	tests := []struct {
-		name       string
-		value      string
-		trimQuotes bool
-		want       []string
-	}{
-		{
-			name: "empty list",
-			want: nil,
-		},
-		{
-			name:  "empty list with brackets",
-			value: "[]",
-			want:  nil,
-		},
-		{
-			name:  "one element in list",
-			value: "a",
-			want:  []string{"a"},
-		},
-		{
-			name:       "one element in list, wrapped",
-			value:      "'a'",
-			trimQuotes: true,
-			want:       []string{"a"},
-		},
-		{
-			name:  "one element in list with brackets",
-			value: "[a]",
-			want:  []string{"a"},
-		},
-		{
-			name:       "one element in list wrapped, with brackets",
-			value:      "['a']",
-			trimQuotes: true,
-			want:       []string{"a"},
-		},
-		{
-			name:  "multiple elements in list",
-			value: "a, b",
-			want:  []string{"a", "b"},
-		},
-		{
-			name:       "multiple elements in list wrapped",
-			value:      "'a', 'b'",
-			trimQuotes: true,
-			want:       []string{"a", "b"},
-		},
-		{
-			name:  "multiple elements in list with brackets",
-			value: "[a, b]",
-			want:  []string{"a", "b"},
-		},
-		{
-			name:       "multiple elements in list wrapped, with brackets",
-			value:      "['a',   'b' ]",
-			trimQuotes: true,
-			want:       []string{"a", "b"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := listValueToSlice(tt.value, tt.trimQuotes); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("listValueToSlice() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
