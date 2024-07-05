@@ -48,7 +48,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Type:             schema.TypeInt,
 		Optional:         true,
 		ValidateFunc:     validation.IntAtLeast(0),
-		Default:          -1,
+		Default:          IntDefault,
 		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_access_token_validity"),
 	},
@@ -124,7 +124,7 @@ func handleApiAuthUpdate(d *schema.ResourceData) (commonApiAuthSet, commonApiAut
 	}
 
 	if d.HasChange("oauth_access_token_validity") {
-		if v := d.Get("oauth_access_token_validity").(int); v != -1 {
+		if v := d.Get("oauth_access_token_validity").(int); v != IntDefault {
 			set.oauthAccessTokenValidity = sdk.Pointer(v)
 		} else {
 			// TODO(SNOW-1515781): use UNSET
@@ -185,7 +185,7 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 		create.comment = sdk.Pointer(v.(string))
 	}
 
-	if v := d.Get("oauth_access_token_validity").(int); v != -1 {
+	if v := d.Get("oauth_access_token_validity").(int); v != IntDefault {
 		create.oauthAccessTokenValidity = sdk.Pointer(v)
 	}
 	if v, ok := d.GetOk("oauth_refresh_token_validity"); ok {
