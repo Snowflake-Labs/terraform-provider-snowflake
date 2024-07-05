@@ -24,9 +24,9 @@ import (
 
 func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	issuer := random.String()
-	t.Cleanup(role1Cleanup)
+	t.Cleanup(roleCleanup)
 	m := func(complete bool) map[string]config.Variable {
 		c := map[string]config.Variable{
 			"enabled":             config.BoolVariable(true),
@@ -39,7 +39,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 		}
 		if complete {
 			c["external_oauth_add_privileged_roles_to_blocked_list"] = config.BoolVariable(true)
-			c["external_oauth_allowed_roles_list"] = config.SetVariable(config.StringVariable(role1.ID().Name()))
+			c["external_oauth_allowed_roles_list"] = config.SetVariable(config.StringVariable(role.ID().Name()))
 			c["external_oauth_any_role_mode"] = config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable))
 			c["external_oauth_audience_list"] = config.SetVariable(config.StringVariable("foo"))
 			c["external_oauth_scope_delimiter"] = config.StringVariable(".")
@@ -117,7 +117,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.0", "foo"),
@@ -145,7 +145,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_issuer.0.value", issuer),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_jws_keys_url.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role1.Name),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_snowflake_user_mapping_attribute.0.value", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
@@ -170,7 +170,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_jws_keys_url.0", "https://example.com"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_allowed_roles_list.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_allowed_roles_list.0", role1.Name),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_allowed_roles_list.0", role.Name),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_audience_list.#", "1"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_audience_list.0", "foo"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "external_oauth_scope_delimiter", "."),
@@ -198,7 +198,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.0", "foo"),
@@ -226,7 +226,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_issuer.0.value", issuer),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_jws_keys_url.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role1.Name),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_snowflake_user_mapping_attribute.0.value", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
@@ -285,16 +285,16 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 
 func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	issuer := random.String()
-	t.Cleanup(role1Cleanup)
+	t.Cleanup(roleCleanup)
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"comment": config.StringVariable("foo"),
 			"enabled": config.BoolVariable(true),
 			"external_oauth_add_privileged_roles_to_blocked_list": config.BoolVariable(true),
-			"external_oauth_allowed_roles_list":                   config.SetVariable(config.StringVariable(role1.ID().Name())),
+			"external_oauth_allowed_roles_list":                   config.SetVariable(config.StringVariable(role.ID().Name())),
 			"external_oauth_any_role_mode":                        config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 			"external_oauth_audience_list":                        config.SetVariable(config.StringVariable("foo")),
 			"external_oauth_issuer":                               config.StringVariable(issuer),
@@ -321,7 +321,7 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_allowed_roles_list.0", role.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.0", "foo"),
@@ -349,7 +349,7 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_issuer.0.value", issuer),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_jws_keys_url.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role1.Name),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_snowflake_user_mapping_attribute.0.value", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
@@ -371,9 +371,9 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 
 func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesList_paramSet(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(role1Cleanup)
-	expectedRoles := []string{"ACCOUNTADMIN", "SECURITYADMIN", role1.Name}
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+	expectedRoles := []string{"ACCOUNTADMIN", "SECURITYADMIN", role.Name}
 	sort.Strings(expectedRoles)
 	issuer := random.String()
 	rsaKey, _ := random.GenerateRSAPublicKey(t)
@@ -384,7 +384,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 			"comment": config.StringVariable("foo"),
 			"enabled": config.BoolVariable(true),
 			"external_oauth_add_privileged_roles_to_blocked_list": config.BoolVariable(true),
-			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable(role1.ID().Name())),
+			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable(role.ID().Name())),
 			"external_oauth_any_role_mode":                        config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 			"external_oauth_audience_list":                        config.SetVariable(config.StringVariable("foo")),
 			"external_oauth_issuer":                               config.StringVariable(issuer),
@@ -412,7 +412,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.0", role1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.0", role.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.0", "foo"),
@@ -464,8 +464,8 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 
 func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesList_paramUnset(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(role1Cleanup)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
 	issuer := random.String()
 	rsaKey, _ := random.GenerateRSAPublicKey(t)
 	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "false")
@@ -475,7 +475,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 			"comment": config.StringVariable("foo"),
 			"enabled": config.BoolVariable(true),
 			"external_oauth_add_privileged_roles_to_blocked_list": config.BoolVariable(true),
-			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable(role1.ID().Name())),
+			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable(role.ID().Name())),
 			"external_oauth_any_role_mode":                        config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 			"external_oauth_audience_list":                        config.SetVariable(config.StringVariable("foo")),
 			"external_oauth_issuer":                               config.StringVariable(issuer),
@@ -503,7 +503,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.0", role1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_blocked_roles_list.0", role.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_audience_list.0", "foo"),
@@ -532,7 +532,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_rsa_public_key.0.value", rsaKey),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_rsa_public_key_2.0.value", rsaKey),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_blocked_roles_list.0.value", role1.Name),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_blocked_roles_list.0.value", role.Name),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_allowed_roles_list.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
@@ -699,8 +699,8 @@ func TestAcc_ExternalOauthIntegration_InvalidIncomplete(t *testing.T) {
 
 func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAndBlockedRolesList(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(role1Cleanup)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
 	issuer := random.String()
 	rsaKey, _ := random.GenerateRSAPublicKey(t)
 	resourceName := "snowflake_external_oauth_integration.test"
@@ -718,7 +718,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: externalOauthIntegrationWithRsaPublicKeysAndBlockedRolesListv092(id.Name(), issuer, rsaKey, role1.Name),
+				Config: externalOauthIntegrationWithRsaPublicKeysAndBlockedRolesListv092(id.Name(), issuer, rsaKey, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -730,7 +730,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 					resource.TestCheckResourceAttr(resourceName, "rsa_public_key", rsaKey),
 					resource.TestCheckResourceAttr(resourceName, "rsa_public_key_2", rsaKey),
 					resource.TestCheckResourceAttr(resourceName, "blocked_roles.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "blocked_roles.0", role1.Name),
+					resource.TestCheckResourceAttr(resourceName, "blocked_roles.0", role.Name),
 					resource.TestCheckResourceAttr(resourceName, "audience_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audience_urls.0", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
@@ -739,7 +739,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   externalOauthIntegrationWithRsaPublicKeysAndBlockedRolesListv093(id.Name(), issuer, rsaKey, role1.Name),
+				Config:                   externalOauthIntegrationWithRsaPublicKeysAndBlockedRolesListv093(id.Name(), issuer, rsaKey, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -751,7 +751,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_rsa_public_key", rsaKey),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_rsa_public_key_2", rsaKey),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_blocked_roles_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "external_oauth_blocked_roles_list.0", role1.Name),
+					resource.TestCheckResourceAttr(resourceName, "external_oauth_blocked_roles_list.0", role.Name),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_audience_list.0", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
@@ -816,8 +816,8 @@ resource "snowflake_external_oauth_integration" "test" {
 
 func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAllowedRolesList(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(role1Cleanup)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
 	issuer := random.String()
 	resourceName := "snowflake_external_oauth_integration.test"
 	resource.Test(t, resource.TestCase{
@@ -834,7 +834,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAll
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: externalOauthIntegrationWithJwsKeysUrlAndAllowedRolesListv092(id.Name(), issuer, role1.Name),
+				Config: externalOauthIntegrationWithJwsKeysUrlAndAllowedRolesListv092(id.Name(), issuer, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -846,7 +846,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAll
 					resource.TestCheckResourceAttr(resourceName, "jws_keys_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jws_keys_urls.0", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_roles.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_roles.0", role1.Name),
+					resource.TestCheckResourceAttr(resourceName, "allowed_roles.0", role.Name),
 					resource.TestCheckResourceAttr(resourceName, "audience_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audience_urls.0", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
@@ -855,7 +855,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAll
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   externalOauthIntegrationWithJwsKeysUrlAndAllowedRolesListv093(id.Name(), issuer, role1.Name),
+				Config:                   externalOauthIntegrationWithJwsKeysUrlAndAllowedRolesListv093(id.Name(), issuer, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -867,7 +867,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAll
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_jws_keys_url.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_jws_keys_url.0", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_allowed_roles_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "external_oauth_allowed_roles_list.0", role1.Name),
+					resource.TestCheckResourceAttr(resourceName, "external_oauth_allowed_roles_list.0", role.Name),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_audience_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_audience_list.0", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_any_role_mode", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),

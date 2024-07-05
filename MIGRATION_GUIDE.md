@@ -57,6 +57,12 @@ Conditional force new was added for the following attributes when they are remov
 - `external_oauth_jws_keys_url`
 - `external_oauth_token_user_mapping_claim`
 
+#### *(behavior change)* Conflicting fields
+Fields listed below can not be set at the same time in Snowflake. They are marked as conflicting fields.
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key`
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key_2`
+- `external_oauth_allowed_roles_list` <-> `external_oauth_blocked_roles_list`
+
 #### *(behavior change)* Changed diff suppress for some fields
 The fields listed below had diff suppress which removed '-' from strings. Now, this behavior is removed, so if you had '-' in these strings, please remove them. Note that '-' in these values is not allowed by Snowflake.
 - `external_oauth_snowflake_user_mapping_attribute`

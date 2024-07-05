@@ -2,12 +2,12 @@
 page_title: "snowflake_external_oauth_integration Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage external oauth security integrations. For more information, check documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external.
 ---
 
 # snowflake_external_oauth_integration (Resource)
 
-
+Resource used to manage external oauth security integrations. For more information, check [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).
 
 ## Example Usage
 
@@ -63,29 +63,29 @@ resource "snowflake_external_oauth_integration" "test" {
 
 - `enabled` (Boolean) Specifies whether to initiate operation of the integration or suspend it.
 - `external_oauth_issuer` (String) Specifies the URL to define the OAuth 2.0 authorization server.
-- `external_oauth_snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid options are: [LOGIN_NAME EMAIL_ADDRESS]
-- `external_oauth_token_user_mapping_claim` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.
-- `external_oauth_type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid options are: [OKTA AZURE PING_FEDERATE CUSTOM]
+- `external_oauth_snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid values are (case-insensitive): `LOGIN_NAME` | `EMAIL_ADDRESS`.
+- `external_oauth_token_user_mapping_claim` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record. If removed from the config, the resource is recreated.
+- `external_oauth_type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid values are (case-insensitive): `OKTA` | `AZURE` | `PING_FEDERATE` | `CUSTOM`.
 - `name` (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the OAuth integration.
 - `external_oauth_allowed_roles_list` (Set of String) Specifies the list of roles that the client can set as the primary role.
-- `external_oauth_any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid options are: [DISABLE ENABLE ENABLE_FOR_PRIVILEGE]
+- `external_oauth_any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid values are (case-insensitive): `DISABLE` | `ENABLE` | `ENABLE_FOR_PRIVILEGE`.
 - `external_oauth_audience_list` (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
-- `external_oauth_blocked_roles_list` (Set of String) Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.
-- `external_oauth_jws_keys_url` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.
-- `external_oauth_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.
-- `external_oauth_rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.
+- `external_oauth_blocked_roles_list` (Set of String) Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.
+- `external_oauth_jws_keys_url` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3. If removed from the config, the resource is recreated.
+- `external_oauth_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. If removed from the config, the resource is recreated.
+- `external_oauth_rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation. If removed from the config, the resource is recreated.
 - `external_oauth_scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
-- `external_oauth_scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role.
+- `external_oauth_scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role. If removed from the config, the resource is recreated.
 
 ### Read-Only
 
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
-- `parameters` (List of Object) Paramteres related to this security integration. (see [below for nested schema](#nestedatt--parameters))
+- `related_parameters` (List of Object) Paramteres related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>
@@ -251,15 +251,15 @@ Read-Only:
 
 
 
-<a id="nestedatt--parameters"></a>
-### Nested Schema for `parameters`
+<a id="nestedatt--related_parameters"></a>
+### Nested Schema for `related_parameters`
 
 Read-Only:
 
-- `external_oauth_add_privileged_roles_to_blocked_list` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--external_oauth_add_privileged_roles_to_blocked_list))
+- `external_oauth_add_privileged_roles_to_blocked_list` (List of Object) (see [below for nested schema](#nestedobjatt--related_parameters--external_oauth_add_privileged_roles_to_blocked_list))
 
-<a id="nestedobjatt--parameters--external_oauth_add_privileged_roles_to_blocked_list"></a>
-### Nested Schema for `parameters.external_oauth_add_privileged_roles_to_blocked_list`
+<a id="nestedobjatt--related_parameters--external_oauth_add_privileged_roles_to_blocked_list"></a>
+### Nested Schema for `related_parameters.external_oauth_add_privileged_roles_to_blocked_list`
 
 Read-Only:
 

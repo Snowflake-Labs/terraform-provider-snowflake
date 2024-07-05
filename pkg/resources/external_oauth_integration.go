@@ -30,7 +30,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 	"external_oauth_type": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      fmt.Sprintf("Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid options are: %v", sdk.AllExternalOauthSecurityIntegrationTypes),
+		Description:      fmt.Sprintf("Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationTypes))),
 		ValidateDiagFunc: sdkValidation(sdk.ToExternalOauthSecurityIntegrationTypeOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToExternalOauthSecurityIntegrationTypeOption),
 	},
@@ -48,12 +48,12 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
-		Description: "Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record.",
+		Description: "Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record. If removed from the config, the resource is recreated.",
 	},
 	"external_oauth_snowflake_user_mapping_attribute": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      fmt.Sprintf("Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid options are: %v", sdk.AllExternalOauthSecurityIntegrationSnowflakeUserMappingAttributes),
+		Description:      fmt.Sprintf("Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationSnowflakeUserMappingAttributes))),
 		ValidateDiagFunc: sdkValidation(sdk.ToExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption),
 	},
@@ -63,19 +63,19 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		MaxItems:      3,
 		Optional:      true,
 		ConflictsWith: []string{"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2"},
-		Description:   "Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3.",
+		Description:   "Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3. If removed from the config, the resource is recreated.",
 	},
 	"external_oauth_rsa_public_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. If removed from the config, the resource is recreated.",
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
 		ConflictsWith:    []string{"external_oauth_jws_keys_url"},
 	},
 	"external_oauth_rsa_public_key_2": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation.",
+		Description:      "Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation. If removed from the config, the resource is recreated.",
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
 		ConflictsWith:    []string{"external_oauth_jws_keys_url"},
 	},
@@ -83,7 +83,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
+		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			params := d.Get(ParametersAttributeName).([]any)
 			var found *sdk.Parameter
@@ -97,7 +97,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 				return false
 			}
 
-			return slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN"}, old)
+			return slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "ORGADMIN"}, old)
 		},
 		ConflictsWith: []string{"external_oauth_allowed_roles_list"},
 	},
@@ -117,7 +117,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 	"external_oauth_any_role_mode": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      fmt.Sprintf("Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid options are: %v", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationAnyRoleModes)),
+		Description:      fmt.Sprintf("Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationAnyRoleModes)))),
 		ValidateDiagFunc: sdkValidation(sdk.ToExternalOauthSecurityIntegrationAnyRoleModeOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToExternalOauthSecurityIntegrationAnyRoleModeOption),
 	},
@@ -129,7 +129,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 	"external_oauth_scope_mapping_attribute": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the access token claim to map the access token to an account role.",
+		Description: "Specifies the access token claim to map the access token to an account role. If removed from the config, the resource is recreated.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -186,6 +186,7 @@ func ExternalOauthIntegration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportExternalOauthIntegration,
 		},
+		Description: "Resource used to manage external oauth security integrations. For more information, check [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -268,10 +269,10 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 		}
 
 		var roles []string
-		if err == nil && (*found).Value == "true" {
+		if err == nil && found.Value == "true" {
 			unfilteredRoles := sdk.ParseCommaSeparatedStringArray(prop.Value, false)
 			for _, role := range unfilteredRoles {
-				if !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN"}, role) {
+				if !slices.Contains([]string{"ACCOUNTADMIN", "ORGADMIN", "SECURITYADMIN"}, role) {
 					roles = append(roles, role)
 				}
 			}
