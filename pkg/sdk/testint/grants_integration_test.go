@@ -238,7 +238,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		assert.Equal(t, 0, len(grants))
 	})
 
-	t.Run("on schema object: cortex search service", func(t *testing.T) {
+	t.Run("on all: cortex search service", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
 

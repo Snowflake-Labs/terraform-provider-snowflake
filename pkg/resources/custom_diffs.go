@@ -59,6 +59,30 @@ func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectPar
 	}
 }
 
+// ForceNewIfChangeToEmptySlice sets a ForceNew for a list field which was set to an empty value.
+func ForceNewIfChangeToEmptySlice[T any](key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.([]T), newValue.([]T)
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+// ForceNewIfChangeToEmptySet sets a ForceNew for a list field which was set to an empty value.
+func ForceNewIfChangeToEmptySet(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldList, newList := oldValue.(*schema.Set).List(), newValue.(*schema.Set).List()
+		return len(oldList) > 0 && len(newList) == 0
+	})
+}
+
+// ForceNewIfChangeToEmptyString sets a ForceNew for a string field which was set to an empty value.
+func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange(key, func(ctx context.Context, oldValue, newValue, meta any) bool {
+		oldString, newString := oldValue.(string), newValue.(string)
+		return len(oldString) > 0 && len(newString) == 0
+	})
+}
+
 // TODO [follow-up PR]: test
 func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {

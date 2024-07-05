@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func v091ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+func v092ScimIntegrationStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return rawState, nil
 	}
