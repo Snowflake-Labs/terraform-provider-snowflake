@@ -56,3 +56,20 @@ func TestCheckResourceAttrInstanceState(id string, attributeName, attributeValue
 		return fmt.Errorf("attribute %s not found in instance state", attributeName)
 	}
 }
+
+// TestCheckNoResourceAttrInstanceState checks if the value is present in the instatnce state and returns an error if it does.
+func TestCheckNoResourceAttrInstanceState(id string, attributeName string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		for _, v := range is {
+			if v.ID != id {
+				continue
+			}
+
+			if _, ok := v.Attributes[attributeName]; ok {
+				return fmt.Errorf("attribute %s found in instance state, but was not expected", attributeName)
+			}
+		}
+
+		return nil
+	}
+}

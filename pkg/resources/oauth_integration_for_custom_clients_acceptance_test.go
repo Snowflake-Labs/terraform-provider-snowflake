@@ -135,7 +135,8 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_refresh_token_validity", "7776000"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", ""),
-					// oauth_client_rsa_public_key and oauth_client_rsa_public_key_2 cannot be imported, because they're not available in SHOW and DESC outputs.
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key"),
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
 				),
 			},
@@ -211,7 +212,8 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_refresh_token_validity", "86400"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
-					// oauth_client_rsa_public_key and oauth_client_rsa_public_key_2 cannot be imported, because they're not available in SHOW and DESC outputs.
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key"),
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
 			},
@@ -466,7 +468,8 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_refresh_token_validity", "86400"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
-					// oauth_client_rsa_public_key and oauth_client_rsa_public_key_2 cannot be imported, because they're not available in SHOW and DESC outputs.
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key"),
+					importchecks.TestCheckNoResourceAttrInstanceState(id.Name(), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
 			},
@@ -612,10 +615,10 @@ func TestAcc_OauthIntegrationForCustomClients_DefaultValues(t *testing.T) {
 	})
 }
 
-func TestAcc_OauthIntegrationForCustomClients_InvalidOauthUseSecondaryRoles(t *testing.T) {
+func TestAcc_OauthIntegrationForCustomClients_Invalid(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	configVariables := config.Variables{
+	invalidUseSecondaryRoles := config.Variables{
 		"name":                      config.StringVariable(id.Name()),
 		"oauth_client_type":         config.StringVariable(string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 		"oauth_redirect_uri":        config.StringVariable("https://example.com"),
@@ -623,26 +626,7 @@ func TestAcc_OauthIntegrationForCustomClients_InvalidOauthUseSecondaryRoles(t *t
 		"blocked_roles_list":        config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
 	}
 
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/invalid"),
-				ConfigVariables: configVariables,
-				ExpectError:     regexp.MustCompile(`Error: expected \[{{} oauth_use_secondary_roles}] to be one of \["IMPLICIT" "NONE"], got invalid`),
-			},
-		},
-	})
-}
-
-func TestAcc_OauthIntegrationForCustomClients_InvalidClientType(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	configVariables := config.Variables{
+	invalidClientType := config.Variables{
 		"name":                      config.StringVariable(id.Name()),
 		"oauth_client_type":         config.StringVariable("invalid"),
 		"oauth_redirect_uri":        config.StringVariable("https://example.com"),
@@ -659,8 +643,13 @@ func TestAcc_OauthIntegrationForCustomClients_InvalidClientType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/invalid"),
-				ConfigVariables: configVariables,
-				ExpectError:     regexp.MustCompile(`Error: expected oauth_client_type to be one of \["PUBLIC" "CONFIDENTIAL"], got invalid`),
+				ConfigVariables: invalidUseSecondaryRoles,
+				ExpectError:     regexp.MustCompile(`Error: invalid OauthSecurityIntegrationUseSecondaryRolesOption: INVALID`),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/invalid"),
+				ConfigVariables: invalidClientType,
+				ExpectError:     regexp.MustCompile(`Error: invalid OauthSecurityIntegrationClientTypeOption: INVALID`),
 			},
 		},
 	})

@@ -62,7 +62,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
 					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "network_policy"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", r.BooleanDefault),
-					resource.TestCheckNoResourceAttr("snowflake_scim_integration.test", "comment"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "show_output.0.name", id.Name()),

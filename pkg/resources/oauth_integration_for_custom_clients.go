@@ -4,21 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
@@ -29,11 +27,12 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Description: "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
 	},
 	"oauth_client_type": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  fmt.Sprintf("Specifies the type of client being registered. Snowflake supports both confidential and public clients. Valid options are: %v", sdk.AllOauthSecurityIntegrationClientTypes),
-		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllOauthSecurityIntegrationClientTypes), true),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationClientTypeOption),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationClientTypeOption),
+		Description:      fmt.Sprintf("Specifies the type of client being registered. Snowflake supports both confidential and public clients. Valid options are: %v", sdk.AllOauthSecurityIntegrationClientTypes),
 	},
 	"oauth_redirect_uri": {
 		Type:        schema.TypeString,
@@ -67,21 +66,28 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 	"oauth_use_secondary_roles": {
 		Type:             schema.TypeString,
 		Optional:         true,
+		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
 		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v", sdk.AllOauthSecurityIntegrationUseSecondaryRoles),
-		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllOauthSecurityIntegrationUseSecondaryRoles), true),
 	},
 	"pre_authorized_roles_list": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
+		Type: schema.TypeSet,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
 		Optional:    true,
-		Description: "Comma-separated list of Snowflake roles that a user does not need to explicitly consent to using after authenticating.",
+		Description: "A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating.",
 	},
 	"blocked_roles_list": {
 		Type: schema.TypeSet,
-		Elem: &schema.Schema{Type: schema.TypeString},
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
 		// TODO(SNOW-1517937): Check if can make optional
 		Required:    true,
-		Description: "Comma-separated list of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
+		Description: "A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
 	},
 	"oauth_issue_refresh_tokens": {
 		Type:             schema.TypeString,
@@ -94,7 +100,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 	"oauth_refresh_token_validity": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      -1,
+		Default:      IntDefault,
 		ValidateFunc: validation.IntAtLeast(0),
 		Description:  "Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.",
 	},
@@ -105,14 +111,16 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"oauth_client_rsa_public_key": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Hash of `oauth_client_rsa_public_key` returned from Snowflake.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
 	},
 	"oauth_client_rsa_public_key_2": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Hash of `oauth_client_rsa_public_key` returned from Snowflake.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -193,7 +201,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		return nil, err
 	}
 
-	if err = d.Set("enabled", strconv.FormatBool(integration.Enabled)); err != nil {
+	if err = d.Set("enabled", booleanStringFromBool(integration.Enabled)); err != nil {
 		return nil, err
 	}
 
@@ -247,7 +255,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, oauthClientType, d.Get("oauth_redirect_uri").(string))
 
 	if v := d.Get("enabled").(string); v != BooleanDefault {
-		parsedBool, err := strconv.ParseBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -255,7 +263,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_allow_non_tls_redirect_uri").(string); v != BooleanDefault {
-		parsedBool, err := strconv.ParseBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -263,15 +271,15 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_enforce_pkce").(string); v != BooleanDefault {
-		parsedBool, err := strconv.ParseBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		req.WithOauthEnforcePkce(parsedBool)
 	}
 
-	if v := d.Get("oauth_use_secondary_roles").(string); len(v) > 0 {
-		oauthUseSecondaryRoles, err := sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption(v)
+	if v, ok := d.GetOk("oauth_use_secondary_roles"); ok {
+		oauthUseSecondaryRoles, err := sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -297,14 +305,14 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-		parsedBool, err := strconv.ParseBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		req.WithOauthIssueRefreshTokens(parsedBool)
 	}
 
-	if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
+	if v := d.Get("oauth_refresh_token_validity").(int); v != IntDefault {
 		req.WithOauthRefreshTokenValidity(v)
 	}
 
@@ -430,7 +438,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"enabled", "enabled", integration.Enabled, strconv.FormatBool(integration.Enabled), nil},
+				showMapping{"enabled", "enabled", integration.Enabled, booleanStringFromBool(integration.Enabled), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -515,7 +523,7 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("enabled") {
 		if v := d.Get("enabled").(string); v != BooleanDefault {
-			parsedBool, err := strconv.ParseBool(v)
+			parsedBool, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -527,33 +535,33 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("oauth_allow_non_tls_redirect_uri") {
 		if v := d.Get("oauth_allow_non_tls_redirect_uri").(string); v != BooleanDefault {
-			parsedBool, err := strconv.ParseBool(v)
+			parsedBool, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			set.WithOauthAllowNonTlsRedirectUri(parsedBool)
 		} else {
-			// No unset available for this field (setting Snowflake default)
+			// TODO(SNOW-1515781): No unset available for this field (setting Snowflake default)
 			set.WithOauthAllowNonTlsRedirectUri(false)
 		}
 	}
 
 	if d.HasChange("oauth_enforce_pkce") {
 		if v := d.Get("oauth_enforce_pkce").(string); v != BooleanDefault {
-			parsedBool, err := strconv.ParseBool(v)
+			parsedBool, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			set.WithOauthEnforcePkce(parsedBool)
 		} else {
-			// No unset available for this field (setting Snowflake default)
+			// TODO(SNOW-1515781): No unset available for this field (setting Snowflake default)
 			set.WithOauthEnforcePkce(false)
 		}
 	}
 
 	if d.HasChange("oauth_use_secondary_roles") {
-		if v := d.Get("oauth_use_secondary_roles").(string); len(v) > 0 {
-			oauthUseSecondaryRoles, err := sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption(v)
+		if v, ok := d.GetOk("oauth_use_secondary_roles"); ok {
+			oauthUseSecondaryRoles, err := sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption(v.(string))
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -583,45 +591,45 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("oauth_issue_refresh_tokens") {
 		if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-			parsedBool, err := strconv.ParseBool(v)
+			parsedBool, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			set.WithOauthIssueRefreshTokens(parsedBool)
 		} else {
-			// No unset available for this field (setting Snowflake default)
+			// TODO(SNOW-1515781): No unset available for this field (setting Snowflake default)
 			set.WithOauthIssueRefreshTokens(true)
 		}
 	}
 
 	if d.HasChange("oauth_refresh_token_validity") {
-		if v := d.Get("oauth_refresh_token_validity").(int); v != -1 {
+		if v := d.Get("oauth_refresh_token_validity").(int); v != IntDefault {
 			set.WithOauthRefreshTokenValidity(v)
 		} else {
-			// No unset available for this field (setting Snowflake default; 90 days in seconds)
+			// TODO(SNOW-1515781): No unset available for this field (setting Snowflake default; 90 days in seconds)
 			set.WithOauthRefreshTokenValidity(7_776_000)
 		}
 	}
 
 	if d.HasChange("network_policy") {
-		if v := d.Get("network_policy").(string); v != "" {
-			set.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v))
+		if v, ok := d.GetOk("network_policy"); ok {
+			set.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v.(string)))
 		} else {
 			unset.WithNetworkPolicy(true)
 		}
 	}
 
 	if d.HasChange("oauth_client_rsa_public_key") {
-		if v := d.Get("oauth_client_rsa_public_key").(string); v != "" {
-			set.WithOauthClientRsaPublicKey(v)
+		if v, ok := d.GetOk("oauth_client_rsa_public_key"); ok {
+			set.WithOauthClientRsaPublicKey(v.(string))
 		} else {
 			unset.WithOauthClientRsaPublicKey(true)
 		}
 	}
 
 	if d.HasChange("oauth_client_rsa_public_key_2") {
-		if v := d.Get("oauth_client_rsa_public_key_2").(string); v != "" {
-			set.WithOauthClientRsaPublicKey2(v)
+		if v, ok := d.GetOk("oauth_client_rsa_public_key_2"); ok {
+			set.WithOauthClientRsaPublicKey2(v.(string))
 		} else {
 			unset.WithOauthClientRsaPublicKey2(true)
 		}

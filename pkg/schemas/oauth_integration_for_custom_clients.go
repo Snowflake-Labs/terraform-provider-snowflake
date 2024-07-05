@@ -33,6 +33,7 @@ var DescribeOauthIntegrationForCustomClients = map[string]*schema.Schema{
 func DescribeOauthIntegrationForCustomClientsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	propsSchema := make(map[string]any)
 	for _, property := range integrationProperties {
+		property := property
 		switch property.Name {
 		case "OAUTH_CLIENT_TYPE",
 			"OAUTH_REDIRECT_URI",
@@ -53,14 +54,7 @@ func DescribeOauthIntegrationForCustomClientsToSchema(integrationProperties []sd
 			"OAUTH_TOKEN_ENDPOINT",
 			"OAUTH_ALLOWED_AUTHORIZATION_ENDPOINTS",
 			"OAUTH_ALLOWED_TOKEN_ENDPOINTS":
-			propsSchema[strings.ToLower(property.Name)] = []map[string]any{
-				{
-					"name":    property.Name,
-					"type":    property.Type,
-					"value":   property.Value,
-					"default": property.Default,
-				},
-			}
+			propsSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
 		default:
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", property.Name)
 		}

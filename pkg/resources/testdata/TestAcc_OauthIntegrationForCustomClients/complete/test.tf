@@ -5,10 +5,6 @@ resource "snowflake_oauth_integration_for_custom_clients" "test" {
   name                             = var.name
   network_policy                   = var.network_policy
   oauth_allow_non_tls_redirect_uri = var.oauth_allow_non_tls_redirect_uri
-  # oauth_client_rsa_public_key {
-  #   value = var.oauth_client_rsa_public_key
-  # }
-
   oauth_client_rsa_public_key   = var.oauth_client_rsa_public_key
   oauth_client_rsa_public_key_2 = var.oauth_client_rsa_public_key_2
   oauth_client_type             = var.oauth_client_type
