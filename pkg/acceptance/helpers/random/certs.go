@@ -40,7 +40,7 @@ func GenerateX509(t *testing.T) string {
 	return encode(t, "CERTIFICATE", caBytes)
 }
 
-// GenerateRSA returns an RSA public key without BEGIN and END markers.
+// GenerateRSA returns an RSA public key without BEGIN and END markers, and key's hash.
 func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -49,7 +49,7 @@ func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	pub := key.Public()
 	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
 	require.NoError(t, err)
-	return encode(t, "RSA PUBLIC KEY", b), fmt.Sprintf("SHA256:%s", hash(t, b))
+	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
 }
 
 func hash(t *testing.T, b []byte) string {

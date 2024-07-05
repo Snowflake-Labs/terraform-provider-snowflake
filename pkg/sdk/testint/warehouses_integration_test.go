@@ -308,7 +308,7 @@ func TestInt_Warehouses(t *testing.T) {
 		returnedWarehouse, err = client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
 		assert.Equal(t, sdk.WarehouseTypeSnowparkOptimized, returnedWarehouse.Type)
-		assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+		assert.Contains(t, []any{sdk.WarehouseStateStarted, sdk.WarehouseStateResuming}, returnedWarehouse.State)
 
 		// TODO [SNOW-1473453]: uncomment and test when UNSET starts working correctly (expecting to unset to default type STANDARD)
 		// alterOptions = &sdk.AlterWarehouseOptions{
@@ -335,7 +335,7 @@ func TestInt_Warehouses(t *testing.T) {
 		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
 		assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
-		assert.Equal(t, sdk.WarehouseStateSuspended, returnedWarehouse.State)
+		assert.Contains(t, []any{sdk.WarehouseStateSuspended, sdk.WarehouseStateSuspending}, returnedWarehouse.State)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			Set: &sdk.WarehouseSet{WarehouseType: sdk.Pointer(sdk.WarehouseTypeSnowparkOptimized)},

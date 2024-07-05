@@ -49,7 +49,7 @@ Fields added to the resource:
 New field `enabled` is required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
 
 #### *(behavior change)* Force new for multiple attributes
-Force new was added for the following attributes (because no usable SQL alter statements for them):
+Force new was added for the following attributes (because there are no usable SQL alter statements for them):
 - `scim_client`
 - `run_as_role`
 
