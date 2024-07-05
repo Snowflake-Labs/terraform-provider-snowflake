@@ -33,7 +33,7 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringInSlice([]string{sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer}, true),
-			Description:  "Specifies the type of OAuth flow.",
+			Description:  fmt.Sprintf("Specifies the type of OAuth flow. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer),
 		},
 	}
 	return MergeMaps(apiAuthCommonSchema, apiAuthJwtBearer)

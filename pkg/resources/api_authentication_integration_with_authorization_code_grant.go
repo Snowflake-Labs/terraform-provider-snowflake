@@ -23,7 +23,7 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 		"oauth_authorization_endpoint": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Specifies the URL for authenticating to the external service.",
+			Description: "Specifies the URL for authenticating to the external service. If removed from the config, the resource is recreated.",
 		},
 		"oauth_allowed_scopes": {
 			Type:        schema.TypeSet,
@@ -35,7 +35,7 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringInSlice([]string{sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode}, true),
-			Description:  "Specifies the type of OAuth flow.",
+			Description:  fmt.Sprintf("Specifies the type of OAuth flow. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 		},
 	}
 	return MergeMaps(apiAuthCommonSchema, apiAuthAuthorizationCodeGrant)

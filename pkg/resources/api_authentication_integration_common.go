@@ -36,13 +36,13 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 	"oauth_token_endpoint": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).",
+		Description: "Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly). If removed from the config, the resource is recreated.",
 	},
 	"oauth_client_auth_method": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
-		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption))),
+		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption))),
 	},
 	"oauth_access_token_validity": {
 		Type:             schema.TypeInt,

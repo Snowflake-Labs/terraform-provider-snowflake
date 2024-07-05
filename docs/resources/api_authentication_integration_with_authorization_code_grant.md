@@ -50,11 +50,11 @@ resource "snowflake_api_authentication_integration_with_authorization_code_grant
 - `comment` (String) Specifies a comment for the integration.
 - `oauth_access_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
 - `oauth_allowed_scopes` (Set of String) Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.
-- `oauth_authorization_endpoint` (String) Specifies the URL for authenticating to the external service.
-- `oauth_client_auth_method` (String) Specifies that POST is used as the authentication method to the external service. Valid options are: [CLIENT_SECRET_POST]
-- `oauth_grant` (String) Specifies the type of OAuth flow.
+- `oauth_authorization_endpoint` (String) Specifies the URL for authenticating to the external service. If removed from the config, the resource is recreated.
+- `oauth_client_auth_method` (String) Specifies that POST is used as the authentication method to the external service. If removed from the config, the resource is recreated. Valid values are (case-insensitive): `CLIENT_SECRET_POST`.
+- `oauth_grant` (String) Specifies the type of OAuth flow. If removed from the config, the resource is recreated. Valid values are (case-insensitive): AUTHORIZATION_CODE.
 - `oauth_refresh_token_validity` (Number) Specifies the value to determine the validity of the refresh token obtained from the OAuth server.
-- `oauth_token_endpoint` (String) Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly).
+- `oauth_token_endpoint` (String) Specifies the token endpoint used by the client to obtain an access token by presenting its authorization grant or refresh token. The token endpoint is used with every authorization grant except for the implicit grant type (since an access token is issued directly). If removed from the config, the resource is recreated.
 
 ### Read-Only
 
