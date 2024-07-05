@@ -23,20 +23,17 @@ func ParseTimestampWithOffset(s string, dateTimeFormat string) (string, error) {
 // 2. Items are separated by commas, and they shouldn't be a part of any item's value
 // 3. Items can have as many spaces in between, but after separation they will be trimmed and shouldn't be a part of any item's value
 func ParseCommaSeparatedStringArray(value string, trimQuotes bool) []string {
-	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
-		if value == "[]" {
-			return make([]string, 0)
-		}
-		list := strings.Trim(value, "[]")
-		listItems := strings.Split(list, ",")
-		trimmedListItems := make([]string, len(listItems))
-		for i, item := range listItems {
-			trimmedListItems[i] = strings.TrimSpace(item)
-			if trimQuotes {
-				trimmedListItems[i] = strings.Trim(trimmedListItems[i], "'")
-			}
-		}
-		return trimmedListItems
+	value = strings.Trim(value, "[]")
+	if value == "" {
+		return make([]string, 0)
 	}
-	return make([]string, 0)
+	listItems := strings.Split(value, ",")
+	trimmedListItems := make([]string, len(listItems))
+	for i, item := range listItems {
+		trimmedListItems[i] = strings.TrimSpace(item)
+		if trimQuotes {
+			trimmedListItems[i] = strings.Trim(trimmedListItems[i], "'")
+		}
+	}
+	return trimmedListItems
 }
