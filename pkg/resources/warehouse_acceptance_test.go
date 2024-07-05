@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	poc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
@@ -46,73 +47,172 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: warehouseBasicConfigWithComment(name, comment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_type"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "warehouse_size"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "max_cluster_count"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "min_cluster_count"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "scaling_policy"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", r.IntDefaultString),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", r.BooleanDefault),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", r.BooleanDefault),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
+				Check: poc.AssertThat(t,
+					poc.WarehouseResource(t, "snowflake_warehouse.w").
+						HasName(name).
+						HasNoType().
+						HasNoSize().
+						HasNoMaxClusterCount().
+						HasNoMinClusterCount().
+						HasNoScalingPolicy().
+						HasAutoSuspend(r.IntDefaultString).
+						HasAutoResume(r.BooleanDefault).
+						HasNoInitiallySuspended().
+						HasNoResourceMonitor().
+						HasComment(comment).
+						HasEnableQueryAcceleration(r.BooleanDefault).
+						HasQueryAccelerationMaxScaleFactor(r.IntDefaultString).
+						HasMaxConcurrencyLevel("8").
+						HasStatementQueuedTimeoutInSeconds("0").
+						HasStatementTimeoutInSeconds("172800").
+						// alternatively extensions possible:
+						HasDefaultMaxConcurrencyLevel().
+						HasDefaultStatementQueuedTimeoutInSeconds().
+						HasDefaultStatementTimeoutInSeconds(),
+					poc.WarehouseShowOutput(t, "snowflake_warehouse.w").
+						HasType(sdk.WarehouseTypeStandard).
+						HasSize(sdk.WarehouseSizeXSmall).
+						HasMaxClusterCount(1).
+						HasMinClusterCount(1).
+						HasScalingPolicy(sdk.ScalingPolicyStandard).
+						HasAutoSuspend(600).
+						HasAutoResume(true).
+						HasResourceMonitor("").
+						HasComment(comment).
+						HasEnableQueryAcceleration(false).
+						HasQueryAccelerationMaxScaleFactor(8),
+					poc.WarehouseParameters(t, "snowflake_warehouse.w").
+						HasMaxConcurrencyLevel(8).
+						HasStatementQueuedTimeoutInSeconds(0).
+						HasStatementTimeoutInSeconds(172800).
+						// alternatively extensions possible:
+						HasDefaultMaxConcurrencyLevel().
+						HasDefaultStatementQueuedTimeoutInSeconds().
+						HasDefaultStatementTimeoutInSeconds(),
+					poc.Warehouse(t, warehouseId).
+						HasName(warehouseId.Name()).
+						HasState(sdk.WarehouseStateStarted).
+						HasType(sdk.WarehouseTypeStandard).
+						HasSize(sdk.WarehouseSizeXSmall).
+						HasMaxClusterCount(1).
+						HasMinClusterCount(1).
+						HasScalingPolicy(sdk.ScalingPolicyStandard).
+						HasAutoSuspend(600).
+						HasAutoResume(true).
+						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
+						HasComment(comment).
+						HasEnableQueryAcceleration(false).
+						HasQueryAccelerationMaxScaleFactor(8),
+					// we can still use normal checks
+					poc.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
-
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.type", string(sdk.WarehouseTypeStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.max_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.min_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.scaling_policy", string(sdk.ScalingPolicyStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_suspend", "600"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.auto_resume", "true"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.resource_monitor", ""),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.enable_query_acceleration", "false"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
-
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.max_concurrency_level.0.value", "8"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					// bad checks below
+					// poc.WarehouseResource(t, "snowflake_warehouse.w").
+					// 	HasType(string(sdk.WarehouseTypeSnowparkOptimized)).
+					// 	HasSize(string(sdk.WarehouseSizeMedium)),
+					// poc.WarehouseShowOutput(t, "snowflake_warehouse.w").
+					// 	HasType(sdk.WarehouseTypeSnowparkOptimized),
+					// poc.WarehouseParameters(t, "snowflake_warehouse.w").
+					// 	HasMaxConcurrencyLevel(16).
+					// 	HasMaxConcurrencyLevelLevel(sdk.ParameterTypeWarehouse),
+					// poc.Warehouse(t, warehouseId).
+					// 	HasName("bad name").
+					// 	HasState(sdk.WarehouseStateSuspended).
+					// 	HasType(sdk.WarehouseTypeSnowparkOptimized).
+					// 	HasSize(sdk.WarehouseSizeMedium).
+					// 	HasMaxClusterCount(12).
+					// 	HasMinClusterCount(13).
+					// 	HasScalingPolicy(sdk.ScalingPolicyEconomy).
+					// 	HasAutoSuspend(123).
+					// 	HasAutoResume(false).
+					// 	HasResourceMonitor(sdk.NewAccountObjectIdentifier("some-id")).
+					// 	HasComment("bad comment").
+					// 	HasEnableQueryAcceleration(true).
+					// 	HasQueryAccelerationMaxScaleFactor(12),
+					// poc.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeSnowparkOptimized))),
 				),
 			},
 			// IMPORT after empty config (in this method, most of the attributes will be filled with the defaults acquired from Snowflake)
 			{
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
-				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "max_cluster_count", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "min_cluster_count", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "scaling_policy", string(sdk.ScalingPolicyStandard)),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "auto_suspend", "600"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "auto_resume", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "resource_monitor", ""),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "comment", comment),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "enable_query_acceleration", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "query_acceleration_max_scale_factor", "8"),
+				ImportStateCheck: poc.AssertThatImport(t,
+					poc.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
+					poc.ImportedWarehouseResource(t, warehouseId.Name()).
+						HasName(name).
+						HasType(string(sdk.WarehouseTypeStandard)).
+						HasSize(string(sdk.WarehouseSizeXSmall)).
+						HasMaxClusterCount("1").
+						HasMinClusterCount("1").
+						HasScalingPolicy(string(sdk.ScalingPolicyStandard)).
+						HasAutoSuspend("600").
+						HasAutoResume("true").
+						HasResourceMonitor("").
+						HasComment(comment).
+						HasEnableQueryAcceleration("false").
+						HasQueryAccelerationMaxScaleFactor("8").
+						HasDefaultMaxConcurrencyLevel().
+						HasDefaultStatementQueuedTimeoutInSeconds().
+						HasDefaultStatementTimeoutInSeconds(),
+					poc.ImportedWarehouseShowOutput(t, warehouseId.Name()),
+					poc.ImportedWarehouseParameters(t, warehouseId.Name()).
+						HasMaxConcurrencyLevel(8).
+						HasMaxConcurrencyLevelLevel("").
+						HasStatementQueuedTimeoutInSeconds(0).
+						HasStatementQueuedTimeoutInSecondsLevel("").
+						HasStatementTimeoutInSeconds(172800).
+						HasStatementTimeoutInSecondsLevel(""),
+					poc.Warehouse(t, warehouseId).
+						HasName(warehouseId.Name()).
+						HasState(sdk.WarehouseStateStarted).
+						HasType(sdk.WarehouseTypeStandard).
+						HasSize(sdk.WarehouseSizeXSmall).
+						HasMaxClusterCount(1).
+						HasMinClusterCount(1).
+						HasScalingPolicy(sdk.ScalingPolicyStandard).
+						HasAutoSuspend(600).
+						HasAutoResume(true).
+						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
+						HasComment(comment).
+						HasEnableQueryAcceleration(false).
+						HasQueryAccelerationMaxScaleFactor(8),
 
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "max_concurrency_level", "8"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "statement_queued_timeout_in_seconds", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "statement_timeout_in_seconds", "172800"),
-
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.max_concurrency_level.0.value", "8"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.max_concurrency_level.0.level", ""),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.statement_queued_timeout_in_seconds.0.level", ""),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
-					importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "parameters.0.statement_timeout_in_seconds.0.level", ""),
+					// bad checks below
+					poc.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "bad name", name)),
+					poc.ImportedWarehouseResource(t, warehouseId.Name()).
+						HasName("bad name").
+						HasType(string(sdk.WarehouseTypeSnowparkOptimized)).
+						HasSize(string(sdk.WarehouseSizeMedium)).
+						HasMaxClusterCount("2").
+						HasMinClusterCount("3").
+						HasScalingPolicy(string(sdk.ScalingPolicyEconomy)).
+						HasAutoSuspend("123").
+						HasAutoResume("false").
+						HasResourceMonitor("abc").
+						HasComment("bad comment").
+						HasEnableQueryAcceleration("true").
+						HasQueryAccelerationMaxScaleFactor("16"),
+					poc.ImportedWarehouseParameters(t, warehouseId.Name()).
+						HasMaxConcurrencyLevel(1).
+						HasMaxConcurrencyLevelLevel(sdk.ParameterTypeWarehouse).
+						HasStatementQueuedTimeoutInSeconds(23).
+						HasStatementQueuedTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse).
+						HasStatementTimeoutInSeconds(1232).
+						HasStatementTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse),
+					poc.Warehouse(t, warehouseId).
+						HasName("bad name").
+						HasState(sdk.WarehouseStateSuspended).
+						HasType(sdk.WarehouseTypeSnowparkOptimized).
+						HasSize(sdk.WarehouseSizeMedium).
+						HasMaxClusterCount(12).
+						HasMinClusterCount(13).
+						HasScalingPolicy(sdk.ScalingPolicyEconomy).
+						HasAutoSuspend(123).
+						HasAutoResume(false).
+						HasResourceMonitor(sdk.NewAccountObjectIdentifier("some-id")).
+						HasComment("bad comment").
+						HasEnableQueryAcceleration(true).
+						HasQueryAccelerationMaxScaleFactor(12),
 				),
 			},
 			// RENAME

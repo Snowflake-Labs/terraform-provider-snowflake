@@ -1,0 +1,62 @@
+package bettertestspoc
+
+import (
+	"errors"
+	"fmt"
+	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+)
+
+type assertSdk[T any] func(*testing.T, T) error
+type objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (T, error)
+
+type SnowflakeObjectAssert[T any, I sdk.ObjectIdentifier] struct {
+	assertions []assertSdk[T]
+	id         I
+	provider   objectProvider[T, I]
+	objectType sdk.ObjectType
+	TestCheckFuncProvider
+}
+
+func NewSnowflakeObjectAssert[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider objectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
+	return &SnowflakeObjectAssert[T, I]{
+		assertions: make([]assertSdk[T], 0),
+		id:         id,
+		provider:   provider,
+		objectType: objectType,
+	}
+}
+
+func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
+	t.Helper()
+	return func(_ *terraform.State) error {
+		return s.commonTerraformCheckFuncProvider(t)
+	}
+}
+
+func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+	t.Helper()
+	return func(_ []*terraform.InstanceState) error {
+		return s.commonTerraformCheckFuncProvider(t)
+	}
+}
+
+func (s *SnowflakeObjectAssert[_, _]) commonTerraformCheckFuncProvider(t *testing.T) error {
+	sdkObject, err := s.provider(t, s.id)
+	if err != nil {
+		return err
+	}
+
+	var result []error
+
+	for i, assertion := range s.assertions {
+		if err = assertion(t, sdkObject); err != nil {
+			result = append(result, fmt.Errorf("object %s[%s] assertion [%d/%d]: failed with error: %w", s.objectType, s.id.FullyQualifiedName(), i+1, len(s.assertions), err))
+		}
+	}
+
+	return errors.Join(result...)
+}
