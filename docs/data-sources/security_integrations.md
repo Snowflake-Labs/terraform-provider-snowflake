@@ -100,10 +100,274 @@ Read-Only:
 
 Read-Only:
 
-- `todo` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--todo))
+- `allowed_email_patterns` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--allowed_email_patterns))
+- `allowed_user_domains` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--allowed_user_domains))
+- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--comment))
+- `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--enabled))
+- `network_policy` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--network_policy))
+- `run_as_role` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--run_as_role))
+- `saml2_digest_methods_used` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_digest_methods_used))
+- `saml2_enable_sp_initiated` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_enable_sp_initiated))
+- `saml2_force_authn` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_force_authn))
+- `saml2_issuer` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_issuer))
+- `saml2_post_logout_redirect_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_post_logout_redirect_url))
+- `saml2_provider` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_provider))
+- `saml2_requested_nameid_format` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_requested_nameid_format))
+- `saml2_sign_request` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_sign_request))
+- `saml2_signature_methods_used` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_signature_methods_used))
+- `saml2_snowflake_acs_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_snowflake_acs_url))
+- `saml2_snowflake_issuer_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_snowflake_issuer_url))
+- `saml2_snowflake_metadata` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_snowflake_metadata))
+- `saml2_snowflake_x509_cert` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_snowflake_x509_cert))
+- `saml2_sp_initiated_login_page_label` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_sp_initiated_login_page_label))
+- `saml2_sso_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_sso_url))
+- `saml2_x509_cert` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_x509_cert))
+- `sync_password` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--sync_password))
 
-<a id="nestedobjatt--security_integrations--describe_output--todo"></a>
-### Nested Schema for `security_integrations.describe_output.todo`
+<a id="nestedobjatt--security_integrations--describe_output--allowed_email_patterns"></a>
+### Nested Schema for `security_integrations.describe_output.allowed_email_patterns`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--allowed_user_domains"></a>
+### Nested Schema for `security_integrations.describe_output.allowed_user_domains`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--comment"></a>
+### Nested Schema for `security_integrations.describe_output.comment`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--enabled"></a>
+### Nested Schema for `security_integrations.describe_output.enabled`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--network_policy"></a>
+### Nested Schema for `security_integrations.describe_output.network_policy`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--run_as_role"></a>
+### Nested Schema for `security_integrations.describe_output.run_as_role`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_digest_methods_used"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_digest_methods_used`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_enable_sp_initiated"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_enable_sp_initiated`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_force_authn"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_force_authn`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_issuer"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_issuer`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_post_logout_redirect_url"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_post_logout_redirect_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_provider"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_provider`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_requested_nameid_format"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_requested_nameid_format`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_sign_request"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_sign_request`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_signature_methods_used"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_signature_methods_used`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_snowflake_acs_url"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_snowflake_acs_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_snowflake_issuer_url"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_snowflake_issuer_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_snowflake_metadata"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_snowflake_metadata`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_snowflake_x509_cert"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_snowflake_x509_cert`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_sp_initiated_login_page_label"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_sp_initiated_login_page_label`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_sso_url"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_sso_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--saml2_x509_cert"></a>
+### Nested Schema for `security_integrations.describe_output.saml2_x509_cert`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--sync_password"></a>
+### Nested Schema for `security_integrations.describe_output.sync_password`
 
 Read-Only:
 
