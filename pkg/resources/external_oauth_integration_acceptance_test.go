@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -188,8 +189,8 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_external_oauth_integration.test", plancheck.ResourceActionUpdate),
 						planchecks.ExpectDrift("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", sdk.String(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)), sdk.String(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName))),
-
 						planchecks.ExpectChange("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", tfjson.ActionUpdate, sdk.String(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName)), sdk.String(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress))),
 					},
 				},
@@ -236,6 +237,11 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/basic"),
 				ConfigVariables: m(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_external_oauth_integration.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "enabled", "true"),
@@ -370,7 +376,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 	expectedRoles := []string{"ACCOUNTADMIN", "SECURITYADMIN", role1.Name}
 	sort.Strings(expectedRoles)
 	issuer := random.String()
-	rsaKey := random.GenerateRSAPublicKey(t)
+	rsaKey, _ := random.GenerateRSAPublicKey(t)
 	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "true")
 	t.Cleanup(paramCleanup)
 	m := func() map[string]config.Variable {
@@ -461,7 +467,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(role1Cleanup)
 	issuer := random.String()
-	rsaKey := random.GenerateRSAPublicKey(t)
+	rsaKey, _ := random.GenerateRSAPublicKey(t)
 	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "false")
 	t.Cleanup(paramCleanup)
 	m := func() map[string]config.Variable {
@@ -547,7 +553,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 	})
 }
 
-func TestAcc_ExternalOauthIntegration_invalid(t *testing.T) {
+func TestAcc_ExternalOauthIntegration_invalidAnyRoleMode(t *testing.T) {
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"comment": config.StringVariable("foo"),
@@ -579,11 +585,83 @@ func TestAcc_ExternalOauthIntegration_invalid(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
 				ConfigVariables: m(),
-				ExpectError: helpers.MatchAllStringsInOrderNonOverlapping([]string{
-					fmt.Sprintf("expected external_oauth_any_role_mode to be one of %q, got invalid", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationAnyRoleModes)),
-					fmt.Sprintf("expected external_oauth_snowflake_user_mapping_attribute to be one of %q, got invalid", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationSnowflakeUserMappingAttributes)),
-					fmt.Sprintf("expected external_oauth_type to be one of %q, got invalid", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationTypes)),
-				}),
+				ExpectError:     regexp.MustCompile(fmt.Sprintf("expected external_oauth_any_role_mode to be one of %q, got invalid", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationAnyRoleModes))),
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalOauthIntegration_invalidSnowflakeUserMappingAttribute(t *testing.T) {
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"comment": config.StringVariable("foo"),
+			"enabled": config.BoolVariable(true),
+			"external_oauth_add_privileged_roles_to_blocked_list": config.BoolVariable(true),
+			"external_oauth_allowed_roles_list":                   config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_any_role_mode":                        config.StringVariable("invalid"),
+			"external_oauth_audience_list":                        config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_issuer":                               config.StringVariable("foo"),
+			"external_oauth_jws_keys_url":                         config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_rsa_public_key":                       config.StringVariable("foo"),
+			"external_oauth_rsa_public_key_2":                     config.StringVariable("foo"),
+			"external_oauth_scope_delimiter":                      config.StringVariable("foo"),
+			"external_oauth_scope_mapping_attribute":              config.StringVariable("foo"),
+			"external_oauth_snowflake_user_mapping_attribute":     config.StringVariable("invalid"),
+			"external_oauth_token_user_mapping_claim":             config.SetVariable(config.StringVariable("foo")),
+			"name":                config.StringVariable("foo"),
+			"external_oauth_type": config.StringVariable("invalid"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
+				ConfigVariables: m(),
+				ExpectError:     regexp.MustCompile(fmt.Sprintf("expected external_oauth_snowflake_user_mapping_attribute to be one of %q, got invalid", sdk.AsStringList(sdk.AllExternalOauthSecurityIntegrationSnowflakeUserMappingAttributes))),
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalOauthIntegration_invalidOauthType(t *testing.T) {
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"comment": config.StringVariable("foo"),
+			"enabled": config.BoolVariable(true),
+			"external_oauth_add_privileged_roles_to_blocked_list": config.BoolVariable(true),
+			"external_oauth_allowed_roles_list":                   config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_any_role_mode":                        config.StringVariable("invalid"),
+			"external_oauth_audience_list":                        config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_blocked_roles_list":                   config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_issuer":                               config.StringVariable("foo"),
+			"external_oauth_jws_keys_url":                         config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_rsa_public_key":                       config.StringVariable("foo"),
+			"external_oauth_rsa_public_key_2":                     config.StringVariable("foo"),
+			"external_oauth_scope_delimiter":                      config.StringVariable("foo"),
+			"external_oauth_scope_mapping_attribute":              config.StringVariable("foo"),
+			"external_oauth_snowflake_user_mapping_attribute":     config.StringVariable("invalid"),
+			"external_oauth_token_user_mapping_claim":             config.SetVariable(config.StringVariable("foo")),
+			"name":                config.StringVariable("foo"),
+			"external_oauth_type": config.StringVariable("invalid"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
+				ConfigVariables: m(),
+				ExpectError:     regexp.MustCompile(fmt.Sprintf("expected external_oauth_type to be one of %q, got invalid", sdk.AsStringList(sdk.AllOauthSecurityIntegrationClientTypes))),
 			},
 		},
 	})
@@ -624,7 +702,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 	role1, role1Cleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(role1Cleanup)
 	issuer := random.String()
-	rsaKey := random.GenerateRSAPublicKey(t)
+	rsaKey, _ := random.GenerateRSAPublicKey(t)
 	resourceName := "snowflake_external_oauth_integration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },

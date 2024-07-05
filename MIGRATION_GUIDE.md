@@ -50,11 +50,18 @@ Renamed fields:
 to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
 #### *(behavior change)* Force new for multiple attributes after removing from config
-Force new was added for the following attributes (because no usable SQL alter statements for them):
+Conditional force new was added for the following attributes when they are removed from config. There are no alter statements supporting UNSET on these fields.
 - `external_oauth_rsa_public_key`
 - `external_oauth_rsa_public_key_2`
 - `external_oauth_scope_mapping_attribute`
 - `external_oauth_jws_keys_url`
+- `external_oauth_token_user_mapping_claim`
+
+#### *(behavior change)* Changed diff suppress for some fields
+The fields listed below had diff suppress which removed '-' from strings. Now, this behavior is removed, so if you had '-' in these strings, please remove them. Note that '-' in these values is not allowed by Snowflake.
+- `external_oauth_snowflake_user_mapping_attribute`
+- `external_oauth_type`
+- `external_oauth_any_role_mode`
 
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`

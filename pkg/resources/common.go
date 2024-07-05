@@ -54,23 +54,6 @@ func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool 
 	}
 }
 
-func listValueToSlice(value string, trimQuotes bool) []string {
-	value = strings.TrimLeft(value, "[")
-	value = strings.TrimRight(value, "]")
-	if value == "" {
-		return nil
-	}
-	elems := strings.Split(value, ",")
-	for i := range elems {
-		if trimQuotes {
-			elems[i] = strings.Trim(elems[i], " '")
-		} else {
-			elems[i] = strings.Trim(elems[i], " ")
-		}
-	}
-	return elems
-}
-
 func ctyValToSliceString(valueElems []cty.Value) []string {
 	elems := make([]string, len(valueElems))
 	for i, v := range valueElems {

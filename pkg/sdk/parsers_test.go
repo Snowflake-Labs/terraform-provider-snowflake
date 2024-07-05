@@ -8,9 +8,10 @@ import (
 
 func TestParseCommaSeparatedStringArray(t *testing.T) {
 	testCases := []struct {
-		Name   string
-		Value  string
-		Result []string
+		Name       string
+		Value      string
+		TrimQuotes bool
+		Result     []string
 	}{
 		{
 			Name:   "empty list",
@@ -51,7 +52,7 @@ func TestParseCommaSeparatedStringArray(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			assert.Equal(t, tc.Result, ParseCommaSeparatedStringArray(tc.Value))
+			assert.Equal(t, tc.Result, ParseCommaSeparatedStringArray(tc.Value, tc.TrimQuotes))
 		})
 	}
 }
