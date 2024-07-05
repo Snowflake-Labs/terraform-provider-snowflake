@@ -8,22 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// ComposeAggregateImportStateCheck does the same as ComposeImportStateCheck, but it aggregates all the occurred errors,
-// instead of returning the first encountered one.
-func ComposeAggregateImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		var result []error
-
-		for i, f := range fs {
-			if err := f(s); err != nil {
-				result = append(result, fmt.Errorf("check %d/%d error: %w", i+1, len(fs), err))
-			}
-		}
-
-		return errors.Join(result...)
-	}
-}
-
 // ComposeImportStateCheck is based on unexported composeImportStateCheck from teststep_providers_test.go
 func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
 	return func(s []*terraform.InstanceState) error {
@@ -106,22 +90,5 @@ func TestCheckResourceAttrInstanceStateSet(id string, attributeName string) reso
 		}
 
 		return fmt.Errorf("attribute %s not found in instance state", attributeName)
-	}
-}
-
-// TestCheckNoResourceAttrInstanceState checks if the value is present in the instatnce state and returns an error if it does.
-func TestCheckNoResourceAttrInstanceState(id string, attributeName string) resource.ImportStateCheckFunc {
-	return func(is []*terraform.InstanceState) error {
-		for _, v := range is {
-			if v.ID != id {
-				continue
-			}
-
-			if _, ok := v.Attributes[attributeName]; ok {
-				return fmt.Errorf("attribute %s found in instance state, but was not expected", attributeName)
-			}
-		}
-
-		return nil
 	}
 }

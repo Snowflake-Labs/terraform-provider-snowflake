@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -14,9 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"reflect"
-	"strconv"
-	"strings"
 )
 
 var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
@@ -114,13 +115,13 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
 	},
 	"oauth_client_rsa_public_key_2": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers.",
+		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
