@@ -2,9 +2,9 @@ package bettertestspoc
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
-
-	hclJson "github.com/hashicorp/hcl2/hcl/json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -40,23 +40,27 @@ func defaultMeta(resource resources.Resource) *resourceModelMeta {
 	return &resourceModelMeta{name: DefaultResourceName, resource: resource}
 }
 
+// TODO: use reflection to build config directly from model struct
 func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
-	m1 := make(map[string]map[string]ResourceModel)
-	m2 := make(map[string]ResourceModel)
-	m2[model.ResourceName()] = model
-	m1[model.Resource().String()] = m2
-	b, err := json.Marshal(ResourceWrapper{m1})
+	b, err := json.Marshal(model)
 	require.NoError(t, err)
-	t.Logf("Generated json:\n%s", string(b))
-	// TODO: https://pkg.go.dev/github.com/hashicorp/hcl2/hcl/json#Parse
-	f, diag := hclJson.Parse(b, "")
-	if diag.HasErrors() {
-		t.Fatal("Could not parse")
+
+	var objMap map[string]json.RawMessage
+	err = json.Unmarshal(b, &objMap)
+	require.NoError(t, err)
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`resource "%s" "%s" {`, model.Resource(), model.ResourceName()))
+	sb.WriteRune('\n')
+	for k, v := range objMap {
+		sb.WriteString(fmt.Sprintf("\t%s = %s\n", k, v))
 	}
-	s := string(f.Bytes)
-	t.Logf("Generated hcl:\n%s", s)
+	sb.WriteString(`}`)
+	sb.WriteRune('\n')
+	s := sb.String()
+	t.Logf("Generated config:\n%s", s)
 	return s
 }
 
@@ -69,8 +73,4 @@ func ConfigurationFromModelProvider(t *testing.T, model ResourceModel) func(conf
 		_ = content
 		return ""
 	}
-}
-
-type ResourceWrapper struct {
-	Resource map[string]map[string]ResourceModel `json:"resource"`
 }
