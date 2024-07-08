@@ -136,7 +136,7 @@ func TestInt_Warehouses(t *testing.T) {
 		warehouseAssertions.CheckAll(t)
 
 		//// to show errors
-		//warehouseAssertionsBad := poc.Warehouse(t, id).
+		// warehouseAssertionsBad := poc.Warehouse(t, id).
 		//	HasName("bad name").
 		//	HasState(sdk.WarehouseStateSuspended).
 		//	HasType(sdk.WarehouseTypeSnowparkOptimized).
@@ -151,9 +151,9 @@ func TestInt_Warehouses(t *testing.T) {
 		//	HasEnableQueryAcceleration(false).
 		//	HasQueryAccelerationMaxScaleFactor(12)
 		////and run it like this
-		//poc.AssertThatObject(t, warehouseAssertionsBad.SnowflakeObjectAssert)
+		// poc.AssertThatObject(t, warehouseAssertionsBad.SnowflakeObjectAssert)
 		////or alternatively
-		//warehouseAssertionsBad.CheckAll(t)
+		// warehouseAssertionsBad.CheckAll(t)
 
 		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)

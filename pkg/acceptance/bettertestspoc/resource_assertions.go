@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-var _ TestCheckFuncProvider = (*ResourceAssert)(nil)
-var _ ImportStateCheckFuncProvider = (*ResourceAssert)(nil)
+var (
+	_ TestCheckFuncProvider        = (*ResourceAssert)(nil)
+	_ ImportStateCheckFuncProvider = (*ResourceAssert)(nil)
+)
 
 type ResourceAssert struct {
 	name       string
@@ -40,8 +42,10 @@ func NewImportedResourceAssert(id string, prefix string) *ResourceAssert {
 
 type resourceAssertionType string
 
-const resourceAssertionTypeValueSet = "VALUE_SET"
-const resourceAssertionTypeValueNotSet = "VALUE_NOT_SET"
+const (
+	resourceAssertionTypeValueSet    = "VALUE_SET"
+	resourceAssertionTypeValueNotSet = "VALUE_NOT_SET"
+)
 
 type resourceAssertion struct {
 	fieldName             string
@@ -63,9 +67,11 @@ func showOutputValueSet(fieldName string, expected string) resourceAssertion {
 	return resourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
-const parametersPrefix = "parameters.0."
-const parametersValueSuffix = ".0.value"
-const parametersLevelSuffix = ".0.level"
+const (
+	parametersPrefix      = "parameters.0."
+	parametersValueSuffix = ".0.value"
+	parametersLevelSuffix = ".0.level"
+)
 
 func parameterValueSet(fieldName string, expected string) resourceAssertion {
 	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
@@ -108,7 +114,7 @@ func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T) resource.
 			switch a.resourceAssertionType {
 			case resourceAssertionTypeValueSet:
 				if err := importchecks.TestCheckResourceAttrInstanceState(r.id, a.fieldName, a.expectedValue)(s); err != nil {
-					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %s", r.id, r.prefix, i+1, len(r.assertions), err))
+					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %w", r.id, r.prefix, i+1, len(r.assertions), err))
 				}
 			case resourceAssertionTypeValueNotSet:
 				panic("implement")

@@ -2,9 +2,9 @@ package bettertestspoc
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 	"testing"
+
+	hclJson "github.com/hashicorp/hcl2/hcl/json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -43,15 +43,20 @@ func defaultMeta(resource resources.Resource) *resourceModelMeta {
 func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
-	b, err := json.MarshalIndent(model, "", "  ")
+	m1 := make(map[string]map[string]ResourceModel)
+	m2 := make(map[string]ResourceModel)
+	m2[model.ResourceName()] = model
+	m1[model.Resource().String()] = m2
+	b, err := json.Marshal(ResourceWrapper{m1})
 	require.NoError(t, err)
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(`resource "%s" "%s" {`, model.Resource(), model.ResourceName()))
-	sb.WriteString(strings.Trim(string(b), "{}"))
-	sb.WriteString(`}`)
-	sb.WriteRune('\n')
-	s := sb.String()
-	t.Logf("Generated config:\n%s", s)
+	t.Logf("Generated json:\n%s", string(b))
+	// TODO: https://pkg.go.dev/github.com/hashicorp/hcl2/hcl/json#Parse
+	f, diag := hclJson.Parse(b, "")
+	if diag.HasErrors() {
+		t.Fatal("Could not parse")
+	}
+	s := string(f.Bytes)
+	t.Logf("Generated hcl:\n%s", s)
 	return s
 }
 
@@ -64,4 +69,8 @@ func ConfigurationFromModelProvider(t *testing.T, model ResourceModel) func(conf
 		_ = content
 		return ""
 	}
+}
+
+type ResourceWrapper struct {
+	Resource map[string]map[string]ResourceModel `json:"resource"`
 }

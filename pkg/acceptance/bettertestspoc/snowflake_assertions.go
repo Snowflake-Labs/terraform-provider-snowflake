@@ -11,8 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type assertSdk[T any] func(*testing.T, T) error
-type objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (*T, error)
+type (
+	assertSdk[T any]                              func(*testing.T, T) error
+	objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (*T, error)
+)
 
 type SnowflakeObjectAssert[T any, I sdk.ObjectIdentifier] struct {
 	assertions []assertSdk[*T]
@@ -56,6 +58,8 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing
 }
 
 func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
+	t.Helper()
+
 	var sdkObject *T
 	var err error
 	switch {
