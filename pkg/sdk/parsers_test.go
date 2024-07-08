@@ -45,13 +45,13 @@ func TestParseCommaSeparatedStringArray(t *testing.T) {
 		{
 			Name:   "list without brackets",
 			Value:  "one,two,three",
-			Result: []string{},
+			Result: []string{"one", "two", "three"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			assert.Equal(t, tc.Result, ParseCommaSeparatedStringArray(tc.Value))
+			assert.Equal(t, tc.Result, ParseCommaSeparatedStringArray(tc.Value, false))
 		})
 	}
 }

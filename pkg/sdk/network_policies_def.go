@@ -4,6 +4,11 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+// NetworkRulesSnowflakeDTO is needed to unpack the applied network rules from the JSON response from Snowflake
+type NetworkRulesSnowflakeDTO struct {
+	FullyQualifiedRuleName string
+}
+
 var (
 	ip = g.NewQueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes().Required())
@@ -122,15 +127,17 @@ var (
 				Field("EntriesInBlockedNetworkRules", "int"),
 			g.NewQueryStruct("ShowNetworkPolicies").
 				Show().
-				SQL("NETWORK POLICIES"),
+				SQL("NETWORK POLICIES").
+				OptionalLike(),
 		).
+		ShowByIdOperation().
 		DescribeOperation(
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
 			g.DbStruct("describeNetworkPolicyDBRow").
 				Field("name", "string").
 				Field("value", "string"),
-			g.PlainStruct("NetworkPolicyDescription").
+			g.PlainStruct("NetworkPolicyProperty").
 				Field("Name", "string").
 				Field("Value", "string"),
 			g.NewQueryStruct("DescribeNetworkPolicy").

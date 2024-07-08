@@ -20,6 +20,27 @@ They are all described in short in the [changes before v1 doc](./v1-preparations
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
+### *(new feature)* refactored snowflake_network_policy resource
+
+No migration required.
+
+New behavior:
+- `name` is no longer marked as ForceNew parameter. When changed, now it will perform ALTER RENAME operation, instead of re-creating with the new name.
+- Additional validation was added to `blocked_ip_list` to inform about specifying `0.0.0.0/0` ip. More details in the [official documentation](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy#usage-notes).
+
+New fields:
+- `show_output` and `describe_output` added to hold the results returned by `SHOW` and `DESCRIBE` commands.
+
+### *(new feature)* snowflake_network_policies datasource
+
+Added a new datasource enabling querying and filtering network policies. Notes:
+- all results are stored in `network_policies` field.
+- `like` field enables filtering.
+- SHOW NETWORK POLICIES output is enclosed in `show_output` field inside `network_policies`.
+- Output from **DESC NETWORK POLICY** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `network_policies`.
+  The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ### *(new feature)* snowflake_security_integrations datasource
 Added a new datasource enabling querying and filtering all types of security integrations. Notes:
 - all results are stored in `security_integrations` field.

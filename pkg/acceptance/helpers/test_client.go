@@ -26,6 +26,7 @@ type TestClient struct {
 	MaskingPolicy       *MaskingPolicyClient
 	MaterializedView    *MaterializedViewClient
 	NetworkPolicy       *NetworkPolicyClient
+	NetworkRule         *NetworkRuleClient
 	Parameter           *ParameterClient
 	PasswordPolicy      *PasswordPolicyClient
 	Pipe                *PipeClient
@@ -76,6 +77,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		MaskingPolicy:       NewMaskingPolicyClient(context, idsGenerator),
 		MaterializedView:    NewMaterializedViewClient(context, idsGenerator),
 		NetworkPolicy:       NewNetworkPolicyClient(context, idsGenerator),
+		NetworkRule:         NewNetworkRuleClient(context, idsGenerator),
 		Parameter:           NewParameterClient(context),
 		PasswordPolicy:      NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                NewPipeClient(context, idsGenerator),

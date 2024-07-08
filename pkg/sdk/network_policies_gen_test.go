@@ -279,7 +279,10 @@ func TestNetworkPolicies_Show(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "SHOW NETWORK POLICIES")
+		opts.Like = &Like{
+			Pattern: String("some pattern"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW NETWORK POLICIES LIKE 'some pattern'")
 	})
 }
 
