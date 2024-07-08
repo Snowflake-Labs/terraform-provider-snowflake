@@ -37,6 +37,10 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	t.Cleanup(resourceMonitorCleanup)
 	resourceMonitorId := resourceMonitor.ID()
 
+	model := poc.NewWarehouseModel(name).WithComment(comment)
+	// TODO: handle resource name better
+	model.SetResourceName("w")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -46,7 +50,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: warehouseBasicConfigWithComment(name, comment),
+				Config: poc.ConfigurationFromModel(t, model),
 				Check: poc.AssertThat(t,
 					poc.WarehouseResource(t, "snowflake_warehouse.w").
 						HasName(name).

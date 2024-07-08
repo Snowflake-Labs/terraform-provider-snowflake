@@ -1,28 +1,31 @@
 package bettertestspoc
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
 type WarehouseModel struct {
-	Name                            config.Variable
-	WarehouseType                   config.Variable
-	WarehouseSize                   config.Variable
-	MaxClusterCount                 config.Variable
-	MinClusterCount                 config.Variable
-	ScalingPolicy                   config.Variable
-	AutoSuspend                     config.Variable
-	AutoResume                      config.Variable
-	InitiallySuspended              config.Variable
-	ResourceMonitor                 config.Variable
-	Comment                         config.Variable
-	EnableQueryAcceleration         config.Variable
-	QueryAccelerationMaxScaleFactor config.Variable
+	Name                            config.Variable `json:"name,omitempty"`
+	WarehouseType                   config.Variable `json:"warehouse_type,omitempty"`
+	WarehouseSize                   config.Variable `json:"warehouse_size,omitempty"`
+	MaxClusterCount                 config.Variable `json:"max_cluster_count,omitempty"`
+	MinClusterCount                 config.Variable `json:"min_cluster_count,omitempty"`
+	ScalingPolicy                   config.Variable `json:"scaling_policy,omitempty"`
+	AutoSuspend                     config.Variable `json:"auto_suspend,omitempty"`
+	AutoResume                      config.Variable `json:"auto_resume,omitempty"`
+	InitiallySuspended              config.Variable `json:"initially_suspended,omitempty"`
+	ResourceMonitor                 config.Variable `json:"resource_monitor,omitempty"`
+	Comment                         config.Variable `json:"comment,omitempty"`
+	EnableQueryAcceleration         config.Variable `json:"enable_query_acceleration,omitempty"`
+	QueryAccelerationMaxScaleFactor config.Variable `json:"query_acceleration_max_scale_factor,omitempty"`
 
-	MaxConcurrencyLevel             config.Variable
-	StatementQueuedTimeoutInSeconds config.Variable
-	StatementTimeoutInSeconds       config.Variable
+	MaxConcurrencyLevel             config.Variable `json:"max_concurrency_level,omitempty"`
+	StatementQueuedTimeoutInSeconds config.Variable `json:"statement_queued_timeout_in_seconds,omitempty"`
+	StatementTimeoutInSeconds       config.Variable `json:"statement_timeout_in_seconds,omitempty"`
+
+	*resourceModelMeta
 }
 
 ///////////////////////////////////
@@ -32,7 +35,7 @@ type WarehouseModel struct {
 func NewWarehouseModel(
 	name string,
 ) *WarehouseModel {
-	m := &WarehouseModel{}
+	m := &WarehouseModel{resourceModelMeta: defaultMeta(resources.Warehouse)}
 	m.WithName(name)
 	return m
 }
