@@ -140,7 +140,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
-			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&sdk.WarehouseSizeXSmall))
+			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(sdk.Pointer(sdk.WarehouseSizeXSmall)))
 
 		task := createTaskWithRequest(t, request)
 

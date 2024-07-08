@@ -8,6 +8,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 type assertSdk[T any] func(*testing.T, T) error
@@ -33,18 +34,18 @@ func NewSnowflakeObjectAssert[T any, I sdk.ObjectIdentifier](objectType sdk.Obje
 func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.commonTerraformCheckFuncProvider(t)
+		return s.runSnowflakeObjectsAssertions(t)
 	}
 }
 
 func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.commonTerraformCheckFuncProvider(t)
+		return s.runSnowflakeObjectsAssertions(t)
 	}
 }
 
-func (s *SnowflakeObjectAssert[_, _]) commonTerraformCheckFuncProvider(t *testing.T) error {
+func (s *SnowflakeObjectAssert[_, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
 	sdkObject, err := s.provider(t, s.id)
 	if err != nil {
 		return err
@@ -59,4 +60,16 @@ func (s *SnowflakeObjectAssert[_, _]) commonTerraformCheckFuncProvider(t *testin
 	}
 
 	return errors.Join(result...)
+}
+
+func AssertThatObject[T any, I sdk.ObjectIdentifier](t *testing.T, objectAssert *SnowflakeObjectAssert[T, I]) {
+	t.Helper()
+	err := objectAssert.runSnowflakeObjectsAssertions(t)
+	require.NoError(t, err)
+}
+
+func (s *SnowflakeObjectAssert[_, _]) CheckAll(t *testing.T) {
+	t.Helper()
+	err := s.runSnowflakeObjectsAssertions(t)
+	require.NoError(t, err)
 }
