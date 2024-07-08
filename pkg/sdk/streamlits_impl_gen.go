@@ -38,8 +38,8 @@ func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([
 }
 
 func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
-	request := NewShowStreamlitRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
-	streamlits, err := v.Show(ctx, request)
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	streamlits, err := v.Show(ctx, NewShowStreamlitRequest())
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +65,17 @@ func (r *CreateStreamlitRequest) toOpts() *CreateStreamlitOptions {
 		RootLocation: r.RootLocation,
 		MainFile:     r.MainFile,
 		Warehouse:    r.Warehouse,
-		Comment:      r.Comment,
+
+		Title:   r.Title,
+		Comment: r.Comment,
 	}
+
+	if r.ExternalAccessIntegrations != nil {
+		opts.ExternalAccessIntegrations = &ExternalAccessIntegrations{
+			ExternalAccessIntegrations: r.ExternalAccessIntegrations.ExternalAccessIntegrations,
+		}
+	}
+
 	return opts
 }
 
@@ -77,14 +86,34 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 
 		RenameTo: r.RenameTo,
 	}
+
 	if r.Set != nil {
+
 		opts.Set = &StreamlitSet{
 			RootLocation: r.Set.RootLocation,
 			MainFile:     r.Set.MainFile,
 			Warehouse:    r.Set.Warehouse,
-			Comment:      r.Set.Comment,
+
+			Comment: r.Set.Comment,
+			Title:   r.Set.Title,
+		}
+
+		if r.Set.ExternalAccessIntegrations != nil {
+			opts.Set.ExternalAccessIntegrations = &ExternalAccessIntegrations{
+				ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations.ExternalAccessIntegrations,
+			}
+		}
+
+	}
+
+	if r.Unset != nil {
+		opts.Unset = &StreamlitUnset{
+			QueryWarehouse: r.Unset.QueryWarehouse,
+			Comment:        r.Unset.Comment,
+			Title:          r.Unset.Title,
 		}
 	}
+
 	return opts
 }
 
@@ -107,25 +136,8 @@ func (r *ShowStreamlitRequest) toOpts() *ShowStreamlitOptions {
 }
 
 func (r streamlitsRow) convert() *Streamlit {
-	e := &Streamlit{
-		CreatedOn:     r.CreatedOn,
-		Name:          r.Name,
-		DatabaseName:  r.DatabaseName,
-		SchemaName:    r.SchemaName,
-		Owner:         r.Owner,
-		UrlId:         r.UrlId,
-		OwnerRoleType: r.OwnerRoleType,
-	}
-	if r.Title.Valid {
-		e.Title = r.Title.String
-	}
-	if r.Comment.Valid {
-		e.Comment = r.Comment.String
-	}
-	if r.QueryWarehouse.Valid {
-		e.QueryWarehouse = r.QueryWarehouse.String
-	}
-	return e
+	// TODO: Mapping
+	return &Streamlit{}
 }
 
 func (r *DescribeStreamlitRequest) toOpts() *DescribeStreamlitOptions {
@@ -136,17 +148,6 @@ func (r *DescribeStreamlitRequest) toOpts() *DescribeStreamlitOptions {
 }
 
 func (r streamlitsDetailRow) convert() *StreamlitDetail {
-	e := &StreamlitDetail{
-		Name:         r.Name,
-		RootLocation: r.RootLocation,
-		MainFile:     r.MainFile,
-		UrlId:        r.UrlId,
-	}
-	if r.Title.Valid {
-		e.Title = r.Title.String
-	}
-	if r.QueryWarehouse.Valid {
-		e.QueryWarehouse = r.QueryWarehouse.String
-	}
-	return e
+	// TODO: Mapping
+	return &StreamlitDetail{}
 }

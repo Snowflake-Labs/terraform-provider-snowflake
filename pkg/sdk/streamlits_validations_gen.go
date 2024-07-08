@@ -36,12 +36,20 @@ func (opts *AlterStreamlitOptions) validate() error {
 	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.RenameTo, opts.Set) {
-		errs = append(errs, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set"))
+	if !exactlyOneValueSet(opts.RenameTo, opts.Set, opts.Unset) {
+		errs = append(errs, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if opts.Set.Warehouse != nil && !ValidObjectIdentifier(opts.Set.Warehouse) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
+		}
+		if !anyValueSet(opts.Set.RootLocation, opts.Set.MainFile, opts.Set.Warehouse, opts.Set.ExternalAccessIntegrations, opts.Set.Comment, opts.Set.Title) {
+			errs = append(errs, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "Warehouse", "ExternalAccessIntegrations", "Comment", "Title"))
+		}
+	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.QueryWarehouse, opts.Unset.Title, opts.Unset.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterStreamlitOptions.Unset", "QueryWarehouse", "Title", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)
@@ -63,9 +71,6 @@ func (opts *ShowStreamlitOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, ErrPatternRequiredForLikeKeyword)
-	}
 	return JoinErrors(errs...)
 }
 

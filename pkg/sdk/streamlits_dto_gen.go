@@ -11,27 +11,42 @@ var (
 )
 
 type CreateStreamlitRequest struct {
-	OrReplace    *bool
-	IfNotExists  *bool
-	name         SchemaObjectIdentifier // required
-	RootLocation string                 // required
-	MainFile     string                 // required
-	Warehouse    *AccountObjectIdentifier
-	Comment      *string
+	OrReplace                  *bool
+	IfNotExists                *bool
+	name                       SchemaObjectIdentifier // required
+	RootLocation               string                 // required
+	MainFile                   string                 // required
+	Warehouse                  *AccountObjectIdentifier
+	ExternalAccessIntegrations *ExternalAccessIntegrationsRequest
+	Title                      *string
+	Comment                    *string
+}
+
+type ExternalAccessIntegrationsRequest struct {
+	ExternalAccessIntegrations []AccountObjectIdentifier // required
 }
 
 type AlterStreamlitRequest struct {
 	IfExists *bool
 	name     SchemaObjectIdentifier // required
 	Set      *StreamlitSetRequest
+	Unset    *StreamlitUnsetRequest
 	RenameTo *SchemaObjectIdentifier
 }
 
 type StreamlitSetRequest struct {
-	RootLocation *string // required
-	MainFile     *string // required
-	Warehouse    *AccountObjectIdentifier
-	Comment      *string
+	RootLocation               *string // required
+	MainFile                   *string // required
+	Warehouse                  *AccountObjectIdentifier
+	ExternalAccessIntegrations *ExternalAccessIntegrationsRequest
+	Comment                    *string
+	Title                      *string
+}
+
+type StreamlitUnsetRequest struct {
+	QueryWarehouse *bool
+	Comment        *bool
+	Title          *bool
 }
 
 type DropStreamlitRequest struct {
