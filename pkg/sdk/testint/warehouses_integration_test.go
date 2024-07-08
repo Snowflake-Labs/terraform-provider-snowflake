@@ -171,6 +171,23 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
+		// we can also use the read object to initialize:
+		poc.WarehouseFromObject(t, warehouse).
+			HasName(id.Name()).
+			HasType(sdk.WarehouseTypeStandard).
+			HasSize(sdk.WarehouseSizeSmall).
+			HasMaxClusterCount(8).
+			HasMinClusterCount(2).
+			HasScalingPolicy(sdk.ScalingPolicyEconomy).
+			HasAutoSuspend(1000).
+			HasAutoResume(true).
+			HasStateOneOf(sdk.WarehouseStateResuming, sdk.WarehouseStateStarted).
+			HasResourceMonitor(resourceMonitor.ID()).
+			HasComment("comment").
+			HasEnableQueryAcceleration(true).
+			HasQueryAccelerationMaxScaleFactor(90).
+			CheckAll(t)
+
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)

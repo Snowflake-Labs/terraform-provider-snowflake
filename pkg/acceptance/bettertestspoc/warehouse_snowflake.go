@@ -10,13 +10,20 @@ import (
 )
 
 type WarehouseAssert struct {
-	*SnowflakeObjectAssert[*sdk.Warehouse, sdk.AccountObjectIdentifier]
+	*SnowflakeObjectAssert[sdk.Warehouse, sdk.AccountObjectIdentifier]
 }
 
 func Warehouse(t *testing.T, id sdk.AccountObjectIdentifier) *WarehouseAssert {
 	t.Helper()
 	return &WarehouseAssert{
-		NewSnowflakeObjectAssert(sdk.ObjectTypeWarehouse, id, acc.TestClient().Warehouse.Show),
+		NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeWarehouse, id, acc.TestClient().Warehouse.Show),
+	}
+}
+
+func WarehouseFromObject(t *testing.T, warehouse *sdk.Warehouse) *WarehouseAssert {
+	t.Helper()
+	return &WarehouseAssert{
+		NewSnowflakeObjectAssertWithObject(sdk.ObjectTypeWarehouse, warehouse.ID(), warehouse),
 	}
 }
 

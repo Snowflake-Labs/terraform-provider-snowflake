@@ -12,22 +12,32 @@ import (
 )
 
 type assertSdk[T any] func(*testing.T, T) error
-type objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (T, error)
+type objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (*T, error)
 
 type SnowflakeObjectAssert[T any, I sdk.ObjectIdentifier] struct {
-	assertions []assertSdk[T]
+	assertions []assertSdk[*T]
 	id         I
-	provider   objectProvider[T, I]
 	objectType sdk.ObjectType
+	object     *T
+	provider   objectProvider[T, I]
 	TestCheckFuncProvider
 }
 
-func NewSnowflakeObjectAssert[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider objectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
+func NewSnowflakeObjectAssertWithProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider objectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
 	return &SnowflakeObjectAssert[T, I]{
-		assertions: make([]assertSdk[T], 0),
+		assertions: make([]assertSdk[*T], 0),
 		id:         id,
-		provider:   provider,
 		objectType: objectType,
+		provider:   provider,
+	}
+}
+
+func NewSnowflakeObjectAssertWithObject[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, object *T) *SnowflakeObjectAssert[T, I] {
+	return &SnowflakeObjectAssert[T, I]{
+		assertions: make([]assertSdk[*T], 0),
+		id:         id,
+		objectType: objectType,
+		object:     object,
 	}
 }
 
@@ -45,10 +55,19 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing
 	}
 }
 
-func (s *SnowflakeObjectAssert[_, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
-	sdkObject, err := s.provider(t, s.id)
-	if err != nil {
-		return err
+func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
+	var sdkObject *T
+	var err error
+	switch {
+	case s.object != nil:
+		sdkObject = s.object
+	case s.provider != nil:
+		sdkObject, err = s.provider(t, s.id)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("cannot proceed with object %s[%s] assertion: object or provider must be specified", s.objectType, s.id.FullyQualifiedName())
 	}
 
 	var result []error
