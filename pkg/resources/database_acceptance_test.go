@@ -725,7 +725,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			{
 				PreConfig: func() {
 					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-					require.Equal(t, sdk.ParameterTypeAccount, string(param.Level))
+					require.Equal(t, string(sdk.ParameterTypeAccount), string(param.Level))
 					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "50")
 					t.Cleanup(revert)
 				},
@@ -770,7 +770,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			{
 				PreConfig: func() {
 					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-					require.Equal(t, "", string(param.Level))
+					require.Equal(t, string(sdk.ParameterTypeAccount), string(param.Level))
 				},
 				ConfigVariables: databaseBasicConfig,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/int_parameter/unset"),
@@ -815,7 +815,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			{
 				PreConfig: func() {
 					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-					require.Equal(t, "", string(param.Level))
+					require.Equal(t, string(sdk.ParameterTypeAccount), string(param.Level))
 				},
 				ConfigVariables: databaseBasicConfig,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/int_parameter/unset"),
@@ -835,7 +835,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			{
 				PreConfig: func() {
 					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-					require.Equal(t, "", string(param.Level))
+					require.Equal(t, string(sdk.ParameterTypeAccount), string(param.Level))
 					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "50")
 					t.Cleanup(revert)
 				},
