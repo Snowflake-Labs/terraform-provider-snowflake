@@ -68,7 +68,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						// alternatively extensions possible:
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
-						HasDefaultStatementTimeoutInSeconds(),
+						HasDefaultStatementTimeoutInSeconds().
+						// alternatively extension possible
+						HasAllDefault(),
 					poc.WarehouseShowOutput(t, "snowflake_warehouse.w").
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
