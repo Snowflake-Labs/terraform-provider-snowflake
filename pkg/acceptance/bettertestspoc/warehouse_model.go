@@ -6,6 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
+// TODO: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
+// TODO: add possibility to have depends_on to other resources (in meta?)
+// TODO: add a convenience method to use multiple configs from multiple models
 type WarehouseModel struct {
 	Name                            config.Variable `json:"name,omitempty"`
 	WarehouseType                   config.Variable `json:"warehouse_type,omitempty"`
