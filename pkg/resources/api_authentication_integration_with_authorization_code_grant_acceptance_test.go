@@ -30,7 +30,6 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 			c["oauth_refresh_token_validity"] = config.IntegerVariable(12345)
 			c["oauth_token_endpoint"] = config.StringVariable("https://example.com")
 			c["oauth_allowed_scopes"] = config.SetVariable(config.StringVariable("foo"))
-			c["oauth_grant"] = config.StringVariable(sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode)
 		}
 		return c
 	}
@@ -67,7 +66,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_authorization_endpoint.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_token_endpoint.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_allowed_scopes.0.value", ""),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_grant.0.value", ""),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.parent_integration.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.auth_type.0.value", "OAUTH2"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.comment.0.value", ""),
@@ -98,7 +97,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_client_auth_method.0.value", ""),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_token_endpoint.0.value", ""),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_allowed_scopes.0.value", ""),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_grant.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.parent_integration.0.value", ""),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.auth_type.0.value", "OAUTH2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.comment.0.value", ""),
@@ -118,7 +117,6 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_secret", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_refresh_token_validity", "12345"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_token_endpoint", "https://example.com"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_grant", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_allowed_scopes.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_allowed_scopes.0", "foo"),
 
@@ -187,7 +185,6 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_complete(t *
 			"oauth_client_secret":          config.StringVariable("foo"),
 			"oauth_refresh_token_validity": config.IntegerVariable(12345),
 			"oauth_token_endpoint":         config.StringVariable("https://example.com"),
-			"oauth_grant":                  config.StringVariable(sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
 			"oauth_allowed_scopes":         config.SetVariable(config.StringVariable("foo")),
 		}
 	}

@@ -28,9 +28,6 @@ variable "oauth_refresh_token_validity" {
 variable "oauth_token_endpoint" {
   type = string
 }
-variable "oauth_grant" {
-  type = string
-}
 variable "oauth_allowed_scopes" {
   type = set(string)
 }

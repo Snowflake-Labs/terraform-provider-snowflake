@@ -28,6 +28,3 @@ variable "oauth_token_endpoint" {
 variable "oauth_allowed_scopes" {
   type = set(string)
 }
-variable "oauth_grant" {
-  type = string
-}

@@ -9,6 +9,5 @@ resource "snowflake_api_authentication_integration_with_authorization_code_grant
   oauth_client_secret          = var.oauth_client_secret
   oauth_refresh_token_validity = var.oauth_refresh_token_validity
   oauth_token_endpoint         = var.oauth_token_endpoint
-  oauth_grant                  = var.oauth_grant
   oauth_allowed_scopes         = var.oauth_allowed_scopes
 }

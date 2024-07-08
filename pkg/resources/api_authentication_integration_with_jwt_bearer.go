@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
@@ -28,12 +27,6 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 		"oauth_assertion_issuer": {
 			Type:     schema.TypeString,
 			Required: true,
-		},
-		"oauth_grant": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringInSlice([]string{sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer}, true),
-			Description:  fmt.Sprintf("Specifies the type of OAuth flow. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer),
 		},
 	}
 	return MergeMaps(apiAuthCommonSchema, apiAuthJwtBearer)
@@ -50,11 +43,10 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
-			ForceNewIfChangeToEmptyString("oauth_grant"),
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
-				"oauth_token_endpoint", "oauth_grant", "oauth_assertion_issuer"),
+				"oauth_token_endpoint", "oauth_assertion_issuer"),
 		),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportApiAuthenticationWithJwtBearer,
@@ -93,12 +85,6 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 			return nil, err
 		}
 	}
-	oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
-	if err == nil {
-		if err = d.Set("oauth_grant", oauthGrant.Value); err != nil {
-			return nil, err
-		}
-	}
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -111,6 +97,7 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 	}
 	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
 	req := sdk.NewCreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id, commonCreate.enabled, d.Get("oauth_assertion_issuer").(string), commonCreate.oauthClientId, commonCreate.oauthClientSecret)
+	req.WithOauthGrantJwtBearer(true)
 	req.Comment = commonCreate.comment
 	req.OauthAccessTokenValidity = commonCreate.oauthAccessTokenValidity
 	req.OauthRefreshTokenValidity = commonCreate.oauthRefreshTokenValidity
@@ -119,12 +106,6 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 
 	if v, ok := d.GetOk("oauth_authorization_endpoint"); ok {
 		req.WithOauthAuthorizationEndpoint(v.(string))
-	}
-
-	if v, ok := d.GetOk("oauth_grant"); ok {
-		if v.(string) == sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer {
-			req.WithOauthGrantJwtBearer(true)
-		}
 	}
 
 	if err := client.SecurityIntegrations.CreateApiAuthenticationWithJwtBearerFlow(ctx, req); err != nil {
@@ -173,21 +154,15 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
-		if err != nil {
-			return diag.FromErr(err)
-		}
 		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_assertion_issuer", "oauth_assertion_issuer", oauthAssertionIssuer.Value, oauthAssertionIssuer.Value, nil},
-			{"oauth_grant", "oauth_grant", oauthGrant.Value, oauthGrant.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_assertion_issuer",
-			"oauth_grant",
 		}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -217,12 +192,6 @@ func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 	}
 	if d.HasChange("oauth_authorization_endpoint") {
 		set.WithOauthAuthorizationEndpoint(d.Get("oauth_authorization_endpoint").(string))
-	}
-	if d.HasChange("oauth_grant") {
-		if v := d.Get("oauth_grant").(string); v == sdk.ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer {
-			set.WithOauthGrantJwtBearer(true)
-		}
-		// else: force new
 	}
 	if !reflect.DeepEqual(*set, sdk.ApiAuthenticationWithJwtBearerFlowIntegrationSetRequest{}) {
 		if err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithSet(*set)); err != nil {

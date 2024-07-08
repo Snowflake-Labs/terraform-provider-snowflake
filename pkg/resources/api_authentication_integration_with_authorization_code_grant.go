@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
@@ -31,12 +30,6 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.",
 		},
-		"oauth_grant": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringInSlice([]string{sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode}, true),
-			Description:  fmt.Sprintf("Specifies the type of OAuth flow. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
-		},
 	}
 	return MergeMaps(apiAuthCommonSchema, apiAuthAuthorizationCodeGrant)
 }()
@@ -51,11 +44,10 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
-			ForceNewIfChangeToEmptyString("oauth_grant"),
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
-				"oauth_token_endpoint", "oauth_allowed_scopes", "oauth_grant"),
+				"oauth_token_endpoint", "oauth_allowed_scopes"),
 		),
 		Schema: apiAuthAuthorizationCodeGrantSchema,
 		Importer: &schema.ResourceImporter{
@@ -96,12 +88,6 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 			return nil, err
 		}
 	}
-	oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
-	if err == nil {
-		if err = d.Set("oauth_grant", oauthGrant.Value); err != nil {
-			return nil, err
-		}
-	}
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -114,6 +100,7 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 	}
 	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
 	req := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, commonCreate.enabled, commonCreate.oauthClientId, commonCreate.oauthClientSecret)
+	req.WithOauthGrantAuthorizationCode(true)
 	req.Comment = commonCreate.comment
 	req.OauthAccessTokenValidity = commonCreate.oauthAccessTokenValidity
 	req.OauthRefreshTokenValidity = commonCreate.oauthRefreshTokenValidity
@@ -122,12 +109,6 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 
 	if v, ok := d.GetOk("oauth_authorization_endpoint"); ok {
 		req.WithOauthAuthorizationEndpoint(v.(string))
-	}
-
-	if v, ok := d.GetOk("oauth_grant"); ok {
-		if v.(string) == sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode {
-			req.WithOauthGrantAuthorizationCode(true)
-		}
 	}
 
 	if v, ok := d.GetOk("oauth_allowed_scopes"); ok {
@@ -186,21 +167,15 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 			return diag.FromErr(err)
 		}
 
-		oauthGrant, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_GRANT" })
-		if err != nil {
-			return diag.FromErr(err)
-		}
 		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
-			{"oauth_grant", "oauth_grant", oauthGrant.Value, oauthGrant.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_allowed_scopes",
-			"oauth_grant",
 			"oauth_client_auth_method",
 			"oauth_token_endpoint",
 		}); err != nil {
@@ -232,12 +207,6 @@ func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 	}
 	if d.HasChange("oauth_authorization_endpoint") {
 		set.WithOauthAuthorizationEndpoint(d.Get("oauth_authorization_endpoint").(string))
-	}
-	if d.HasChange("oauth_grant") {
-		if v := d.Get("oauth_grant").(string); v == sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode {
-			set.WithOauthGrantAuthorizationCode(true)
-		}
-		// else: force new
 	}
 
 	if d.HasChange("oauth_allowed_scopes") {
