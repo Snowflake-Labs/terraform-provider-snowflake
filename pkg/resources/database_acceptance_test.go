@@ -725,7 +725,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			{
 				PreConfig: func() {
 					param := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-					require.Equal(t, "", string(param.Level))
+					require.Equal(t, sdk.ParameterTypeAccount, string(param.Level))
 					revert := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "50")
 					t.Cleanup(revert)
 				},
@@ -1138,7 +1138,7 @@ func databaseStateUpgraderWithReplicationOld(id sdk.AccountObjectIdentifier, ena
 resource "snowflake_database" "test" {
 	name = "%s"
 	replication_configuration {
-		accounts = ["%s"] 
+		accounts = ["%s"]
 		ignore_edition_check = true
 	}
 }
