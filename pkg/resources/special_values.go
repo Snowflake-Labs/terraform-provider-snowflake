@@ -37,3 +37,7 @@ func booleanStringToBool(value string) (bool, error) {
 func booleanStringFieldDescription(description string) string {
 	return fmt.Sprintf(`%s Available options are: "%s" or "%s". When the value is not set in the configuration the provider will put "%s" there which means to use the Snowflake default for this value.`, description, BooleanTrue, BooleanFalse, BooleanDefault)
 }
+
+func withPrivilegedRolesDescription(description, paramName string) string {
+	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE. `, description, paramName)
+}

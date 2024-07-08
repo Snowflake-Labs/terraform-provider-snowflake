@@ -86,7 +86,7 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.",
+		Description: withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			params := d.Get(RelatedParametersAttributeName).([]any)
 			if len(params) == 0 {
