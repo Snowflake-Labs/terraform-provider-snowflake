@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	poc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc"
+	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -116,7 +116,7 @@ func TestInt_Warehouses(t *testing.T) {
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
 		// we can use the same assertion builder in the SDK tests
-		poc.AssertThatObject(t, poc.Warehouse(t, id).
+		objectAssert.AssertThatObject(t, objectAssert.Warehouse(t, id).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -130,23 +130,6 @@ func TestInt_Warehouses(t *testing.T) {
 			HasComment("comment").
 			HasEnableQueryAcceleration(true).
 			HasQueryAccelerationMaxScaleFactor(90))
-
-		//// to show errors
-		// warehouseAssertionsBad := poc.Warehouse(t, id).
-		//	HasName("bad name").
-		//	HasState(sdk.WarehouseStateSuspended).
-		//	HasType(sdk.WarehouseTypeSnowparkOptimized).
-		//	HasSize(sdk.WarehouseSizeMedium).
-		//	HasMaxClusterCount(12).
-		//	HasMinClusterCount(13).
-		//	HasScalingPolicy(sdk.ScalingPolicyStandard).
-		//	HasAutoSuspend(123).
-		//	HasAutoResume(false).
-		//	HasResourceMonitor(sdk.NewAccountObjectIdentifier("some-id")).
-		//	HasComment("bad comment").
-		//	HasEnableQueryAcceleration(false).
-		//	HasQueryAccelerationMaxScaleFactor(12)
-		// poc.AssertThatObject(t, warehouseAssertionsBad)
 
 		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -165,7 +148,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		// we can also use the read object to initialize:
-		poc.AssertThatObject(t, poc.WarehouseFromObject(t, warehouse).
+		objectAssert.AssertThatObject(t, objectAssert.WarehouseFromObject(t, warehouse).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).

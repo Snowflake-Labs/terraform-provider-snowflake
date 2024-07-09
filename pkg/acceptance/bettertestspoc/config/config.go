@@ -1,4 +1,4 @@
-package bettertestspoc
+package config
 
 import (
 	"encoding/json"
@@ -46,11 +46,11 @@ func meta(resourceName string, resource resources.Resource) *resourceModelMeta {
 	return &resourceModelMeta{name: resourceName, resource: resource}
 }
 
-// ConfigurationFromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
+// FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
 // TODO: use reflection to build config directly from model struct (or some other different way)
 // TODO: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
-func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
+func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
 	b, err := json.Marshal(model)

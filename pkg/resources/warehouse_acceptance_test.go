@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	poc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
@@ -37,10 +38,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	t.Cleanup(resourceMonitorCleanup)
 	resourceMonitorId := resourceMonitor.ID()
 
-	model := poc.NewWarehouseModel("w", name).WithComment(comment)
-
-	// alternatively some extension func
-	// model := poc.BasicWarehouseModel(name, comment)
+	model := config.NewWarehouseModel("w", name).WithComment(comment)
+	// alternatively we can add an extension func
+	_ = config.BasicWarehouseModel(name, comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -51,9 +51,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: poc.ConfigurationFromModel(t, model),
-				Check: poc.AssertThat(t,
-					poc.WarehouseResource(t, "snowflake_warehouse.w").
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t,
+					assert.WarehouseResource(t, "snowflake_warehouse.w").
 						HasName(name).
 						HasNoType().
 						HasNoSize().
@@ -76,7 +76,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultStatementTimeoutInSeconds().
 						// alternatively extension possible
 						HasAllDefault(),
-					poc.WarehouseShowOutput(t, "snowflake_warehouse.w").
+					assert.WarehouseShowOutput(t, "snowflake_warehouse.w").
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
 						HasMaxClusterCount(1).
@@ -88,7 +88,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
-					poc.WarehouseParameters(t, "snowflake_warehouse.w").
+					assert.WarehouseParameters(t, "snowflake_warehouse.w").
 						HasMaxConcurrencyLevel(8).
 						HasStatementQueuedTimeoutInSeconds(0).
 						HasStatementTimeoutInSeconds(172800).
@@ -96,7 +96,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					poc.Warehouse(t, warehouseId).
+					assert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -111,41 +111,16 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
 					// we can still use normal checks
-					poc.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
-
-					// bad checks below
-					// poc.WarehouseResource(t, "snowflake_warehouse.w").
-					// 	HasType(string(sdk.WarehouseTypeSnowparkOptimized)).
-					// 	HasSize(string(sdk.WarehouseSizeMedium)),
-					// poc.WarehouseShowOutput(t, "snowflake_warehouse.w").
-					// 	HasType(sdk.WarehouseTypeSnowparkOptimized),
-					// poc.WarehouseParameters(t, "snowflake_warehouse.w").
-					// 	HasMaxConcurrencyLevel(16).
-					// 	HasMaxConcurrencyLevelLevel(sdk.ParameterTypeWarehouse),
-					// poc.Warehouse(t, warehouseId).
-					// 	HasName("bad name").
-					// 	HasState(sdk.WarehouseStateSuspended).
-					// 	HasType(sdk.WarehouseTypeSnowparkOptimized).
-					// 	HasSize(sdk.WarehouseSizeMedium).
-					// 	HasMaxClusterCount(12).
-					// 	HasMinClusterCount(13).
-					// 	HasScalingPolicy(sdk.ScalingPolicyEconomy).
-					// 	HasAutoSuspend(123).
-					// 	HasAutoResume(false).
-					// 	HasResourceMonitor(sdk.NewAccountObjectIdentifier("some-id")).
-					// 	HasComment("bad comment").
-					// 	HasEnableQueryAcceleration(true).
-					// 	HasQueryAccelerationMaxScaleFactor(12),
-					// poc.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeSnowparkOptimized))),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
 				),
 			},
 			// IMPORT after empty config (in this method, most of the attributes will be filled with the defaults acquired from Snowflake)
 			{
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
-				ImportStateCheck: poc.AssertThatImport(t,
-					poc.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
-					poc.ImportedWarehouseResource(t, warehouseId.Name()).
+				ImportStateCheck: assert.AssertThatImport(t,
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
+					assert.ImportedWarehouseResource(t, warehouseId.Name()).
 						HasName(name).
 						HasType(string(sdk.WarehouseTypeStandard)).
 						HasSize(string(sdk.WarehouseSizeXSmall)).
@@ -161,15 +136,15 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					poc.ImportedWarehouseShowOutput(t, warehouseId.Name()),
-					poc.ImportedWarehouseParameters(t, warehouseId.Name()).
+					assert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
+					assert.ImportedWarehouseParameters(t, warehouseId.Name()).
 						HasMaxConcurrencyLevel(8).
 						HasMaxConcurrencyLevelLevel("").
 						HasStatementQueuedTimeoutInSeconds(0).
 						HasStatementQueuedTimeoutInSecondsLevel("").
 						HasStatementTimeoutInSeconds(172800).
 						HasStatementTimeoutInSecondsLevel(""),
-					poc.Warehouse(t, warehouseId).
+					assert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -183,43 +158,6 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
-
-					// bad checks below
-					poc.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "bad name", name)),
-					poc.ImportedWarehouseResource(t, warehouseId.Name()).
-						HasName("bad name").
-						HasType(string(sdk.WarehouseTypeSnowparkOptimized)).
-						HasSize(string(sdk.WarehouseSizeMedium)).
-						HasMaxClusterCount("2").
-						HasMinClusterCount("3").
-						HasScalingPolicy(string(sdk.ScalingPolicyEconomy)).
-						HasAutoSuspend("123").
-						HasAutoResume("false").
-						HasResourceMonitor("abc").
-						HasComment("bad comment").
-						HasEnableQueryAcceleration("true").
-						HasQueryAccelerationMaxScaleFactor("16"),
-					poc.ImportedWarehouseParameters(t, warehouseId.Name()).
-						HasMaxConcurrencyLevel(1).
-						HasMaxConcurrencyLevelLevel(sdk.ParameterTypeWarehouse).
-						HasStatementQueuedTimeoutInSeconds(23).
-						HasStatementQueuedTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse).
-						HasStatementTimeoutInSeconds(1232).
-						HasStatementTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse),
-					poc.Warehouse(t, warehouseId).
-						HasName("bad name").
-						HasState(sdk.WarehouseStateSuspended).
-						HasType(sdk.WarehouseTypeSnowparkOptimized).
-						HasSize(sdk.WarehouseSizeMedium).
-						HasMaxClusterCount(12).
-						HasMinClusterCount(13).
-						HasScalingPolicy(sdk.ScalingPolicyEconomy).
-						HasAutoSuspend(123).
-						HasAutoResume(false).
-						HasResourceMonitor(sdk.NewAccountObjectIdentifier("some-id")).
-						HasComment("bad comment").
-						HasEnableQueryAcceleration(true).
-						HasQueryAccelerationMaxScaleFactor(12),
 				),
 			},
 			// RENAME

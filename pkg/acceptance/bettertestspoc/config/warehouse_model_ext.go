@@ -1,4 +1,4 @@
-package bettertestspoc
+package config
 
 func BasicWarehouseModel(
 	name string,

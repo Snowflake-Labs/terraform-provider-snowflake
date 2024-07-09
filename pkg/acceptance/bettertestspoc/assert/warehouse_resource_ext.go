@@ -1,4 +1,4 @@
-package bettertestspoc
+package assert
 
 import r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 

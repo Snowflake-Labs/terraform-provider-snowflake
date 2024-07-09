@@ -1,4 +1,4 @@
-package bettertestspoc
+package config
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"

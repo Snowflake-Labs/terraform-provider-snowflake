@@ -1,4 +1,4 @@
-package bettertestspoc
+package assert
 
 func (w *WarehouseParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseParametersAssert {
 	return w.
