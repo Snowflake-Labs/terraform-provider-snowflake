@@ -456,6 +456,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_network_rule":                                                 resources.NetworkRule(),
 		"snowflake_notification_integration":                                     resources.NotificationIntegration(),
 		"snowflake_oauth_integration":                                            resources.OAuthIntegration(),
+		"snowflake_oauth_integration_for_partner_applications":                   resources.OauthIntegrationForPartnerApplications(),
 		"snowflake_object_parameter":                                             resources.ObjectParameter(),
 		"snowflake_password_policy":                                              resources.PasswordPolicy(),
 		"snowflake_pipe":                                                         resources.Pipe(),
