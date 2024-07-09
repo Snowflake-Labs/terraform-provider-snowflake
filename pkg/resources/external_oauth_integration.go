@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"slices"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -83,41 +81,12 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 		ConflictsWith:    []string{"external_oauth_jws_keys_url"},
 	},
 	"external_oauth_blocked_roles_list": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)),
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			params := d.Get(RelatedParametersAttributeName).([]any)
-			if len(params) == 0 {
-				return false
-			}
-			result := params[0].(map[string]any)
-			param := result[strings.ToLower(string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList))].([]any)
-			value := param[0].(map[string]any)["value"]
-			if !helpers.StringToBool(value.(string)) {
-				return false
-			}
-			if k == "external_oauth_blocked_roles_list.#" {
-				old, new := d.GetChange("external_oauth_blocked_roles_list")
-				var numOld, numNew int
-				oldList := expandStringList(old.(*schema.Set).List())
-				newList := expandStringList(new.(*schema.Set).List())
-				for _, v := range oldList {
-					if !slices.Contains(privilegedRoles, v) {
-						numOld++
-					}
-				}
-				for _, v := range newList {
-					if !slices.Contains(privilegedRoles, v) {
-						numNew++
-					}
-				}
-				return numOld == numNew
-			}
-			return slices.Contains(privilegedRoles, old)
-		},
-		ConflictsWith: []string{"external_oauth_allowed_roles_list"},
+		Type:             schema.TypeSet,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		Optional:         true,
+		Description:      withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)),
+		DiffSuppressFunc: IgnoreValuesFromSetIfParamSet("external_oauth_blocked_roles_list", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),
+		ConflictsWith:    []string{"external_oauth_allowed_roles_list"},
 	},
 	"external_oauth_allowed_roles_list": {
 		Type:          schema.TypeSet,
