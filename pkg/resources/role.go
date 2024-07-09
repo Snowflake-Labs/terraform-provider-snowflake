@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,17 +24,27 @@ var accountRoleSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
-	"tag": tagReferenceSchema,
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW ROLES` for the given role.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowRoleSchema,
+		},
+	},
 }
 
 func Role() *schema.Resource {
 	return &schema.Resource{
+		Schema: accountRoleSchema,
+
 		CreateContext: CreateAccountRole,
 		ReadContext:   ReadAccountRole,
 		DeleteContext: DeleteAccountRole,
 		UpdateContext: UpdateAccountRole,
 
-		Schema: accountRoleSchema,
+		CustomizeDiff: ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment"),
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -44,16 +54,11 @@ func Role() *schema.Resource {
 func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	name := d.Get("name").(string)
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	req := sdk.NewCreateRoleRequest(id)
 
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(v.(string))
-	}
-
-	if _, ok := d.GetOk("tag"); ok {
-		req.WithTag(getPropertyTags(d, "tag"))
 	}
 
 	err := client.Roles.Create(ctx, req)
@@ -62,7 +67,7 @@ func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to create account role",
-				Detail:   fmt.Sprintf("Account role name: %s, err: %s", name, err),
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.Name(), err),
 			},
 		}
 	}
@@ -84,7 +89,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 				diag.Diagnostic{
 					Severity: diag.Warning,
 					Summary:  "Account role not found; marking it as removed",
-					Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
+					Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.Name(), err),
 				},
 			}
 		}
@@ -92,12 +97,12 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to show account role by id",
-				Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.Name(), err),
 			},
 		}
 	}
 
-	if err := d.Set("name", accountRole.Name); err != nil {
+	if err := d.Set("name", sdk.NewAccountObjectIdentifier(accountRole.Name).Name()); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
@@ -117,7 +122,9 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 		}
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.RoleToSchema(accountRole)}); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -128,13 +135,12 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if d.HasChange("comment") {
 		if v, ok := d.GetOk("comment"); ok {
-			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetComment(v.(string)))
-			if err != nil {
+			if err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetComment(v.(string))); err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "Failed to set account role comment",
-						Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", id.FullyQualifiedName(), v, err),
+						Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", id.Name(), v, err),
 					},
 				}
 			}
@@ -145,45 +151,7 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 					diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "Failed to unset account role comment",
-						Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
-					},
-				}
-			}
-		}
-	}
-
-	if d.HasChange("tag") {
-		unsetTags, setTags := GetTagsDiff(d, "tag")
-
-		if len(unsetTags) > 0 {
-			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithUnsetTags(unsetTags))
-			if err != nil {
-				tagNames := make([]string, len(unsetTags))
-				for i, v := range unsetTags {
-					tagNames[i] = v.FullyQualifiedName()
-				}
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Error,
-						Summary:  "Failed to unset account role tags",
-						Detail:   fmt.Sprintf("Account role name: %s, tags to unset: %v, err: %s", id.FullyQualifiedName(), tagNames, err),
-					},
-				}
-			}
-		}
-
-		if len(setTags) > 0 {
-			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetTags(setTags))
-			if err != nil {
-				tagNames := make([]string, len(unsetTags))
-				for i, v := range unsetTags {
-					tagNames[i] = v.FullyQualifiedName()
-				}
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Error,
-						Summary:  "Failed to set account role tags",
-						Detail:   fmt.Sprintf("Account role name: %s, tags to set: %v, err: %s", id.FullyQualifiedName(), tagNames, err),
+						Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.Name(), err),
 					},
 				}
 			}
@@ -191,30 +159,19 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if d.HasChange("name") {
-		_, newName := d.GetChange("name")
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-		newId, err := helpers.DecodeSnowflakeParameterID(newName.(string))
-		if err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to parse account role name",
-					Detail:   fmt.Sprintf("Account role name: %s, err: %s", newName, err),
-				},
-			}
-		}
-
-		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId.(sdk.AccountObjectIdentifier)))
-		if err != nil {
+		if err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId)); err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Failed to rename account role name",
-					Detail:   fmt.Sprintf("Previous account role name: %s, new account role name: %s, err: %s", id, newName, err),
+					Detail:   fmt.Sprintf("Previous account role name: %s, new account role name: %s, err: %s", id.Name(), newId.Name(), err),
 				},
 			}
 		}
 
+		id = newId
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
 
@@ -225,8 +182,7 @@ func DeleteAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(id))
-	if err != nil {
+	if err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(id).WithIfExists(true)); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,

@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -12,31 +14,29 @@ import (
 )
 
 var accountRolesSchema = map[string]*schema.Schema{
-	"pattern": {
+	"like": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Filters the command output by object name.",
+		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
+	},
+	"in_class": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Filters the output and returns only the records for the specified class name.",
 	},
 	"roles": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "List of all the roles which you can view across your entire account, including the system-defined roles and any custom roles that exist.",
+		Description: "Holds the aggregated output of all role details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
+				resources.ShowOutputAttributeName: {
+					Type:        schema.TypeList,
 					Computed:    true,
-					Description: "Identifier for the role.",
-				},
-				"comment": {
-					Type:        schema.TypeString,
-					Computed:    true,
-					Description: "The comment on the role",
-				},
-				"owner": {
-					Type:        schema.TypeString,
-					Computed:    true,
-					Description: "The owner of the role",
+					Description: "Holds the output of SHOW ROLES.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowRoleSchema,
+					},
 				},
 			},
 		},
@@ -47,6 +47,7 @@ func Roles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadAccountRoles,
 		Schema:      accountRolesSchema,
+		Description: "Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}
 }
 
@@ -54,8 +55,15 @@ func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) dia
 	client := meta.(*provider.Context).Client
 
 	req := sdk.NewShowRoleRequest()
-	if pattern, ok := d.GetOk("pattern"); ok {
-		req.WithLike(sdk.NewLikeRequest(pattern.(string)))
+
+	if likePattern, ok := d.GetOk("like"); ok {
+		req.WithLike(sdk.NewLikeRequest(likePattern.(string)))
+	}
+
+	if className, ok := d.GetOk("in_class"); ok {
+		req.WithInClass(sdk.RolesInClass{
+			Class: sdk.NewAccountObjectIdentifier(className.(string)),
+		})
 	}
 
 	roles, err := client.Roles.Show(ctx, req)
@@ -64,31 +72,25 @@ func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) dia
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to show account roles",
-				Detail:   fmt.Sprintf("Search pattern: %v, err: %s", d.Get("pattern").(string), err),
-			},
-		}
-	}
-
-	mappedRoles := make([]map[string]any, len(roles))
-	for i, role := range roles {
-		mappedRoles[i] = map[string]any{
-			"name":    role.Name,
-			"comment": role.Comment,
-			"owner":   role.Owner,
-		}
-	}
-
-	if err := d.Set("roles", mappedRoles); err != nil {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to set roles",
-				Detail:   fmt.Sprintf("Search pattern: %v, err: %s", d.Get("pattern").(string), err),
+				Detail:   fmt.Sprintf("Error: %s", err),
 			},
 		}
 	}
 
 	d.SetId("roles_read")
+
+	flattenedRoles := make([]map[string]any, len(roles))
+	for i, role := range roles {
+		role := role
+		flattenedRoles[i] = map[string]any{
+			resources.ShowOutputAttributeName: []map[string]any{schemas.RoleToSchema(&role)},
+		}
+	}
+
+	err = d.Set("roles", flattenedRoles)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }

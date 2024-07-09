@@ -1,21 +1,139 @@
 package resources_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Role(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	name2 := acc.TestClient().Ids.Alpha()
+func TestAcc_Role_Basic(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	currentRole, err := acc.Client(t).ContextFunctions.CurrentRole(context.Background())
+	require.NoError(t, err)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.Role),
+		Steps: []resource.TestStep{
+			// create with empty optionals
+			{
+				Config: roleBasicConfig(id.Name(), ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "comment", ""),
+
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_role.role", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_current", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_inherited", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.assigned_to_users", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_to_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.owner", currentRole.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.comment", ""),
+				),
+			},
+			// import - without optionals
+			{
+				Config:       roleBasicConfig(id.Name(), ""),
+				ResourceName: "snowflake_role.role",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+				),
+			},
+			// set optionals
+			{
+				Config: roleBasicConfig(id.Name(), comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_role.role", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "comment", comment),
+
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_role.role", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_current", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_inherited", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.assigned_to_users", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_to_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.owner", currentRole.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.comment", comment),
+				),
+			},
+			// import - complete
+			{
+				Config:       roleBasicConfig(id.Name(), ""),
+				ResourceName: "snowflake_role.role",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
+				),
+			},
+			// unset
+			{
+				Config: roleBasicConfig(id.Name(), ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_role.role", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "comment", ""),
+
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_role.role", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_current", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_inherited", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.assigned_to_users", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_to_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.owner", currentRole.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.comment", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Role_Complete(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newComment := random.Comment()
+
+	currentRole, err := acc.Client(t).ContextFunctions.CurrentRole(context.Background())
+	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,123 +144,52 @@ func TestAcc_Role(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Role),
 		Steps: []resource.TestStep{
 			{
-				Config: roleBasicConfig(name, "test comment"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.role", "name", name),
-					resource.TestCheckResourceAttr("snowflake_role.role", "comment", "test comment"),
-				),
-			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_role.role",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// RENAME
-			{
-				Config: roleBasicConfig(name2, "test comment"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.role", "name", name2),
-					resource.TestCheckResourceAttr("snowflake_role.role", "comment", "test comment"),
-				),
-			},
-			// CHANGE PROPERTIES
-			{
-				Config: roleBasicConfig(name2, "test comment 2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_role.role", "name", name2),
-					resource.TestCheckResourceAttr("snowflake_role.role", "comment", "test comment 2"),
-				),
-			},
-		},
-	})
-}
+				Config: roleBasicConfig(id.Name(), comment),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "comment", comment),
 
-func TestAcc_AccountRole_basic(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	comment := random.Comment()
-	configVariables := map[string]config.Variable{
-		"name":    config.StringVariable(name),
-		"comment": config.StringVariable(comment),
-	}
-	resourceName := "snowflake_role.test"
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Role),
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment),
-					resource.TestCheckResourceAttr(resourceName, "id", name),
-				),
-			},
-			// test import
-			{
-				ConfigDirectory:   config.TestNameDirectory(),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAcc_AccountRole_updates(t *testing.T) {
-	configVariables := func(name string, comment string) config.Variables {
-		return config.Variables{
-			"name":    config.StringVariable(name),
-			"comment": config.StringVariable(comment),
-		}
-	}
-
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
-	comment := random.Comment()
-	NewComment := "updated comment with 'single' quotes"
-	resourceName := "snowflake_role.test"
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Role),
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(name, comment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment),
-					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_role.role", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_current", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_inherited", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.assigned_to_users", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_to_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.owner", currentRole.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.comment", comment),
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(newName, NewComment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
-					resource.TestCheckResourceAttr(resourceName, "comment", NewComment),
-					resource.TestCheckResourceAttr(resourceName, "id", newName),
+				Config:       roleBasicConfig(id.Name(), ""),
+				ResourceName: "snowflake_role.role",
+				ImportState:  true,
+				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
 			},
-			// test import
+			// rename + comment change
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
-				ConfigVariables:   configVariables(newName, NewComment),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: roleBasicConfig(newId.Name(), newComment),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_role.role", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "comment", newComment),
+
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.#", "1"),
+					resource.TestCheckResourceAttrSet("snowflake_role.role", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_current", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.is_inherited", "false"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.assigned_to_users", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_to_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.granted_roles", "0"),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.owner", currentRole.Name()),
+					resource.TestCheckResourceAttr("snowflake_role.role", "show_output.0.comment", newComment),
+				),
 			},
 		},
 	})

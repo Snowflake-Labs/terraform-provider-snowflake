@@ -19,5 +19,5 @@ data "snowflake_roles" "test" {
     snowflake_role.test2,
     snowflake_role.test3,
   ]
-  pattern = var.pattern
+  like = var.like
 }
