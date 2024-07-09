@@ -31,11 +31,20 @@ type WarehouseModel struct {
 	*resourceModelMeta
 }
 
-///////////////////////////////////
-// Basic builder (only required) //
-///////////////////////////////////
+/////////////////////////////////////////////////
+// Basic builders (resource name and required) //
+/////////////////////////////////////////////////
 
 func NewWarehouseModel(
+	resourceName string,
+	name string,
+) *WarehouseModel {
+	m := &WarehouseModel{resourceModelMeta: meta(resourceName, resources.Warehouse)}
+	m.WithName(name)
+	return m
+}
+
+func NewDefaultWarehouseModel(
 	name string,
 ) *WarehouseModel {
 	m := &WarehouseModel{resourceModelMeta: defaultMeta(resources.Warehouse)}

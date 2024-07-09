@@ -4,5 +4,5 @@ func BasicWarehouseModel(
 	name string,
 	comment string,
 ) *WarehouseModel {
-	return NewWarehouseModel(name).WithComment(comment)
+	return NewDefaultWarehouseModel(name).WithComment(comment)
 }

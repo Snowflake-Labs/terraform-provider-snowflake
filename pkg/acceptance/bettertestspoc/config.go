@@ -40,6 +40,10 @@ func defaultMeta(resource resources.Resource) *resourceModelMeta {
 	return &resourceModelMeta{name: DefaultResourceName, resource: resource}
 }
 
+func meta(resourceName string, resource resources.Resource) *resourceModelMeta {
+	return &resourceModelMeta{name: resourceName, resource: resource}
+}
+
 // TODO: use reflection to build config directly from model struct
 func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()

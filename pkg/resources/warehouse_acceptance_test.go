@@ -37,9 +37,10 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	t.Cleanup(resourceMonitorCleanup)
 	resourceMonitorId := resourceMonitor.ID()
 
-	model := poc.NewWarehouseModel(name).WithComment(comment)
-	// TODO: handle resource name better
-	model.SetResourceName("w")
+	model := poc.NewWarehouseModel("w", name).WithComment(comment)
+
+	// alternatively some extension func
+	// model := poc.BasicWarehouseModel(name, comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
