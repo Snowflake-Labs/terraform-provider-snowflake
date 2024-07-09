@@ -449,9 +449,10 @@ func (r *AlterExternalOauthSecurityIntegrationRequest) toOpts() *AlterExternalOa
 			ExternalOauthRsaPublicKey:  r.Set.ExternalOauthRsaPublicKey,
 			ExternalOauthRsaPublicKey2: r.Set.ExternalOauthRsaPublicKey2,
 
-			ExternalOauthAnyRoleMode:    r.Set.ExternalOauthAnyRoleMode,
-			ExternalOauthScopeDelimiter: r.Set.ExternalOauthScopeDelimiter,
-			Comment:                     r.Set.Comment,
+			ExternalOauthAnyRoleMode:           r.Set.ExternalOauthAnyRoleMode,
+			ExternalOauthScopeDelimiter:        r.Set.ExternalOauthScopeDelimiter,
+			ExternalOauthScopeMappingAttribute: r.Set.ExternalOauthScopeMappingAttribute,
+			Comment:                            r.Set.Comment,
 		}
 
 		if r.Set.ExternalOauthBlockedRolesList != nil {

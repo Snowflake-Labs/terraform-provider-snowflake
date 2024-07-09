@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	ShowOutputAttributeName     = "show_output"
-	DescribeOutputAttributeName = "describe_output"
-	ParametersAttributeName     = "parameters"
+	ShowOutputAttributeName        = "show_output"
+	DescribeOutputAttributeName    = "describe_output"
+	ParametersAttributeName        = "parameters"
+	RelatedParametersAttributeName = "related_parameters"
 )
 
 // handleExternalChangesToObjectInShow assumes that show output is kept in ShowOutputAttributeName attribute

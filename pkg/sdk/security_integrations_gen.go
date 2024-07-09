@@ -347,7 +347,8 @@ type ExternalOauthIntegrationSet struct {
 	ExternalOauthAudienceList                  *AudienceList                                                        `ddl:"parameter,parentheses" sql:"EXTERNAL_OAUTH_AUDIENCE_LIST"`
 	ExternalOauthAnyRoleMode                   *ExternalOauthSecurityIntegrationAnyRoleModeOption                   `ddl:"parameter" sql:"EXTERNAL_OAUTH_ANY_ROLE_MODE"`
 	ExternalOauthScopeDelimiter                *string                                                              `ddl:"parameter,single_quotes" sql:"EXTERNAL_OAUTH_SCOPE_DELIMITER"`
-	Comment                                    *string                                                              `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ExternalOauthScopeMappingAttribute         *string                                                              `ddl:"parameter,single_quotes" sql:"EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE"`
+	Comment                                    *StringAllowEmpty                                                    `ddl:"parameter" sql:"COMMENT"`
 }
 type ExternalOauthIntegrationUnset struct {
 	Enabled                   *bool `ddl:"keyword" sql:"ENABLED"`

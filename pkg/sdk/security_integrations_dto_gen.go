@@ -301,7 +301,8 @@ type ExternalOauthIntegrationSetRequest struct {
 	ExternalOauthAudienceList                  *AudienceListRequest
 	ExternalOauthAnyRoleMode                   *ExternalOauthSecurityIntegrationAnyRoleModeOption
 	ExternalOauthScopeDelimiter                *string
-	Comment                                    *string
+	ExternalOauthScopeMappingAttribute         *string
+	Comment                                    *StringAllowEmpty
 }
 
 type ExternalOauthIntegrationUnsetRequest struct {
