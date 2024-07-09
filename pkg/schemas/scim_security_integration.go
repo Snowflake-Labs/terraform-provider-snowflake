@@ -36,7 +36,7 @@ func ScimSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []s
 		if slices.Contains(ScimPropertiesNames, property.Name) {
 			securityIntegrationSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
 		} else {
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", property.Name)
+			log.Printf("[WARN] unexpected property %v in scim security integration returned from Snowflake", property.Name)
 		}
 	}
 	return securityIntegrationSchema

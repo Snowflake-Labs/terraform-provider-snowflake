@@ -106,6 +106,17 @@ Read-Only:
 - `blocked_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--blocked_roles_list))
 - `comment` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--comment))
 - `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--enabled))
+- `external_oauth_allowed_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_allowed_roles_list))
+- `external_oauth_any_role_mode` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_any_role_mode))
+- `external_oauth_audience_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_audience_list))
+- `external_oauth_blocked_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_blocked_roles_list))
+- `external_oauth_issuer` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_issuer))
+- `external_oauth_jws_keys_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_jws_keys_url))
+- `external_oauth_rsa_public_key` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_rsa_public_key))
+- `external_oauth_rsa_public_key_2` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_rsa_public_key_2))
+- `external_oauth_scope_delimiter` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_scope_delimiter))
+- `external_oauth_snowflake_user_mapping_attribute` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_snowflake_user_mapping_attribute))
+- `external_oauth_token_user_mapping_claim` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--external_oauth_token_user_mapping_claim))
 - `network_policy` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--network_policy))
 - `oauth_access_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_access_token_validity))
 - `oauth_allow_non_tls_redirect_uri` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allow_non_tls_redirect_uri))
@@ -203,6 +214,127 @@ Read-Only:
 
 <a id="nestedobjatt--security_integrations--describe_output--enabled"></a>
 ### Nested Schema for `security_integrations.describe_output.enabled`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_allowed_roles_list"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_allowed_roles_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_any_role_mode"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_any_role_mode`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_audience_list"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_audience_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_blocked_roles_list"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_blocked_roles_list`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_issuer"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_issuer`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_jws_keys_url"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_jws_keys_url`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_rsa_public_key"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_rsa_public_key`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_rsa_public_key_2"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_rsa_public_key_2`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_scope_delimiter"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_scope_delimiter`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_snowflake_user_mapping_attribute"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_snowflake_user_mapping_attribute`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--external_oauth_token_user_mapping_claim"></a>
+### Nested Schema for `security_integrations.describe_output.external_oauth_token_user_mapping_claim`
 
 Read-Only:
 

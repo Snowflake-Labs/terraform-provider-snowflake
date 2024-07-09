@@ -25,7 +25,7 @@ var DescribeApiAuthSecurityIntegrationSchema = map[string]*schema.Schema{
 	"comment":                      DescribePropertyListSchema,
 }
 
-var ApiAuthenticationPropertiesKeys = []string{
+var ApiAuthenticationPropertiesNames = []string{
 	"ENABLED",
 	"OAUTH_ACCESS_TOKEN_VALIDITY",
 	"OAUTH_REFRESH_TOKEN_VALIDITY",
@@ -45,10 +45,10 @@ func ApiAuthSecurityIntegrationPropertiesToSchema(securityIntegrationProperties 
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
 		securityIntegrationProperty := securityIntegrationProperty
-		if slices.Contains(ApiAuthenticationPropertiesKeys, securityIntegrationProperty.Name) {
+		if slices.Contains(ApiAuthenticationPropertiesNames, securityIntegrationProperty.Name) {
 			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
 		} else {
-			log.Printf("unknown field from DESCRIBE: %v", securityIntegrationProperty.Name)
+			log.Printf("[WARN] unexpected property %v in api auth security integration returned from Snowflake", securityIntegrationProperty.Name)
 		}
 	}
 	return securityIntegrationSchema

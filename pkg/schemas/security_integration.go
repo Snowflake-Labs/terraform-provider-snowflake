@@ -11,13 +11,15 @@ import (
 var (
 	SecurityIntegrationDescribeSchema = helpers.MergeMaps(
 		DescribeApiAuthSecurityIntegrationSchema,
+		DescribeExternalOauthSecurityIntegrationSchema,
 		DescribeOauthIntegrationForCustomClients,
 		DescribeOauthIntegrationForPartnerApplications,
 		DescribeSaml2IntegrationSchema,
 		DescribeScimSecurityIntegrationSchema,
 	)
 	allSecurityIntegrationPropertiesNames = helpers.ConcatSlices(
-		ApiAuthenticationPropertiesKeys,
+		ApiAuthenticationPropertiesNames,
+		ExternalOauthPropertiesNames,
 		OauthIntegrationForCustomClientsPropertiesNames,
 		OauthIntegrationForPartnerApplicationsPropertiesNames,
 		Saml2PropertiesNames,
