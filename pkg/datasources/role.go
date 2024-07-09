@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TODO: Adjust
+
 var roleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,

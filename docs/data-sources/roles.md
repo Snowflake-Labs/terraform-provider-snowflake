@@ -5,6 +5,8 @@ description: |-
   Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
+
 # snowflake_roles (Data Source)
 
 Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
@@ -12,12 +14,44 @@ Datasource used to get details of filtered roles. Filtering is aligned with the 
 ## Example Usage
 
 ```terraform
-data "snowflake_roles" "this" {
-
+# Simple usage
+data "snowflake_roles" "simple" {
 }
 
-data "snowflake_roles" "ad" {
-  pattern = "SYSADMIN"
+output "simple_output" {
+  value = data.snowflake_roles.simple.roles
+}
+
+# Filtering (like)
+data "snowflake_roles" "like" {
+  like = "role-name"
+}
+
+output "like_output" {
+  value = data.snowflake_roles.like.roles
+}
+
+# Ensure the number of roles is equal to at least one element (with the use of postcondition)
+data "snowflake_roles" "assert_with_postcondition" {
+  like = "role-name-%"
+  lifecycle {
+    postcondition {
+      condition     = length(self.roles) > 0
+      error_message = "there should be at least one role"
+    }
+  }
+}
+
+# Ensure the number of roles is equal to at exactly one element (with the use of check block)
+check "role_check" {
+  data "snowflake_roles" "assert_with_check_block" {
+    like = "role-name"
+  }
+
+  assert {
+    condition     = length(data.snowflake_roles.assert_with_check_block.roles) == 1
+    error_message = "Roles filtered by '${data.snowflake_roles.assert_with_check_block.like}' returned ${length(data.snowflake_roles.assert_with_check_block.roles)} roles where one was expected"
+  }
 }
 ```
 
