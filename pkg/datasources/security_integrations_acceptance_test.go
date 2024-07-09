@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_SecurityIntegrations_ApiAuthentication(t *testing.T) {
+func TestAcc_SecurityIntegrations_ApiAuthenticationWithAuthorizationCodeGrant(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	m := func() map[string]config.Variable {
@@ -47,27 +47,27 @@ func TestAcc_SecurityIntegrations_ApiAuthentication(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
 
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.integration_type", "API_AUTHENTICATION"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttrSet("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "API_AUTHENTICATION"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_access_token_validity.0.value", "42"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_refresh_token_validity.0.value", "12345"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_client_id.0.value", "foo"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_client_auth_method.0.value", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_authorization_endpoint.0.value", "https://example.com"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_token_endpoint.0.value", "https://example.com"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_allowed_scopes.0.value", "[foo]"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.parent_integration.0.value", ""),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.auth_type.0.value", "OAUTH2"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "describe_output.0.comment.0.value", "foo")),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_access_token_validity.0.value", "42"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_refresh_token_validity.0.value", "12345"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_id.0.value", "foo"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_auth_method.0.value", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_authorization_endpoint.0.value", "https://example.com"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_token_endpoint.0.value", "https://example.com"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_allowed_scopes.0.value", "[foo]"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.parent_integration.0.value", ""),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.auth_type.0.value", "OAUTH2"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.comment.0.value", "foo")),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/api_authentication_with_authorization_code_grant/optionals_unset"),
@@ -75,13 +75,86 @@ func TestAcc_SecurityIntegrations_ApiAuthentication(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
 
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.integration_type", "API_AUTHENTICATION"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttrSet("snowflake_api_authentication_integration_with_authorization_code_grant.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "API_AUTHENTICATION"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecurityIntegrations_ApiAuthenticationWithClientCredentials(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"comment":                      config.StringVariable("foo"),
+			"enabled":                      config.BoolVariable(true),
+			"name":                         config.StringVariable(id.Name()),
+			"oauth_access_token_validity":  config.IntegerVariable(42),
+			"oauth_client_auth_method":     config.StringVariable(string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
+			"oauth_client_id":              config.StringVariable("foo"),
+			"oauth_client_secret":          config.StringVariable("foo"),
+			"oauth_refresh_token_validity": config.IntegerVariable(12345),
+			"oauth_token_endpoint":         config.StringVariable("https://example.com"),
+			"oauth_allowed_scopes":         config.SetVariable(config.StringVariable("foo")),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithClientCredentials),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/api_authentication_with_client_credentials/optionals_set"),
+				ConfigVariables: m(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "API_AUTHENTICATION"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_access_token_validity.0.value", "42"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_refresh_token_validity.0.value", "12345"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_id.0.value", "foo"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_auth_method.0.value", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_token_endpoint.0.value", "https://example.com"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_allowed_scopes.0.value", "[foo]"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_grant.0.value", sdk.ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.parent_integration.0.value", ""),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.auth_type.0.value", "OAUTH2"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.comment.0.value", "foo")),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/api_authentication_with_client_credentials/optionals_unset"),
+				ConfigVariables: m(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "API_AUTHENTICATION"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
 
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "0"),
 				),
