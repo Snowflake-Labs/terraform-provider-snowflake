@@ -86,10 +86,11 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 // OAuthIntegration returns a pointer to the resource representing an OAuth integration.
 func OAuthIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateOAuthIntegration,
-		Read:   ReadOAuthIntegration,
-		Update: UpdateOAuthIntegration,
-		Delete: DeleteOAuthIntegration,
+		Create:             CreateOAuthIntegration,
+		Read:               ReadOAuthIntegration,
+		Update:             UpdateOAuthIntegration,
+		Delete:             DeleteOAuthIntegration,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_oauth_integration_for_custom_clients or snowflake_oauth_integration_for_partner_applications instead.",
 
 		Schema: oauthIntegrationSchema,
 		Importer: &schema.ResourceImporter{

@@ -28,6 +28,14 @@ Added new api authentication resources, i.e.:
 
 See reference [doc](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).
 
+### *(new feature)* snowflake_oauth_integration_for_custom_clients and snowflake_oauth_integration_for_partner_applications resources
+
+To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced 
+to replace the previous `snowflake_oauth_integration`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into two more specialized resources.
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes). 
+This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`, 
+while other attributes align with `snowflake_oauth_integration_for_partner_applications`.
+
 ### *(new feature)* snowflake_security_integrations datasource
 Added a new datasource enabling querying and filtering all types of security integrations. Notes:
 - all results are stored in `security_integrations` field.
