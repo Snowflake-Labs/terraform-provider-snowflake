@@ -4,14 +4,14 @@ This document is a supplement to all the resource changes described in the [migr
 
 ## Default values
 For any resource that went through the rework as part of the [resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1),
-the behaviour for default values may change from the previous one. 
+the behaviour for default values may change from the previous one.
 
-In the past, the provider copied defaults from Snowflake, creating a tight coupling between them. 
+In the past, the provider copied defaults from Snowflake, creating a tight coupling between them.
 However, this approach posed a challenge as the defaults on the Snowflake side could change and vary between accounts based on their configurations.
 
 Now, whenever the value is not specified in the configuration, we let the Snowflake fill out the default value for a given field
-(if there is one). Using such defaults may lead to non-idempotent cases where the same configuration may 
-create a resource with slightly different configuration in Snowflake (depending on the Snowflake Edition and Version, 
+(if there is one). Using such defaults may lead to non-idempotent cases where the same configuration may
+create a resource with slightly different configuration in Snowflake (depending on the Snowflake Edition and Version,
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 

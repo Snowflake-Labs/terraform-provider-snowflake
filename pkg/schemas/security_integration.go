@@ -13,9 +13,9 @@ var (
 	allSecurityIntegrationPropertiesNames = append(Saml2PropertiesNames, ScimPropertiesNames...)
 )
 
-func SecurityIntegrationsDescriptionsToSchema(descriptions []sdk.SecurityIntegrationProperty) map[string]any {
+func SecurityIntegrationsDescriptionsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationProperties := make(map[string]any)
-	for _, desc := range descriptions {
+	for _, desc := range integrationProperties {
 		desc := desc
 		if slices.Contains(allSecurityIntegrationPropertiesNames, desc.Name) {
 			securityIntegrationProperties[strings.ToLower(desc.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&desc)}

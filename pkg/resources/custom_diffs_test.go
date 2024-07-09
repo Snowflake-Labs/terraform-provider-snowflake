@@ -301,7 +301,9 @@ func TestForceNewIfChangeToEmptySet(t *testing.T) {
 		}, {
 			name: "non-empty to empty",
 			stateValue: map[string]string{
-				"value.#":          "1",
+				"value.#": "1",
+				// The Sets are using hashes to generate an index for a given value.
+				// In this case: 2577344683 == hash("CREATE DATABASE").
 				"value.2577344683": "CREATE DATABASE",
 			},
 			rawConfigValue: map[string]any{},
