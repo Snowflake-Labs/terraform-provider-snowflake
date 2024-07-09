@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,4 +52,12 @@ func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool 
 		newWithoutQuotes := strings.ReplaceAll(newValue, "'", "")
 		return oldWithoutQuotes == newWithoutQuotes
 	}
+}
+
+func ctyValToSliceString(valueElems []cty.Value) []string {
+	elems := make([]string, len(valueElems))
+	for i, v := range valueElems {
+		elems[i] = v.AsString()
+	}
+	return elems
 }

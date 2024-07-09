@@ -117,6 +117,11 @@ func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegratio
 	return s
 }
 
+func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
+	return s
+}
+
 func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithComment(Comment string) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
 	s.Comment = &Comment
 	return s
@@ -744,6 +749,11 @@ func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) W
 
 func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthRefreshTokenValidity(OauthRefreshTokenValidity int) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
 	s.OauthRefreshTokenValidity = &OauthRefreshTokenValidity
+	return s
+}
+
+func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
 	return s
 }
 

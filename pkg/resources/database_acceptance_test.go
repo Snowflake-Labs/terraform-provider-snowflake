@@ -1138,7 +1138,7 @@ func databaseStateUpgraderWithReplicationOld(id sdk.AccountObjectIdentifier, ena
 resource "snowflake_database" "test" {
 	name = "%s"
 	replication_configuration {
-		accounts = ["%s"] 
+		accounts = ["%s"]
 		ignore_edition_check = true
 	}
 }
