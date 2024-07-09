@@ -777,7 +777,7 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType",
 			"ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl",
 			"ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList",
-			"ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment"))
+			"ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "ExternalOauthScopeMappingAttribute", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
@@ -846,12 +846,13 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 			ExternalOauthAudienceList:                  &AudienceList{AudienceList: []AudienceListItem{{Item: "foo"}}},
 			ExternalOauthAnyRoleMode:                   Pointer(ExternalOauthSecurityIntegrationAnyRoleModeDisable),
 			ExternalOauthScopeDelimiter:                Pointer(" "),
-			Comment:                                    Pointer("foo"),
+			ExternalOauthScopeMappingAttribute:         Pointer("foo"),
+			Comment:                                    Pointer(StringAllowEmpty{Value: "foo"}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, EXTERNAL_OAUTH_TYPE = CUSTOM, EXTERNAL_OAUTH_ISSUER = 'foo',"+
 			" EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('foo'), EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'EMAIL_ADDRESS', EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = (%s),"+
 			" EXTERNAL_OAUTH_RSA_PUBLIC_KEY = 'foo', EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2 = 'foo', EXTERNAL_OAUTH_AUDIENCE_LIST = ('foo'), EXTERNAL_OAUTH_ANY_ROLE_MODE = DISABLE,"+
-			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ', COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ', EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE = 'foo', COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 		opts.Set = &ExternalOauthIntegrationSet{
 			ExternalOauthBlockedRolesList: &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
 			ExternalOauthJwsKeysUrl:       []JwsKeysUrl{{JwsKeyUrl: "foo"}},
@@ -866,6 +867,14 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 			ExternalOauthAudienceList: Pointer(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, EXTERNAL_OAUTH_AUDIENCE_LIST", id.FullyQualifiedName())
+	})
+
+	t.Run("set empty comment", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			Comment: Pointer(StringAllowEmpty{Value: ""}),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET COMMENT = ''", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {

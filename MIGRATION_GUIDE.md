@@ -46,6 +46,45 @@ Added a new datasource enabling querying and filtering all types of security int
   The additional parameters call **DESC SECURITY INTEGRATION** (with `with_describe` turned on) **per security integration** returned by **SHOW SECURITY INTEGRATIONS**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
+### snowflake_external_oauth_integration resource changes
+
+#### *(behavior change)* Renamed fields
+Renamed fields:
+- `type` to `external_oauth_type`
+- `issuer` to `external_oauth_issuer`
+- `token_user_mapping_claims` to `external_oauth_token_user_mapping_claim`
+- `snowflake_user_mapping_attribute` to `external_oauth_snowflake_user_mapping_attribute`
+- `scope_mapping_attribute` to `external_oauth_scope_mapping_attribute`
+- `jws_keys_urls` to `external_oauth_jws_keys_url`
+- `rsa_public_key` to `external_oauth_rsa_public_key`
+- `rsa_public_key_2` to `external_oauth_rsa_public_key_2`
+- `blocked_roles` to `external_oauth_blocked_roles_list`
+- `allowed_roles` to `external_oauth_allowed_roles_list`
+- `audience_urls` to `external_oauth_audience_list`
+- `any_role_mode` to `external_oauth_any_role_mode`
+- `scope_delimiter` to `external_oauth_scope_delimiter`
+to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+
+#### *(behavior change)* Force new for multiple attributes after removing from config
+Conditional force new was added for the following attributes when they are removed from config. There are no alter statements supporting UNSET on these fields.
+- `external_oauth_rsa_public_key`
+- `external_oauth_rsa_public_key_2`
+- `external_oauth_scope_mapping_attribute`
+- `external_oauth_jws_keys_url`
+- `external_oauth_token_user_mapping_claim`
+
+#### *(behavior change)* Conflicting fields
+Fields listed below can not be set at the same time in Snowflake. They are marked as conflicting fields.
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key`
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key_2`
+- `external_oauth_allowed_roles_list` <-> `external_oauth_blocked_roles_list`
+
+#### *(behavior change)* Changed diff suppress for some fields
+The fields listed below had diff suppress which removed '-' from strings. Now, this behavior is removed, so if you had '-' in these strings, please remove them. Note that '-' in these values is not allowed by Snowflake.
+- `external_oauth_snowflake_user_mapping_attribute`
+- `external_oauth_type`
+- `external_oauth_any_role_mode`
+
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`
 
