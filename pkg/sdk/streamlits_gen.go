@@ -23,7 +23,7 @@ type CreateStreamlitOptions struct {
 	name                       SchemaObjectIdentifier      `ddl:"identifier"`
 	RootLocation               string                      `ddl:"parameter,single_quotes" sql:"ROOT_LOCATION"`
 	MainFile                   string                      `ddl:"parameter,single_quotes" sql:"MAIN_FILE"`
-	Warehouse                  *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"QUERY_WAREHOUSE"`
+	QueryWarehouse             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"QUERY_WAREHOUSE"`
 	ExternalAccessIntegrations *ExternalAccessIntegrations `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Title                      *string                     `ddl:"parameter,single_quotes" sql:"TITLE"`
 	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -45,7 +45,7 @@ type AlterStreamlitOptions struct {
 type StreamlitSet struct {
 	RootLocation               *string                     `ddl:"parameter,single_quotes" sql:"ROOT_LOCATION"`
 	MainFile                   *string                     `ddl:"parameter,single_quotes" sql:"MAIN_FILE"`
-	Warehouse                  *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"QUERY_WAREHOUSE"`
+	QueryWarehouse             *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"QUERY_WAREHOUSE"`
 	ExternalAccessIntegrations *ExternalAccessIntegrations `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Title                      *string                     `ddl:"parameter,single_quotes" sql:"TITLE"`

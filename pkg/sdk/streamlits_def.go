@@ -7,14 +7,14 @@ var externalAccessIntegrations = g.NewQueryStruct("ExternalAccessIntegrations").
 	List("ExternalAccessIntegrations", "AccountObjectIdentifier", g.ListOptions().Required().MustParentheses())
 
 var streamlitSet = g.NewQueryStruct("StreamlitSet").
-	OptionalTextAssignment("ROOT_LOCATION", g.ParameterOptions().SingleQuotes().Required()).
-	OptionalTextAssignment("MAIN_FILE", g.ParameterOptions().SingleQuotes().Required()).
-	OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
+	OptionalTextAssignment("ROOT_LOCATION", g.ParameterOptions().SingleQuotes()).
+	OptionalTextAssignment("MAIN_FILE", g.ParameterOptions().SingleQuotes()).
+	OptionalIdentifier("QueryWarehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
 	OptionalQueryStructField("ExternalAccessIntegrations", externalAccessIntegrations, g.ParameterOptions().SQL("EXTERNAL_ACCESS_INTEGRATIONS").Parentheses()).
 	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 	OptionalTextAssignment("TITLE", g.ParameterOptions().SingleQuotes()).
-	WithValidation(g.ValidIdentifierIfSet, "Warehouse").
-	WithValidation(g.AtLeastOneValueSet, "RootLocation", "MainFile", "Warehouse", "ExternalAccessIntegrations", "Comment", "Title")
+	WithValidation(g.ValidIdentifierIfSet, "QueryWarehouse").
+	WithValidation(g.AtLeastOneValueSet, "RootLocation", "MainFile", "QueryWarehouse", "ExternalAccessIntegrations", "Comment", "Title")
 
 var streamlitUnset = g.NewQueryStruct("StreamlitUnset").
 	OptionalSQL("QUERY_WAREHOUSE").
@@ -36,7 +36,7 @@ var StreamlitsDef = g.NewInterface(
 		Name().
 		TextAssignment("ROOT_LOCATION", g.ParameterOptions().SingleQuotes().Required()).
 		TextAssignment("MAIN_FILE", g.ParameterOptions().SingleQuotes().Required()).
-		OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
+		OptionalIdentifier("QueryWarehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
 		OptionalQueryStructField("ExternalAccessIntegrations", externalAccessIntegrations, g.ParameterOptions().SQL("EXTERNAL_ACCESS_INTEGRATIONS").Parentheses()).
 		OptionalTextAssignment("TITLE", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).

@@ -26,8 +26,8 @@ func (s *CreateStreamlitRequest) WithIfNotExists(IfNotExists bool) *CreateStream
 	return s
 }
 
-func (s *CreateStreamlitRequest) WithWarehouse(Warehouse AccountObjectIdentifier) *CreateStreamlitRequest {
-	s.Warehouse = &Warehouse
+func (s *CreateStreamlitRequest) WithQueryWarehouse(QueryWarehouse AccountObjectIdentifier) *CreateStreamlitRequest {
+	s.QueryWarehouse = &QueryWarehouse
 	return s
 }
 
@@ -82,18 +82,22 @@ func (s *AlterStreamlitRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *A
 	return s
 }
 
-func NewStreamlitSetRequest(
-	RootLocation *string,
-	MainFile *string,
-) *StreamlitSetRequest {
-	s := StreamlitSetRequest{}
-	s.RootLocation = RootLocation
-	s.MainFile = MainFile
-	return &s
+func NewStreamlitSetRequest() *StreamlitSetRequest {
+	return &StreamlitSetRequest{}
 }
 
-func (s *StreamlitSetRequest) WithWarehouse(Warehouse AccountObjectIdentifier) *StreamlitSetRequest {
-	s.Warehouse = &Warehouse
+func (s *StreamlitSetRequest) WithRootLocation(RootLocation string) *StreamlitSetRequest {
+	s.RootLocation = &RootLocation
+	return s
+}
+
+func (s *StreamlitSetRequest) WithMainFile(MainFile string) *StreamlitSetRequest {
+	s.MainFile = &MainFile
+	return s
+}
+
+func (s *StreamlitSetRequest) WithQueryWarehouse(QueryWarehouse AccountObjectIdentifier) *StreamlitSetRequest {
+	s.QueryWarehouse = &QueryWarehouse
 	return s
 }
 

@@ -25,6 +25,7 @@ type TestClient struct {
 	FileFormat          *FileFormatClient
 	MaskingPolicy       *MaskingPolicyClient
 	MaterializedView    *MaterializedViewClient
+	NetworkRule         *NetworkRuleClient
 	NetworkPolicy       *NetworkPolicyClient
 	Parameter           *ParameterClient
 	PasswordPolicy      *PasswordPolicyClient
@@ -75,6 +76,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		FileFormat:          NewFileFormatClient(context, idsGenerator),
 		MaskingPolicy:       NewMaskingPolicyClient(context, idsGenerator),
 		MaterializedView:    NewMaterializedViewClient(context, idsGenerator),
+		NetworkRule:         NewNetworkRuleClient(context, idsGenerator),
 		NetworkPolicy:       NewNetworkPolicyClient(context, idsGenerator),
 		Parameter:           NewParameterClient(context),
 		PasswordPolicy:      NewPasswordPolicyClient(context, idsGenerator),

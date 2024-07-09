@@ -38,8 +38,8 @@ func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([
 }
 
 func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	streamlits, err := v.Show(ctx, NewShowStreamlitRequest())
+	request := NewShowStreamlitRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
+	streamlits, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (v *streamlits) Describe(ctx context.Context, id SchemaObjectIdentifier) (*
 
 func (r *CreateStreamlitRequest) toOpts() *CreateStreamlitOptions {
 	opts := &CreateStreamlitOptions{
-		OrReplace:    r.OrReplace,
-		IfNotExists:  r.IfNotExists,
-		name:         r.name,
-		RootLocation: r.RootLocation,
-		MainFile:     r.MainFile,
-		Warehouse:    r.Warehouse,
+		OrReplace:      r.OrReplace,
+		IfNotExists:    r.IfNotExists,
+		name:           r.name,
+		RootLocation:   r.RootLocation,
+		MainFile:       r.MainFile,
+		QueryWarehouse: r.QueryWarehouse,
 
 		Title:   r.Title,
 		Comment: r.Comment,
@@ -90,9 +90,9 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 	if r.Set != nil {
 
 		opts.Set = &StreamlitSet{
-			RootLocation: r.Set.RootLocation,
-			MainFile:     r.Set.MainFile,
-			Warehouse:    r.Set.Warehouse,
+			RootLocation:   r.Set.RootLocation,
+			MainFile:       r.Set.MainFile,
+			QueryWarehouse: r.Set.QueryWarehouse,
 
 			Comment: r.Set.Comment,
 			Title:   r.Set.Title,
@@ -136,8 +136,25 @@ func (r *ShowStreamlitRequest) toOpts() *ShowStreamlitOptions {
 }
 
 func (r streamlitsRow) convert() *Streamlit {
-	// TODO: Mapping
-	return &Streamlit{}
+	e := &Streamlit{
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		DatabaseName:  r.DatabaseName,
+		SchemaName:    r.SchemaName,
+		Owner:         r.Owner,
+		UrlId:         r.UrlId,
+		OwnerRoleType: r.OwnerRoleType,
+	}
+	if r.Title.Valid {
+		e.Title = r.Title.String
+	}
+	if r.Comment.Valid {
+		e.Comment = r.Comment.String
+	}
+	if r.QueryWarehouse.Valid {
+		e.QueryWarehouse = r.QueryWarehouse.String
+	}
+	return e
 }
 
 func (r *DescribeStreamlitRequest) toOpts() *DescribeStreamlitOptions {
@@ -148,6 +165,22 @@ func (r *DescribeStreamlitRequest) toOpts() *DescribeStreamlitOptions {
 }
 
 func (r streamlitsDetailRow) convert() *StreamlitDetail {
-	// TODO: Mapping
-	return &StreamlitDetail{}
+	e := &StreamlitDetail{
+		Name:                       r.Name,
+		RootLocation:               r.RootLocation,
+		MainFile:                   r.MainFile,
+		UrlId:                      r.UrlId,
+		DefaultPackages:            r.DefaultPackages,
+		UserPackages:               r.UserPackages,
+		ImportUrls:                 ParseCommaSeparatedStringArray(r.ImportUrls),
+		ExternalAccessIntegrations: ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations),
+		ExternalAccessSecrets:      r.ExternalAccessSecrets,
+	}
+	if r.Title.Valid {
+		e.Title = r.Title.String
+	}
+	if r.QueryWarehouse.Valid {
+		e.QueryWarehouse = r.QueryWarehouse.String
+	}
+	return e
 }

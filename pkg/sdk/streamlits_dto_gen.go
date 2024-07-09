@@ -16,7 +16,7 @@ type CreateStreamlitRequest struct {
 	name                       SchemaObjectIdentifier // required
 	RootLocation               string                 // required
 	MainFile                   string                 // required
-	Warehouse                  *AccountObjectIdentifier
+	QueryWarehouse             *AccountObjectIdentifier
 	ExternalAccessIntegrations *ExternalAccessIntegrationsRequest
 	Title                      *string
 	Comment                    *string
@@ -35,9 +35,9 @@ type AlterStreamlitRequest struct {
 }
 
 type StreamlitSetRequest struct {
-	RootLocation               *string // required
-	MainFile                   *string // required
-	Warehouse                  *AccountObjectIdentifier
+	RootLocation               *string
+	MainFile                   *string
+	QueryWarehouse             *AccountObjectIdentifier
 	ExternalAccessIntegrations *ExternalAccessIntegrationsRequest
 	Comment                    *string
 	Title                      *string

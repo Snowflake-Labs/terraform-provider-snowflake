@@ -47,6 +47,26 @@ func IgnoreChangeToCurrentSnowflakeValueInShow(keyInShowOutput string) schema.Sc
 	}
 }
 
+func IgnoreChangeToCurrentSnowflakeValueInOutput(attrName, keyInShowOutput string) schema.SchemaDiffSuppressFunc {
+	return func(_, _, new string, d *schema.ResourceData) bool {
+		if d.Id() == "" {
+			return false
+		}
+
+		if queryOutput, ok := d.GetOk(attrName); ok {
+			queryOutputList := queryOutput.([]any)
+			if len(queryOutputList) == 1 {
+				result := queryOutputList[0].(map[string]any)
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInShowOutput, result[keyInShowOutput], new, new == fmt.Sprintf("%v", result[keyInShowOutput]))
+				if new == fmt.Sprintf("%v", result[keyInShowOutput]) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+}
+
 func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInDescribeOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {

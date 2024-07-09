@@ -40,11 +40,13 @@ var DescribeStreamlitSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"import_urls": {
-		Type:     schema.TypeString,
+		Type:     schema.TypeList,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"external_access_integrations": {
-		Type:     schema.TypeString,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"external_access_secrets": {
@@ -53,7 +55,7 @@ var DescribeStreamlitSchema = map[string]*schema.Schema{
 	},
 }
 
-func StreamlitIntegrationPropertiesToSchema(details sdk.StreamlitDetail) map[string]any {
+func StreamlitPropertiesToSchema(details sdk.StreamlitDetail) map[string]any {
 	return map[string]any{
 		"name":                         details.Name,
 		"title":                        details.Title,

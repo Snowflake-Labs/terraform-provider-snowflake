@@ -4,6 +4,10 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.93.0 ➞ v0.94.0
+### *(new feature)* snowflake_streamlit resource
+Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit).
+
 ## v0.92.0 ➞ v0.93.0
 
 ### general changes
@@ -129,10 +133,10 @@ All the field changes in comparison to the previous database resource are:
         - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
 - `from_database` - database cloning was entirely removed and is not possible by any of the new database resources.
 - `from_share` - the parameter was moved to the dedicated resource for databases created from shares `snowflake_shared_database`. Right now, it's a text field instead of a map. Additionally, instead of legacy account identifier format we're expecting the new one that with share looks like this: `<organization_name>.<account_name>.<share_name>`. For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
-- p, 
+- p,
 - `from_replication` - the parameter was moved to the dedicated resource for databases created from primary databases `snowflake_secondary_database`
 - `replication_configuration` - renamed: was renamed to `configuration` and is only available in the `snowflake_database`. Its internal schema changed that instead of list of accounts, we expect a list of nested objects with accounts for which replication (and optionally failover) should be enabled. More information about converting between both versions [here](#resource-renamed-snowflake_database---snowflake_database_old). Additionally, instead of legacy account identifier format we're expecting the new one that looks like this: `<organization_name>.<account_name>` (it will be automatically migrated to the recommended format by the state upgrader). For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
-- `data_retention_time_in_days` 
+- `data_retention_time_in_days`
   - in `snowflake_shared_database`
       - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
   - in `snowflake_database` and `snowflake_secondary_database`
@@ -213,7 +217,7 @@ The only difference would be that instead of writing/generating new configuratio
 - `pattern` was replaced by `like` field.
 - Additional filtering options added (`limit`).
 - Added missing fields returned by SHOW DATABASES and enclosed its output in `show_output` field.
-- Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**). 
+- Added outputs from **DESC DATABASE** and **SHOW PARAMETERS IN DATABASE** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
 The additional parameters call **DESC DATABASE** (with `with_describe` turned on) and **SHOW PARAMETERS IN DATABASE** (with `with_parameters` turned on) **per database** returned by **SHOW DATABASES**.
 The outputs of both commands are held in `databases` entry, where **DESC DATABASE** is saved in the `describe_output` field, and **SHOW PARAMETERS IN DATABASE** in the `parameters` field.
 It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
@@ -237,7 +241,7 @@ resource "snowflake_tag_masking_policy_association" "name" {
     masking_policy_id = snowflake_masking_policy.example_masking_policy.id
 }
 ```
-    
+
 After
 ```terraform
 resource "snowflake_tag_masking_policy_association" "name" {

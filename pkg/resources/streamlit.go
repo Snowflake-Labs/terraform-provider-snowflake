@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -22,12 +20,12 @@ var streamlitSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "String that specifies the identifier (i.e. name) for the integration; must be unique in your account.",
+		Description: "String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account.",
 	},
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The database in which to create the streamlit.",
+		Description: "The database in which to create the Cortex search service.",
 		ForceNew:    true,
 	},
 	"schema": {
@@ -40,13 +38,13 @@ var streamlitSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("root_location"),
+		DiffSuppressFunc: SuppressIfAny(suppressLocationQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "root_location")),
 	},
 	"main_file": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("main_file"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "main_file"),
 	},
 	"query_warehouse": {
 		Type:             schema.TypeString,
@@ -56,11 +54,13 @@ var streamlitSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("query_warehouse")),
 	},
 	"external_access_integrations": {
-		Type:             schema.TypeSet,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		Type: schema.TypeSet,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
 		Optional:         true,
 		Description:      "External access integrations connected to the Streamlit.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("query_warehouse")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "external_access_integrations")),
 	},
 	"title": {
 		Type:        schema.TypeString,
@@ -110,63 +110,56 @@ func Streamlit() *schema.Resource {
 }
 
 func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	logging.DebugLogger.Printf("[DEBUG] Starting scim integration import")
+	logging.DebugLogger.Printf("[DEBUG] Starting streamlit import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+	streamlit, err := client.Streamlits.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	integrationProperties, err := client.SecurityIntegrations.Describe(ctx, id)
+	streamlitDetails, err := client.Streamlits.Describe(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-
-	if err = d.Set("name", integration.Name); err != nil {
+	if err = d.Set("name", streamlit.Name); err != nil {
 		return nil, err
 	}
-	if err = d.Set("enabled", integration.Enabled); err != nil {
+	if err = d.Set("schema", streamlit.SchemaName); err != nil {
 		return nil, err
 	}
-	if scimClient, err := integration.SubType(); err == nil {
-		if err = d.Set("scim_client", scimClient); err != nil {
-			return nil, err
-		}
-	}
-	if runAsRoleProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" }); err == nil {
-		if err = d.Set("run_as_role", runAsRoleProperty.Value); err != nil {
-			return nil, err
-		}
-	}
-	if networkPolicyProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" }); err == nil {
-		if err = d.Set("network_policy", networkPolicyProperty.Value); err != nil {
-			return nil, err
-		}
-	}
-	if syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" }); err == nil {
-		if err = d.Set("sync_password", syncPasswordProperty.Value); err != nil {
-			return nil, err
-		}
-	}
-	if err = d.Set("comment", integration.Comment); err != nil {
+	if err = d.Set("root_location", streamlitDetails.RootLocation); err != nil {
 		return nil, err
 	}
-
+	if err = d.Set("main_file", streamlitDetails.MainFile); err != nil {
+		return nil, err
+	}
+	if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
+		return nil, err
+	}
+	if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {
+		return nil, err
+	}
+	if err = d.Set("title", streamlit.Title); err != nil {
+		return nil, err
+	}
+	if err = d.Set("comment", streamlit.Comment); err != nil {
+		return nil, err
+	}
 	return []*schema.ResourceData{d}, nil
 }
 
 func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schemaName, name)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 	req := sdk.NewCreateStreamlitRequest(id, d.Get("root_location").(string), d.Get("main_file").(string))
 
 	if v, ok := d.GetOk("query_warehouse"); ok {
-		req.WithWarehouse(sdk.NewAccountObjectIdentifier(v.(string)))
+		req.WithQueryWarehouse(sdk.NewAccountObjectIdentifier(v.(string)))
 	}
 	if v, ok := d.GetOk("title"); ok {
 		req.WithTitle(v.(string))
@@ -198,7 +191,7 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 		client := meta.(*provider.Context).Client
 		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-		integration, err := client.Streamlits.ShowByID(ctx, id)
+		streamlit, err := client.Streamlits.ShowByID(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -213,7 +206,7 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		describeResult, err := client.Streamlits.Describe(ctx, id)
+		streamlitDetails, err := client.Streamlits.Describe(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -228,50 +221,43 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("name", integration.Name); err != nil {
+		if err := d.Set("name", streamlit.Name); err != nil {
 			return diag.FromErr(err)
 		}
-
+		if err := d.Set("schema", streamlit.SchemaName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("root_location", streamlitDetails.RootLocation); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
+			return diag.FromErr(err)
+		}
 		if withExternalChangesMarking {
-			networkPolicyProperty, err := collections.FindOne(describeResult, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" })
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			syncPasswordProperty, err := collections.FindOne(describeResult, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err = handleExternalChangesToObjectInDescribe(d,
-				describeMapping{"network_policy", "network_policy", networkPolicyProperty.Value, networkPolicyProperty.Value, nil},
-				describeMapping{"sync_password", "sync_password", syncPasswordProperty.Value, syncPasswordProperty.Value, nil},
+			if err = handleExternalChangesToObjectInShow(d,
+				showMapping{"query_warehouse", "query_warehouse", streamlit.QueryWarehouse, streamlit.QueryWarehouse, nil},
+				showMapping{"external_access_integrations", "external_access_integrations", streamlitDetails.ExternalAccessIntegrations, streamlitDetails.ExternalAccessIntegrations, nil},
+				showMapping{"title", "title", streamlit.Title, streamlit.Title, nil},
+				showMapping{"comment", "comment", streamlit.Comment, streamlit.Comment, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		// These are all identity sets, needed for the case where:
-		// - previous config was empty (therefore Snowflake defaults had been used)
-		// - new config have the same values that are already in SF
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["network_policy"]; !v.IsNull() {
-				if err = d.Set("network_policy", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["sync_password"]; !v.IsNull() {
-				if err = d.Set("sync_password", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+		if err = setStateToValuesFromConfig(d, streamlitSchema, []string{
+			"query_warehouse",
+			"external_access_integrations",
+			"title",
+			"comment",
+		}); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamlitToSchema(streamlit)}); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.ScimSecurityIntegrationPropertiesToSchema(describeResult)}); err != nil {
+		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamlitPropertiesToSchema(*streamlitDetails)}); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -282,44 +268,68 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	set, unset := sdk.NewStreamlitSetRequest(nil, nil), sdk.NewStreamlitUnsetRequest()
+	set, unset := sdk.NewStreamlitSetRequest(), sdk.NewStreamlitUnsetRequest()
 
-	if d.HasChange("enabled") {
-		set.WithEnabled(d.Get("enabled").(bool))
+	if d.HasChange("root_location") {
+		// required field
+		set.WithRootLocation(d.Get("root_location").(string))
 	}
 
-	if d.HasChange("network_policy") {
-		if v := d.Get("network_policy").(string); v != "" {
-			set.WithNetworkPolicy(sdk.NewAccountObjectIdentifier(v))
+	if d.HasChange("main_file") {
+		// required field
+		set.WithMainFile(d.Get("main_file").(string))
+	}
+
+	if d.HasChange("title") {
+		if v, ok := d.GetOk("title"); ok {
+			set.WithTitle(v.(string))
 		} else {
-			unset.WithNetworkPolicy(true)
+			unset.WithTitle(true)
 		}
 	}
 
-	if d.HasChange("sync_password") {
-		if v := d.Get("sync_password").(string); v != BooleanDefault {
-			parsed, err := strconv.ParseBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			set.WithSyncPassword(parsed)
+	if d.HasChange("query_warehouse") {
+		if v, ok := d.GetOk("query_warehouse"); ok {
+			set.WithQueryWarehouse(sdk.NewAccountObjectIdentifier(v.(string)))
 		} else {
-			unset.WithSyncPassword(true)
+			unset.WithQueryWarehouse(true)
+		}
+	}
+
+	if d.HasChange("title") {
+		if v, ok := d.GetOk("title"); ok {
+			set.WithTitle(v.(string))
+		} else {
+			unset.WithTitle(true)
 		}
 	}
 
 	if d.HasChange("comment") {
-		set.WithComment(sdk.StringAllowEmpty{Value: d.Get("comment").(string)})
+		if v, ok := d.GetOk("comment"); ok {
+			set.WithComment(v.(string))
+		} else {
+			unset.WithComment(true)
+		}
+	}
+	if v, ok := d.GetOk("external_access_integrations"); ok {
+		raw := expandStringList(v.(*schema.Set).List())
+		integrations := make([]sdk.AccountObjectIdentifier, len(raw))
+		for i, v := range raw {
+			integrations[i] = sdk.NewAccountObjectIdentifier(v)
+		}
+		set.WithExternalAccessIntegrations(sdk.ExternalAccessIntegrationsRequest{
+			ExternalAccessIntegrations: integrations,
+		})
 	}
 
 	if (*set != sdk.StreamlitSetRequest{}) {
-		if err := client.SecurityIntegrations.AlterScim(ctx, sdk.NewAlterScimSecurityIntegrationRequest(id).WithSet(*set)); err != nil {
+		if err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithSet(*set)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
 	if (*unset != sdk.StreamlitUnsetRequest{}) {
-		if err := client.SecurityIntegrations.AlterScim(ctx, sdk.NewAlterScimSecurityIntegrationRequest(id).WithUnset(*unset)); err != nil {
+		if err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
