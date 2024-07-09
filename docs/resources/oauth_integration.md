@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_oauth_integration (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_oauth_integration_for_custom_clients or snowflake_oauth_integration_for_partner_applications instead. <deprecation>
 
 ## Example Usage
 

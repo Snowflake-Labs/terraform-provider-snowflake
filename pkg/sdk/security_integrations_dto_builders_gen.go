@@ -979,7 +979,12 @@ func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthScopeDelimiter(Ext
 	return s
 }
 
-func (s *ExternalOauthIntegrationSetRequest) WithComment(Comment string) *ExternalOauthIntegrationSetRequest {
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthScopeMappingAttribute(ExternalOauthScopeMappingAttribute string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthScopeMappingAttribute = &ExternalOauthScopeMappingAttribute
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithComment(Comment StringAllowEmpty) *ExternalOauthIntegrationSetRequest {
 	s.Comment = &Comment
 	return s
 }

@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
+
 # snowflake_role (Resource)
 
 
@@ -28,24 +30,27 @@ resource "snowflake_role" "role" {
 ### Optional
 
 - `comment` (String)
-- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW ROLES` for the given role. (see [below for nested schema](#nestedatt--show_output))
 
-<a id="nestedblock--tag"></a>
-### Nested Schema for `tag`
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
 
-Required:
+Read-Only:
 
-- `name` (String) Tag name, e.g. department.
-- `value` (String) Tag value, e.g. marketing_info.
-
-Optional:
-
-- `database` (String) Name of the database that the tag was created in.
-- `schema` (String) Name of the schema that the tag was created in.
+- `assigned_to_users` (Number)
+- `comment` (String)
+- `created_on` (String)
+- `granted_roles` (Number)
+- `granted_to_roles` (Number)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `is_inherited` (Boolean)
+- `name` (String)
+- `owner` (String)
 
 ## Import
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -133,6 +134,23 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
+	if d.HasChange("name") {
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+
+		if err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId)); err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Failed to rename account role name",
+					Detail:   fmt.Sprintf("Previous account role name: %s, new account role name: %s, err: %s", id.Name(), newId.Name(), err),
+				},
+			}
+		}
+
+		id = newId
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+	}
+
 	if d.HasChange("comment") {
 		if v, ok := d.GetOk("comment"); ok {
 			if err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetComment(v.(string))); err != nil {
@@ -156,23 +174,6 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 				}
 			}
 		}
-	}
-
-	if d.HasChange("name") {
-		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-
-		if err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId)); err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to rename account role name",
-					Detail:   fmt.Sprintf("Previous account role name: %s, new account role name: %s, err: %s", id.Name(), newId.Name(), err),
-				},
-			}
-		}
-
-		id = newId
-		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
 
 	return ReadAccountRole(ctx, d, meta)
