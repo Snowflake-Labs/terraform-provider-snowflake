@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,32 +31,35 @@ var DescribeOauthIntegrationForCustomClients = map[string]*schema.Schema{
 	"oauth_allowed_token_endpoints":         DescribePropertyListSchema,
 }
 
+var OauthIntegrationForCustomClientsPropertiesNames = []string{
+	"OAUTH_CLIENT_TYPE",
+	"OAUTH_REDIRECT_URI",
+	"ENABLED",
+	"OAUTH_ALLOW_NON_TLS_REDIRECT_URI",
+	"OAUTH_ENFORCE_PKCE",
+	"OAUTH_USE_SECONDARY_ROLES",
+	"PRE_AUTHORIZED_ROLES_LIST",
+	"BLOCKED_ROLES_LIST",
+	"OAUTH_ISSUE_REFRESH_TOKENS",
+	"OAUTH_REFRESH_TOKEN_VALIDITY",
+	"NETWORK_POLICY",
+	"OAUTH_CLIENT_RSA_PUBLIC_KEY_FP",
+	"OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP",
+	"COMMENT",
+	"OAUTH_CLIENT_ID",
+	"OAUTH_AUTHORIZATION_ENDPOINT",
+	"OAUTH_TOKEN_ENDPOINT",
+	"OAUTH_ALLOWED_AUTHORIZATION_ENDPOINTS",
+	"OAUTH_ALLOWED_TOKEN_ENDPOINTS",
+}
+
 func DescribeOauthIntegrationForCustomClientsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	propsSchema := make(map[string]any)
 	for _, property := range integrationProperties {
 		property := property
-		switch property.Name {
-		case "OAUTH_CLIENT_TYPE",
-			"OAUTH_REDIRECT_URI",
-			"ENABLED",
-			"OAUTH_ALLOW_NON_TLS_REDIRECT_URI",
-			"OAUTH_ENFORCE_PKCE",
-			"OAUTH_USE_SECONDARY_ROLES",
-			"PRE_AUTHORIZED_ROLES_LIST",
-			"BLOCKED_ROLES_LIST",
-			"OAUTH_ISSUE_REFRESH_TOKENS",
-			"OAUTH_REFRESH_TOKEN_VALIDITY",
-			"NETWORK_POLICY",
-			"OAUTH_CLIENT_RSA_PUBLIC_KEY_FP",
-			"OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP",
-			"COMMENT",
-			"OAUTH_CLIENT_ID",
-			"OAUTH_AUTHORIZATION_ENDPOINT",
-			"OAUTH_TOKEN_ENDPOINT",
-			"OAUTH_ALLOWED_AUTHORIZATION_ENDPOINTS",
-			"OAUTH_ALLOWED_TOKEN_ENDPOINTS":
+		if slices.Contains(OauthIntegrationForCustomClientsPropertiesNames, property.Name) {
 			propsSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
-		default:
+		} else {
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", property.Name)
 		}
 	}

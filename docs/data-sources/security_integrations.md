@@ -100,12 +100,33 @@ Read-Only:
 
 Read-Only:
 
-<<<<<<< HEAD
 - `allowed_email_patterns` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--allowed_email_patterns))
 - `allowed_user_domains` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--allowed_user_domains))
+- `auth_type` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--auth_type))
+- `blocked_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--blocked_roles_list))
 - `comment` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--comment))
 - `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--enabled))
 - `network_policy` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--network_policy))
+- `oauth_access_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_access_token_validity))
+- `oauth_allow_non_tls_redirect_uri` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allow_non_tls_redirect_uri))
+- `oauth_allowed_authorization_endpoints` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allowed_authorization_endpoints))
+- `oauth_allowed_scopes` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allowed_scopes))
+- `oauth_allowed_token_endpoints` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allowed_token_endpoints))
+- `oauth_authorization_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_authorization_endpoint))
+- `oauth_client_auth_method` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_auth_method))
+- `oauth_client_id` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_id))
+- `oauth_client_rsa_public_key_2_fp` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_2_fp))
+- `oauth_client_rsa_public_key_fp` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_fp))
+- `oauth_client_type` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_type))
+- `oauth_enforce_pkce` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_enforce_pkce))
+- `oauth_grant` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_grant))
+- `oauth_issue_refresh_tokens` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_issue_refresh_tokens))
+- `oauth_redirect_uri` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_redirect_uri))
+- `oauth_refresh_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_refresh_token_validity))
+- `oauth_token_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_token_endpoint))
+- `oauth_use_secondary_roles` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_use_secondary_roles))
+- `parent_integration` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--parent_integration))
+- `pre_authorized_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--pre_authorized_roles_list))
 - `run_as_role` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--run_as_role))
 - `saml2_digest_methods_used` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_digest_methods_used))
 - `saml2_enable_sp_initiated` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_enable_sp_initiated))
@@ -124,31 +145,7 @@ Read-Only:
 - `saml2_sso_url` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_sso_url))
 - `saml2_x509_cert` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--saml2_x509_cert))
 - `sync_password` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--sync_password))
-||||||| d0c136d1
-- `todo` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--todo))
-=======
-- `blocked_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--blocked_roles_list))
-- `comment` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--comment))
-- `enabled` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--enabled))
-- `network_policy` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--network_policy))
-- `oauth_allow_non_tls_redirect_uri` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allow_non_tls_redirect_uri))
-- `oauth_allowed_authorization_endpoints` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allowed_authorization_endpoints))
-- `oauth_allowed_token_endpoints` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_allowed_token_endpoints))
-- `oauth_authorization_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_authorization_endpoint))
-- `oauth_client_id` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_id))
-- `oauth_client_rsa_public_key_2_fp` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_2_fp))
-- `oauth_client_rsa_public_key_fp` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_fp))
-- `oauth_client_type` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_client_type))
-- `oauth_enforce_pkce` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_enforce_pkce))
-- `oauth_issue_refresh_tokens` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_issue_refresh_tokens))
-- `oauth_redirect_uri` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_redirect_uri))
-- `oauth_refresh_token_validity` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_refresh_token_validity))
-- `oauth_token_endpoint` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_token_endpoint))
-- `oauth_use_secondary_roles` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--oauth_use_secondary_roles))
-- `pre_authorized_roles_list` (List of Object) (see [below for nested schema](#nestedobjatt--security_integrations--describe_output--pre_authorized_roles_list))
->>>>>>> origin/main
 
-<<<<<<< HEAD
 <a id="nestedobjatt--security_integrations--describe_output--allowed_email_patterns"></a>
 ### Nested Schema for `security_integrations.describe_output.allowed_email_patterns`
 
@@ -162,6 +159,28 @@ Read-Only:
 
 <a id="nestedobjatt--security_integrations--describe_output--allowed_user_domains"></a>
 ### Nested Schema for `security_integrations.describe_output.allowed_user_domains`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--auth_type"></a>
+### Nested Schema for `security_integrations.describe_output.auth_type`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--blocked_roles_list"></a>
+### Nested Schema for `security_integrations.describe_output.blocked_roles_list`
 
 Read-Only:
 
@@ -195,6 +214,226 @@ Read-Only:
 
 <a id="nestedobjatt--security_integrations--describe_output--network_policy"></a>
 ### Nested Schema for `security_integrations.describe_output.network_policy`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_access_token_validity"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_access_token_validity`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_allow_non_tls_redirect_uri"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_allow_non_tls_redirect_uri`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_allowed_authorization_endpoints"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_allowed_authorization_endpoints`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_allowed_scopes"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_allowed_scopes`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_allowed_token_endpoints"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_allowed_token_endpoints`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_authorization_endpoint"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_authorization_endpoint`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_client_auth_method"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_client_auth_method`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_client_id"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_client_id`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_2_fp"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_client_rsa_public_key_2_fp`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_fp"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_client_rsa_public_key_fp`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_client_type"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_client_type`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_enforce_pkce"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_enforce_pkce`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_grant"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_grant`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_issue_refresh_tokens"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_issue_refresh_tokens`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_redirect_uri"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_redirect_uri`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_refresh_token_validity"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_refresh_token_validity`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_token_endpoint"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_token_endpoint`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--oauth_use_secondary_roles"></a>
+### Nested Schema for `security_integrations.describe_output.oauth_use_secondary_roles`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--parent_integration"></a>
+### Nested Schema for `security_integrations.describe_output.parent_integration`
+
+Read-Only:
+
+- `default` (String)
+- `name` (String)
+- `type` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--security_integrations--describe_output--pre_authorized_roles_list"></a>
+### Nested Schema for `security_integrations.describe_output.pre_authorized_roles_list`
 
 Read-Only:
 
@@ -393,211 +632,6 @@ Read-Only:
 
 <a id="nestedobjatt--security_integrations--describe_output--sync_password"></a>
 ### Nested Schema for `security_integrations.describe_output.sync_password`
-||||||| d0c136d1
-<a id="nestedobjatt--security_integrations--describe_output--todo"></a>
-### Nested Schema for `security_integrations.describe_output.todo`
-=======
-<a id="nestedobjatt--security_integrations--describe_output--blocked_roles_list"></a>
-### Nested Schema for `security_integrations.describe_output.blocked_roles_list`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--comment"></a>
-### Nested Schema for `security_integrations.describe_output.comment`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--enabled"></a>
-### Nested Schema for `security_integrations.describe_output.enabled`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--network_policy"></a>
-### Nested Schema for `security_integrations.describe_output.network_policy`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_allow_non_tls_redirect_uri"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_allow_non_tls_redirect_uri`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_allowed_authorization_endpoints"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_allowed_authorization_endpoints`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_allowed_token_endpoints"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_allowed_token_endpoints`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_authorization_endpoint"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_authorization_endpoint`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_client_id"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_client_id`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_2_fp"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_client_rsa_public_key_2_fp`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_client_rsa_public_key_fp"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_client_rsa_public_key_fp`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_client_type"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_client_type`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_enforce_pkce"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_enforce_pkce`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_issue_refresh_tokens"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_issue_refresh_tokens`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_redirect_uri"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_redirect_uri`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_refresh_token_validity"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_refresh_token_validity`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_token_endpoint"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_token_endpoint`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--oauth_use_secondary_roles"></a>
-### Nested Schema for `security_integrations.describe_output.oauth_use_secondary_roles`
-
-Read-Only:
-
-- `default` (String)
-- `name` (String)
-- `type` (String)
-- `value` (String)
-
-
-<a id="nestedobjatt--security_integrations--describe_output--pre_authorized_roles_list"></a>
-### Nested Schema for `security_integrations.describe_output.pre_authorized_roles_list`
->>>>>>> origin/main
 
 Read-Only:
 

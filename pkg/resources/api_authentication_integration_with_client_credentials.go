@@ -26,7 +26,7 @@ var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
 			Description: "Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.",
 		},
 	}
-	return MergeMaps(apiAuthCommonSchema, apiAuthClientCredentials)
+	return helpers.MergeMaps(apiAuthCommonSchema, apiAuthClientCredentials)
 }()
 
 func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
