@@ -8,18 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// ComposeImportStateCheck is based on unexported composeImportStateCheck from teststep_providers_test.go
-func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		for i, f := range fs {
-			if err := f(s); err != nil {
-				return fmt.Errorf("check %d/%d error: %w", i+1, len(fs), err)
-			}
-		}
-		return nil
-	}
-}
-
 // ComposeAggregateImportStateCheck does the same as ComposeImportStateCheck, but it aggregates all the occurred errors,
 // instead of returning the first encountered one.
 func ComposeAggregateImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
@@ -33,6 +21,18 @@ func ComposeAggregateImportStateCheck(fs ...resource.ImportStateCheckFunc) resou
 		}
 
 		return errors.Join(result...)
+	}
+}
+
+// ComposeImportStateCheck is based on unexported composeImportStateCheck from teststep_providers_test.go
+func ComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
+	return func(s []*terraform.InstanceState) error {
+		for i, f := range fs {
+			if err := f(s); err != nil {
+				return fmt.Errorf("check %d/%d error: %w", i+1, len(fs), err)
+			}
+		}
+		return nil
 	}
 }
 

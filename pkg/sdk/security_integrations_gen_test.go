@@ -95,10 +95,11 @@ func TestSecurityIntegrations_CreateApiAuthenticationWithAuthorizationCodeGrantF
 		opts.OauthGrantAuthorizationCode = Pointer(true)
 		opts.OauthAccessTokenValidity = Pointer(42)
 		opts.OauthRefreshTokenValidity = Pointer(42)
+		opts.OauthAllowedScopes = []AllowedScope{{Scope: "bar"}}
 		opts.Comment = Pointer("foo")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_AUTHORIZATION_ENDPOINT = 'foo'"+
 			" OAUTH_TOKEN_ENDPOINT = 'foo' OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST OAUTH_CLIENT_ID = 'foo' OAUTH_CLIENT_SECRET = 'bar' OAUTH_GRANT = AUTHORIZATION_CODE"+
-			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 COMMENT = 'foo'", id.FullyQualifiedName())
+			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 OAUTH_ALLOWED_SCOPES = ('bar') COMMENT = 'foo'", id.FullyQualifiedName())
 	})
 }
 
@@ -261,7 +262,6 @@ func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 		roleID, role2ID, npID := randomAccountObjectIdentifier(), randomAccountObjectIdentifier(), randomAccountObjectIdentifier()
 		opts.IfNotExists = Bool(true)
 		opts.OauthClientType = OauthSecurityIntegrationClientTypePublic
-		opts.OauthRedirectUri = "uri"
 		opts.Enabled = Pointer(true)
 		opts.OauthAllowNonTlsRedirectUri = Pointer(true)
 		opts.OauthEnforcePkce = Pointer(true)
@@ -570,7 +570,7 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t 
 		opts := defaultOpts()
 		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint",
-			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
@@ -598,11 +598,12 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t 
 			OauthGrantAuthorizationCode: Pointer(true),
 			OauthAccessTokenValidity:    Pointer(42),
 			OauthRefreshTokenValidity:   Pointer(42),
+			OauthAllowedScopes:          []AllowedScope{{Scope: "bar"}},
 			Comment:                     Pointer("foo"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
 			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = AUTHORIZATION_CODE, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
-			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, COMMENT = 'foo'", id.FullyQualifiedName())
+			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, OAUTH_ALLOWED_SCOPES = ('bar'), COMMENT = 'foo'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
@@ -960,10 +961,10 @@ func TestSecurityIntegrations_AlterOauthForPartnerApplications(t *testing.T) {
 			OauthRefreshTokenValidity: Pointer(42),
 			OauthUseSecondaryRoles:    Pointer(OauthSecurityIntegrationUseSecondaryRolesNone),
 			BlockedRolesList:          &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
-			Comment:                   Pointer("a"),
+			Comment:                   Pointer(StringAllowEmpty{""}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
-			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = 'a'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = ''", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {

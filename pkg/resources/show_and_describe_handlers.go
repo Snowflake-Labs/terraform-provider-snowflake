@@ -106,6 +106,10 @@ func setStateToValuesFromConfig(d *schema.ResourceData, resourceSchema map[strin
 						if err := d.Set(field, v.AsString()); err != nil {
 							return err
 						}
+					case schema.TypeSet:
+						if err := d.Set(field, ctyValToSliceString(v.AsValueSlice())); err != nil {
+							return err
+						}
 					default:
 						log.Printf("[DEBUG] field %s has unsupported schema type %v not found", field, schemaField.Type)
 					}
