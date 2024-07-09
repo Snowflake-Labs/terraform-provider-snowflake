@@ -69,6 +69,14 @@ func (c *SecurityIntegrationClient) UpdateSaml2ForceAuthn(t *testing.T, id sdk.A
 	c.UpdateSaml2(t, sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSet(*sdk.NewSaml2IntegrationSetRequest().WithSaml2ForceAuthn(forceAuthn)))
 }
 
+func (c *SecurityIntegrationClient) UpdateOauthForPartnerApplications(t *testing.T, request *sdk.AlterOauthForPartnerApplicationsSecurityIntegrationRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterOauthForPartnerApplications(ctx, request)
+	require.NoError(t, err)
+}
+
 func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request *sdk.CreateScimSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
 	ctx := context.Background()
@@ -80,6 +88,14 @@ func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request 
 	require.NoError(t, err)
 
 	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) UpdateOauthForClients(t *testing.T, request *sdk.AlterOauthForCustomClientsSecurityIntegrationRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterOauthForCustomClients(ctx, request)
+	require.NoError(t, err)
 }
 
 func (c *SecurityIntegrationClient) DropSecurityIntegrationFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {

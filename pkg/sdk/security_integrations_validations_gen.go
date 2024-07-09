@@ -182,8 +182,8 @@ func (opts *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrat
 		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
-		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrantAuthorizationCode, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrantAuthorizationCode, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthAllowedScopes, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {

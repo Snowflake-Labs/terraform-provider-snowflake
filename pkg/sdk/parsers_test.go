@@ -29,21 +29,21 @@ func TestParseCommaSeparatedStringArray(t *testing.T) {
 			Result: []string{"one"},
 		},
 		{
-			Name:       "one element in list with quotes",
+			Name:       "one element in list - with quotes",
 			Value:      "['one']",
 			TrimQuotes: true,
 			Result:     []string{"one"},
 		},
 		{
-			Name:   "multiple elements with quotes in list",
-			Value:  "[one, two, three]",
-			Result: []string{"one", "two", "three"},
-		},
-		{
-			Name:       "multiple elements with quotes in list",
+			Name:       "multiple elements in list - with quotes",
 			Value:      "['one', 'two', 'three']",
 			TrimQuotes: true,
 			Result:     []string{"one", "two", "three"},
+		},
+		{
+			Name:   "multiple elements in list",
+			Value:  "[one, two, three]",
+			Result: []string{"one", "two", "three"},
 		},
 		{
 			Name:   "multiple elements in list - packed",
@@ -61,7 +61,7 @@ func TestParseCommaSeparatedStringArray(t *testing.T) {
 			Result: []string{"one", "two", "three"},
 		},
 		{
-			Name:       "list without brackets, elems with quotes",
+			Name:       "list without brackets - with quotes",
 			Value:      "'one','two','three'",
 			TrimQuotes: true,
 			Result:     []string{"one", "two", "three"},

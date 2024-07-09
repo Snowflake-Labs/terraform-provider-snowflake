@@ -20,6 +20,22 @@ They are all described in short in the [changes before v1 doc](./v1-preparations
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
+### *(new feature)* Api authentication resources
+Added new api authentication resources, i.e.:
+- `snowflake_api_authentication_integration_with_authorization_code_grant`
+- `snowflake_api_authentication_integration_with_client_credentials`
+- `snowflake_api_authentication_integration_with_jwt_bearer`
+
+See reference [doc](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).
+
+### *(new feature)* snowflake_oauth_integration_for_custom_clients and snowflake_oauth_integration_for_partner_applications resources
+
+To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced 
+to replace the previous `snowflake_oauth_integration`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into two more specialized resources.
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes). 
+This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`, 
+while other attributes align with `snowflake_oauth_integration_for_partner_applications`.
+
 ### *(new feature)* snowflake_security_integrations datasource
 Added a new datasource enabling querying and filtering all types of security integrations. Notes:
 - all results are stored in `security_integrations` field.

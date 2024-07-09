@@ -9,13 +9,32 @@ import (
 
 //go:generate go run ./poc/main.go
 
-const SecurityIntegrationCategory = "SECURITY"
+const (
+	SecurityIntegrationCategory                                     = "SECURITY"
+	ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode = "AUTHORIZATION_CODE"
+	ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials = "CLIENT_CREDENTIALS" //nolint:gosec
+	ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer         = "JWT_BEARER"
+)
 
 type ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption string
 
 const (
 	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = "CLIENT_SECRET_POST"
 )
+
+var AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = []ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption{
+	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost,
+}
+
+func ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption(s string) (ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost):
+		return ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost, nil
+	default:
+		return "", fmt.Errorf("invalid ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption: %s", s)
+	}
+}
 
 type ExternalOauthSecurityIntegrationTypeOption string
 
@@ -385,9 +404,10 @@ var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationW
 	OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses()).
 	OptionalComment().
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode",
-		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment")
 
 var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
@@ -606,7 +626,8 @@ var SecurityIntegrationsDef = g.NewInterface(
 				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
 				OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
-				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+				ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses())
 		}),
 	).
 	CustomOperation(
