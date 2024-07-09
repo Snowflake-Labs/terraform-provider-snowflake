@@ -171,9 +171,9 @@ func (r streamlitsDetailRow) convert() *StreamlitDetail {
 		MainFile:                   r.MainFile,
 		UrlId:                      r.UrlId,
 		DefaultPackages:            r.DefaultPackages,
-		UserPackages:               r.UserPackages,
-		ImportUrls:                 ParseCommaSeparatedStringArray(r.ImportUrls),
-		ExternalAccessIntegrations: ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations),
+		UserPackages:               ParseCommaSeparatedStringArray(r.UserPackages, false),
+		ImportUrls:                 ParseCommaSeparatedStringArray(r.ImportUrls, false),
+		ExternalAccessIntegrations: ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false),
 		ExternalAccessSecrets:      r.ExternalAccessSecrets,
 	}
 	if r.Title.Valid {
@@ -182,5 +182,10 @@ func (r streamlitsDetailRow) convert() *StreamlitDetail {
 	if r.QueryWarehouse.Valid {
 		e.QueryWarehouse = r.QueryWarehouse.String
 	}
+	var externalAccessIntegrations []string
+	for _, v := range ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false) {
+		externalAccessIntegrations = append(externalAccessIntegrations, NewObjectIdentifierFromFullyQualifiedName(v).Name())
+	}
+	e.ExternalAccessIntegrations = externalAccessIntegrations
 	return e
 }

@@ -95,10 +95,11 @@ func TestSecurityIntegrations_CreateApiAuthenticationWithAuthorizationCodeGrantF
 		opts.OauthGrantAuthorizationCode = Pointer(true)
 		opts.OauthAccessTokenValidity = Pointer(42)
 		opts.OauthRefreshTokenValidity = Pointer(42)
+		opts.OauthAllowedScopes = []AllowedScope{{Scope: "bar"}}
 		opts.Comment = Pointer("foo")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE SECURITY INTEGRATION IF NOT EXISTS %s TYPE = API_AUTHENTICATION AUTH_TYPE = OAUTH2 ENABLED = true OAUTH_AUTHORIZATION_ENDPOINT = 'foo'"+
 			" OAUTH_TOKEN_ENDPOINT = 'foo' OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST OAUTH_CLIENT_ID = 'foo' OAUTH_CLIENT_SECRET = 'bar' OAUTH_GRANT = AUTHORIZATION_CODE"+
-			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 COMMENT = 'foo'", id.FullyQualifiedName())
+			" OAUTH_ACCESS_TOKEN_VALIDITY = 42 OAUTH_REFRESH_TOKEN_VALIDITY = 42 OAUTH_ALLOWED_SCOPES = ('bar') COMMENT = 'foo'", id.FullyQualifiedName())
 	})
 }
 
@@ -261,7 +262,6 @@ func TestSecurityIntegrations_CreateOauthForCustomClients(t *testing.T) {
 		roleID, role2ID, npID := randomAccountObjectIdentifier(), randomAccountObjectIdentifier(), randomAccountObjectIdentifier()
 		opts.IfNotExists = Bool(true)
 		opts.OauthClientType = OauthSecurityIntegrationClientTypePublic
-		opts.OauthRedirectUri = "uri"
 		opts.Enabled = Pointer(true)
 		opts.OauthAllowNonTlsRedirectUri = Pointer(true)
 		opts.OauthEnforcePkce = Pointer(true)
@@ -570,7 +570,7 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t 
 		opts := defaultOpts()
 		opts.Set = &ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint",
-			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+			"OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
@@ -598,11 +598,12 @@ func TestSecurityIntegrations_AlterApiAuthenticationWithAuthorizationCodeFlow(t 
 			OauthGrantAuthorizationCode: Pointer(true),
 			OauthAccessTokenValidity:    Pointer(42),
 			OauthRefreshTokenValidity:   Pointer(42),
+			OauthAllowedScopes:          []AllowedScope{{Scope: "bar"}},
 			Comment:                     Pointer("foo"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_TOKEN_ENDPOINT = 'foo', OAUTH_CLIENT_AUTH_METHOD = CLIENT_SECRET_POST,"+
 			" OAUTH_CLIENT_ID = 'foo', OAUTH_CLIENT_SECRET = 'foo', OAUTH_GRANT = AUTHORIZATION_CODE, OAUTH_ACCESS_TOKEN_VALIDITY = 42,"+
-			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, COMMENT = 'foo'", id.FullyQualifiedName())
+			" OAUTH_REFRESH_TOKEN_VALIDITY = 42, OAUTH_ALLOWED_SCOPES = ('bar'), COMMENT = 'foo'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {
@@ -776,7 +777,7 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType",
 			"ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl",
 			"ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList",
-			"ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment"))
+			"ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "ExternalOauthScopeMappingAttribute", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.*] should be set", func(t *testing.T) {
@@ -845,12 +846,13 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 			ExternalOauthAudienceList:                  &AudienceList{AudienceList: []AudienceListItem{{Item: "foo"}}},
 			ExternalOauthAnyRoleMode:                   Pointer(ExternalOauthSecurityIntegrationAnyRoleModeDisable),
 			ExternalOauthScopeDelimiter:                Pointer(" "),
-			Comment:                                    Pointer("foo"),
+			ExternalOauthScopeMappingAttribute:         Pointer("foo"),
+			Comment:                                    Pointer(StringAllowEmpty{Value: "foo"}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, EXTERNAL_OAUTH_TYPE = CUSTOM, EXTERNAL_OAUTH_ISSUER = 'foo',"+
 			" EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('foo'), EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'EMAIL_ADDRESS', EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = (%s),"+
 			" EXTERNAL_OAUTH_RSA_PUBLIC_KEY = 'foo', EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2 = 'foo', EXTERNAL_OAUTH_AUDIENCE_LIST = ('foo'), EXTERNAL_OAUTH_ANY_ROLE_MODE = DISABLE,"+
-			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ', COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+			" EXTERNAL_OAUTH_SCOPE_DELIMITER = ' ', EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE = 'foo', COMMENT = 'foo'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 		opts.Set = &ExternalOauthIntegrationSet{
 			ExternalOauthBlockedRolesList: &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
 			ExternalOauthJwsKeysUrl:       []JwsKeysUrl{{JwsKeyUrl: "foo"}},
@@ -865,6 +867,14 @@ func TestSecurityIntegrations_AlterExternalOauth(t *testing.T) {
 			ExternalOauthAudienceList: Pointer(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s UNSET ENABLED, EXTERNAL_OAUTH_AUDIENCE_LIST", id.FullyQualifiedName())
+	})
+
+	t.Run("set empty comment", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalOauthIntegrationSet{
+			Comment: Pointer(StringAllowEmpty{Value: ""}),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET COMMENT = ''", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {
@@ -960,10 +970,10 @@ func TestSecurityIntegrations_AlterOauthForPartnerApplications(t *testing.T) {
 			OauthRefreshTokenValidity: Pointer(42),
 			OauthUseSecondaryRoles:    Pointer(OauthSecurityIntegrationUseSecondaryRolesNone),
 			BlockedRolesList:          &BlockedRolesList{BlockedRolesList: []AccountObjectIdentifier{roleID}},
-			Comment:                   Pointer("a"),
+			Comment:                   Pointer(StringAllowEmpty{""}),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECURITY INTEGRATION %s SET ENABLED = true, OAUTH_ISSUE_REFRESH_TOKENS = true, OAUTH_REDIRECT_URI = 'uri', OAUTH_REFRESH_TOKEN_VALIDITY = 42,"+
-			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = 'a'", id.FullyQualifiedName(), roleID.FullyQualifiedName())
+			" OAUTH_USE_SECONDARY_ROLES = NONE, BLOCKED_ROLES_LIST = (%s), COMMENT = ''", id.FullyQualifiedName(), roleID.FullyQualifiedName())
 	})
 
 	t.Run("all options - unset", func(t *testing.T) {

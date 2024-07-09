@@ -5,10 +5,10 @@ variable "database" {
 variable "schema" {
   type = string
 }
-variable "name" {
+variable "stage" {
   type = string
 }
-variable "root_location" {
+variable "name" {
   type = string
 }
 variable "main_file" {

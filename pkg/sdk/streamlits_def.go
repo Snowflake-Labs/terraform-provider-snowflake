@@ -41,7 +41,7 @@ var StreamlitsDef = g.NewInterface(
 		OptionalTextAssignment("TITLE", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		WithValidation(g.ValidIdentifier, "name").
-		WithValidation(g.ValidIdentifierIfSet, "Warehouse").
+		WithValidation(g.ValidIdentifierIfSet, "QueryWarehouse").
 		WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-streamlit",
@@ -58,7 +58,7 @@ var StreamlitsDef = g.NewInterface(
 		OptionalQueryStructField(
 			"Unset",
 			streamlitUnset,
-			g.KeywordOptions().SQL("UNSET"),
+			g.ListOptions().NoParentheses().SQL("UNSET"),
 		).
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 		WithValidation(g.ValidIdentifier, "name").
@@ -126,7 +126,7 @@ var StreamlitsDef = g.NewInterface(
 		Field("QueryWarehouse", "string").
 		Field("UrlId", "string").
 		Field("DefaultPackages", "string").
-		Field("UserPackages", "string").
+		Field("UserPackages", "[]string").
 		Field("ImportUrls", "[]string").
 		Field("ExternalAccessIntegrations", "[]string").
 		Field("ExternalAccessSecrets", "string"),

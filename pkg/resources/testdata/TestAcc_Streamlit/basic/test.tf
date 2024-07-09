@@ -1,7 +1,7 @@
 resource "snowflake_streamlit" "test" {
-  database      = var.database
-  schema        = var.schema
-  name          = var.name
-  root_location = var.root_location
-  main_file     = var.main_file
+  database  = var.database
+  schema    = var.schema
+  stage     = var.stage
+  name      = var.name
+  main_file = var.main_file
 }

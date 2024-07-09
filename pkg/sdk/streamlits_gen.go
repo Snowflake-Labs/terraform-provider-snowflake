@@ -39,7 +39,7 @@ type AlterStreamlitOptions struct {
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      SchemaObjectIdentifier  `ddl:"identifier"`
 	Set       *StreamlitSet           `ddl:"keyword" sql:"SET"`
-	Unset     *StreamlitUnset         `ddl:"keyword" sql:"UNSET"`
+	Unset     *StreamlitUnset         `ddl:"list,no_parentheses" sql:"UNSET"`
 	RenameTo  *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 type StreamlitSet struct {
@@ -125,8 +125,12 @@ type StreamlitDetail struct {
 	QueryWarehouse             string
 	UrlId                      string
 	DefaultPackages            string
-	UserPackages               string
+	UserPackages               []string
 	ImportUrls                 []string
 	ExternalAccessIntegrations []string
 	ExternalAccessSecrets      string
+}
+
+func (s *Streamlit) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
 }

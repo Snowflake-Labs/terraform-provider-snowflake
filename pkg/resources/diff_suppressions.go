@@ -3,7 +3,10 @@ package resources
 import (
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -98,5 +101,38 @@ func SuppressIfAny(diffSuppressFunctions ...schema.SchemaDiffSuppressFunc) schem
 			suppress = suppress || f(k, old, new, d)
 		}
 		return suppress
+	}
+}
+
+func IgnoreValuesFromSetIfParamSet(key, param string, values []string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		params := d.Get(RelatedParametersAttributeName).([]any)
+		if len(params) == 0 {
+			return false
+		}
+		result := params[0].(map[string]any)
+		param := result[strings.ToLower(param)].([]any)
+		value := param[0].(map[string]any)["value"]
+		if !helpers.StringToBool(value.(string)) {
+			return false
+		}
+		if k == key+".#" {
+			old, new := d.GetChange(key)
+			var numOld, numNew int
+			oldList := expandStringList(old.(*schema.Set).List())
+			newList := expandStringList(new.(*schema.Set).List())
+			for _, v := range oldList {
+				if !slices.Contains(values, v) {
+					numOld++
+				}
+			}
+			for _, v := range newList {
+				if !slices.Contains(values, v) {
+					numNew++
+				}
+			}
+			return numOld == numNew
+		}
+		return slices.Contains(values, old)
 	}
 }

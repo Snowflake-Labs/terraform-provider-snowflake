@@ -6,7 +6,17 @@ across different versions.
 
 ## v0.93.0 ➞ v0.94.0
 ### *(new feature)* snowflake_streamlit resource
-Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit).
+Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
+
+### *(new feature)* snowflake_streamlits datasource
+Added a new datasource enabling querying and filtering stremlits. Notes:
+- all results are stored in `streamlits` field.
+- `like` field enables streamlits filtering.
+- SHOW STREAMLITS output is enclosed in `show_output` field inside `streamlits`.
+- Output from **DESC STREAMLIT** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `streamlits`.
+  **DESC STREAMLIT** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.
+  The additional parameters call **DESC STREAMLIT** (with `with_describe` turned on) **per streamlit** returned by **SHOW STREAMLITS**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 ## v0.92.0 ➞ v0.93.0
 
@@ -24,6 +34,22 @@ They are all described in short in the [changes before v1 doc](./v1-preparations
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
+### *(new feature)* Api authentication resources
+Added new api authentication resources, i.e.:
+- `snowflake_api_authentication_integration_with_authorization_code_grant`
+- `snowflake_api_authentication_integration_with_client_credentials`
+- `snowflake_api_authentication_integration_with_jwt_bearer`
+
+See reference [doc](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).
+
+### *(new feature)* snowflake_oauth_integration_for_custom_clients and snowflake_oauth_integration_for_partner_applications resources
+
+To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced
+to replace the previous `snowflake_oauth_integration`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into two more specialized resources.
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
+This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`,
+while other attributes align with `snowflake_oauth_integration_for_partner_applications`.
+
 ### *(new feature)* snowflake_security_integrations datasource
 Added a new datasource enabling querying and filtering all types of security integrations. Notes:
 - all results are stored in `security_integrations` field.
@@ -33,6 +59,45 @@ Added a new datasource enabling querying and filtering all types of security int
   **DESC SECURITY INTEGRATION** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.
   The additional parameters call **DESC SECURITY INTEGRATION** (with `with_describe` turned on) **per security integration** returned by **SHOW SECURITY INTEGRATIONS**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+### snowflake_external_oauth_integration resource changes
+
+#### *(behavior change)* Renamed fields
+Renamed fields:
+- `type` to `external_oauth_type`
+- `issuer` to `external_oauth_issuer`
+- `token_user_mapping_claims` to `external_oauth_token_user_mapping_claim`
+- `snowflake_user_mapping_attribute` to `external_oauth_snowflake_user_mapping_attribute`
+- `scope_mapping_attribute` to `external_oauth_scope_mapping_attribute`
+- `jws_keys_urls` to `external_oauth_jws_keys_url`
+- `rsa_public_key` to `external_oauth_rsa_public_key`
+- `rsa_public_key_2` to `external_oauth_rsa_public_key_2`
+- `blocked_roles` to `external_oauth_blocked_roles_list`
+- `allowed_roles` to `external_oauth_allowed_roles_list`
+- `audience_urls` to `external_oauth_audience_list`
+- `any_role_mode` to `external_oauth_any_role_mode`
+- `scope_delimiter` to `external_oauth_scope_delimiter`
+to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+
+#### *(behavior change)* Force new for multiple attributes after removing from config
+Conditional force new was added for the following attributes when they are removed from config. There are no alter statements supporting UNSET on these fields.
+- `external_oauth_rsa_public_key`
+- `external_oauth_rsa_public_key_2`
+- `external_oauth_scope_mapping_attribute`
+- `external_oauth_jws_keys_url`
+- `external_oauth_token_user_mapping_claim`
+
+#### *(behavior change)* Conflicting fields
+Fields listed below can not be set at the same time in Snowflake. They are marked as conflicting fields.
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key`
+- `external_oauth_jws_keys_url` <-> `external_oauth_rsa_public_key_2`
+- `external_oauth_allowed_roles_list` <-> `external_oauth_blocked_roles_list`
+
+#### *(behavior change)* Changed diff suppress for some fields
+The fields listed below had diff suppress which removed '-' from strings. Now, this behavior is removed, so if you had '-' in these strings, please remove them. Note that '-' in these values is not allowed by Snowflake.
+- `external_oauth_snowflake_user_mapping_attribute`
+- `external_oauth_type`
+- `external_oauth_any_role_mode`
 
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`

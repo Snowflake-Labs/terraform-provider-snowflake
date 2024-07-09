@@ -49,8 +49,8 @@ func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
 
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.todo.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.todo.0.value"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.0.value", "false"),
 				),
 			},
 			{

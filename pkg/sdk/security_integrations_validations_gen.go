@@ -182,8 +182,8 @@ func (opts *AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrat
 		errs = append(errs, errExactlyOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
-		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrantAuthorizationCode, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment"))
+		if !anyValueSet(opts.Set.Enabled, opts.Set.OauthAuthorizationEndpoint, opts.Set.OauthTokenEndpoint, opts.Set.OauthClientAuthMethod, opts.Set.OauthClientId, opts.Set.OauthClientSecret, opts.Set.OauthGrantAuthorizationCode, opts.Set.OauthAccessTokenValidity, opts.Set.OauthRefreshTokenValidity, opts.Set.OauthAllowedScopes, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationOptions.Set", "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode", "OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
@@ -239,8 +239,8 @@ func (opts *AlterExternalOauthSecurityIntegrationOptions) validate() error {
 		if everyValueSet(opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthRsaPublicKey2) {
 			errs = append(errs, errOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2"))
 		}
-		if !anyValueSet(opts.Set.Enabled, opts.Set.ExternalOauthType, opts.Set.ExternalOauthIssuer, opts.Set.ExternalOauthTokenUserMappingClaim, opts.Set.ExternalOauthSnowflakeUserMappingAttribute, opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthBlockedRolesList, opts.Set.ExternalOauthAllowedRolesList, opts.Set.ExternalOauthRsaPublicKey, opts.Set.ExternalOauthRsaPublicKey2, opts.Set.ExternalOauthAudienceList, opts.Set.ExternalOauthAnyRoleMode, opts.Set.ExternalOauthScopeDelimiter, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment"))
+		if !anyValueSet(opts.Set.Enabled, opts.Set.ExternalOauthType, opts.Set.ExternalOauthIssuer, opts.Set.ExternalOauthTokenUserMappingClaim, opts.Set.ExternalOauthSnowflakeUserMappingAttribute, opts.Set.ExternalOauthJwsKeysUrl, opts.Set.ExternalOauthBlockedRolesList, opts.Set.ExternalOauthAllowedRolesList, opts.Set.ExternalOauthRsaPublicKey, opts.Set.ExternalOauthRsaPublicKey2, opts.Set.ExternalOauthAudienceList, opts.Set.ExternalOauthAnyRoleMode, opts.Set.ExternalOauthScopeDelimiter, opts.Set.ExternalOauthScopeMappingAttribute, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterExternalOauthSecurityIntegrationOptions.Set", "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute", "ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2", "ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "ExternalOauthScopeMappingAttribute", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {

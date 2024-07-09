@@ -34,9 +34,16 @@ var streamlitSchema = map[string]*schema.Schema{
 		Description: "The schema in which to create the streamlit.",
 		ForceNew:    true,
 	},
-	"root_location": {
+	"stage": {
 		Type:             schema.TypeString,
 		Required:         true,
+		Description:      "The stage in which streamlit files are located.",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "root_location")),
+	},
+	"directory_location": {
+		Type:             schema.TypeString,
+		Optional:         true,
 		Description:      "Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.",
 		DiffSuppressFunc: SuppressIfAny(suppressLocationQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "root_location")),
 	},
@@ -51,7 +58,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
 		Description:      "Specifies the warehouse where SQL queries issued by the Streamlit application are run.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("query_warehouse")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("query_warehouse")),
 	},
 	"external_access_integrations": {
 		Type: schema.TypeSet,
@@ -103,8 +110,8 @@ func Streamlit() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "scim_client", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "title", "comment", "query_warehouse"),
+			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name", "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
 		),
 	}
 }
@@ -126,12 +133,25 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("name", streamlit.Name); err != nil {
 		return nil, err
 	}
+	if err = d.Set("database", streamlit.DatabaseName); err != nil {
+		return nil, err
+	}
 	if err = d.Set("schema", streamlit.SchemaName); err != nil {
 		return nil, err
 	}
-	if err = d.Set("root_location", streamlitDetails.RootLocation); err != nil {
+	stageId, location, err := schemas.ParseRootLocation(streamlitDetails.RootLocation)
+	if err != nil {
 		return nil, err
 	}
+	if err := d.Set("stage", stageId.FullyQualifiedName()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("directory_location", location); err != nil {
+		return nil, err
+	}
+	// if err = d.Set("root_location", streamlitDetails.RootLocation); err != nil {
+	// 	return nil, err
+	// }
 	if err = d.Set("main_file", streamlitDetails.MainFile); err != nil {
 		return nil, err
 	}
@@ -156,7 +176,12 @@ func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-	req := sdk.NewCreateStreamlitRequest(id, d.Get("root_location").(string), d.Get("main_file").(string))
+	stageId := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("stage").(string))
+	rootLocation := fmt.Sprintf("@%s", stageId.FullyQualifiedName())
+	if v, ok := d.GetOk("directory_location"); ok {
+		rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
+	}
+	req := sdk.NewCreateStreamlitRequest(id, rootLocation, d.Get("main_file").(string))
 
 	if v, ok := d.GetOk("query_warehouse"); ok {
 		req.WithQueryWarehouse(sdk.NewAccountObjectIdentifier(v.(string)))
@@ -227,7 +252,14 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 		if err := d.Set("schema", streamlit.SchemaName); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("root_location", streamlitDetails.RootLocation); err != nil {
+		stageId, location, err := schemas.ParseRootLocation(streamlitDetails.RootLocation)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("stage", stageId.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("directory_location", location); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
@@ -256,8 +288,11 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamlitToSchema(streamlit)}); err != nil {
 			return diag.FromErr(err)
 		}
-
-		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamlitPropertiesToSchema(*streamlitDetails)}); err != nil {
+		schemaDetails, err := schemas.StreamlitPropertiesToSchema(*streamlitDetails)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemaDetails}); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -270,9 +305,32 @@ func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	set, unset := sdk.NewStreamlitSetRequest(), sdk.NewStreamlitUnsetRequest()
 
-	if d.HasChange("root_location") {
-		// required field
-		set.WithRootLocation(d.Get("root_location").(string))
+	if d.HasChange("name") {
+		databaseName := d.Get("database").(string)
+		schemaName := d.Get("schema").(string)
+		name := d.Get("name").(string)
+		newId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
+		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithRenameTo(newId))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
+	}
+
+	// if d.HasChange("root_location") {
+	// 	// required field
+	// 	set.WithRootLocation(d.Get("root_location").(string))
+	// }
+	if d.HasChange("stage") || d.HasChange("directory_location") {
+		stageId := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("stage").(string))
+		rootLocation := fmt.Sprintf("@%s", stageId.FullyQualifiedName())
+		if v, ok := d.GetOk("directory_location"); ok {
+			rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
+		}
+		set.WithRootLocation(rootLocation)
 	}
 
 	if d.HasChange("main_file") {
@@ -311,8 +369,8 @@ func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 			unset.WithComment(true)
 		}
 	}
-	if v, ok := d.GetOk("external_access_integrations"); ok {
-		raw := expandStringList(v.(*schema.Set).List())
+	if d.HasChange("external_access_integrations") {
+		raw := expandStringList(d.Get("external_access_integrations").(*schema.Set).List())
 		integrations := make([]sdk.AccountObjectIdentifier, len(raw))
 		for i, v := range raw {
 			integrations[i] = sdk.NewAccountObjectIdentifier(v)

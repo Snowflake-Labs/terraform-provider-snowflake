@@ -44,7 +44,7 @@ func (opts *AlterStreamlitOptions) validate() error {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 		if !anyValueSet(opts.Set.RootLocation, opts.Set.MainFile, opts.Set.QueryWarehouse, opts.Set.ExternalAccessIntegrations, opts.Set.Comment, opts.Set.Title) {
-			errs = append(errs, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "Warehouse", "ExternalAccessIntegrations", "Comment", "Title"))
+			errs = append(errs, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "QueryWarehouse", "ExternalAccessIntegrations", "Comment", "Title"))
 		}
 	}
 	if valueSet(opts.Unset) {

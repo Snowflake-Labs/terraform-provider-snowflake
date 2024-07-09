@@ -22,3 +22,17 @@ func ParseIdentifierString(identifier string) ([]string, error) {
 	}
 	return lines[0], nil
 }
+
+func ParseIdentifierStringWithDelimiter(identifier string, delimiter rune) ([]string, error) {
+	reader := csv.NewReader(strings.NewReader(identifier))
+	reader.Comma = delimiter
+	reader.LazyQuotes = true
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
+	}
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	return lines[0], nil
+}
