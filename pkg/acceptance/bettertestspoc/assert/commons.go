@@ -98,5 +98,6 @@ type InPlaceAssertionVerifier interface {
 // AssertThatObject should be used in the SDK tests for created object validation.
 // It verifies all the prepared assertions in place.
 func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
+	t.Helper()
 	objectAssert.VerifyAll(t)
 }
