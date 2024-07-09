@@ -9,10 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+// TestCheckFuncProvider is an interface with just one method providing resource.TestCheckFunc.
+// It allows using it as input the "Check:" in resource.TestStep.
+// It should be used with AssertThat.
 type TestCheckFuncProvider interface {
 	ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc
 }
 
+// AssertThat should be used for "Check:" input in resource.TestStep instead of e.g. resource.ComposeTestCheckFunc.
+// It allows performing all the checks implementing the TestCheckFuncProvider interface.
 func AssertThat(t *testing.T, fs ...TestCheckFuncProvider) resource.TestCheckFunc {
 	t.Helper()
 	return func(s *terraform.State) error {
@@ -38,14 +43,21 @@ func (w *testCheckFuncWrapper) ToTerraformTestCheckFunc(_ *testing.T) resource.T
 	return w.f
 }
 
+// Check allows using the basic terraform checks while using AssertThat.
+// To use, just simply wrap the check in Check.
 func Check(f resource.TestCheckFunc) TestCheckFuncProvider {
 	return &testCheckFuncWrapper{f}
 }
 
+// ImportStateCheckFuncProvider is an interface with just one method providing resource.ImportStateCheckFunc.
+// It allows using it as input the "ImportStateCheck:" in resource.TestStep for import tests.
+// It should be used with AssertThatImport.
 type ImportStateCheckFuncProvider interface {
 	ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc
 }
 
+// AssertThatImport should be used for "ImportStateCheck:" input in resource.TestStep instead of e.g. importchecks.ComposeImportStateCheck.
+// It allows performing all the checks implementing the ImportStateCheckFuncProvider interface.
 func AssertThatImport(t *testing.T, fs ...ImportStateCheckFuncProvider) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(s []*terraform.InstanceState) error {
@@ -71,6 +83,8 @@ func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing
 	return w.f
 }
 
+// CheckImport allows using the basic terraform import checks while using AssertThatImport.
+// To use, just simply wrap the check in CheckImport.
 func CheckImport(f resource.ImportStateCheckFunc) ImportStateCheckFuncProvider {
 	return &importStateCheckFuncWrapper{f}
 }

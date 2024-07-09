@@ -16,14 +16,16 @@ var (
 	_ ImportStateCheckFuncProvider = (*ResourceAssert)(nil)
 )
 
+// ResourceAssert is an embeddable struct that should be used to construct new resource assertions (for resource, show output, parameters, etc.).
+// It implements both TestCheckFuncProvider and ImportStateCheckFuncProvider which makes it easy to create new resource assertions.
 type ResourceAssert struct {
 	name       string
 	id         string
 	prefix     string
 	assertions []resourceAssertion
-	TestCheckFuncProvider
 }
 
+// NewResourceAssert creates a ResourceAssert where the resource name should be used as a key for assertions.
 func NewResourceAssert(name string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		name:       name,
@@ -32,6 +34,7 @@ func NewResourceAssert(name string, prefix string) *ResourceAssert {
 	}
 }
 
+// NewImportedResourceAssert creates a ResourceAssert where the resource id should be used as a key for assertions.
 func NewImportedResourceAssert(id string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		id:         id,
@@ -81,6 +84,8 @@ func parameterLevelSet(fieldName string, expected string) resourceAssertion {
 	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersLevelSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
+// ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new resource assertions.
+// It goes through all the assertion accumulated earlier and gathers the results of the checks.
 func (r *ResourceAssert) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
 	t.Helper()
 	return func(s *terraform.State) error {
@@ -105,6 +110,8 @@ func (r *ResourceAssert) ToTerraformTestCheckFunc(t *testing.T) resource.TestChe
 	}
 }
 
+// ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new resource assertions.
+// It goes through all the assertion accumulated earlier and gathers the results of the checks.
 func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(s []*terraform.InstanceState) error {

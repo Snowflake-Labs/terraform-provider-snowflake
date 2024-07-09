@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/stretchr/testify/require"
 )
 
+// ResourceModel is the base interface all of our config models will implement.
+// To allow easy implementation, resourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ResourceModel interface {
 	Resource() resources.Resource
 	ResourceName() string
@@ -34,6 +35,7 @@ func (m *resourceModelMeta) SetResourceName(name string) {
 	m.name = name
 }
 
+// DefaultResourceName is exported to allow assertions against the resources using the default name.
 const DefaultResourceName = "test"
 
 func defaultMeta(resource resources.Resource) *resourceModelMeta {
@@ -44,7 +46,10 @@ func meta(resourceName string, resource resources.Resource) *resourceModelMeta {
 	return &resourceModelMeta{name: resourceName, resource: resource}
 }
 
-// TODO: use reflection to build config directly from model struct
+// ConfigurationFromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
+// Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
+// TODO: use reflection to build config directly from model struct (or some other different way)
+// TODO: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
 func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -66,15 +71,4 @@ func ConfigurationFromModel(t *testing.T, model ResourceModel) string {
 	s := sb.String()
 	t.Logf("Generated config:\n%s", s)
 	return s
-}
-
-// TODO: save to tmp file and return path to it
-func ConfigurationFromModelProvider(t *testing.T, model ResourceModel) func(config.TestStepConfigRequest) string {
-	t.Helper()
-	return func(req config.TestStepConfigRequest) string {
-		t.Logf("Generating config for test %s, step %d for resource %s", req.TestName, req.StepNumber, model.Resource())
-		content := ConfigurationFromModel(t, model)
-		_ = content
-		return ""
-	}
 }
