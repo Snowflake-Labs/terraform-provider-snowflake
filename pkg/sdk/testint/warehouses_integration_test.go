@@ -116,7 +116,7 @@ func TestInt_Warehouses(t *testing.T) {
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
 		// we can use the same assertion builder in the SDK tests
-		warehouseAssertions := poc.Warehouse(t, id).
+		poc.AssertThatObject(t, poc.Warehouse(t, id).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -129,11 +129,7 @@ func TestInt_Warehouses(t *testing.T) {
 			HasResourceMonitor(resourceMonitor.ID()).
 			HasComment("comment").
 			HasEnableQueryAcceleration(true).
-			HasQueryAccelerationMaxScaleFactor(90)
-		// and run it like this
-		poc.AssertThatObject(t, warehouseAssertions.SnowflakeObjectAssert)
-		// or alternatively
-		warehouseAssertions.CheckAll(t)
+			HasQueryAccelerationMaxScaleFactor(90))
 
 		//// to show errors
 		// warehouseAssertionsBad := poc.Warehouse(t, id).
@@ -150,10 +146,7 @@ func TestInt_Warehouses(t *testing.T) {
 		//	HasComment("bad comment").
 		//	HasEnableQueryAcceleration(false).
 		//	HasQueryAccelerationMaxScaleFactor(12)
-		////and run it like this
-		// poc.AssertThatObject(t, warehouseAssertionsBad.SnowflakeObjectAssert)
-		////or alternatively
-		// warehouseAssertionsBad.CheckAll(t)
+		// poc.AssertThatObject(t, warehouseAssertionsBad)
 
 		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -172,7 +165,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		// we can also use the read object to initialize:
-		poc.WarehouseFromObject(t, warehouse).
+		poc.AssertThatObject(t, poc.WarehouseFromObject(t, warehouse).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -185,8 +178,7 @@ func TestInt_Warehouses(t *testing.T) {
 			HasResourceMonitor(resourceMonitor.ID()).
 			HasComment("comment").
 			HasEnableQueryAcceleration(true).
-			HasQueryAccelerationMaxScaleFactor(90).
-			CheckAll(t)
+			HasQueryAccelerationMaxScaleFactor(90))
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)

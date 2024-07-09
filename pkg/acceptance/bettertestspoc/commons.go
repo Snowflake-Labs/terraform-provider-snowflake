@@ -88,3 +88,15 @@ func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing
 func CheckImport(f resource.ImportStateCheckFunc) ImportStateCheckFuncProvider {
 	return &importStateCheckFuncWrapper{f}
 }
+
+// InPlaceAssertionVerifier is an interface providing a method allowing verifying all the prepared assertions in place.
+// It does not return function like TestCheckFuncProvider or ImportStateCheckFuncProvider; it runs all the assertions in place instead.
+type InPlaceAssertionVerifier interface {
+	VerifyAll(t *testing.T)
+}
+
+// AssertThatObject should be used in the SDK tests for created object validation.
+// It verifies all the prepared assertions in place.
+func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
+	objectAssert.VerifyAll(t)
+}

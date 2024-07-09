@@ -66,6 +66,14 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing
 	}
 }
 
+// VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake object assertions.
+// It verifies all the assertions accumulated earlier and gathers the results of the checks.
+func (s *SnowflakeObjectAssert[_, _]) VerifyAll(t *testing.T) {
+	t.Helper()
+	err := s.runSnowflakeObjectsAssertions(t)
+	require.NoError(t, err)
+}
+
 func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
 	t.Helper()
 
@@ -92,16 +100,4 @@ func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T
 	}
 
 	return errors.Join(result...)
-}
-
-func AssertThatObject[T any, I sdk.ObjectIdentifier](t *testing.T, objectAssert *SnowflakeObjectAssert[T, I]) {
-	t.Helper()
-	err := objectAssert.runSnowflakeObjectsAssertions(t)
-	require.NoError(t, err)
-}
-
-func (s *SnowflakeObjectAssert[_, _]) CheckAll(t *testing.T) {
-	t.Helper()
-	err := s.runSnowflakeObjectsAssertions(t)
-	require.NoError(t, err)
 }
