@@ -13,7 +13,7 @@ resource "snowflake_account_role" "test3" {
   comment = var.comment
 }
 
-data "snowflake_account_roles" "test" {
+data "snowflake_roles" "test" {
   depends_on = [
     snowflake_account_role.test1,
     snowflake_account_role.test2,

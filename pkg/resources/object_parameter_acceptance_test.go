@@ -2,8 +2,9 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -33,6 +34,7 @@ func TestAcc_ObjectParameter(t *testing.T) {
 }
 
 func TestAcc_ObjectParameterAccount(t *testing.T) {
+	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
 	t.Cleanup(func() {
 		acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
 	})

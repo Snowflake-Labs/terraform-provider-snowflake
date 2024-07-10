@@ -60,7 +60,7 @@ check "role_check" {
 
 ### Optional
 
-- `in_class` (String) Filters the output and returns only the records for the specified class name.
+- `in_class` (String) Filters the SHOW GRANTS output by class name.
 - `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
 
 ### Read-Only

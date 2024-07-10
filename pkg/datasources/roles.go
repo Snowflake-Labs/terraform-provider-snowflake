@@ -23,7 +23,7 @@ var rolesSchema = map[string]*schema.Schema{
 	"in_class": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Filters the output and returns only the records for the specified class name.",
+		Description: "Filters the SHOW GRANTS output by class name.",
 	},
 	"roles": {
 		Type:        schema.TypeList,
