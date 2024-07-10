@@ -19,14 +19,18 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.AuthenticationMethods = []AuthenticationMethods{{Method: "ALL"}}
+		opts.MfaAuthenticationMethods = []MfaAuthenticationMethods{{Method: "PASSWORD"}}
+		opts.MfaEnrollment = String("OPTIONAL")
+		opts.ClientTypes = []ClientTypes{{ClientType: "DRIVERS"}, {ClientType: "SNOWSQL"}}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE AUTHENTICATION POLICY %s AUTHENTICATION_METHODS = ('ALL') MFA_AUTHENTICATION_METHODS = ('PASSWORD') MFA_ENROLLMENT = OPTIONAL CLIENT_TYPES = ('DRIVERS', 'SNOWSQL') COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {

@@ -17,12 +17,12 @@ func (s *CreateAuthenticationPolicyRequest) WithOrReplace(OrReplace bool) *Creat
 	return s
 }
 
-func (s *CreateAuthenticationPolicyRequest) WithAuthenticationMethods(AuthenticationMethods []SchemaObjectIdentifier) *CreateAuthenticationPolicyRequest {
+func (s *CreateAuthenticationPolicyRequest) WithAuthenticationMethods(AuthenticationMethods []AuthenticationMethods) *CreateAuthenticationPolicyRequest {
 	s.AuthenticationMethods = AuthenticationMethods
 	return s
 }
 
-func (s *CreateAuthenticationPolicyRequest) WithMfaAuthenticationMethods(MfaAuthenticationMethods []SchemaObjectIdentifier) *CreateAuthenticationPolicyRequest {
+func (s *CreateAuthenticationPolicyRequest) WithMfaAuthenticationMethods(MfaAuthenticationMethods []MfaAuthenticationMethods) *CreateAuthenticationPolicyRequest {
 	s.MfaAuthenticationMethods = MfaAuthenticationMethods
 	return s
 }
@@ -32,7 +32,7 @@ func (s *CreateAuthenticationPolicyRequest) WithMfaEnrollment(MfaEnrollment stri
 	return s
 }
 
-func (s *CreateAuthenticationPolicyRequest) WithClientTypes(ClientTypes []SchemaObjectIdentifier) *CreateAuthenticationPolicyRequest {
+func (s *CreateAuthenticationPolicyRequest) WithClientTypes(ClientTypes []ClientTypes) *CreateAuthenticationPolicyRequest {
 	s.ClientTypes = ClientTypes
 	return s
 }
@@ -79,22 +79,22 @@ func NewAuthenticationPolicySetRequest() *AuthenticationPolicySetRequest {
 	return &AuthenticationPolicySetRequest{}
 }
 
-func (s *AuthenticationPolicySetRequest) WithAuthenticationMethods(AuthenticationMethods []SchemaObjectIdentifier) *AuthenticationPolicySetRequest {
+func (s *AuthenticationPolicySetRequest) WithAuthenticationMethods(AuthenticationMethods []AuthenticationMethods) *AuthenticationPolicySetRequest {
 	s.AuthenticationMethods = AuthenticationMethods
 	return s
 }
 
-func (s *AuthenticationPolicySetRequest) WithMfaAuthenticationMethods(MfaAuthenticationMethods []SchemaObjectIdentifier) *AuthenticationPolicySetRequest {
+func (s *AuthenticationPolicySetRequest) WithMfaAuthenticationMethods(MfaAuthenticationMethods []MfaAuthenticationMethods) *AuthenticationPolicySetRequest {
 	s.MfaAuthenticationMethods = MfaAuthenticationMethods
 	return s
 }
 
-func (s *AuthenticationPolicySetRequest) WithMfaEnrollment(MfaEnrollment []SchemaObjectIdentifier) *AuthenticationPolicySetRequest {
-	s.MfaEnrollment = MfaEnrollment
+func (s *AuthenticationPolicySetRequest) WithMfaEnrollment(MfaEnrollment string) *AuthenticationPolicySetRequest {
+	s.MfaEnrollment = &MfaEnrollment
 	return s
 }
 
-func (s *AuthenticationPolicySetRequest) WithClientTypes(ClientTypes []SchemaObjectIdentifier) *AuthenticationPolicySetRequest {
+func (s *AuthenticationPolicySetRequest) WithClientTypes(ClientTypes []ClientTypes) *AuthenticationPolicySetRequest {
 	s.ClientTypes = ClientTypes
 	return s
 }

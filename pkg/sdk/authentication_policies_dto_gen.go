@@ -13,10 +13,10 @@ var (
 type CreateAuthenticationPolicyRequest struct {
 	OrReplace                *bool
 	name                     AccountObjectIdentifier // required
-	AuthenticationMethods    []SchemaObjectIdentifier
-	MfaAuthenticationMethods []SchemaObjectIdentifier
+	AuthenticationMethods    []AuthenticationMethods
+	MfaAuthenticationMethods []MfaAuthenticationMethods
 	MfaEnrollment            *string
-	ClientTypes              []SchemaObjectIdentifier
+	ClientTypes              []ClientTypes
 	SecurityIntegrations     []SchemaObjectIdentifier
 	Comment                  *string
 }
@@ -30,10 +30,10 @@ type AlterAuthenticationPolicyRequest struct {
 }
 
 type AuthenticationPolicySetRequest struct {
-	AuthenticationMethods    []SchemaObjectIdentifier
-	MfaAuthenticationMethods []SchemaObjectIdentifier
-	MfaEnrollment            []SchemaObjectIdentifier
-	ClientTypes              []SchemaObjectIdentifier
+	AuthenticationMethods    []AuthenticationMethods
+	MfaAuthenticationMethods []MfaAuthenticationMethods
+	MfaEnrollment            *string
+	ClientTypes              []ClientTypes
 	SecurityIntegrations     []SchemaObjectIdentifier
 	Comment                  *string
 }

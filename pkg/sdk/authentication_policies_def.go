@@ -4,6 +4,67 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type AuthenticationMethodsOption string
+
+var AuthenticationMethodsOptionDef = g.NewQueryStruct("AuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
+
+const (
+	AuthenticationMethodsAll      AuthenticationMethodsOption = "ALL"
+	AuthenticationMethodsSaml     AuthenticationMethodsOption = "SAML"
+	AuthenticationMethodsPassword AuthenticationMethodsOption = "PASSWORD"
+	AuthenticationMethodsOauth    AuthenticationMethodsOption = "OAUTH"
+	AuthenticationMethodsKeyPair  AuthenticationMethodsOption = "KEYPAIR"
+)
+
+var AllAuthenticationMethods = []AuthenticationMethodsOption{
+	AuthenticationMethodsAll,
+	AuthenticationMethodsSaml,
+	AuthenticationMethodsPassword,
+	AuthenticationMethodsOauth,
+	AuthenticationMethodsKeyPair,
+}
+
+type MfaAuthenticationMethodsOption string
+
+var MfaAuthenticationMethodsOptionDef = g.NewQueryStruct("MfaAuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
+
+const (
+	MfaAuthenticationMethodsAll      MfaAuthenticationMethodsOption = "ALL"
+	MfaAuthenticationMethodsSaml     MfaAuthenticationMethodsOption = "SAML"
+	MfaAuthenticationMethodsPassword MfaAuthenticationMethodsOption = "PASSWORD"
+)
+
+var AllMfaAuthenticationMethods = []MfaAuthenticationMethodsOption{
+	MfaAuthenticationMethodsAll,
+	MfaAuthenticationMethodsSaml,
+	MfaAuthenticationMethodsPassword,
+}
+
+type MfaEnrollmentOption string
+
+const (
+	MfaEnrollmentRequired MfaEnrollmentOption = "REQUIRED"
+	MfaEnrollmentOptional MfaEnrollmentOption = "OPTIONAL"
+)
+
+type ClientTypesOption string
+
+var ClientTypesOptionDef = g.NewQueryStruct("ClientTypes").Text("ClientType", g.KeywordOptions().SingleQuotes())
+
+const (
+	ClientTypesAll         ClientTypesOption = "ALL"
+	ClientTypesSnowflakeUi ClientTypesOption = "SNOWFLAKE_UI"
+	ClientTypesDrivers     ClientTypesOption = "DRIVERS"
+	ClientTypesSnowSql     ClientTypesOption = "SNOWSQL"
+)
+
+var AllClientTypes = []ClientTypesOption{
+	ClientTypesAll,
+	ClientTypesSnowflakeUi,
+	ClientTypesDrivers,
+	ClientTypesSnowSql,
+}
+
 var (
 	AuthenticationPoliciesDef = g.NewInterface(
 		"AuthenticationPolicies",
@@ -17,13 +78,16 @@ var (
 				OrReplace().
 				SQL("AUTHENTICATION POLICY").
 				Name().
-				ListAssignment("AUTHENTICATION_METHODS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-				ListAssignment("MFA_AUTHENTICATION_METHODS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-				OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions().SingleQuotes()).
-				ListAssignment("CLIENT_TYPES", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-				ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().MustParentheses()).
+				ListAssignment("AUTHENTICATION_METHODS", "AuthenticationMethods", g.ParameterOptions().Parentheses()).
+				ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
+				OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions()).
+				ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
+				ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses().SingleQuotes()).
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				WithValidation(g.ValidIdentifier, "name"),
+			AuthenticationMethodsOptionDef,
+			MfaAuthenticationMethodsOptionDef,
+			ClientTypesOptionDef,
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-authentication-policy",
@@ -35,11 +99,11 @@ var (
 				OptionalQueryStructField(
 					"Set",
 					g.NewQueryStruct("AuthenticationPolicySet").
-						ListAssignment("AUTHENTICATION_METHODS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListAssignment("MFA_AUTHENTICATION_METHODS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListAssignment("MFA_ENROLLMENT", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListAssignment("CLIENT_TYPES", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
-						ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses()).
+						ListAssignment("AUTHENTICATION_METHODS", "AuthenticationMethods", g.ParameterOptions().Parentheses()).
+						ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
+						OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions().SingleQuotes()).
+						ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
+						ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses().SingleQuotes()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 						WithValidation(g.AtLeastOneValueSet, "AuthenticationMethods", "MfaAuthenticationMethods", "MfaEnrollment", "ClientTypes", "SecurityIntegrations", "Comment"),
 					g.KeywordOptions().SQL("SET"),

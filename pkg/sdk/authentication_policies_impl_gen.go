@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"context"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ AuthenticationPolicies = (*authenticationPolicies)(nil)
@@ -72,7 +70,7 @@ func (r *AlterAuthenticationPolicyRequest) toOpts() *AlterAuthenticationPolicyOp
 
 	if r.Set != nil {
 
-		opts.Set = AuthenticationPolicySet{
+		opts.Set = &AuthenticationPolicySet{
 			AuthenticationMethods:    r.Set.AuthenticationMethods,
 			MfaAuthenticationMethods: r.Set.MfaAuthenticationMethods,
 			MfaEnrollment:            r.Set.MfaEnrollment,
@@ -85,7 +83,7 @@ func (r *AlterAuthenticationPolicyRequest) toOpts() *AlterAuthenticationPolicyOp
 
 	if r.Unset != nil {
 
-		opts.Unset = AuthenticationPolicyUnset{
+		opts.Unset = &AuthenticationPolicyUnset{
 			ClientTypes:              r.Unset.ClientTypes,
 			AuthenticationMethods:    r.Unset.AuthenticationMethods,
 			SecurityIntegrations:     r.Unset.SecurityIntegrations,
