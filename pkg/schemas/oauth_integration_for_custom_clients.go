@@ -60,7 +60,7 @@ func DescribeOauthIntegrationForCustomClientsToSchema(integrationProperties []sd
 		if slices.Contains(OauthIntegrationForCustomClientsPropertiesNames, property.Name) {
 			propsSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
 		} else {
-			log.Printf("[WARN] unexpected property %v in oauth security integration returned from Snowflake", property.Name)
+			log.Printf("[WARN] unexpected property %v in oauth security integration for custom clients returned from Snowflake", property.Name)
 		}
 	}
 	return propsSchema

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -14,6 +15,71 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
+
+func TestAcc_SecurityIntegrations_MultipleTypes(t *testing.T) {
+	prefix := random.AlphaN(4)
+	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	issuer := acc.TestClient().Ids.Alpha()
+	cert := random.GenerateX509(t)
+	validUrl := "http://example.com"
+
+	role := snowflakeroles.GenericScimProvisioner
+	configVariables := config.Variables{
+		// saml2
+		"name_1":          config.StringVariable(idOne.Name()),
+		"saml2_issuer":    config.StringVariable(issuer),
+		"saml2_provider":  config.StringVariable(string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+		"saml2_sso_url":   config.StringVariable(validUrl),
+		"saml2_x509_cert": config.StringVariable(cert),
+		// scim
+		"name_2":      config.StringVariable(idTwo.Name()),
+		"scim_client": config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientGeneric)),
+		"run_as_role": config.StringVariable(role.Name()),
+		"enabled":     config.BoolVariable(true),
+
+		"like": config.StringVariable(prefix + "%"),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/multiple_types"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "2"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", idOne.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "SCIM - GENERIC"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", sdk.SecurityIntegrationCategory),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.run_as_role.0.value", "GENERIC_SCIM_PROVISIONER"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.sync_password.0.value", "true"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.show_output.0.name", idTwo.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.show_output.0.integration_type", "SAML2"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.show_output.0.category", sdk.SecurityIntegrationCategory),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.1.show_output.0.created_on"),
+
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.describe_output.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.describe_output.0.saml2_issuer.0.value", issuer),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.describe_output.0.saml2_provider.0.value", "CUSTOM"),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.describe_output.0.saml2_sso_url.0.value", validUrl),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.1.describe_output.0.saml2_x509_cert.0.value", cert),
+				),
+			},
+		},
+	})
+}
 
 func TestAcc_SecurityIntegrations_ApiAuthenticationWithAuthorizationCodeGrant(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()

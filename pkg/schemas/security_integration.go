@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"log"
 	"slices"
 	"strings"
 
@@ -33,6 +34,8 @@ func SecurityIntegrationsDescriptionsToSchema(integrationProperties []sdk.Securi
 		desc := desc
 		if slices.Contains(allSecurityIntegrationPropertiesNames, desc.Name) {
 			securityIntegrationProperties[strings.ToLower(desc.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&desc)}
+		} else {
+			log.Printf("[WARN] unexpected property %v in security integration returned from Snowflake", desc.Name)
 		}
 	}
 	return securityIntegrationProperties
