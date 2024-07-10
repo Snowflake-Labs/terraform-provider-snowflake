@@ -33,7 +33,7 @@ func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 
 func generateAccessTokenConfig(name string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_role" "azured" {
+	resource "snowflake_account_role" "azured" {
 		name = "AAD_PROVISIONER"
 		comment = "test comment"
 	}

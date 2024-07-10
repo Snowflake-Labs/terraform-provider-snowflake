@@ -2,7 +2,7 @@
 ### on object to account role
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test_role"
 }
 
@@ -55,7 +55,7 @@ resource "snowflake_grant_ownership" "test" {
 ### on all tables in database to account role
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test_role"
 }
 
@@ -77,7 +77,7 @@ resource "snowflake_grant_ownership" "test" {
 ### on all tables in schema to account role
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test_role"
 }
 
@@ -104,7 +104,7 @@ resource "snowflake_grant_ownership" "test" {
 ### on future tables in database to account role
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test_role"
 }
 
@@ -126,7 +126,7 @@ resource "snowflake_grant_ownership" "test" {
 ### on future tables in schema to account role
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test_role"
 }
 
@@ -153,7 +153,7 @@ resource "snowflake_grant_ownership" "test" {
 ### RoleBasedAccessControl (RBAC example)
 ##################################
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "role"
 }
 
@@ -162,7 +162,7 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_grant_ownership" "test" {
-  account_role_name = snowflake_role.test.name
+  account_role_name = snowflake_account_role.test.name
   on {
     object_type = "DATABASE"
     object_name = snowflake_database.test.name
@@ -170,14 +170,14 @@ resource "snowflake_grant_ownership" "test" {
 }
 
 resource "snowflake_grant_account_role" "test" {
-  role_name = snowflake_role.test.name
+  role_name = snowflake_account_role.test.name
   user_name = "username"
 }
 
 provider "snowflake" {
   profile = "default"
   alias   = "secondary"
-  role    = snowflake_role.test.name
+  role    = snowflake_account_role.test.name
 }
 
 ## With ownership on the database, the secondary provider is able to create schema on it without any additional privileges.

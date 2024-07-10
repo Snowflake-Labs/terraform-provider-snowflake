@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var accountRolesSchema = map[string]*schema.Schema{
+var rolesSchema = map[string]*schema.Schema{
 	"like": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -46,13 +46,13 @@ var accountRolesSchema = map[string]*schema.Schema{
 
 func Roles() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadAccountRoles,
-		Schema:      accountRolesSchema,
+		ReadContext: ReadRoles,
+		Schema:      rolesSchema,
 		Description: "Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}
 }
 
-func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func ReadRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	req := sdk.NewShowRoleRequest()
@@ -72,7 +72,7 @@ func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Failed to show account roles",
+				Summary:  "Failed to show roles",
 				Detail:   fmt.Sprintf("Error: %s", err),
 			},
 		}

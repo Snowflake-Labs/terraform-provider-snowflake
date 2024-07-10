@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -32,6 +33,9 @@ func TestAcc_ObjectParameter(t *testing.T) {
 }
 
 func TestAcc_ObjectParameterAccount(t *testing.T) {
+	t.Cleanup(func() {
+		acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+	})
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

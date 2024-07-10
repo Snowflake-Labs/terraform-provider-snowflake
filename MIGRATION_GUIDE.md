@@ -20,10 +20,10 @@ They are all described in short in the [changes before v1 doc](./v1-preparations
 ### old grant resources removal
 Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
+### *(new feature)* new snowflake_account_role resource
 
-### *(new feature)* new field in the snowflake_role resource
-
-No migration is needed.
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to 
+have the same features as the new one. The only difference is the deprecation message on the old resource.
 
 New fields:
 - added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.

@@ -491,7 +491,7 @@ resource "snowflake_view" "test" {
   is_secure = true
 }
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test"
 }
 

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_AccountRoles_Complete(t *testing.T) {
+func TestAcc_Roles_Complete(t *testing.T) {
 	accountRoleNamePrefix := random.AlphaN(10)
 	accountRoleName1 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix + "1")
 	accountRoleName2 := acc.TestClient().Ids.AlphaWithPrefix(accountRoleNamePrefix + "2")
@@ -33,8 +33,8 @@ func TestAcc_AccountRoles_Complete(t *testing.T) {
 	likeVariables["like"] = config.StringVariable(accountRoleNamePrefix + "%")
 
 	// TODO(SNOW-1353303): Add test case for instance classes after they're available in the provider
-	inClassVariables := maps.Clone(commonVariables)
-	inClassVariables["in_class"] = config.StringVariable("TODO")
+	// inClassVariables := maps.Clone(commonVariables)
+	// inClassVariables["in_class"] = config.StringVariable("<class name>")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

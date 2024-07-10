@@ -1,4 +1,4 @@
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = var.account_role_name
 }
 
@@ -21,7 +21,7 @@ resource "snowflake_task" "child" {
 
 resource "snowflake_grant_ownership" "test" {
   depends_on        = [snowflake_task.test, snowflake_task.child]
-  account_role_name = snowflake_role.test.name
+  account_role_name = snowflake_account_role.test.name
 
   on {
     all {
