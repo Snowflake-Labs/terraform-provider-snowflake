@@ -2,7 +2,6 @@ package schemas
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -61,7 +60,7 @@ var DescribeStreamlitSchema = map[string]*schema.Schema{
 }
 
 func StreamlitPropertiesToSchema(details sdk.StreamlitDetail) (map[string]any, error) {
-	stageId, location, err := ParseRootLocation(details.RootLocation)
+	stageId, location, err := helpers.ParseRootLocation(details.RootLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -82,19 +81,4 @@ func StreamlitPropertiesToSchema(details sdk.StreamlitDetail) (map[string]any, e
 		"external_access_integrations": details.ExternalAccessIntegrations,
 		"external_access_secrets":      details.ExternalAccessSecrets,
 	}, nil
-}
-
-// todo: unit test
-func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, error) {
-	location = strings.TrimPrefix(location, "@")
-	parts, err := helpers.ParseIdentifierStringWithDelimiter(location, '.')
-	if err != nil {
-		return sdk.SchemaObjectIdentifier{}, "", err
-	}
-	if len(parts) < 3 {
-		return sdk.SchemaObjectIdentifier{}, "", fmt.Errorf("expected 3 parts, got ")
-	}
-	parts[2] = strings.Join(parts[2:], ".")
-	lastParts := strings.Split(parts[2], "/")
-	return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], lastParts[0]), strings.Join(lastParts[1:], "/"), nil
 }

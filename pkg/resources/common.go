@@ -43,13 +43,6 @@ func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceD
 	}
 }
 
-// TODO [SNOW-999049]: address during identifiers rework
-func suppressLocationQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
-	oldValue = strings.TrimLeft(oldValue, "@")
-	newValue = strings.TrimLeft(newValue, "@")
-	return suppressIdentifierQuoting("", oldValue, newValue, nil)
-}
-
 // TODO [SNOW-1325214]: address during stage resource rework
 func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {

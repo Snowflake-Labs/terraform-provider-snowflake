@@ -54,7 +54,7 @@ func Streamlits() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadStreamlits,
 		Schema:      streamlitsSchema,
-		Description: "Datasource used to get details of filtered streamlits. Filtering is aligned with the current possibilities for [SHOW STREAMLITS](https://docs.snowflake.com/en/sql-reference/sql/show-integrations) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `security_integrations`.",
+		Description: "Datasource used to get details of filtered streamlits. Filtering is aligned with the current possibilities for [SHOW STREAMLITS](https://docs.snowflake.com/en/sql-reference/sql/show-streamlits) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `streamlits`.",
 	}
 }
 
@@ -72,7 +72,7 @@ func ReadStreamlits(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("security_integrations_read")
+	d.SetId("streamlits_read")
 
 	flattenedStreamlits := make([]map[string]any, len(streamlits))
 

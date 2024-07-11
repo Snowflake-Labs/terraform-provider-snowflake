@@ -22,11 +22,11 @@ import (
 )
 
 func TestAcc_Streamlit_basic(t *testing.T) {
+	acc.TestAccPreCheck(t)
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	ctx := context.Background()
-	acc.TestAccPreCheck(t)
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
 	err := acc.Client(t).Sessions.UseSchema(ctx, schemaId)
@@ -345,28 +345,69 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 	})
 }
 
-func TestAcc_Streamlit_InvalidQueryWarehouse(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	client := acc.Client(t)
-	ctx := context.Background()
+func TestAcc_Streamlit_Rename(t *testing.T) {
 	acc.TestAccPreCheck(t)
-	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
-	t.Cleanup(networkRuleCleanup)
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE EXTERNAL ACCESS INTEGRATION "%s" ALLOWED_NETWORK_RULES = (%s) ENABLED = FALSE`, integrationId.Name(), networkRule.ID().FullyQualifiedName()))
-	require.NoError(t, err)
+	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	t.Cleanup(stageCleanup)
+	m := func(name string) map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":  config.StringVariable(databaseId.Name()),
+			"schema":    config.StringVariable(schemaId.Name()),
+			"stage":     config.StringVariable(stage.ID().FullyQualifiedName()),
+			"name":      config.StringVariable(name),
+			"main_file": config.StringVariable("foo"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
+				ConfigVariables: m(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", id.Name()),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
+				ConfigVariables: m(newId.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", newId.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Streamlit_InvalidStage(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	schemaId := acc.TestClient().Ids.SchemaId()
+	databaseId := acc.TestClient().Ids.DatabaseId()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"schema":                       config.StringVariable(schemaId.FullyQualifiedName()),
-			"name":                         config.StringVariable(id.Name()),
-			"root_location":                config.StringVariable("foo"),
-			"main_file":                    config.StringVariable("foo"),
-			"query_warehouse":              config.StringVariable("invalid"),
-			"external_access_integrations": config.SetVariable(config.StringVariable(integrationId.FullyQualifiedName())),
-			"title":                        config.StringVariable("foo"),
-			"comment":                      config.StringVariable("foo"),
+			"schema":          config.StringVariable(schemaId.FullyQualifiedName()),
+			"database":        config.StringVariable(databaseId.FullyQualifiedName()),
+			"name":            config.StringVariable(id.Name()),
+			"stage":           config.StringVariable("foo"),
+			"main_file":       config.StringVariable("foo"),
+			"query_warehouse": config.StringVariable("foo"),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -378,14 +419,10 @@ func TestAcc_Streamlit_InvalidQueryWarehouse(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/complete"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
 				ConfigVariables: m(),
 				ExpectError:     regexp.MustCompile(`Invalid identifier type`),
 			},
 		},
 	})
-	defer func() {
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`DROP EXTERNAL ACCESS INTEGRATION "%s"`, integrationId.Name()))
-		require.NoError(t, err)
-	}()
 }

@@ -46,7 +46,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("enabled"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(ShowOutputAttributeName, "enabled"),
 		Description:      booleanStringFieldDescription("Specifies whether this OAuth integration is enabled or disabled."),
 	},
 	"oauth_issue_refresh_tokens": {
@@ -87,7 +87,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Description:      "Specifies a comment for the OAuth integration.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("comment"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(ShowOutputAttributeName, "comment"),
 	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,

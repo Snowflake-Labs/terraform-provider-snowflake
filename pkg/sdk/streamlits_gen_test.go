@@ -3,12 +3,10 @@ package sdk
 import "testing"
 
 func TestStreamlits_Create(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid CreateStreamlitOptions
+
 	defaultOpts := func() *CreateStreamlitOptions {
 		return &CreateStreamlitOptions{
-
 			name: id,
 		}
 	}
@@ -17,45 +15,39 @@ func TestStreamlits_Create(t *testing.T) {
 		var opts *CreateStreamlitOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
 
-	t.Run("validation: valid identifier for [opts.Warehouse] if set", func(t *testing.T) {
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateStreamlitOptions", "IfNotExists", "OrReplace"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
 	t.Run("all options", func(t *testing.T) {
+		warehouse := NewAccountObjectIdentifier("test_warehouse")
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.RootLocation = "@test"
+		opts.MainFile = "manifest.yml"
+		opts.QueryWarehouse = &warehouse
+		opts.Comment = String("test")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAMLIT IF NOT EXISTS %s ROOT_LOCATION = '@test' MAIN_FILE = 'manifest.yml' QUERY_WAREHOUSE = %s COMMENT = 'test'`, id.FullyQualifiedName(), warehouse.FullyQualifiedName())
 	})
 }
 
 func TestStreamlits_Alter(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid AlterStreamlitOptions
+
 	defaultOpts := func() *AlterStreamlitOptions {
 		return &AlterStreamlitOptions{
-
-			name: id,
+			IfExists: Bool(true),
+			name:     id,
 		}
 	}
 
@@ -63,62 +55,50 @@ func TestStreamlits_Alter(t *testing.T) {
 		var opts *AlterStreamlitOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
+	t.Run("validation: exactly one field should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.Unset] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set", "Unset"))
 	})
 
-	t.Run("validation: valid identifier for [opts.Set.Warehouse] if set", func(t *testing.T) {
+	t.Run("alter: set options", func(t *testing.T) {
+		warehouse := NewAccountObjectIdentifier("test_warehouse")
+		integration := NewAccountObjectIdentifier("integration")
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		opts.Set = &StreamlitSet{
+			RootLocation:               String("@test"),
+			MainFile:                   String("manifest.yml"),
+			QueryWarehouse:             &warehouse,
+			ExternalAccessIntegrations: &ExternalAccessIntegrations{[]AccountObjectIdentifier{integration}},
+			Comment:                    String("test"),
+			Title:                      String("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAMLIT IF EXISTS %s SET ROOT_LOCATION = '@test' MAIN_FILE = 'manifest.yml' QUERY_WAREHOUSE = %s EXTERNAL_ACCESS_INTEGRATIONS = ("integration") COMMENT = 'test' TITLE = 'foo'`, id.FullyQualifiedName(), warehouse.FullyQualifiedName())
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.RootLocation opts.Set.MainFile opts.Set.Warehouse opts.Set.ExternalAccessIntegrations opts.Set.Comment opts.Set.Title] should be set", func(t *testing.T) {
+	t.Run("alter: unset options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "Warehouse", "ExternalAccessIntegrations", "Comment", "Title"))
-	})
-
-	t.Run("validation: at least one of the fields [opts.Unset.QueryWarehouse opts.Unset.Title opts.Unset.Comment] should be set", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterStreamlitOptions.Unset", "QueryWarehouse", "Title", "Comment"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
-	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Unset = &StreamlitUnset{
+			QueryWarehouse: Pointer(true),
+			Comment:        Pointer(true),
+			Title:          Pointer(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAMLIT IF EXISTS %s UNSET QUERY_WAREHOUSE, COMMENT, TITLE`, id.FullyQualifiedName())
 	})
 }
 
 func TestStreamlits_Drop(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid DropStreamlitOptions
+
 	defaultOpts := func() *DropStreamlitOptions {
 		return &DropStreamlitOptions{
-
 			name: id,
 		}
 	}
@@ -127,29 +107,25 @@ func TestStreamlits_Drop(t *testing.T) {
 		var opts *DropStreamlitOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.name = emptySchemaObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP STREAMLIT IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestStreamlits_Show(t *testing.T) {
-	// Minimal valid ShowStreamlitOptions
 	defaultOpts := func() *ShowStreamlitOptions {
-		return &ShowStreamlitOptions{}
+		return &ShowStreamlitOptions{
+			Terse: Bool(true),
+		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
@@ -157,49 +133,59 @@ func TestStreamlits_Show(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("show with empty options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS`)
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("show with like", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String("pattern"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS LIKE 'pattern'`)
+	})
+
+	t.Run("show with in", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.In = &In{
+			Account: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS IN ACCOUNT`)
+	})
+
+	t.Run("show with limit", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Limit = &LimitFrom{
+			Rows: Int(123),
+			From: String("from pattern"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS LIMIT 123 FROM 'from pattern'`)
 	})
 }
 
 func TestStreamlits_Describe(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid DescribeStreamlitOptions
+
 	defaultOpts := func() *DescribeStreamlitOptions {
 		return &DescribeStreamlitOptions{
-
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *DescribeStreamlitOptions = nil
+		opts := (*DescribeStreamlitOptions)(nil)
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.name = emptySchemaObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE STREAMLIT %s`, id.FullyQualifiedName())
 	})
 }
