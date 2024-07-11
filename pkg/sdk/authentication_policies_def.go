@@ -65,6 +65,8 @@ var AllClientTypes = []ClientTypesOption{
 	ClientTypesSnowSql,
 }
 
+var SecurityIntegrationsOptionDef = g.NewQueryStruct("SecurityIntegrationsOption").Text("Name", g.KeywordOptions().SingleQuotes())
+
 var (
 	AuthenticationPoliciesDef = g.NewInterface(
 		"AuthenticationPolicies",
@@ -82,12 +84,13 @@ var (
 				ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
 				OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions()).
 				ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
-				ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses().SingleQuotes()).
+				ListAssignment("SECURITY_INTEGRATIONS", "SecurityIntegrationsOption", g.ParameterOptions().Parentheses()).
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				WithValidation(g.ValidIdentifier, "name"),
 			AuthenticationMethodsOptionDef,
 			MfaAuthenticationMethodsOptionDef,
 			ClientTypesOptionDef,
+			SecurityIntegrationsOptionDef,
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-authentication-policy",
@@ -103,7 +106,7 @@ var (
 						ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
 						OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions().SingleQuotes()).
 						ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
-						ListAssignment("SECURITY_INTEGRATIONS", "SchemaObjectIdentifier", g.ParameterOptions().Parentheses().SingleQuotes()).
+						ListAssignment("SECURITY_INTEGRATIONS", "SecurityIntegrationsOption", g.ParameterOptions().Parentheses()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 						WithValidation(g.AtLeastOneValueSet, "AuthenticationMethods", "MfaAuthenticationMethods", "MfaEnrollment", "ClientTypes", "SecurityIntegrations", "Comment"),
 					g.KeywordOptions().SQL("SET"),

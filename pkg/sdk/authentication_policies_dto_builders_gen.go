@@ -37,7 +37,7 @@ func (s *CreateAuthenticationPolicyRequest) WithClientTypes(ClientTypes []Client
 	return s
 }
 
-func (s *CreateAuthenticationPolicyRequest) WithSecurityIntegrations(SecurityIntegrations []SchemaObjectIdentifier) *CreateAuthenticationPolicyRequest {
+func (s *CreateAuthenticationPolicyRequest) WithSecurityIntegrations(SecurityIntegrations []SecurityIntegrationsOption) *CreateAuthenticationPolicyRequest {
 	s.SecurityIntegrations = SecurityIntegrations
 	return s
 }
@@ -99,7 +99,7 @@ func (s *AuthenticationPolicySetRequest) WithClientTypes(ClientTypes []ClientTyp
 	return s
 }
 
-func (s *AuthenticationPolicySetRequest) WithSecurityIntegrations(SecurityIntegrations []SchemaObjectIdentifier) *AuthenticationPolicySetRequest {
+func (s *AuthenticationPolicySetRequest) WithSecurityIntegrations(SecurityIntegrations []SecurityIntegrationsOption) *AuthenticationPolicySetRequest {
 	s.SecurityIntegrations = SecurityIntegrations
 	return s
 }

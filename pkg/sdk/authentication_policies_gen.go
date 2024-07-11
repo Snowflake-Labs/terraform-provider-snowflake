@@ -12,16 +12,16 @@ type AuthenticationPolicies interface {
 
 // CreateAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy.
 type CreateAuthenticationPolicyOptions struct {
-	create                   bool                       `ddl:"static" sql:"CREATE"`
-	OrReplace                *bool                      `ddl:"keyword" sql:"OR REPLACE"`
-	authenticationPolicy     bool                       `ddl:"static" sql:"AUTHENTICATION POLICY"`
-	name                     AccountObjectIdentifier    `ddl:"identifier"`
-	AuthenticationMethods    []AuthenticationMethods    `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
-	MfaAuthenticationMethods []MfaAuthenticationMethods `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
-	MfaEnrollment            *string                    `ddl:"parameter" sql:"MFA_ENROLLMENT"`
-	ClientTypes              []ClientTypes              `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
-	SecurityIntegrations     []SchemaObjectIdentifier   `ddl:"parameter,single_quotes" sql:"SECURITY_INTEGRATIONS"`
-	Comment                  *string                    `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                   bool                         `ddl:"static" sql:"CREATE"`
+	OrReplace                *bool                        `ddl:"keyword" sql:"OR REPLACE"`
+	authenticationPolicy     bool                         `ddl:"static" sql:"AUTHENTICATION POLICY"`
+	name                     AccountObjectIdentifier      `ddl:"identifier"`
+	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
+	MfaAuthenticationMethods []MfaAuthenticationMethods   `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
+	MfaEnrollment            *string                      `ddl:"parameter" sql:"MFA_ENROLLMENT"`
+	ClientTypes              []ClientTypes                `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
+	SecurityIntegrations     []SecurityIntegrationsOption `ddl:"parameter,parentheses" sql:"SECURITY_INTEGRATIONS"`
+	Comment                  *string                      `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 type AuthenticationMethods struct {
 	Method string `ddl:"keyword,single_quotes"`
@@ -31,6 +31,9 @@ type MfaAuthenticationMethods struct {
 }
 type ClientTypes struct {
 	ClientType string `ddl:"keyword,single_quotes"`
+}
+type SecurityIntegrationsOption struct {
+	Name string `ddl:"keyword,single_quotes"`
 }
 
 // AlterAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-authentication-policy.
@@ -44,12 +47,12 @@ type AlterAuthenticationPolicyOptions struct {
 	RenameTo             *AccountObjectIdentifier   `ddl:"identifier" sql:"RENAME TO"`
 }
 type AuthenticationPolicySet struct {
-	AuthenticationMethods    []AuthenticationMethods    `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
-	MfaAuthenticationMethods []MfaAuthenticationMethods `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
-	MfaEnrollment            *string                    `ddl:"parameter,single_quotes" sql:"MFA_ENROLLMENT"`
-	ClientTypes              []ClientTypes              `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
-	SecurityIntegrations     []SchemaObjectIdentifier   `ddl:"parameter,single_quotes" sql:"SECURITY_INTEGRATIONS"`
-	Comment                  *string                    `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
+	MfaAuthenticationMethods []MfaAuthenticationMethods   `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
+	MfaEnrollment            *string                      `ddl:"parameter,single_quotes" sql:"MFA_ENROLLMENT"`
+	ClientTypes              []ClientTypes                `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
+	SecurityIntegrations     []SecurityIntegrationsOption `ddl:"parameter,parentheses" sql:"SECURITY_INTEGRATIONS"`
+	Comment                  *string                      `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 type AuthenticationPolicyUnset struct {
 	ClientTypes              *bool `ddl:"keyword" sql:"CLIENT_TYPES"`

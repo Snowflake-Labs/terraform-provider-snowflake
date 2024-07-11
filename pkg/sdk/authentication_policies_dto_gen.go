@@ -17,7 +17,7 @@ type CreateAuthenticationPolicyRequest struct {
 	MfaAuthenticationMethods []MfaAuthenticationMethods
 	MfaEnrollment            *string
 	ClientTypes              []ClientTypes
-	SecurityIntegrations     []SchemaObjectIdentifier
+	SecurityIntegrations     []SecurityIntegrationsOption
 	Comment                  *string
 }
 
@@ -34,7 +34,7 @@ type AuthenticationPolicySetRequest struct {
 	MfaAuthenticationMethods []MfaAuthenticationMethods
 	MfaEnrollment            *string
 	ClientTypes              []ClientTypes
-	SecurityIntegrations     []SchemaObjectIdentifier
+	SecurityIntegrations     []SecurityIntegrationsOption
 	Comment                  *string
 }
 
