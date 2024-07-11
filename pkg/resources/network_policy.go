@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -193,8 +192,6 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	log.Println("PROPS:", policyProperties)
 
 	if allowedIpList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
 		if err = d.Set("allowed_ip_list", sdk.ParseCommaSeparatedStringArray(allowedIpList.Value, false)); err != nil {

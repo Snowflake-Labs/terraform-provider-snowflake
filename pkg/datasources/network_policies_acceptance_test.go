@@ -9,7 +9,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,7 +17,7 @@ import (
 )
 
 func TestAcc_NetworkPolicies_Complete(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	//_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -83,6 +82,25 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
 					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
 					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_network_rules", "0"),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.comment", ""),
+
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.#", "1"),
+					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_ip_list"),
+					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_ip_list"),
+					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_network_rule_list"),
+					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_network_rule_list"),
+				),
+			},
+			{
+				Config: networkPolicyConfigBasic(id2.Name(), true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
+					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id2.Name()),
 					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
 					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
 					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),

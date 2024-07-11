@@ -405,3 +405,89 @@ func networkPolicyConfigComplete(
 		comment,
 	)
 }
+
+// TODO: Test upgrade
+
+func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	//allowedNetworkRuleId1 := acc.TestClient().Ids.NewSchemaObjectIdentifier()
+	allowedNetworkRuleId1 := sdk.NewSchemaObjectIdentifier(acc.TestClient().Ids.DatabaseId().Name(), acc.TestClient().Ids.SchemaId().Name(), "INTERNAL_TRAFFIC")
+	allowedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	blockedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	blockedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				PreConfig: func() {
+					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId1.Name())
+					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId2.Name())
+					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId1.Name())
+					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId2.Name())
+				},
+				Config: networkPolicyConfigWithNetworkRules(
+					id.Name(),
+					[]string{allowedNetworkRuleId1.FullyQualifiedName(), allowedNetworkRuleId2.FullyQualifiedName()},
+					[]string{blockedNetworkRuleId1.FullyQualifiedName(), blockedNetworkRuleId2.FullyQualifiedName()},
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_network_rule_list.#", "2"),
+
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.#", "1"),
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.entries_in_allowed_network_rules", "2"),
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.entries_in_blocked_network_rules", "2"),
+					//
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "describe_output.#", "1"),
+					//resource.TestCheckResourceAttrSet("snowflake_network_policy.test", "describe_output.0.allowed_network_rule_list"),
+					//resource.TestCheckResourceAttrSet("snowflake_network_policy.test", "describe_output.0.blocked_network_rule_list"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config: networkPolicyConfigWithNetworkRules(
+					id.Name(),
+					[]string{allowedNetworkRuleId1.FullyQualifiedName(), allowedNetworkRuleId2.FullyQualifiedName()},
+					[]string{blockedNetworkRuleId1.FullyQualifiedName(), blockedNetworkRuleId2.FullyQualifiedName()},
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_network_rule_list.#", "2"),
+
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.#", "1"),
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.entries_in_allowed_network_rules", "2"),
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.entries_in_blocked_network_rules", "2"),
+					//
+					//resource.TestCheckResourceAttr("snowflake_network_policy.test", "describe_output.#", "1"),
+					//resource.TestCheckResourceAttrSet("snowflake_network_policy.test", "describe_output.0.allowed_network_rule_list"),
+					//resource.TestCheckResourceAttrSet("snowflake_network_policy.test", "describe_output.0.blocked_network_rule_list"),
+				),
+			},
+		},
+	})
+}
+
+func networkPolicyConfigWithNetworkRules(name string, allowedNetworkRules []string, blockedNetworkRules []string) string {
+	allowedRuleListBytes, _ := json.Marshal(allowedNetworkRules)
+	blockedRuleListBytes, _ := json.Marshal(blockedNetworkRules)
+
+	return fmt.Sprintf(`resource "snowflake_network_policy" "test" {
+		name = "%[1]s"
+		allowed_network_rule_list = %[2]s
+		blocked_network_rule_list = %[3]s
+	}`, name, string(allowedRuleListBytes), string(blockedRuleListBytes))
+}
