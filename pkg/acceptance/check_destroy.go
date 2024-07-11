@@ -67,6 +67,15 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Alert: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Alerts.ShowByID)
 	},
+	resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
+	resources.ApiAuthenticationIntegrationWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
+	resources.ApiAuthenticationIntegrationWithJwtBearer: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
+	},
 	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ApiIntegrations.ShowByID)
 	},

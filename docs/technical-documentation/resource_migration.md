@@ -61,7 +61,7 @@ resource "snowflake_grant_privileges_to_account_role" "new_resource" {
 Write the `terraform import` command with the ID so that the resource will be able to parse and fill the state correctly.
 You can find import syntax in the documentation for a given resource, [here](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)
 is the one for `snowflake_grant_privileges_to_account_role`. In our case, the command will look like this:
-```shell 
+```shell
 terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_a_name"]' 'role_a_name|USAGE|false|false|OnAccountObject|DATABASE|database_name'
 terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_b_name"]' 'role_b_name|USAGE|false|false|OnAccountObject|DATABASE|database_name'
 ```
@@ -110,8 +110,8 @@ and nothing has to be adjusted, then we can perform `terraform apply` to import 
 
 #### 3.3.1. Write import block
 
-Unfortunately, `for_each` cannot be used when generating with import blocks, so we have to define them one by one.
-For simplicity, we'll define just one import block (the second one would look the same, only with a different role).
+You will need to define import blocks for each role. For simplicity, we'll define just one import block (the second one
+would look the same, only with a different role).
 
 ```terraform
 import {
@@ -119,6 +119,10 @@ import {
   id = "\"${snowflake_role.a.name}\"|false|false|USAGE|OnAccountObject|DATABASE|\"${snowflake_database.test.name}\""
 }
 ```
+
+If you are using terraform 1.7 or above you could use a `for_each` to import multiple resources at once. See
+[Terraform 1.7 adds test mocking and config-driven remove > Import block for_each](https://www.hashicorp.com/blog/terraform-1-7-adds-test-mocking-and-config-driven-remove).
+
 [Hashicorp documentation reference on import block](https://developer.hashicorp.com/terraform/language/import)
 
 #### 3.3.2. terraform plan -generate-config-out

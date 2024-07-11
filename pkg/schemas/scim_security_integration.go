@@ -1,6 +1,8 @@
 package schemas
 
 import (
+	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -16,19 +18,25 @@ var DescribeScimSecurityIntegrationSchema = map[string]*schema.Schema{
 	"comment":        DescribePropertyListSchema,
 }
 
-var _ = DescribeScimSecurityIntegrationSchema
+var (
+	_                   = DescribeScimSecurityIntegrationSchema
+	ScimPropertiesNames = []string{
+		"ENABLED",
+		"NETWORK_POLICY",
+		"RUN_AS_ROLE",
+		"SYNC_PASSWORD",
+		"COMMENT",
+	}
+)
 
 func ScimSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
-	for _, securityIntegrationProperty := range securityIntegrationProperties {
-		securityIntegrationProperty := securityIntegrationProperty
-		switch securityIntegrationProperty.Name {
-		case "ENABLED",
-			"NETWORK_POLICY",
-			"RUN_AS_ROLE",
-			"SYNC_PASSWORD",
-			"COMMENT":
-			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
+	for _, property := range securityIntegrationProperties {
+		property := property
+		if slices.Contains(ScimPropertiesNames, property.Name) {
+			securityIntegrationSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
+		} else {
+			log.Printf("[WARN] unexpected property %v in scim security integration returned from Snowflake", property.Name)
 		}
 	}
 	return securityIntegrationSchema
