@@ -18,6 +18,8 @@
   * [How to set up the connection with the private key?](#how-to-set-up-the-connection-with-the-private-key)
   * [Incorrect identifier (index out of bounds) (even with the old error message)](#incorrect-identifier-index-out-of-bounds-even-with-the-old-error-message)
   * [Incorrect account identifier (snowflake_database.from_share)](#incorrect-account-identifier-snowflake_databasefrom_share)
+  * [Granting on Functions or Procedures](#granting-on-functions-or-procedures)
+  * [Infinite diffs, empty privileges, errors when revoking on grant resources](#infinite-diffs-empty-privileges-errors-when-revoking-on-grant-resources)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible. 
 To correctly report the issue, we suggest going through the following steps.
@@ -161,3 +163,59 @@ panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier
 [GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2590)
 
 **Solution:** As specified in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#behavior-change-external-object-identifier-changes), use account locator instead.
+
+### Granting on Functions or Procedures
+**Problem:** Right now, when granting any privilege on Function or Procedure with this or similar configuration:
+
+```terraform
+resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
+  privileges        = ["USAGE"]
+  account_role_name = snowflake_account_role.name
+  on_schema_object {
+    object_type = "PROCEDURE"
+    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}\""
+  }
+}
+```
+
+You may encounter the following error:
+```text
+│ Error: 090208 (42601): Argument types of function 'procedure_name' must be
+│ specified.
+```
+
+**Related issues:** [#2375](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2375), [#2922](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2922)
+
+**Solution:** Specify the arguments in the `object_name`: 
+
+```terraform
+resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
+  privileges        = ["USAGE"]
+  account_role_name = snowflake_account_role.name
+  on_schema_object {
+    object_type = "PROCEDURE"
+    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}(NUMBER, VARCHAR)\""
+  }
+}
+```
+
+### Infinite diffs, empty privileges, errors when revoking on grant resources
+**Problem:** If you encountered one of the following issues:
+- Issue with revoking: `Error: An error occurred when revoking privileges from an account role.
+- Plan in every `terraform plan` run (mostly empty privileges)
+It's possible that the `object_type` you specified is "incorrect."
+Let's say you would like to grant `SELECT` on event table. In Snowflake, it's possible to specify
+`TABLE` object type instead of dedicated `EVENT TABLE` one. As `object_type` is one of the fields
+we filter on, it needs to exactly match with the output provided by `SHOW GRANTS` command.
+
+**Related issues:** [#2749](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2749), [#2803](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2803)
+
+**Solution:** Here's a list of things that may help with your issue:
+- Firstly, check if the privilege has been granted in Snowflake. If it is, it means the configuration is correct (or at least compliant with Snowflake syntax).
+- When granting `IMPORTED PRIVILEGES` on `SNOWFLAKE` database/application, use `object_type = "DATABASE"`.
+- Run `SHOW GRANTS` command with the right filters to find the granted privilege and check what is the object type returned of that command. If it doesn't match the one you have in your configuration, then follow those steps:
+  - Use state manipulation (no revoking)
+    - Remove the resource from your state using `terraform state rm`.
+    - Change the `object_type` to correct value.
+    - Import the state from Snowflake using `terraform import`.
+  - Remove the grant configuration and after `terraform apply` put it back with the correct `object_type` (requires revoking).

@@ -148,6 +148,5 @@ Required:
 Import is supported using the following syntax:
 
 ```shell
-# format is constraint name ❄ constraint type ❄ database name | schema name | table name
 terraform import snowflake_table_constraint.example 'myconstraintfk❄️FOREIGN KEY❄️databaseName|schemaName|tableName'
 ```
