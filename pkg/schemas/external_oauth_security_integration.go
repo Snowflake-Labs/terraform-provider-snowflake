@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"log"
 	"slices"
 	"strings"
 
@@ -25,27 +26,30 @@ var DescribeExternalOauthSecurityIntegrationSchema = map[string]*schema.Schema{
 	"comment":                                         DescribePropertyListSchema,
 }
 
-var _ = DescribeExternalOauthSecurityIntegrationSchema
+var ExternalOauthPropertiesNames = []string{
+	"ENABLED",
+	"EXTERNAL_OAUTH_ISSUER",
+	"EXTERNAL_OAUTH_JWS_KEYS_URL",
+	"EXTERNAL_OAUTH_ANY_ROLE_MODE",
+	"EXTERNAL_OAUTH_RSA_PUBLIC_KEY",
+	"EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2",
+	"EXTERNAL_OAUTH_BLOCKED_ROLES_LIST",
+	"EXTERNAL_OAUTH_ALLOWED_ROLES_LIST",
+	"EXTERNAL_OAUTH_AUDIENCE_LIST",
+	"EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM",
+	"EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE",
+	"EXTERNAL_OAUTH_SCOPE_DELIMITER",
+	"COMMENT",
+}
 
 func ExternalOauthSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
 		securityIntegrationProperty := securityIntegrationProperty
-		switch securityIntegrationProperty.Name {
-		case "ENABLED",
-			"EXTERNAL_OAUTH_ISSUER",
-			"EXTERNAL_OAUTH_JWS_KEYS_URL",
-			"EXTERNAL_OAUTH_ANY_ROLE_MODE",
-			"EXTERNAL_OAUTH_RSA_PUBLIC_KEY",
-			"EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2",
-			"EXTERNAL_OAUTH_BLOCKED_ROLES_LIST",
-			"EXTERNAL_OAUTH_ALLOWED_ROLES_LIST",
-			"EXTERNAL_OAUTH_AUDIENCE_LIST",
-			"EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM",
-			"EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE",
-			"EXTERNAL_OAUTH_SCOPE_DELIMITER",
-			"COMMENT":
+		if slices.Contains(ExternalOauthPropertiesNames, securityIntegrationProperty.Name) {
 			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
+		} else {
+			log.Printf("[WARN] unexpected property %v in external oauth security integration returned from Snowflake", securityIntegrationProperty.Name)
 		}
 	}
 	return securityIntegrationSchema

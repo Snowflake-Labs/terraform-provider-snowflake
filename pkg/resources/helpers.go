@@ -296,20 +296,6 @@ func getTags(from interface{}) (to tags) {
 }
 
 // TODO(SNOW-1479870): Test
-// MergeMaps takes any number of maps (of the same type) and concatenates them.
-// In case of key collision, the value will be selected from the map that is provided
-// later in the src function parameter.
-func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
-	merged := make(M)
-	for _, m := range src {
-		for k, v := range m {
-			merged[k] = v
-		}
-	}
-	return merged
-}
-
-// TODO(SNOW-1479870): Test
 // JoinDiags iterates through passed diag.Diagnostics and joins them into one diag.Diagnostics.
 // If none of the passed diagnostics contained any element a nil reference will be returned.
 func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {

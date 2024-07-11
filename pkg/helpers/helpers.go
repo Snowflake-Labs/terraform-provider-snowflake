@@ -137,3 +137,26 @@ func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier,
 		return sdk.AccountIdentifier{}, fmt.Errorf("unable to classify account identifier: %s, expected format: <organization_name>.<account_name>", identifier)
 	}
 }
+
+// TODO(SNOW-1479870): Test
+// MergeMaps takes any number of maps (of the same type) and concatenates them.
+// In case of key collision, the value will be selected from the map that is provided
+// later in the src function parameter.
+func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
+	merged := make(M)
+	for _, m := range src {
+		for k, v := range m {
+			merged[k] = v
+		}
+	}
+	return merged
+}
+
+// TODO: use slices.Concat in Go 1.22
+func ConcatSlices[T any](slices ...[]T) []T {
+	var tmp []T
+	for _, s := range slices {
+		tmp = append(tmp, s...)
+	}
+	return tmp
+}
