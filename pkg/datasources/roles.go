@@ -21,9 +21,10 @@ var rolesSchema = map[string]*schema.Schema{
 		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
 	},
 	"in_class": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Filters the SHOW GRANTS output by class name.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: resources.IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+		Description:      "Filters the SHOW GRANTS output by class name.",
 	},
 	"roles": {
 		Type:        schema.TypeList,
@@ -63,7 +64,7 @@ func ReadRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 
 	if className, ok := d.GetOk("in_class"); ok {
 		req.WithInClass(sdk.RolesInClass{
-			Class: sdk.NewAccountObjectIdentifier(className.(string)),
+			Class: sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(className.(string)),
 		})
 	}
 

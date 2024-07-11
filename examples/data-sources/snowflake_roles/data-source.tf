@@ -15,6 +15,15 @@ output "like_output" {
   value = data.snowflake_roles.like.roles
 }
 
+# Filtering (in class)
+data "snowflake_roles" "in_class" {
+  in_class = "SNOWFLAKE.CORE.BUDGET"
+}
+
+output "in_class_output" {
+  value = data.snowflake_roles.in_class.roles
+}
+
 # Ensure the number of roles is equal to at least one element (with the use of postcondition)
 data "snowflake_roles" "assert_with_postcondition" {
   like = "role-name-%"

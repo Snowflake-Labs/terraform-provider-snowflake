@@ -2,7 +2,6 @@ package datasources_test
 
 import (
 	"fmt"
-	"maps"
 	"strconv"
 	"testing"
 
@@ -22,19 +21,13 @@ func TestAcc_Roles_Complete(t *testing.T) {
 	accountRoleName3 := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
 
-	commonVariables := config.Variables{
+	likeVariables := config.Variables{
 		"account_role_name_1": config.StringVariable(accountRoleName1),
 		"account_role_name_2": config.StringVariable(accountRoleName2),
 		"account_role_name_3": config.StringVariable(accountRoleName3),
 		"comment":             config.StringVariable(comment),
+		"like":                config.StringVariable(accountRoleNamePrefix + "%"),
 	}
-
-	likeVariables := maps.Clone(commonVariables)
-	likeVariables["like"] = config.StringVariable(accountRoleNamePrefix + "%")
-
-	// TODO(SNOW-1353303): Add test case for instance classes after they're available in the provider
-	// inClassVariables := maps.Clone(commonVariables)
-	// inClassVariables["in_class"] = config.StringVariable("<class name>")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -44,13 +37,31 @@ func TestAcc_Roles_Complete(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: likeVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_roles.test", "roles.#", "2"),
 					containsAccountRole(accountRoleName1, comment),
 					containsAccountRole(accountRoleName2, comment),
 					doesntContainAccountRole(accountRoleName3, comment),
+				),
+			},
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("data.snowflake_roles.test", "roles.#", func(value string) error {
+						numberOfRoles, err := strconv.ParseInt(value, 10, 8)
+						if err != nil {
+							return err
+						}
+
+						if numberOfRoles == 0 {
+							return fmt.Errorf("expected roles to be non-empty")
+						}
+
+						return nil
+					}),
 				),
 			},
 		},
