@@ -458,3 +458,13 @@ func BasicWarehouseModel(
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.
 - Support `showOutputValueUnset` and add a second function for each `show_output` attribute.
 - Support `resourceAssertionTypeValueNotSet` for import checks (`panic` left currently).
+- Add assertions for the `describe_output`.
+- Add support for datasource tests (assertions and config builders).
+- Consider overriding the assertions when invoking same check multiple times with different params (e.g. `Warehouse(...).HasType(X).HasType(Y)`; it could use the last-check-wins approach, to more easily reuse complex checks between the test steps).
+- Consider not adding the check for `show_output` presence on creation (same with `parameters`). The majority of the use cases need it to be present but there are a few others (like conditional presence in the datasources). Currently, it seems that they should be always present in the resources, so no change is made. Later, with adding the support for the datasource tests, consider simple destructive implementation like:
+```go
+func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
+    w.assertions = make([]resourceAssertion, 0)
+    w.assertions = append(w.assertions, valueSet("show_output.#", "0"))
+}
+```
