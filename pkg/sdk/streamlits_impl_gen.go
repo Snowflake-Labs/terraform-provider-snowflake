@@ -88,7 +88,6 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &StreamlitSet{
 			RootLocation:   r.Set.RootLocation,
 			MainFile:       r.Set.MainFile,
@@ -103,7 +102,6 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 				ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations.ExternalAccessIntegrations,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {
@@ -182,9 +180,10 @@ func (r streamlitsDetailRow) convert() *StreamlitDetail {
 	if r.QueryWarehouse.Valid {
 		e.QueryWarehouse = r.QueryWarehouse.String
 	}
-	var externalAccessIntegrations []string
-	for _, v := range ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false) {
-		externalAccessIntegrations = append(externalAccessIntegrations, NewObjectIdentifierFromFullyQualifiedName(v).Name())
+	integrationsRaw := ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false)
+	externalAccessIntegrations := make([]string, len(integrationsRaw))
+	for i, v := range integrationsRaw {
+		externalAccessIntegrations[i] = NewObjectIdentifierFromFullyQualifiedName(v).Name()
 	}
 	e.ExternalAccessIntegrations = externalAccessIntegrations
 	return e
