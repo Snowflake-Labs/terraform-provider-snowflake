@@ -4,7 +4,7 @@ import "testing"
 
 func TestAuthenticationPolicies_Create(t *testing.T) {
 
-	id := randomAccountObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	// Minimal valid CreateAuthenticationPolicyOptions
 	defaultOpts := func() *CreateAuthenticationPolicyOptions {
 		return &CreateAuthenticationPolicyOptions{
@@ -19,7 +19,7 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -45,7 +45,7 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 
 func TestAuthenticationPolicies_Alter(t *testing.T) {
 
-	id := randomAccountObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	// Minimal valid AlterAuthenticationPolicyOptions
 	defaultOpts := func() *AlterAuthenticationPolicyOptions {
 		return &AlterAuthenticationPolicyOptions{
@@ -60,7 +60,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -71,7 +71,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.RenameTo = &emptyAccountObjectIdentifier
+		opts.RenameTo = &emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -133,7 +133,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 
 	t.Run("alter: renameTo", func(t *testing.T) {
 		opts := defaultOpts()
-		target := randomAccountObjectIdentifier()
+		target := randomSchemaObjectIdentifier()
 		opts.RenameTo = &target
 		assertOptsValidAndSQLEquals(t, opts, "ALTER AUTHENTICATION POLICY %s RENAME TO %s", id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
 	})
@@ -142,7 +142,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 
 func TestAuthenticationPolicies_Drop(t *testing.T) {
 
-	id := randomAccountObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	// Minimal valid DropAuthenticationPolicyOptions
 	defaultOpts := func() *DropAuthenticationPolicyOptions {
 		return &DropAuthenticationPolicyOptions{
@@ -157,7 +157,7 @@ func TestAuthenticationPolicies_Drop(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -187,7 +187,7 @@ func TestAuthenticationPolicies_Show(t *testing.T) {
 
 func TestAuthenticationPolicies_Describe(t *testing.T) {
 
-	id := randomAccountObjectIdentifier()
+	id := randomSchemaObjectIdentifier()
 	// Minimal valid DescribeAuthenticationPolicyOptions
 	defaultOpts := func() *DescribeAuthenticationPolicyOptions {
 		return &DescribeAuthenticationPolicyOptions{
@@ -202,7 +202,7 @@ func TestAuthenticationPolicies_Describe(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

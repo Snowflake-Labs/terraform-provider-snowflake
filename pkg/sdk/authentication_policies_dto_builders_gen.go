@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateAuthenticationPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *CreateAuthenticationPolicyRequest {
 	s := CreateAuthenticationPolicyRequest{}
 	s.name = name
@@ -48,7 +48,7 @@ func (s *CreateAuthenticationPolicyRequest) WithComment(Comment string) *CreateA
 }
 
 func NewAlterAuthenticationPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterAuthenticationPolicyRequest {
 	s := AlterAuthenticationPolicyRequest{}
 	s.name = name
@@ -70,7 +70,7 @@ func (s *AlterAuthenticationPolicyRequest) WithUnset(Unset AuthenticationPolicyU
 	return s
 }
 
-func (s *AlterAuthenticationPolicyRequest) WithRenameTo(RenameTo AccountObjectIdentifier) *AlterAuthenticationPolicyRequest {
+func (s *AlterAuthenticationPolicyRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *AlterAuthenticationPolicyRequest {
 	s.RenameTo = &RenameTo
 	return s
 }
@@ -144,7 +144,7 @@ func (s *AuthenticationPolicyUnsetRequest) WithComment(Comment bool) *Authentica
 }
 
 func NewDropAuthenticationPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropAuthenticationPolicyRequest {
 	s := DropAuthenticationPolicyRequest{}
 	s.name = name
@@ -160,8 +160,28 @@ func NewShowAuthenticationPolicyRequest() *ShowAuthenticationPolicyRequest {
 	return &ShowAuthenticationPolicyRequest{}
 }
 
+func (s *ShowAuthenticationPolicyRequest) WithLike(Like Like) *ShowAuthenticationPolicyRequest {
+	s.Like = &Like
+	return s
+}
+
+func (s *ShowAuthenticationPolicyRequest) WithIn(In In) *ShowAuthenticationPolicyRequest {
+	s.In = &In
+	return s
+}
+
+func (s *ShowAuthenticationPolicyRequest) WithStartsWith(StartsWith string) *ShowAuthenticationPolicyRequest {
+	s.StartsWith = &StartsWith
+	return s
+}
+
+func (s *ShowAuthenticationPolicyRequest) WithLimit(Limit LimitFrom) *ShowAuthenticationPolicyRequest {
+	s.Limit = &Limit
+	return s
+}
+
 func NewDescribeAuthenticationPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DescribeAuthenticationPolicyRequest {
 	s := DescribeAuthenticationPolicyRequest{}
 	s.name = name

@@ -7,7 +7,8 @@ type AuthenticationPolicies interface {
 	Alter(ctx context.Context, request *AlterAuthenticationPolicyRequest) error
 	Drop(ctx context.Context, request *DropAuthenticationPolicyRequest) error
 	Show(ctx context.Context, request *ShowAuthenticationPolicyRequest) ([]AuthenticationPolicy, error)
-	Describe(ctx context.Context, id AccountObjectIdentifier) ([]AuthenticationPolicyDescription, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) ([]AuthenticationPolicyDescription, error)
 }
 
 // CreateAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy.
@@ -15,7 +16,7 @@ type CreateAuthenticationPolicyOptions struct {
 	create                   bool                         `ddl:"static" sql:"CREATE"`
 	OrReplace                *bool                        `ddl:"keyword" sql:"OR REPLACE"`
 	authenticationPolicy     bool                         `ddl:"static" sql:"AUTHENTICATION POLICY"`
-	name                     AccountObjectIdentifier      `ddl:"identifier"`
+	name                     SchemaObjectIdentifier       `ddl:"identifier"`
 	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
 	MfaAuthenticationMethods []MfaAuthenticationMethods   `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
 	MfaEnrollment            *string                      `ddl:"parameter" sql:"MFA_ENROLLMENT"`
@@ -41,10 +42,10 @@ type AlterAuthenticationPolicyOptions struct {
 	alter                bool                       `ddl:"static" sql:"ALTER"`
 	authenticationPolicy bool                       `ddl:"static" sql:"AUTHENTICATION POLICY"`
 	IfExists             *bool                      `ddl:"keyword" sql:"IF EXISTS"`
-	name                 AccountObjectIdentifier    `ddl:"identifier"`
+	name                 SchemaObjectIdentifier     `ddl:"identifier"`
 	Set                  *AuthenticationPolicySet   `ddl:"keyword" sql:"SET"`
 	Unset                *AuthenticationPolicyUnset `ddl:"list,no_parentheses" sql:"UNSET"`
-	RenameTo             *AccountObjectIdentifier   `ddl:"identifier" sql:"RENAME TO"`
+	RenameTo             *SchemaObjectIdentifier    `ddl:"identifier" sql:"RENAME TO"`
 }
 type AuthenticationPolicySet struct {
 	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
@@ -65,16 +66,20 @@ type AuthenticationPolicyUnset struct {
 
 // DropAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-authentication-policy.
 type DropAuthenticationPolicyOptions struct {
-	drop                 bool                    `ddl:"static" sql:"DROP"`
-	authenticationPolicy bool                    `ddl:"static" sql:"AUTHENTICATION POLICY"`
-	IfExists             *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name                 AccountObjectIdentifier `ddl:"identifier"`
+	drop                 bool                   `ddl:"static" sql:"DROP"`
+	authenticationPolicy bool                   `ddl:"static" sql:"AUTHENTICATION POLICY"`
+	IfExists             *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name                 SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 // ShowAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-authentication-policies.
 type ShowAuthenticationPolicyOptions struct {
-	show                   bool `ddl:"static" sql:"SHOW"`
-	authenticationPolicies bool `ddl:"static" sql:"AUTHENTICATION POLICIES"`
+	show                   bool       `ddl:"static" sql:"SHOW"`
+	authenticationPolicies bool       `ddl:"static" sql:"AUTHENTICATION POLICIES"`
+	Like                   *Like      `ddl:"keyword" sql:"LIKE"`
+	In                     *In        `ddl:"keyword" sql:"IN"`
+	StartsWith             *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	Limit                  *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
 type showAuthenticationPolicyDBRow struct {
 	CreatedOn     string `db:"created_on"`
@@ -84,6 +89,7 @@ type showAuthenticationPolicyDBRow struct {
 	SchemaName    string `db:"schema_name"`
 	Owner         string `db:"owner"`
 	OwnerRoleType string `db:"owner_role_type"`
+	Options       string `db:"options"`
 }
 type AuthenticationPolicy struct {
 	CreatedOn     string
@@ -93,13 +99,14 @@ type AuthenticationPolicy struct {
 	SchemaName    string
 	Owner         string
 	OwnerRoleType string
+	Options       string
 }
 
 // DescribeAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy.
 type DescribeAuthenticationPolicyOptions struct {
-	describe             bool                    `ddl:"static" sql:"DESCRIBE"`
-	authenticationPolicy bool                    `ddl:"static" sql:"AUTHENTICATION POLICY"`
-	name                 AccountObjectIdentifier `ddl:"identifier"`
+	describe             bool                   `ddl:"static" sql:"DESCRIBE"`
+	authenticationPolicy bool                   `ddl:"static" sql:"AUTHENTICATION POLICY"`
+	name                 SchemaObjectIdentifier `ddl:"identifier"`
 }
 type describeAuthenticationPolicyDBRow struct {
 	Name  string `db:"name"`

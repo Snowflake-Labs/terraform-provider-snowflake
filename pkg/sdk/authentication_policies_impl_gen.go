@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ AuthenticationPolicies = (*authenticationPolicies)(nil)
@@ -35,7 +37,16 @@ func (v *authenticationPolicies) Show(ctx context.Context, request *ShowAuthenti
 	return resultList, nil
 }
 
-func (v *authenticationPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]AuthenticationPolicyDescription, error) {
+func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error) {
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	authenticationPolicies, err := v.Show(ctx, NewShowAuthenticationPolicyRequest())
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindOne(authenticationPolicies, func(r AuthenticationPolicy) bool { return r.Name == id.Name() })
+}
+
+func (v *authenticationPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]AuthenticationPolicyDescription, error) {
 	opts := &DescribeAuthenticationPolicyOptions{
 		name: id,
 	}
@@ -106,7 +117,12 @@ func (r *DropAuthenticationPolicyRequest) toOpts() *DropAuthenticationPolicyOpti
 }
 
 func (r *ShowAuthenticationPolicyRequest) toOpts() *ShowAuthenticationPolicyOptions {
-	opts := &ShowAuthenticationPolicyOptions{}
+	opts := &ShowAuthenticationPolicyOptions{
+		Like:       r.Like,
+		In:         r.In,
+		StartsWith: r.StartsWith,
+		Limit:      r.Limit,
+	}
 	return opts
 }
 

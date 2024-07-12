@@ -71,7 +71,7 @@ var (
 	AuthenticationPoliciesDef = g.NewInterface(
 		"AuthenticationPolicies",
 		"AuthenticationPolicy",
-		g.KindOfT[AccountObjectIdentifier](),
+		g.KindOfT[SchemaObjectIdentifier](),
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy",
@@ -123,7 +123,7 @@ var (
 						WithValidation(g.AtLeastOneValueSet, "ClientTypes", "AuthenticationMethods", "Comment", "SecurityIntegrations", "MfaAuthenticationMethods", "MfaEnrollment"),
 					g.ListOptions().NoParentheses().SQL("UNSET"),
 				).
-				Identifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+				Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "RenameTo").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
@@ -146,7 +146,8 @@ var (
 				Field("database_name", "string").
 				Field("schema_name", "string").
 				Field("owner", "string").
-				Field("owner_role_type", "string"),
+				Field("owner_role_type", "string").
+				Field("options", "string"),
 			g.PlainStruct("AuthenticationPolicy").
 				Field("CreatedOn", "string").
 				Field("Name", "string").
@@ -154,11 +155,17 @@ var (
 				Field("DatabaseName", "string").
 				Field("SchemaName", "string").
 				Field("Owner", "string").
-				Field("OwnerRoleType", "string"),
+				Field("OwnerRoleType", "string").
+				Field("Options", "string"),
 			g.NewQueryStruct("ShowAuthenticationPolicies").
 				Show().
-				SQL("AUTHENTICATION POLICIES"),
+				SQL("AUTHENTICATION POLICIES").
+				OptionalLike().
+				OptionalIn().
+				OptionalStartsWith().
+				OptionalLimit(),
 		).
+		ShowByIdOperation().
 		DescribeOperation(
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy",

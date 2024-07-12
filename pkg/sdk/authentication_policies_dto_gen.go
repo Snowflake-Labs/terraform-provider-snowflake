@@ -12,7 +12,7 @@ var (
 
 type CreateAuthenticationPolicyRequest struct {
 	OrReplace                *bool
-	name                     AccountObjectIdentifier // required
+	name                     SchemaObjectIdentifier // required
 	AuthenticationMethods    []AuthenticationMethods
 	MfaAuthenticationMethods []MfaAuthenticationMethods
 	MfaEnrollment            *string
@@ -23,10 +23,10 @@ type CreateAuthenticationPolicyRequest struct {
 
 type AlterAuthenticationPolicyRequest struct {
 	IfExists *bool
-	name     AccountObjectIdentifier // required
+	name     SchemaObjectIdentifier // required
 	Set      *AuthenticationPolicySetRequest
 	Unset    *AuthenticationPolicyUnsetRequest
-	RenameTo *AccountObjectIdentifier
+	RenameTo *SchemaObjectIdentifier
 }
 
 type AuthenticationPolicySetRequest struct {
@@ -49,12 +49,16 @@ type AuthenticationPolicyUnsetRequest struct {
 
 type DropAuthenticationPolicyRequest struct {
 	IfExists *bool
-	name     AccountObjectIdentifier // required
+	name     SchemaObjectIdentifier // required
 }
 
 type ShowAuthenticationPolicyRequest struct {
+	Like       *Like
+	In         *In
+	StartsWith *string
+	Limit      *LimitFrom
 }
 
 type DescribeAuthenticationPolicyRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }
