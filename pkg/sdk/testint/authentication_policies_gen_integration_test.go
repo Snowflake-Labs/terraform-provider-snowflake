@@ -143,6 +143,119 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "MFA_ENROLLMENT", Value: "REQUIRED"})
 	})
 
+	t.Run("Alter - set comment", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithComment("new comment")))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "COMMENT", Value: "new comment"})
+	})
+
+	t.Run("Alter - unset authentication methods", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithAuthenticationMethods(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "AUTHENTICATION_METHODS", Value: "[]"})
+	})
+
+	t.Run("Alter - unset client types", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithClientTypes(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "CLIENT_TYPES", Value: "[]"})
+	})
+
+	t.Run("Alter - unset security integrations", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithSecurityIntegrations(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "SECURITY_INTEGRATIONS", Value: "[]"})
+	})
+
+	t.Run("Alter - unset mfa authentication methods", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithMfaAuthenticationMethods(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "MFA_AUTHENTICATION_METHODS", Value: "[]"})
+	})
+
+	t.Run("Alter - unset mfa enrollment", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithMfaEnrollment(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "MFA_ENROLLMENT", Value: ""})
+	})
+
+	t.Run("Alter - unset comment", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithComment(true)))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		require.NoError(t, err)
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Name: "SECURITY_INTEGRATIONS", Value: ""})
+	})
+
+	t.Run("Alter - rename", func(t *testing.T) {
+		req := defaultCreateRequest()
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+
+		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
+			WithRenameTo(newId))
+		require.NoError(t, alterErr)
+
+		desc, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest())
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(desc))
+	})
+
 	t.Run("Drop: existing", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
