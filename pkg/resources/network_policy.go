@@ -193,24 +193,20 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	if allowedIpList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
-		if err = d.Set("allowed_ip_list", sdk.ParseCommaSeparatedStringArray(allowedIpList.Value, false)); err != nil {
-			return diag.FromErr(err)
-		}
-	} else {
-		if err = d.Set("allowed_ip_list", []any{}); err != nil {
-			return diag.FromErr(err)
-		}
+	allowedIpList := make([]string, 0)
+	if allowedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
+		allowedIpList = append(allowedIpList, sdk.ParseCommaSeparatedStringArray(allowedIpListProperty.Value, false)...)
+	}
+	if err = d.Set("allowed_ip_list", allowedIpList); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if blockedIpList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_IP_LIST" }); err == nil {
-		if err = d.Set("blocked_ip_list", sdk.ParseCommaSeparatedStringArray(blockedIpList.Value, false)); err != nil {
-			return diag.FromErr(err)
-		}
-	} else {
-		if err = d.Set("blocked_ip_list", []any{}); err != nil {
-			return diag.FromErr(err)
-		}
+	blockedIpList := make([]string, 0)
+	if blockedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_IP_LIST" }); err == nil {
+		blockedIpList = append(blockedIpList, sdk.ParseCommaSeparatedStringArray(blockedIpListProperty.Value, false)...)
+	}
+	if err = d.Set("blocked_ip_list", blockedIpList); err != nil {
+		return diag.FromErr(err)
 	}
 
 	allowedNetworkRules := make([]string, 0)

@@ -26,12 +26,7 @@ func (c *NetworkRuleClient) client() sdk.NetworkRules {
 
 func (c *NetworkRuleClient) Create(t *testing.T) *sdk.NetworkRule {
 	t.Helper()
-	return c.CreateWithName(t, c.ids.Alpha())
-}
-
-func (c *NetworkRuleClient) CreateWithName(t *testing.T, name string) *sdk.NetworkRule {
-	t.Helper()
-	return c.CreateWithIdentifier(t, c.ids.NewSchemaObjectIdentifier(name))
+	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifier())
 }
 
 func (c *NetworkRuleClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifier) *sdk.NetworkRule {

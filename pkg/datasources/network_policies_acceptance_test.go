@@ -1,7 +1,6 @@
 package datasources_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -10,29 +9,23 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_NetworkPolicies_Complete(t *testing.T) {
-	//_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
-
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-
-	allowedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	allowedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	blockedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	blockedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	allowedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	allowedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	blockedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	blockedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -40,11 +33,6 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					db, _ := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(func() {
-						require.NoError(t, acc.Client(t).Databases.Drop(context.Background(), db.ID(), &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)}))
-					})
-					acc.TestClient().Schema.CreateSchemaWithIdentifier(t, schemaId)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId1)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)

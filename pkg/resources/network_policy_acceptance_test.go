@@ -79,10 +79,10 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 			// set optionals
 			{
 				PreConfig: func() {
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId2.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId2.Name())
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId2)
 				},
 				Config: networkPolicyConfigComplete(
 					id.Name(),
@@ -246,10 +246,10 @@ func TestAcc_NetworkPolicy_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId2.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId2.Name())
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId2)
 				},
 				Config: networkPolicyConfigComplete(
 					id.Name(),
@@ -432,10 +432,10 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 					},
 				},
 				PreConfig: func() {
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, allowedNetworkRuleId2.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId1.Name())
-					acc.TestClient().NetworkRule.CreateWithName(t, blockedNetworkRuleId2.Name())
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)
+					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId2)
 				},
 				Config: networkPolicyConfigWithNetworkRules(
 					id.Name(),
