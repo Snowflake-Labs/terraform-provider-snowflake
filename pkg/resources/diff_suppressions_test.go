@@ -126,27 +126,27 @@ func Test_NormalizeAndCompareIdentifiersSet(t *testing.T) {
 		resourceData := rawDataWithValues([]any{`"schema"."object"."identifier"`})
 		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
 		// TODO: Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
-		//assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
 	})
 
 	t.Run(`change detected from "schema"."object"."identifier" to schema.object.identifier with schema.object.identifier in state`, func(t *testing.T) {
 		resourceData := rawDataWithValues([]any{"schema.object.identifier"})
 		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
 		// TODO: Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
-		//assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
 	})
 
 	t.Run(`change detected from "schema"."object"."identifier" to schema.object.identifier with "schema"."object"."identifier" in state`, func(t *testing.T) {
 		resourceData := rawDataWithValues([]any{`"schema"."object"."identifier"`})
 		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
 		// TODO: Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
-		//assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
 	})
 
 	t.Run(`change detected from "schema"."object"."identifier" to schema.object.identifier with "schema"."object"."identifier" in state uppercased`, func(t *testing.T) {
 		resourceData := rawDataWithValues([]any{`"SCHEMA"."OBJECT"."IDENTIFIER"`})
 		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "SCHEMA.OBJECT.IDENTIFIER", "", resourceData))
 		// TODO: Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
-		//assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"SCHEMA"."OBJECT"."IDENTIFIER"`, resourceData))
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"SCHEMA"."OBJECT"."IDENTIFIER"`, resourceData))
 	})
 }

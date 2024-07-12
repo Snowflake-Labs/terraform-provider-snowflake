@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"encoding/json"
+
 	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 

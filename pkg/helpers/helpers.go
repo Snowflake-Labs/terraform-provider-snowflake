@@ -161,22 +161,29 @@ func ConcatSlices[T any](slices ...[]T) []T {
 	return tmp
 }
 
-func ContainsIdentifierIgnoreQuotes(ids []string, valueToCompare string) bool {
-	if len(ids) == 0 || len(valueToCompare) == 0 {
+// ContainsIdentifierIgnoreQuotes takes ids (a slice of Snowflake identifiers represented as strings), and
+// id (a string representing Snowflake id). It checks if id is contained within ids ignoring quotes around identifier parts.
+//
+// The original quoting should be retrieved to avoid situations like "object" == "\"object\"" (true)
+// where that should not be a truthful comparison (different ids). Right now, we assume this case won't happen because the quoting difference would only appear
+// in cases where the identifier parts are upper-cased and returned without quotes by snowflake, e.g. "OBJECT" == "\"OBJECT\"" (true)
+// which is correct (the same ids).
+func ContainsIdentifierIgnoreQuotes(ids []string, id string) bool {
+	if len(ids) == 0 || len(id) == 0 {
 		return false
 	}
 
-	idToCompare, err := DecodeSnowflakeParameterID(valueToCompare)
+	idToCompare, err := DecodeSnowflakeParameterID(id)
 	if err != nil {
 		return false
 	}
 
-	for _, idString := range ids {
-		id, err := DecodeSnowflakeParameterID(idString)
+	for _, stringId := range ids {
+		objectIdentifier, err := DecodeSnowflakeParameterID(stringId)
 		if err != nil {
 			return false
 		}
-		if idToCompare.FullyQualifiedName() == id.FullyQualifiedName() {
+		if idToCompare.FullyQualifiedName() == objectIdentifier.FullyQualifiedName() {
 			return true
 		}
 	}

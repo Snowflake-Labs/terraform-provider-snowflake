@@ -2,8 +2,9 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
@@ -265,10 +266,6 @@ func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
 			Id:   "\"object\"",
 		},
 		{
-			// TODO: In cases like these the original quoting should be retrieved to avoid situations like "object" == "\"object\"" (true)
-			// where that should not be a valid comparison (different ids). Right now, we assume the cases covered by the suppress diff are
-			// cases where the only different parts are upper-cased and returned without quotes by snowflake, e.g. "OBJECT" == "\"OBJECT\""
-			// and this is valid comparison (the same ids).
 			Name:          "account object identifier in Ids",
 			Ids:           []string{"object", "db.schema", "db.schema.object"},
 			Id:            "\"object\"",

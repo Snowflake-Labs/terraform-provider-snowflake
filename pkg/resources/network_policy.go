@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -91,22 +92,22 @@ func NetworkPolicy() *schema.Resource {
 		Description:   "Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.",
 
 		CustomizeDiff: customdiff.All(
-			// TODO: For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented and the implementation
+			// For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented and the implementation
 			// for ComputedIfAnyAttributeChanged has to be adjusted. The main issue lays in fields that have diff suppression.
-			// When the value in state and the value in config are different (which is notmal with diff suppressions) show
-			// and decribe outputs are constantly recomputed (which will appear in every terraform plan).
+			// When the value in state and the value in config are different (which is normal with diff suppressions) show
+			// and describe outputs are constantly recomputed (which will appear in every terraform plan).
 			ComputedIfAnyAttributeChanged(
 				ShowOutputAttributeName,
-				//"allowed_network_rule_list",
-				//"blocked_network_rule_list",
+				// "allowed_network_rule_list",
+				// "blocked_network_rule_list",
 				"allowed_ip_list",
 				"blocked_ip_list",
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
 				DescribeOutputAttributeName,
-				//"allowed_network_rule_list",
-				//"blocked_network_rule_list",
+				// "allowed_network_rule_list",
+				// "blocked_network_rule_list",
 				"allowed_ip_list",
 				"blocked_ip_list",
 			),
