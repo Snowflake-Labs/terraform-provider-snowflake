@@ -21,6 +21,7 @@ func GetSessionParametersFrom(params map[string]any) (*SessionParameters, error)
 }
 
 // TODO [SNOW-1348330]: get type based on the tag in SessionParameters struct and handle in a generic way
+// TODO [SNOW-1348330]: use sdk.ToX for the enums
 func (sessionParameters *SessionParameters) setParam(parameter SessionParameter, value string) error {
 	var err error
 	switch parameter {
