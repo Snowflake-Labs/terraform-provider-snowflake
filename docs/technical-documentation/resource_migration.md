@@ -120,8 +120,8 @@ import {
 }
 ```
 
-If you are using terraform 1.7 or above you could use a `for_each` to import multiple resources at once. See
-[Terraform 1.7 adds test mocking and config-driven remove > Import block for_each](https://www.hashicorp.com/blog/terraform-1-7-adds-test-mocking-and-config-driven-remove).
+If you are using terraform 1.7 or above you could use a `for_each` to import multiple resources at once.
+For more details, take a look at [importing multiple instances with for_each](https://developer.hashicorp.com/terraform/language/v1.7.x/import?product_intent=terraform#import-multiple-instances-with-for_each).
 
 [Hashicorp documentation reference on import block](https://developer.hashicorp.com/terraform/language/import)
 

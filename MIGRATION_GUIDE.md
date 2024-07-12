@@ -4,6 +4,23 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.93.0 ➞ v0.94.0
+
+### *(new feature)* new snowflake_account_role resource
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
+have the same features as the new one. The only difference is the deprecation message on the old resource.
+
+New fields:
+- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
+
+### *(breaking change)* refactored snowflake_roles data source
+
+Changes:
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
+- `pattern` was renamed to `like`
+- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
 ## v0.92.0 ➞ v0.93.0
 
 ### general changes

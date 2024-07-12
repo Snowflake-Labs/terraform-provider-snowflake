@@ -33,19 +33,19 @@ func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 
 func generateAccessTokenConfig(name string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_role" "azured" {
+	resource "snowflake_account_role" "azured" {
 		name = "AAD_PROVISIONER"
 		comment = "test comment"
 	}
 
 	resource "snowflake_grant_privileges_to_account_role" "azure_grants" {
-	  	account_role_name = snowflake_role.azured.name
+	  	account_role_name = snowflake_account_role.azured.name
   		privileges        = ["CREATE USER", "CREATE ROLE"]
 		on_account        = true
 	}
 
 	resource "snowflake_grant_account_role" "azured" {
-		role_name        = snowflake_role.azured.name
+		role_name        = snowflake_account_role.azured.name
 		parent_role_name = "ACCOUNTADMIN"
 	}
 
@@ -53,7 +53,7 @@ func generateAccessTokenConfig(name string) string {
 		name = "%s"
 		enabled = true
 		scim_client = "AZURE"
-		run_as_role = snowflake_role.azured.name
+		run_as_role = snowflake_account_role.azured.name
 		depends_on = [
 			snowflake_grant_privileges_to_account_role.azure_grants,
 			snowflake_grant_account_role.azured

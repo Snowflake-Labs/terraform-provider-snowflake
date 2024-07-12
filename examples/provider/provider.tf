@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    snowflake = {
+      source = "Snowflake-Labs/snowflake"
+    }
+  }
+}
+
 provider "snowflake" {
   account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
   username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
@@ -22,7 +30,6 @@ provider "snowflake" {
     query_tag = "..."
   }
 }
-
 
 provider "snowflake" {
   profile = "securityadmin"

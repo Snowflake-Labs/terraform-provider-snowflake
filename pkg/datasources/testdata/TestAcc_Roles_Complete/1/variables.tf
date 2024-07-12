@@ -14,6 +14,6 @@ variable "comment" {
   type = string
 }
 
-variable "pattern" {
+variable "like" {
   type = string
 }

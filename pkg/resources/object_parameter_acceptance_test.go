@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,6 +34,10 @@ func TestAcc_ObjectParameter(t *testing.T) {
 }
 
 func TestAcc_ObjectParameterAccount(t *testing.T) {
+	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
+	t.Cleanup(func() {
+		acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
+	})
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
