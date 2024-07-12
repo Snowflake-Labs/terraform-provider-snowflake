@@ -4,7 +4,7 @@ type resource string
 
 const (
 	Account                                                resource = "snowflake_account"
-	AccountRole                            resource = "snowflake_account_role"
+	AccountRole                                            resource = "snowflake_account_role"
 	Alert                                                  resource = "snowflake_alert"
 	ApiAuthenticationIntegrationWithAuthorizationCodeGrant resource = "snowflake_api_authentication_integration_with_authorization_code_grant"
 	ApiAuthenticationIntegrationWithClientCredentials      resource = "snowflake_api_authentication_integration_with_client_credentials"

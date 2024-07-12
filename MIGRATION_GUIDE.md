@@ -17,7 +17,7 @@ New fields:
 ### *(breaking change)* refactored snowflake_roles data source
 
 Changes:
-- New filter option `in_class`
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
 
