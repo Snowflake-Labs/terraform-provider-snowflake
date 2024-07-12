@@ -116,3 +116,25 @@ func IgnoreValuesFromSetIfParamSet(key, param string, values []string) schema.Sc
 		return slices.Contains(values, old)
 	}
 }
+
+func NormalizeAndCompareIdentifiersInSet(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(k, ".#") {
+			return false
+		}
+
+		if oldValue == "" && !d.GetRawState().IsNull() {
+			if helpers.ContainsIdentifierIgnoreQuotes(ctyValToSliceString(d.GetRawState().AsValueMap()[key].AsValueSet().Values()), newValue) {
+				return true
+			}
+		}
+
+		if newValue == "" {
+			if helpers.ContainsIdentifierIgnoreQuotes(expandStringList(d.Get(key).(*schema.Set).List()), oldValue) {
+				return true
+			}
+		}
+
+		return false
+	}
+}

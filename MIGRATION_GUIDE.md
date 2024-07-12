@@ -15,7 +15,7 @@ New behavior:
 - Additional validation was added to `blocked_ip_list` to inform about specifying `0.0.0.0/0` ip. More details in the [official documentation](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy#usage-notes).
 
 New fields:
-- `show_output` and `describe_output` added to hold the results returned by `SHOW` and `DESCRIBE` commands.
+- `show_output` and `describe_output` added to hold the results returned by `SHOW` and `DESCRIBE` commands. Those fields will only be recomputed when specified fields change
 
 ### *(new feature)* snowflake_network_policies datasource
 

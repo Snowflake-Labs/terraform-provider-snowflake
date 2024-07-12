@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -220,4 +221,94 @@ func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
 
 		require.ErrorContains(t, err, fmt.Sprintf("unable to read identifier: %s", id))
 	})
+}
+
+func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Ids           []string
+		Id            string
+		ShouldContain bool
+	}{
+		{
+			Name: "validation: nil Ids",
+			Id:   "id",
+		},
+		{
+			Name: "validation: empty Id",
+			Ids:  []string{"id"},
+			Id:   "",
+		},
+		{
+			Name: "validation: Ids with too many parts",
+			Ids:  []string{"this.id.has.too.many.parts"},
+			Id:   "id",
+		},
+		{
+			Name: "validation: Id with too many parts",
+			Ids:  []string{"id"},
+			Id:   "this.id.has.too.many.parts",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased Id",
+			Ids:  []string{"object", "db.schema", "db.schema.object"},
+			Id:   "\"OBJECT\"",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased id in Ids",
+			Ids:  []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:   "\"object\"",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased id in Ids",
+			Ids:  []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:   "\"object\"",
+		},
+		{
+			// TODO: In cases like these the original quoting should be retrieved to avoid situations like "object" == "\"object\"" (true)
+			// where that should not be a valid comparison (different ids). Right now, we assume the cases covered by the suppress diff are
+			// cases where the only different parts are upper-cased and returned without quotes by snowflake, e.g. "OBJECT" == "\"OBJECT\""
+			// and this is valid comparison (the same ids).
+			Name:          "account object identifier in Ids",
+			Ids:           []string{"object", "db.schema", "db.schema.object"},
+			Id:            "\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\".\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "account object identifier in Ids upper-cased",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"OBJECT\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids upper-cased",
+			Ids:           []string{"object", "DB.SCHEMA", "db.schema.object"},
+			Id:            "\"DB\".\"SCHEMA\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids upper-cased",
+			Ids:           []string{"object", "db.schema", "DB.SCHEMA.OBJECT"},
+			Id:            "\"DB\".\"SCHEMA\".\"OBJECT\"",
+			ShouldContain: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			assert.Equal(t, tc.ShouldContain, ContainsIdentifierIgnoreQuotes(tc.Ids, tc.Id))
+		})
+	}
 }

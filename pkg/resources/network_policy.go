@@ -2,16 +2,14 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,8 +28,9 @@ var networkPolicySchema = map[string]*schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional:    true,
-		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("allowed_network_rule_list"),
+		Optional:         true,
+		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
 	},
 	"blocked_network_rule_list": {
 		Type: schema.TypeSet,
@@ -39,8 +38,9 @@ var networkPolicySchema = map[string]*schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional:    true,
-		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("blocked_network_rule_list"),
+		Optional:         true,
+		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
 	},
 	"allowed_ip_list": {
 		Type:        schema.TypeSet,
@@ -91,18 +91,22 @@ func NetworkPolicy() *schema.Resource {
 		Description:   "Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.",
 
 		CustomizeDiff: customdiff.All(
+			// TODO: For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented and the implementation
+			// for ComputedIfAnyAttributeChanged has to be adjusted. The main issue lays in fields that have diff suppression.
+			// When the value in state and the value in config are different (which is notmal with diff suppressions) show
+			// and decribe outputs are constantly recomputed (which will appear in every terraform plan).
 			ComputedIfAnyAttributeChanged(
 				ShowOutputAttributeName,
-				"allowed_network_rule_list",
-				"blocked_network_rule_list",
+				//"allowed_network_rule_list",
+				//"blocked_network_rule_list",
 				"allowed_ip_list",
 				"blocked_ip_list",
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
 				DescribeOutputAttributeName,
-				"allowed_network_rule_list",
-				"blocked_network_rule_list",
+				//"allowed_network_rule_list",
+				//"blocked_network_rule_list",
 				"allowed_ip_list",
 				"blocked_ip_list",
 			),
@@ -211,12 +215,10 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 	allowedNetworkRules := make([]string, 0)
 	if allowedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_NETWORK_RULE_LIST" }); err == nil {
-		var networkRules []sdk.NetworkRulesSnowflakeDTO
-		err := json.Unmarshal([]byte(allowedNetworkRuleList.Value), &networkRules)
+		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(allowedNetworkRuleList.Value)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 		for _, networkRule := range networkRules {
 			allowedNetworkRules = append(allowedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
 		}
@@ -227,12 +229,10 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 	blockedNetworkRules := make([]string, 0)
 	if blockedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_NETWORK_RULE_LIST" }); err == nil {
-		var networkRules []sdk.NetworkRulesSnowflakeDTO
-		err := json.Unmarshal([]byte(blockedNetworkRuleList.Value), &networkRules)
+		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(blockedNetworkRuleList.Value)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 		for _, networkRule := range networkRules {
 			blockedNetworkRules = append(blockedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
 		}

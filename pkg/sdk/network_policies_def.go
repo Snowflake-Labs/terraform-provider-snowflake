@@ -1,12 +1,24 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"encoding/json"
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
 
-// NetworkRulesSnowflakeDTO is needed to unpack the applied network rules from the JSON response from Snowflake
-type NetworkRulesSnowflakeDTO struct {
+// NetworkRulesSnowflakeDto is needed to unpack the applied network rules from the JSON response from Snowflake
+type NetworkRulesSnowflakeDto struct {
 	FullyQualifiedRuleName string
+}
+
+func ParseNetworkRulesSnowflakeDto(networkRulesStringValue string) ([]NetworkRulesSnowflakeDto, error) {
+	var networkRules []NetworkRulesSnowflakeDto
+	err := json.Unmarshal([]byte(networkRulesStringValue), &networkRules)
+	if err != nil {
+		return nil, err
+	}
+	return networkRules, nil
 }
 
 var (

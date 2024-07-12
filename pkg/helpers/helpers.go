@@ -160,3 +160,26 @@ func ConcatSlices[T any](slices ...[]T) []T {
 	}
 	return tmp
 }
+
+func ContainsIdentifierIgnoreQuotes(ids []string, valueToCompare string) bool {
+	if len(ids) == 0 || len(valueToCompare) == 0 {
+		return false
+	}
+
+	idToCompare, err := DecodeSnowflakeParameterID(valueToCompare)
+	if err != nil {
+		return false
+	}
+
+	for _, idString := range ids {
+		id, err := DecodeSnowflakeParameterID(idString)
+		if err != nil {
+			return false
+		}
+		if idToCompare.FullyQualifiedName() == id.FullyQualifiedName() {
+			return true
+		}
+	}
+
+	return false
+}
