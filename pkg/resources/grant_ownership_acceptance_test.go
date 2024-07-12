@@ -768,7 +768,7 @@ func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 
 func roleBasedAccessControlUseCaseConfig(accountRoleName string, databaseName string, userName string, schemaName string, withSecondaryProvider bool) string {
 	baseConfig := fmt.Sprintf(`
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "%[1]s"
 }
 

@@ -422,6 +422,7 @@ func Provider() *schema.Provider {
 func getResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"snowflake_account":                            resources.Account(),
+		"snowflake_account_role":                       resources.AccountRole(),
 		"snowflake_account_password_policy_attachment": resources.AccountPasswordPolicyAttachment(),
 		"snowflake_account_parameter":                  resources.AccountParameter(),
 		"snowflake_alert":                              resources.Alert(),
