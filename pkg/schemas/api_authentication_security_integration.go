@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,28 +25,30 @@ var DescribeApiAuthSecurityIntegrationSchema = map[string]*schema.Schema{
 	"comment":                      DescribePropertyListSchema,
 }
 
+var ApiAuthenticationPropertiesNames = []string{
+	"ENABLED",
+	"OAUTH_ACCESS_TOKEN_VALIDITY",
+	"OAUTH_REFRESH_TOKEN_VALIDITY",
+	"OAUTH_CLIENT_ID",
+	"OAUTH_CLIENT_AUTH_METHOD",
+	"OAUTH_AUTHORIZATION_ENDPOINT",
+	"OAUTH_TOKEN_ENDPOINT",
+	"OAUTH_ALLOWED_SCOPES",
+	"OAUTH_GRANT",
+	"PARENT_INTEGRATION",
+	"AUTH_TYPE",
+	"COMMENT",
+}
 var _ = DescribeApiAuthSecurityIntegrationSchema
 
 func ApiAuthSecurityIntegrationPropertiesToSchema(securityIntegrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
 	for _, securityIntegrationProperty := range securityIntegrationProperties {
 		securityIntegrationProperty := securityIntegrationProperty
-		switch securityIntegrationProperty.Name {
-		case "ENABLED",
-			"OAUTH_ACCESS_TOKEN_VALIDITY",
-			"OAUTH_REFRESH_TOKEN_VALIDITY",
-			"OAUTH_CLIENT_ID",
-			"OAUTH_CLIENT_AUTH_METHOD",
-			"OAUTH_AUTHORIZATION_ENDPOINT",
-			"OAUTH_TOKEN_ENDPOINT",
-			"OAUTH_ALLOWED_SCOPES",
-			"OAUTH_GRANT",
-			"PARENT_INTEGRATION",
-			"AUTH_TYPE",
-			"COMMENT":
+		if slices.Contains(ApiAuthenticationPropertiesNames, securityIntegrationProperty.Name) {
 			securityIntegrationSchema[strings.ToLower(securityIntegrationProperty.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&securityIntegrationProperty)}
-		default:
-			log.Printf("unknown field from DESCRIBE: %v", securityIntegrationProperty.Name)
+		} else {
+			log.Printf("[WARN] unexpected property %v in api auth security integration returned from Snowflake", securityIntegrationProperty.Name)
 		}
 	}
 	return securityIntegrationSchema

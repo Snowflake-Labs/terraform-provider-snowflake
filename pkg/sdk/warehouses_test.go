@@ -26,11 +26,11 @@ func TestWarehouseCreate(t *testing.T) {
 			name:        NewAccountObjectIdentifier("completewarehouse"),
 			IfNotExists: Bool(true),
 
-			WarehouseType:                   &WarehouseTypeStandard,
-			WarehouseSize:                   &WarehouseSizeX4Large,
+			WarehouseType:                   Pointer(WarehouseTypeStandard),
+			WarehouseSize:                   Pointer(WarehouseSizeX4Large),
 			MaxClusterCount:                 Int(8),
 			MinClusterCount:                 Int(3),
-			ScalingPolicy:                   &ScalingPolicyEconomy,
+			ScalingPolicy:                   Pointer(ScalingPolicyEconomy),
 			AutoSuspend:                     Int(1000),
 			AutoResume:                      Bool(true),
 			InitiallySuspended:              Bool(false),
@@ -109,7 +109,7 @@ func TestWarehouseAlter(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Set: &WarehouseSet{
-				WarehouseType:                   &WarehouseTypeSnowparkOptimized,
+				WarehouseType:                   Pointer(WarehouseTypeSnowparkOptimized),
 				WaitForCompletion:               Bool(false),
 				MinClusterCount:                 Int(4),
 				MaxClusterCount:                 Int(5),

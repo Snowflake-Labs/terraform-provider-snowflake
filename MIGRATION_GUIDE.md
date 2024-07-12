@@ -102,16 +102,22 @@ The fields listed below had diff suppress which removed '-' from strings. Now, t
 - `external_oauth_type`
 - `external_oauth_any_role_mode`
 
+### *(new feature)* snowflake_saml2_integration resource
+
+The new `snowflake_saml2_integration` is introduced and deprecates `snowflake_saml_integration`. It contains new fields
+and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed, 
+but we recommend to eventually migrate to the newer counterpart.
+
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`
 
-Now, the `sync_password` field will set the state value to `unknown` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+Now, the `sync_password` field will set the state value to `default` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
 
 #### *(behavior change)* Renamed fields
 
 Renamed field `provisioner_role` to `run_as_role` to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
 
-#### *(feature)* New fields
+#### *(new feature)* New fields
 Fields added to the resource:
 - `enabled`
 - `sync_password`
@@ -121,7 +127,7 @@ Fields added to the resource:
 New field `enabled` is required. Previously the default value during create in Snowflake was `true`. If you created a resource with Terraform, please add `enabled = true` to have the same value.
 
 #### *(behavior change)* Force new for multiple attributes
-Force new was added for the following attributes (because there are no usable SQL alter statements for them):
+ForceNew was added for the following attributes (because there are no usable SQL alter statements for them):
 - `scim_client`
 - `run_as_role`
 
@@ -139,9 +145,9 @@ As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-s
 - `statement_queued_timeout_in_seconds` (previously `0`)
 - `statement_timeout_in_seconds` (previously `172800`)
 
-**Beware!** For attributes being Snowflake parameters (in case of warehouse: `max_concurrency_level`, `statement_queued_timeout_in_seconds`, and `statement_timeout_in_seconds`), this is a breaking change (read more in  [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). Previously, not setting a value for them was treated as a fallback to values hardcoded on the provider side. This caused warehouse creation with these parameters set on the warehouse level (and not using the Snowflake default from hierarchy; read more in the [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters)). To keep the previous values, fill in your configs to the default values listed above.
+**Beware!** For attributes being Snowflake parameters (in case of warehouse: `max_concurrency_level`, `statement_queued_timeout_in_seconds`, and `statement_timeout_in_seconds`), this is a breaking change (read more in [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). Previously, not setting a value for them was treated as a fallback to values hardcoded on the provider side. This caused warehouse creation with these parameters set on the warehouse level (and not using the Snowflake default from hierarchy; read more in the [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters)). To keep the previous values, fill in your configs to the default values listed above.
 
-All previous defaults were aligned with the current Snowflake ones, however it's not possible to distinguish between filled out value and no value in the automatic state upgrader. Therefore, if the given attribute is not filled out in your configuration, terraform will try to perform update after the change (to UNSET the given attribute to the Snowflake default); it should result in no changes on Snowflake object side, but it is required to make Terraform state aligned with your config. **All** other optional fields that were not set inside the config at all (because of the change in handling state logic on our provider side) will follow the same logic. To avoid the need for the changes, fill out the default fields in your config. Alternatively run apply; no further changes should be shown as a part of the plan.
+All previous defaults were aligned with the current Snowflake ones, however it's not possible to distinguish between filled out value and no value in the automatic state upgrader. Therefore, if the given attribute is not filled out in your configuration, terraform will try to perform update after the change (to UNSET the given attribute to the Snowflake default); it should result in no changes on Snowflake object side, but it is required to make Terraform state aligned with your config. **All** other optional fields that were not set inside the config at all (because of the change in handling state logic on our provider side) will follow the same logic. To avoid the need for the changes, fill out the default fields in your config. Alternatively, run `terraform apply`; no further changes should be shown as a part of the plan.
 
 #### *(note)* Automatic state migrations
 There are three migrations that should happen automatically with the version bump:
@@ -189,7 +195,7 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 
 You can read more in ["raw Snowflake output"](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values).
 
-### new database resources
+### *(new feature)* new database resources
 As part of the [preparation for v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1), we split up the database resource into multiple ones:
 - Standard database - can be used as `snowflake_database` (replaces the old one and is used to create databases with optional ability to become a primary database ready for replication)
 - Shared database - can be used as `snowflake_shared_database` (used to create databases from externally defined shares)
@@ -201,7 +207,6 @@ All the field changes in comparison to the previous database resource are:
         - removed: the field is removed from `snowflake_shared_database` as it doesn't have any effect on shared databases.
 - `from_database` - database cloning was entirely removed and is not possible by any of the new database resources.
 - `from_share` - the parameter was moved to the dedicated resource for databases created from shares `snowflake_shared_database`. Right now, it's a text field instead of a map. Additionally, instead of legacy account identifier format we're expecting the new one that with share looks like this: `<organization_name>.<account_name>.<share_name>`. For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
-- p,
 - `from_replication` - the parameter was moved to the dedicated resource for databases created from primary databases `snowflake_secondary_database`
 - `replication_configuration` - renamed: was renamed to `configuration` and is only available in the `snowflake_database`. Its internal schema changed that instead of list of accounts, we expect a list of nested objects with accounts for which replication (and optionally failover) should be enabled. More information about converting between both versions [here](#resource-renamed-snowflake_database---snowflake_database_old). Additionally, instead of legacy account identifier format we're expecting the new one that looks like this: `<organization_name>.<account_name>` (it will be automatically migrated to the recommended format by the state upgrader). For more information on account identifiers, visit the [official documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
 - `data_retention_time_in_days`
@@ -229,7 +234,7 @@ All the field changes in comparison to the previous database resource are:
 The split was done (and will be done for several objects during the refactor) to simplify the resource on maintainability and usage level.
 Its purpose was also to divide the resources by their specific purpose rather than cramping every use case of an object into one resource.
 
-### Resource renamed snowflake_database -> snowflake_database_old
+### *(behavior change)* Resource renamed snowflake_database -> snowflake_database_old
 We made a decision to use the existing `snowflake_database` resource for redesigning it into a standard database.
 The previous `snowflake_database` was renamed to `snowflake_database_old` and the current `snowflake_database`
 contains completely new implementation that follows our guidelines we set for V1.
@@ -275,7 +280,7 @@ cloned databases diverge in behavior from standard databases, it may cause issue
 For databases with one of the fields mentioned above, manual migration will be needed.
 Please refer to our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration.
 
-If you would like to upgrade to the latest version and postpone the upgrade, you still have to perform the maunal migration
+If you would like to upgrade to the latest version and postpone the upgrade, you still have to perform the manual migration
 to the `snowflake_database_old` resource by following the [zero downtime migrations document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 The only difference would be that instead of writing/generating new configurations you have to just rename the existing ones to contain `_old` suffix.
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -84,11 +86,11 @@ func TestInt_Warehouses(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 			OrReplace:                       sdk.Bool(true),
-			WarehouseType:                   &sdk.WarehouseTypeStandard,
-			WarehouseSize:                   &sdk.WarehouseSizeSmall,
+			WarehouseType:                   sdk.Pointer(sdk.WarehouseTypeStandard),
+			WarehouseSize:                   sdk.Pointer(sdk.WarehouseSizeSmall),
 			MaxClusterCount:                 sdk.Int(8),
 			MinClusterCount:                 sdk.Int(2),
-			ScalingPolicy:                   &sdk.ScalingPolicyEconomy,
+			ScalingPolicy:                   sdk.Pointer(sdk.ScalingPolicyEconomy),
 			AutoSuspend:                     sdk.Int(1000),
 			AutoResume:                      sdk.Bool(true),
 			InitiallySuspended:              sdk.Bool(false),
@@ -113,6 +115,22 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
+		// we can use the same assertion builder in the SDK tests
+		objectAssert.AssertThatObject(t, objectAssert.Warehouse(t, id).
+			HasName(id.Name()).
+			HasType(sdk.WarehouseTypeStandard).
+			HasSize(sdk.WarehouseSizeSmall).
+			HasMaxClusterCount(8).
+			HasMinClusterCount(2).
+			HasScalingPolicy(sdk.ScalingPolicyEconomy).
+			HasAutoSuspend(1000).
+			HasAutoResume(true).
+			HasStateOneOf(sdk.WarehouseStateResuming, sdk.WarehouseStateStarted).
+			HasResourceMonitor(resourceMonitor.ID()).
+			HasComment("comment").
+			HasEnableQueryAcceleration(true).
+			HasQueryAccelerationMaxScaleFactor(90))
+
 		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), warehouse.Name)
@@ -128,6 +146,22 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, "comment", warehouse.Comment)
 		assert.Equal(t, true, warehouse.EnableQueryAcceleration)
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
+
+		// we can also use the read object to initialize:
+		objectAssert.AssertThatObject(t, objectAssert.WarehouseFromObject(t, warehouse).
+			HasName(id.Name()).
+			HasType(sdk.WarehouseTypeStandard).
+			HasSize(sdk.WarehouseSizeSmall).
+			HasMaxClusterCount(8).
+			HasMinClusterCount(2).
+			HasScalingPolicy(sdk.ScalingPolicyEconomy).
+			HasAutoSuspend(1000).
+			HasAutoResume(true).
+			HasStateOneOf(sdk.WarehouseStateResuming, sdk.WarehouseStateStarted).
+			HasResourceMonitor(resourceMonitor.ID()).
+			HasComment("comment").
+			HasEnableQueryAcceleration(true).
+			HasQueryAccelerationMaxScaleFactor(90))
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
@@ -189,7 +223,7 @@ func TestInt_Warehouses(t *testing.T) {
 		alterOptions := &sdk.AlterWarehouseOptions{
 			// WarehouseType omitted on purpose - it requires suspending the warehouse (separate test cases)
 			Set: &sdk.WarehouseSet{
-				WarehouseSize:                   &sdk.WarehouseSizeMedium,
+				WarehouseSize:                   sdk.Pointer(sdk.WarehouseSizeMedium),
 				WaitForCompletion:               sdk.Bool(true),
 				MaxClusterCount:                 sdk.Int(3),
 				MinClusterCount:                 sdk.Int(2),

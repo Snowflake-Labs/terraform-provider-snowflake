@@ -38,7 +38,7 @@ type warehouses struct {
 
 type WarehouseType string
 
-var (
+const (
 	WarehouseTypeStandard          WarehouseType = "STANDARD"
 	WarehouseTypeSnowparkOptimized WarehouseType = "SNOWPARK-OPTIMIZED"
 )
@@ -56,7 +56,7 @@ func ToWarehouseType(s string) (WarehouseType, error) {
 
 type WarehouseSize string
 
-var (
+const (
 	WarehouseSizeXSmall   WarehouseSize = "XSMALL"
 	WarehouseSizeSmall    WarehouseSize = "SMALL"
 	WarehouseSizeMedium   WarehouseSize = "MEDIUM"
@@ -98,7 +98,7 @@ func ToWarehouseSize(s string) (WarehouseSize, error) {
 
 type ScalingPolicy string
 
-var (
+const (
 	ScalingPolicyStandard ScalingPolicy = "STANDARD"
 	ScalingPolicyEconomy  ScalingPolicy = "ECONOMY"
 )

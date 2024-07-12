@@ -482,7 +482,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		} else {
 			// TODO [SNOW-1473453]: UNSET of type does not work
 			// unset.WarehouseType = sdk.Bool(true)
-			set.WarehouseType = &sdk.WarehouseTypeStandard
+			set.WarehouseType = sdk.Pointer(sdk.WarehouseTypeStandard)
 		}
 	}
 	if d.HasChange("warehouse_size") {
@@ -519,7 +519,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		} else {
 			// TODO [SNOW-1473453]: UNSET of scaling policy does not work
 			// unset.ScalingPolicy = sdk.Bool(true)
-			set.ScalingPolicy = &sdk.ScalingPolicyStandard
+			set.ScalingPolicy = sdk.Pointer(sdk.ScalingPolicyStandard)
 		}
 	}
 	if d.HasChange("auto_suspend") {

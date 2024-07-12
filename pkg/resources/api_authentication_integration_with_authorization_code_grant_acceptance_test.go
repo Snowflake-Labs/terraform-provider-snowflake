@@ -6,6 +6,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -39,6 +40,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant/basic"),
@@ -194,6 +196,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_complete(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant/complete"),

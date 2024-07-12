@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,34 +31,36 @@ var DescribeSaml2IntegrationSchema = map[string]*schema.Schema{
 	"comment":                             DescribePropertyListSchema,
 }
 
+var Saml2PropertiesNames = []string{
+	"COMMENT",
+	"SAML2_ISSUER",
+	"SAML2_SSO_URL",
+	"SAML2_PROVIDER",
+	"SAML2_X509_CERT",
+	"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL",
+	"SAML2_SNOWFLAKE_X509_CERT",
+	"SAML2_REQUESTED_NAMEID_FORMAT",
+	"SAML2_POST_LOGOUT_REDIRECT_URL",
+	"SAML2_SNOWFLAKE_ISSUER_URL",
+	"SAML2_SNOWFLAKE_ACS_URL",
+	"SAML2_SNOWFLAKE_METADATA",
+	"SAML2_DIGEST_METHODS_USED",
+	"SAML2_SIGNATURE_METHODS_USED",
+	"SAML2_ENABLE_SP_INITIATED",
+	"SAML2_SIGN_REQUEST",
+	"SAML2_FORCE_AUTHN",
+	"ALLOWED_USER_DOMAINS",
+	"ALLOWED_EMAIL_PATTERNS",
+}
+
 func DescribeSaml2IntegrationToSchema(props []sdk.SecurityIntegrationProperty) map[string]any {
 	propsSchema := make(map[string]any)
 	for _, property := range props {
 		property := property
-		switch property.Name {
-		case "ENABLED",
-			"COMMENT",
-			"SAML2_ISSUER",
-			"SAML2_SSO_URL",
-			"SAML2_PROVIDER",
-			"SAML2_X509_CERT",
-			"SAML2_SP_INITIATED_LOGIN_PAGE_LABEL",
-			"SAML2_SNOWFLAKE_X509_CERT",
-			"SAML2_REQUESTED_NAMEID_FORMAT",
-			"SAML2_POST_LOGOUT_REDIRECT_URL",
-			"SAML2_SNOWFLAKE_ISSUER_URL",
-			"SAML2_SNOWFLAKE_ACS_URL",
-			"SAML2_SNOWFLAKE_METADATA",
-			"SAML2_DIGEST_METHODS_USED",
-			"SAML2_SIGNATURE_METHODS_USED",
-			"SAML2_ENABLE_SP_INITIATED",
-			"SAML2_SIGN_REQUEST",
-			"SAML2_FORCE_AUTHN",
-			"ALLOWED_USER_DOMAINS",
-			"ALLOWED_EMAIL_PATTERNS":
+		if slices.Contains(Saml2PropertiesNames, property.Name) {
 			propsSchema[strings.ToLower(property.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&property)}
-		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", property.Name)
+		} else {
+			log.Printf("[WARN] unexpected property %v in saml2 security integration returned from Snowflake", property.Name)
 		}
 	}
 	return propsSchema
