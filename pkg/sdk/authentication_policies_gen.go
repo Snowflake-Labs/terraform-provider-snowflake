@@ -24,6 +24,11 @@ type CreateAuthenticationPolicyOptions struct {
 	SecurityIntegrations     []SecurityIntegrationsOption `ddl:"parameter,parentheses" sql:"SECURITY_INTEGRATIONS"`
 	Comment                  *string                      `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
+
+func (r *CreateAuthenticationPolicyRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type AuthenticationMethods struct {
 	Method string `ddl:"keyword,single_quotes"`
 }
