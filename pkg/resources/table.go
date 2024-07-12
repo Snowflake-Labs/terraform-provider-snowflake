@@ -57,7 +57,7 @@ var tableSchema = map[string]*schema.Schema{
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					Description:      "Column type, e.g. VARIANT",
+					Description:      "Column type, e.g. VARIANT. For a full list of column types, see [Summary of Data Types](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).",
 					ValidateFunc:     dataTypeValidateFunc,
 					DiffSuppressFunc: dataTypeDiffSuppressFunc,
 				},
