@@ -9,13 +9,32 @@ import (
 
 //go:generate go run ./poc/main.go
 
-const SecurityIntegrationCategory = "SECURITY"
+const (
+	SecurityIntegrationCategory                                     = "SECURITY"
+	ApiAuthenticationSecurityIntegrationOauthGrantAuthorizationCode = "AUTHORIZATION_CODE"
+	ApiAuthenticationSecurityIntegrationOauthGrantClientCredentials = "CLIENT_CREDENTIALS" //nolint:gosec
+	ApiAuthenticationSecurityIntegrationOauthGrantJwtBearer         = "JWT_BEARER"
+)
 
 type ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption string
 
 const (
 	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = "CLIENT_SECRET_POST"
 )
+
+var AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption = []ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption{
+	ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost,
+}
+
+func ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption(s string) (ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost):
+		return ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost, nil
+	default:
+		return "", fmt.Errorf("invalid ApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption: %s", s)
+	}
+}
 
 type ExternalOauthSecurityIntegrationTypeOption string
 
@@ -26,12 +45,52 @@ const (
 	ExternalOauthSecurityIntegrationTypeCustom       ExternalOauthSecurityIntegrationTypeOption = "CUSTOM"
 )
 
+var AllExternalOauthSecurityIntegrationTypes = []ExternalOauthSecurityIntegrationTypeOption{
+	ExternalOauthSecurityIntegrationTypeOkta,
+	ExternalOauthSecurityIntegrationTypeAzure,
+	ExternalOauthSecurityIntegrationTypePingFederate,
+	ExternalOauthSecurityIntegrationTypeCustom,
+}
+
+func ToExternalOauthSecurityIntegrationTypeOption(s string) (ExternalOauthSecurityIntegrationTypeOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ExternalOauthSecurityIntegrationTypeOkta):
+		return ExternalOauthSecurityIntegrationTypeOkta, nil
+	case string(ExternalOauthSecurityIntegrationTypeAzure):
+		return ExternalOauthSecurityIntegrationTypeAzure, nil
+	case string(ExternalOauthSecurityIntegrationTypePingFederate):
+		return ExternalOauthSecurityIntegrationTypePingFederate, nil
+	case string(ExternalOauthSecurityIntegrationTypeCustom):
+		return ExternalOauthSecurityIntegrationTypeCustom, nil
+	default:
+		return "", fmt.Errorf("invalid ExternalOauthSecurityIntegrationTypeOption: %s", s)
+	}
+}
+
 type ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption string
 
 const (
 	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName    ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption = "LOGIN_NAME"
 	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption = "EMAIL_ADDRESS"
 )
+
+var AllExternalOauthSecurityIntegrationSnowflakeUserMappingAttributes = []ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption{
+	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName,
+	ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress,
+}
+
+func ToExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption(s string) (ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName):
+		return ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName, nil
+	case string(ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress):
+		return ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress, nil
+	default:
+		return "", fmt.Errorf("invalid ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOption: %s", s)
+	}
+}
 
 type ExternalOauthSecurityIntegrationAnyRoleModeOption string
 
@@ -40,6 +99,26 @@ const (
 	ExternalOauthSecurityIntegrationAnyRoleModeEnable             ExternalOauthSecurityIntegrationAnyRoleModeOption = "ENABLE"
 	ExternalOauthSecurityIntegrationAnyRoleModeEnableForPrivilege ExternalOauthSecurityIntegrationAnyRoleModeOption = "ENABLE_FOR_PRIVILEGE"
 )
+
+var AllExternalOauthSecurityIntegrationAnyRoleModes = []ExternalOauthSecurityIntegrationAnyRoleModeOption{
+	ExternalOauthSecurityIntegrationAnyRoleModeDisable,
+	ExternalOauthSecurityIntegrationAnyRoleModeEnable,
+	ExternalOauthSecurityIntegrationAnyRoleModeEnableForPrivilege,
+}
+
+func ToExternalOauthSecurityIntegrationAnyRoleModeOption(s string) (ExternalOauthSecurityIntegrationAnyRoleModeOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ExternalOauthSecurityIntegrationAnyRoleModeDisable):
+		return ExternalOauthSecurityIntegrationAnyRoleModeDisable, nil
+	case string(ExternalOauthSecurityIntegrationAnyRoleModeEnable):
+		return ExternalOauthSecurityIntegrationAnyRoleModeEnable, nil
+	case string(ExternalOauthSecurityIntegrationAnyRoleModeEnableForPrivilege):
+		return ExternalOauthSecurityIntegrationAnyRoleModeEnableForPrivilege, nil
+	default:
+		return "", fmt.Errorf("invalid ExternalOauthSecurityIntegrationAnyRoleModeOption: %s", s)
+	}
+}
 
 type OauthSecurityIntegrationUseSecondaryRolesOption string
 
@@ -325,9 +404,10 @@ var apiAuthCodeGrantFlowIntegrationSetDef = g.NewQueryStruct("ApiAuthenticationW
 	OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 	OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
 	OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+	ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses()).
 	OptionalComment().
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "OauthAuthorizationEndpoint", "OauthTokenEndpoint", "OauthClientAuthMethod", "OauthClientId", "OauthClientSecret", "OauthGrantAuthorizationCode",
-		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "Comment")
+		"OauthAccessTokenValidity", "OauthRefreshTokenValidity", "OauthAllowedScopes", "Comment")
 
 var apiAuthCodeGrantFlowIntegrationUnsetDef = g.NewQueryStruct("ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationUnset").
 	OptionalSQL("ENABLED").
@@ -383,13 +463,15 @@ var externalOauthIntegrationSetDef = g.NewQueryStruct("ExternalOauthIntegrationS
 		g.ParameterOptions(),
 	).
 	OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_DELIMITER", g.ParameterOptions().SingleQuotes()).
-	OptionalComment().
+	OptionalTextAssignment("EXTERNAL_OAUTH_SCOPE_MAPPING_ATTRIBUTE", g.ParameterOptions().SingleQuotes()).
+	// TODO(SNOW-1461780): use COMMENT in unset and here use OptionalComment
+	OptionalAssignment("COMMENT", "StringAllowEmpty", g.ParameterOptions()).
 	WithValidation(g.ConflictingFields, "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList").
 	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey").
 	WithValidation(g.ConflictingFields, "ExternalOauthJwsKeysUrl", "ExternalOauthRsaPublicKey2").
 	WithValidation(g.AtLeastOneValueSet, "Enabled", "ExternalOauthType", "ExternalOauthIssuer", "ExternalOauthTokenUserMappingClaim", "ExternalOauthSnowflakeUserMappingAttribute",
 		"ExternalOauthJwsKeysUrl", "ExternalOauthBlockedRolesList", "ExternalOauthAllowedRolesList", "ExternalOauthRsaPublicKey", "ExternalOauthRsaPublicKey2",
-		"ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "Comment")
+		"ExternalOauthAudienceList", "ExternalOauthAnyRoleMode", "ExternalOauthScopeDelimiter", "ExternalOauthScopeMappingAttribute", "Comment")
 
 var externalOauthIntegrationUnsetDef = g.NewQueryStruct("ExternalOauthIntegrationUnset").
 	OptionalSQL("ENABLED").
@@ -544,7 +626,8 @@ var SecurityIntegrationsDef = g.NewInterface(
 				TextAssignment("OAUTH_CLIENT_SECRET", g.ParameterOptions().Required().SingleQuotes()).
 				OptionalSQL("OAUTH_GRANT = AUTHORIZATION_CODE").
 				OptionalNumberAssignment("OAUTH_ACCESS_TOKEN_VALIDITY", g.ParameterOptions()).
-				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions())
+				OptionalNumberAssignment("OAUTH_REFRESH_TOKEN_VALIDITY", g.ParameterOptions()).
+				ListAssignment("OAUTH_ALLOWED_SCOPES", "AllowedScope", g.ParameterOptions().Parentheses())
 		}),
 	).
 	CustomOperation(

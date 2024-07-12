@@ -81,29 +81,39 @@ var CortexSearchServiceDef = g.NewInterface(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/desc-cortex-search",
 	g.DbStruct("cortexSearchServiceDetailsRow").
-		Field("name", "string").
-		Field("schema", "string").
-		Field("database", "string").
-		Field("warehouse", "string").
-		Field("target_lag", "string").
-		Field("search_column", "string").
-		OptionalText("included_columns").
-		Field("service_url", "string").
-		OptionalText("refreshed_on").
-		OptionalNumber("num_rows_indexed").
-		OptionalText("comment"),
+		Text("created_on").
+		Text("name").
+		Text("database_name").
+		Text("schema_name").
+		Text("target_lag").
+		Text("warehouse").
+		OptionalText("search_column").
+		OptionalText("attribute_columns").
+		OptionalText("columns").
+		OptionalText("definition").
+		OptionalText("comment").
+		Text("service_query_url").
+		Text("data_timestamp").
+		Number("source_data_num_rows").
+		Text("indexing_state").
+		OptionalText("indexing_error"),
 	g.PlainStruct("CortexSearchServiceDetails").
-		Field("Name", "string").
-		Field("Schema", "string").
-		Field("Database", "string").
-		Field("Warehouse", "string").
-		Field("TargetLag", "string").
-		Field("On", "string").
-		Field("Attributes", "[]string").
-		Field("ServiceUrl", "string").
-		Field("RefreshedOn", "string").
-		Field("NumRowsIndexed", "int").
-		Field("Comment", "string"),
+		Text("CreatedOn").
+		Text("Name").
+		Text("DatabaseName").
+		Text("SchemaName").
+		Text("TargetLag").
+		Text("Warehouse").
+		OptionalText("SearchColumn").
+		Field("AttributeColumns", "[]string").
+		Field("Columns", "[]string").
+		OptionalText("Definition").
+		OptionalText("Comment").
+		Text("ServiceQueryUrl").
+		Text("DataTimestamp").
+		Number("SourceDataNumRows").
+		Text("IndexingState").
+		OptionalText("IndexingError"),
 	g.NewQueryStruct("DescribeCortexSearchService").
 		Describe().
 		SQL("CORTEX SEARCH SERVICE").

@@ -84,7 +84,7 @@ func Database() *schema.Resource {
 		DeleteContext: DeleteDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		Schema: MergeMaps(databaseSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(databaseSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

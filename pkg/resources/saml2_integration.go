@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
@@ -30,10 +29,10 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "unknown",
-		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, false),
-		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInShow("enabled")),
-		Description:      "Specifies whether this security integration is enabled or disabled. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.",
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("enabled"),
+		Description:      booleanStringFieldDescription("Specifies whether this security integration is enabled or disabled."),
 	},
 	"saml2_issuer": {
 		Type:        schema.TypeString,
@@ -49,6 +48,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
 		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", sdk.AllSaml2SecurityIntegrationSaml2Providers),
 	},
 	"saml2_x509_cert": {
@@ -65,24 +65,24 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_enable_sp_initiated": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "unknown",
-		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, false),
-		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_enable_sp_initiated")),
-		Description:      "The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.",
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_enable_sp_initiated"),
+		Description:      booleanStringFieldDescription("The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page."),
 	},
 	"saml2_sign_request": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "unknown",
-		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, false),
-		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sign_request")),
-		Description:      "The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.",
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sign_request"),
+		Description:      booleanStringFieldDescription("The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed."),
 	},
 	"saml2_requested_nameid_format": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption),
-		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_requested_nameid_format")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_requested_nameid_format")),
 		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
 	},
 	"saml2_post_logout_redirect_url": {
@@ -94,10 +94,10 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_force_authn": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "unknown",
-		ValidateDiagFunc: StringInSlice([]string{"true", "false"}, false),
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_force_authn"),
-		Description:      "The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake. Available options are: `true` or `false`. When the value is not set in the configuration the provider will put `unknown` there which means to use the Snowflake default for this value.",
+		Description:      booleanStringFieldDescription("The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake."),
 	},
 	"saml2_snowflake_issuer_url": {
 		Type:             schema.TypeString,
@@ -198,7 +198,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 	if err := d.Set("comment", integration.Comment); err != nil {
 		return nil, err
 	}
-	if err := d.Set("enabled", fmt.Sprintf("%t", integration.Enabled)); err != nil {
+	if err := d.Set("enabled", booleanStringFromBool(integration.Enabled)); err != nil {
 		return nil, err
 	}
 
@@ -222,7 +222,11 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 provider, err = %w", err)
 	}
-	if err := d.Set("saml2_provider", samlProvider.Value); err != nil {
+	samlProviderValue, err := sdk.ToSaml2SecurityIntegrationSaml2ProviderOption(samlProvider.Value)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("saml2_provider", samlProviderValue); err != nil {
 		return nil, err
 	}
 
@@ -340,21 +344,22 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
+	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	samlProvider, err := sdk.ToSaml2SecurityIntegrationSaml2ProviderOption(d.Get("saml2_provider").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	req := sdk.NewCreateSaml2SecurityIntegrationRequest(
-		sdk.NewAccountObjectIdentifier(d.Get("name").(string)),
+		id,
 		d.Get("saml2_issuer").(string),
 		d.Get("saml2_sso_url").(string),
 		samlProvider,
 		d.Get("saml2_x509_cert").(string),
 	)
 
-	if v := d.Get("enabled").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("enabled").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -365,16 +370,16 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		req.WithSaml2SpInitiatedLoginPageLabel(v.(string))
 	}
 
-	if v := d.Get("saml2_enable_sp_initiated").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("saml2_enable_sp_initiated").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		req.WithSaml2EnableSpInitiated(parsed)
 	}
 
-	if v := d.Get("saml2_sign_request").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("saml2_sign_request").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -393,8 +398,8 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		req.WithSaml2PostLogoutRedirectUrl(v.(string))
 	}
 
-	if v := d.Get("saml2_force_authn").(string); v != "unknown" {
-		parsed, err := strconv.ParseBool(v)
+	if v := d.Get("saml2_force_authn").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -439,7 +444,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
@@ -497,7 +502,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 provider, err = %w", err))
 		}
-		if err := d.Set("saml2_provider", samlProvider.Value); err != nil {
+		samlProviderValue, err := sdk.ToSaml2SecurityIntegrationSaml2ProviderOption(samlProvider.Value)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("saml2_provider", samlProviderValue); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -545,7 +554,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"enabled", "enabled", integration.Enabled, integration.Enabled, nil},
+				showMapping{"enabled", "enabled", integration.Enabled, booleanStringFromBool(integration.Enabled), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -612,50 +621,17 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			}
 		}
 
-		// These are all identity sets, needed for the case where:
-		// - previous config was empty (therefore Snowflake defaults had been used)
-		// - new config have the same values that are already in SF
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["enabled"]; !v.IsNull() {
-				if err = d.Set("enabled", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_enable_sp_initiated"]; !v.IsNull() {
-				if err = d.Set("saml2_enable_sp_initiated", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_sign_request"]; !v.IsNull() {
-				if err = d.Set("saml2_sign_request", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_requested_nameid_format"]; !v.IsNull() {
-				if err = d.Set("saml2_requested_nameid_format", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_force_authn"]; !v.IsNull() {
-				if err = d.Set("saml2_force_authn", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_snowflake_acs_url"]; !v.IsNull() {
-				if err = d.Set("saml2_snowflake_acs_url", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_snowflake_issuer_url"]; !v.IsNull() {
-				if err = d.Set("saml2_snowflake_issuer_url", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["saml2_sp_initiated_login_page_label"]; !v.IsNull() {
-				if err = d.Set("saml2_sp_initiated_login_page_label", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+		if err = setStateToValuesFromConfig(d, saml2IntegrationSchema, []string{
+			"enabled",
+			"saml2_enable_sp_initiated",
+			"saml2_sign_request",
+			"saml2_requested_nameid_format",
+			"saml2_force_authn",
+			"saml2_snowflake_acs_url",
+			"saml2_snowflake_issuer_url",
+			"saml2_sp_initiated_login_page_label",
+		}); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
@@ -676,8 +652,8 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	set, unset := sdk.NewSaml2IntegrationSetRequest(), sdk.NewSaml2IntegrationUnsetRequest()
 
 	if d.HasChange("enabled") {
-		if v := d.Get("enabled").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("enabled").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -715,8 +691,8 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("saml2_enable_sp_initiated") {
-		if v := d.Get("saml2_enable_sp_initiated").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("saml2_enable_sp_initiated").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -728,8 +704,8 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("saml2_sign_request") {
-		if v := d.Get("saml2_sign_request").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("saml2_sign_request").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -741,8 +717,8 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("saml2_requested_nameid_format") {
-		if v := d.Get("saml2_requested_nameid_format").(string); len(v) > 0 {
-			value, err := sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption(v)
+		if v, ok := d.GetOk("saml2_requested_nameid_format"); ok {
+			value, err := sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption(v.(string))
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -753,16 +729,16 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("saml2_post_logout_redirect_url") {
-		if v := d.Get("saml2_post_logout_redirect_url").(string); len(v) > 0 {
-			set.WithSaml2PostLogoutRedirectUrl(v)
+		if v, ok := d.GetOk("saml2_post_logout_redirect_url"); ok {
+			set.WithSaml2PostLogoutRedirectUrl(v.(string))
 		} else {
 			unset.WithSaml2PostLogoutRedirectUrl(true)
 		}
 	}
 
 	if d.HasChange("saml2_force_authn") {
-		if v := d.Get("saml2_force_authn").(string); v != "unknown" {
-			parsed, err := strconv.ParseBool(v)
+		if v := d.Get("saml2_force_authn").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}

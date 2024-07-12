@@ -46,7 +46,7 @@ func SharedDatabase() *schema.Resource {
 		DeleteContext: DeleteSharedDatabase,
 		Description:   "A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).",
 
-		Schema: MergeMaps(sharedDatabaseSchema, SharedDatabaseParametersSchema),
+		Schema: helpers.MergeMaps(sharedDatabaseSchema, SharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.93.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.92.0...v0.93.0) (2024-07-10)
+
+
+### 🎉 **What's new:**
+
+* Add OAUTH integration for custom clients ([#2908](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2908)) ([d9b557f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d9b557f7de6c20c16e9d39be9becc92a5a74fb40))
+* Add oauth integration for partner applications ([#2912](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2912)) ([91788e5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/91788e5942c581c59fa8138e775e14c53c749956))
+* Add support for cortex search service ([#2860](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2860)) ([43aa89f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/43aa89f16419943ccffdd10f63e2aa9034891d6a))
+* API Authentication integration v1 readiness ([#2898](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2898)) ([91931da](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/91931dacbc6c92bef7ef4299b7a5ddfaf5faf171))
+* External Oauth integration v1 readiness ([#2907](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2907)) ([ed237c3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ed237c36e82291d75d38e2741bdcfd53e598a447))
+* Generate show outputs with mappers ([#2886](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2886)) ([1cada88](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1cada880bd22bc9b0904b859730bf66e0c56639a))
+* Introduce security integrations datasource ([#2892](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2892)) ([7f6c657](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7f6c65777966f9555a6bb8013667dd14cb44b431))
+* SAML2 integration v1 readiness ([#2868](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2868)) ([d0c136d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d0c136d1e669ee97b76199ce1e906b469b279842))
+* SCIM integration v1 readiness ([#2846](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2846)) ([269df6b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/269df6b11f14358c19dd37e2d6eeb75d33d633ee))
+* Security integrations datasource v1 readiness ([#2913](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2913)) ([d10474a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d10474ababa7489dec3bf6c220b419b3e6a97c8b))
+* standard database v1 readiness ([#2842](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2842)) ([3c11953](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3c11953bf2800ac8297da14b2394d49e3e11dd39))
+* Warehouse redesign final touches ([#2900](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2900)) ([0eab636](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0eab636f9e16ba4ff60f20d81be82ebcd4e642d3))
+* Warehouse redesign part1 ([#2864](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2864)) ([6664457](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/66644576f2e6ba77e0601090231bf42e5d08fcdf))
+* Warehouse redesign part2 ([#2887](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2887)) ([1aaf417](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1aaf417de916a0aa6f9ba29eb79c9aea1b9c4bf6))
+* Warehouse redesign part3 ([#2890](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2890)) ([873a1ed](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/873a1edc3a96b7d9f8eb304b43747f3843484a0f))
+* Warehouse redesign part4 ([#2893](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2893)) ([d525fd9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d525fd952517afb540543ede22a6d2e818146ce5))
+
+
+### 🔧 **Misc**
+
+* Add documentation on unset and defaults ([#2882](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2882)) ([85a7836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/85a78365490c2a1b8ec08b1b7883350cb41c1d76))
+* apply minor database changes ([#2872](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2872)) ([6ccac59](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6ccac596d2115cb0ecf9475a3c10c2e0794259b0))
+* Apply new resource conventions to scim integration ([#2891](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2891)) ([e11e608](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e11e6085c2896981c73c78640b5fc1743e29142b))
+* Improve generator template organization ([#2820](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2820)) ([5035e2f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5035e2f0632c9dfca26ab61b5f3af406af743f50))
+* Nuke stale objects ([#2869](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2869)) ([9c4a117](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9c4a1172da745af8f5059291e58b7cf8c8ec60c5))
+* Show a possible solution for [#2877](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2877) ([#2878](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2878)) ([6fb437b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6fb437bfad221fe9322d24f5e3167ca161edc9c8))
+* Validations cleanup and old grants removal ([#2884](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2884)) ([05b7eee](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05b7eeec0e29a633c30e58625ec4fb08bdaeeb1b))
+
+
+### 🐛 **Bug fixes:**
+
+* Add disclaimers and fix tests ([#2905](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2905)) ([1deaedc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1deaedc95df9b82229256055a4803387098c58d9))
+* Fix cortex search service ([#2904](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2904)) ([763d06c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/763d06c9124bcc43aa918035f67a9ad0680e5635))
+* use suppressQuoting to fix stage file_format permadiff ([#2885](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2885)) ([fd70f6e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fd70f6ef21e90e991763211dbacc0c3870864985))
+
 ## [0.92.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.91.0...v0.92.0) (2024-06-06)
 
 

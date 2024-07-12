@@ -117,6 +117,11 @@ func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegratio
 	return s
 }
 
+func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
+	return s
+}
+
 func (s *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) WithComment(Comment string) *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest {
 	s.Comment = &Comment
 	return s
@@ -747,6 +752,11 @@ func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) W
 	return s
 }
 
+func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithOauthAllowedScopes(OauthAllowedScopes []AllowedScope) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
+	s.OauthAllowedScopes = OauthAllowedScopes
+	return s
+}
+
 func (s *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest) WithComment(Comment string) *ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest {
 	s.Comment = &Comment
 	return s
@@ -969,7 +979,12 @@ func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthScopeDelimiter(Ext
 	return s
 }
 
-func (s *ExternalOauthIntegrationSetRequest) WithComment(Comment string) *ExternalOauthIntegrationSetRequest {
+func (s *ExternalOauthIntegrationSetRequest) WithExternalOauthScopeMappingAttribute(ExternalOauthScopeMappingAttribute string) *ExternalOauthIntegrationSetRequest {
+	s.ExternalOauthScopeMappingAttribute = &ExternalOauthScopeMappingAttribute
+	return s
+}
+
+func (s *ExternalOauthIntegrationSetRequest) WithComment(Comment StringAllowEmpty) *ExternalOauthIntegrationSetRequest {
 	s.Comment = &Comment
 	return s
 }

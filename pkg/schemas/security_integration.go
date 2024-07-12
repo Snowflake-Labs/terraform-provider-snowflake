@@ -1,21 +1,42 @@
 package schemas
 
 import (
+	"log"
+	"slices"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO [SNOW-1348100]: multiple PRs touching the security integrations are in progress, this should be filled by all the possible properties (the mapping method below should be too)
-var SecurityIntegrationDescribeSchema = map[string]*schema.Schema{
-	"todo": DescribePropertyListSchema,
-}
+var (
+	SecurityIntegrationDescribeSchema = helpers.MergeMaps(
+		DescribeApiAuthSecurityIntegrationSchema,
+		DescribeExternalOauthSecurityIntegrationSchema,
+		DescribeOauthIntegrationForCustomClients,
+		DescribeOauthIntegrationForPartnerApplications,
+		DescribeSaml2IntegrationSchema,
+		DescribeScimSecurityIntegrationSchema,
+	)
+	allSecurityIntegrationPropertiesNames = helpers.ConcatSlices(
+		ApiAuthenticationPropertiesNames,
+		ExternalOauthPropertiesNames,
+		OauthIntegrationForCustomClientsPropertiesNames,
+		OauthIntegrationForPartnerApplicationsPropertiesNames,
+		Saml2PropertiesNames,
+		ScimPropertiesNames,
+	)
+)
 
-func SecurityIntegrationsDescriptionsToSchema(descriptions []sdk.SecurityIntegrationProperty) map[string]any {
+func SecurityIntegrationsDescriptionsToSchema(integrationProperties []sdk.SecurityIntegrationProperty) map[string]any {
 	securityIntegrationProperties := make(map[string]any)
-	for _, desc := range descriptions {
+	for _, desc := range integrationProperties {
 		desc := desc
-		propertySchema := SecurityIntegrationPropertyToSchema(&desc)
-		securityIntegrationProperties["todo"] = []map[string]any{propertySchema}
+		if slices.Contains(allSecurityIntegrationPropertiesNames, desc.Name) {
+			securityIntegrationProperties[strings.ToLower(desc.Name)] = []map[string]any{SecurityIntegrationPropertyToSchema(&desc)}
+		} else {
+			log.Printf("[WARN] unexpected property %v in security integration returned from Snowflake", desc.Name)
+		}
 	}
 	return securityIntegrationProperties
 }

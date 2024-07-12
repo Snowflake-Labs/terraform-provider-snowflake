@@ -53,6 +53,7 @@ type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationReq
 	OauthGrantAuthorizationCode *bool
 	OauthAccessTokenValidity    *int
 	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
 	Comment                     *string
 }
 
@@ -241,6 +242,7 @@ type ApiAuthenticationWithAuthorizationCodeGrantFlowIntegrationSetRequest struct
 	OauthGrantAuthorizationCode *bool
 	OauthAccessTokenValidity    *int
 	OauthRefreshTokenValidity   *int
+	OauthAllowedScopes          []AllowedScope
 	Comment                     *string
 }
 
@@ -299,7 +301,8 @@ type ExternalOauthIntegrationSetRequest struct {
 	ExternalOauthAudienceList                  *AudienceListRequest
 	ExternalOauthAnyRoleMode                   *ExternalOauthSecurityIntegrationAnyRoleModeOption
 	ExternalOauthScopeDelimiter                *string
-	Comment                                    *string
+	ExternalOauthScopeMappingAttribute         *string
+	Comment                                    *StringAllowEmpty
 }
 
 type ExternalOauthIntegrationUnsetRequest struct {
