@@ -30,7 +30,7 @@ func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 	return d.Id() != ""
 }
 
-func IgnoreChangeToCurrentSnowflakeValueInOutput(attrName, keyInShowOutput string) schema.SchemaDiffSuppressFunc {
+func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {
 			return false
@@ -40,8 +40,8 @@ func IgnoreChangeToCurrentSnowflakeValueInOutput(attrName, keyInShowOutput strin
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)
-				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInShowOutput, result[keyInShowOutput], new, new == fmt.Sprintf("%v", result[keyInShowOutput]))
-				if new == fmt.Sprintf("%v", result[keyInShowOutput]) {
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result[keyInOutput], new, new == fmt.Sprintf("%v", result[keyInOutput]))
+				if new == fmt.Sprintf("%v", result[keyInOutput]) {
 					return true
 				}
 			}
@@ -50,7 +50,7 @@ func IgnoreChangeToCurrentSnowflakeValueInOutput(attrName, keyInShowOutput strin
 	}
 }
 
-func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInDescribeOutput string) schema.SchemaDiffSuppressFunc {
+func IgnoreChangeToCurrentSnowflakeListValueInDescribe(keyInDescribeOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {
 			return false
@@ -63,7 +63,7 @@ func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInDescribeOutput string) s
 				newValueInDescribeList := result[keyInDescribeOutput].([]any)
 				if len(newValueInDescribeList) == 1 {
 					newValueInDescribe := newValueInDescribeList[0].(map[string]any)["value"]
-					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeValueInDescribe: value for key %s is %v, new value is %s, comparison result is: %t", keyInDescribeOutput, newValueInDescribe, new, new == fmt.Sprintf("%v", newValueInDescribe))
+					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeListValueInDescribe: value for key %s is %v, new value is %s, comparison result is: %t", keyInDescribeOutput, newValueInDescribe, new, new == fmt.Sprintf("%v", newValueInDescribe))
 					if new == fmt.Sprintf("%v", newValueInDescribe) {
 						return true
 					}

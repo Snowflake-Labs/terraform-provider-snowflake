@@ -42,7 +42,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_client_auth_method")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_client_auth_method")),
 		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption))),
 	},
 	"oauth_access_token_validity": {
@@ -51,14 +51,14 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		ValidateFunc:     validation.IntAtLeast(0),
 		Default:          IntDefault,
 		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_access_token_validity"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_access_token_validity"),
 	},
 	"oauth_refresh_token_validity": {
 		Type:             schema.TypeInt,
 		Optional:         true,
 		ValidateFunc:     validation.IntAtLeast(1),
 		Description:      "Specifies the value to determine the validity of the refresh token obtained from the OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_validity"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_refresh_token_validity"),
 	},
 	"comment": {
 		Type:        schema.TypeString,

@@ -31,7 +31,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(ShowOutputAttributeName, "enabled"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "enabled"),
 		Description:      booleanStringFieldDescription("Specifies whether this security integration is enabled or disabled."),
 	},
 	"saml2_issuer": {
@@ -59,7 +59,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_sp_initiated_login_page_label": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sp_initiated_login_page_label"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_sp_initiated_login_page_label"),
 		Description:      "The string containing the label to display after the Log In With button on the login page. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.",
 	},
 	"saml2_enable_sp_initiated": {
@@ -67,7 +67,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_enable_sp_initiated"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_enable_sp_initiated"),
 		Description:      booleanStringFieldDescription("The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page."),
 	},
 	"saml2_sign_request": {
@@ -75,20 +75,20 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sign_request"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_sign_request"),
 		Description:      booleanStringFieldDescription("The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed."),
 	},
 	"saml2_requested_nameid_format": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_requested_nameid_format")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_requested_nameid_format")),
 		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
 	},
 	"saml2_post_logout_redirect_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_post_logout_redirect_url"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_post_logout_redirect_url"),
 		Description:      "The endpoint to which Snowflake redirects users after clicking the Log Out button in the classic Snowflake web interface. Snowflake terminates the Snowflake session upon redirecting to the specified endpoint.",
 	},
 	"saml2_force_authn": {
@@ -96,19 +96,19 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_force_authn"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_force_authn"),
 		Description:      booleanStringFieldDescription("The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake."),
 	},
 	"saml2_snowflake_issuer_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_snowflake_issuer_url"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_snowflake_issuer_url"),
 		Description:      "The string containing the EntityID / Issuer for the Snowflake service provider. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use. Because Okta does not support underscores in URLs, the underscore in the account name must be converted to a hyphen. See [docs](https://docs.snowflake.com/en/user-guide/organizations-connect#okta-urls).",
 	},
 	"saml2_snowflake_acs_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_snowflake_acs_url"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_snowflake_acs_url"),
 		Description:      "The string containing the Snowflake Assertion Consumer Service URL to which the IdP will send its SAML authentication response back to Snowflake. This property will be set in the SAML authentication request generated by Snowflake when initiating a SAML SSO operation with the IdP. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use. Because Okta does not support underscores in URLs, the underscore in the account name must be converted to a hyphen. See [docs](https://docs.snowflake.com/en/user-guide/organizations-connect#okta-urls).",
 	},
 	"allowed_user_domains": {

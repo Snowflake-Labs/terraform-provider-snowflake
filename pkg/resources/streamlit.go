@@ -39,26 +39,26 @@ var streamlitSchema = map[string]*schema.Schema{
 		Required:         true,
 		Description:      "The stage in which streamlit files are located.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "root_location")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "root_location")),
 	},
 	"directory_location": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Description:      "Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "root_location"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "root_location"),
 	},
 	"main_file": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "main_file"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "main_file"),
 	},
 	"query_warehouse": {
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
 		Description:      "Specifies the warehouse where SQL queries issued by the Streamlit application are run.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(ShowOutputAttributeName, "query_warehouse")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "query_warehouse")),
 	},
 	"external_access_integrations": {
 		Type: schema.TypeSet,
@@ -68,7 +68,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		},
 		Optional:         true,
 		Description:      "External access integrations connected to the Streamlit.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInOutput(DescribeOutputAttributeName, "external_access_integrations")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "external_access_integrations")),
 	},
 	"title": {
 		Type:        schema.TypeString,
@@ -178,7 +178,6 @@ func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 	stageId := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("stage").(string))
 	rootLocation := fmt.Sprintf("@%s", stageId.FullyQualifiedName())
 	if v, ok := d.GetOk("directory_location"); ok {
-		// rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
 		rootLocation = path.Join(rootLocation, v.(string))
 	}
 	req := sdk.NewCreateStreamlitRequest(id, rootLocation, d.Get("main_file").(string))
