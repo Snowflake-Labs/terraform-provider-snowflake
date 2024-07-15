@@ -352,13 +352,14 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
-	m := func(name, mainFile string) map[string]config.Variable {
+	m := func(name, comment string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"database":  config.StringVariable(databaseId.Name()),
 			"schema":    config.StringVariable(schemaId.Name()),
 			"stage":     config.StringVariable(stage.ID().FullyQualifiedName()),
 			"name":      config.StringVariable(name),
-			"main_file": config.StringVariable(mainFile),
+			"main_file": config.StringVariable("foo"),
+			"comment":   config.StringVariable(comment),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -369,16 +370,16 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basicWithComment"),
 				ConfigVariables: m(id.Name(), "foo"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.main_file", "foo"),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "foo"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basicWithComment"),
 				ConfigVariables: m(newId.Name(), "bar"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -388,7 +389,7 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.main_file", "bar"),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "bar"),
 				),
 			},
 		},

@@ -40,6 +40,29 @@ output "like_prefix_output" {
   value = data.snowflake_streamlits.like_prefix.streamlits
 }
 
+# Filtering (limit)
+data "snowflake_streamlits" "limit" {
+  limit {
+    rows = 10
+    from = "prefix-"
+  }
+}
+
+output "limit_output" {
+  value = data.snowflake_streamlits.limit.streamlits
+}
+
+# Filtering (in)
+data "snowflake_streamlits" "in" {
+  in {
+    database = "database"
+  }
+}
+
+output "in_output" {
+  value = data.snowflake_streamlits.in.streamlits
+}
+
 # Without additional data (to limit the number of calls make for every found streamlit)
 data "snowflake_streamlits" "only_show" {
   # with_describe is turned on by default and it calls DESCRIBE STREAMLIT for every streamlit found and attaches its output to streamlits.*.describe_output field
@@ -79,13 +102,37 @@ check "streamlit_check" {
 
 ### Optional
 
+- `in` (Block List, Max: 1) IN clause to filter the list of streamlits (see [below for nested schema](#nestedblock--in))
 - `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
+- `limit` (Block List, Max: 1) Limits the number of rows returned. If the `limit.from` is set, then the limit wll start from the first element matched by the expression. The expression is only used to match with the first element, later on the elements are not matched by the prefix, but you can enforce a certain pattern with `starts_with` or `like`. (see [below for nested schema](#nestedblock--limit))
 - `with_describe` (Boolean) Runs DESC STREAMLIT for each streamlit returned by SHOW STREAMLITS. The output of describe is saved to the description field. By default this value is set to true.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `streamlits` (List of Object) Holds the aggregated output of all streamlits details queries. (see [below for nested schema](#nestedatt--streamlits))
+
+<a id="nestedblock--in"></a>
+### Nested Schema for `in`
+
+Optional:
+
+- `account` (Boolean) Returns records for the entire account.
+- `database` (String) Returns records for the current database in use or for a specified database (db_name).
+- `schema` (String) Returns records for the current schema in use or a specified schema (schema_name).
+
+
+<a id="nestedblock--limit"></a>
+### Nested Schema for `limit`
+
+Required:
+
+- `rows` (Number) The maximum number of rows to return.
+
+Optional:
+
+- `from` (String) Specifies a **case-sensitive** pattern that is used to match object name. After the first match, the limit on the number of rows will be applied.
+
 
 <a id="nestedatt--streamlits"></a>
 ### Nested Schema for `streamlits`
@@ -103,14 +150,14 @@ Read-Only:
 - `default_packages` (String)
 - `external_access_integrations` (Set of String)
 - `external_access_secrets` (String)
-- `import_urls` (List of String)
+- `import_urls` (Set of String)
 - `main_file` (String)
 - `name` (String)
 - `query_warehouse` (String)
 - `root_location` (String)
 - `title` (String)
 - `url_id` (String)
-- `user_packages` (List of String)
+- `user_packages` (Set of String)
 
 
 <a id="nestedobjatt--streamlits--show_output"></a>

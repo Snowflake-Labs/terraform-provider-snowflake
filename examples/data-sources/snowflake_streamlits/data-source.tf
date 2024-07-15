@@ -24,6 +24,29 @@ output "like_prefix_output" {
   value = data.snowflake_streamlits.like_prefix.streamlits
 }
 
+# Filtering (limit)
+data "snowflake_streamlits" "limit" {
+  limit {
+    rows = 10
+    from = "prefix-"
+  }
+}
+
+output "limit_output" {
+  value = data.snowflake_streamlits.limit.streamlits
+}
+
+# Filtering (in)
+data "snowflake_streamlits" "in" {
+  in {
+    database = "database"
+  }
+}
+
+output "in_output" {
+  value = data.snowflake_streamlits.in.streamlits
+}
+
 # Without additional data (to limit the number of calls make for every found streamlit)
 data "snowflake_streamlits" "only_show" {
   # with_describe is turned on by default and it calls DESCRIBE STREAMLIT for every streamlit found and attaches its output to streamlits.*.describe_output field

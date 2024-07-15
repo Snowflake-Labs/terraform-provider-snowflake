@@ -42,7 +42,7 @@ resource "snowflake_streamlit" "streamlit" {
 
 ### Required
 
-- `database` (String) The database in which to create the Cortex search service.
+- `database` (String) The database in which to create the streamlit
 - `main_file` (String) Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`
 - `name` (String) String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account.
 - `schema` (String) The schema in which to create the streamlit.
@@ -70,14 +70,14 @@ Read-Only:
 - `default_packages` (String)
 - `external_access_integrations` (Set of String)
 - `external_access_secrets` (String)
-- `import_urls` (List of String)
+- `import_urls` (Set of String)
 - `main_file` (String)
 - `name` (String)
 - `query_warehouse` (String)
 - `root_location` (String)
 - `title` (String)
 - `url_id` (String)
-- `user_packages` (List of String)
+- `user_packages` (Set of String)
 
 
 <a id="nestedatt--show_output"></a>

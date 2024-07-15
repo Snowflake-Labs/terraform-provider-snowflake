@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -220,4 +221,76 @@ func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
 
 		require.ErrorContains(t, err, fmt.Sprintf("unable to read identifier: %s", id))
 	})
+}
+
+func TestParseRootLocation(t *testing.T) {
+	tests := []struct {
+		name     string
+		location string
+		id       string
+		path     string
+		wantErr  bool
+	}{
+		{
+			name:     "unquoted",
+			location: `@a.b.c`,
+			id:       `"a"."b"."c"`,
+		},
+		{
+			name:     "unquoted with path",
+			location: `@a.b.c/foo`,
+			id:       `"a"."b"."c"`,
+			path:     `foo`,
+		},
+		{
+			name:     "partially quoted",
+			location: `@"a".b.c`,
+			id:       `"a"."b"."c"`,
+		},
+		{
+			name:     "partially quoted with path",
+			location: `@"a".b.c/foo`,
+			id:       `"a"."b"."c"`,
+			path:     `foo`,
+		},
+		{
+			name:     "quoted",
+			location: `@"a"."b"."c"`,
+			id:       `"a"."b"."c"`,
+		},
+		{
+			name:     "quoted with path",
+			location: `@"a"."b"."c"/foo`,
+			id:       `"a"."b"."c"`,
+			path:     `foo`,
+		},
+		{
+			name:     "unquoted with path with dots",
+			location: `@a.b.c/foo.d`,
+			id:       `"a"."b"."c"`,
+			path:     `foo.d`,
+		},
+		{
+			name:     "quoted with path with dots",
+			location: `@"a"."b"."c"/foo.d`,
+			id:       `"a"."b"."c"`,
+			path:     `foo.d`,
+		},
+		{
+			name:     "invalid location",
+			location: `@foo`,
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotId, gotPath, err := ParseRootLocation(tt.location)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ParseRootLocation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.id, gotId.FullyQualifiedName())
+			assert.Equal(t, tt.path, gotPath)
+		})
+	}
 }

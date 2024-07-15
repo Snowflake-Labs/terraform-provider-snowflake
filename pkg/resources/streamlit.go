@@ -264,23 +264,16 @@ func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFun
 		if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
 			return diag.FromErr(err)
 		}
-		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"query_warehouse", "query_warehouse", streamlit.QueryWarehouse, streamlit.QueryWarehouse, nil},
-				showMapping{"external_access_integrations", "external_access_integrations", streamlitDetails.ExternalAccessIntegrations, streamlitDetails.ExternalAccessIntegrations, nil},
-				showMapping{"title", "title", streamlit.Title, streamlit.Title, nil},
-				showMapping{"comment", "comment", streamlit.Comment, streamlit.Comment, nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
+		if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
+			return diag.FromErr(err)
 		}
-
-		if err = setStateToValuesFromConfig(d, streamlitSchema, []string{
-			"query_warehouse",
-			"external_access_integrations",
-			"title",
-			"comment",
-		}); err != nil {
+		if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("title", streamlit.Title); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("comment", streamlit.Comment); err != nil {
 			return diag.FromErr(err)
 		}
 
