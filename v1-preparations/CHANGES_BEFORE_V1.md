@@ -46,3 +46,16 @@ Because of the changes regarding [Config values in the state](#config-values-in-
 - `parameters` computed field, containing all the values and levels of Snowflake parameters (the result of `SHOW PARAMETERS IN <object> <name>`)
 
 This way, it is still possible to obtain the values in your configs, even without setting them directly for the given managed object.
+
+## Object cloning
+Some of the Snowflake objects (like [Database](https://docs.snowflake.com/en/sql-reference/sql/create-database)) can create clones from already existing objects.
+For now, we decided to drop the support for object cloning. That's why during the [resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1)
+we will be removing the option to clone (if they exist in the current implementation). The main reasons behind that decision are
+- With [object cloning](https://docs.snowflake.com/en/user-guide/object-clone) we have to keep in mind additional things that still have to be researched to check how they're matching within the Terraform ecosystem.
+- There is potentially not enough information in Snowflake available for the end users (like us) to track the information about the connection between cloned objects.
+- There are still at least a few of the design decisions that have to be answered before knowingly putting cloning into resources
+
+Because of that, we would like to shelve the idea of introducing cloning to the resources (at least for V1). After V1,
+object cloning is one of the topics we would like to take a closer look at. Right now, the cloning can be done manually
+and imported into normal resources, but in case there is any divergence between the normal and cloned object, the resources
+may act in an unexpected way. An alternative solution is to use plain SQL with [unsafe execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/unsafe_execute) for now.

@@ -76,15 +76,23 @@ func TestInt_CortexSearchServices(t *testing.T) {
 
 		cortexSearchServiceDetails, err := client.CortexSearchServices.Describe(ctx, cortexSearchService.ID())
 		require.NoError(t, err)
+		assert.NotEmpty(t, cortexSearchServiceDetails.CreatedOn)
 		assert.Equal(t, cortexSearchService.Name, cortexSearchServiceDetails.Name)
-		assert.Equal(t, cortexSearchService.SchemaName, cortexSearchServiceDetails.Schema)
-		assert.Equal(t, cortexSearchService.DatabaseName, cortexSearchServiceDetails.Database)
-		assert.NotEmpty(t, cortexSearchServiceDetails.Warehouse)
+		// Yes, the names are exchanged on purpose, because now it works like this
+		assert.Equal(t, cortexSearchService.DatabaseName, cortexSearchServiceDetails.SchemaName)
+		assert.Equal(t, cortexSearchService.SchemaName, cortexSearchServiceDetails.DatabaseName)
 		assert.Equal(t, targetLag, cortexSearchServiceDetails.TargetLag)
-		assert.Equal(t, strings.ToUpper(on), cortexSearchServiceDetails.On)
-		assert.NotEmpty(t, cortexSearchServiceDetails.ServiceUrl)
-		assert.GreaterOrEqual(t, cortexSearchServiceDetails.NumRowsIndexed, 0)
-		assert.Empty(t, cortexSearchServiceDetails.Comment)
+		assert.NotEmpty(t, cortexSearchServiceDetails.Warehouse)
+		assert.Equal(t, strings.ToUpper(on), *cortexSearchServiceDetails.SearchColumn)
+		assert.NotEmpty(t, cortexSearchServiceDetails.AttributeColumns)
+		assert.NotEmpty(t, cortexSearchServiceDetails.Columns)
+		assert.NotEmpty(t, cortexSearchServiceDetails.Definition)
+		assert.Nil(t, cortexSearchServiceDetails.Comment)
+		assert.NotEmpty(t, cortexSearchServiceDetails.ServiceQueryUrl)
+		assert.NotEmpty(t, cortexSearchServiceDetails.DataTimestamp)
+		assert.GreaterOrEqual(t, cortexSearchServiceDetails.SourceDataNumRows, 0)
+		assert.NotEmpty(t, cortexSearchServiceDetails.IndexingState)
+		assert.Empty(t, cortexSearchServiceDetails.IndexingError)
 	})
 
 	t.Run("describe: when cortex search service does not exist", func(t *testing.T) {
@@ -113,7 +121,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 		cortexSearchServiceDetails, err := client.CortexSearchServices.Describe(ctx, id)
 		require.NoError(t, err)
 
-		require.Equal(t, newComment, cortexSearchServiceDetails.Comment)
+		require.Equal(t, newComment, *cortexSearchServiceDetails.Comment)
 		require.Equal(t, newTargetLag, cortexSearchServiceDetails.TargetLag)
 	})
 

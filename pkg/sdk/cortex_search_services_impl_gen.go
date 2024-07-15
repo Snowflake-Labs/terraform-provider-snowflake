@@ -131,25 +131,34 @@ func (r *DescribeCortexSearchServiceRequest) toOpts() *DescribeCortexSearchServi
 
 func (r cortexSearchServiceDetailsRow) convert() *CortexSearchServiceDetails {
 	row := &CortexSearchServiceDetails{
-		Name:       r.Name,
-		Schema:     r.Schema,
-		Database:   r.Database,
-		Warehouse:  r.Warehouse,
-		TargetLag:  r.TargetLag,
-		On:         r.SearchColumn,
-		ServiceUrl: r.ServiceUrl,
+		CreatedOn:         r.CreatedOn,
+		Name:              r.Name,
+		DatabaseName:      r.DatabaseName,
+		SchemaName:        r.SchemaName,
+		TargetLag:         r.TargetLag,
+		Warehouse:         r.Warehouse,
+		ServiceQueryUrl:   r.ServiceQueryUrl,
+		DataTimestamp:     r.DataTimestamp,
+		SourceDataNumRows: r.SourceDataNumRows,
+		IndexingState:     r.IndexingState,
 	}
-	if r.IncludedColumns.Valid {
-		row.Attributes = strings.Split(r.IncludedColumns.String, ",")
+	if r.SearchColumn.Valid {
+		row.SearchColumn = String(r.SearchColumn.String)
 	}
-	if r.NumRowsIndexed.Valid {
-		row.NumRowsIndexed = int(r.NumRowsIndexed.Int64)
+	if r.AttributeColumns.Valid {
+		row.AttributeColumns = strings.Split(r.AttributeColumns.String, ",")
 	}
-	if r.RefreshedOn.Valid {
-		row.RefreshedOn = r.RefreshedOn.String
+	if r.Columns.Valid {
+		row.Columns = strings.Split(r.Columns.String, ",")
+	}
+	if r.Definition.Valid {
+		row.Definition = String(r.Definition.String)
 	}
 	if r.Comment.Valid {
-		row.Comment = r.Comment.String
+		row.Comment = String(r.Comment.String)
+	}
+	if r.IndexingError.Valid {
+		row.IndexingError = String(r.IndexingError.String)
 	}
 
 	return row

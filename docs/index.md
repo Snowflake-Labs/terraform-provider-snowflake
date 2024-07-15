@@ -18,6 +18,14 @@ Coverage is focused on part of Snowflake related to access control.
 ## Example Provider Configuration
 
 ```terraform
+terraform {
+  required_providers {
+    snowflake = {
+      source = "Snowflake-Labs/snowflake"
+    }
+  }
+}
+
 provider "snowflake" {
   account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
   username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
@@ -42,7 +50,6 @@ provider "snowflake" {
     query_tag = "..."
   }
 }
-
 
 provider "snowflake" {
   profile = "securityadmin"
@@ -231,6 +238,7 @@ The Snowflake provider will use the following order of precedence when determini
 
 - [snowflake_database_old](./docs/resources/database_old)
 - [snowflake_oauth_integration](./docs/resources/oauth_integration)
+- [snowflake_role](./docs/resources/role) - use [snowflake_account_role](./docs/resources/account_role) instead
 - [snowflake_saml_integration](./docs/resources/saml_integration) - use [snowflake_saml2_integration](./docs/resources/saml2_integration) instead
 - [snowflake_unsafe_execute](./docs/resources/unsafe_execute)
 

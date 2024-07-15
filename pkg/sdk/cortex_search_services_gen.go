@@ -83,30 +83,40 @@ type DescribeCortexSearchServiceOptions struct {
 	name                SchemaObjectIdentifier `ddl:"identifier"`
 }
 type cortexSearchServiceDetailsRow struct {
-	Name            string         `db:"name"`
-	Schema          string         `db:"schema"`
-	Database        string         `db:"database"`
-	Warehouse       string         `db:"warehouse"`
-	TargetLag       string         `db:"target_lag"`
-	SearchColumn    string         `db:"search_column"`
-	IncludedColumns sql.NullString `db:"included_columns"`
-	ServiceUrl      string         `db:"service_url"`
-	RefreshedOn     sql.NullString `db:"refreshed_on"`
-	NumRowsIndexed  sql.NullInt64  `db:"num_rows_indexed"`
-	Comment         sql.NullString `db:"comment"`
+	CreatedOn         string         `db:"created_on"`
+	Name              string         `db:"name"`
+	DatabaseName      string         `db:"database_name"`
+	SchemaName        string         `db:"schema_name"`
+	TargetLag         string         `db:"target_lag"`
+	Warehouse         string         `db:"warehouse"`
+	SearchColumn      sql.NullString `db:"search_column"`
+	AttributeColumns  sql.NullString `db:"attribute_columns"`
+	Columns           sql.NullString `db:"columns"`
+	Definition        sql.NullString `db:"definition"`
+	Comment           sql.NullString `db:"comment"`
+	ServiceQueryUrl   string         `db:"service_query_url"`
+	DataTimestamp     string         `db:"data_timestamp"`
+	SourceDataNumRows int            `db:"source_data_num_rows"`
+	IndexingState     string         `db:"indexing_state"`
+	IndexingError     sql.NullString `db:"indexing_error"`
 }
 type CortexSearchServiceDetails struct {
-	Name           string
-	Schema         string
-	Database       string
-	Warehouse      string
-	TargetLag      string
-	On             string
-	Attributes     []string
-	ServiceUrl     string
-	RefreshedOn    string
-	NumRowsIndexed int
-	Comment        string
+	CreatedOn         string
+	Name              string
+	DatabaseName      string
+	SchemaName        string
+	TargetLag         string
+	Warehouse         string
+	SearchColumn      *string
+	AttributeColumns  []string
+	Columns           []string
+	Definition        *string
+	Comment           *string
+	ServiceQueryUrl   string
+	DataTimestamp     string
+	SourceDataNumRows int
+	IndexingState     string
+	IndexingError     *string
 }
 
 // DropCortexSearchServiceOptions is based on https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/drop-cortex-search.

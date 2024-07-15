@@ -55,7 +55,7 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("with initial warehouse size", func(t *testing.T) {
 		req := NewCreateTaskRequest(id, sql).
-			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&WarehouseSizeXSmall))
+			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(Pointer(WarehouseSizeXSmall)))
 		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE TASK %s USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL' AS %s", id.FullyQualifiedName(), sql)
 	})
 
@@ -177,7 +177,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{}
 		opts.Set.Warehouse = &warehouseId
-		opts.Set.UserTaskManagedInitialWarehouseSize = &WarehouseSizeXSmall
+		opts.Set.UserTaskManagedInitialWarehouseSize = Pointer(WarehouseSizeXSmall)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 

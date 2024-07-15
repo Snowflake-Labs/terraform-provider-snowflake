@@ -491,13 +491,13 @@ resource "snowflake_view" "test" {
   is_secure = true
 }
 
-resource "snowflake_role" "test" {
+resource "snowflake_account_role" "test" {
   name = "test"
 }
 
 resource "snowflake_grant_privileges_to_account_role" "grant" {
   privileges        = ["SELECT"]
-  account_role_name = snowflake_role.test.name
+  account_role_name = snowflake_account_role.test.name
   on_schema_object {
     object_type = "VIEW"
     object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""

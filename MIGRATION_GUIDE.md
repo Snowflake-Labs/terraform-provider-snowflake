@@ -5,6 +5,38 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.93.0 ➞ v0.94.0
+
+### *(new feature)* new snowflake_account_role resource
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
+have the same features as the new one. The only difference is the deprecation message on the old resource.
+
+New fields:
+- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
+
+### *(breaking change)* refactored snowflake_roles data source
+
+Changes:
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
+- `pattern` was renamed to `like`
+- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
+### *(new feature)* new snowflake_account_role resource
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
+have the same features as the new one. The only difference is the deprecation message on the old resource.
+
+New fields:
+- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
+
+### *(breaking change)* refactored snowflake_roles data source
+
+Changes:
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
+- `pattern` was renamed to `like`
+- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
+## v0.93.0 ➞ v0.94.0
 ### *(new feature)* snowflake_streamlit resource
 Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
 
@@ -102,7 +134,7 @@ The fields listed below had diff suppress which removed '-' from strings. Now, t
 ### *(new feature)* snowflake_saml2_integration resource
 
 The new `snowflake_saml2_integration` is introduced and deprecates `snowflake_saml_integration`. It contains new fields
-and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed, 
+and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed,
 but we recommend to eventually migrate to the newer counterpart.
 
 ### snowflake_scim_integration resource changes

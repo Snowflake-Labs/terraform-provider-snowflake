@@ -46,7 +46,7 @@ func TestCheckResourceAttrInstanceState(id string, attributeName, attributeValue
 
 			if attrVal, ok := v.Attributes[attributeName]; ok {
 				if attrVal != attributeValue {
-					return fmt.Errorf("expected: %s got: %s", attributeValue, attrVal)
+					return fmt.Errorf("expected: %s, got: %s", attributeValue, attrVal)
 				}
 
 				return nil
