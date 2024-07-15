@@ -121,3 +121,7 @@ type AuthenticationPolicyDescription struct {
 	Name  string
 	Value string
 }
+
+func (v *AuthenticationPolicy) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
