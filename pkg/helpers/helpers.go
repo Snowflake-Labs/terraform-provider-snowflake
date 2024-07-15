@@ -166,14 +166,14 @@ func ConcatSlices[T any](slices ...[]T) []T {
 func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, error) {
 	location = strings.TrimPrefix(location, "@")
 	parts, err := parseIdentifierStringWithOpts(location, func(r *csv.Reader) {
-		r.Comma = '/'
+		r.Comma = '.'
 		r.LazyQuotes = true
 	})
 	if err != nil {
 		return sdk.SchemaObjectIdentifier{}, "", err
 	}
 	if len(parts) < 3 {
-		return sdk.SchemaObjectIdentifier{}, "", fmt.Errorf("expected 3 parts, got ")
+		return sdk.SchemaObjectIdentifier{}, "", fmt.Errorf("expected 3 parts for id %s, got %d", location, len(parts))
 	}
 	parts[2] = strings.Join(parts[2:], ".")
 	lastParts := strings.Split(parts[2], "/")

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -23,28 +22,28 @@ import (
 
 func TestAcc_Streamlit_basic(t *testing.T) {
 	acc.TestAccPreCheck(t)
+
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	ctx := context.Background()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	// use schema is needed because otherwise reference to external access integration fails.
+	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
+	require.NoError(t, err)
+
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
-	err := acc.Client(t).Sessions.UseSchema(ctx, schemaId)
-	require.NoError(t, err)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	integrationId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
 	t.Cleanup(networkRuleCleanup)
-	_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`CREATE EXTERNAL ACCESS INTEGRATION %s ALLOWED_NETWORK_RULES = (%s) ENABLED = TRUE`, integrationId.Name(), networkRule.ID().Name()))
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`DROP EXTERNAL ACCESS INTEGRATION %s`, integrationId.Name()))
-		require.NoError(t, err)
-	})
+	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
+
 	rootLocation := fmt.Sprintf("@%s", stage.ID().FullyQualifiedName())
 	rootLocationWithCatalog := fmt.Sprintf("%s/foo", rootLocation)
+
 	m := func(complete bool) map[string]config.Variable {
 		c := map[string]config.Variable{
 			"database":  config.StringVariable(databaseId.Name()),
@@ -56,7 +55,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 		if complete {
 			c["directory_location"] = config.StringVariable("foo")
 			c["query_warehouse"] = config.StringVariable(warehouse.ID().Name())
-			c["external_access_integrations"] = config.SetVariable(config.StringVariable(integrationId.Name()))
+			c["external_access_integrations"] = config.SetVariable(config.StringVariable(externalAccessIntegrationId.Name()))
 			c["title"] = config.StringVariable("foo")
 			c["comment"] = config.StringVariable("foo")
 		}
@@ -88,7 +87,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.database_name", databaseId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.schema_name", schemaId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.title", ""),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", snowflakeroles.Accountadmin.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", acc.TestClient().Context.CurrentRole(t).Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", ""),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.query_warehouse", ""),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "show_output.0.url_id"),
@@ -132,7 +131,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "main_file", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "title", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "comment", "foo"),
 
@@ -142,7 +141,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.database_name", databaseId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.schema_name", schemaId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.title", "foo"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", snowflakeroles.Accountadmin.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", acc.TestClient().Context.CurrentRole(t).Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "show_output.0.url_id"),
@@ -158,7 +157,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.user_packages.#"),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.import_urls.#"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.external_access_secrets")),
 			},
 			// import - complete
@@ -176,7 +175,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "main_file", "foo"),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "query_warehouse", warehouse.ID().Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "external_access_integrations.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "external_access_integrations.0", integrationId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "external_access_integrations.0", externalAccessIntegrationId.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "title", "foo"),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "comment", "foo")),
 			},
@@ -202,7 +201,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "main_file", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "title", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "comment", "foo"),
 
@@ -212,7 +211,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.database_name", databaseId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.schema_name", schemaId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.title", "foo"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", snowflakeroles.Accountadmin.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", acc.TestClient().Context.CurrentRole(t).Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "show_output.0.url_id"),
@@ -228,7 +227,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.user_packages.#"),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.import_urls.#"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.external_access_secrets")),
 			},
 			// unset
@@ -248,28 +247,28 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 }
 
 func TestAcc_Streamlit_complete(t *testing.T) {
+	acc.TestAccPreCheck(t)
+
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	ctx := context.Background()
-	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	// use schema is needed because otherwise reference to external access integration fails.
+	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
+	require.NoError(t, err)
+
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
-	err := acc.Client(t).Sessions.UseSchema(ctx, schemaId)
-	require.NoError(t, err)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	integrationId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
 	t.Cleanup(networkRuleCleanup)
-	_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`CREATE EXTERNAL ACCESS INTEGRATION %s ALLOWED_NETWORK_RULES = (%s) ENABLED = TRUE`, integrationId.Name(), networkRule.ID().Name()))
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`DROP EXTERNAL ACCESS INTEGRATION %s`, integrationId.Name()))
-		require.NoError(t, err)
-	})
+	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
+
 	rootLocation := fmt.Sprintf("@%s/foo", stage.ID().FullyQualifiedName())
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"database":                     config.StringVariable(databaseId.Name()),
@@ -279,7 +278,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 			"name":                         config.StringVariable(id.Name()),
 			"main_file":                    config.StringVariable("foo"),
 			"query_warehouse":              config.StringVariable(warehouse.ID().Name()),
-			"external_access_integrations": config.SetVariable(config.StringVariable(integrationId.Name())),
+			"external_access_integrations": config.SetVariable(config.StringVariable(externalAccessIntegrationId.Name())),
 			"title":                        config.StringVariable("foo"),
 			"comment":                      config.StringVariable("foo"),
 		}
@@ -304,7 +303,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "main_file", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "title", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "comment", "foo"),
 
@@ -314,7 +313,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.database_name", databaseId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.schema_name", schemaId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.title", "foo"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", snowflakeroles.Accountadmin.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.owner", acc.TestClient().Context.CurrentRole(t).Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "show_output.0.url_id"),
@@ -330,7 +329,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.user_packages.#"),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.import_urls.#"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "describe_output.0.external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "describe_output.0.external_access_secrets"),
 				),
 			},
@@ -349,17 +348,17 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
-	m := func(name string) map[string]config.Variable {
+	m := func(name, mainFile string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"database":  config.StringVariable(databaseId.Name()),
 			"schema":    config.StringVariable(schemaId.Name()),
 			"stage":     config.StringVariable(stage.ID().FullyQualifiedName()),
 			"name":      config.StringVariable(name),
-			"main_file": config.StringVariable("foo"),
+			"main_file": config.StringVariable(mainFile),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -371,15 +370,16 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
-				ConfigVariables: m(id.Name()),
+				ConfigVariables: m(id.Name(), "foo"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.main_file", "foo"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/basic"),
-				ConfigVariables: m(newId.Name()),
+				ConfigVariables: m(newId.Name(), "bar"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionUpdate),
@@ -388,6 +388,7 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.main_file", "bar"),
 				),
 			},
 		},

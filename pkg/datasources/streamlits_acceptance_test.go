@@ -21,25 +21,20 @@ import (
 func TestAcc_Streamlits(t *testing.T) {
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	ctx := context.Background()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	acc.TestAccPreCheck(t)
 	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
 	t.Cleanup(stageCleanup)
-	err := acc.Client(t).Sessions.UseSchema(ctx, schemaId)
+	// use schema is needed because otherwise reference to external access integration fails.
+	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
 	require.NoError(t, err)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	integrationId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
 	t.Cleanup(networkRuleCleanup)
-	_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`CREATE EXTERNAL ACCESS INTEGRATION %s ALLOWED_NETWORK_RULES = (%s) ENABLED = TRUE`, integrationId.Name(), networkRule.ID().Name()))
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_, err = acc.Client(t).ExecForTests(ctx, fmt.Sprintf(`DROP EXTERNAL ACCESS INTEGRATION %s`, integrationId.Name()))
-		require.NoError(t, err)
-	})
+	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
 	rootLocation := fmt.Sprintf("@%s/foo", stage.ID().FullyQualifiedName())
 	configVariables := config.Variables{
 		"database":                     config.StringVariable(databaseId.Name()),
@@ -49,7 +44,7 @@ func TestAcc_Streamlits(t *testing.T) {
 		"name":                         config.StringVariable(id.Name()),
 		"main_file":                    config.StringVariable("foo"),
 		"query_warehouse":              config.StringVariable(warehouse.ID().Name()),
-		"external_access_integrations": config.SetVariable(config.StringVariable(integrationId.Name())),
+		"external_access_integrations": config.SetVariable(config.StringVariable(externalAccessIntegrationId.Name())),
 		"title":                        config.StringVariable("foo"),
 		"comment":                      config.StringVariable("foo"),
 	}
@@ -73,7 +68,7 @@ func TestAcc_Streamlits(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.database_name", databaseId.Name()),
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.schema_name", schemaId.Name()),
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.title", "foo"),
-					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.owner", snowflakeroles.Accountadmin.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.owner", acc.TestClient().Context.CurrentRole(t).Name()),
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.comment", "foo"),
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.show_output.0.query_warehouse", warehouse.ID().Name()),
 					resource.TestCheckResourceAttrSet("data.snowflake_streamlits.test", "streamlits.0.show_output.0.url_id"),
@@ -89,7 +84,7 @@ func TestAcc_Streamlits(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.user_packages.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.import_urls.#"),
 					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.external_access_integrations.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.external_access_integrations.0", integrationId.Name()),
+					resource.TestCheckResourceAttr("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttrSet("data.snowflake_streamlits.test", "streamlits.0.describe_output.0.external_access_secrets"),
 				),
 			},
@@ -173,6 +168,40 @@ func TestAcc_Streamlits_Filtering(t *testing.T) {
 	})
 }
 
+func TestAcc_Streamlits_badCombination(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      streamlitsDatasourceConfigDbAndSchema(),
+				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_Streamlits_emptyIn(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      streamlitsDatasourceEmptyIn(),
+				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
 func TestAcc_Streamlits_StreamlitNotFound_WithPostConditions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -186,4 +215,24 @@ func TestAcc_Streamlits_StreamlitNotFound_WithPostConditions(t *testing.T) {
 			},
 		},
 	})
+}
+
+func streamlitsDatasourceConfigDbAndSchema() string {
+	return fmt.Sprintf(`
+data "snowflake_streamlits" "test" {
+  in {
+    database = "%s"
+    schema   = "%s"
+  }
+}
+`, acc.TestDatabaseName, acc.TestSchemaName)
+}
+
+func streamlitsDatasourceEmptyIn() string {
+	return `
+data "snowflake_streamlits" "test" {
+  in {
+  }
+}
+`
 }

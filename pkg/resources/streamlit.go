@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -24,7 +25,7 @@ var streamlitSchema = map[string]*schema.Schema{
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The database in which to create the Cortex search service.",
+		Description: "The database in which to create the streamlit",
 		ForceNew:    true,
 	},
 	"schema": {
@@ -62,7 +63,8 @@ var streamlitSchema = map[string]*schema.Schema{
 	"external_access_integrations": {
 		Type: schema.TypeSet,
 		Elem: &schema.Schema{
-			Type: schema.TypeString,
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		Optional:         true,
 		Description:      "External access integrations connected to the Streamlit.",
@@ -176,7 +178,8 @@ func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 	stageId := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("stage").(string))
 	rootLocation := fmt.Sprintf("@%s", stageId.FullyQualifiedName())
 	if v, ok := d.GetOk("directory_location"); ok {
-		rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
+		// rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
+		rootLocation = path.Join(rootLocation, v.(string))
 	}
 	req := sdk.NewCreateStreamlitRequest(id, rootLocation, d.Get("main_file").(string))
 
@@ -321,7 +324,7 @@ func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 		stageId := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("stage").(string))
 		rootLocation := fmt.Sprintf("@%s", stageId.FullyQualifiedName())
 		if v, ok := d.GetOk("directory_location"); ok {
-			rootLocation = fmt.Sprintf("%s/%s", rootLocation, v)
+			rootLocation = path.Join(rootLocation, v.(string))
 		}
 		set.WithRootLocation(rootLocation)
 	}

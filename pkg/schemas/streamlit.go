@@ -39,12 +39,12 @@ var DescribeStreamlitSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"user_packages": {
-		Type:     schema.TypeList,
+		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"import_urls": {
-		Type:     schema.TypeList,
+		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
