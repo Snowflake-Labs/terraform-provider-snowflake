@@ -20,115 +20,89 @@ func GetSessionParametersFrom(params map[string]any) (*SessionParameters, error)
 	return sessionParameters, nil
 }
 
+// TODO [SNOW-1348330]: get type based on the tag in SessionParameters struct and handle in a generic way
+// TODO [SNOW-1348330]: use sdk.ToX for the enums
 func (sessionParameters *SessionParameters) setParam(parameter SessionParameter, value string) error {
+	var err error
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.AbortDetachedQuery = b
+		err = setBooleanValue(parameter, value, &sessionParameters.AbortDetachedQuery)
 	case SessionParameterAutocommit:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.Autocommit = b
+		err = setBooleanValue(parameter, value, &sessionParameters.Autocommit)
 	case SessionParameterBinaryInputFormat:
 		sessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
 	case SessionParameterBinaryOutputFormat:
 		sessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
+	case SessionParameterClientMemoryLimit:
+		err = setIntegerValue(parameter, value, &sessionParameters.ClientMemoryLimit)
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.ClientMetadataRequestUseConnectionCtx = b
-	case SessionParameterClientMetadataUseSessionDatabase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.ClientMetadataUseSessionDatabase = b
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientMetadataRequestUseConnectionCtx)
+	case SessionParameterClientPrefetchThreads:
+		err = setIntegerValue(parameter, value, &sessionParameters.ClientPrefetchThreads)
+	case SessionParameterClientResultChunkSize:
+		err = setIntegerValue(parameter, value, &sessionParameters.ClientResultChunkSize)
 	case SessionParameterClientResultColumnCaseInsensitive:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.ClientResultColumnCaseInsensitive = b
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientResultColumnCaseInsensitive)
+	case SessionParameterClientMetadataUseSessionDatabase:
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientMetadataUseSessionDatabase)
+	case SessionParameterClientSessionKeepAlive:
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientSessionKeepAlive)
+	case SessionParameterClientSessionKeepAliveHeartbeatFrequency:
+		err = setIntegerValue(parameter, value, &sessionParameters.ClientSessionKeepAliveHeartbeatFrequency)
+	case SessionParameterClientTimestampTypeMapping:
+		sessionParameters.ClientTimestampTypeMapping = Pointer(ClientTimestampTypeMapping(value))
 	case SessionParameterDateInputFormat:
 		sessionParameters.DateInputFormat = &value
 	case SessionParameterDateOutputFormat:
 		sessionParameters.DateOutputFormat = &value
+	case SessionParameterEnableUnloadPhysicalTypeOptimization:
+		err = setBooleanValue(parameter, value, &sessionParameters.EnableUnloadPhysicalTypeOptimization)
 	case SessionParameterErrorOnNondeterministicMerge:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.ErrorOnNondeterministicMerge = b
+		err = setBooleanValue(parameter, value, &sessionParameters.ErrorOnNondeterministicMerge)
 	case SessionParameterErrorOnNondeterministicUpdate:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.ErrorOnNondeterministicUpdate = b
+		err = setBooleanValue(parameter, value, &sessionParameters.ErrorOnNondeterministicUpdate)
 	case SessionParameterGeographyOutputFormat:
 		sessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
+	case SessionParameterGeometryOutputFormat:
+		sessionParameters.GeometryOutputFormat = Pointer(GeometryOutputFormat(value))
+	case SessionParameterJdbcTreatDecimalAsInt:
+		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatDecimalAsInt)
+	case SessionParameterJdbcTreatTimestampNtzAsUtc:
+		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatTimestampNtzAsUtc)
+	case SessionParameterJdbcUseSessionTimezone:
+		err = setBooleanValue(parameter, value, &sessionParameters.JdbcUseSessionTimezone)
 	case SessionParameterJSONIndent:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("JSON_INDENT session parameter is an integer, got %v", value)
-		}
-		sessionParameters.JSONIndent = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.JSONIndent)
 	case SessionParameterLockTimeout:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
-		}
-		sessionParameters.LockTimeout = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.LockTimeout)
+	case SessionParameterLogLevel:
+		sessionParameters.LogLevel = Pointer(LogLevel(value))
 	case SessionParameterMultiStatementCount:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
-		}
-		sessionParameters.MultiStatementCount = Pointer(v)
-
+		err = setIntegerValue(parameter, value, &sessionParameters.MultiStatementCount)
+	case SessionParameterNoorderSequenceAsDefault:
+		err = setBooleanValue(parameter, value, &sessionParameters.NoorderSequenceAsDefault)
+	case SessionParameterOdbcTreatDecimalAsInt:
+		err = setBooleanValue(parameter, value, &sessionParameters.OdbcTreatDecimalAsInt)
 	case SessionParameterQueryTag:
 		sessionParameters.QueryTag = &value
 	case SessionParameterQuotedIdentifiersIgnoreCase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.QuotedIdentifiersIgnoreCase = b
+		err = setBooleanValue(parameter, value, &sessionParameters.QuotedIdentifiersIgnoreCase)
 	case SessionParameterRowsPerResultset:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
-		}
-		sessionParameters.RowsPerResultset = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.RowsPerResultset)
 	case SessionParameterS3StageVpceDnsName:
 		sessionParameters.S3StageVpceDnsName = &value
+	case SessionParameterSearchPath:
+		sessionParameters.SearchPath = &value
 	case SessionParameterSimulatedDataSharingConsumer:
 		sessionParameters.SimulatedDataSharingConsumer = &value
+	case SessionParameterStatementQueuedTimeoutInSeconds:
+		err = setIntegerValue(parameter, value, &sessionParameters.StatementQueuedTimeoutInSeconds)
 	case SessionParameterStatementTimeoutInSeconds:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
-		}
-		sessionParameters.StatementTimeoutInSeconds = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.StatementTimeoutInSeconds)
 	case SessionParameterStrictJSONOutput:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.StrictJSONOutput = b
+		err = setBooleanValue(parameter, value, &sessionParameters.StrictJSONOutput)
 	case SessionParameterTimestampDayIsAlways24h:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.TimestampDayIsAlways24h = b
+		err = setBooleanValue(parameter, value, &sessionParameters.TimestampDayIsAlways24h)
 	case SessionParameterTimestampInputFormat:
 		sessionParameters.TimestampInputFormat = &value
 	case SessionParameterTimestampLTZOutputFormat:
@@ -138,7 +112,7 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 	case SessionParameterTimestampOutputFormat:
 		sessionParameters.TimestampOutputFormat = &value
 	case SessionParameterTimestampTypeMapping:
-		sessionParameters.TimestampTypeMapping = &value
+		sessionParameters.TimestampTypeMapping = Pointer(TimestampTypeMapping(value))
 	case SessionParameterTimestampTZOutputFormat:
 		sessionParameters.TimestampTZOutputFormat = &value
 	case SessionParameterTimezone:
@@ -147,43 +121,43 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		sessionParameters.TimeInputFormat = &value
 	case SessionParameterTimeOutputFormat:
 		sessionParameters.TimeOutputFormat = &value
+	case SessionParameterTraceLevel:
+		sessionParameters.TraceLevel = Pointer(TraceLevel(value))
 	case SessionParameterTransactionAbortOnError:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.TransactionAbortOnError = b
+		err = setBooleanValue(parameter, value, &sessionParameters.TransactionAbortOnError)
 	case SessionParameterTransactionDefaultIsolationLevel:
 		sessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
 	case SessionParameterTwoDigitCenturyStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("TWO_DIGIT_CENTURY_START session parameter is an integer, got %v", value)
-		}
-		sessionParameters.TwoDigitCenturyStart = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.TwoDigitCenturyStart)
 	case SessionParameterUnsupportedDDLAction:
 		sessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
 	case SessionParameterUseCachedResult:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		sessionParameters.UseCachedResult = b
+		err = setBooleanValue(parameter, value, &sessionParameters.UseCachedResult)
 	case SessionParameterWeekOfYearPolicy:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_OF_YEAR_POLICY session parameter is an integer, got %v", value)
-		}
-		sessionParameters.WeekOfYearPolicy = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.WeekOfYearPolicy)
 	case SessionParameterWeekStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
-		}
-		sessionParameters.WeekStart = Pointer(v)
+		err = setIntegerValue(parameter, value, &sessionParameters.WeekStart)
 	default:
-		return fmt.Errorf("%s session parameter is not supported", string(parameter))
+		err = fmt.Errorf("%s session parameter is not supported", string(parameter))
 	}
+	return err
+}
+
+func setBooleanValue(parameter SessionParameter, value string, setField **bool) error {
+	b, err := parseBooleanParameter(string(parameter), value)
+	if err != nil {
+		return err
+	}
+	*setField = b
+	return nil
+}
+
+func setIntegerValue(parameter SessionParameter, value string, setField **int) error {
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return fmt.Errorf("%s session parameter is an integer, got %v", parameter, value)
+	}
+	*setField = Pointer(v)
 	return nil
 }
 
@@ -199,85 +173,123 @@ func GetSessionParametersUnsetFrom(params map[string]any) (*SessionParametersUns
 }
 
 func (sessionParametersUnset *SessionParametersUnset) setParam(parameter SessionParameter) error {
+	var unsetField **bool
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
-		sessionParametersUnset.AbortDetachedQuery = Bool(true)
+		unsetField = &sessionParametersUnset.AbortDetachedQuery
 	case SessionParameterAutocommit:
-		sessionParametersUnset.Autocommit = Bool(true)
+		unsetField = &sessionParametersUnset.Autocommit
 	case SessionParameterBinaryInputFormat:
-		sessionParametersUnset.BinaryInputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.BinaryInputFormat
 	case SessionParameterBinaryOutputFormat:
-		sessionParametersUnset.BinaryOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.BinaryOutputFormat
+	case SessionParameterClientMemoryLimit:
+		unsetField = &sessionParametersUnset.ClientMemoryLimit
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
-		sessionParametersUnset.ClientMetadataRequestUseConnectionCtx = Bool(true)
-	case SessionParameterClientMetadataUseSessionDatabase:
-		sessionParametersUnset.ClientMetadataUseSessionDatabase = Bool(true)
+		unsetField = &sessionParametersUnset.ClientMetadataRequestUseConnectionCtx
+	case SessionParameterClientPrefetchThreads:
+		unsetField = &sessionParametersUnset.ClientPrefetchThreads
+	case SessionParameterClientResultChunkSize:
+		unsetField = &sessionParametersUnset.ClientResultChunkSize
 	case SessionParameterClientResultColumnCaseInsensitive:
-		sessionParametersUnset.ClientResultColumnCaseInsensitive = Bool(true)
+		unsetField = &sessionParametersUnset.ClientResultColumnCaseInsensitive
+	case SessionParameterClientMetadataUseSessionDatabase:
+		unsetField = &sessionParametersUnset.ClientMetadataUseSessionDatabase
+	case SessionParameterClientSessionKeepAlive:
+		unsetField = &sessionParametersUnset.ClientSessionKeepAlive
+	case SessionParameterClientSessionKeepAliveHeartbeatFrequency:
+		unsetField = &sessionParametersUnset.ClientSessionKeepAliveHeartbeatFrequency
+	case SessionParameterClientTimestampTypeMapping:
+		unsetField = &sessionParametersUnset.ClientTimestampTypeMapping
 	case SessionParameterDateInputFormat:
-		sessionParametersUnset.DateInputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.DateInputFormat
 	case SessionParameterDateOutputFormat:
-		sessionParametersUnset.DateOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.DateOutputFormat
+	case SessionParameterEnableUnloadPhysicalTypeOptimization:
+		unsetField = &sessionParametersUnset.EnableUnloadPhysicalTypeOptimization
 	case SessionParameterErrorOnNondeterministicMerge:
-		sessionParametersUnset.ErrorOnNondeterministicMerge = Bool(true)
+		unsetField = &sessionParametersUnset.ErrorOnNondeterministicMerge
 	case SessionParameterErrorOnNondeterministicUpdate:
-		sessionParametersUnset.ErrorOnNondeterministicUpdate = Bool(true)
+		unsetField = &sessionParametersUnset.ErrorOnNondeterministicUpdate
 	case SessionParameterGeographyOutputFormat:
-		sessionParametersUnset.GeographyOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.GeographyOutputFormat
+	case SessionParameterGeometryOutputFormat:
+		unsetField = &sessionParametersUnset.GeometryOutputFormat
+	case SessionParameterJdbcTreatDecimalAsInt:
+		unsetField = &sessionParametersUnset.JdbcTreatDecimalAsInt
+	case SessionParameterJdbcTreatTimestampNtzAsUtc:
+		unsetField = &sessionParametersUnset.JdbcTreatTimestampNtzAsUtc
+	case SessionParameterJdbcUseSessionTimezone:
+		unsetField = &sessionParametersUnset.JdbcUseSessionTimezone
 	case SessionParameterJSONIndent:
-		sessionParametersUnset.JSONIndent = Bool(true)
+		unsetField = &sessionParametersUnset.JSONIndent
 	case SessionParameterLockTimeout:
-		sessionParametersUnset.LockTimeout = Bool(true)
+		unsetField = &sessionParametersUnset.LockTimeout
+	case SessionParameterLogLevel:
+		unsetField = &sessionParametersUnset.LogLevel
 	case SessionParameterMultiStatementCount:
-		sessionParametersUnset.MultiStatementCount = Bool(true)
+		unsetField = &sessionParametersUnset.MultiStatementCount
+	case SessionParameterNoorderSequenceAsDefault:
+		unsetField = &sessionParametersUnset.NoorderSequenceAsDefault
+	case SessionParameterOdbcTreatDecimalAsInt:
+		unsetField = &sessionParametersUnset.OdbcTreatDecimalAsInt
 	case SessionParameterQueryTag:
-		sessionParametersUnset.QueryTag = Bool(true)
+		unsetField = &sessionParametersUnset.QueryTag
 	case SessionParameterQuotedIdentifiersIgnoreCase:
-		sessionParametersUnset.QuotedIdentifiersIgnoreCase = Bool(true)
+		unsetField = &sessionParametersUnset.QuotedIdentifiersIgnoreCase
 	case SessionParameterRowsPerResultset:
-		sessionParametersUnset.RowsPerResultset = Bool(true)
+		unsetField = &sessionParametersUnset.RowsPerResultset
 	case SessionParameterS3StageVpceDnsName:
-		sessionParametersUnset.S3StageVpceDnsName = Bool(true)
+		unsetField = &sessionParametersUnset.S3StageVpceDnsName
+	case SessionParameterSearchPath:
+		unsetField = &sessionParametersUnset.SearchPath
 	case SessionParameterSimulatedDataSharingConsumer:
-		sessionParametersUnset.SimulatedDataSharingConsumer = Bool(true)
+		unsetField = &sessionParametersUnset.SimulatedDataSharingConsumer
+	case SessionParameterStatementQueuedTimeoutInSeconds:
+		unsetField = &sessionParametersUnset.StatementQueuedTimeoutInSeconds
 	case SessionParameterStatementTimeoutInSeconds:
-		sessionParametersUnset.StatementTimeoutInSeconds = Bool(true)
+		unsetField = &sessionParametersUnset.StatementTimeoutInSeconds
 	case SessionParameterStrictJSONOutput:
-		sessionParametersUnset.StrictJSONOutput = Bool(true)
+		unsetField = &sessionParametersUnset.StrictJSONOutput
 	case SessionParameterTimestampDayIsAlways24h:
-		sessionParametersUnset.TimestampDayIsAlways24h = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampDayIsAlways24h
 	case SessionParameterTimestampInputFormat:
-		sessionParametersUnset.TimestampInputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampInputFormat
 	case SessionParameterTimestampLTZOutputFormat:
-		sessionParametersUnset.TimestampLTZOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampLTZOutputFormat
 	case SessionParameterTimestampNTZOutputFormat:
-		sessionParametersUnset.TimestampNTZOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampNTZOutputFormat
 	case SessionParameterTimestampOutputFormat:
-		sessionParametersUnset.TimestampOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampOutputFormat
 	case SessionParameterTimestampTypeMapping:
-		sessionParametersUnset.TimestampTypeMapping = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampTypeMapping
 	case SessionParameterTimestampTZOutputFormat:
-		sessionParametersUnset.TimestampTZOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimestampTZOutputFormat
 	case SessionParameterTimezone:
-		sessionParametersUnset.Timezone = Bool(true)
+		unsetField = &sessionParametersUnset.Timezone
 	case SessionParameterTimeInputFormat:
-		sessionParametersUnset.TimeInputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimeInputFormat
 	case SessionParameterTimeOutputFormat:
-		sessionParametersUnset.TimeOutputFormat = Bool(true)
+		unsetField = &sessionParametersUnset.TimeOutputFormat
+	case SessionParameterTraceLevel:
+		unsetField = &sessionParametersUnset.TraceLevel
+	case SessionParameterTransactionAbortOnError:
+		unsetField = &sessionParametersUnset.TransactionAbortOnError
 	case SessionParameterTransactionDefaultIsolationLevel:
-		sessionParametersUnset.TransactionDefaultIsolationLevel = Bool(true)
+		unsetField = &sessionParametersUnset.TransactionDefaultIsolationLevel
 	case SessionParameterTwoDigitCenturyStart:
-		sessionParametersUnset.TwoDigitCenturyStart = Bool(true)
+		unsetField = &sessionParametersUnset.TwoDigitCenturyStart
 	case SessionParameterUnsupportedDDLAction:
-		sessionParametersUnset.UnsupportedDDLAction = Bool(true)
+		unsetField = &sessionParametersUnset.UnsupportedDDLAction
 	case SessionParameterUseCachedResult:
-		sessionParametersUnset.UseCachedResult = Bool(true)
+		unsetField = &sessionParametersUnset.UseCachedResult
 	case SessionParameterWeekOfYearPolicy:
-		sessionParametersUnset.WeekOfYearPolicy = Bool(true)
+		unsetField = &sessionParametersUnset.WeekOfYearPolicy
 	case SessionParameterWeekStart:
-		sessionParametersUnset.WeekStart = Bool(true)
+		unsetField = &sessionParametersUnset.WeekStart
 	default:
 		return fmt.Errorf("%s session parameter is not supported", string(parameter))
 	}
+	*unsetField = Bool(true)
 	return nil
 }
