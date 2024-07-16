@@ -51,8 +51,7 @@ func UnsafeExecute() *schema.Resource {
 
 		Schema: unsafeExecuteSchema,
 
-		DeprecationMessage: "Experimental resource. Will be deleted in the upcoming versions. Use at your own risk.",
-		Description:        "Experimental resource used for testing purposes only. Allows to execute ANY SQL statement.",
+		Description: "Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 			if diff.HasChange("query") {
