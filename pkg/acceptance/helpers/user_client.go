@@ -53,3 +53,10 @@ func (c *UserClient) DropUserFunc(t *testing.T, id sdk.AccountObjectIdentifier) 
 		require.NoError(t, err)
 	}
 }
+
+func (c *UserClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.User, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}

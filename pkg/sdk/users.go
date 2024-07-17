@@ -59,6 +59,7 @@ type User struct {
 	HasPassword           bool
 	HasRsaPublicKey       bool
 }
+
 type userDBRow struct {
 	Name                  string         `db:"name"`
 	CreatedOn             time.Time      `db:"created_on"`

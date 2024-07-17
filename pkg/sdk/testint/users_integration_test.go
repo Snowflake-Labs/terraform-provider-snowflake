@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -70,7 +72,13 @@ func TestInt_Users(t *testing.T) {
 
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), user.Name)
+
+		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+			HasName(id.Name()).
+			HasHasPassword(true).
+			HasLoginName(strings.ToUpper(loginName)).
+			HasDefaultRole(defaultRole),
+		)
 	})
 
 	t.Run("create: if not exists", func(t *testing.T) {
@@ -111,7 +119,12 @@ func TestInt_Users(t *testing.T) {
 
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), user.Name)
+
+		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+			HasName(id.Name()).
+			HasHasPassword(true).
+			HasLoginName(strings.ToUpper(loginName)),
+		)
 	})
 
 	t.Run("create: no options", func(t *testing.T) {
@@ -129,7 +142,12 @@ func TestInt_Users(t *testing.T) {
 
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), user.Name)
+
+		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+			HasName(id.Name()).
+			HasHasPassword(false).
+			HasLoginName(strings.ToUpper(id.Name())),
+		)
 	})
 
 	t.Run("create: default role with hyphen", func(t *testing.T) {
@@ -146,9 +164,9 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		createdUser, err := client.Users.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, defaultRole, createdUser.DefaultRole)
+		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+			HasDefaultRole(defaultRole),
+		)
 	})
 
 	t.Run("create: default role in lowercase", func(t *testing.T) {
@@ -165,9 +183,9 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		createdUser, err := client.Users.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, defaultRole, createdUser.DefaultRole)
+		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+			HasDefaultRole(defaultRole),
+		)
 	})
 
 	t.Run("create: other params with hyphen and mixed cases", func(t *testing.T) {
@@ -192,16 +210,16 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		createdUser, err := client.Users.ShowByID(ctx, id)
-		require.NoError(t, err)
-		// login name is always case-insensitive
-		assert.Equal(t, strings.ToUpper(randomWithHyphenAndMixedCase), createdUser.LoginName)
-		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DisplayName)
-		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.FirstName)
-		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.LastName)
-		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DefaultWarehouse)
-		assert.Equal(t, randomWithHyphenAndMixedCase+"."+randomWithHyphenAndMixedCase, createdUser.DefaultNamespace)
-		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DefaultRole)
+		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(randomWithHyphenAndMixedCase)).
+			HasDisplayName(randomWithHyphenAndMixedCase).
+			HasFirstName(randomWithHyphenAndMixedCase).
+			HasLastName(randomWithHyphenAndMixedCase).
+			HasDefaultWarehouse(randomWithHyphenAndMixedCase).
+			HasDefaultNamespace(randomWithHyphenAndMixedCase+"."+randomWithHyphenAndMixedCase).
+			HasDefaultRole(randomWithHyphenAndMixedCase),
+		)
 
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
@@ -290,10 +308,6 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		createdUser, err := client.Users.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, id.Name(), createdUser.Name)
-
 		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
 
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterAbortDetachedQuery).Value)
@@ -364,10 +378,6 @@ func TestInt_Users(t *testing.T) {
 		err := client.Users.Create(ctx, id, nil)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
-
-		createdUser, err := client.Users.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, id.Name(), createdUser.Name)
 
 		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
 
