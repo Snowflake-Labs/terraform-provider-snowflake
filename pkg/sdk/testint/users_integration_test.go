@@ -188,6 +188,20 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	t.Run("create: client memory limit set to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		opts := &sdk.CreateUserOptions{
+			SessionParameters: &sdk.SessionParameters{
+				ClientMemoryLimit: sdk.Int(0),
+			},
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+	})
+
 	t.Run("create: other params with hyphen and mixed cases", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		randomWithHyphenAndMixedCase := strings.ToUpper(random.AlphaN(4)) + "-" + strings.ToLower(random.AlphaN(4))
@@ -314,7 +328,6 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterAutocommit).Value)
 		assert.Equal(t, string(sdk.BinaryInputFormatUTF8), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryInputFormat).Value)
 		assert.Equal(t, string(sdk.BinaryOutputFormatBase64), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryOutputFormat).Value)
-		// TODO: check zero
 		assert.Equal(t, "1024", helpers.FindParameter(t, parameters, sdk.UserParameterClientMemoryLimit).Value)
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterClientMetadataRequestUseConnectionCtx).Value)
 		assert.Equal(t, "2", helpers.FindParameter(t, parameters, sdk.UserParameterClientPrefetchThreads).Value)
