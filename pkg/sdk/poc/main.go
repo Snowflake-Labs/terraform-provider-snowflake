@@ -41,6 +41,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"network_rule_def.go":              sdk.NetworkRuleDef,
 	"security_integrations_def.go":     sdk.SecurityIntegrationsDef,
 	"cortex_search_services_def.go":    sdk.CortexSearchServiceDef,
+	"authentication_policies_def.go":   sdk.AuthenticationPoliciesDef,
 }
 
 func main() {

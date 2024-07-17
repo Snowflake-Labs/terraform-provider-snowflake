@@ -347,31 +347,33 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 }
 
 type UserSet struct {
-	PasswordPolicy    *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
-	SessionPolicy     *string                 `ddl:"parameter" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`
-	ObjectParameters  *UserObjectParameters   `ddl:"keyword"`
-	SessionParameters *SessionParameters      `ddl:"keyword"`
+	PasswordPolicy       *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
+	SessionPolicy        *string                 `ddl:"parameter" sql:"SESSION POLICY"`
+	AuthenticationPolicy SchemaObjectIdentifier  `ddl:"identifier" sql:"AUTHENTICATION POLICY"`
+	ObjectProperties     *UserObjectProperties   `ddl:"keyword"`
+	ObjectParameters     *UserObjectParameters   `ddl:"keyword"`
+	SessionParameters    *SessionParameters      `ddl:"keyword"`
 }
 
 func (opts *UserSet) validate() error {
-	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
 
 type UserUnset struct {
-	PasswordPolicy    *bool                      `ddl:"keyword" sql:"PASSWORD POLICY"`
-	SessionPolicy     *bool                      `ddl:"keyword" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectPropertiesUnset `ddl:"list"`
-	ObjectParameters  *UserObjectParametersUnset `ddl:"list"`
-	SessionParameters *SessionParametersUnset    `ddl:"list"`
+	PasswordPolicy       *bool                      `ddl:"keyword" sql:"PASSWORD POLICY"`
+	SessionPolicy        *bool                      `ddl:"keyword" sql:"SESSION POLICY"`
+	AuthenticationPolicy *bool                      `ddl:"keyword" sql:"AUTHENTICATION POLICY"`
+	ObjectProperties     *UserObjectPropertiesUnset `ddl:"list"`
+	ObjectParameters     *UserObjectParametersUnset `ddl:"list"`
+	SessionParameters    *SessionParametersUnset    `ddl:"list"`
 }
 
 func (opts *UserUnset) validate() error {
-	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters, opts.AuthenticationPolicy) {
+		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters", "AuthenticationPolicy")
 	}
 	return nil
 }

@@ -45,6 +45,7 @@ type Client struct {
 	ApplicationPackages      ApplicationPackages
 	ApplicationRoles         ApplicationRoles
 	Applications             Applications
+	AuthenticationPolicies   AuthenticationPolicies
 	Comments                 Comments
 	CortexSearchServices     CortexSearchServices
 	DatabaseRoles            DatabaseRoles
@@ -199,6 +200,7 @@ func (c *Client) initialize() {
 	c.ApplicationPackages = &applicationPackages{client: c}
 	c.ApplicationRoles = &applicationRoles{client: c}
 	c.Applications = &applications{client: c}
+	c.AuthenticationPolicies = &authenticationPolicies{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}

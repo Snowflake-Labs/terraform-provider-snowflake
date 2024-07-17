@@ -122,6 +122,16 @@ func TestAccountAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET SESSION POLICY %s`, id.FullyQualifiedName())
 	})
 
+	t.Run("with set authentication policy", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
+		opts := &AlterAccountOptions{
+			Set: &AccountSet{
+				AuthenticationPolicy: id,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET AUTHENTICATION POLICY %s`, id.FullyQualifiedName())
+	})
+
 	t.Run("with unset password policy", func(t *testing.T) {
 		opts := &AlterAccountOptions{
 			Unset: &AccountUnset{
@@ -138,6 +148,15 @@ func TestAccountAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET SESSION POLICY`)
+	})
+
+	t.Run("with unset authentication policy", func(t *testing.T) {
+		opts := &AlterAccountOptions{
+			Unset: &AccountUnset{
+				AuthenticationPolicy: Bool(true),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET AUTHENTICATION POLICY`)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
