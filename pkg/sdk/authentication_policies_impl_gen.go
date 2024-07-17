@@ -134,6 +134,7 @@ func (r showAuthenticationPolicyDBRow) convert() *AuthenticationPolicy {
 		Owner:         r.Owner,
 		OwnerRoleType: r.OwnerRoleType,
 		Options:       r.Options,
+		Comment:       r.Comment,
 	}
 }
 
@@ -146,7 +147,7 @@ func (r *DescribeAuthenticationPolicyRequest) toOpts() *DescribeAuthenticationPo
 
 func (r describeAuthenticationPolicyDBRow) convert() *AuthenticationPolicyDescription {
 	return &AuthenticationPolicyDescription{
-		Name:  r.Name,
+		Property:  r.Property,
 		Value: r.Value,
 	}
 }

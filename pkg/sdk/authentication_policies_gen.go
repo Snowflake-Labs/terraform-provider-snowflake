@@ -114,11 +114,11 @@ type DescribeAuthenticationPolicyOptions struct {
 	name                 SchemaObjectIdentifier `ddl:"identifier"`
 }
 type describeAuthenticationPolicyDBRow struct {
-	Name  string `db:"name"`
+	Property  string `db:"property"`
 	Value string `db:"value"`
 }
 type AuthenticationPolicyDescription struct {
-	Name  string
+	Property  string
 	Value string
 }
 

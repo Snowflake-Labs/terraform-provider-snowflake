@@ -170,10 +170,10 @@ var (
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy",
 			g.DbStruct("describeAuthenticationPolicyDBRow").
-				Field("name", "string").
+				Field("property", "string").
 				Field("value", "string"),
 			g.PlainStruct("AuthenticationPolicyDescription").
-				Field("Name", "string").
+				Field("Property", "string").
 				Field("Value", "string"),
 			g.NewQueryStruct("DescribeAuthenticationPolicy").
 				Describe().
