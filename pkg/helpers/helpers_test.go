@@ -225,72 +225,84 @@ func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
 
 func TestParseRootLocation(t *testing.T) {
 	tests := []struct {
-		name     string
-		location string
-		id       string
-		path     string
-		wantErr  bool
+		name         string
+		location     string
+		expectedId   string
+		expectedPath string
+		expectedErr  string
 	}{
 		{
-			name:     "unquoted",
-			location: `@a.b.c`,
-			id:       `"a"."b"."c"`,
+			name:        "empty",
+			location:    ``,
+			expectedErr: "incompatible identifier",
 		},
 		{
-			name:     "unquoted with path",
-			location: `@a.b.c/foo`,
-			id:       `"a"."b"."c"`,
-			path:     `foo`,
+			name:       "unquoted",
+			location:   `@a.b.c`,
+			expectedId: `"a"."b"."c"`,
 		},
 		{
-			name:     "partially quoted",
-			location: `@"a".b.c`,
-			id:       `"a"."b"."c"`,
+			name:         "unquoted with path",
+			location:     `@a.b.c/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
 		},
 		{
-			name:     "partially quoted with path",
-			location: `@"a".b.c/foo`,
-			id:       `"a"."b"."c"`,
-			path:     `foo`,
+			name:       "partially quoted",
+			location:   `@"a".b.c`,
+			expectedId: `"a"."b"."c"`,
 		},
 		{
-			name:     "quoted",
-			location: `@"a"."b"."c"`,
-			id:       `"a"."b"."c"`,
+			name:         "partially quoted with path",
+			location:     `@"a".b.c/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
 		},
 		{
-			name:     "quoted with path",
-			location: `@"a"."b"."c"/foo`,
-			id:       `"a"."b"."c"`,
-			path:     `foo`,
+			name:       "quoted",
+			location:   `@"a"."b"."c"`,
+			expectedId: `"a"."b"."c"`,
 		},
 		{
-			name:     "unquoted with path with dots",
-			location: `@a.b.c/foo.d`,
-			id:       `"a"."b"."c"`,
-			path:     `foo.d`,
+			name:         "quoted with path",
+			location:     `@"a"."b"."c"/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
 		},
 		{
-			name:     "quoted with path with dots",
-			location: `@"a"."b"."c"/foo.d`,
-			id:       `"a"."b"."c"`,
-			path:     `foo.d`,
+			name:         "unquoted with path with dots",
+			location:     `@a.b.c/foo.d`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.d`,
 		},
 		{
-			name:     "invalid location",
-			location: `@foo`,
-			wantErr:  true,
+			name:         "quoted with path with dots",
+			location:     `@"a"."b"."c"/foo.d`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.d`,
+		},
+		{
+			name:         "quoted with complex path",
+			location:     `@"a"."b"."c"/foo.a/bar.b//hoge.c`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.a/bar.b/hoge.c`,
+		},
+		{
+			name:        "invalid location",
+			location:    `@foo`,
+			expectedErr: "expected 3 parts for location foo, got 1",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotId, gotPath, err := ParseRootLocation(tt.location)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseRootLocation() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			gotId, gotPath, gotErr := ParseRootLocation(tt.location)
+			if len(tt.expectedErr) > 0 {
+				assert.ErrorContains(t, gotErr, tt.expectedErr)
+			} else {
+				assert.NoError(t, gotErr)
+				assert.Equal(t, tt.expectedId, gotId.FullyQualifiedName())
+				assert.Equal(t, tt.expectedPath, gotPath)
 			}
-			assert.Equal(t, tt.id, gotId.FullyQualifiedName())
-			assert.Equal(t, tt.path, gotPath)
 		})
 	}
 }

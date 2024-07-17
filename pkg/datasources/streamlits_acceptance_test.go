@@ -23,7 +23,7 @@ func TestAcc_Streamlits(t *testing.T) {
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	acc.TestAccPreCheck(t)
-	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// use schema is needed because otherwise reference to external access integration fails.
 	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
@@ -121,7 +121,7 @@ func TestAcc_Streamlits_Filtering(t *testing.T) {
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
 	acc.TestAccPreCheck(t)
-	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	commonVariables := config.Variables{
 		"name_1":    config.StringVariable(idOne.Name()),

@@ -36,14 +36,13 @@ Changes:
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
 
-## v0.93.0 ➞ v0.94.0
 ### *(new feature)* snowflake_streamlit resource
 Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
 
 ### *(new feature)* snowflake_streamlits datasource
 Added a new datasource enabling querying and filtering stremlits. Notes:
 - all results are stored in `streamlits` field.
-- `like` field enables streamlits filtering.
+- `like`, `in`, and `limit` fields enable streamlits filtering.
 - SHOW STREAMLITS output is enclosed in `show_output` field inside `streamlits`.
 - Output from **DESC STREAMLIT** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `streamlits`.
   **DESC STREAMLIT** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.

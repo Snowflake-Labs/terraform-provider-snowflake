@@ -13,7 +13,7 @@ resource "snowflake_streamlit" "streamlit" {
   name                         = "streamlit"
   stage                        = "streamlit_db.streamlit_schema.streamlit_stage"
   directory_location           = "src"
-  main_file                    = "/streamlit_main.py"
+  main_file                    = "streamlit_main.py"
   query_warehouse              = "warehouse"
   external_access_integrations = ["integration_id"]
   title                        = "title"

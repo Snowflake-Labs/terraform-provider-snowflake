@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(SNOW-1325215): change raw sqls to proper client
 type ExternalAccessIntegrationClient struct {
 	context *TestClientContext
 	ids     *IdsGenerator

@@ -31,7 +31,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
 	require.NoError(t, err)
 
-	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
@@ -257,7 +257,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
 	require.NoError(t, err)
 
-	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
@@ -350,7 +350,7 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	stage, stageCleanup := acc.TestClient().Stage.CreateStageInSchema(t, schemaId)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	m := func(name, comment string) map[string]config.Variable {
 		return map[string]config.Variable{
