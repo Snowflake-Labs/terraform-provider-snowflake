@@ -30,6 +30,17 @@ func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 	return d.Id() != ""
 }
 
+// IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
+func IgnoreChangeToCurrentSnowflakeValueInShow(keyInOutput string) schema.SchemaDiffSuppressFunc {
+	return IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, keyInOutput)
+}
+
+// IgnoreChangeToCurrentSnowflakeValueInDescribe should be used to ignore changes to the given attribute when its value is equal to value in describe_output.
+func IgnoreChangeToCurrentSnowflakeValueInDescribe(keyInOutput string) schema.SchemaDiffSuppressFunc {
+	return IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, keyInOutput)
+}
+
+// IgnoreChangeToCurrentSnowflakePlainValueInOutput should be used to ignore changes to the given attribute when its value is equal to value in provided `attrName`.
 func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {
@@ -39,9 +50,9 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput stri
 		if queryOutput, ok := d.GetOk(attrName); ok {
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
-				result := queryOutputList[0].(map[string]any)
-				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result[keyInOutput], new, new == fmt.Sprintf("%v", result[keyInOutput]))
-				if new == fmt.Sprintf("%v", result[keyInOutput]) {
+				result := queryOutputList[0].(map[string]any)[keyInOutput]
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
+				if new == fmt.Sprintf("%v", result) {
 					return true
 				}
 			}
@@ -50,6 +61,7 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput stri
 	}
 }
 
+// IgnoreChangeToCurrentSnowflakeListValueInDescribe works similarly to IgnoreChangeToCurrentSnowflakeValueInDescribe, but assumes that in `describe_output` the value is saved in nested `value` field.
 func IgnoreChangeToCurrentSnowflakeListValueInDescribe(keyInDescribeOutput string) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {

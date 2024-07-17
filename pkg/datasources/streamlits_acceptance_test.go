@@ -1,7 +1,6 @@
 package datasources_test
 
 import (
-	"context"
 	"fmt"
 	"maps"
 	"regexp"
@@ -9,7 +8,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -25,10 +23,8 @@ func TestAcc_Streamlits(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
-	// use schema is needed because otherwise reference to external access integration fails.
-	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
-	require.NoError(t, err)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
+	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)

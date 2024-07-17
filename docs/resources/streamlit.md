@@ -5,7 +5,7 @@ description: |-
   Resource used to manage streamlits objects. For more information, check streamlit documentation https://docs.snowflake.com/en/sql-reference/commands-streamlit.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0930--v0940) to use it.
 
 # snowflake_streamlit (Resource)
 
@@ -29,7 +29,7 @@ resource "snowflake_streamlit" "streamlit" {
   name                         = "streamlit"
   stage                        = "streamlit_db.streamlit_schema.streamlit_stage"
   directory_location           = "src"
-  main_file                    = "/streamlit_main.py"
+  main_file                    = "streamlit_main.py"
   query_warehouse              = "warehouse"
   external_access_integrations = ["integration_id"]
   title                        = "title"

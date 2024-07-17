@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -9,11 +8,12 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -27,13 +27,10 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	// use schema is needed because otherwise reference to external access integration fails.
-	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
-	require.NoError(t, err)
-
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
+	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
@@ -184,7 +181,8 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Streamlit.Update(t, sdk.NewAlterStreamlitRequest(id).WithSet(
 						*sdk.NewStreamlitSetRequest().
-							WithRootLocation(fmt.Sprintf("@%s/bar", stage.ID().FullyQualifiedName())),
+							WithRootLocation(fmt.Sprintf("@%s/bar", stage.ID().FullyQualifiedName())).
+							WithComment("bar"),
 					))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streamlit/complete"),
@@ -192,6 +190,10 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionUpdate),
+						planchecks.ExpectDrift("snowflake_streamlit.test", "directory_location", sdk.String("foo"), sdk.String("bar")),
+						planchecks.ExpectChange("snowflake_streamlit.test", "directory_location", tfjson.ActionUpdate, sdk.String("bar"), sdk.String("foo")),
+						planchecks.ExpectDrift("snowflake_streamlit.test", "comment", sdk.String("foo"), sdk.String("bar")),
+						planchecks.ExpectChange("snowflake_streamlit.test", "comment", tfjson.ActionUpdate, sdk.String("bar"), sdk.String("foo")),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -253,13 +255,10 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	// use schema is needed because otherwise reference to external access integration fails.
-	err := acc.Client(t).Sessions.UseSchema(context.Background(), schemaId)
-	require.NoError(t, err)
-
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
+	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)

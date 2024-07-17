@@ -39,26 +39,26 @@ var streamlitSchema = map[string]*schema.Schema{
 		Required:         true,
 		Description:      "The stage in which streamlit files are located.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "root_location")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("root_location")),
 	},
 	"directory_location": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Description:      "Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "root_location"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("root_location"),
 	},
 	"main_file": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "main_file"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("main_file"),
 	},
 	"query_warehouse": {
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
 		Description:      "Specifies the warehouse where SQL queries issued by the Streamlit application are run.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "query_warehouse")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("query_warehouse")),
 	},
 	"external_access_integrations": {
 		Type: schema.TypeSet,
@@ -68,7 +68,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		},
 		Optional:         true,
 		Description:      "External access integrations connected to the Streamlit.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakePlainValueInOutput(DescribeOutputAttributeName, "external_access_integrations")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("external_access_integrations")),
 	},
 	"title": {
 		Type:        schema.TypeString,
@@ -101,7 +101,7 @@ var streamlitSchema = map[string]*schema.Schema{
 func Streamlit() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextStreamlit,
-		ReadContext:   ReadContextStreamlit(true),
+		ReadContext:   ReadContextStreamlit,
 		UpdateContext: UpdateContextStreamlit,
 		DeleteContext: DeleteContextStreamlit,
 		Description:   "Resource used to manage streamlits objects. For more information, check [streamlit documentation](https://docs.snowflake.com/en/sql-reference/commands-streamlit).",
@@ -169,7 +169,7 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	return []*schema.ResourceData{d}, nil
 }
 
-func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -207,92 +207,90 @@ func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadContextStreamlit(false)(ctx, d, meta)
+	return ReadContextStreamlit(ctx, d, meta)
 }
 
-func ReadContextStreamlit(withExternalChangesMarking bool) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-		streamlit, err := client.Streamlits.ShowByID(ctx, id)
-		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) {
-				d.SetId("")
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  "Failed to query streamlit. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Streamlit name: %s, Err: %s", id.FullyQualifiedName(), err),
-					},
-				}
+	streamlit, err := client.Streamlits.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query streamlit. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Streamlit name: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
 			}
-			return diag.FromErr(err)
 		}
-
-		streamlitDetails, err := client.Streamlits.Describe(ctx, id)
-		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) {
-				d.SetId("")
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  "Failed to query streamlit properties. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Streamlit name: %s, Err: %s", id.FullyQualifiedName(), err),
-					},
-				}
-			}
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("name", streamlit.Name); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("schema", streamlit.SchemaName); err != nil {
-			return diag.FromErr(err)
-		}
-		stageId, location, err := helpers.ParseRootLocation(streamlitDetails.RootLocation)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("stage", stageId.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("directory_location", location); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("title", streamlit.Title); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("comment", streamlit.Comment); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamlitToSchema(streamlit)}); err != nil {
-			return diag.FromErr(err)
-		}
-		schemaDetails, err := schemas.StreamlitPropertiesToSchema(*streamlitDetails)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemaDetails}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		return nil
+		return diag.FromErr(err)
 	}
+
+	streamlitDetails, err := client.Streamlits.Describe(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query streamlit properties. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Streamlit name: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("name", streamlit.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("schema", streamlit.SchemaName); err != nil {
+		return diag.FromErr(err)
+	}
+	stageId, location, err := helpers.ParseRootLocation(streamlitDetails.RootLocation)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("stage", stageId.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("directory_location", location); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("title", streamlit.Title); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("comment", streamlit.Comment); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamlitToSchema(streamlit)}); err != nil {
+		return diag.FromErr(err)
+	}
+	schemaDetails, err := schemas.StreamlitPropertiesToSchema(*streamlitDetails)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemaDetails}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
-func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	set, unset := sdk.NewStreamlitSetRequest(), sdk.NewStreamlitUnsetRequest()
@@ -380,10 +378,10 @@ func UpdateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	return ReadContextStreamlit(false)(ctx, d, meta)
+	return ReadContextStreamlit(ctx, d, meta)
 }
 
-func DeleteContextStreamlit(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	client := meta.(*provider.Context).Client
 

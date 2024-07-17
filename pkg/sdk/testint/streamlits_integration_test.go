@@ -2,6 +2,8 @@ package testint
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -70,6 +72,21 @@ func TestInt_Streamlits(t *testing.T) {
 		t.Cleanup(cleanupStreamlitHandle(id))
 
 		assertStreamlit(t, id, comment, "")
+	})
+
+	// TODO(SNOW-1541938): remove this after fix on snowflake side
+	t.Run("create streamlit with lower case warehouse fails", func(t *testing.T) {
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix("lowercase"), nil)
+		t.Cleanup(warehouseCleanup)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		mainFile := "manifest.yml"
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithQueryWarehouse(warehouse.ID())
+		err := client.Streamlits.Create(ctx, request)
+		require.ErrorContains(t, err, fmt.Sprintf("The specified warehouse %s does not exist", strings.ToUpper(warehouse.ID().Name())))
 	})
 
 	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side

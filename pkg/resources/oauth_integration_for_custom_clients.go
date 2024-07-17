@@ -45,7 +45,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "enabled"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("enabled"),
 		Description:      booleanStringFieldDescription("Specifies whether this OAuth integration is enabled or disabled."),
 	},
 	"oauth_allow_non_tls_redirect_uri": {
@@ -53,7 +53,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "oauth_allow_non_tls_redirect_uri"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_allow_non_tls_redirect_uri"),
 		Description:      booleanStringFieldDescription("If true, allows setting oauth_redirect_uri to a URI not protected by TLS."),
 	},
 	"oauth_enforce_pkce": {
@@ -61,7 +61,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "oauth_enforce_pkce"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_enforce_pkce"),
 		Description:      booleanStringFieldDescription("Boolean that specifies whether Proof Key for Code Exchange (PKCE) should be required for the integration."),
 	},
 	"oauth_use_secondary_roles": {
@@ -95,7 +95,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "oauth_issue_refresh_tokens"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_issue_refresh_tokens"),
 		Description:      booleanStringFieldDescription("Specifies whether to allow the client to exchange a refresh token for an access token when the current access token has expired."),
 	},
 	"oauth_refresh_token_validity": {

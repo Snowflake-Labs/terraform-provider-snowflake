@@ -31,7 +31,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, "enabled"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("enabled"),
 		Description:      booleanStringFieldDescription("Specifies whether this security integration is enabled or disabled."),
 	},
 	"saml2_issuer": {
