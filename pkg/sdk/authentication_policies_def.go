@@ -4,67 +4,9 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-type AuthenticationMethodsOption string
-
 var AuthenticationMethodsOptionDef = g.NewQueryStruct("AuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
-
-const (
-	AuthenticationMethodsAll      AuthenticationMethodsOption = "ALL"
-	AuthenticationMethodsSaml     AuthenticationMethodsOption = "SAML"
-	AuthenticationMethodsPassword AuthenticationMethodsOption = "PASSWORD"
-	AuthenticationMethodsOauth    AuthenticationMethodsOption = "OAUTH"
-	AuthenticationMethodsKeyPair  AuthenticationMethodsOption = "KEYPAIR"
-)
-
-var AllAuthenticationMethods = []AuthenticationMethodsOption{
-	AuthenticationMethodsAll,
-	AuthenticationMethodsSaml,
-	AuthenticationMethodsPassword,
-	AuthenticationMethodsOauth,
-	AuthenticationMethodsKeyPair,
-}
-
-type MfaAuthenticationMethodsOption string
-
 var MfaAuthenticationMethodsOptionDef = g.NewQueryStruct("MfaAuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
-
-const (
-	MfaAuthenticationMethodsAll      MfaAuthenticationMethodsOption = "ALL"
-	MfaAuthenticationMethodsSaml     MfaAuthenticationMethodsOption = "SAML"
-	MfaAuthenticationMethodsPassword MfaAuthenticationMethodsOption = "PASSWORD"
-)
-
-var AllMfaAuthenticationMethods = []MfaAuthenticationMethodsOption{
-	MfaAuthenticationMethodsAll,
-	MfaAuthenticationMethodsSaml,
-	MfaAuthenticationMethodsPassword,
-}
-
-type MfaEnrollmentOption string
-
-const (
-	MfaEnrollmentRequired MfaEnrollmentOption = "REQUIRED"
-	MfaEnrollmentOptional MfaEnrollmentOption = "OPTIONAL"
-)
-
-type ClientTypesOption string
-
 var ClientTypesOptionDef = g.NewQueryStruct("ClientTypes").Text("ClientType", g.KeywordOptions().SingleQuotes())
-
-const (
-	ClientTypesAll         ClientTypesOption = "ALL"
-	ClientTypesSnowflakeUi ClientTypesOption = "SNOWFLAKE_UI"
-	ClientTypesDrivers     ClientTypesOption = "DRIVERS"
-	ClientTypesSnowSql     ClientTypesOption = "SNOWSQL"
-)
-
-var AllClientTypes = []ClientTypesOption{
-	ClientTypesAll,
-	ClientTypesSnowflakeUi,
-	ClientTypesDrivers,
-	ClientTypesSnowSql,
-}
-
 var SecurityIntegrationsOptionDef = g.NewQueryStruct("SecurityIntegrationsOption").Text("Name", g.KeywordOptions().SingleQuotes())
 
 var (
