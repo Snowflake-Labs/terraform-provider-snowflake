@@ -61,14 +61,9 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 		assert.Equal(t, "foo", userDetails.DefaultRole.Value)
 
-		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.Pointer(id.Name()),
-			},
-		})
+		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.Name(), user[0].Name)
+		assert.Equal(t, id.Name(), user.Name)
 	})
 
 	t.Run("create: if not exists", func(t *testing.T) {
@@ -105,14 +100,9 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 
-		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.Pointer(id.Name()),
-			},
-		})
+		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.Name(), user[0].Name)
+		assert.Equal(t, id.Name(), user.Name)
 	})
 
 	t.Run("create: no options", func(t *testing.T) {
@@ -126,14 +116,9 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, strings.ToUpper(id.Name()), userDetails.LoginName.Value)
 		assert.Empty(t, userDetails.Password.Value)
 
-		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.Pointer(id.Name()),
-			},
-		})
+		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.Name(), user[0].Name)
+		assert.Equal(t, id.Name(), user.Name)
 	})
 
 	// TODO: add tests for alter
