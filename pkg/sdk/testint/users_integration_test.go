@@ -27,6 +27,7 @@ func TestInt_Users(t *testing.T) {
 
 	t.Run("create: complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		defaultRole := strings.ToUpper(random.AlphaN(6))
 		tagValue := random.String()
 		tags := []sdk.TagAssociation{
 			{
@@ -42,7 +43,7 @@ func TestInt_Users(t *testing.T) {
 			ObjectProperties: &sdk.UserObjectProperties{
 				Password:    &password,
 				LoginName:   &loginName,
-				DefaultRole: sdk.String("foo"),
+				DefaultRole: sdk.Pointer(sdk.NewAccountObjectIdentifier(defaultRole)),
 			},
 			ObjectParameters: &sdk.UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
@@ -55,11 +56,13 @@ func TestInt_Users(t *testing.T) {
 		}
 		err := client.Users.Create(ctx, id, opts)
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
-		assert.Equal(t, "foo", userDetails.DefaultRole.Value)
+		assert.Equal(t, defaultRole, userDetails.DefaultRole.Value)
 
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -95,6 +98,8 @@ func TestInt_Users(t *testing.T) {
 		}
 		err := client.Users.Create(ctx, id, opts)
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
@@ -110,6 +115,8 @@ func TestInt_Users(t *testing.T) {
 
 		err := client.Users.Create(ctx, id, nil)
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
@@ -121,10 +128,91 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, id.Name(), user.Name)
 	})
 
+	t.Run("create: default role with hyphen", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		defaultRole := strings.ToUpper(random.AlphaN(4) + "-" + random.AlphaN(4))
+
+		opts := &sdk.CreateUserOptions{
+			ObjectProperties: &sdk.UserObjectProperties{
+				DefaultRole: sdk.Pointer(sdk.NewAccountObjectIdentifier(defaultRole)),
+			},
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		createdUser, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, defaultRole, createdUser.DefaultRole)
+	})
+
+	t.Run("create: default role in lowercase", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		defaultRole := strings.ToLower(random.AlphaN(6))
+
+		opts := &sdk.CreateUserOptions{
+			ObjectProperties: &sdk.UserObjectProperties{
+				DefaultRole: sdk.Pointer(sdk.NewAccountObjectIdentifier(defaultRole)),
+			},
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		createdUser, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, defaultRole, createdUser.DefaultRole)
+	})
+
+	t.Run("create: other params with hyphen and mixed cases", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		randomWithHyphenAndMixedCase := strings.ToUpper(random.AlphaN(4)) + "-" + strings.ToLower(random.AlphaN(4))
+		var namespaceId sdk.ObjectIdentifier = sdk.NewDatabaseObjectIdentifier(randomWithHyphenAndMixedCase, randomWithHyphenAndMixedCase)
+
+		opts := &sdk.CreateUserOptions{
+			ObjectProperties: &sdk.UserObjectProperties{
+				LoginName:        sdk.String(randomWithHyphenAndMixedCase),
+				DisplayName:      sdk.String(randomWithHyphenAndMixedCase),
+				FirstName:        sdk.String(randomWithHyphenAndMixedCase),
+				MiddleName:       sdk.String(randomWithHyphenAndMixedCase),
+				LastName:         sdk.String(randomWithHyphenAndMixedCase),
+				DefaultWarehouse: sdk.Pointer(sdk.NewAccountObjectIdentifier(randomWithHyphenAndMixedCase)),
+				DefaultNamespace: sdk.Pointer(namespaceId),
+				DefaultRole:      sdk.Pointer(sdk.NewAccountObjectIdentifier(randomWithHyphenAndMixedCase)),
+			},
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		createdUser, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		// login name is always case-insensitive
+		assert.Equal(t, strings.ToUpper(randomWithHyphenAndMixedCase), createdUser.LoginName)
+		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DisplayName)
+		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.FirstName)
+		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.LastName)
+		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DefaultWarehouse)
+		assert.Equal(t, randomWithHyphenAndMixedCase+"."+randomWithHyphenAndMixedCase, createdUser.DefaultNamespace)
+		assert.Equal(t, randomWithHyphenAndMixedCase, createdUser.DefaultRole)
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.MiddleName.Value)
+		// login name is always case-insensitive
+		assert.Equal(t, strings.ToUpper(randomWithHyphenAndMixedCase), userDetails.LoginName.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.DisplayName.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.FirstName.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.LastName.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.DefaultWarehouse.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase+"."+randomWithHyphenAndMixedCase, userDetails.DefaultNamespace.Value)
+		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.DefaultRole.Value)
+	})
+
 	// TODO: add tests for alter
-	// TODO: add tests for default role with hyphen
-	// TODO: add tests for default role different casing
-	// TODO: add tests for other params with hyphen
 	// TODO: add tests for parameters
 
 	t.Run("describe: when user exists", func(t *testing.T) {

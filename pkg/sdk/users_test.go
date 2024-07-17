@@ -24,15 +24,20 @@ func TestUserCreate(t *testing.T) {
 		}
 		password := random.Password()
 		loginName := random.String()
+		defaultRoleId := randomAccountObjectIdentifier()
+		defaultWarehouseId := randomAccountObjectIdentifier()
+		var defaultNamespaceId ObjectIdentifier = randomDatabaseObjectIdentifier()
 
 		opts := &CreateUserOptions{
 			OrReplace:   Bool(true),
 			name:        id,
 			IfNotExists: Bool(true),
 			ObjectProperties: &UserObjectProperties{
-				Password:    &password,
-				LoginName:   &loginName,
-				DefaultRole: String("foo"),
+				Password:         &password,
+				LoginName:        &loginName,
+				DefaultRole:      Pointer(defaultRoleId),
+				DefaultNamespace: Pointer(defaultNamespaceId),
+				DefaultWarehouse: Pointer(defaultWarehouseId),
 			},
 			ObjectParameters: &UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: Bool(true),
@@ -44,7 +49,7 @@ func TestUserCreate(t *testing.T) {
 			Tags: tags,
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_ROLE = foo ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_WAREHOUSE = %s DEFAULT_NAMESPACE = %s DEFAULT_ROLE = %s ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, defaultWarehouseId.FullyQualifiedName(), defaultNamespaceId.FullyQualifiedName(), defaultRoleId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
