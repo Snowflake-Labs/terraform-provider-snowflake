@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -213,7 +214,221 @@ func TestInt_Users(t *testing.T) {
 	})
 
 	// TODO: add tests for alter
-	// TODO: add tests for parameters
+
+	t.Run("create: with all parameters set", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		opts := &sdk.CreateUserOptions{
+			SessionParameters: &sdk.SessionParameters{
+				AbortDetachedQuery:                       sdk.Bool(true),
+				Autocommit:                               sdk.Bool(false),
+				BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+				BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+				ClientMemoryLimit:                        sdk.Int(1024),
+				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+				ClientPrefetchThreads:                    sdk.Int(2),
+				ClientResultChunkSize:                    sdk.Int(48),
+				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+				ClientSessionKeepAlive:                   sdk.Bool(true),
+				ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+				ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+				DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+				DateOutputFormat:                         sdk.String("YY-MM-DD"),
+				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+				ErrorOnNondeterministicMerge:             sdk.Bool(false),
+				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+				GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+				GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+				JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+				JdbcUseSessionTimezone:                   sdk.Bool(false),
+				JSONIndent:                               sdk.Int(4),
+				LockTimeout:                              sdk.Int(21222),
+				LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+				MultiStatementCount:                      sdk.Int(0),
+				NoorderSequenceAsDefault:                 sdk.Bool(false),
+				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+				QueryTag:                                 sdk.String("some_tag"),
+				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+				RowsPerResultset:                         sdk.Int(2),
+				S3StageVpceDnsName:                       sdk.String("vpce-some_dns-vpce.amazonaws.com"),
+				SearchPath:                               sdk.String("$public, $current"),
+				SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+				StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+				StatementTimeoutInSeconds:                sdk.Int(10),
+				StrictJSONOutput:                         sdk.Bool(true),
+				TimestampDayIsAlways24h:                  sdk.Bool(true),
+				TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+				TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+				TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				Timezone:                                 sdk.String("Europe/Warsaw"),
+				TimeInputFormat:                          sdk.String("HH24:MI"),
+				TimeOutputFormat:                         sdk.String("HH24:MI"),
+				TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+				TransactionAbortOnError:                  sdk.Bool(true),
+				TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+				TwoDigitCenturyStart:                     sdk.Int(1980),
+				UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+				UseCachedResult:                          sdk.Bool(false),
+				WeekOfYearPolicy:                         sdk.Int(1),
+				WeekStart:                                sdk.Int(1),
+			},
+			ObjectParameters: &sdk.UserObjectParameters{
+				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+				//NetworkPolicy: ,
+				PreventUnloadToInternalStages: sdk.Bool(true),
+			},
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		createdUser, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), createdUser.Name)
+
+		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
+
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterAbortDetachedQuery).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterAutocommit).Value)
+		assert.Equal(t, string(sdk.BinaryInputFormatUTF8), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryInputFormat).Value)
+		assert.Equal(t, string(sdk.BinaryOutputFormatBase64), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryOutputFormat).Value)
+		// TODO: check zero
+		assert.Equal(t, "1024", helpers.FindParameter(t, parameters, sdk.UserParameterClientMemoryLimit).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterClientMetadataRequestUseConnectionCtx).Value)
+		assert.Equal(t, "2", helpers.FindParameter(t, parameters, sdk.UserParameterClientPrefetchThreads).Value)
+		assert.Equal(t, "48", helpers.FindParameter(t, parameters, sdk.UserParameterClientResultChunkSize).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterClientResultColumnCaseInsensitive).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterClientSessionKeepAlive).Value)
+		assert.Equal(t, "2400", helpers.FindParameter(t, parameters, sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency).Value)
+		assert.Equal(t, string(sdk.ClientTimestampTypeMappingNtz), helpers.FindParameter(t, parameters, sdk.UserParameterClientTimestampTypeMapping).Value)
+		assert.Equal(t, "YYYY-MM-DD", helpers.FindParameter(t, parameters, sdk.UserParameterDateInputFormat).Value)
+		assert.Equal(t, "YY-MM-DD", helpers.FindParameter(t, parameters, sdk.UserParameterDateOutputFormat).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterEnableUnloadPhysicalTypeOptimization).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterErrorOnNondeterministicMerge).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterErrorOnNondeterministicUpdate).Value)
+		assert.Equal(t, string(sdk.GeographyOutputFormatWKB), helpers.FindParameter(t, parameters, sdk.UserParameterGeographyOutputFormat).Value)
+		assert.Equal(t, string(sdk.GeometryOutputFormatWKB), helpers.FindParameter(t, parameters, sdk.UserParameterGeometryOutputFormat).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcTreatDecimalAsInt).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcTreatTimestampNtzAsUtc).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcUseSessionTimezone).Value)
+		assert.Equal(t, "4", helpers.FindParameter(t, parameters, sdk.UserParameterJsonIndent).Value)
+		assert.Equal(t, "21222", helpers.FindParameter(t, parameters, sdk.UserParameterLockTimeout).Value)
+		assert.Equal(t, string(sdk.LogLevelError), helpers.FindParameter(t, parameters, sdk.UserParameterLogLevel).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.UserParameterMultiStatementCount).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterNoorderSequenceAsDefault).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterOdbcTreatDecimalAsInt).Value)
+		assert.Equal(t, "some_tag", helpers.FindParameter(t, parameters, sdk.UserParameterQueryTag).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterQuotedIdentifiersIgnoreCase).Value)
+		assert.Equal(t, "2", helpers.FindParameter(t, parameters, sdk.UserParameterRowsPerResultset).Value)
+		assert.Equal(t, "vpce-some_dns-vpce.amazonaws.com", helpers.FindParameter(t, parameters, sdk.UserParameterS3StageVpceDnsName).Value)
+		assert.Equal(t, "$public, $current", helpers.FindParameter(t, parameters, sdk.UserParameterSearchPath).Value)
+		assert.Equal(t, "some_consumer", helpers.FindParameter(t, parameters, sdk.UserParameterSimulatedDataSharingConsumer).Value)
+		assert.Equal(t, "10", helpers.FindParameter(t, parameters, sdk.UserParameterStatementQueuedTimeoutInSeconds).Value)
+		assert.Equal(t, "10", helpers.FindParameter(t, parameters, sdk.UserParameterStatementTimeoutInSeconds).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterStrictJsonOutput).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampDayIsAlways24h).Value)
+		assert.Equal(t, "YYYY-MM-DD", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampInputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampLtzOutputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampNtzOutputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampOutputFormat).Value)
+		assert.Equal(t, string(sdk.TimestampTypeMappingLtz), helpers.FindParameter(t, parameters, sdk.UserParameterTimestampTypeMapping).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampTzOutputFormat).Value)
+		assert.Equal(t, "Europe/Warsaw", helpers.FindParameter(t, parameters, sdk.UserParameterTimezone).Value)
+		assert.Equal(t, "HH24:MI", helpers.FindParameter(t, parameters, sdk.UserParameterTimeInputFormat).Value)
+		assert.Equal(t, "HH24:MI", helpers.FindParameter(t, parameters, sdk.UserParameterTimeOutputFormat).Value)
+		assert.Equal(t, string(sdk.TraceLevelOnEvent), helpers.FindParameter(t, parameters, sdk.UserParameterTraceLevel).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterTransactionAbortOnError).Value)
+		assert.Equal(t, string(sdk.TransactionDefaultIsolationLevelReadCommitted), helpers.FindParameter(t, parameters, sdk.UserParameterTransactionDefaultIsolationLevel).Value)
+		assert.Equal(t, "1980", helpers.FindParameter(t, parameters, sdk.UserParameterTwoDigitCenturyStart).Value)
+		assert.Equal(t, string(sdk.UnsupportedDDLActionFail), helpers.FindParameter(t, parameters, sdk.UserParameterUnsupportedDdlAction).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterUseCachedResult).Value)
+		assert.Equal(t, "1", helpers.FindParameter(t, parameters, sdk.UserParameterWeekOfYearPolicy).Value)
+		assert.Equal(t, "1", helpers.FindParameter(t, parameters, sdk.UserParameterWeekStart).Value)
+
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterEnableUnredactedQuerySyntaxError).Value)
+		//assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterNetworkPolicy).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterPreventUnloadToInternalStages).Value)
+	})
+
+	t.Run("create: with all parameters default", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		createdUser, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), createdUser.Name)
+
+		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
+
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterAbortDetachedQuery).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterAutocommit).Value)
+		assert.Equal(t, string(sdk.BinaryInputFormatHex), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryInputFormat).Value)
+		assert.Equal(t, string(sdk.BinaryOutputFormatHex), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryOutputFormat).Value)
+		assert.Equal(t, "1536", helpers.FindParameter(t, parameters, sdk.UserParameterClientMemoryLimit).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterClientMetadataRequestUseConnectionCtx).Value)
+		assert.Equal(t, "4", helpers.FindParameter(t, parameters, sdk.UserParameterClientPrefetchThreads).Value)
+		assert.Equal(t, "160", helpers.FindParameter(t, parameters, sdk.UserParameterClientResultChunkSize).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterClientResultColumnCaseInsensitive).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterClientSessionKeepAlive).Value)
+		assert.Equal(t, "3600", helpers.FindParameter(t, parameters, sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency).Value)
+		assert.Equal(t, string(sdk.ClientTimestampTypeMappingLtz), helpers.FindParameter(t, parameters, sdk.UserParameterClientTimestampTypeMapping).Value)
+		assert.Equal(t, "AUTO", helpers.FindParameter(t, parameters, sdk.UserParameterDateInputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD", helpers.FindParameter(t, parameters, sdk.UserParameterDateOutputFormat).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterEnableUnloadPhysicalTypeOptimization).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterErrorOnNondeterministicMerge).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterErrorOnNondeterministicUpdate).Value)
+		assert.Equal(t, string(sdk.GeographyOutputFormatGeoJSON), helpers.FindParameter(t, parameters, sdk.UserParameterGeographyOutputFormat).Value)
+		assert.Equal(t, string(sdk.GeometryOutputFormatGeoJSON), helpers.FindParameter(t, parameters, sdk.UserParameterGeometryOutputFormat).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcTreatDecimalAsInt).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcTreatTimestampNtzAsUtc).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterJdbcUseSessionTimezone).Value)
+		assert.Equal(t, "2", helpers.FindParameter(t, parameters, sdk.UserParameterJsonIndent).Value)
+		assert.Equal(t, "43200", helpers.FindParameter(t, parameters, sdk.UserParameterLockTimeout).Value)
+		assert.Equal(t, string(sdk.LogLevelOff), helpers.FindParameter(t, parameters, sdk.UserParameterLogLevel).Value)
+		assert.Equal(t, "1", helpers.FindParameter(t, parameters, sdk.UserParameterMultiStatementCount).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterNoorderSequenceAsDefault).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterOdbcTreatDecimalAsInt).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterQueryTag).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterQuotedIdentifiersIgnoreCase).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.UserParameterRowsPerResultset).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterS3StageVpceDnsName).Value)
+		assert.Equal(t, "$current, $public", helpers.FindParameter(t, parameters, sdk.UserParameterSearchPath).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterSimulatedDataSharingConsumer).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.UserParameterStatementQueuedTimeoutInSeconds).Value)
+		assert.Equal(t, "172800", helpers.FindParameter(t, parameters, sdk.UserParameterStatementTimeoutInSeconds).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterStrictJsonOutput).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampDayIsAlways24h).Value)
+		assert.Equal(t, "AUTO", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampInputFormat).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampLtzOutputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS.FF3", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampNtzOutputFormat).Value)
+		assert.Equal(t, "YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampOutputFormat).Value)
+		assert.Equal(t, string(sdk.TimestampTypeMappingNtz), helpers.FindParameter(t, parameters, sdk.UserParameterTimestampTypeMapping).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterTimestampTzOutputFormat).Value)
+		assert.Equal(t, "America/Los_Angeles", helpers.FindParameter(t, parameters, sdk.UserParameterTimezone).Value)
+		assert.Equal(t, "AUTO", helpers.FindParameter(t, parameters, sdk.UserParameterTimeInputFormat).Value)
+		assert.Equal(t, "HH24:MI:SS", helpers.FindParameter(t, parameters, sdk.UserParameterTimeOutputFormat).Value)
+		assert.Equal(t, string(sdk.TraceLevelOff), helpers.FindParameter(t, parameters, sdk.UserParameterTraceLevel).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterTransactionAbortOnError).Value)
+		assert.Equal(t, string(sdk.TransactionDefaultIsolationLevelReadCommitted), helpers.FindParameter(t, parameters, sdk.UserParameterTransactionDefaultIsolationLevel).Value)
+		assert.Equal(t, "1970", helpers.FindParameter(t, parameters, sdk.UserParameterTwoDigitCenturyStart).Value)
+		// lowercase by default in Snowflake
+		assert.Equal(t, strings.ToLower(string(sdk.UnsupportedDDLActionIgnore)), helpers.FindParameter(t, parameters, sdk.UserParameterUnsupportedDdlAction).Value)
+		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterUseCachedResult).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.UserParameterWeekOfYearPolicy).Value)
+		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.UserParameterWeekStart).Value)
+
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterEnableUnredactedQuerySyntaxError).Value)
+		assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterNetworkPolicy).Value)
+		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterPreventUnloadToInternalStages).Value)
+	})
 
 	t.Run("describe: when user exists", func(t *testing.T) {
 		userDetails, err := client.Users.Describe(ctx, user.ID())
