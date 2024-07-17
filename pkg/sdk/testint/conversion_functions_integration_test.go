@@ -16,7 +16,7 @@ func TestInt_ToTimestampLTZ(t *testing.T) {
 		Set: &sdk.AccountSet{
 			Parameters: &sdk.AccountLevelParameters{
 				SessionParameters: &sdk.SessionParameters{
-					TimestampTypeMapping: sdk.String("TIMESTAMP_LTZ"),
+					TimestampTypeMapping: sdk.Pointer(sdk.TimestampTypeMappingLtz),
 					Timezone:             sdk.String("UTC"),
 				},
 			},
@@ -55,7 +55,7 @@ func TestInt_ToTimestampNTZ(t *testing.T) {
 		Set: &sdk.AccountSet{
 			Parameters: &sdk.AccountLevelParameters{
 				SessionParameters: &sdk.SessionParameters{
-					TimestampTypeMapping: sdk.String("TIMESTAMP_NTZ"),
+					TimestampTypeMapping: sdk.Pointer(sdk.TimestampTypeMappingLtz),
 					Timezone:             sdk.String("UTC"),
 				},
 			},
