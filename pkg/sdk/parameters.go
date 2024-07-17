@@ -1000,6 +1000,7 @@ const (
 	ParameterTypeObject    ParameterType = "OBJECT"
 	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
 	ParameterTypeDatabase  ParameterType = "DATABASE"
+	ParameterTypeSchema    ParameterType = "SCHEMA"
 )
 
 type Parameter struct {

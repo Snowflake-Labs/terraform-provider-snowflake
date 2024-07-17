@@ -58,6 +58,17 @@ func (c *ParameterClient) ShowWarehouseParameters(t *testing.T, id sdk.AccountOb
 	return params
 }
 
+func (c *ParameterClient) ShowSchemaParameters(t *testing.T, id sdk.DatabaseObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Schema: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
 	t.Helper()
 	ctx := context.Background()
