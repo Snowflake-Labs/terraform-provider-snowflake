@@ -186,7 +186,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		opts.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
+		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
@@ -353,7 +353,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		alterOptions.Set.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
+		alterOptions.Set.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if d.HasChange("rsa_public_key") {
 		runSet = true

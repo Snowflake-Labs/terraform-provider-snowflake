@@ -10,83 +10,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInt_UsersShow(t *testing.T) {
+func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
 	randomPrefix := random.AlphaN(6)
 
-	userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
+	user, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
 	t.Cleanup(userCleanup)
 
-	userTest2, user2Cleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix)
+	user2, user2Cleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix)
 	t.Cleanup(user2Cleanup)
-
-	t.Run("with like options", func(t *testing.T) {
-		showOptions := &sdk.ShowUserOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(userTest.Name),
-			},
-		}
-		users, err := client.Users.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Contains(t, users, *userTest)
-		assert.Equal(t, 1, len(users))
-	})
-
-	t.Run("with starts with options", func(t *testing.T) {
-		showOptions := &sdk.ShowUserOptions{
-			StartsWith: sdk.String(randomPrefix),
-		}
-		users, err := client.Users.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Contains(t, users, *userTest)
-		assert.Contains(t, users, *userTest2)
-		assert.Equal(t, 2, len(users))
-	})
-
-	t.Run("with starts with, limit and from options", func(t *testing.T) {
-		showOptions := &sdk.ShowUserOptions{
-			Limit:      sdk.Int(10),
-			From:       sdk.String(randomPrefix + "_"),
-			StartsWith: sdk.String(randomPrefix),
-		}
-
-		users, err := client.Users.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Contains(t, users, *userTest)
-		assert.Equal(t, 1, len(users))
-	})
-
-	t.Run("when searching a non-existent user", func(t *testing.T) {
-		showOptions := &sdk.ShowUserOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String("non-existent"),
-			},
-		}
-		users, err := client.Users.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Equal(t, 0, len(users))
-	})
-
-	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &sdk.ShowUserOptions{
-			Limit: sdk.Int(1),
-		}
-		users, err := client.Users.Show(ctx, showOptions)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(users))
-	})
-}
-
-func TestInt_UserCreate(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
 
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
-	t.Run("test complete case", func(t *testing.T) {
+	t.Run("create: complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		tagValue := random.String()
 		tags := []sdk.TagAssociation{
@@ -120,7 +59,7 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
-		assert.Equal(t, "FOO", userDetails.DefaultRole.Value)
+		assert.Equal(t, "foo", userDetails.DefaultRole.Value)
 
 		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 			Like: &sdk.Like{
@@ -132,7 +71,7 @@ func TestInt_UserCreate(t *testing.T) {
 		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
-	t.Run("test if not exists", func(t *testing.T) {
+	t.Run("create: if not exists", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		tagValue := random.String()
 		tags := []sdk.TagAssociation{
@@ -176,7 +115,7 @@ func TestInt_UserCreate(t *testing.T) {
 		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
-	t.Run("test no options", func(t *testing.T) {
+	t.Run("create: no options", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		err := client.Users.Create(ctx, id, nil)
@@ -196,33 +135,26 @@ func TestInt_UserCreate(t *testing.T) {
 		assert.Equal(t, 1, len(user))
 		assert.Equal(t, id.Name(), user[0].Name)
 	})
-}
 
-func TestInt_UserDescribe(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+	// TODO: add tests for alter
+	// TODO: add tests for default role with hyphen
+	// TODO: add tests for default role different casing
+	// TODO: add tests for other params with hyphen
+	// TODO: add tests for parameters
 
-	user, userCleanup := testClientHelper().User.CreateUser(t)
-	t.Cleanup(userCleanup)
-
-	t.Run("when user exists", func(t *testing.T) {
+	t.Run("describe: when user exists", func(t *testing.T) {
 		userDetails, err := client.Users.Describe(ctx, user.ID())
 		require.NoError(t, err)
 		assert.Equal(t, user.Name, userDetails.Name.Value)
 	})
 
-	t.Run("when user does not exist", func(t *testing.T) {
+	t.Run("describe: when user does not exist", func(t *testing.T) {
 		id := NonExistingAccountObjectIdentifier
 		_, err := client.Users.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
-}
 
-func TestInt_UserDrop(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	t.Run("when user exists", func(t *testing.T) {
+	t.Run("drop: when user exists", func(t *testing.T) {
 		user, userCleanup := testClientHelper().User.CreateUser(t)
 		t.Cleanup(userCleanup)
 
@@ -233,9 +165,65 @@ func TestInt_UserDrop(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("when user does not exist", func(t *testing.T) {
+	t.Run("drop: when user does not exist", func(t *testing.T) {
 		id := NonExistingAccountObjectIdentifier
 		err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("show: with like options", func(t *testing.T) {
+		showOptions := &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(user.Name),
+			},
+		}
+		users, err := client.Users.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Contains(t, users, *user)
+		assert.Equal(t, 1, len(users))
+	})
+
+	t.Run("show: with starts with options", func(t *testing.T) {
+		showOptions := &sdk.ShowUserOptions{
+			StartsWith: sdk.String(randomPrefix),
+		}
+		users, err := client.Users.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Contains(t, users, *user)
+		assert.Contains(t, users, *user2)
+		assert.Equal(t, 2, len(users))
+	})
+
+	t.Run("show: with starts with, limit and from options", func(t *testing.T) {
+		showOptions := &sdk.ShowUserOptions{
+			Limit:      sdk.Int(10),
+			From:       sdk.String(randomPrefix + "_"),
+			StartsWith: sdk.String(randomPrefix),
+		}
+
+		users, err := client.Users.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Contains(t, users, *user)
+		assert.Equal(t, 1, len(users))
+	})
+
+	t.Run("show: search for a non-existent user", func(t *testing.T) {
+		showOptions := &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(NonExistingAccountObjectIdentifier.Name()),
+			},
+		}
+		users, err := client.Users.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(users))
+	})
+
+	t.Run("show: limit the number of results", func(t *testing.T) {
+		showOptions := &sdk.ShowUserOptions{
+			Limit: sdk.Int(1),
+		}
+		users, err := client.Users.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(users))
 	})
 }

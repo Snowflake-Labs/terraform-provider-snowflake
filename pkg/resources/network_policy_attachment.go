@@ -242,7 +242,7 @@ func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	policyName := data.Get("network_policy_name").(string)
 
-	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectParameters: &sdk.UserObjectParameters{NetworkPolicy: sdk.String(policyName)}}})
+	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectParameters: &sdk.UserObjectParameters{NetworkPolicy: sdk.Pointer(sdk.NewAccountObjectIdentifier(policyName))}}})
 	if err != nil {
 		return fmt.Errorf("error setting network policy %v on user %v err = %w", policyName, user, err)
 	}

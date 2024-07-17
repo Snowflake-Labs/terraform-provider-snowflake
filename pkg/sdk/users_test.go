@@ -97,8 +97,8 @@ func TestUserAlter(t *testing.T) {
 	t.Run("with setting properties and parameters", func(t *testing.T) {
 		password := random.Password()
 		objectProperties := UserObjectProperties{
-			Password:             &password,
-			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
+			Password:              &password,
+			DefaultSecondaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
 		}
 		opts := &AlterUserOptions{
 			name: id,
