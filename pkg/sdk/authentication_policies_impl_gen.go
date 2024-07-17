@@ -38,7 +38,6 @@ func (v *authenticationPolicies) Show(ctx context.Context, request *ShowAuthenti
 }
 
 func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
 	authenticationPolicies, err := v.Show(ctx, NewShowAuthenticationPolicyRequest())
 	if err != nil {
 		return nil, err
@@ -127,8 +126,15 @@ func (r *ShowAuthenticationPolicyRequest) toOpts() *ShowAuthenticationPolicyOpti
 }
 
 func (r showAuthenticationPolicyDBRow) convert() *AuthenticationPolicy {
-	// TODO: Mapping
-	return &AuthenticationPolicy{}
+	return &AuthenticationPolicy{
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		DatabaseName:  r.DatabaseName,
+		SchemaName:    r.SchemaName,
+		Owner:         r.Owner,
+		OwnerRoleType: r.OwnerRoleType,
+		Options:       r.Options,
+	}
 }
 
 func (r *DescribeAuthenticationPolicyRequest) toOpts() *DescribeAuthenticationPolicyOptions {
@@ -139,6 +145,8 @@ func (r *DescribeAuthenticationPolicyRequest) toOpts() *DescribeAuthenticationPo
 }
 
 func (r describeAuthenticationPolicyDBRow) convert() *AuthenticationPolicyDescription {
-	// TODO: Mapping
-	return &AuthenticationPolicyDescription{}
+	return &AuthenticationPolicyDescription{
+		Name:  r.Name,
+		Value: r.Value,
+	}
 }
