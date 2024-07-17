@@ -26,6 +26,9 @@ func TestInt_Users(t *testing.T) {
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
+	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+	t.Cleanup(networkPolicyCleanup)
+
 	t.Run("create: complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		defaultRole := strings.ToUpper(random.AlphaN(6))
@@ -278,8 +281,8 @@ func TestInt_Users(t *testing.T) {
 			},
 			ObjectParameters: &sdk.UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-				//NetworkPolicy: ,
-				PreventUnloadToInternalStages: sdk.Bool(true),
+				NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+				PreventUnloadToInternalStages:    sdk.Bool(true),
 			},
 		}
 
@@ -351,7 +354,7 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, "1", helpers.FindParameter(t, parameters, sdk.UserParameterWeekStart).Value)
 
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterEnableUnredactedQuerySyntaxError).Value)
-		//assert.Equal(t, "", helpers.FindParameter(t, parameters, sdk.UserParameterNetworkPolicy).Value)
+		assert.Equal(t, networkPolicy.ID().Name(), helpers.FindParameter(t, parameters, sdk.UserParameterNetworkPolicy).Value)
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterPreventUnloadToInternalStages).Value)
 	})
 
