@@ -206,13 +206,13 @@ type UserObjectProperties struct {
 	Email                 *string                  `ddl:"parameter,single_quotes" sql:"EMAIL"`
 	MustChangePassword    *bool                    `ddl:"parameter,no_quotes" sql:"MUST_CHANGE_PASSWORD"`
 	Disable               *bool                    `ddl:"parameter,no_quotes" sql:"DISABLED"`
-	DaysToExpiry          *int                     `ddl:"parameter,single_quotes" sql:"DAYS_TO_EXPIRY"`
-	MinsToUnlock          *int                     `ddl:"parameter,single_quotes" sql:"MINS_TO_UNLOCK"`
+	DaysToExpiry          *int                     `ddl:"parameter,no_quotes" sql:"DAYS_TO_EXPIRY"`
+	MinsToUnlock          *int                     `ddl:"parameter,no_quotes" sql:"MINS_TO_UNLOCK"`
 	DefaultWarehouse      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace      *ObjectIdentifier        `ddl:"identifier,equals" sql:"DEFAULT_NAMESPACE"`
 	DefaultRole           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_ROLE"`
 	DefaultSecondaryRoles *SecondaryRoles          `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
-	MinsToBypassMFA       *int                     `ddl:"parameter,single_quotes" sql:"MINS_TO_BYPASS_MFA"`
+	MinsToBypassMFA       *int                     `ddl:"parameter,no_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey          *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKeyFp        *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_FP"`
 	RSAPublicKey2         *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2"`
@@ -231,25 +231,25 @@ type SecondaryRole struct {
 	Value string `ddl:"keyword,single_quotes"`
 }
 type UserObjectPropertiesUnset struct {
-	Password             *bool `ddl:"keyword" sql:"PASSWORD"`
-	LoginName            *bool `ddl:"keyword" sql:"LOGIN_NAME"`
-	DisplayName          *bool `ddl:"keyword" sql:"DISPLAY_NAME"`
-	FirstName            *bool `ddl:"keyword" sql:"FIRST_NAME"`
-	MiddleName           *bool `ddl:"keyword" sql:"MIDDLE_NAME"`
-	LastName             *bool `ddl:"keyword" sql:"LAST_NAME"`
-	Email                *bool `ddl:"keyword" sql:"EMAIL"`
-	MustChangePassword   *bool `ddl:"keyword" sql:"MUST_CHANGE_PASSWORD"`
-	Disable              *bool `ddl:"keyword" sql:"DISABLED"`
-	DaysToExpiry         *bool `ddl:"keyword" sql:"DAYS_TO_EXPIRY"`
-	MinsToUnlock         *bool `ddl:"keyword" sql:"MINS_TO_UNLOCK"`
-	DefaultWarehosue     *bool `ddl:"keyword" sql:"DEFAULT_WAREHOUSE"`
-	DefaultNamespace     *bool `ddl:"keyword" sql:"DEFAULT_NAMESPACE"`
-	DefaultRole          *bool `ddl:"keyword" sql:"DEFAULT_ROLE"`
-	DefaultSeconaryRoles *bool `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
-	MinsToBypassMFA      *bool `ddl:"keyword" sql:"MINS_TO_BYPASS_MFA"`
-	RSAPublicKey         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
-	RSAPublicKey2        *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
-	Comment              *bool `ddl:"keyword" sql:"COMMENT"`
+	Password              *bool `ddl:"keyword" sql:"PASSWORD"`
+	LoginName             *bool `ddl:"keyword" sql:"LOGIN_NAME"`
+	DisplayName           *bool `ddl:"keyword" sql:"DISPLAY_NAME"`
+	FirstName             *bool `ddl:"keyword" sql:"FIRST_NAME"`
+	MiddleName            *bool `ddl:"keyword" sql:"MIDDLE_NAME"`
+	LastName              *bool `ddl:"keyword" sql:"LAST_NAME"`
+	Email                 *bool `ddl:"keyword" sql:"EMAIL"`
+	MustChangePassword    *bool `ddl:"keyword" sql:"MUST_CHANGE_PASSWORD"`
+	Disable               *bool `ddl:"keyword" sql:"DISABLED"`
+	DaysToExpiry          *bool `ddl:"keyword" sql:"DAYS_TO_EXPIRY"`
+	MinsToUnlock          *bool `ddl:"keyword" sql:"MINS_TO_UNLOCK"`
+	DefaultWarehouse      *bool `ddl:"keyword" sql:"DEFAULT_WAREHOUSE"`
+	DefaultNamespace      *bool `ddl:"keyword" sql:"DEFAULT_NAMESPACE"`
+	DefaultRole           *bool `ddl:"keyword" sql:"DEFAULT_ROLE"`
+	DefaultSecondaryRoles *bool `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
+	MinsToBypassMFA       *bool `ddl:"keyword" sql:"MINS_TO_BYPASS_MFA"`
+	RSAPublicKey          *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
+	RSAPublicKey2         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
+	Comment               *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 type UserObjectParameters struct {
@@ -375,8 +375,9 @@ type UserUnset struct {
 }
 
 func (opts *UserUnset) validate() error {
-	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	// TODO [next PR]: change validations with policies
+	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errAtLeastOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
