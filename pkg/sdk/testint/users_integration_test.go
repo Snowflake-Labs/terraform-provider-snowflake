@@ -325,10 +325,8 @@ func TestInt_Users(t *testing.T) {
 			},
 			MinsToBypassMFA: sdk.Int(30),
 			RSAPublicKey:    sdk.String(key),
-			//RSAPublicKeyFp:  sdk.String(hash),
-			RSAPublicKey2: sdk.String(key2),
-			//RSAPublicKey2Fp: sdk.String(hash2),
-			Comment: sdk.String("some comment"),
+			RSAPublicKey2:   sdk.String(key2),
+			Comment:         sdk.String("some comment"),
 		}}
 
 		err := client.Users.Create(ctx, id, createOpts)
@@ -374,6 +372,50 @@ func TestInt_Users(t *testing.T) {
 			HasHasPassword(true).
 			HasHasRsaPublicKey(true),
 		)
+	})
+
+	// TODO [SNOW-1348101]: consult this with appropriate team when we have all the problems listed
+	t.Run("create and alter: problems with public key fingerprints", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			RSAPublicKey:   sdk.String(key),
+			RSAPublicKeyFp: sdk.String(hash),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_FP' for 'USER'")
+
+		createOpts = &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			RSAPublicKey2:   sdk.String(key),
+			RSAPublicKey2Fp: sdk.String(hash),
+		}}
+
+		err = client.Users.Create(ctx, id, createOpts)
+		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_2_FP' for 'USER'")
+
+		user, userCleanup := testClientHelper().User.CreateUser(t)
+		t.Cleanup(userCleanup)
+
+		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserObjectProperties{
+				RSAPublicKey:   sdk.String(key),
+				RSAPublicKeyFp: sdk.String(hash),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_FP' for 'USER'")
+
+		alterOpts = &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserObjectProperties{
+				RSAPublicKey2:   sdk.String(key2),
+				RSAPublicKey2Fp: sdk.String(hash2),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_2_FP' for 'USER'")
 	})
 
 	t.Run("create: default role with hyphen", func(t *testing.T) {
@@ -609,10 +651,8 @@ func TestInt_Users(t *testing.T) {
 				},
 				MinsToBypassMFA: sdk.Int(30),
 				RSAPublicKey:    sdk.String(key),
-				//RSAPublicKeyFp:  sdk.String(hash),
-				RSAPublicKey2: sdk.String(key2),
-				//RSAPublicKey2Fp: sdk.String(hash2),
-				Comment: sdk.String("some comment"),
+				RSAPublicKey2:   sdk.String(key2),
+				Comment:         sdk.String("some comment"),
 			},
 		}}
 
