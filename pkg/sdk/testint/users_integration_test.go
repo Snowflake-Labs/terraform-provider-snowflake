@@ -31,8 +31,6 @@ func TestInt_Users(t *testing.T) {
 	roleId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 	key, hash := random.GenerateRSAPublicKey(t)
 	key2, hash2 := random.GenerateRSAPublicKey(t)
-	_ = hash
-	_ = hash2
 
 	user, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
 	t.Cleanup(userCleanup)
