@@ -794,7 +794,8 @@ func TestInt_Users(t *testing.T) {
 					NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
 					PreventUnloadToInternalStages:    sdk.Bool(true),
 				},
-			}}
+			},
+		}
 
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
@@ -864,7 +865,8 @@ func TestInt_Users(t *testing.T) {
 					WeekOfYearPolicy:                         sdk.Bool(true),
 					WeekStart:                                sdk.Bool(true),
 				},
-			}}
+			},
+		}
 
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
@@ -876,7 +878,8 @@ func TestInt_Users(t *testing.T) {
 					NetworkPolicy:                    sdk.Bool(true),
 					PreventUnloadToInternalStages:    sdk.Bool(true),
 				},
-			}}
+			},
+		}
 
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
