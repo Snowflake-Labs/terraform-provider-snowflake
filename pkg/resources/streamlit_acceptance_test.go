@@ -11,6 +11,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	tfjson "github.com/hashicorp/terraform-json"
@@ -21,6 +22,7 @@ import (
 )
 
 func TestAcc_Streamlit_basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	databaseId := acc.TestClient().Ids.DatabaseId()
@@ -249,6 +251,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 }
 
 func TestAcc_Streamlit_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	databaseId := acc.TestClient().Ids.DatabaseId()
