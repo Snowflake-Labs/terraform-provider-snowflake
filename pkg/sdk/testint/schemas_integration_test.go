@@ -11,11 +11,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInt_SchemasCreate(t *testing.T) {
+func TestInt_Schemas(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
+	schema1, cleanupSchema1 := testClientHelper().Schema.CreateSchema(t)
+	t.Cleanup(cleanupSchema1)
+	schema2, cleanupSchema2 := testClientHelper().Schema.CreateSchema(t)
+	t.Cleanup(cleanupSchema2)
 
-	t.Run("minimal", func(t *testing.T) {
+	assertParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.AccountParameter, expected string) {
+		t.Helper()
+		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
+	}
+
+	assertParameterEqualsToDefaultValue := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter) {
+		t.Helper()
+		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
+		assert.NoError(t, err)
+		assert.NotNil(t, param)
+		assert.Equal(t, (*param).Default, (*param).Value)
+	}
+
+	t.Run("create: minimal", func(t *testing.T) {
 		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
 			OrReplace: sdk.Bool(true),
@@ -26,9 +43,28 @@ func TestInt_SchemasCreate(t *testing.T) {
 		database, err := client.Schemas.ShowByID(ctx, schemaId)
 		require.NoError(t, err)
 		assert.Equal(t, schemaId.Name(), database.Name)
+
+		params := testClientHelper().Parameter.ShowSchemaParameters(t, schemaId)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterCatalog)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterReplaceInvalidCharacters)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDefaultDDLCollation)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterStorageSerializationPolicy)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterLogLevel)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterTraceLevel)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterSuspendTaskAfterNumFailures)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterTaskAutoRetryAttempts)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterUserTaskTimeoutMs)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterQuotedIdentifiersIgnoreCase)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterEnableConsoleOutput)
+		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterPipeExecutionPaused)
 	})
 
-	t.Run("replace", func(t *testing.T) {
+	t.Run("create: or replace", func(t *testing.T) {
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 		comment := "replaced"
@@ -48,7 +84,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		assert.Equal(t, comment, s.Comment)
 	})
 
-	t.Run("if not exists", func(t *testing.T) {
+	t.Run("create: if not exists", func(t *testing.T) {
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 		comment := "some_comment"
@@ -62,7 +98,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		assert.NotEqual(t, comment, s.Comment)
 	})
 
-	t.Run("clone", func(t *testing.T) {
+	t.Run("create: clone", func(t *testing.T) {
 		comment := "some_comment"
 		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
@@ -94,7 +130,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		})
 	})
 
-	t.Run("with tags", func(t *testing.T) {
+	t.Run("create: with tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
@@ -119,7 +155,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		assert.Equal(t, tagValue, tv)
 	})
 
-	t.Run("complete", func(t *testing.T) {
+	t.Run("create: complete", func(t *testing.T) {
 		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 
 		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
@@ -213,28 +249,8 @@ func TestInt_SchemasCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "v2", tag2Value)
 	})
-}
 
-func TestInt_SchemasAlter(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	assertParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.AccountParameter, expected string) {
-		t.Helper()
-		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
-	}
-
-	assertParameterEqualsToDefaultValue := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter) {
-		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
-		assert.NoError(t, err)
-		assert.NotNil(t, param)
-		if param != nil && (*param).Level == "" {
-			param := *param
-			assert.Equal(t, param.Default, param.Value)
-		}
-	}
-	t.Run("rename to", func(t *testing.T) {
+	t.Run("alter: rename to", func(t *testing.T) {
 		// new schema created on purpose
 		schema, _ := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(func() {
@@ -255,7 +271,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		})
 	})
 
-	t.Run("swap with", func(t *testing.T) {
+	t.Run("alter: swap with", func(t *testing.T) {
 		// new schemas created on purpose
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
@@ -281,7 +297,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assert.Equal(t, table.Name, schemaDetails[0].Name)
 	})
 
-	t.Run("set and unset parameters", func(t *testing.T) {
+	t.Run("alter: set and unset parameters", func(t *testing.T) {
 		// new schema created on purpose
 		schemaTest, cleanupSchemaTest := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchemaTest)
@@ -377,7 +393,30 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterPipeExecutionPaused)
 	})
 
-	t.Run("unset", func(t *testing.T) {
+	t.Run("alter: set non-parameters", func(t *testing.T) {
+		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		comment := random.Comment()
+		err := client.Schemas.Create(ctx, schemaID, nil)
+		require.NoError(t, err)
+
+		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
+			Set: &sdk.SchemaSet{
+				Comment: sdk.Pointer(comment),
+			},
+		})
+		require.NoError(t, err)
+
+		s, err := client.Schemas.ShowByID(ctx, schemaID)
+		require.NoError(t, err)
+		assert.Equal(t, comment, s.Comment)
+
+		t.Cleanup(func() {
+			err := client.Schemas.Drop(ctx, schemaID, nil)
+			require.NoError(t, err)
+		})
+	})
+
+	t.Run("alter: unset non-parameters", func(t *testing.T) {
 		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		comment := random.Comment()
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
@@ -402,7 +441,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		})
 	})
 
-	t.Run("set tags", func(t *testing.T) {
+	t.Run("alter: set tags", func(t *testing.T) {
 		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		err := client.Schemas.Create(ctx, schemaID, nil)
 		require.NoError(t, err)
@@ -433,7 +472,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assert.Equal(t, tagValue, tv)
 	})
 
-	t.Run("unset tags", func(t *testing.T) {
+	t.Run("alter: unset tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
@@ -464,7 +503,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("enable managed access", func(t *testing.T) {
+	t.Run("alter: enable managed access", func(t *testing.T) {
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 
@@ -479,7 +518,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assert.True(t, true, s.IsManagedAccess())
 	})
 
-	t.Run("disable managed access", func(t *testing.T) {
+	t.Run("alter: disable managed access", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchemaWithOpts(t, id, &sdk.CreateSchemaOptions{
 			WithManagedAccess: sdk.Pointer(true),
@@ -496,18 +535,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 		assert.Equal(t, schema.Name, s.Name)
 		assert.False(t, s.IsManagedAccess())
 	})
-}
 
-func TestInt_SchemasShow(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	schema1, cleanupSchema1 := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema1)
-	schema2, cleanupSchema2 := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema2)
-
-	t.Run("no options", func(t *testing.T) {
+	t.Run("show: no options", func(t *testing.T) {
 		schemas, err := client.Schemas.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.GreaterOrEqual(t, len(schemas), 2)
@@ -519,7 +548,7 @@ func TestInt_SchemasShow(t *testing.T) {
 		assert.Contains(t, schemaIds, schema2.ID())
 	})
 
-	t.Run("with terse", func(t *testing.T) {
+	t.Run("show: with terse", func(t *testing.T) {
 		schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
 			Terse: sdk.Bool(true),
 			Like: &sdk.Like{
@@ -536,7 +565,7 @@ func TestInt_SchemasShow(t *testing.T) {
 		assert.Empty(t, schema.Owner)
 	})
 
-	t.Run("with history", func(t *testing.T) {
+	t.Run("show: with history", func(t *testing.T) {
 		schema3, cleanupSchema3 := testClientHelper().Schema.CreateSchema(t)
 		cleanupSchema3()
 		schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
@@ -554,7 +583,7 @@ func TestInt_SchemasShow(t *testing.T) {
 		assert.NotEmpty(t, droppedSchema.DroppedOn)
 	})
 
-	t.Run("with options", func(t *testing.T) {
+	t.Run("show: with options", func(t *testing.T) {
 		schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
 			Terse:   sdk.Bool(true),
 			History: sdk.Bool(true),
@@ -577,47 +606,41 @@ func TestInt_SchemasShow(t *testing.T) {
 		assert.Contains(t, schemaNames, schema1.Name)
 		assert.Equal(t, "ROLE", schema1.OwnerRoleType)
 	})
-}
 
-func TestInt_SchemasDrop(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+	t.Run("drop", func(t *testing.T) {
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(cleanupSchema)
 
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema)
+		s, err := client.Schemas.ShowByID(ctx, schema.ID())
+		require.NoError(t, err)
+		assert.Equal(t, schema.Name, s.Name)
 
-	s, err := client.Schemas.ShowByID(ctx, schema.ID())
-	require.NoError(t, err)
-	assert.Equal(t, schema.Name, s.Name)
+		err = client.Schemas.Drop(ctx, schema.ID(), nil)
+		require.NoError(t, err)
 
-	err = client.Schemas.Drop(ctx, schema.ID(), nil)
-	require.NoError(t, err)
+		_, err = client.Schemas.ShowByID(ctx, schema.ID())
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
 
-	_, err = client.Schemas.ShowByID(ctx, schema.ID())
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-}
+	t.Run("undrop", func(t *testing.T) {
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(cleanupSchema)
 
-func TestInt_SchemasUndrop(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+		before, err := client.Schemas.ShowByID(ctx, schema.ID())
+		require.NoError(t, err)
+		assert.Equal(t, schema.Name, before.Name)
 
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-	t.Cleanup(cleanupSchema)
+		err = client.Schemas.Drop(ctx, schema.ID(), nil)
+		require.NoError(t, err)
 
-	before, err := client.Schemas.ShowByID(ctx, schema.ID())
-	require.NoError(t, err)
-	assert.Equal(t, schema.Name, before.Name)
+		_, err = client.Schemas.ShowByID(ctx, schema.ID())
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 
-	err = client.Schemas.Drop(ctx, schema.ID(), nil)
-	require.NoError(t, err)
+		err = client.Schemas.Undrop(ctx, schema.ID())
+		require.NoError(t, err)
 
-	_, err = client.Schemas.ShowByID(ctx, schema.ID())
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-
-	err = client.Schemas.Undrop(ctx, schema.ID())
-	require.NoError(t, err)
-
-	after, err := client.Schemas.ShowByID(ctx, schema.ID())
-	require.NoError(t, err)
-	assert.Equal(t, schema.Name, after.Name)
+		after, err := client.Schemas.ShowByID(ctx, schema.ID())
+		require.NoError(t, err)
+		assert.Equal(t, schema.Name, after.Name)
+	})
 }
