@@ -3,7 +3,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"slices"
@@ -26,7 +25,12 @@ func main() {
 	printAllStructsFields(allStructsDetails)
 	printUniqueTypes(allStructsDetails)
 	generateAllStructsToStdOut(allStructsDetails)
-	saveAllGeneratedSchemas(allStructsDetails)
+	gencommons.GenerateAndSaveForAllObjects(
+		allStructsDetails,
+		gen.ModelFromStructDetails,
+		func(_, model gen.ShowResultSchemaModel) { return gencommons.ToSnakeCase(model.Name) + "_gen.go" },
+		gen.AllTemplates,
+	)
 }
 
 func printAllStructsFields(allStructs []gencommons.StructDetails) {
@@ -63,17 +67,6 @@ func generateAllStructsToStdOut(allStructs []gencommons.StructDetails) {
 		fmt.Println("===========================")
 		fmt.Printf("Generated for %s\n", s.Name)
 		fmt.Println("===========================")
-		model := gen.ModelFromStructDetails(s)
-		gen.Generate(model, os.Stdout)
-	}
-}
-
-func saveAllGeneratedSchemas(allStructs []gencommons.StructDetails) {
-	for _, s := range allStructs {
-		buffer := bytes.Buffer{}
-		model := gen.ModelFromStructDetails(s)
-		gen.Generate(model, &buffer)
-		filename := gencommons.ToSnakeCase(model.Name) + "_gen.go"
-		gencommons.WriteCodeToFile(&buffer, filename)
+		gencommons.ExecuteAllTemplates(gen.ModelFromStructDetails(s), os.Stdout, gen.AllTemplates)
 	}
 }

@@ -2,12 +2,15 @@ package gencommons
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"go/format"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 )
 
 var (
@@ -43,18 +46,54 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 	return sb.String()
 }
 
+// TODO: describe
+type ObjectNameProvider interface {
+	ObjectName() string
+}
+
+// TODO: describe
+func GenerateAndSaveForAllObjects[T ObjectNameProvider, M any](objects []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates ...*template.Template) error {
+	var errs []error
+	for _, s := range objects {
+		buffer := bytes.Buffer{}
+		model := modelProvider(s)
+		if err := ExecuteAllTemplates(model, &buffer, templates...); err != nil {
+			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
+			continue
+		}
+		filename := filenameProvider(s, model)
+		if err := WriteCodeToFile(&buffer, filename); err != nil {
+			errs = append(errs, fmt.Errorf("saving output for object %s to file %s failed with err: %w", s.ObjectName(), filename, err))
+			continue
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// TODO: describe
+func ExecuteAllTemplates[M any](model M, writer io.Writer, templates ...*template.Template) error {
+	var errs []error
+	for _, t := range templates {
+		if err := t.Execute(writer, model); err != nil {
+			errs = append(errs, fmt.Errorf("template execution for template %s failed with err: %w", t.Name(), err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
 // WriteCodeToFile formats and saves content from the given buffer into file relative to the current working directory.
-func WriteCodeToFile(buffer *bytes.Buffer, fileName string) {
-	wd, errWd := os.Getwd()
-	if errWd != nil {
-		log.Panicln(errWd)
+func WriteCodeToFile(buffer *bytes.Buffer, fileName string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
 	}
 	outputPath := filepath.Join(wd, fileName)
-	src, errSrcFormat := format.Source(buffer.Bytes())
-	if errSrcFormat != nil {
-		log.Panicln(errSrcFormat)
+	src, err := format.Source(buffer.Bytes())
+	if err != nil {
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
 	}
 	if err := os.WriteFile(outputPath, src, 0o600); err != nil {
-		log.Panicln(err)
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
 	}
+	return nil
 }

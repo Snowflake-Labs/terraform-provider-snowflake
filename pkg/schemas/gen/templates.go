@@ -25,4 +25,6 @@ var (
 		"firstLetterLowercase": func(in string) string { return strings.ToLower(in[:1]) + in[1:] },
 		"runMapper":            func(mapper Mapper, in ...string) string { return mapper(strings.Join(in, "")) },
 	}).Parse(toSchemaMapperTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, SchemaTemplate, ToSchemaMapperTemplate}
 )
