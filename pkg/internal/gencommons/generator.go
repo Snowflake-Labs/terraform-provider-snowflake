@@ -3,6 +3,7 @@ package gencommons
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -53,25 +54,31 @@ func (g *Generator[_, _]) Run() error {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
+	var additionalLogs = flag.Bool("additional-logs", false, "print additional object debug logs")
+	var dryRun = flag.Bool("dry-run", false, "generate to std out instead of saving")
+	flag.Parse()
+
 	objects := g.objectsProvider()
 
-	// TODO: print conditionally from invocation flag
-	for _, p := range g.additionalObjectDebugLogProviders {
-		p(objects)
+	if *additionalLogs {
+		for _, p := range g.additionalObjectDebugLogProviders {
+			p(objects)
+		}
 	}
 
-	// TODO: do not generate twice?
-	// TODO: print conditionally from invocation flag
-	if err := generateAndPrintForAllObjects(objects, g.modelProvider, g.templates...); err != nil {
-		return err
-	}
-	if err := generateAndSaveForAllObjects(
-		objects,
-		g.modelProvider,
-		g.filenameProvider,
-		g.templates...,
-	); err != nil {
-		return err
+	if *dryRun {
+		if err := generateAndPrintForAllObjects(objects, g.modelProvider, g.templates...); err != nil {
+			return err
+		}
+	} else {
+		if err := generateAndSaveForAllObjects(
+			objects,
+			g.modelProvider,
+			g.filenameProvider,
+			g.templates...,
+		); err != nil {
+			return err
+		}
 	}
 
 	return nil
