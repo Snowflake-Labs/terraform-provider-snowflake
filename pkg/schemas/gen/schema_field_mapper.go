@@ -31,7 +31,7 @@ var (
 // TODO [SNOW-1501905]: handle any other interface (error)
 // TODO [SNOW-1501905]: handle slices
 // TODO [SNOW-1501905]: handle structs (chosen one or all)
-func MapToSchemaField(field Field) SchemaField {
+func MapToSchemaField(field gencommons.Field) SchemaField {
 	isPointer := field.IsPointer()
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
 	name := gencommons.ToSnakeCase(field.Name)
