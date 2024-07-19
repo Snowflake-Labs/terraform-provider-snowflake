@@ -144,28 +144,3 @@ func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testi
 
 	return errors.Join(result...)
 }
-
-func (s *SnowflakeParametersAssert[I]) HasBoolParameterValue(parameterName sdk.UserParameter, expected bool) *SnowflakeParametersAssert[I] {
-	s.assertions = append(s.assertions, snowflakeParameterBoolValueSet(parameterName, expected))
-	return s
-}
-
-func (s *SnowflakeParametersAssert[I]) HasIntParameterValue(parameterName sdk.UserParameter, expected int) *SnowflakeParametersAssert[I] {
-	s.assertions = append(s.assertions, snowflakeParameterIntValueSet(parameterName, expected))
-	return s
-}
-
-func (s *SnowflakeParametersAssert[I]) HasStringParameterValue(parameterName sdk.UserParameter, expected string) *SnowflakeParametersAssert[I] {
-	s.assertions = append(s.assertions, snowflakeParameterValueSet(parameterName, expected))
-	return s
-}
-
-func (s *SnowflakeParametersAssert[I]) HasDefaultParameterValue(parameterName sdk.UserParameter) *SnowflakeParametersAssert[I] {
-	s.assertions = append(s.assertions, snowflakeParameterDefaultValueSet(parameterName))
-	return s
-}
-
-func (s *SnowflakeParametersAssert[I]) HasDefaultParameterValueOnLevel(parameterName sdk.UserParameter, parameterType sdk.ParameterType) *SnowflakeParametersAssert[I] {
-	s.assertions = append(s.assertions, snowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
-	return s
-}

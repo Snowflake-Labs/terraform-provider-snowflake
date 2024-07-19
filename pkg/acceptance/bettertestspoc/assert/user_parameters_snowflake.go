@@ -27,7 +27,7 @@ func UserParametersPrefetched(t *testing.T, id sdk.AccountObjectIdentifier, para
 	}
 }
 
-// TODO: move this section to SnowflakeParametersAssert and not copy it for every object
+// TODO: try to move this section to SnowflakeParametersAssert to not copy it for every object; persist the type-safe assertions
 //////////////////////////////
 // Generic parameter checks //
 //////////////////////////////
