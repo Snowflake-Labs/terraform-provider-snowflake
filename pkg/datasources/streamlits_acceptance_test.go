@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,10 +18,12 @@ import (
 )
 
 func TestAcc_Streamlits(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	acc.TestAccPreCheck(t)
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
