@@ -12,7 +12,7 @@ type ShowResultSchemaModel struct {
 	SchemaFields []SchemaField
 }
 
-func ModelFromStructDetails(sdkStruct gencommons.Struct) ShowResultSchemaModel {
+func ModelFromStructDetails(sdkStruct gencommons.StructDetails) ShowResultSchemaModel {
 	name, _ := strings.CutPrefix(sdkStruct.Name, "sdk.")
 	schemaFields := make([]SchemaField, len(sdkStruct.Fields))
 	for idx, field := range sdkStruct.Fields {

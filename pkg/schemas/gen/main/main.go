@@ -18,7 +18,7 @@ func main() {
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
 	allObjects := append(gen.SdkShowResultStructs, gen.AdditionalStructs...)
-	allStructsDetails := make([]gencommons.Struct, len(allObjects))
+	allStructsDetails := make([]gencommons.StructDetails, len(allObjects))
 	for idx, s := range allObjects {
 		allStructsDetails[idx] = gencommons.ExtractStructDetails(s)
 	}
@@ -29,7 +29,7 @@ func main() {
 	saveAllGeneratedSchemas(allStructsDetails)
 }
 
-func printAllStructsFields(allStructs []gencommons.Struct) {
+func printAllStructsFields(allStructs []gencommons.StructDetails) {
 	for _, s := range allStructs {
 		fmt.Println("===========================")
 		fmt.Printf("%s\n", s.Name)
@@ -41,7 +41,7 @@ func printAllStructsFields(allStructs []gencommons.Struct) {
 	}
 }
 
-func printUniqueTypes(allStructs []gencommons.Struct) {
+func printUniqueTypes(allStructs []gencommons.StructDetails) {
 	uniqueTypes := make(map[string]bool)
 	for _, s := range allStructs {
 		for _, f := range s.Fields {
@@ -58,7 +58,7 @@ func printUniqueTypes(allStructs []gencommons.Struct) {
 	}
 }
 
-func generateAllStructsToStdOut(allStructs []gencommons.Struct) {
+func generateAllStructsToStdOut(allStructs []gencommons.StructDetails) {
 	for _, s := range allStructs {
 		fmt.Println("===========================")
 		fmt.Printf("Generated for %s\n", s.Name)
@@ -68,7 +68,7 @@ func generateAllStructsToStdOut(allStructs []gencommons.Struct) {
 	}
 }
 
-func saveAllGeneratedSchemas(allStructs []gencommons.Struct) {
+func saveAllGeneratedSchemas(allStructs []gencommons.StructDetails) {
 	for _, s := range allStructs {
 		buffer := bytes.Buffer{}
 		model := gen.ModelFromStructDetails(s)

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Struct struct {
+type StructDetails struct {
 	Name   string
 	Fields []Field
 }
@@ -24,7 +24,7 @@ func (f *Field) IsSlice() bool {
 	return strings.HasPrefix(f.ConcreteType, "[]")
 }
 
-func ExtractStructDetails(s any) Struct {
+func ExtractStructDetails(s any) StructDetails {
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
@@ -54,5 +54,5 @@ func ExtractStructDetails(s any) Struct {
 
 		fields[i] = Field{currentName, currentType, underlyingType}
 	}
-	return Struct{v.Type().String(), fields}
+	return StructDetails{v.Type().String(), fields}
 }
