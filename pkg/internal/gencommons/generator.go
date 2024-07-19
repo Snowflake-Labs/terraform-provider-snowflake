@@ -54,6 +54,7 @@ func (g *Generator[_, _]) Run() error {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
+	// TODO: describe running with build flags: make generate-show-output-schemas SF_TF_GENERATOR_ARGS=--dry-run
 	var additionalLogs = flag.Bool("additional-logs", false, "print additional object debug logs")
 	var dryRun = flag.Bool("dry-run", false, "generate to std out instead of saving")
 	flag.Parse()
