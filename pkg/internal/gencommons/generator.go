@@ -1,7 +1,10 @@
 package gencommons
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"text/template"
@@ -19,7 +22,6 @@ type GenerationModel interface {
 	SomeFunc()
 }
 
-// TODO: add type for objects provider?
 // TODO: add erorrs to any of these functions?
 type Generator[T ObjectNameProvider, M GenerationModel] struct {
 	objectsProvider func() []T
@@ -60,10 +62,10 @@ func (g *Generator[_, _]) Run() error {
 
 	// TODO: do not generate twice?
 	// TODO: print conditionally from invocation flag
-	if err := GenerateAndPrintForAllObjects(objects, g.modelProvider, g.templates...); err != nil {
+	if err := generateAndPrintForAllObjects(objects, g.modelProvider, g.templates...); err != nil {
 		return err
 	}
-	if err := GenerateAndSaveForAllObjects(
+	if err := generateAndSaveForAllObjects(
 		objects,
 		g.modelProvider,
 		g.filenameProvider,
@@ -80,4 +82,46 @@ func (g *Generator[_, _]) RunAndHandleOsReturn() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func generateAndSaveForAllObjects[T ObjectNameProvider, M GenerationModel](objects []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates ...*template.Template) error {
+	var errs []error
+	for _, s := range objects {
+		buffer := bytes.Buffer{}
+		model := modelProvider(s)
+		if err := executeAllTemplates(model, &buffer, templates...); err != nil {
+			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
+			continue
+		}
+		filename := filenameProvider(s, model)
+		if err := WriteCodeToFile(&buffer, filename); err != nil {
+			errs = append(errs, fmt.Errorf("saving output for object %s to file %s failed with err: %w", s.ObjectName(), filename, err))
+			continue
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func generateAndPrintForAllObjects[T ObjectNameProvider, M GenerationModel](objects []T, modelProvider func(T) M, templates ...*template.Template) error {
+	var errs []error
+	for _, s := range objects {
+		fmt.Println("===========================")
+		fmt.Printf("Generating for object %s\n", s.ObjectName())
+		fmt.Println("===========================")
+		if err := executeAllTemplates(modelProvider(s), os.Stdout, templates...); err != nil {
+			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
+			continue
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func executeAllTemplates[M GenerationModel](model M, writer io.Writer, templates ...*template.Template) error {
+	var errs []error
+	for _, t := range templates {
+		if err := t.Execute(writer, model); err != nil {
+			errs = append(errs, fmt.Errorf("template execution for template %s failed with err: %w", t.Name(), err))
+		}
+	}
+	return errors.Join(errs...)
 }

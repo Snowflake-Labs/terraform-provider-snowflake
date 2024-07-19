@@ -2,15 +2,12 @@ package gencommons
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"go/format"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 )
 
 var (
@@ -44,51 +41,6 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 		}
 	}
 	return sb.String()
-}
-
-// TODO: describe
-func GenerateAndSaveForAllObjects[T ObjectNameProvider, M any](objects []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates ...*template.Template) error {
-	var errs []error
-	for _, s := range objects {
-		buffer := bytes.Buffer{}
-		model := modelProvider(s)
-		if err := ExecuteAllTemplates(model, &buffer, templates...); err != nil {
-			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
-			continue
-		}
-		filename := filenameProvider(s, model)
-		if err := WriteCodeToFile(&buffer, filename); err != nil {
-			errs = append(errs, fmt.Errorf("saving output for object %s to file %s failed with err: %w", s.ObjectName(), filename, err))
-			continue
-		}
-	}
-	return errors.Join(errs...)
-}
-
-// TODO: describe
-func GenerateAndPrintForAllObjects[T ObjectNameProvider, M any](objects []T, modelProvider func(T) M, templates ...*template.Template) error {
-	var errs []error
-	for _, s := range objects {
-		fmt.Println("===========================")
-		fmt.Printf("Generating for object %s\n", s.ObjectName())
-		fmt.Println("===========================")
-		if err := ExecuteAllTemplates(modelProvider(s), os.Stdout, templates...); err != nil {
-			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
-			continue
-		}
-	}
-	return errors.Join(errs...)
-}
-
-// TODO: describe
-func ExecuteAllTemplates[M any](model M, writer io.Writer, templates ...*template.Template) error {
-	var errs []error
-	for _, t := range templates {
-		if err := t.Execute(writer, model); err != nil {
-			errs = append(errs, fmt.Errorf("template execution for template %s failed with err: %w", t.Name(), err))
-		}
-	}
-	return errors.Join(errs...)
 }
 
 // WriteCodeToFile formats and saves content from the given buffer into file relative to the current working directory.
