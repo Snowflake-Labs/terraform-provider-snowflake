@@ -1012,12 +1012,13 @@ func (v *ParametersIn) validate() error {
 type ParameterType string
 
 const (
-	ParameterTypeAccount   ParameterType = "ACCOUNT"
-	ParameterTypeUser      ParameterType = "USER"
-	ParameterTypeSession   ParameterType = "SESSION"
-	ParameterTypeObject    ParameterType = "OBJECT"
-	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
-	ParameterTypeDatabase  ParameterType = "DATABASE"
+	ParameterTypeSnowflakeDefault ParameterType = ""
+	ParameterTypeAccount          ParameterType = "ACCOUNT"
+	ParameterTypeUser             ParameterType = "USER"
+	ParameterTypeSession          ParameterType = "SESSION"
+	ParameterTypeObject           ParameterType = "OBJECT"
+	ParameterTypeWarehouse        ParameterType = "WAREHOUSE"
+	ParameterTypeDatabase         ParameterType = "DATABASE"
 )
 
 type Parameter struct {

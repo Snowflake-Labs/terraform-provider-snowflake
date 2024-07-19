@@ -31,19 +31,98 @@ func UserParametersPrefetched(t *testing.T, id sdk.AccountObjectIdentifier, para
 // Generic parameter checks //
 //////////////////////////////
 
-func (w *UserParametersAssert) HasBoolParameter(parameterName sdk.UserParameter, expected bool) *UserParametersAssert {
+func (w *UserParametersAssert) HasBoolParameterValue(parameterName sdk.UserParameter, expected bool) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(parameterName, expected))
 	return w
 }
 
-func (w *UserParametersAssert) HasIntParameter(parameterName sdk.UserParameter, expected int) *UserParametersAssert {
+func (w *UserParametersAssert) HasIntParameterValue(parameterName sdk.UserParameter, expected int) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(parameterName, expected))
 	return w
 }
 
-func (w *UserParametersAssert) HasStringParameter(parameterName sdk.UserParameter, expected string) *UserParametersAssert {
+func (w *UserParametersAssert) HasStringParameterValue(parameterName sdk.UserParameter, expected string) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterValueSet(parameterName, expected))
 	return w
+}
+
+func (w *UserParametersAssert) HasDefaultParameterValue(parameterName sdk.UserParameter) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterDefaultValueSet(parameterName))
+	return w
+}
+
+func (w *UserParametersAssert) HasDefaultParameterValueOnLevel(parameterName sdk.UserParameter, parameterType sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
+	return w
+}
+
+///////////////////////////////
+// Aggregated generic checks //
+///////////////////////////////
+
+// HasAllDefaults checks if all the parameters:
+// - have a default value by comparing current value of the sdk.Parameter with its default
+// - have a expected level
+func (w *UserParametersAssert) HasAllDefaults() *UserParametersAssert {
+	return w.
+		HasDefaultParameterValueOnLevel(sdk.UserParameterEnableUnredactedQuerySyntaxError, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterNetworkPolicy, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterPreventUnloadToInternalStages, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterAbortDetachedQuery, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterAutocommit, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterBinaryInputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterBinaryOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientMemoryLimit, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientMetadataRequestUseConnectionCtx, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientPrefetchThreads, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientResultChunkSize, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientResultColumnCaseInsensitive, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientSessionKeepAlive, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterClientTimestampTypeMapping, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterDateInputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterDateOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterErrorOnNondeterministicMerge, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterErrorOnNondeterministicUpdate, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterGeographyOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterGeometryOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterJdbcTreatDecimalAsInt, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterJdbcUseSessionTimezone, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterJsonIndent, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterLockTimeout, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterLogLevel, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterMultiStatementCount, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterNoorderSequenceAsDefault, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterOdbcTreatDecimalAsInt, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterQueryTag, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterQuotedIdentifiersIgnoreCase, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterRowsPerResultset, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterS3StageVpceDnsName, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterSearchPath, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterSimulatedDataSharingConsumer, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterStatementQueuedTimeoutInSeconds, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterStatementTimeoutInSeconds, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterStrictJsonOutput, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampDayIsAlways24h, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampInputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampLtzOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampNtzOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampTypeMapping, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampTzOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimezone, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimeInputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimeOutputFormat, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTraceLevel, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTransactionAbortOnError, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTransactionDefaultIsolationLevel, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTwoDigitCenturyStart, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterUnsupportedDdlAction, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterUseCachedResult, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterWeekOfYearPolicy, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterWeekStart, sdk.ParameterTypeSnowflakeDefault)
 }
 
 ///////////////////////////////
