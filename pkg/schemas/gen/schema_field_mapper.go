@@ -8,14 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type Mapper func(string) string
-
 type SchemaField struct {
 	Name                  string
 	SchemaType            schema.ValueType
 	OriginalName          string
 	IsOriginalTypePointer bool
-	Mapper                Mapper
+	Mapper                gencommons.Mapper
 }
 
 var (
