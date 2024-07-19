@@ -27,6 +27,29 @@ func UserParametersPrefetched(t *testing.T, id sdk.AccountObjectIdentifier, para
 	}
 }
 
+//////////////////////////////
+// Generic parameter checks //
+//////////////////////////////
+
+func (w *UserParametersAssert) HasBoolParameter(parameterName sdk.UserParameter, expected bool) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(parameterName, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasIntParameter(parameterName sdk.UserParameter, expected int) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(parameterName, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasStringParameter(parameterName sdk.UserParameter, expected string) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterValueSet(parameterName, expected))
+	return w
+}
+
+///////////////////////////////
+// Specific parameter checks //
+///////////////////////////////
+
 func (w *UserParametersAssert) HasEnableUnredactedQuerySyntaxError(expected bool) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
 	return w

@@ -186,7 +186,8 @@ func TestInt_Users(t *testing.T) {
 			HasUnsupportedDdlAction(string(sdk.UnsupportedDDLActionFail)).
 			HasUseCachedResult(false).
 			HasWeekOfYearPolicy(1).
-			HasWeekStart(1),
+			HasWeekStart(1).
+			HasBoolParameter(sdk.UserParameterUseCachedResult, false),
 		)
 	}
 
