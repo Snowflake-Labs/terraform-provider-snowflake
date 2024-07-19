@@ -27,6 +27,7 @@ func UserParametersPrefetched(t *testing.T, id sdk.AccountObjectIdentifier, para
 	}
 }
 
+// TODO: move this section to SnowflakeParametersAssert and not copy it for every object
 //////////////////////////////
 // Generic parameter checks //
 //////////////////////////////
@@ -62,7 +63,7 @@ func (w *UserParametersAssert) HasDefaultParameterValueOnLevel(parameterName sdk
 
 // HasAllDefaults checks if all the parameters:
 // - have a default value by comparing current value of the sdk.Parameter with its default
-// - have a expected level
+// - have an expected level
 func (w *UserParametersAssert) HasAllDefaults() *UserParametersAssert {
 	return w.
 		HasDefaultParameterValueOnLevel(sdk.UserParameterEnableUnredactedQuerySyntaxError, sdk.ParameterTypeSnowflakeDefault).
