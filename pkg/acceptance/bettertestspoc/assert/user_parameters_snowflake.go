@@ -1,7 +1,6 @@
 package assert
 
 import (
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -298,9 +297,9 @@ func (w *UserParametersAssert) HasTwoDigitCenturyStart(expected int) *UserParame
 	return w
 }
 
-func (w *UserParametersAssert) HasUnsupportedDdlAction(expected sdk.UnsupportedDDLAction) *UserParametersAssert {
-	// lowercase by default in Snowflake
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterUnsupportedDdlAction, strings.ToLower(string(expected))))
+// lowercase for ignore in snowflake by default but uppercase for FAIL
+func (w *UserParametersAssert) HasUnsupportedDdlAction(expected string) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterUnsupportedDdlAction, expected))
 	return w
 }
 

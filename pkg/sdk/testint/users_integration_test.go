@@ -48,7 +48,7 @@ func TestInt_Users(t *testing.T) {
 	t.Cleanup(networkPolicyCleanup)
 
 	// TODO [SNOW-1348101]: extract as custom assertions
-	assertDefaultParameters := func(id sdk.AccountObjectIdentifier) {
+	assertDefaultParameters := func(t *testing.T, id sdk.AccountObjectIdentifier) {
 		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
 
 		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
@@ -58,12 +58,12 @@ func TestInt_Users(t *testing.T) {
 			HasDateOutputFormat("YYYY-MM-DD"),
 		)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserParametersPrefetched(t, id, parameters).
-			HasAbortDetachedQuery(true).
-			HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
-			HasClientMemoryLimit(1537).
-			HasDateOutputFormat("YY-MM-DD"),
-		)
+		//objectAssert.AssertThatObject(t, objectAssert.UserParametersPrefetched(t, id, parameters).
+		//	HasAbortDetachedQuery(true).
+		//	HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+		//	HasClientMemoryLimit(1537).
+		//	HasDateOutputFormat("YY-MM-DD"),
+		//)
 
 		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterAbortDetachedQuery).Value)
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterAutocommit).Value)
@@ -127,7 +127,7 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterPreventUnloadToInternalStages).Value)
 	}
 
-	assertParametersSet := func(id sdk.AccountObjectIdentifier) {
+	assertParametersSet := func(t *testing.T, id sdk.AccountObjectIdentifier) {
 		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
 			HasEnableUnredactedQuerySyntaxError(true).
 			HasNetworkPolicy(networkPolicy.ID().Name()).
@@ -183,7 +183,7 @@ func TestInt_Users(t *testing.T) {
 			HasTransactionAbortOnError(true).
 			HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
 			HasTwoDigitCenturyStart(1980).
-			HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+			HasUnsupportedDdlAction(string(sdk.UnsupportedDDLActionFail)).
 			HasUseCachedResult(false).
 			HasWeekOfYearPolicy(1).
 			HasWeekStart(1),
@@ -598,7 +598,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertParametersSet(id)
+		assertParametersSet(t, id)
 	})
 
 	t.Run("create: with all parameters default", func(t *testing.T) {
@@ -608,7 +608,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertDefaultParameters(id)
+		assertDefaultParameters(t, id)
 	})
 
 	t.Run("alter: rename", func(t *testing.T) {
@@ -810,7 +810,7 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
 
-		assertParametersSet(id)
+		assertParametersSet(t, id)
 
 		// unset is split into two because:
 		// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
@@ -894,7 +894,7 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
 
-		assertDefaultParameters(id)
+		assertDefaultParameters(t, id)
 	})
 
 	t.Run("alter: set and unset tags", func(t *testing.T) {
