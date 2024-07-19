@@ -5,8 +5,6 @@ import (
 	"text/template"
 )
 
-type Mapper func(string) string
-
 func firstLetterLowercase(in string) string {
 	return strings.ToLower(in[:1]) + in[1:]
 }
