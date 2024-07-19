@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -51,10 +52,12 @@ func (g *Generator[T, M]) WithAdditionalObjectsDebugLogs(objectLogsProvider func
 }
 
 func (g *Generator[_, _]) Run() error {
+	preprocessArgs()
+
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	// TODO: describe running with build flags: make generate-show-output-schemas SF_TF_GENERATOR_ARGS=--dry-run
+	// TODO: describe running with build flags: make generate-show-output-schemas SF_TF_GENERATOR_ARGS='--dry-run additional-logs'
 	var additionalLogs = flag.Bool("additional-logs", false, "print additional object debug logs")
 	var dryRun = flag.Bool("dry-run", false, "generate to std out instead of saving")
 	flag.Parse()
@@ -83,6 +86,17 @@ func (g *Generator[_, _]) Run() error {
 	}
 
 	return nil
+}
+
+// TODO: temporary hacky solution to allow easy passing multiple args from the make command
+func preprocessArgs() {
+	rest := os.Args[1:]
+	newArgs := make([]string, 0)
+	newArgs = append(newArgs, os.Args[0])
+	for _, a := range rest {
+		newArgs = append(newArgs, strings.Split(a, " ")...)
+	}
+	os.Args = newArgs
 }
 
 func (g *Generator[_, _]) RunAndHandleOsReturn() {
