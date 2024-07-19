@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -129,6 +130,8 @@ func (w *UserParametersAssert) HasAllDefaults() *UserParametersAssert {
 ///////////////////////////////
 // Specific parameter checks //
 ///////////////////////////////
+
+// value checks
 
 func (w *UserParametersAssert) HasEnableUnredactedQuerySyntaxError(expected bool) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
@@ -419,4 +422,473 @@ func (w *UserParametersAssert) HasWeekOfYearPolicy(expected int) *UserParameters
 func (w *UserParametersAssert) HasWeekStart(expected int) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterWeekStart, expected))
 	return w
+}
+
+// default checks
+
+func (w *UserParametersAssert) HasDefaultEnableUnredactedQuerySyntaxErrorValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterEnableUnredactedQuerySyntaxError)
+}
+
+func (w *UserParametersAssert) HasDefaultNetworkPolicyValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterNetworkPolicy)
+}
+
+func (w *UserParametersAssert) HasDefaultPreventUnloadToInternalStagesValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterPreventUnloadToInternalStages)
+}
+
+func (w *UserParametersAssert) HasDefaultAbortDetachedQueryValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterAbortDetachedQuery)
+}
+
+func (w *UserParametersAssert) HasDefaultAutocommitValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterAutocommit)
+}
+
+func (w *UserParametersAssert) HasDefaultBinaryInputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterBinaryInputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultBinaryOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterBinaryOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultClientMemoryLimitValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientMemoryLimit)
+}
+
+func (w *UserParametersAssert) HasDefaultClientMetadataRequestUseConnectionCtxValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientMetadataRequestUseConnectionCtx)
+}
+
+func (w *UserParametersAssert) HasDefaultClientPrefetchThreadsValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientPrefetchThreads)
+}
+
+func (w *UserParametersAssert) HasDefaultClientResultChunkSizeValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientResultChunkSize)
+}
+
+func (w *UserParametersAssert) HasDefaultClientResultColumnCaseInsensitiveValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientResultColumnCaseInsensitive)
+}
+
+func (w *UserParametersAssert) HasDefaultClientSessionKeepAliveValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientSessionKeepAlive)
+}
+
+func (w *UserParametersAssert) HasDefaultClientSessionKeepAliveHeartbeatFrequencyValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency)
+}
+
+func (w *UserParametersAssert) HasDefaultClientTimestampTypeMappingValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterClientTimestampTypeMapping)
+}
+
+func (w *UserParametersAssert) HasDefaultDateInputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterDateInputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultDateOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterDateOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultEnableUnloadPhysicalTypeOptimizationValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterEnableUnloadPhysicalTypeOptimization)
+}
+
+func (w *UserParametersAssert) HasDefaultErrorOnNondeterministicMergeValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterErrorOnNondeterministicMerge)
+}
+
+func (w *UserParametersAssert) HasDefaultErrorOnNondeterministicUpdateValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterErrorOnNondeterministicUpdate)
+}
+
+func (w *UserParametersAssert) HasDefaultGeographyOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterGeographyOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultGeometryOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterGeometryOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcTreatDecimalAsIntValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterJdbcTreatDecimalAsInt)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcTreatTimestampNtzAsUtcValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterJdbcTreatTimestampNtzAsUtc)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcUseSessionTimezoneValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterJdbcUseSessionTimezone)
+}
+
+func (w *UserParametersAssert) HasDefaultJsonIndentValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterJsonIndent)
+}
+
+func (w *UserParametersAssert) HasDefaultLockTimeoutValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterLockTimeout)
+}
+
+func (w *UserParametersAssert) HasDefaultLogLevelValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterLogLevel)
+}
+
+func (w *UserParametersAssert) HasDefaultMultiStatementCountValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterMultiStatementCount)
+}
+
+func (w *UserParametersAssert) HasDefaultNoorderSequenceAsDefaultValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterNoorderSequenceAsDefault)
+}
+
+func (w *UserParametersAssert) HasDefaultOdbcTreatDecimalAsIntValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterOdbcTreatDecimalAsInt)
+}
+
+func (w *UserParametersAssert) HasDefaultQueryTagValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterQueryTag)
+}
+
+func (w *UserParametersAssert) HasDefaultQuotedIdentifiersIgnoreCaseValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterQuotedIdentifiersIgnoreCase)
+}
+
+func (w *UserParametersAssert) HasDefaultRowsPerResultsetValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterRowsPerResultset)
+}
+
+func (w *UserParametersAssert) HasDefaultS3StageVpceDnsNameValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterS3StageVpceDnsName)
+}
+
+func (w *UserParametersAssert) HasDefaultSearchPathValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterSearchPath)
+}
+
+func (w *UserParametersAssert) HasDefaultSimulatedDataSharingConsumerValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterSimulatedDataSharingConsumer)
+}
+
+func (w *UserParametersAssert) HasDefaultStatementQueuedTimeoutInSecondsValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterStatementQueuedTimeoutInSeconds)
+}
+
+func (w *UserParametersAssert) HasDefaultStatementTimeoutInSecondsValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterStatementTimeoutInSeconds)
+}
+
+func (w *UserParametersAssert) HasDefaultStrictJsonOutputValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterStrictJsonOutput)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampDayIsAlways24hValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampDayIsAlways24h)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampInputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampInputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampLtzOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampLtzOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampNtzOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampNtzOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampTypeMappingValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampTypeMapping)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampTzOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimestampTzOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimezoneValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimezone)
+}
+
+func (w *UserParametersAssert) HasDefaultTimeInputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimeInputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTimeOutputFormatValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTimeOutputFormat)
+}
+
+func (w *UserParametersAssert) HasDefaultTraceLevelValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTraceLevel)
+}
+
+func (w *UserParametersAssert) HasDefaultTransactionAbortOnErrorValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTransactionAbortOnError)
+}
+
+func (w *UserParametersAssert) HasDefaultTransactionDefaultIsolationLevelValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTransactionDefaultIsolationLevel)
+}
+
+func (w *UserParametersAssert) HasDefaultTwoDigitCenturyStartValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterTwoDigitCenturyStart)
+}
+
+func (w *UserParametersAssert) HasDefaultUnsupportedDdlActionValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterUnsupportedDdlAction)
+}
+
+func (w *UserParametersAssert) HasDefaultUseCachedResultValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterUseCachedResult)
+}
+
+func (w *UserParametersAssert) HasDefaultWeekOfYearPolicyValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterWeekOfYearPolicy)
+}
+
+func (w *UserParametersAssert) HasDefaultWeekStartValue() *UserParametersAssert {
+	return w.HasDefaultParameterValue(sdk.UserParameterWeekStart)
+}
+
+// default checks explicit
+
+func (w *UserParametersAssert) HasDefaultEnableUnredactedQuerySyntaxErrorValueExplicit() *UserParametersAssert {
+	return w.HasEnableUnredactedQuerySyntaxError(false)
+}
+
+func (w *UserParametersAssert) HasDefaultNetworkPolicyValueExplicit() *UserParametersAssert {
+	return w.HasNetworkPolicy("")
+}
+
+func (w *UserParametersAssert) HasDefaultPreventUnloadToInternalStagesValueExplicit() *UserParametersAssert {
+	return w.HasPreventUnloadToInternalStages(false)
+}
+
+func (w *UserParametersAssert) HasDefaultAbortDetachedQueryValueExplicit() *UserParametersAssert {
+	return w.HasAbortDetachedQuery(false)
+}
+
+func (w *UserParametersAssert) HasDefaultAutocommitValueExplicit() *UserParametersAssert {
+	return w.HasAutocommit(true)
+}
+
+func (w *UserParametersAssert) HasDefaultBinaryInputFormatValueExplicit() *UserParametersAssert {
+	return w.HasBinaryInputFormat(sdk.BinaryInputFormatHex)
+}
+
+func (w *UserParametersAssert) HasDefaultBinaryOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasBinaryOutputFormat(sdk.BinaryOutputFormatHex)
+}
+
+func (w *UserParametersAssert) HasDefaultClientMemoryLimitValueExplicit() *UserParametersAssert {
+	return w.HasClientMemoryLimit(1536)
+}
+
+func (w *UserParametersAssert) HasDefaultClientMetadataRequestUseConnectionCtxValueExplicit() *UserParametersAssert {
+	return w.HasClientMetadataRequestUseConnectionCtx(false)
+}
+
+func (w *UserParametersAssert) HasDefaultClientPrefetchThreadsValueExplicit() *UserParametersAssert {
+	return w.HasClientPrefetchThreads(4)
+}
+
+func (w *UserParametersAssert) HasDefaultClientResultChunkSizeValueExplicit() *UserParametersAssert {
+	return w.HasClientResultChunkSize(160)
+}
+
+func (w *UserParametersAssert) HasDefaultClientResultColumnCaseInsensitiveValueExplicit() *UserParametersAssert {
+	return w.HasClientResultColumnCaseInsensitive(false)
+}
+
+func (w *UserParametersAssert) HasDefaultClientSessionKeepAliveValueExplicit() *UserParametersAssert {
+	return w.HasClientSessionKeepAlive(false)
+}
+
+func (w *UserParametersAssert) HasDefaultClientSessionKeepAliveHeartbeatFrequencyValueExplicit() *UserParametersAssert {
+	return w.HasClientSessionKeepAliveHeartbeatFrequency(3600)
+}
+
+func (w *UserParametersAssert) HasDefaultClientTimestampTypeMappingValueExplicit() *UserParametersAssert {
+	return w.HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingLtz)
+}
+
+func (w *UserParametersAssert) HasDefaultDateInputFormatValueExplicit() *UserParametersAssert {
+	return w.HasDateInputFormat("AUTO")
+}
+
+func (w *UserParametersAssert) HasDefaultDateOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasDateOutputFormat("YYYY-MM-DD")
+}
+
+func (w *UserParametersAssert) HasDefaultEnableUnloadPhysicalTypeOptimizationValueExplicit() *UserParametersAssert {
+	return w.HasEnableUnloadPhysicalTypeOptimization(true)
+}
+
+func (w *UserParametersAssert) HasDefaultErrorOnNondeterministicMergeValueExplicit() *UserParametersAssert {
+	return w.HasErrorOnNondeterministicMerge(true)
+}
+
+func (w *UserParametersAssert) HasDefaultErrorOnNondeterministicUpdateValueExplicit() *UserParametersAssert {
+	return w.HasErrorOnNondeterministicUpdate(false)
+}
+
+func (w *UserParametersAssert) HasDefaultGeographyOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasGeographyOutputFormat(sdk.GeographyOutputFormatGeoJSON)
+}
+
+func (w *UserParametersAssert) HasDefaultGeometryOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasGeometryOutputFormat(sdk.GeometryOutputFormatGeoJSON)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcTreatDecimalAsIntValueExplicit() *UserParametersAssert {
+	return w.HasJdbcTreatDecimalAsInt(true)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcTreatTimestampNtzAsUtcValueExplicit() *UserParametersAssert {
+	return w.HasJdbcTreatTimestampNtzAsUtc(false)
+}
+
+func (w *UserParametersAssert) HasDefaultJdbcUseSessionTimezoneValueExplicit() *UserParametersAssert {
+	return w.HasJdbcUseSessionTimezone(true)
+}
+
+func (w *UserParametersAssert) HasDefaultJsonIndentValueExplicit() *UserParametersAssert {
+	return w.HasJsonIndent(2)
+}
+
+func (w *UserParametersAssert) HasDefaultLockTimeoutValueExplicit() *UserParametersAssert {
+	return w.HasLockTimeout(43200)
+}
+
+func (w *UserParametersAssert) HasDefaultLogLevelValueExplicit() *UserParametersAssert {
+	return w.HasLogLevel(sdk.LogLevelOff)
+}
+
+func (w *UserParametersAssert) HasDefaultMultiStatementCountValueExplicit() *UserParametersAssert {
+	return w.HasMultiStatementCount(1)
+}
+
+func (w *UserParametersAssert) HasDefaultNoorderSequenceAsDefaultValueExplicit() *UserParametersAssert {
+	return w.HasNoorderSequenceAsDefault(true)
+}
+
+func (w *UserParametersAssert) HasDefaultOdbcTreatDecimalAsIntValueExplicit() *UserParametersAssert {
+	return w.HasOdbcTreatDecimalAsInt(false)
+}
+
+func (w *UserParametersAssert) HasDefaultQueryTagValueExplicit() *UserParametersAssert {
+	return w.HasQueryTag("")
+}
+
+func (w *UserParametersAssert) HasDefaultQuotedIdentifiersIgnoreCaseValueExplicit() *UserParametersAssert {
+	return w.HasQuotedIdentifiersIgnoreCase(false)
+}
+
+func (w *UserParametersAssert) HasDefaultRowsPerResultsetValueExplicit() *UserParametersAssert {
+	return w.HasRowsPerResultset(0)
+}
+
+func (w *UserParametersAssert) HasDefaultS3StageVpceDnsNameValueExplicit() *UserParametersAssert {
+	return w.HasS3StageVpceDnsName("")
+}
+
+func (w *UserParametersAssert) HasDefaultSearchPathValueExplicit() *UserParametersAssert {
+	return w.HasSearchPath("$current, $public")
+}
+
+func (w *UserParametersAssert) HasDefaultSimulatedDataSharingConsumerValueExplicit() *UserParametersAssert {
+	return w.HasSimulatedDataSharingConsumer("")
+}
+
+func (w *UserParametersAssert) HasDefaultStatementQueuedTimeoutInSecondsValueExplicit() *UserParametersAssert {
+	return w.HasStatementQueuedTimeoutInSeconds(0)
+}
+
+func (w *UserParametersAssert) HasDefaultStatementTimeoutInSecondsValueExplicit() *UserParametersAssert {
+	return w.HasStatementTimeoutInSeconds(172800)
+}
+
+func (w *UserParametersAssert) HasDefaultStrictJsonOutputValueExplicit() *UserParametersAssert {
+	return w.HasStrictJsonOutput(false)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampDayIsAlways24hValueExplicit() *UserParametersAssert {
+	return w.HasTimestampDayIsAlways24h(false)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampInputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimestampInputFormat("AUTO")
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampLtzOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimestampLtzOutputFormat("")
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampNtzOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS.FF3")
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM")
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampTypeMappingValueExplicit() *UserParametersAssert {
+	return w.HasTimestampTypeMapping(sdk.TimestampTypeMappingNtz)
+}
+
+func (w *UserParametersAssert) HasDefaultTimestampTzOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimestampTzOutputFormat("")
+}
+
+func (w *UserParametersAssert) HasDefaultTimezoneValueExplicit() *UserParametersAssert {
+	return w.HasTimezone("America/Los_Angeles")
+}
+
+func (w *UserParametersAssert) HasDefaultTimeInputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimeInputFormat("AUTO")
+}
+
+func (w *UserParametersAssert) HasDefaultTimeOutputFormatValueExplicit() *UserParametersAssert {
+	return w.HasTimeOutputFormat("HH24:MI:SS")
+}
+
+func (w *UserParametersAssert) HasDefaultTraceLevelValueExplicit() *UserParametersAssert {
+	return w.HasTraceLevel(sdk.TraceLevelOff)
+}
+
+func (w *UserParametersAssert) HasDefaultTransactionAbortOnErrorValueExplicit() *UserParametersAssert {
+	return w.HasTransactionAbortOnError(false)
+}
+
+func (w *UserParametersAssert) HasDefaultTransactionDefaultIsolationLevelValueExplicit() *UserParametersAssert {
+	return w.HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted)
+}
+
+func (w *UserParametersAssert) HasDefaultTwoDigitCenturyStartValueExplicit() *UserParametersAssert {
+	return w.HasTwoDigitCenturyStart(1970)
+}
+
+// lowercase for ignore in snowflake by default but uppercase for FAIL
+func (w *UserParametersAssert) HasDefaultUnsupportedDdlActionValueExplicit() *UserParametersAssert {
+	return w.HasUnsupportedDdlAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore)))
+}
+
+func (w *UserParametersAssert) HasDefaultUseCachedResultValueExplicit() *UserParametersAssert {
+	return w.HasUseCachedResult(true)
+}
+
+func (w *UserParametersAssert) HasDefaultWeekOfYearPolicyValueExplicit() *UserParametersAssert {
+	return w.HasWeekOfYearPolicy(0)
+}
+
+func (w *UserParametersAssert) HasDefaultWeekStartValueExplicit() *UserParametersAssert {
+	return w.HasWeekStart(0)
 }
