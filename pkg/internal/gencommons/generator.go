@@ -42,7 +42,7 @@ func NewGenerator[T ObjectNameProvider, M GenerationModel](objectsProvider func(
 	}
 }
 
-func (g *Generator[T, _]) WithAdditionalObjectsDebugLogs(objectLogsProvider func([]T)) *Generator[T, _] {
+func (g *Generator[T, M]) WithAdditionalObjectsDebugLogs(objectLogsProvider func([]T)) *Generator[T, M] {
 	g.additionalObjectDebugLogProviders = append(g.additionalObjectDebugLogProviders, objectLogsProvider)
 	return g
 }
