@@ -51,6 +51,20 @@ func TestInt_Users(t *testing.T) {
 	assertDefaultParameters := func(id sdk.AccountObjectIdentifier) {
 		parameters := testClientHelper().Parameter.ShowUserParameters(t, id)
 
+		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
+			HasAbortDetachedQuery(false).
+			HasBinaryInputFormat(sdk.BinaryInputFormatHex).
+			HasClientMemoryLimit(1536).
+			HasDateOutputFormat("YYYY-MM-DD"),
+		)
+
+		objectAssert.AssertThatObject(t, objectAssert.UserParametersPrefetched(t, id, parameters).
+			HasAbortDetachedQuery(true).
+			HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+			HasClientMemoryLimit(1537).
+			HasDateOutputFormat("YY-MM-DD"),
+		)
+
 		assert.Equal(t, "false", helpers.FindParameter(t, parameters, sdk.UserParameterAbortDetachedQuery).Value)
 		assert.Equal(t, "true", helpers.FindParameter(t, parameters, sdk.UserParameterAutocommit).Value)
 		assert.Equal(t, string(sdk.BinaryInputFormatHex), helpers.FindParameter(t, parameters, sdk.UserParameterBinaryInputFormat).Value)
