@@ -1,6 +1,11 @@
 package gencommons
 
 import (
+	"bytes"
+	"go/format"
+	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -36,4 +41,20 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 		}
 	}
 	return sb.String()
+}
+
+// WriteCodeToFile formats and saves content from the given buffer into file relative to the current working directory.
+func WriteCodeToFile(buffer *bytes.Buffer, fileName string) {
+	wd, errWd := os.Getwd()
+	if errWd != nil {
+		log.Panicln(errWd)
+	}
+	outputPath := filepath.Join(wd, fileName)
+	src, errSrcFormat := format.Source(buffer.Bytes())
+	if errSrcFormat != nil {
+		log.Panicln(errSrcFormat)
+	}
+	if err := os.WriteFile(outputPath, src, 0o600); err != nil {
+		log.Panicln(err)
+	}
 }

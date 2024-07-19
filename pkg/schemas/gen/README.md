@@ -86,7 +86,6 @@ Functional improvements:
 
 Implementation improvements:
 - add acceptance test for a `testStruct` (the one from [struct_details_extractor_test.go](./struct_details_extractor_test.go)) for the whole generation flow
-- extract common generator functions inside the project (TODO in [main.go](./main/main.go); e.g. `writeCodeToFile` function)
 - test the generator part and improve error handling (TODOs in [generator.go](./generator.go))
 - extract common template functions (TODO in [templates.go](./templates.go)))
 - (optional) consider different implementations of `Mapper` (e.g. TODO in [schema_field_mapper_test.go](./schema_field_mapper_test.go): `ugly comparison of functions with the current implementation of mapper` and not ideal implementation in the [to_schema_mapper.tmpl](./templates/to_schema_mapper.tmpl): `runMapper .Mapper $nameLowerCase "." .OriginalName`)

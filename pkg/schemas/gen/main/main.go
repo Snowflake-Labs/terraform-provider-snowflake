@@ -5,10 +5,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go/format"
-	"log"
 	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
@@ -77,22 +74,6 @@ func saveAllGeneratedSchemas(allStructs []gencommons.Struct) {
 		model := gen.ModelFromStructDetails(s)
 		gen.Generate(model, &buffer)
 		filename := gencommons.ToSnakeCase(model.Name) + "_gen.go"
-		writeCodeToFile(&buffer, filename)
-	}
-}
-
-// TODO [SNOW-1501905]: this is copied, extract some generator helpers
-func writeCodeToFile(buffer *bytes.Buffer, fileName string) {
-	wd, errWd := os.Getwd()
-	if errWd != nil {
-		log.Panicln(errWd)
-	}
-	outputPath := filepath.Join(wd, fileName)
-	src, errSrcFormat := format.Source(buffer.Bytes())
-	if errSrcFormat != nil {
-		log.Panicln(errSrcFormat)
-	}
-	if err := os.WriteFile(outputPath, src, 0o600); err != nil {
-		log.Panicln(err)
+		gencommons.WriteCodeToFile(&buffer, filename)
 	}
 }
