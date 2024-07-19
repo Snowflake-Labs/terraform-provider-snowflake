@@ -10,7 +10,7 @@ type StructDetails struct {
 	Fields []Field
 }
 
-func (s *StructDetails) ObjectName() string {
+func (s StructDetails) ObjectName() string {
 	return s.Name
 }
 
