@@ -4,7 +4,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
@@ -20,6 +22,7 @@ func main() {
 	).
 		WithAdditionalObjectsDebugLogs(printAllStructsFields).
 		WithAdditionalObjectsDebugLogs(printUniqueTypes).
+		WithObjectFilter(filterByNameFromEnv).
 		RunAndHandleOsReturn()
 }
 
@@ -63,4 +66,14 @@ func printUniqueTypes(allStructs []gencommons.StructDetails) {
 	for _, k := range keys {
 		fmt.Println(k)
 	}
+}
+
+// TODO: describe filtering: make generate-show-output-schemas SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES="sdk.Warehouse,sdk.User"
+func filterByNameFromEnv(o gencommons.StructDetails) bool {
+	allowedObjectNamesString := os.Getenv("SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES")
+	if allowedObjectNamesString == "" {
+		return true
+	}
+	allowedObjectNames := strings.Split(allowedObjectNamesString, ",")
+	return slices.Contains(allowedObjectNames, o.ObjectName())
 }

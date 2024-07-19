@@ -79,7 +79,6 @@ If you change the show output struct in the SDK:
 Functional improvements:
 - handle the missing types (TODOs in [schema_field_mapper.go](./schema_field_mapper.go) and [struct_details_extractor_test.go](./struct_details_extractor_test.go))
 - parametrize the generation, e.g.:
-  - generate only given object(s) - now all are always generated
   - (optional) parametrize the output directory - currently, it's always written to `schemas` package
 - discover a change and generate as part of a `make pre-push`
 

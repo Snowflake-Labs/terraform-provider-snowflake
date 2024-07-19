@@ -53,6 +53,11 @@ func (g *Generator[T, M]) WithAdditionalObjectsDebugLogs(objectLogsProvider func
 	return g
 }
 
+func (g *Generator[T, M]) WithObjectFilter(objectFilter func(T) bool) *Generator[T, M] {
+	g.objectFilters = append(g.objectFilters, objectFilter)
+	return g
+}
+
 func (g *Generator[T, _]) Run() error {
 	preprocessArgs()
 
