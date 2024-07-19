@@ -49,7 +49,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Required:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
-		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", sdk.AllSaml2SecurityIntegrationSaml2Providers),
+		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", possibleValuesListed(sdk.AllSaml2SecurityIntegrationSaml2Providers)),
 	},
 	"saml2_x509_cert": {
 		Type:        schema.TypeString,
@@ -83,7 +83,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption),
 		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_requested_nameid_format")),
-		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
+		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v.", possibleValuesListed(sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats)),
 	},
 	"saml2_post_logout_redirect_url": {
 		Type:             schema.TypeString,
@@ -156,6 +156,7 @@ func SAML2Integration() *schema.Resource {
 		ReadContext:   ReadContextSAML2Integration(true),
 		UpdateContext: UpdateContextSAML2Integration,
 		DeleteContext: DeleteContextSAM2LIntegration,
+		Description:   "Resource used to manage saml2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{

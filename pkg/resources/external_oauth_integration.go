@@ -157,7 +157,9 @@ func ExternalOauthIntegration() *schema.Resource {
 		ReadContext:   ReadContextExternalOauthIntegration(true),
 		UpdateContext: UpdateContextExternalOauthIntegration,
 		DeleteContext: DeleteContextExternalOauthIntegration,
-		Schema:        oauthExternalIntegrationSchema,
+		Description:   "Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
+
+		Schema: oauthExternalIntegrationSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
@@ -173,7 +175,6 @@ func ExternalOauthIntegration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportExternalOauthIntegration,
 		},
-		Description: "Resource used to manage external oauth security integrations. For more information, check [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
 		StateUpgraders: []schema.StateUpgrader{
 			{

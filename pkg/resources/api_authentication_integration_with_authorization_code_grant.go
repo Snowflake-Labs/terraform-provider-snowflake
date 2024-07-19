@@ -40,6 +40,8 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
+		Description:   "Resource used to manage api authentication security integration objects with authorization code grant. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),

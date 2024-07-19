@@ -208,6 +208,53 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 	})
 }
 
+func TestAcc_ScimIntegration_completeAzure(t *testing.T) {
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	t.Cleanup(networkPolicyCleanup)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	role := snowflakeroles.AadProvisioner
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":                config.StringVariable(id.Name()),
+			"enabled":             config.BoolVariable(false),
+			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientAzure)),
+			"network_policy_name": config.StringVariable(networkPolicy.Name),
+			"run_as_role":         config.StringVariable(role.Name()),
+			"comment":             config.StringVariable("foo"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/completeAzure"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", string(sdk.ScimSecurityIntegrationScimClientAzure)),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", r.BooleanDefault),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_ScimIntegration/completeAzure"),
+				ConfigVariables:   m(),
+				ResourceName:      "snowflake_scim_integration.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAcc_ScimIntegration_InvalidScimClient(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func() map[string]config.Variable {
@@ -292,7 +339,77 @@ func TestAcc_ScimIntegration_InvalidIncomplete(t *testing.T) {
 	})
 }
 
-func TestAcc_ScimIntegration_migrateFromVersion093EnabledTrue(t *testing.T) {
+func TestAcc_ScimIntegration_InvalidCreateWithSyncPasswordWithAzure(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":                config.StringVariable(id.Name()),
+			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientAzure)),
+			"run_as_role":         config.StringVariable(snowflakeroles.AadProvisioner.Name()),
+			"enabled":             config.BoolVariable(true),
+			"sync_password":       config.BoolVariable(false),
+			"network_policy_name": config.StringVariable(""),
+			"comment":             config.StringVariable("foo"),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
+			"can not CREATE scim integration with field `sync_password` for scim_client = \"AZURE\"",
+		}),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables: m(),
+			},
+		},
+	})
+}
+
+func TestAcc_ScimIntegration_InvalidUpdateWithSyncPasswordWithAzure(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	m := func(complete bool) map[string]config.Variable {
+		c := map[string]config.Variable{
+			"name":        config.StringVariable(id.Name()),
+			"scim_client": config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientAzure)),
+			"run_as_role": config.StringVariable(snowflakeroles.AadProvisioner.Name()),
+			"enabled":     config.BoolVariable(true),
+		}
+		if complete {
+			c["sync_password"] = config.BoolVariable(true)
+			c["network_policy_name"] = config.StringVariable("")
+			c["comment"] = config.StringVariable("foo")
+		}
+		return c
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
+			"can not SET and UNSET field `sync_password` for scim_client = \"AZURE\"",
+		}),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/basic"),
+				ConfigVariables: m(false),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
+				ConfigVariables: m(true),
+			},
+		},
+	})
+}
+
+func TestAcc_ScimIntegration_migrateFromVersion092EnabledTrue(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	role := snowflakeroles.GenericScimProvisioner
 	resourceName := "snowflake_scim_integration.test"
@@ -310,7 +427,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093EnabledTrue(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: scimIntegrationv092(id.Name(), role.Name()),
+				Config: scimIntegrationv092(id.Name(), role.Name(), sdk.ScimSecurityIntegrationScimClientGeneric),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "provisioner_role", role.Name()),
@@ -318,7 +435,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093EnabledTrue(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   scimIntegrationv093(id.Name(), role.Name(), true),
+				Config:                   scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientGeneric),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange("snowflake_scim_integration.test", "name", tfjson.ActionUpdate, sdk.String(id.Name()), sdk.String(id.Name())),
@@ -358,7 +475,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: scimIntegrationv092(id.Name(), role.Name()),
+				Config: scimIntegrationv092(id.Name(), role.Name(), sdk.ScimSecurityIntegrationScimClientGeneric),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "provisioner_role", role.Name()),
@@ -366,7 +483,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   scimIntegrationv093(id.Name(), role.Name(), false),
+				Config:                   scimIntegrationv093(id.Name(), role.Name(), false, sdk.ScimSecurityIntegrationScimClientGeneric),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
@@ -380,7 +497,61 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 	})
 }
 
-func scimIntegrationv092(name, roleName string) string {
+func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	role := snowflakeroles.AadProvisioner
+	resourceName := "snowflake_scim_integration.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: scimIntegrationv092(id.Name(), role.Name(), sdk.ScimSecurityIntegrationScimClientAzure),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+				),
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Config: scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientAzure),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+				),
+				ExpectError: regexp.MustCompile("invalid property 'SYNC_PASSWORD' for 'INTEGRATION"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientAzure),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "sync_password", r.BooleanDefault),
+				),
+			},
+		},
+	})
+}
+
+func scimIntegrationv092(name, roleName string, scimClient sdk.ScimSecurityIntegrationScimClientOption) string {
 	s := `
 resource "snowflake_scim_integration" "test" {
 	name             = "%s"
@@ -388,10 +559,10 @@ resource "snowflake_scim_integration" "test" {
 	provisioner_role = "%s"
 }
 `
-	return fmt.Sprintf(s, name, sdk.ScimSecurityIntegrationScimClientGeneric, roleName)
+	return fmt.Sprintf(s, name, scimClient, roleName)
 }
 
-func scimIntegrationv093(name, roleName string, enabled bool) string {
+func scimIntegrationv093(name, roleName string, enabled bool, scimClient sdk.ScimSecurityIntegrationScimClientOption) string {
 	s := `
 resource "snowflake_scim_integration" "test" {
 	name             = "%s"
@@ -400,5 +571,5 @@ resource "snowflake_scim_integration" "test" {
 	run_as_role		 = "%s"
 }
 `
-	return fmt.Sprintf(s, name, enabled, sdk.ScimSecurityIntegrationScimClientGeneric, roleName)
+	return fmt.Sprintf(s, name, enabled, scimClient, roleName)
 }

@@ -38,7 +38,9 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithJwtBearer(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithJwtBearer,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithJwtBearer,
-		Schema:        apiAuthJwtBearerSchema,
+		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
+		Schema: apiAuthJwtBearerSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),

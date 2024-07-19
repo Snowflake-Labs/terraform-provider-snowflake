@@ -36,7 +36,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients)),
+		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", possibleValuesListed(sdk.AllScimSecurityIntegrationScimClients)),
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
 		DiffSuppressFunc: ignoreCaseAndTrimSpaceSuppressFunc,
 	},
@@ -45,7 +45,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Required: true,
 		ForceNew: true,
 		Description: fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM."+
-			" Provider assumes that the specified role is already provided. Valid options are: %v.", sdk.AllScimSecurityIntegrationRunAsRoles),
+			" Provider assumes that the specified role is already provided. Valid options are: %v.", possibleValuesListed(sdk.AllScimSecurityIntegrationRunAsRoles)),
 		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(s string) string {
@@ -67,7 +67,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("sync_password"),
-		Description:      booleanStringFieldDescription("Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake."),
+		Description:      booleanStringFieldDescription("Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. This property is not supported for Azure SCIM."),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -94,12 +94,13 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 
 		CreateContext: CreateContextSCIMIntegration,
 		ReadContext:   ReadContextSCIMIntegration(true),
 		UpdateContext: UpdateContextSCIMIntegration,
 		DeleteContext: DeleteContextSCIMIntegration,
+		Description:   "Resource used to manage scim security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim).",
 
 		Schema: scimIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -117,6 +118,12 @@ func SCIMIntegration() *schema.Resource {
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v092ScimIntegrationStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v093ScimIntegrationStateUpgrader,
 			},
 		},
 	}
@@ -143,10 +150,12 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 	if err = d.Set("enabled", integration.Enabled); err != nil {
 		return nil, err
 	}
-	if scimClient, err := integration.SubType(); err == nil {
-		if err = d.Set("scim_client", scimClient); err != nil {
-			return nil, err
-		}
+	scimClient, err := integration.SubType()
+	if err != nil {
+		return nil, err
+	}
+	if err = d.Set("scim_client", scimClient); err != nil {
+		return nil, err
 	}
 	if runAsRoleProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" }); err == nil {
 		if err = d.Set("run_as_role", runAsRoleProperty.Value); err != nil {
@@ -158,9 +167,15 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 			return nil, err
 		}
 	}
-	if syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" }); err == nil {
-		if err = d.Set("sync_password", syncPasswordProperty.Value); err != nil {
+	if scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+		if err = d.Set("sync_password", BooleanDefault); err != nil {
 			return nil, err
+		}
+	} else {
+		if syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" }); err == nil {
+			if err = d.Set("sync_password", syncPasswordProperty.Value); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if err = d.Set("comment", integration.Comment); err != nil {
@@ -192,6 +207,15 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v := d.Get("sync_password").(string); v != BooleanDefault {
+		if scimClient := d.Get("scim_client").(string); scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "field `sync_password` is not supported for scim_client = \"AZURE\"",
+					Detail:   "can not CREATE scim integration with field `sync_password` for scim_client = \"AZURE\"",
+				},
+			}
+		}
 		parsed, err := strconv.ParseBool(v)
 		if err != nil {
 			return diag.FromErr(err)
@@ -288,16 +312,22 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 				return diag.FromErr(err)
 			}
 
-			syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
-			if err != nil {
+			if err = handleExternalChangesToObjectInDescribe(d,
+				describeMapping{"network_policy", "network_policy", networkPolicyProperty.Value, networkPolicyProperty.Value, nil},
+			); err != nil {
 				return diag.FromErr(err)
 			}
 
-			if err = handleExternalChangesToObjectInDescribe(d,
-				describeMapping{"network_policy", "network_policy", networkPolicyProperty.Value, networkPolicyProperty.Value, nil},
-				describeMapping{"sync_password", "sync_password", syncPasswordProperty.Value, syncPasswordProperty.Value, nil},
-			); err != nil {
-				return diag.FromErr(err)
+			if scimClient != string(sdk.ScimSecurityIntegrationScimClientAzure) {
+				syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if err = handleExternalChangesToObjectInDescribe(d,
+					describeMapping{"sync_password", "sync_password", syncPasswordProperty.Value, syncPasswordProperty.Value, nil},
+				); err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 
@@ -347,6 +377,15 @@ func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("sync_password") {
+		if scimClient := d.Get("scim_client").(string); scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "field `sync_password` is not supported for scim_client = \"AZURE\"",
+					Detail:   "can not SET and UNSET field `sync_password` for scim_client = \"AZURE\"",
+				},
+			}
+		}
 		if v := d.Get("sync_password").(string); v != BooleanDefault {
 			parsed, err := strconv.ParseBool(v)
 			if err != nil {
