@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
@@ -13,25 +12,28 @@ import (
 )
 
 func main() {
-	file := os.Getenv("GOFILE")
-	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
+	gencommons.NewGenerator(
+		getStructDetails,
+		gen.ModelFromStructDetails,
+		getFilename,
+		gen.AllTemplates,
+	).
+		WithAdditionalObjectsDebugLogs(printAllStructsFields).
+		WithAdditionalObjectsDebugLogs(printUniqueTypes).
+		RunAndHandleOsReturn()
+}
 
+func getStructDetails() []gencommons.StructDetails {
 	allObjects := append(gen.SdkShowResultStructs, gen.AdditionalStructs...)
 	allStructsDetails := make([]gencommons.StructDetails, len(allObjects))
 	for idx, s := range allObjects {
 		allStructsDetails[idx] = gencommons.ExtractStructDetails(s)
 	}
+	return allStructsDetails
+}
 
-	printAllStructsFields(allStructsDetails)
-	printUniqueTypes(allStructsDetails)
-	// TODO: handle objects
-	gencommons.GenerateAndPrintForAllObjects(allStructsDetails, gen.ModelFromStructDetails, gen.AllTemplates)
-	gencommons.GenerateAndSaveForAllObjects(
-		allStructsDetails,
-		gen.ModelFromStructDetails,
-		func(_, model gen.ShowResultSchemaModel) { return gencommons.ToSnakeCase(model.Name) + "_gen.go" },
-		gen.AllTemplates,
-	)
+func getFilename(_ gencommons.StructDetails, model gen.ShowResultSchemaModel) string {
+	return gencommons.ToSnakeCase(model.Name) + "_gen.go"
 }
 
 func printAllStructsFields(allStructs []gencommons.StructDetails) {

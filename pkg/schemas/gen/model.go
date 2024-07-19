@@ -12,6 +12,10 @@ type ShowResultSchemaModel struct {
 	SchemaFields []SchemaField
 }
 
+func (m ShowResultSchemaModel) SomeFunc() {
+	return
+}
+
 func ModelFromStructDetails(sdkStruct gencommons.StructDetails) ShowResultSchemaModel {
 	name, _ := strings.CutPrefix(sdkStruct.Name, "sdk.")
 	schemaFields := make([]SchemaField, len(sdkStruct.Fields))

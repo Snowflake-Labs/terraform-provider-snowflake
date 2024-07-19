@@ -2,45 +2,82 @@ package gencommons
 
 import (
 	"fmt"
+	"log"
 	"os"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
+	"text/template"
 )
 
-type Generator struct {
+// TODO: describe
+type ObjectNameProvider interface {
+	ObjectName() string
 }
 
-func NewGenerator() *Generator {
-	return &Generator{}
+// TODO: describe
+// TODO: use
+// TODO: better func
+type GenerationModel interface {
+	SomeFunc()
 }
 
-func (g *Generator) Run() error {
+// TODO: add type for objects provider?
+// TODO: add erorrs to any of these functions?
+type Generator[T ObjectNameProvider, M GenerationModel] struct {
+	objectsProvider func() []T
+	modelProvider   func(T) M
+	// TODO: add filename to model?
+	filenameProvider func(T, M) string
+	templates        []*template.Template
+
+	additionalObjectDebugLogProviders []func([]T)
+}
+
+func NewGenerator[T ObjectNameProvider, M GenerationModel](objectsProvider func() []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates []*template.Template) *Generator[T, M] {
+	return &Generator[T, M]{
+		objectsProvider:  objectsProvider,
+		modelProvider:    modelProvider,
+		filenameProvider: filenameProvider,
+		templates:        templates,
+
+		additionalObjectDebugLogProviders: make([]func([]T), 0),
+	}
+}
+
+func (g *Generator[T, _]) WithAdditionalObjectsDebugLogs(objectLogsProvider func([]T)) *Generator[T, _] {
+	g.additionalObjectDebugLogProviders = append(g.additionalObjectDebugLogProviders, objectLogsProvider)
+	return g
+}
+
+func (g *Generator[_, _]) Run() error {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	// generating objects
-	allObjects := append(gen.SdkShowResultStructs, gen.AdditionalStructs...)
-	allStructsDetails := make([]StructDetails, len(allObjects))
-	for idx, s := range allObjects {
-		allStructsDetails[idx] = ExtractStructDetails(s)
+	objects := g.objectsProvider()
+
+	// TODO: print conditionally from invocation flag
+	for _, p := range g.additionalObjectDebugLogProviders {
+		p(objects)
 	}
 
-	// additional debug logs
-	// printAllStructsFields(allStructsDetails)
-	// printUniqueTypes(allStructsDetails)
-
-	// printing objects to sdt out
-	_ = GenerateAndPrintForAllObjects(allStructsDetails, gen.ModelFromStructDetails, gen.AllTemplates...)
-
-	// saving objects to file
-	_ = GenerateAndSaveForAllObjects(
-		allStructsDetails,
-		gen.ModelFromStructDetails,
-		func(_ StructDetails, model gen.ShowResultSchemaModel) string {
-			return ToSnakeCase(model.Name) + "_gen.go"
-		},
-		gen.AllTemplates...,
-	)
+	// TODO: do not generate twice?
+	// TODO: print conditionally from invocation flag
+	if err := GenerateAndPrintForAllObjects(objects, g.modelProvider, g.templates...); err != nil {
+		return err
+	}
+	if err := GenerateAndSaveForAllObjects(
+		objects,
+		g.modelProvider,
+		g.filenameProvider,
+		g.templates...,
+	); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func (g *Generator[_, _]) RunAndHandleOsReturn() {
+	err := g.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

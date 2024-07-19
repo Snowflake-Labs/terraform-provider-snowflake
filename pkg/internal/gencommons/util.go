@@ -47,11 +47,6 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 }
 
 // TODO: describe
-type ObjectNameProvider interface {
-	ObjectName() string
-}
-
-// TODO: describe
 func GenerateAndSaveForAllObjects[T ObjectNameProvider, M any](objects []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates ...*template.Template) error {
 	var errs []error
 	for _, s := range objects {
