@@ -68,6 +68,7 @@ func snowflakeParameterValueSet[T ~string](parameterName T, expected string) sno
 	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: expected}
 }
 
+// TODO: can we just replace all above with this one?
 func snowflakeParameterValueSetGeneric[T ~string, U bool | int | ~string](parameterName T, expected U) snowflakeParameterAssertion {
 	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: fmt.Sprintf("%s", expected)}
 }
