@@ -3,6 +3,7 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
@@ -51,8 +52,24 @@ func NewSnowflakeParametersAssertWithParameters[I sdk.ObjectIdentifier](id I, ob
 	}
 }
 
+func snowflakeParameterBoolValueSet[T ~string](parameterName T, expected bool) snowflakeParameterAssertion {
+	return snowflakeParameterValueSet(parameterName, strconv.FormatBool(expected))
+}
+
+func snowflakeParameterIntValueSet[T ~string](parameterName T, expected int) snowflakeParameterAssertion {
+	return snowflakeParameterValueSet(parameterName, strconv.Itoa(expected))
+}
+
+func snowflakeParameterStringUnderlyingValueSet[T ~string, U ~string](parameterName T, expected U) snowflakeParameterAssertion {
+	return snowflakeParameterValueSet(parameterName, string(expected))
+}
+
 func snowflakeParameterValueSet[T ~string](parameterName T, expected string) snowflakeParameterAssertion {
 	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: expected}
+}
+
+func snowflakeParameterValueSetGeneric[T ~string, U bool | int | ~string](parameterName T, expected U) snowflakeParameterAssertion {
+	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: fmt.Sprintf("%s", expected)}
 }
 
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.
