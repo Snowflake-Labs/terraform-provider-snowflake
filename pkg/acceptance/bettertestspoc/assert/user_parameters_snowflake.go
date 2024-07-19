@@ -127,6 +127,68 @@ func (w *UserParametersAssert) HasAllDefaults() *UserParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.UserParameterWeekStart, sdk.ParameterTypeSnowflakeDefault)
 }
 
+func (w *UserParametersAssert) HasAllDefaultsExplicit() *UserParametersAssert {
+	return w.
+		HasDefaultEnableUnredactedQuerySyntaxErrorValueExplicit().
+		HasDefaultNetworkPolicyValueExplicit().
+		HasDefaultPreventUnloadToInternalStagesValueExplicit().
+		HasDefaultAbortDetachedQueryValueExplicit().
+		HasDefaultAutocommitValueExplicit().
+		HasDefaultBinaryInputFormatValueExplicit().
+		HasDefaultBinaryOutputFormatValueExplicit().
+		HasDefaultClientMemoryLimitValueExplicit().
+		HasDefaultClientMetadataRequestUseConnectionCtxValueExplicit().
+		HasDefaultClientPrefetchThreadsValueExplicit().
+		HasDefaultClientResultChunkSizeValueExplicit().
+		HasDefaultClientResultColumnCaseInsensitiveValueExplicit().
+		HasDefaultClientSessionKeepAliveValueExplicit().
+		HasDefaultClientSessionKeepAliveHeartbeatFrequencyValueExplicit().
+		HasDefaultClientTimestampTypeMappingValueExplicit().
+		HasDefaultDateInputFormatValueExplicit().
+		HasDefaultDateOutputFormatValueExplicit().
+		HasDefaultEnableUnloadPhysicalTypeOptimizationValueExplicit().
+		HasDefaultErrorOnNondeterministicMergeValueExplicit().
+		HasDefaultErrorOnNondeterministicUpdateValueExplicit().
+		HasDefaultGeographyOutputFormatValueExplicit().
+		HasDefaultGeometryOutputFormatValueExplicit().
+		HasDefaultJdbcTreatDecimalAsIntValueExplicit().
+		HasDefaultJdbcTreatTimestampNtzAsUtcValueExplicit().
+		HasDefaultJdbcUseSessionTimezoneValueExplicit().
+		HasDefaultJsonIndentValueExplicit().
+		HasDefaultLockTimeoutValueExplicit().
+		HasDefaultLogLevelValueExplicit().
+		HasDefaultMultiStatementCountValueExplicit().
+		HasDefaultNoorderSequenceAsDefaultValueExplicit().
+		HasDefaultOdbcTreatDecimalAsIntValueExplicit().
+		HasDefaultQueryTagValueExplicit().
+		HasDefaultQuotedIdentifiersIgnoreCaseValueExplicit().
+		HasDefaultRowsPerResultsetValueExplicit().
+		HasDefaultS3StageVpceDnsNameValueExplicit().
+		HasDefaultSearchPathValueExplicit().
+		HasDefaultSimulatedDataSharingConsumerValueExplicit().
+		HasDefaultStatementQueuedTimeoutInSecondsValueExplicit().
+		HasDefaultStatementTimeoutInSecondsValueExplicit().
+		HasDefaultStrictJsonOutputValueExplicit().
+		HasDefaultTimestampDayIsAlways24hValueExplicit().
+		HasDefaultTimestampInputFormatValueExplicit().
+		HasDefaultTimestampLtzOutputFormatValueExplicit().
+		HasDefaultTimestampNtzOutputFormatValueExplicit().
+		HasDefaultTimestampOutputFormatValueExplicit().
+		HasDefaultTimestampTypeMappingValueExplicit().
+		HasDefaultTimestampTzOutputFormatValueExplicit().
+		HasDefaultTimezoneValueExplicit().
+		HasDefaultTimeInputFormatValueExplicit().
+		HasDefaultTimeOutputFormatValueExplicit().
+		HasDefaultTraceLevelValueExplicit().
+		HasDefaultTransactionAbortOnErrorValueExplicit().
+		HasDefaultTransactionDefaultIsolationLevelValueExplicit().
+		HasDefaultTwoDigitCenturyStartValueExplicit().
+		HasDefaultUnsupportedDdlActionValueExplicit().
+		HasDefaultUseCachedResultValueExplicit().
+		HasDefaultWeekOfYearPolicyValueExplicit().
+		HasDefaultWeekStartValueExplicit()
+}
+
 ///////////////////////////////
 // Specific parameter checks //
 ///////////////////////////////
@@ -421,6 +483,298 @@ func (w *UserParametersAssert) HasWeekOfYearPolicy(expected int) *UserParameters
 
 func (w *UserParametersAssert) HasWeekStart(expected int) *UserParametersAssert {
 	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterWeekStart, expected))
+	return w
+}
+
+// level checks
+
+func (w *UserParametersAssert) HasEnableUnredactedQuerySyntaxErrorLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasNetworkPolicyLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterNetworkPolicy, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasPreventUnloadToInternalStagesLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterPreventUnloadToInternalStages, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasAbortDetachedQueryLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterAbortDetachedQuery, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasAutocommitLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterAutocommit, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasBinaryInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterBinaryInputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasBinaryOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterBinaryOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientMemoryLimitLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientMemoryLimit, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientMetadataRequestUseConnectionCtxLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientMetadataRequestUseConnectionCtx, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientPrefetchThreadsLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientPrefetchThreads, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientResultChunkSizeLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientResultChunkSize, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientResultColumnCaseInsensitiveLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientResultColumnCaseInsensitive, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientSessionKeepAliveLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAlive, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientSessionKeepAliveHeartbeatFrequencyLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasClientTimestampTypeMappingLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientTimestampTypeMapping, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasDateInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterDateInputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasDateOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterDateOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasEnableUnloadPhysicalTypeOptimizationLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasErrorOnNondeterministicMergeLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicMerge, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasErrorOnNondeterministicUpdateLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicUpdate, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasGeographyOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterGeographyOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasGeometryOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterGeometryOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasJdbcTreatDecimalAsIntLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcTreatDecimalAsInt, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasJdbcTreatTimestampNtzAsUtcLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasJdbcUseSessionTimezoneLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcUseSessionTimezone, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasJsonIndentLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJsonIndent, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasLockTimeoutLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterLockTimeout, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasLogLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterLogLevel, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasMultiStatementCountLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterMultiStatementCount, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasNoorderSequenceAsDefaultLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterNoorderSequenceAsDefault, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasOdbcTreatDecimalAsIntLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterOdbcTreatDecimalAsInt, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasQueryTagLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterQueryTag, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasQuotedIdentifiersIgnoreCaseLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterQuotedIdentifiersIgnoreCase, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasRowsPerResultsetLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterRowsPerResultset, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasS3StageVpceDnsNameLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterS3StageVpceDnsName, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasSearchPathLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterSearchPath, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasSimulatedDataSharingConsumerLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterSimulatedDataSharingConsumer, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasStatementQueuedTimeoutInSecondsLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStatementQueuedTimeoutInSeconds, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasStatementTimeoutInSecondsLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStatementTimeoutInSeconds, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasStrictJsonOutputLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStrictJsonOutput, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampDayIsAlways24hLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampDayIsAlways24h, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampInputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampLtzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampLtzOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampNtzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampNtzOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampTypeMappingLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampTypeMapping, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimestampTzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampTzOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimezoneLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimezone, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimeInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimeInputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTimeOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimeOutputFormat, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTraceLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTraceLevel, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTransactionAbortOnErrorLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTransactionAbortOnError, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTransactionDefaultIsolationLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTransactionDefaultIsolationLevel, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasTwoDigitCenturyStartLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTwoDigitCenturyStart, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasUnsupportedDdlActionLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterUnsupportedDdlAction, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasUseCachedResultLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterUseCachedResult, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasWeekOfYearPolicyLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterWeekOfYearPolicy, expected))
+	return w
+}
+
+func (w *UserParametersAssert) HasWeekStartLevel(expected sdk.ParameterType) *UserParametersAssert {
+	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterWeekStart, expected))
 	return w
 }
 

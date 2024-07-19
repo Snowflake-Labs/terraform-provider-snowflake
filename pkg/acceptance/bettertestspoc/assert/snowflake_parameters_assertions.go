@@ -31,6 +31,7 @@ const (
 	snowflakeParameterAssertionTypeExpectedValue = iota
 	snowflakeParameterAssertionTypeDefaultValue
 	snowflakeParameterAssertionTypeDefaultValueOnLevel
+	snowflakeParameterAssertionTypeLevel
 )
 
 type snowflakeParameterAssertion struct {
@@ -91,6 +92,10 @@ func snowflakeParameterDefaultValueOnLevelSet[T ~string](parameterName T, parame
 	return snowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeDefaultValueOnLevel}
 }
 
+func snowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) snowflakeParameterAssertion {
+	return snowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeLevel}
+}
+
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.
 // It verifies all the assertions accumulated earlier and gathers the results of the checks.
 func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T) {
@@ -135,6 +140,13 @@ func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testi
 				result = append(result, fmt.Errorf(
 					"parameter assertion for %s[%s][%s][%d/%d] failed: expected default value %s on level %s, got %s and level %s",
 					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), p.Default, assertion.parameterType, p.Value, p.Level,
+				))
+			}
+		case snowflakeParameterAssertionTypeLevel:
+			if p := helpers.FindParameter(t, parameters, assertion.parameterName); p.Level != assertion.parameterType {
+				result = append(result, fmt.Errorf(
+					"parameter assertion for %s[%s][%s][%d/%d] failed: expected level %s, got %s",
+					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), assertion.parameterType, p.Level,
 				))
 			}
 		default:
