@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,7 +34,7 @@ var (
 func MapToSchemaField(field Field) SchemaField {
 	isPointer := field.IsPointer()
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
-	name := ToSnakeCase(field.Name)
+	name := gencommons.ToSnakeCase(field.Name)
 	switch concreteTypeWithoutPtr {
 	case "string":
 		return SchemaField{name, schema.TypeString, field.Name, isPointer, Identity}

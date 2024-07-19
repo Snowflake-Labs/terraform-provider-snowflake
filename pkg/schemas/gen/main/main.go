@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
 	"golang.org/x/exp/maps"
 )
@@ -37,7 +38,7 @@ func printAllStructsFields(allStructs []gen.Struct) {
 		fmt.Printf("%s\n", s.Name)
 		fmt.Println("===========================")
 		for _, field := range s.Fields {
-			fmt.Println(gen.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
+			fmt.Println(gencommons.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
 		}
 		fmt.Println()
 	}
@@ -75,7 +76,7 @@ func saveAllGeneratedSchemas(allStructs []gen.Struct) {
 		buffer := bytes.Buffer{}
 		model := gen.ModelFromStructDetails(s)
 		gen.Generate(model, &buffer)
-		filename := gen.ToSnakeCase(model.Name) + "_gen.go"
+		filename := gencommons.ToSnakeCase(model.Name) + "_gen.go"
 		writeCodeToFile(&buffer, filename)
 	}
 }
