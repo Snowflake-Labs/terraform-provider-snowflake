@@ -24,7 +24,8 @@ func main() {
 
 	printAllStructsFields(allStructsDetails)
 	printUniqueTypes(allStructsDetails)
-	generateAllStructsToStdOut(allStructsDetails)
+	// TODO: handle objects
+	gencommons.GenerateAndPrintForAllObjects(allStructsDetails, gen.ModelFromStructDetails, gen.AllTemplates)
 	gencommons.GenerateAndSaveForAllObjects(
 		allStructsDetails,
 		gen.ModelFromStructDetails,
@@ -59,14 +60,5 @@ func printUniqueTypes(allStructs []gencommons.StructDetails) {
 	slices.Sort(keys)
 	for _, k := range keys {
 		fmt.Println(k)
-	}
-}
-
-func generateAllStructsToStdOut(allStructs []gencommons.StructDetails) {
-	for _, s := range allStructs {
-		fmt.Println("===========================")
-		fmt.Printf("Generated for %s\n", s.Name)
-		fmt.Println("===========================")
-		gencommons.ExecuteAllTemplates(gen.ModelFromStructDetails(s), os.Stdout, gen.AllTemplates)
 	}
 }

@@ -71,6 +71,21 @@ func GenerateAndSaveForAllObjects[T ObjectNameProvider, M any](objects []T, mode
 }
 
 // TODO: describe
+func GenerateAndPrintForAllObjects[T ObjectNameProvider, M any](objects []T, modelProvider func(T) M, templates ...*template.Template) error {
+	var errs []error
+	for _, s := range objects {
+		fmt.Println("===========================")
+		fmt.Printf("Generating for object %s\n", s.ObjectName())
+		fmt.Println("===========================")
+		if err := ExecuteAllTemplates(modelProvider(s), os.Stdout, templates...); err != nil {
+			errs = append(errs, fmt.Errorf("generating output for object %s failed with err: %w", s.ObjectName(), err))
+			continue
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// TODO: describe
 func ExecuteAllTemplates[M any](model M, writer io.Writer, templates ...*template.Template) error {
 	var errs []error
 	for _, t := range templates {
