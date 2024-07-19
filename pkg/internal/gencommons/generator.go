@@ -33,6 +33,7 @@ type Generator[T ObjectNameProvider, M GenerationModel] struct {
 	templates        []*template.Template
 
 	additionalObjectDebugLogProviders []func([]T)
+	objectFilters                     []func(T) bool
 }
 
 func NewGenerator[T ObjectNameProvider, M GenerationModel](objectsProvider func() []T, modelProvider func(T) M, filenameProvider func(T, M) string, templates []*template.Template) *Generator[T, M] {
@@ -43,6 +44,7 @@ func NewGenerator[T ObjectNameProvider, M GenerationModel](objectsProvider func(
 		templates:        templates,
 
 		additionalObjectDebugLogProviders: make([]func([]T), 0),
+		objectFilters:                     make([]func(T) bool, 0),
 	}
 }
 
@@ -51,7 +53,7 @@ func (g *Generator[T, M]) WithAdditionalObjectsDebugLogs(objectLogsProvider func
 	return g
 }
 
-func (g *Generator[_, _]) Run() error {
+func (g *Generator[T, _]) Run() error {
 	preprocessArgs()
 
 	file := os.Getenv("GOFILE")
@@ -63,6 +65,20 @@ func (g *Generator[_, _]) Run() error {
 	flag.Parse()
 
 	objects := g.objectsProvider()
+
+	if len(g.objectFilters) > 0 {
+		filteredObjects := make([]T, 0)
+		for _, o := range objects {
+			matches := true
+			for _, f := range g.objectFilters {
+				matches = matches && f(o)
+			}
+			if matches {
+				filteredObjects = append(filteredObjects, o)
+			}
+		}
+		objects = filteredObjects
+	}
 
 	if *additionalLogs {
 		for _, p := range g.additionalObjectDebugLogProviders {
