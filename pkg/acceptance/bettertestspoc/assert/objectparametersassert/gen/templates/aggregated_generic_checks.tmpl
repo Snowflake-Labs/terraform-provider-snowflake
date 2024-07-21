@@ -22,6 +22,6 @@ return {{ $assertVar }}.
 func ({{ $assertVar }} *{{ $assertName }}) HasAllDefaultsExplicit() *{{ $assertName }} {
 return {{ $assertVar }}.
 {{- range $index, $item := .Parameters }}
-    HasDefault{{ SnakeCaseToCamel .Name }}Explicit(){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
+    HasDefault{{ SnakeCaseToCamel .Name }}ValueExplicit(){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
 {{- end }}
 }

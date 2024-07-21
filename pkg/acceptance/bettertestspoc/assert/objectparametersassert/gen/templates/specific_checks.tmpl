@@ -33,7 +33,7 @@
 ////////////////////////////////////
 
 {{ range .Parameters -}}
-    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}() *{{ $assertName }} {
+    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}Value() *{{ $assertName }} {
     return {{ $assertVar }}.HasDefaultParameterValue({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }})
     }
 
@@ -44,7 +44,7 @@
 /////////////////////////////////////////////
 
 {{ range .Parameters -}}
-    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}Explicit() *{{ $assertName }} {
+    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}ValueExplicit() *{{ $assertName }} {
     return {{ $assertVar }}.Has{{ SnakeCaseToCamel .Name }}({{ .DefaultValue }})
     }
 
