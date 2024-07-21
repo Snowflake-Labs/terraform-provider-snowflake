@@ -6,7 +6,7 @@
 {{ $assertVar := FirstLetter $nameLowerCase }}
 {{- range .Fields }}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ TypeWithoutPointer .ConcreteType }}) *{{ $assertName }} {
-    {{ $assertVar }}.assertions = append({{ $assertVar }}.assertions, func(t *testing.T, o *{{ $sdkType }}) error {
+    {{ $assertVar }}.AddAssertion(func(t *testing.T, o *{{ $sdkType }}) error {
     t.Helper()
     {{ if .IsOriginalTypePointer -}}
         if o.{{ .Name }} == nil {
