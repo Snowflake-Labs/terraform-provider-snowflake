@@ -2,6 +2,7 @@ package gen
 
 import (
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
@@ -9,7 +10,8 @@ import (
 
 // TODO: extract to commons?
 type PreambleModel struct {
-	PackageName string
+	PackageName               string
+	AdditionalStandardImports []string
 }
 
 type SnowflakeObjectAssertionsModel struct {
@@ -33,8 +35,19 @@ type SnowflakeObjectFieldAssertion struct {
 func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeObjectAssertionsModel {
 	name, _ := strings.CutPrefix(sdkObject.Name, "sdk.")
 	fields := make([]SnowflakeObjectFieldAssertion, len(sdkObject.Fields))
+	imports := make(map[string]struct{})
 	for idx, field := range sdkObject.Fields {
 		fields[idx] = MapToSnowflakeObjectFieldAssertion(field)
+		additionalImport, isImportedType := field.GetImportedType()
+		if isImportedType {
+			imports[additionalImport] = struct{}{}
+		}
+	}
+	additionalImports := make([]string, 0)
+	for k, _ := range imports {
+		if !slices.Contains([]string{"sdk"}, k) {
+			additionalImports = append(additionalImports, k)
+		}
 	}
 
 	packageWithGenerateDirective := os.Getenv("GOPACKAGE")
@@ -44,7 +57,8 @@ func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeO
 		IdType:  sdkObject.IdType,
 		Fields:  fields,
 		PreambleModel: PreambleModel{
-			PackageName: packageWithGenerateDirective,
+			PackageName:               packageWithGenerateDirective,
+			AdditionalStandardImports: additionalImports,
 		},
 	}
 }

@@ -7,6 +7,9 @@ package {{ .PackageName }}
 import (
 "fmt"
 "testing"
+{{- range .AdditionalStandardImports }}
+"{{- . }}"
+{{- end }}
 
 acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
