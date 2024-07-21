@@ -1,0 +1,21 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/gen.SnowflakeObjectAssertionsModel*/ -}}
+
+{{ $assertName := .Name | printf "%sAssert" }}
+{{ $nameLowerCase := FirstLetterLowercase .Name }}
+type {{ $assertName }} struct {
+*SnowflakeObjectAssert[{{ .SdkType }}, {{ .IdType }}]
+}
+
+func {{ .Name }}(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
+t.Helper()
+return &{{ $assertName }}{
+NewSnowflakeObjectAssertWithProvider(sdk.ObjectType{{ .Name }}, id, acc.TestClient().{{ .Name }}.Show),
+}
+}
+
+func {{ .Name }}FromObject(t *testing.T, {{ $nameLowerCase }} *{{ .SdkType }}) *{{ $assertName }} {
+t.Helper()
+return &{{ $assertName }}{
+NewSnowflakeObjectAssertWithObject(sdk.ObjectType{{ .Name }}, {{ $nameLowerCase }}.ID(), {{ $nameLowerCase }}),
+}
+}

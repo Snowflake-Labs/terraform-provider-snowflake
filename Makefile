@@ -123,4 +123,10 @@ generate-show-output-schemas: ## Generate show output schemas with mappers
 clean-show-output-schemas: ## Clean generated show output schemas
 	rm -f ./pkg/schemas/*_gen.go
 
+generate-snowflake-object-assertions: ## Generate snowflake object assertions
+	go generate ./pkg/acceptance/bettertestspoc/testgen/generate_snowflake_object_assertions.go
+
+clean-snowflake-object-assertions: ## Clean snowflake object assertions
+	rm -f ./pkg/acceptance/bettertestspoc/testgen/*_gen.go
+
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf

@@ -11,8 +11,21 @@ func FirstLetterLowercase(in string) string {
 	return strings.ToLower(in[:1]) + in[1:]
 }
 
+func FirstLetter(in string) string {
+	return in[:1]
+}
+
 func RunMapper(mapper Mapper, in ...string) string {
 	return mapper(strings.Join(in, ""))
+}
+
+func TypeWithoutPointer(t string) string {
+	without, _ := strings.CutPrefix(t, "*")
+	return without
+}
+
+func CamelToWords(camel string) string {
+	return strings.ReplaceAll(ToSnakeCase(camel), "_", " ")
 }
 
 func BuildTemplateFuncMap(funcs ...any) template.FuncMap {
