@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -21,6 +22,7 @@ type SnowflakeObjectParametersAssertionsModel struct {
 type ParameterAssertionModel struct {
 	Name             string
 	Type             string
+	DefaultValue     string
 	DefaultLevel     string
 	AssertionCreator string
 }
@@ -47,9 +49,16 @@ func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjec
 			assertionCreator = "SnowflakeParameterValueSet"
 		}
 
+		var defaultValue = p.DefaultValue
+		// string has to be wrapped in double quotes; all other values are passed explicitly
+		if p.ParameterType == "string" {
+			defaultValue = fmt.Sprintf(`"%s"`, defaultValue)
+		}
+
 		parameters[idx] = ParameterAssertionModel{
 			Name:             p.ParameterName,
 			Type:             p.ParameterType,
+			DefaultValue:     defaultValue,
 			DefaultLevel:     p.DefaultLevel,
 			AssertionCreator: assertionCreator,
 		}

@@ -1,0 +1,51 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen.SnowflakeObjectParametersAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sParametersAssert" -}}
+{{- $sdkParameterName := .Name | printf "sdk.%sParameter" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase }}
+////////////////////////////
+// Parameter value checks //
+////////////////////////////
+
+{{ range .Parameters -}}
+    func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}(expected {{ .Type }}) *{{ $assertName }} {
+    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
+    return {{ $assertVar }}
+    }
+
+{{ end -}}
+
+////////////////////////////
+// Parameter level checks //
+////////////////////////////
+
+{{ range .Parameters -}}
+    func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}Level(expected sdk.ParameterType) *{{ $assertName }} {
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterLevelSet({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
+    return {{ $assertVar }}
+    }
+
+{{ end -}}
+
+////////////////////////////////////
+// Parameter default value checks //
+////////////////////////////////////
+
+{{ range .Parameters -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}() *{{ $assertName }} {
+    return {{ $assertVar }}.HasDefaultParameterValue({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }})
+    }
+
+{{ end -}}
+
+/////////////////////////////////////////////
+// Parameter explicit default value checks //
+/////////////////////////////////////////////
+
+{{ range .Parameters -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}Explicit() *{{ $assertName }} {
+    return {{ $assertVar }}.Has{{ SnakeCaseToCamel .Name }}({{ .DefaultValue }})
+    }
+
+{{ end }}
