@@ -13,13 +13,13 @@ var (
 	preambleTemplateContent string
 	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
 
-	//go:embed templates/snowflake_object_assertions_definition.tmpl
+	//go:embed templates/definition.tmpl
 	snowflakeObjectAssertionsDefinitionTemplateContent string
 	SnowflakeObjectAssertionsDefinitionTemplate, _     = template.New("snowflakeObjectAssertionsDefinitionTemplate").Funcs(gencommons.BuildTemplateFuncMap(
 		gencommons.FirstLetterLowercase,
 	)).Parse(snowflakeObjectAssertionsDefinitionTemplateContent)
 
-	//go:embed templates/snowflake_object_assertions.tmpl
+	//go:embed templates/assertions.tmpl
 	snowflakeObjectAssertionsTemplateContent string
 	SnowflakeObjectAssertionsTemplate, _     = template.New("snowflakeObjectAssertionsTemplate").Funcs(gencommons.BuildTemplateFuncMap(
 		gencommons.FirstLetterLowercase,
