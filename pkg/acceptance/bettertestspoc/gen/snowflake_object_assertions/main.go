@@ -25,15 +25,8 @@ type SdkObjectDef struct {
 }
 
 func getSdkObjectDetails() []gencommons.SdkObjectDetails {
-	allObjectDefs := []SdkObjectDef{
-		{
-			idType:       "sdk.AccountObjectIdentifier",
-			objectType:   sdk.ObjectTypeWarehouse,
-			objectStruct: sdk.Warehouse{},
-		},
-	}
-	allSdkObjectsDetails := make([]gencommons.SdkObjectDetails, len(allObjectDefs))
-	for idx, d := range allObjectDefs {
+	allSdkObjectsDetails := make([]gencommons.SdkObjectDetails, len(allStructs))
+	for idx, d := range allStructs {
 		structDetails := gencommons.ExtractStructDetails(d.objectStruct)
 		allSdkObjectsDetails[idx] = gencommons.SdkObjectDetails{
 			IdType:        d.idType,
@@ -46,4 +39,17 @@ func getSdkObjectDetails() []gencommons.SdkObjectDetails {
 
 func getFilename(_ gencommons.SdkObjectDetails, model gen.SnowflakeObjectAssertionsModel) string {
 	return gencommons.ToSnakeCase(model.Name) + "_snowflake" + "_gen.go"
+}
+
+var allStructs = []SdkObjectDef{
+	{
+		idType:       "sdk.AccountObjectIdentifier",
+		objectType:   sdk.ObjectTypeUser,
+		objectStruct: sdk.User{},
+	},
+	{
+		idType:       "sdk.AccountObjectIdentifier",
+		objectType:   sdk.ObjectTypeWarehouse,
+		objectStruct: sdk.Warehouse{},
+	},
 }
