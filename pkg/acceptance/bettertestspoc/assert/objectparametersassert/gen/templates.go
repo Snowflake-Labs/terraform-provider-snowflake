@@ -4,6 +4,8 @@ import (
 	"text/template"
 
 	_ "embed"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 )
 
 var (
@@ -15,5 +17,12 @@ var (
 	snowflakeObjectAssertionsDefinitionTemplateContent string
 	SnowflakeObjectAssertionsDefinitionTemplate, _     = template.New("snowflakeObjectAssertionsDefinitionTemplate").Parse(snowflakeObjectAssertionsDefinitionTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate}
+	//go:embed templates/generic_checks.tmpl
+	genericChecksTemplateContent string
+	GenericChecksTemplate, _     = template.New("genericChecksTemplateContent").Funcs(gencommons.BuildTemplateFuncMap(
+		gencommons.FirstLetterLowercase,
+		gencommons.FirstLetter,
+	)).Parse(genericChecksTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate}
 )

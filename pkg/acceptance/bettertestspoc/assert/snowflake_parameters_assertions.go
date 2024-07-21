@@ -63,6 +63,10 @@ func NewSnowflakeParametersAssertWithParameters[I sdk.ObjectIdentifier](id I, ob
 	}
 }
 
+func (s *SnowflakeParametersAssert[I]) AddAssertion(assertion snowflakeParameterAssertion) {
+	s.assertions = append(s.assertions, assertion)
+}
+
 func snowflakeParameterBoolValueSet[T ~string](parameterName T, expected bool) snowflakeParameterAssertion {
 	return snowflakeParameterValueSet(parameterName, strconv.FormatBool(expected))
 }

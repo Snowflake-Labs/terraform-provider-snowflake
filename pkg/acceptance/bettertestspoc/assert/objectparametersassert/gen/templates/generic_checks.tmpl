@@ -1,0 +1,34 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen.SnowflakeObjectParametersAssertionsModel*/ -}}
+
+{{ $assertName := .Name | printf "%sParametersAssert" }}
+{{ $sdkParameterName := .Name | printf "sdk.%sParameter" }}
+{{ $nameLowerCase := FirstLetterLowercase .Name }}
+{{ $assertVar := FirstLetter $nameLowerCase }}
+//////////////////////////////
+// Generic parameter checks //
+//////////////////////////////
+
+func ({{ $assertVar }} *{{ $assertName }}) HasBoolParameterValue(parameterName {{ $sdkParameterName }}, expected bool) *{{ $assertName }} {
+{{ $assertVar }}.AddAssertion(snowflakeParameterBoolValueSet(parameterName, expected))
+return {{ $assertVar }}
+}
+
+func ({{ $assertVar }} *{{ $assertName }}) HasIntParameterValue(parameterName {{ $sdkParameterName }}, expected int) *{{ $assertName }} {
+{{ $assertVar }}.AddAssertion(snowflakeParameterIntValueSet(parameterName, expected))
+return {{ $assertVar }}
+}
+
+func ({{ $assertVar }} *{{ $assertName }}) HasStringParameterValue(parameterName {{ $sdkParameterName }}, expected string) *{{ $assertName }} {
+{{ $assertVar }}.AddAssertion(snowflakeParameterValueSet(parameterName, expected))
+return {{ $assertVar }}
+}
+
+func ({{ $assertVar }} *{{ $assertName }}) HasDefaultParameterValue(parameterName {{ $sdkParameterName }}) *{{ $assertName }} {
+{{ $assertVar }}.AddAssertion(snowflakeParameterDefaultValueSet(parameterName))
+return {{ $assertVar }}
+}
+
+func ({{ $assertVar }} *{{ $assertName }}) HasDefaultParameterValueOnLevel(parameterName {{ $sdkParameterName }}, parameterType sdk.ParameterType) *{{ $assertName }} {
+{{ $assertVar }}.AddAssertion(snowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
+return {{ $assertVar }}
+}
