@@ -4,8 +4,7 @@
 {{- $sdkParameterName := .Name | printf "sdk.%sParameter" -}}
 {{- $nameLowerCase := FirstLetterLowercase .Name -}}
 {{- $assertVar := FirstLetter $nameLowerCase -}}
-{{- $parametersCount := len .Parameters -}}
-
+{{- $parametersCount := len .Parameters }}
 ///////////////////////////////
 // Aggregated generic checks //
 ///////////////////////////////

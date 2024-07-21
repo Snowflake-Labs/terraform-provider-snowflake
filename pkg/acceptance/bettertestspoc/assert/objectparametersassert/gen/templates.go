@@ -26,12 +26,20 @@ var (
 
 	//go:embed templates/aggregated_generic_checks.tmpl
 	aggregatedGenericChecksTemplateContent string
-	AggregatedGenericChecksTemplate, _     = template.New("genericChecksTemplateContent").Funcs(gencommons.BuildTemplateFuncMap(
+	AggregatedGenericChecksTemplate, _     = template.New("aggregatedGenericChecksTemplateContent").Funcs(gencommons.BuildTemplateFuncMap(
 		gencommons.FirstLetterLowercase,
 		gencommons.FirstLetter,
 		gencommons.SnakeCaseToCamel,
 		gencommons.IsLastItem,
 	)).Parse(aggregatedGenericChecksTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate, AggregatedGenericChecksTemplate}
+	//go:embed templates/value_checks.tmpl
+	valueChecksTemplateContent string
+	ValueChecksTemplate, _     = template.New("valueChecksTemplateContent").Funcs(gencommons.BuildTemplateFuncMap(
+		gencommons.FirstLetterLowercase,
+		gencommons.FirstLetter,
+		gencommons.SnakeCaseToCamel,
+	)).Parse(valueChecksTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate, AggregatedGenericChecksTemplate, ValueChecksTemplate}
 )

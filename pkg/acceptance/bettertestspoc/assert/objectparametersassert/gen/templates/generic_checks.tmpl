@@ -3,8 +3,7 @@
 {{- $assertName := .Name | printf "%sParametersAssert" -}}
 {{- $sdkParameterName := .Name | printf "sdk.%sParameter" -}}
 {{- $nameLowerCase := FirstLetterLowercase .Name -}}
-{{- $assertVar := FirstLetter $nameLowerCase -}}
-
+{{- $assertVar := FirstLetter $nameLowerCase }}
 //////////////////////////////
 // Generic parameter checks //
 //////////////////////////////
