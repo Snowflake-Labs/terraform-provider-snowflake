@@ -29,8 +29,9 @@ func getFilename(_ gen.SnowflakeObjectParameters, model gen.SnowflakeObjectParam
 // TODO: use SDK definition after parameters rework (+ preprocessing here)
 var allObjectsParameters = []gen.SnowflakeObjectParameters{
 	{
-		Name:  "User",
-		Level: sdk.ParameterTypeUser,
+		Name:   "User",
+		IdType: "sdk.AccountObjectIdentifier",
+		Level:  sdk.ParameterTypeUser,
 		Parameters: []gen.SnowflakeParameter{
 			{string(sdk.UserParameterEnableUnredactedQuerySyntaxError), "bool", "false"},
 			{string(sdk.UserParameterNetworkPolicy), "string", ""},

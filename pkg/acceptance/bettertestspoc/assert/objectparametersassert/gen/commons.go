@@ -4,6 +4,7 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 type SnowflakeObjectParameters struct {
 	Name       string
+	IdType     string
 	Level      sdk.ParameterType
 	Parameters []SnowflakeParameter
 }

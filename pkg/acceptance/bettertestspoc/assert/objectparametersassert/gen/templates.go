@@ -11,5 +11,9 @@ var (
 	preambleTemplateContent string
 	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate}
+	//go:embed templates/definition.tmpl
+	snowflakeObjectAssertionsDefinitionTemplateContent string
+	SnowflakeObjectAssertionsDefinitionTemplate, _     = template.New("snowflakeObjectAssertionsDefinitionTemplate").Parse(snowflakeObjectAssertionsDefinitionTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate}
 )
