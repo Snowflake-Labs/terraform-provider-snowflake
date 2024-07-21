@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/gen"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert/gen"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
