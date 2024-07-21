@@ -1,0 +1,28 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen.SnowflakeObjectParametersAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sParametersAssert" -}}
+{{- $sdkParameterName := .Name | printf "sdk.%sParameter" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase -}}
+{{- $parametersCount := len .Parameters -}}
+
+///////////////////////////////
+// Aggregated generic checks //
+///////////////////////////////
+
+// HasAllDefaults checks if all the parameters:
+// - have a default value by comparing current value of the sdk.Parameter with its default
+// - have an expected level
+func ({{ $assertVar }} *{{ $assertName }}) HasAllDefaults() *{{ $assertName }} {
+return {{ $assertVar }}.
+{{- range $index, $item := .Parameters }}
+    HasDefaultParameterValueOnLevel({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, {{ .DefaultLevel }}){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
+{{- end }}
+}
+
+func ({{ $assertVar }} *{{ $assertName }}) HasAllDefaultsExplicit() *{{ $assertName }} {
+return {{ $assertVar }}.
+{{- range $index, $item := .Parameters }}
+    HasDefault{{ SnakeCaseToCamel .Name }}Explicit(){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
+{{- end }}
+}

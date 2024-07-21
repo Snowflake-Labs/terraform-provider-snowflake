@@ -33,9 +33,9 @@ var allObjectsParameters = []gen.SnowflakeObjectParameters{
 		IdType: "sdk.AccountObjectIdentifier",
 		Level:  sdk.ParameterTypeUser,
 		Parameters: []gen.SnowflakeParameter{
-			{string(sdk.UserParameterEnableUnredactedQuerySyntaxError), "bool", "false"},
-			{string(sdk.UserParameterNetworkPolicy), "string", ""},
-			{string(sdk.UserParameterPreventUnloadToInternalStages), "bool", "false"},
+			{string(sdk.UserParameterEnableUnredactedQuerySyntaxError), "bool", "false", "sdk.ParameterTypeSnowflakeDefault"},
+			{string(sdk.UserParameterNetworkPolicy), "string", "", "sdk.ParameterTypeSnowflakeDefault"},
+			{string(sdk.UserParameterPreventUnloadToInternalStages), "bool", "false", "sdk.ParameterTypeSnowflakeDefault"},
 		},
 	},
 }

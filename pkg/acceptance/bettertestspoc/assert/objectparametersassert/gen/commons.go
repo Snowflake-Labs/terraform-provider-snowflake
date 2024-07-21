@@ -17,4 +17,5 @@ type SnowflakeParameter struct {
 	ParameterName string
 	ParameterType string
 	DefaultValue  string
+	DefaultLevel  string
 }

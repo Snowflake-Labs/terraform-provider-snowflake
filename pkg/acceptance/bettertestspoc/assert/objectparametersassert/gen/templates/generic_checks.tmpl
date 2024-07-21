@@ -1,9 +1,10 @@
 {{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen.SnowflakeObjectParametersAssertionsModel*/ -}}
 
-{{ $assertName := .Name | printf "%sParametersAssert" }}
-{{ $sdkParameterName := .Name | printf "sdk.%sParameter" }}
-{{ $nameLowerCase := FirstLetterLowercase .Name }}
-{{ $assertVar := FirstLetter $nameLowerCase }}
+{{- $assertName := .Name | printf "%sParametersAssert" -}}
+{{- $sdkParameterName := .Name | printf "sdk.%sParameter" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase -}}
+
 //////////////////////////////
 // Generic parameter checks //
 //////////////////////////////

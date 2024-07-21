@@ -28,6 +28,19 @@ func CamelToWords(camel string) string {
 	return strings.ReplaceAll(ToSnakeCase(camel), "_", " ")
 }
 
+func SnakeCaseToCamel(snake string) string {
+	snake = strings.ToLower(snake)
+	parts := strings.Split(snake, "_")
+	for idx, p := range parts {
+		parts[idx] = strings.ToUpper(p[:1]) + p[1:]
+	}
+	return strings.Join(parts, "")
+}
+
+func IsLastItem(itemIdx int, collectionLength int) bool {
+	return itemIdx+1 == collectionLength
+}
+
 func BuildTemplateFuncMap(funcs ...any) template.FuncMap {
 	var allFuncs = make(map[string]any)
 	for _, f := range funcs {

@@ -24,5 +24,14 @@ var (
 		gencommons.FirstLetter,
 	)).Parse(genericChecksTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate}
+	//go:embed templates/aggregated_generic_checks.tmpl
+	aggregatedGenericChecksTemplateContent string
+	AggregatedGenericChecksTemplate, _     = template.New("genericChecksTemplateContent").Funcs(gencommons.BuildTemplateFuncMap(
+		gencommons.FirstLetterLowercase,
+		gencommons.FirstLetter,
+		gencommons.SnakeCaseToCamel,
+		gencommons.IsLastItem,
+	)).Parse(aggregatedGenericChecksTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate, AggregatedGenericChecksTemplate}
 )
