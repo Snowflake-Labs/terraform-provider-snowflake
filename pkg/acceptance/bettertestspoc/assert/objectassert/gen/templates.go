@@ -14,19 +14,19 @@ var (
 	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
 
 	//go:embed templates/definition.tmpl
-	snowflakeObjectAssertionsDefinitionTemplateContent string
-	SnowflakeObjectAssertionsDefinitionTemplate, _     = template.New("snowflakeObjectAssertionsDefinitionTemplate").Funcs(gencommons.BuildTemplateFuncMap(
+	definitionTemplateContent string
+	DefinitionTemplate, _     = template.New("definitionTemplate").Funcs(gencommons.BuildTemplateFuncMap(
 		gencommons.FirstLetterLowercase,
-	)).Parse(snowflakeObjectAssertionsDefinitionTemplateContent)
+	)).Parse(definitionTemplateContent)
 
 	//go:embed templates/assertions.tmpl
-	snowflakeObjectAssertionsTemplateContent string
-	SnowflakeObjectAssertionsTemplate, _     = template.New("snowflakeObjectAssertionsTemplate").Funcs(gencommons.BuildTemplateFuncMap(
+	assertionsTemplateContent string
+	AssertionsTemplate, _     = template.New("assertionsTemplate").Funcs(gencommons.BuildTemplateFuncMap(
 		gencommons.FirstLetterLowercase,
 		gencommons.FirstLetter,
 		gencommons.TypeWithoutPointer,
 		gencommons.CamelToWords,
-	)).Parse(snowflakeObjectAssertionsTemplateContent)
+	)).Parse(assertionsTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, SnowflakeObjectAssertionsTemplate}
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, AssertionsTemplate}
 )

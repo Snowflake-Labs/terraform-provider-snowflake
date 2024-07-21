@@ -14,8 +14,8 @@ var (
 	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
 
 	//go:embed templates/definition.tmpl
-	snowflakeObjectAssertionsDefinitionTemplateContent string
-	SnowflakeObjectAssertionsDefinitionTemplate, _     = template.New("snowflakeObjectAssertionsDefinitionTemplate").Parse(snowflakeObjectAssertionsDefinitionTemplateContent)
+	definitionTemplateContent string
+	DefinitionTemplate, _     = template.New("definitionTemplate").Parse(definitionTemplateContent)
 
 	//go:embed templates/generic_checks.tmpl
 	genericChecksTemplateContent string
@@ -41,5 +41,5 @@ var (
 		gencommons.SnakeCaseToCamel,
 	)).Parse(specificChecksTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, SnowflakeObjectAssertionsDefinitionTemplate, GenericChecksTemplate, AggregatedGenericChecksTemplate, SpecificChecksTemplate}
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, GenericChecksTemplate, AggregatedGenericChecksTemplate, SpecificChecksTemplate}
 )
