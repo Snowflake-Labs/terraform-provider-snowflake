@@ -18,7 +18,7 @@ type (
 // SnowflakeParametersAssert is an embeddable struct that should be used to construct new Snowflake parameters assertions.
 // It implements both TestCheckFuncProvider and ImportStateCheckFuncProvider which makes it easy to create new resource assertions.
 type SnowflakeParametersAssert[I sdk.ObjectIdentifier] struct {
-	assertions []snowflakeParameterAssertion
+	assertions []SnowflakeParameterAssertion
 	id         I
 	objectType sdk.ObjectType
 	provider   parametersProvider[I]
@@ -34,7 +34,7 @@ const (
 	snowflakeParameterAssertionTypeLevel
 )
 
-type snowflakeParameterAssertion struct {
+type SnowflakeParameterAssertion struct {
 	parameterName string
 	expectedValue string
 	parameterType sdk.ParameterType
@@ -45,7 +45,7 @@ type snowflakeParameterAssertion struct {
 // Object to check is lazily fetched from Snowflake when the checks are being run.
 func NewSnowflakeParametersAssertWithProvider[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, provider parametersProvider[I]) *SnowflakeParametersAssert[I] {
 	return &SnowflakeParametersAssert[I]{
-		assertions: make([]snowflakeParameterAssertion, 0),
+		assertions: make([]SnowflakeParameterAssertion, 0),
 		id:         id,
 		objectType: objectType,
 		provider:   provider,
@@ -56,48 +56,48 @@ func NewSnowflakeParametersAssertWithProvider[I sdk.ObjectIdentifier](id I, obje
 // All the checks are run against the given set of parameters.
 func NewSnowflakeParametersAssertWithParameters[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, parameters []*sdk.Parameter) *SnowflakeParametersAssert[I] {
 	return &SnowflakeParametersAssert[I]{
-		assertions: make([]snowflakeParameterAssertion, 0),
+		assertions: make([]SnowflakeParameterAssertion, 0),
 		id:         id,
 		objectType: objectType,
 		parameters: parameters,
 	}
 }
 
-func (s *SnowflakeParametersAssert[I]) AddAssertion(assertion snowflakeParameterAssertion) {
+func (s *SnowflakeParametersAssert[I]) AddAssertion(assertion SnowflakeParameterAssertion) {
 	s.assertions = append(s.assertions, assertion)
 }
 
-func snowflakeParameterBoolValueSet[T ~string](parameterName T, expected bool) snowflakeParameterAssertion {
-	return snowflakeParameterValueSet(parameterName, strconv.FormatBool(expected))
+func SnowflakeParameterBoolValueSet[T ~string](parameterName T, expected bool) SnowflakeParameterAssertion {
+	return SnowflakeParameterValueSet(parameterName, strconv.FormatBool(expected))
 }
 
-func snowflakeParameterIntValueSet[T ~string](parameterName T, expected int) snowflakeParameterAssertion {
-	return snowflakeParameterValueSet(parameterName, strconv.Itoa(expected))
+func SnowflakeParameterIntValueSet[T ~string](parameterName T, expected int) SnowflakeParameterAssertion {
+	return SnowflakeParameterValueSet(parameterName, strconv.Itoa(expected))
 }
 
-func snowflakeParameterStringUnderlyingValueSet[T ~string, U ~string](parameterName T, expected U) snowflakeParameterAssertion {
-	return snowflakeParameterValueSet(parameterName, string(expected))
+func SnowflakeParameterStringUnderlyingValueSet[T ~string, U ~string](parameterName T, expected U) SnowflakeParameterAssertion {
+	return SnowflakeParameterValueSet(parameterName, string(expected))
 }
 
-func snowflakeParameterValueSet[T ~string](parameterName T, expected string) snowflakeParameterAssertion {
-	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: expected}
+func SnowflakeParameterValueSet[T ~string](parameterName T, expected string) SnowflakeParameterAssertion {
+	return SnowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: expected}
 }
 
 // TODO: can we just replace all above with this one?
-func snowflakeParameterValueSetGeneric[T ~string, U bool | int | ~string](parameterName T, expected U) snowflakeParameterAssertion {
-	return snowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: fmt.Sprintf("%s", expected)}
+func snowflakeParameterValueSetGeneric[T ~string, U bool | int | ~string](parameterName T, expected U) SnowflakeParameterAssertion {
+	return SnowflakeParameterAssertion{parameterName: string(parameterName), expectedValue: fmt.Sprintf("%s", expected)}
 }
 
-func snowflakeParameterDefaultValueSet[T ~string](parameterName T) snowflakeParameterAssertion {
-	return snowflakeParameterAssertion{parameterName: string(parameterName), assertionType: snowflakeParameterAssertionTypeDefaultValue}
+func SnowflakeParameterDefaultValueSet[T ~string](parameterName T) SnowflakeParameterAssertion {
+	return SnowflakeParameterAssertion{parameterName: string(parameterName), assertionType: snowflakeParameterAssertionTypeDefaultValue}
 }
 
-func snowflakeParameterDefaultValueOnLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) snowflakeParameterAssertion {
-	return snowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeDefaultValueOnLevel}
+func SnowflakeParameterDefaultValueOnLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) SnowflakeParameterAssertion {
+	return SnowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeDefaultValueOnLevel}
 }
 
-func snowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) snowflakeParameterAssertion {
-	return snowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeLevel}
+func SnowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) SnowflakeParameterAssertion {
+	return SnowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeLevel}
 }
 
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.

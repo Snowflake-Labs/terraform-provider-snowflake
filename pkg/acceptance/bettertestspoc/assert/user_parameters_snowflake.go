@@ -34,27 +34,27 @@ func UserParametersPrefetched(t *testing.T, id sdk.AccountObjectIdentifier, para
 //////////////////////////////
 
 func (w *UserParametersAssert) HasBoolParameterValue(parameterName sdk.UserParameter, expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(parameterName, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(parameterName, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasIntParameterValue(parameterName sdk.UserParameter, expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(parameterName, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(parameterName, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStringParameterValue(parameterName sdk.UserParameter, expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(parameterName, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(parameterName, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasDefaultParameterValue(parameterName sdk.UserParameter) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterDefaultValueSet(parameterName))
+	w.assertions = append(w.assertions, SnowflakeParameterDefaultValueSet(parameterName))
 	return w
 }
 
 func (w *UserParametersAssert) HasDefaultParameterValueOnLevel(parameterName sdk.UserParameter, parameterType sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
+	w.assertions = append(w.assertions, SnowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
 	return w
 }
 
@@ -196,585 +196,585 @@ func (w *UserParametersAssert) HasAllDefaultsExplicit() *UserParametersAssert {
 // value checks
 
 func (w *UserParametersAssert) HasEnableUnredactedQuerySyntaxError(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasNetworkPolicy(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterNetworkPolicy, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterNetworkPolicy, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasPreventUnloadToInternalStages(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterPreventUnloadToInternalStages, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterPreventUnloadToInternalStages, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasAbortDetachedQuery(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterAbortDetachedQuery, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterAbortDetachedQuery, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasAutocommit(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterAutocommit, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterAutocommit, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasBinaryInputFormat(expected sdk.BinaryInputFormat) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterBinaryInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterBinaryInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasBinaryOutputFormat(expected sdk.BinaryOutputFormat) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterBinaryOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterBinaryOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientMemoryLimit(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterClientMemoryLimit, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterClientMemoryLimit, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientMetadataRequestUseConnectionCtx(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterClientMetadataRequestUseConnectionCtx, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterClientMetadataRequestUseConnectionCtx, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientPrefetchThreads(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterClientPrefetchThreads, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterClientPrefetchThreads, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientResultChunkSize(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterClientResultChunkSize, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterClientResultChunkSize, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientResultColumnCaseInsensitive(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterClientResultColumnCaseInsensitive, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterClientResultColumnCaseInsensitive, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientSessionKeepAlive(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterClientSessionKeepAlive, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterClientSessionKeepAlive, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientSessionKeepAliveHeartbeatFrequency(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientTimestampTypeMapping(expected sdk.ClientTimestampTypeMapping) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterClientTimestampTypeMapping, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterClientTimestampTypeMapping, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasDateInputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterDateInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterDateInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasDateOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterDateOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterDateOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasEnableUnloadPhysicalTypeOptimization(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasErrorOnNondeterministicMerge(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterErrorOnNondeterministicMerge, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterErrorOnNondeterministicMerge, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasErrorOnNondeterministicUpdate(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterErrorOnNondeterministicUpdate, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterErrorOnNondeterministicUpdate, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasGeographyOutputFormat(expected sdk.GeographyOutputFormat) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterGeographyOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterGeographyOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasGeometryOutputFormat(expected sdk.GeometryOutputFormat) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterGeometryOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterGeometryOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcTreatDecimalAsInt(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterJdbcTreatDecimalAsInt, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterJdbcTreatDecimalAsInt, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcTreatTimestampNtzAsUtc(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcUseSessionTimezone(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterJdbcUseSessionTimezone, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterJdbcUseSessionTimezone, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJsonIndent(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterJsonIndent, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterJsonIndent, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasLockTimeout(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterLockTimeout, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterLockTimeout, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasLogLevel(expected sdk.LogLevel) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterLogLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterLogLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasMultiStatementCount(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterMultiStatementCount, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterMultiStatementCount, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasNoorderSequenceAsDefault(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterNoorderSequenceAsDefault, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterNoorderSequenceAsDefault, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasOdbcTreatDecimalAsInt(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterOdbcTreatDecimalAsInt, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterOdbcTreatDecimalAsInt, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasQueryTag(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterQueryTag, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterQueryTag, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasQuotedIdentifiersIgnoreCase(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterQuotedIdentifiersIgnoreCase, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterQuotedIdentifiersIgnoreCase, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasRowsPerResultset(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterRowsPerResultset, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterRowsPerResultset, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasS3StageVpceDnsName(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterS3StageVpceDnsName, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterS3StageVpceDnsName, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasSearchPath(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterSearchPath, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterSearchPath, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasSimulatedDataSharingConsumer(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterSimulatedDataSharingConsumer, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterSimulatedDataSharingConsumer, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStatementQueuedTimeoutInSeconds(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterStatementQueuedTimeoutInSeconds, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterStatementQueuedTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStatementTimeoutInSeconds(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterStatementTimeoutInSeconds, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterStatementTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStrictJsonOutput(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterStrictJsonOutput, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterStrictJsonOutput, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampDayIsAlways24h(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterTimestampDayIsAlways24h, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterTimestampDayIsAlways24h, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampInputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimestampInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimestampInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampLtzOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimestampLtzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimestampLtzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampNtzOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimestampNtzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimestampNtzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimestampOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimestampOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampTypeMapping(expected sdk.TimestampTypeMapping) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTimestampTypeMapping, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTimestampTypeMapping, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampTzOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimestampTzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimestampTzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimezone(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimezone, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimezone, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimeInputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimeInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimeInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimeOutputFormat(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterTimeOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterTimeOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTraceLevel(expected sdk.TraceLevel) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTraceLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTraceLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTransactionAbortOnError(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterTransactionAbortOnError, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterTransactionAbortOnError, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTransactionDefaultIsolationLevel(expected sdk.TransactionDefaultIsolationLevel) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTransactionDefaultIsolationLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterStringUnderlyingValueSet(sdk.UserParameterTransactionDefaultIsolationLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTwoDigitCenturyStart(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterTwoDigitCenturyStart, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterTwoDigitCenturyStart, expected))
 	return w
 }
 
 // lowercase for ignore in snowflake by default but uppercase for FAIL
 func (w *UserParametersAssert) HasUnsupportedDdlAction(expected string) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterValueSet(sdk.UserParameterUnsupportedDdlAction, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterValueSet(sdk.UserParameterUnsupportedDdlAction, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasUseCachedResult(expected bool) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterBoolValueSet(sdk.UserParameterUseCachedResult, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterBoolValueSet(sdk.UserParameterUseCachedResult, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasWeekOfYearPolicy(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterWeekOfYearPolicy, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterWeekOfYearPolicy, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasWeekStart(expected int) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterIntValueSet(sdk.UserParameterWeekStart, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterIntValueSet(sdk.UserParameterWeekStart, expected))
 	return w
 }
 
 // level checks
 
 func (w *UserParametersAssert) HasEnableUnredactedQuerySyntaxErrorLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterEnableUnredactedQuerySyntaxError, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasNetworkPolicyLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterNetworkPolicy, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterNetworkPolicy, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasPreventUnloadToInternalStagesLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterPreventUnloadToInternalStages, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterPreventUnloadToInternalStages, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasAbortDetachedQueryLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterAbortDetachedQuery, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterAbortDetachedQuery, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasAutocommitLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterAutocommit, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterAutocommit, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasBinaryInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterBinaryInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterBinaryInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasBinaryOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterBinaryOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterBinaryOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientMemoryLimitLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientMemoryLimit, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientMemoryLimit, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientMetadataRequestUseConnectionCtxLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientMetadataRequestUseConnectionCtx, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientMetadataRequestUseConnectionCtx, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientPrefetchThreadsLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientPrefetchThreads, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientPrefetchThreads, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientResultChunkSizeLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientResultChunkSize, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientResultChunkSize, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientResultColumnCaseInsensitiveLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientResultColumnCaseInsensitive, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientResultColumnCaseInsensitive, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientSessionKeepAliveLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAlive, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAlive, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientSessionKeepAliveHeartbeatFrequencyLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasClientTimestampTypeMappingLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterClientTimestampTypeMapping, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterClientTimestampTypeMapping, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasDateInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterDateInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterDateInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasDateOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterDateOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterDateOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasEnableUnloadPhysicalTypeOptimizationLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterEnableUnloadPhysicalTypeOptimization, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasErrorOnNondeterministicMergeLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicMerge, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicMerge, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasErrorOnNondeterministicUpdateLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicUpdate, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterErrorOnNondeterministicUpdate, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasGeographyOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterGeographyOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterGeographyOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasGeometryOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterGeometryOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterGeometryOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcTreatDecimalAsIntLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcTreatDecimalAsInt, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterJdbcTreatDecimalAsInt, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcTreatTimestampNtzAsUtcLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterJdbcTreatTimestampNtzAsUtc, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJdbcUseSessionTimezoneLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJdbcUseSessionTimezone, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterJdbcUseSessionTimezone, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasJsonIndentLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterJsonIndent, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterJsonIndent, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasLockTimeoutLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterLockTimeout, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterLockTimeout, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasLogLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterLogLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterLogLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasMultiStatementCountLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterMultiStatementCount, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterMultiStatementCount, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasNoorderSequenceAsDefaultLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterNoorderSequenceAsDefault, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterNoorderSequenceAsDefault, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasOdbcTreatDecimalAsIntLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterOdbcTreatDecimalAsInt, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterOdbcTreatDecimalAsInt, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasQueryTagLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterQueryTag, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterQueryTag, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasQuotedIdentifiersIgnoreCaseLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterQuotedIdentifiersIgnoreCase, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterQuotedIdentifiersIgnoreCase, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasRowsPerResultsetLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterRowsPerResultset, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterRowsPerResultset, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasS3StageVpceDnsNameLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterS3StageVpceDnsName, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterS3StageVpceDnsName, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasSearchPathLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterSearchPath, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterSearchPath, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasSimulatedDataSharingConsumerLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterSimulatedDataSharingConsumer, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterSimulatedDataSharingConsumer, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStatementQueuedTimeoutInSecondsLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStatementQueuedTimeoutInSeconds, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterStatementQueuedTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStatementTimeoutInSecondsLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStatementTimeoutInSeconds, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterStatementTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasStrictJsonOutputLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterStrictJsonOutput, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterStrictJsonOutput, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampDayIsAlways24hLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampDayIsAlways24h, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampDayIsAlways24h, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampLtzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampLtzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampLtzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampNtzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampNtzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampNtzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampTypeMappingLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampTypeMapping, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampTypeMapping, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimestampTzOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimestampTzOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimestampTzOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimezoneLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimezone, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimezone, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimeInputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimeInputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimeInputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTimeOutputFormatLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTimeOutputFormat, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTimeOutputFormat, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTraceLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTraceLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTraceLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTransactionAbortOnErrorLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTransactionAbortOnError, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTransactionAbortOnError, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTransactionDefaultIsolationLevelLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTransactionDefaultIsolationLevel, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTransactionDefaultIsolationLevel, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasTwoDigitCenturyStartLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterTwoDigitCenturyStart, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterTwoDigitCenturyStart, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasUnsupportedDdlActionLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterUnsupportedDdlAction, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterUnsupportedDdlAction, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasUseCachedResultLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterUseCachedResult, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterUseCachedResult, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasWeekOfYearPolicyLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterWeekOfYearPolicy, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterWeekOfYearPolicy, expected))
 	return w
 }
 
 func (w *UserParametersAssert) HasWeekStartLevel(expected sdk.ParameterType) *UserParametersAssert {
-	w.assertions = append(w.assertions, snowflakeParameterLevelSet(sdk.UserParameterWeekStart, expected))
+	w.assertions = append(w.assertions, SnowflakeParameterLevelSet(sdk.UserParameterWeekStart, expected))
 	return w
 }
 
