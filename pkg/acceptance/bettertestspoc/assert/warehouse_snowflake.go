@@ -160,7 +160,7 @@ func (w *WarehouseAssert) HasResourceMonitor(expected sdk.AccountObjectIdentifie
 }
 
 func (w *WarehouseAssert) HasScalingPolicy(expected sdk.ScalingPolicy) *WarehouseAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.Warehouse) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.Warehouse) error {
 		t.Helper()
 		if o.ScalingPolicy != expected {
 			return fmt.Errorf("expected type: %v; got: %v", expected, string(o.ScalingPolicy))
