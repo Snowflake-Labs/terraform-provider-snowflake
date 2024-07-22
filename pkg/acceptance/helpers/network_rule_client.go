@@ -24,16 +24,22 @@ func (c *NetworkRuleClient) client() sdk.NetworkRules {
 	return c.context.client.NetworkRules
 }
 
-func (c *NetworkRuleClient) CreateNetworkRule(t *testing.T) (*sdk.NetworkRule, func()) {
+func (c *NetworkRuleClient) Create(t *testing.T) (*sdk.NetworkRule, func()) {
 	t.Helper()
-	return c.CreateNetworkRuleWithRequest(t, sdk.NewCreateNetworkRuleRequest(c.ids.RandomSchemaObjectIdentifier(),
+	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifier())
+}
+
+func (c *NetworkRuleClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.NetworkRule, func()) {
+	t.Helper()
+	return c.CreateWithRequest(t, sdk.NewCreateNetworkRuleRequest(
+		id,
 		sdk.NetworkRuleTypeHostPort,
 		[]sdk.NetworkRuleValue{},
 		sdk.NetworkRuleModeEgress,
 	))
 }
 
-func (c *NetworkRuleClient) CreateNetworkRuleWithRequest(t *testing.T, request *sdk.CreateNetworkRuleRequest) (*sdk.NetworkRule, func()) {
+func (c *NetworkRuleClient) CreateWithRequest(t *testing.T, request *sdk.CreateNetworkRuleRequest) (*sdk.NetworkRule, func()) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -43,10 +49,10 @@ func (c *NetworkRuleClient) CreateNetworkRuleWithRequest(t *testing.T, request *
 	networkRule, err := c.client().ShowByID(ctx, request.GetName())
 	require.NoError(t, err)
 
-	return networkRule, c.DropNetworkRuleFunc(t, request.GetName())
+	return networkRule, c.DropFunc(t, request.GetName())
 }
 
-func (c *NetworkRuleClient) DropNetworkRuleFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+func (c *NetworkRuleClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 

@@ -28,7 +28,7 @@ var NetworkRuleDef = g.NewInterface(
 ).
 	CreateOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-network-rule",
-		g.NewQueryStruct("CreateNetworkRule").
+		g.NewQueryStruct("Create").
 			Create().
 			OrReplace().
 			SQL("NETWORK RULE").
