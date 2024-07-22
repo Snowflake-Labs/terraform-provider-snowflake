@@ -1,6 +1,8 @@
 package gen
 
 import (
+	"os"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 )
 
@@ -19,5 +21,11 @@ func (m ResourceAssertionsModel) SomeFunc() {
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSchemaDetails) ResourceAssertionsModel {
-	return ResourceAssertionsModel{}
+	packageWithGenerateDirective := os.Getenv("GOPACKAGE")
+	return ResourceAssertionsModel{
+		Name: resourceSchemaDetails.ObjectName(),
+		PreambleModel: PreambleModel{
+			PackageName: packageWithGenerateDirective,
+		},
+	}
 }
