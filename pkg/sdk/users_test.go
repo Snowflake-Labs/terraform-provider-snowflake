@@ -68,6 +68,44 @@ func TestUserAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset", "SetTag", "UnsetTag"))
 	})
 
+	t.Run("validation: no set", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set:  &UserSet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+	})
+
+	t.Run("two sets", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				SessionParameters: &SessionParameters{AbortDetachedQuery: Bool(true)},
+				ObjectParameters:  &UserObjectParameters{EnableUnredactedQuerySyntaxError: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true ABORT_DETACHED_QUERY = true", id.FullyQualifiedName())
+	})
+
+	t.Run("validation: no unset", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name:  id,
+			Unset: &UserUnset{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+	})
+
+	t.Run("validation: two incompatible unsets", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				SessionParameters: &SessionParametersUnset{BinaryOutputFormat: Bool(true)},
+				ObjectParameters:  &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+	})
+
 	t.Run("with setting a policy", func(t *testing.T) {
 		passwordPolicy := randomSchemaObjectIdentifier()
 		opts := &AlterUserOptions{

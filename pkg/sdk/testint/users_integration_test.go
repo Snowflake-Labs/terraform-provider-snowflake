@@ -616,7 +616,7 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, newID.Name(), result.Name.Value)
 	})
 
-	t.Run("alter: set and unset", func(t *testing.T) {
+	t.Run("alter: set and unset object properties", func(t *testing.T) {
 		user, userCleanup := testClientHelper().User.CreateUser(t)
 		t.Cleanup(userCleanup)
 
