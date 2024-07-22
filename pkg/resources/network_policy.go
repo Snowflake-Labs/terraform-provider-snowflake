@@ -160,7 +160,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	return ReadContextNetworkPolicy(ctx, d, meta)
 }
 
-func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 

@@ -21,8 +21,6 @@ Changes:
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
 
-## v0.92.0 ➞ v0.93.0
-
 ### *(new feature)* refactored snowflake_network_policy resource
 
 No migration required.
@@ -43,6 +41,8 @@ Added a new datasource enabling querying and filtering network policies. Notes:
 - Output from **DESC NETWORK POLICY** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `network_policies`.
   The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+## v0.92.0 ➞ v0.93.0
 
 ### general changes
 

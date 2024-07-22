@@ -423,7 +423,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.92.0",
+						VersionConstraint: "=0.93.0",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
@@ -437,13 +437,19 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 				},
 				Config: networkPolicyConfigWithNetworkRules(
 					id.Name(),
-					[]string{fmt.Sprintf("\"%s\".\"%s\".%s", allowedNetworkRuleId.DatabaseName(), allowedNetworkRuleId.SchemaName(), allowedNetworkRuleId.Name())},
-					[]string{fmt.Sprintf("\"%s\".\"%s\".%s", blockedNetworkRuleId.DatabaseName(), blockedNetworkRuleId.SchemaName(), blockedNetworkRuleId.Name())},
+					[]string{
+						fmt.Sprintf("\"%s\".\"%s\".%s", allowedNetworkRuleId.DatabaseName(), allowedNetworkRuleId.SchemaName(), allowedNetworkRuleId.Name()),
+						fmt.Sprintf("\"%s\".\"%s\".%s", allowedNetworkRuleId2.DatabaseName(), allowedNetworkRuleId2.SchemaName(), allowedNetworkRuleId2.Name()),
+					},
+					[]string{
+						fmt.Sprintf("\"%s\".\"%s\".%s", blockedNetworkRuleId.DatabaseName(), blockedNetworkRuleId.SchemaName(), blockedNetworkRuleId.Name()),
+						fmt.Sprintf("\"%s\".\"%s\".%s", blockedNetworkRuleId2.DatabaseName(), blockedNetworkRuleId2.SchemaName(), blockedNetworkRuleId2.Name()),
+					},
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_network_rule_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_network_rule_list.#", "2"),
 				),
 			},
 			{

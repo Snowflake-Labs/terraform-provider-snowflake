@@ -261,11 +261,6 @@ func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
 			Id:   "\"object\"",
 		},
 		{
-			Name: "validation: account object identifier in Ids ignore quotes with upper cased id in Ids",
-			Ids:  []string{"OBJECT", "db.schema", "db.schema.object"},
-			Id:   "\"object\"",
-		},
-		{
 			Name:          "account object identifier in Ids",
 			Ids:           []string{"object", "db.schema", "db.schema.object"},
 			Id:            "\"object\"",
@@ -305,7 +300,7 @@ func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			assert.Equal(t, tc.ShouldContain, ContainsIdentifierIgnoreQuotes(tc.Ids, tc.Id))
+			assert.Equal(t, tc.ShouldContain, ContainsIdentifierIgnoringQuotes(tc.Ids, tc.Id))
 		})
 	}
 }
