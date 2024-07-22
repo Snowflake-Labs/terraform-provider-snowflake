@@ -45,7 +45,7 @@ func IsLastItem(itemIdx int, collectionLength int) bool {
 }
 
 func BuildTemplateFuncMap(funcs ...any) template.FuncMap {
-	var allFuncs = make(map[string]any)
+	allFuncs := make(map[string]any)
 	for _, f := range funcs {
 		allFuncs[getFunctionName(f)] = f
 	}

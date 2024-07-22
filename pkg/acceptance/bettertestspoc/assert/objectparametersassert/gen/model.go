@@ -28,7 +28,6 @@ type ParameterAssertionModel struct {
 }
 
 func (m SnowflakeObjectParametersAssertionsModel) SomeFunc() {
-	return
 }
 
 func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjectParameters) SnowflakeObjectParametersAssertionsModel {
@@ -49,7 +48,7 @@ func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjec
 			assertionCreator = "SnowflakeParameterValueSet"
 		}
 
-		var defaultValue = p.DefaultValue
+		defaultValue := p.DefaultValue
 		// string has to be wrapped in double quotes; all other values are passed explicitly
 		if p.ParameterType == "string" {
 			defaultValue = fmt.Sprintf(`"%s"`, defaultValue)

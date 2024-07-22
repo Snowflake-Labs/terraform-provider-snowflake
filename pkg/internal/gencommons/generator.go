@@ -62,8 +62,8 @@ func (g *Generator[T, _]) Run() error {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	var additionalLogs = flag.Bool("additional-logs", false, "print additional object debug logs")
-	var dryRun = flag.Bool("dry-run", false, "generate to std out instead of saving")
+	additionalLogs := flag.Bool("additional-logs", false, "print additional object debug logs")
+	dryRun := flag.Bool("dry-run", false, "generate to std out instead of saving")
 	flag.Parse()
 
 	objects := g.objectsProvider()

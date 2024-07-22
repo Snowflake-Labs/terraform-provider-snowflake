@@ -13,7 +13,6 @@ type ShowResultSchemaModel struct {
 }
 
 func (m ShowResultSchemaModel) SomeFunc() {
-	return
 }
 
 func ModelFromStructDetails(sdkStruct gencommons.StructDetails) ShowResultSchemaModel {

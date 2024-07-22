@@ -49,6 +49,7 @@ func TestInt_Users(t *testing.T) {
 	t.Cleanup(networkPolicyCleanup)
 
 	assertParametersSet := func(t *testing.T, id sdk.AccountObjectIdentifier) {
+		t.Helper()
 		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
 			HasEnableUnredactedQuerySyntaxError(true).
 			HasNetworkPolicy(networkPolicy.ID().Name()).

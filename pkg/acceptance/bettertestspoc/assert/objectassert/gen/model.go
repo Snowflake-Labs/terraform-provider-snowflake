@@ -23,7 +23,6 @@ type SnowflakeObjectAssertionsModel struct {
 }
 
 func (m SnowflakeObjectAssertionsModel) SomeFunc() {
-	return
 }
 
 type SnowflakeObjectFieldAssertion struct {
@@ -45,7 +44,7 @@ func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeO
 		}
 	}
 	additionalImports := make([]string, 0)
-	for k, _ := range imports {
+	for k := range imports {
 		if !slices.Contains([]string{"sdk"}, k) {
 			additionalImports = append(additionalImports, k)
 		}
@@ -68,9 +67,8 @@ func MapToSnowflakeObjectFieldAssertion(field gencommons.Field) SnowflakeObjectF
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
 
 	// TODO: handle other mappings if needed
-	var mapper = gencommons.Identity
-	switch concreteTypeWithoutPtr {
-	case "sdk.AccountObjectIdentifier":
+	mapper := gencommons.Identity
+	if concreteTypeWithoutPtr == "sdk.AccountObjectIdentifier" {
 		mapper = gencommons.Name
 	}
 

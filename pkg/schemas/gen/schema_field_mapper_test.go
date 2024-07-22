@@ -22,111 +22,111 @@ func Test_MapToSchemaField(t *testing.T) {
 		expected expectedValues
 	}{
 		{
-			field:    gencommons.Field{"unexportedString", "string", "string"},
+			field:    gencommons.Field{Name: "unexportedString", ConcreteType: "string", UnderlyingType: "string"},
 			expected: expectedValues{"unexported_string", schema.TypeString, false, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedInt", "int", "int"},
+			field:    gencommons.Field{Name: "unexportedInt", ConcreteType: "int", UnderlyingType: "int"},
 			expected: expectedValues{"unexported_int", schema.TypeInt, false, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedBool", "bool", "bool"},
+			field:    gencommons.Field{Name: "unexportedBool", ConcreteType: "bool", UnderlyingType: "bool"},
 			expected: expectedValues{"unexported_bool", schema.TypeBool, false, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedFloat64", "float64", "float64"},
+			field:    gencommons.Field{Name: "unexportedFloat64", ConcreteType: "float64", UnderlyingType: "float64"},
 			expected: expectedValues{"unexported_float64", schema.TypeFloat, false, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedStringPtr", "*string", "*string"},
+			field:    gencommons.Field{Name: "unexportedStringPtr", ConcreteType: "*string", UnderlyingType: "*string"},
 			expected: expectedValues{"unexported_string_ptr", schema.TypeString, true, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedIntPtr", "*int", "*int"},
+			field:    gencommons.Field{Name: "unexportedIntPtr", ConcreteType: "*int", UnderlyingType: "*int"},
 			expected: expectedValues{"unexported_int_ptr", schema.TypeInt, true, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedBoolPtr", "*bool", "*bool"},
+			field:    gencommons.Field{Name: "unexportedBoolPtr", ConcreteType: "*bool", UnderlyingType: "*bool"},
 			expected: expectedValues{"unexported_bool_ptr", schema.TypeBool, true, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedFloat64Ptr", "*float64", "*float64"},
+			field:    gencommons.Field{Name: "unexportedFloat64Ptr", ConcreteType: "*float64", UnderlyingType: "*float64"},
 			expected: expectedValues{"unexported_float64_ptr", schema.TypeFloat, true, gencommons.Identity},
 		},
 		{
-			field:    gencommons.Field{"unexportedTime", "time.Time", "struct"},
+			field:    gencommons.Field{Name: "unexportedTime", ConcreteType: "time.Time", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_time", schema.TypeString, false, gencommons.ToString},
 		},
 		{
-			field:    gencommons.Field{"unexportedTimePtr", "*time.Time", "*struct"},
+			field:    gencommons.Field{Name: "unexportedTimePtr", ConcreteType: "*time.Time", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_time_ptr", schema.TypeString, true, gencommons.ToString},
 		},
 		{
-			field:    gencommons.Field{"unexportedStringEnum", "sdk.WarehouseType", "string"},
+			field:    gencommons.Field{Name: "unexportedStringEnum", ConcreteType: "sdk.WarehouseType", UnderlyingType: "string"},
 			expected: expectedValues{"unexported_string_enum", schema.TypeString, false, gencommons.CastToString},
 		},
 		{
-			field:    gencommons.Field{"unexportedStringEnumPtr", "*sdk.WarehouseType", "*string"},
+			field:    gencommons.Field{Name: "unexportedStringEnumPtr", ConcreteType: "*sdk.WarehouseType", UnderlyingType: "*string"},
 			expected: expectedValues{"unexported_string_enum_ptr", schema.TypeString, true, gencommons.CastToString},
 		},
 		{
-			field:    gencommons.Field{"unexportedIntEnum", "sdk.ResourceMonitorLevel", "int"},
+			field:    gencommons.Field{Name: "unexportedIntEnum", ConcreteType: "sdk.ResourceMonitorLevel", UnderlyingType: "int"},
 			expected: expectedValues{"unexported_int_enum", schema.TypeInt, false, gencommons.CastToInt},
 		},
 		{
-			field:    gencommons.Field{"unexportedIntEnumPtr", "*sdk.ResourceMonitorLevel", "*int"},
+			field:    gencommons.Field{Name: "unexportedIntEnumPtr", ConcreteType: "*sdk.ResourceMonitorLevel", UnderlyingType: "*int"},
 			expected: expectedValues{"unexported_int_enum_ptr", schema.TypeInt, true, gencommons.CastToInt},
 		},
 		{
-			field:    gencommons.Field{"unexportedAccountIdentifier", "sdk.AccountIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedAccountIdentifier", ConcreteType: "sdk.AccountIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_account_identifier", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedExternalObjectIdentifier", "sdk.ExternalObjectIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedExternalObjectIdentifier", ConcreteType: "sdk.ExternalObjectIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_external_object_identifier", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedAccountObjectIdentifier", "sdk.AccountObjectIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedAccountObjectIdentifier", ConcreteType: "sdk.AccountObjectIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_account_object_identifier", schema.TypeString, false, gencommons.Name},
 		},
 		{
-			field:    gencommons.Field{"unexportedDatabaseObjectIdentifier", "sdk.DatabaseObjectIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedDatabaseObjectIdentifier", ConcreteType: "sdk.DatabaseObjectIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_database_object_identifier", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedSchemaObjectIdentifier", "sdk.SchemaObjectIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedSchemaObjectIdentifier", ConcreteType: "sdk.SchemaObjectIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_schema_object_identifier", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedTableColumnIdentifier", "sdk.TableColumnIdentifier", "struct"},
+			field:    gencommons.Field{Name: "unexportedTableColumnIdentifier", ConcreteType: "sdk.TableColumnIdentifier", UnderlyingType: "struct"},
 			expected: expectedValues{"unexported_table_column_identifier", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedAccountIdentifierPtr", "*sdk.AccountIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedAccountIdentifierPtr", ConcreteType: "*sdk.AccountIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_account_identifier_ptr", schema.TypeString, true, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedExternalObjectIdentifierPtr", "*sdk.ExternalObjectIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedExternalObjectIdentifierPtr", ConcreteType: "*sdk.ExternalObjectIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_external_object_identifier_ptr", schema.TypeString, true, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedAccountObjectIdentifierPtr", "*sdk.AccountObjectIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedAccountObjectIdentifierPtr", ConcreteType: "*sdk.AccountObjectIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_account_object_identifier_ptr", schema.TypeString, true, gencommons.Name},
 		},
 		{
-			field:    gencommons.Field{"unexportedDatabaseObjectIdentifierPtr", "*sdk.DatabaseObjectIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedDatabaseObjectIdentifierPtr", ConcreteType: "*sdk.DatabaseObjectIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_database_object_identifier_ptr", schema.TypeString, true, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedSchemaObjectIdentifierPtr", "*sdk.SchemaObjectIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedSchemaObjectIdentifierPtr", ConcreteType: "*sdk.SchemaObjectIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_schema_object_identifier_ptr", schema.TypeString, true, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedTableColumnIdentifierPtr", "*sdk.TableColumnIdentifier", "*struct"},
+			field:    gencommons.Field{Name: "unexportedTableColumnIdentifierPtr", ConcreteType: "*sdk.TableColumnIdentifier", UnderlyingType: "*struct"},
 			expected: expectedValues{"unexported_table_column_identifier_ptr", schema.TypeString, true, gencommons.FullyQualifiedName},
 		},
 		{
-			field:    gencommons.Field{"unexportedInterface", "sdk.ObjectIdentifier", "interface"},
+			field:    gencommons.Field{Name: "unexportedInterface", ConcreteType: "sdk.ObjectIdentifier", UnderlyingType: "interface"},
 			expected: expectedValues{"unexported_interface", schema.TypeString, false, gencommons.FullyQualifiedName},
 		},
 	}
