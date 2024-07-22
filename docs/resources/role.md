@@ -2,19 +2,27 @@
 page_title: "snowflake_role Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the official documentation https://docs.snowflake.com/en/user-guide/security-access-control-overview.
 ---
 
 # snowflake_role (Resource)
 
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_account_role](./account_role) instead. <deprecation>
 
+The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the [official documentation](https://docs.snowflake.com/en/user-guide/security-access-control-overview).
 
 ## Example Usage
 
 ```terraform
-resource "snowflake_role" "role" {
-  name    = "role1"
-  comment = "A role."
+## Minimal
+resource "snowflake_role" "minimal" {
+  name = "role_name"
+}
+
+## Complete (with every optional set)
+resource "snowflake_role" "complete" {
+  name    = "role_name"
+  comment = "my account role"
 }
 ```
 
@@ -28,29 +36,32 @@ resource "snowflake_role" "role" {
 ### Optional
 
 - `comment` (String)
-- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW ROLES` for the given role. (see [below for nested schema](#nestedatt--show_output))
 
-<a id="nestedblock--tag"></a>
-### Nested Schema for `tag`
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
 
-Required:
+Read-Only:
 
-- `name` (String) Tag name, e.g. department.
-- `value` (String) Tag value, e.g. marketing_info.
-
-Optional:
-
-- `database` (String) Name of the database that the tag was created in.
-- `schema` (String) Name of the schema that the tag was created in.
+- `assigned_to_users` (Number)
+- `comment` (String)
+- `created_on` (String)
+- `granted_roles` (Number)
+- `granted_to_roles` (Number)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `is_inherited` (Boolean)
+- `name` (String)
+- `owner` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_role.example roleName
+terraform import snowflake_role.example "name"
 ```
