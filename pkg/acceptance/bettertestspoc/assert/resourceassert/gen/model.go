@@ -27,9 +27,19 @@ type ResourceAttributeAssertionModel struct {
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSchemaDetails) ResourceAssertionsModel {
+	attributes := make([]ResourceAttributeAssertionModel, 0)
+	for _, attr := range resourceSchemaDetails.Attributes {
+		attributes = append(attributes, ResourceAttributeAssertionModel{
+			Name: attr.Name,
+			// TODO: add attribute type logic; allow type safe assertions, not only strings
+			AttributeType: "string",
+		})
+	}
+
 	packageWithGenerateDirective := os.Getenv("GOPACKAGE")
 	return ResourceAssertionsModel{
-		Name: resourceSchemaDetails.ObjectName(),
+		Name:       resourceSchemaDetails.ObjectName(),
+		Attributes: attributes,
 		PreambleModel: PreambleModel{
 			PackageName: packageWithGenerateDirective,
 		},
