@@ -1,9 +1,13 @@
 # Better tests poc
 This package contains a quick implementation of helpers that should allow us a quicker, more pleasant, and more readable implementation of tests, mainly the acceptance ones.
 It contains the following packages:
-- `assert` - all the assertions reside here. The currently supported assertions are: resource assertions, show output assertions, parameters assertions, and Snowflake object assertions.
-The package contains utilities to build assertions for new objects.
-All the assertions will be ultimately generated; the ones presented for warehouse were manually created.
+- `assert` - all the assertions reside here. Also, the utilities to build assertions for new objects. All the assertions will be ultimately generated; the ones presented in this folder were manually created. The currently supported assertions are:
+  - resource assertions (currently, created manually)
+  - show output assertions (currently, created manually)
+  - resource parameters assertions (currently, created manually)
+  - Snowflake object assertions (generated in subpackage `objectassert`)
+  - Snowflake object parameters assertions (generated in subpackage `objectparametersassert`)
+
 - `config` - the new ResourceModel abstraction resides here. It provides models for objects and the builder methods allowing better config preparation in the acceptance tests.
 It aims to be more readable than using `Config:` with hardcoded string or `ConfigFile:` for file that is not directly reachable from the test body. Also, it should be easier to reuse the models and prepare convenience extension methods.
 All the models will be ultimately generated; the ones presented for warehouse were manually created.
@@ -21,7 +25,7 @@ You can check the current example usage in `TestAcc_Warehouse_BasicFlows` and th
     assert.WarehouseParameters(t, "snowflake_warehouse.w").
         HasMaxConcurrencyLevel(16).
         HasMaxConcurrencyLevelLevel(sdk.ParameterTypeWarehouse),
-    assert.Warehouse(t, warehouseId).
+    objectassert.Warehouse(t, warehouseId).
         HasName("bad name").
         HasState(sdk.WarehouseStateSuspended).
         HasType(sdk.WarehouseTypeSnowparkOptimized).
@@ -89,7 +93,7 @@ it will result in:
         HasStatementQueuedTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse).
         HasStatementTimeoutInSeconds(1232).
         HasStatementTimeoutInSecondsLevel(sdk.ParameterTypeWarehouse),
-    assert.Warehouse(t, warehouseId).
+    objectassert.Warehouse(t, warehouseId).
         HasName("bad name").
         HasState(sdk.WarehouseStateSuspended).
         HasType(sdk.WarehouseTypeSnowparkOptimized).
@@ -147,7 +151,7 @@ it will result in:
 - add the following to the `create: complete` in `TestInt_Warehouses`:
 ```go
     // to show errors
-    warehouseAssertionsBad := objectAssert.Warehouse(t, id).
+    warehouseAssertionsBad := objectassert.Warehouse(t, id).
         HasName("bad name").
         HasState(sdk.WarehouseStateSuspended).
         HasType(sdk.WarehouseTypeSnowparkOptimized).
@@ -161,7 +165,7 @@ it will result in:
         HasComment("bad comment").
         HasEnableQueryAcceleration(false).
         HasQueryAccelerationMaxScaleFactor(12)
-    objectAssert.AssertThatObject(t, warehouseAssertionsBad)
+    assertions.AssertThatObject(t, warehouseAssertionsBad)
 ```
 it will result in:
 ```
@@ -345,43 +349,9 @@ func (w *WarehouseParametersAssert) HasDefaultStatementTimeoutInSeconds() *Wareh
 ```
 
 ## Adding new Snowflake object assertions
-For object `abc` create the following files with the described content in the `assert` package:
-- `abc_snowflake.go`
-```go
-type AbcAssert struct {
-    *SnowflakeObjectAssert[sdk.Abc, sdk.AccountObjectIdentifier]
-}
-
-func Abc(t *testing.T, id sdk.AccountObjectIdentifier) *AbcAssert {
-    t.Helper()
-    return &AbcAssert{
-        NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeAbc, id, acc.TestClient().Abc.Show),
-    }
-}
-
-func AbcFromObject(t *testing.T, abc *sdk.Abc) *AbcAssert {
-    t.Helper()
-    return &AbcAssert{
-        NewSnowflakeObjectAssertWithObject(sdk.ObjectTypeAbc, abc.ID(), abc),
-    }
-}
-```
-
-A method for each object parameter (let's say parameter name is xyz):
-```go
-func (w *AbcAssert) HasXyz(expected string) *AbcAssert {
-    w.assertions = append(w.assertions, func(t *testing.T, o *sdk.Abc) error {
-        t.Helper()
-        if o.Xyz != expected {
-            return fmt.Errorf("expected xyz: %v; got: %v", expected, o.Xyz)
-        }
-        return nil
-    })
-    return w
-}
-```
-
-- `abc_snowflake_ext.go` - for the easier separation later (when we start generating the common checks for each object). Example would be:
+Snowflake object assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allStructs` slice in the `assert/objectassert/gen/main/main.go`
+- to add custom (not generated assertions) create file `abc_snowflake_ext.go` in the `objectassert` package. Example would be:
 ```go
 func (w *WarehouseAssert) HasStateOneOf(expected ...sdk.WarehouseState) *WarehouseAssert {
     w.assertions = append(w.assertions, func(t *testing.T, o *sdk.Warehouse) error {
@@ -392,6 +362,19 @@ func (w *WarehouseAssert) HasStateOneOf(expected ...sdk.WarehouseState) *Warehou
         return nil
     })
     return w
+}
+```
+
+## Adding new Snowflake object parameters assertions
+Snowflake object parameters assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allObjectsParameters` slice in the `assert/objectparametersassert/gen/main/main.go`
+- make sure that test helper method `acc.TestClient().Parameter.ShowAbcParameters` exists in `/pkg/acceptance/helpers/parameter_client.go`
+- to add custom (not generated assertions) create file `abc_parameters_snowflake_ext.go` in the `objectparametersassert` package. Example would be:
+```go
+func (w *WarehouseParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseParametersAssert {
+    return w.
+        HasMaxConcurrencyLevel(8).
+        HasMaxConcurrencyLevelLevel("")
 }
 ```
 
@@ -447,7 +430,7 @@ func BasicWarehouseModel(
 ```
 
 ## Known limitations/planned improvements
-- Generate all assertions and models.
+- Generate all missing assertions and models.
 - Test all the utilities for assertion/model construction (public interfaces, methods, functions).
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left).
