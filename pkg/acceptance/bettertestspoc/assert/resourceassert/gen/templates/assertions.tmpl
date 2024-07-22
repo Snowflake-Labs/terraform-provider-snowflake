@@ -1,0 +1,28 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert/gen.ResourceAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sResourceAssert" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase }}
+////////////////////////////
+// Attribute value checks //
+////////////////////////////
+
+{{ range .Attributes -}}
+func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}(expected {{ .AttributeType }}) *{{ $assertName }} {
+{{ $assertVar }}.assertions = append({{ $assertVar }}.assertions, assert.valueSet("{{ .Name }}", expected))
+return {{ $assertVar }}
+}
+
+{{ end -}}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+{{ range .Attributes -}}
+func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ SnakeCaseToCamel .Name }}() *{{ $assertName }} {
+{{ $assertVar }}.assertions = append({{ $assertVar }}.assertions, assert.valueNotSet("{{ .Name }}"))
+return {{ $assertVar }}
+}
+
+{{ end -}}

@@ -13,11 +13,17 @@ type PreambleModel struct {
 }
 
 type ResourceAssertionsModel struct {
-	Name string
+	Name       string
+	Attributes []ResourceAttributeAssertionModel
 	PreambleModel
 }
 
 func (m ResourceAssertionsModel) SomeFunc() {
+}
+
+type ResourceAttributeAssertionModel struct {
+	Name          string
+	AttributeType string
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSchemaDetails) ResourceAssertionsModel {

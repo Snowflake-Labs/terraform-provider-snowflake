@@ -16,7 +16,7 @@ func WarehouseShowOutput(t *testing.T, name string) *WarehouseShowOutputAssert {
 	w := WarehouseShowOutputAssert{
 		NewResourceAssert(name, "show_output"),
 	}
-	w.assertions = append(w.assertions, valueSet("show_output.#", "1"))
+	w.assertions = append(w.assertions, ValueSet("show_output.#", "1"))
 	return &w
 }
 
@@ -25,7 +25,7 @@ func ImportedWarehouseShowOutput(t *testing.T, id string) *WarehouseShowOutputAs
 	w := WarehouseShowOutputAssert{
 		NewImportedResourceAssert(id, "show_output"),
 	}
-	w.assertions = append(w.assertions, valueSet("show_output.#", "1"))
+	w.assertions = append(w.assertions, ValueSet("show_output.#", "1"))
 	return &w
 }
 

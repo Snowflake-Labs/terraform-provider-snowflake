@@ -16,7 +16,7 @@ func WarehouseParameters(t *testing.T, name string) *WarehouseParametersAssert {
 	w := WarehouseParametersAssert{
 		NewResourceAssert(name, "parameters"),
 	}
-	w.assertions = append(w.assertions, valueSet("parameters.#", "1"))
+	w.assertions = append(w.assertions, ValueSet("parameters.#", "1"))
 	return &w
 }
 
@@ -25,7 +25,7 @@ func ImportedWarehouseParameters(t *testing.T, id string) *WarehouseParametersAs
 	w := WarehouseParametersAssert{
 		NewImportedResourceAssert(id, "imported parameters"),
 	}
-	w.assertions = append(w.assertions, valueSet("parameters.#", "1"))
+	w.assertions = append(w.assertions, ValueSet("parameters.#", "1"))
 	return &w
 }
 

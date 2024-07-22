@@ -22,7 +22,7 @@ type ResourceAssert struct {
 	name       string
 	id         string
 	prefix     string
-	assertions []resourceAssertion
+	assertions []ResourceAssertion
 }
 
 // NewResourceAssert creates a ResourceAssert where the resource name should be used as a key for assertions.
@@ -30,7 +30,7 @@ func NewResourceAssert(name string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		name:       name,
 		prefix:     prefix,
-		assertions: make([]resourceAssertion, 0),
+		assertions: make([]ResourceAssertion, 0),
 	}
 }
 
@@ -39,7 +39,7 @@ func NewImportedResourceAssert(id string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		id:         id,
 		prefix:     prefix,
-		assertions: make([]resourceAssertion, 0),
+		assertions: make([]ResourceAssertion, 0),
 	}
 }
 
@@ -50,24 +50,24 @@ const (
 	resourceAssertionTypeValueNotSet = "VALUE_NOT_SET"
 )
 
-type resourceAssertion struct {
+type ResourceAssertion struct {
 	fieldName             string
 	expectedValue         string
 	resourceAssertionType resourceAssertionType
 }
 
-func valueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ValueSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
-func valueNotSet(fieldName string) resourceAssertion {
-	return resourceAssertion{fieldName: fieldName, resourceAssertionType: resourceAssertionTypeValueNotSet}
+func ValueNotSet(fieldName string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, resourceAssertionType: resourceAssertionTypeValueNotSet}
 }
 
 const showOutputPrefix = "show_output.0."
 
-func showOutputValueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func showOutputValueSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
 const (
@@ -76,12 +76,12 @@ const (
 	parametersLevelSuffix = ".0.level"
 )
 
-func parameterValueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func parameterValueSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + fieldName + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
-func parameterLevelSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersLevelSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func parameterLevelSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + fieldName + parametersLevelSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new resource assertions.
