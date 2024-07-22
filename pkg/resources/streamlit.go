@@ -231,19 +231,8 @@ func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any)
 
 	streamlitDetails, err := client.Streamlits.Describe(ctx, id)
 	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query streamlit properties. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("Streamlit name: %s, Err: %s", id.FullyQualifiedName(), err),
-				},
-			}
-		}
 		return diag.FromErr(err)
 	}
-
 	if err := d.Set("name", streamlit.Name); err != nil {
 		return diag.FromErr(err)
 	}

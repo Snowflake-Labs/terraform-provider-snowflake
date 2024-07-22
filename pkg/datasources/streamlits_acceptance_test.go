@@ -17,13 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO(SNOW-1548063): 090105 (22000): Cannot perform operation. This session does not have a current database. Call 'USE DATABASE', or use a qualified name.
 func TestAcc_Streamlits(t *testing.T) {
+	t.Skip("Skipping because of the error: 090105 (22000): Cannot perform operation. This session does not have a current database. Call 'USE DATABASE', or use a qualified name.")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	schemaId := acc.TestClient().Ids.SchemaId()
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 	// warehouse is needed because default warehouse uses lowercase, and it fails in snowflake.
@@ -34,6 +37,7 @@ func TestAcc_Streamlits(t *testing.T) {
 	t.Cleanup(networkRuleCleanup)
 	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
+
 	rootLocation := fmt.Sprintf("@%s/foo", stage.ID().FullyQualifiedName())
 	configVariables := config.Variables{
 		"database":                     config.StringVariable(databaseId.Name()),
