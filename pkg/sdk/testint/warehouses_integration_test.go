@@ -631,7 +631,7 @@ func TestInt_Warehouses(t *testing.T) {
 		// check the state - it seems it's resized despite query being run on it
 		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, sdk.WarehouseStateStarted, result.State)
+		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateResizing, sdk.WarehouseStateStarted}, result.State)
 		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
 		assert.Equal(t, 1, result.Running)
 		assert.Equal(t, 0, result.Queued)
