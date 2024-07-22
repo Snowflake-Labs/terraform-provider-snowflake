@@ -1,8 +1,10 @@
 package helpers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"path"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -159,6 +161,24 @@ func ConcatSlices[T any](slices ...[]T) []T {
 		tmp = append(tmp, s...)
 	}
 	return tmp
+}
+
+// TODO(SNOW-999049): address during identifiers rework
+func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, error) {
+	location = strings.TrimPrefix(location, "@")
+	parts, err := parseIdentifierStringWithOpts(location, func(r *csv.Reader) {
+		r.Comma = '.'
+		r.LazyQuotes = true
+	})
+	if err != nil {
+		return sdk.SchemaObjectIdentifier{}, "", err
+	}
+	if len(parts) < 3 {
+		return sdk.SchemaObjectIdentifier{}, "", fmt.Errorf("expected 3 parts for location %s, got %d", location, len(parts))
+	}
+	parts[2] = strings.Join(parts[2:], ".")
+	lastParts := strings.Split(parts[2], "/")
+	return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], lastParts[0]), path.Join(lastParts[1:]...), nil
 }
 
 // ContainsIdentifierIgnoringQuotes takes ids (a slice of Snowflake identifiers represented as strings), and

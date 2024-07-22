@@ -19,6 +19,10 @@ type CreateNetworkRuleRequest struct {
 	Comment   *string
 }
 
+func (r *CreateNetworkRuleRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type AlterNetworkRuleRequest struct {
 	IfExists *bool
 	name     SchemaObjectIdentifier // required

@@ -24,25 +24,34 @@ func (c *NetworkRuleClient) client() sdk.NetworkRules {
 	return c.context.client.NetworkRules
 }
 
-func (c *NetworkRuleClient) Create(t *testing.T) *sdk.NetworkRule {
+func (c *NetworkRuleClient) CreateNetworkRule(t *testing.T) (*sdk.NetworkRule, func()) {
 	t.Helper()
-	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifier())
+	return c.CreateNetworkRuleWithRequest(t, sdk.NewCreateNetworkRuleRequest(c.ids.RandomSchemaObjectIdentifier(),
+		sdk.NetworkRuleTypeHostPort,
+		[]sdk.NetworkRuleValue{},
+		sdk.NetworkRuleModeEgress,
+	))
 }
 
-func (c *NetworkRuleClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifier) *sdk.NetworkRule {
+func (c *NetworkRuleClient) CreateNetworkRuleWithRequest(t *testing.T, request *sdk.CreateNetworkRuleRequest) (*sdk.NetworkRule, func()) {
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress))
+	err := c.client().Create(ctx, request)
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
-		_ = c.client().Drop(ctx, sdk.NewDropNetworkRuleRequest(id).WithIfExists(sdk.Bool(true)))
-	})
-
-	networkRule, err := c.client().ShowByID(ctx, id)
+	networkRule, err := c.client().ShowByID(ctx, request.GetName())
 	require.NoError(t, err)
-	require.NotNil(t, networkRule)
 
-	return networkRule
+	return networkRule, c.DropNetworkRuleFunc(t, request.GetName())
+}
+
+func (c *NetworkRuleClient) DropNetworkRuleFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, sdk.NewDropNetworkRuleRequest(id).WithIfExists(sdk.Bool(true)))
+		require.NoError(t, err)
+	}
 }

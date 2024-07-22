@@ -30,7 +30,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeBool,
 		Required:         true,
 		Description:      "Specify whether the security integration is enabled.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("enabled"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("enabled"),
 	},
 	"scim_client": {
 		Type:             schema.TypeString,
@@ -59,14 +59,14 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
 		Description:      "Specifies an existing network policy that controls SCIM network traffic.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("network_policy")),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeListValueInDescribe("network_policy")),
 	},
 	"sync_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("sync_password"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("sync_password"),
 		Description:      booleanStringFieldDescription("Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake."),
 	},
 	"comment": {
