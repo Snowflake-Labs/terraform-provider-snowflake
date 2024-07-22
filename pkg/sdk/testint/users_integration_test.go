@@ -104,7 +104,7 @@ func TestInt_Users(t *testing.T) {
 			HasTransactionAbortOnError(true).
 			HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
 			HasTwoDigitCenturyStart(1980).
-			HasUnsupportedDdlAction(string(sdk.UnsupportedDDLActionFail)).
+			HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
 			HasUseCachedResult(false).
 			HasWeekOfYearPolicy(1).
 			HasWeekStart(1).
@@ -530,7 +530,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertions.AssertThatObject(t, assertions.UserParameters(t, id).
+		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -819,7 +819,7 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, assertions.UserParameters(t, id).
+		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
