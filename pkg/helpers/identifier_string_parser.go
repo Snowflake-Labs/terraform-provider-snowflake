@@ -11,8 +11,16 @@ const (
 )
 
 func ParseIdentifierString(identifier string) ([]string, error) {
+	return parseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
+		r.Comma = ParameterIDDelimiter
+	})
+}
+
+func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([]string, error) {
 	reader := csv.NewReader(strings.NewReader(identifier))
-	reader.Comma = ParameterIDDelimiter
+	if opts != nil {
+		opts(reader)
+	}
 	lines, err := reader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)

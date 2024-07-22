@@ -54,7 +54,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_issue_refresh_tokens"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_issue_refresh_tokens"),
 		Description:      booleanStringFieldDescription("Specifies whether to allow the client to exchange a refresh token for an access token when the current access token has expired."),
 	},
 	"oauth_refresh_token_validity": {
@@ -62,7 +62,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          IntDefault,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_validity"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_refresh_token_validity"),
 		Description:      "Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.",
 	},
 	"oauth_use_secondary_roles": {
@@ -70,7 +70,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v", sdk.AllOauthSecurityIntegrationUseSecondaryRoles),
 		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_use_secondary_roles")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_use_secondary_roles")),
 	},
 	"blocked_roles_list": {
 		Type: schema.TypeSet,
@@ -81,7 +81,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		// TODO(SNOW-1517937): Check if can make optional
 		Required:         true,
 		Description:      "A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("blocked_roles_list"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("blocked_roles_list"),
 	},
 	"comment": {
 		Type:             schema.TypeString,

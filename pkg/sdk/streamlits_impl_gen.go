@@ -38,7 +38,7 @@ func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([
 }
 
 func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
-	request := NewShowStreamlitRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+	request := NewShowStreamlitRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
 	streamlits, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -59,14 +59,23 @@ func (v *streamlits) Describe(ctx context.Context, id SchemaObjectIdentifier) (*
 
 func (r *CreateStreamlitRequest) toOpts() *CreateStreamlitOptions {
 	opts := &CreateStreamlitOptions{
-		OrReplace:    r.OrReplace,
-		IfNotExists:  r.IfNotExists,
-		name:         r.name,
-		RootLocation: r.RootLocation,
-		MainFile:     r.MainFile,
-		Warehouse:    r.Warehouse,
-		Comment:      r.Comment,
+		OrReplace:      r.OrReplace,
+		IfNotExists:    r.IfNotExists,
+		name:           r.name,
+		RootLocation:   r.RootLocation,
+		MainFile:       r.MainFile,
+		QueryWarehouse: r.QueryWarehouse,
+
+		Title:   r.Title,
+		Comment: r.Comment,
 	}
+
+	if r.ExternalAccessIntegrations != nil {
+		opts.ExternalAccessIntegrations = &ExternalAccessIntegrations{
+			ExternalAccessIntegrations: r.ExternalAccessIntegrations.ExternalAccessIntegrations,
+		}
+	}
+
 	return opts
 }
 
@@ -77,14 +86,32 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 
 		RenameTo: r.RenameTo,
 	}
+
 	if r.Set != nil {
 		opts.Set = &StreamlitSet{
-			RootLocation: r.Set.RootLocation,
-			MainFile:     r.Set.MainFile,
-			Warehouse:    r.Set.Warehouse,
-			Comment:      r.Set.Comment,
+			RootLocation:   r.Set.RootLocation,
+			MainFile:       r.Set.MainFile,
+			QueryWarehouse: r.Set.QueryWarehouse,
+
+			Comment: r.Set.Comment,
+			Title:   r.Set.Title,
+		}
+
+		if r.Set.ExternalAccessIntegrations != nil {
+			opts.Set.ExternalAccessIntegrations = &ExternalAccessIntegrations{
+				ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations.ExternalAccessIntegrations,
+			}
 		}
 	}
+
+	if r.Unset != nil {
+		opts.Unset = &StreamlitUnset{
+			QueryWarehouse: r.Unset.QueryWarehouse,
+			Comment:        r.Unset.Comment,
+			Title:          r.Unset.Title,
+		}
+	}
+
 	return opts
 }
 
@@ -137,10 +164,15 @@ func (r *DescribeStreamlitRequest) toOpts() *DescribeStreamlitOptions {
 
 func (r streamlitsDetailRow) convert() *StreamlitDetail {
 	e := &StreamlitDetail{
-		Name:         r.Name,
-		RootLocation: r.RootLocation,
-		MainFile:     r.MainFile,
-		UrlId:        r.UrlId,
+		Name:                       r.Name,
+		RootLocation:               r.RootLocation,
+		MainFile:                   r.MainFile,
+		UrlId:                      r.UrlId,
+		DefaultPackages:            r.DefaultPackages,
+		UserPackages:               ParseCommaSeparatedStringArray(r.UserPackages, false),
+		ImportUrls:                 ParseCommaSeparatedStringArray(r.ImportUrls, false),
+		ExternalAccessIntegrations: ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false),
+		ExternalAccessSecrets:      r.ExternalAccessSecrets,
 	}
 	if r.Title.Valid {
 		e.Title = r.Title.String
@@ -148,5 +180,11 @@ func (r streamlitsDetailRow) convert() *StreamlitDetail {
 	if r.QueryWarehouse.Valid {
 		e.QueryWarehouse = r.QueryWarehouse.String
 	}
+	integrationsRaw := ParseCommaSeparatedStringArray(r.ExternalAccessIntegrations, false)
+	externalAccessIntegrations := make([]string, len(integrationsRaw))
+	for i, v := range integrationsRaw {
+		externalAccessIntegrations[i] = NewObjectIdentifierFromFullyQualifiedName(v).Name()
+	}
+	e.ExternalAccessIntegrations = externalAccessIntegrations
 	return e
 }

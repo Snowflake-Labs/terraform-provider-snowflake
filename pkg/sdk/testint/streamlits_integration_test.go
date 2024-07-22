@@ -2,6 +2,8 @@ package testint
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -17,16 +19,19 @@ func TestInt_Streamlits(t *testing.T) {
 
 	cleanupStreamlitHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
-			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
+			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(true))
 			require.NoError(t, err)
 		}
 	}
 
-	createStreamlitHandle := func(t *testing.T, stage *sdk.Stage, mainFile string) *sdk.Streamlit {
+	createStreamlitHandle := func(t *testing.T, stage *sdk.Stage, mainFile string, opts func(*sdk.CreateStreamlitRequest)) *sdk.Streamlit {
 		t.Helper()
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile)
+		if opts != nil {
+			opts(request)
+		}
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
@@ -61,12 +66,27 @@ func TestInt_Streamlits(t *testing.T) {
 		comment := random.Comment()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
-		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(comment)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
 
 		assertStreamlit(t, id, comment, "")
+	})
+
+	// TODO(SNOW-1541938): remove this after fix on snowflake side
+	t.Run("create streamlit with lower case warehouse fails", func(t *testing.T) {
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouseWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix("lowercase"), nil)
+		t.Cleanup(warehouseCleanup)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		mainFile := "manifest.yml"
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithQueryWarehouse(warehouse.ID())
+		err := client.Streamlits.Create(ctx, request)
+		require.ErrorContains(t, err, fmt.Sprintf("The specified warehouse %s does not exist", strings.ToUpper(warehouse.ID().Name())))
 	})
 
 	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
@@ -80,7 +100,7 @@ func TestInt_Streamlits(t *testing.T) {
 		comment := random.Comment()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
-		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(comment)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
@@ -148,7 +168,7 @@ func TestInt_Streamlits(t *testing.T) {
 		comment := random.Comment()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		mainFile := "manifest.yml"
-		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(comment)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
@@ -205,26 +225,54 @@ func TestInt_Streamlits(t *testing.T) {
 	t.Run("alter streamlit: set", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
 		manifest := "manifest.yml"
-		e := createStreamlitHandle(t, stage, manifest)
+		e := createStreamlitHandle(t, stage, manifest, nil)
 
 		id := e.ID()
 		comment := random.Comment()
-		set := sdk.NewStreamlitSetRequest(sdk.String(stage.Location()), &manifest).WithComment(&comment)
-		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithSet(set))
+		set := sdk.NewStreamlitSetRequest().
+			WithRootLocation(stage.Location()).
+			WithQueryWarehouse(warehouse.ID()).
+			WithMainFile(manifest).
+			WithComment(comment)
+		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithSet(*set))
 		require.NoError(t, err)
-		assertStreamlit(t, id, comment, "")
+		assertStreamlit(t, id, comment, warehouse.ID().Name())
+	})
+
+	t.Run("alter streamlit: unset", func(t *testing.T) {
+		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(cleanupStage)
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
+		t.Cleanup(warehouseCleanup)
+
+		manifest := "manifest.yml"
+		e := createStreamlitHandle(t, stage, manifest, func(r *sdk.CreateStreamlitRequest) {
+			r.WithComment("foo").WithTitle("foo").WithQueryWarehouse(warehouse.ID())
+		})
+
+		id := e.ID()
+		unset := sdk.NewStreamlitUnsetRequest().
+			WithTitle(true).
+			WithQueryWarehouse(true).
+			WithComment(true)
+		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithUnset(*unset))
+		require.NoError(t, err)
+		assertStreamlit(t, id, "", "")
 	})
 
 	t.Run("alter function: rename", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
-		e := createStreamlitHandle(t, stage, "manifest.yml")
+		e := createStreamlitHandle(t, stage, "manifest.yml", nil)
 		id := e.ID()
 		t.Cleanup(cleanupStreamlitHandle(id))
 
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithRenameTo(&nid))
+		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithRenameTo(nid))
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(nid))
 
@@ -239,9 +287,9 @@ func TestInt_Streamlits(t *testing.T) {
 	t.Run("show streamlit: with like", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
-		e := createStreamlitHandle(t, stage, "manifest.yml")
+		e := createStreamlitHandle(t, stage, "manifest.yml", nil)
 
-		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
+		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithLike(sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(streamlits))
 		require.Equal(t, *e, streamlits[0])
@@ -250,9 +298,9 @@ func TestInt_Streamlits(t *testing.T) {
 	t.Run("show streamlit: terse with like", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
-		e := createStreamlitHandle(t, stage, "manifest.yml")
+		e := createStreamlitHandle(t, stage, "manifest.yml", nil)
 
-		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithTerse(sdk.Bool(true)).WithLike(&sdk.Like{Pattern: &e.Name}))
+		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithTerse(true).WithLike(sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(streamlits))
 		sl := streamlits[0]
@@ -273,7 +321,7 @@ func TestInt_Streamlits(t *testing.T) {
 		t.Cleanup(cleanupStage)
 
 		mainFile := "manifest.yml"
-		e := createStreamlitHandle(t, stage, mainFile)
+		e := createStreamlitHandle(t, stage, mainFile, nil)
 		id := e.ID()
 
 		detail, err := client.Streamlits.Describe(ctx, id)
@@ -295,7 +343,7 @@ func TestInt_StreamlitsShowByID(t *testing.T) {
 	cleanupStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
-			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
+			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(true))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
