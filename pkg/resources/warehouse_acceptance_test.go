@@ -13,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -55,23 +56,23 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 			{
 				Config: config.FromModel(t, model),
 				Check: assert.AssertThat(t,
-					assert.WarehouseResource(t, "snowflake_warehouse.w").
-						HasName(name).
-						HasNoType().
-						HasNoSize().
+					resourceassert.WarehouseResource(t, "snowflake_warehouse.w").
+						HasNameString(name).
+						HasNoWarehouseType().
+						HasNoWarehouseSize().
 						HasNoMaxClusterCount().
 						HasNoMinClusterCount().
 						HasNoScalingPolicy().
-						HasAutoSuspend(r.IntDefaultString).
-						HasAutoResume(r.BooleanDefault).
+						HasAutoSuspendString(r.IntDefaultString).
+						HasAutoResumeString(r.BooleanDefault).
 						HasNoInitiallySuspended().
 						HasNoResourceMonitor().
-						HasComment(comment).
-						HasEnableQueryAcceleration(r.BooleanDefault).
-						HasQueryAccelerationMaxScaleFactor(r.IntDefaultString).
-						HasMaxConcurrencyLevel("8").
-						HasStatementQueuedTimeoutInSeconds("0").
-						HasStatementTimeoutInSeconds("172800").
+						HasCommentString(comment).
+						HasEnableQueryAccelerationString(r.BooleanDefault).
+						HasQueryAccelerationMaxScaleFactorString(r.IntDefaultString).
+						HasMaxConcurrencyLevelString("8").
+						HasStatementQueuedTimeoutInSecondsString("0").
+						HasStatementTimeoutInSecondsString("172800").
 						// alternatively extensions possible:
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
@@ -125,19 +126,19 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
-					assert.ImportedWarehouseResource(t, warehouseId.Name()).
-						HasName(name).
-						HasType(string(sdk.WarehouseTypeStandard)).
-						HasSize(string(sdk.WarehouseSizeXSmall)).
-						HasMaxClusterCount("1").
-						HasMinClusterCount("1").
-						HasScalingPolicy(string(sdk.ScalingPolicyStandard)).
-						HasAutoSuspend("600").
-						HasAutoResume("true").
-						HasResourceMonitor("").
-						HasComment(comment).
-						HasEnableQueryAcceleration("false").
-						HasQueryAccelerationMaxScaleFactor("8").
+					resourceassert.ImportedWarehouseResource(t, warehouseId.Name()).
+						HasNameString(name).
+						HasWarehouseTypeString(string(sdk.WarehouseTypeStandard)).
+						HasWarehouseSizeString(string(sdk.WarehouseSizeXSmall)).
+						HasMaxClusterCountString("1").
+						HasMinClusterCountString("1").
+						HasScalingPolicyString(string(sdk.ScalingPolicyStandard)).
+						HasAutoSuspendString("600").
+						HasAutoResumeString("true").
+						HasResourceMonitorString("").
+						HasCommentString(comment).
+						HasEnableQueryAccelerationString("false").
+						HasQueryAccelerationMaxScaleFactorString("8").
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),

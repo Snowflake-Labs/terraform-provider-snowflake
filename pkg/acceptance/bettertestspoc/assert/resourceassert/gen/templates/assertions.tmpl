@@ -3,12 +3,12 @@
 {{- $assertName := .Name | printf "%sResourceAssert" -}}
 {{- $nameLowerCase := FirstLetterLowercase .Name -}}
 {{- $assertVar := FirstLetter $nameLowerCase }}
-////////////////////////////
-// Attribute value checks //
-////////////////////////////
+///////////////////////////////////
+// Attribute value string checks //
+///////////////////////////////////
 
 {{ range .Attributes -}}
-func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}(expected {{ .AttributeType }}) *{{ $assertName }} {
+func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}String(expected string) *{{ $assertName }} {
 {{ $assertVar }}.AddAssertion(assert.ValueSet("{{ .Name }}", expected))
 return {{ $assertVar }}
 }

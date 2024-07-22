@@ -1,35 +1,39 @@
-package assert
+package resourceassert
 
-import r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+import (
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+)
 
 func (w *WarehouseResourceAssert) HasDefaultMaxConcurrencyLevel() *WarehouseResourceAssert {
-	w.AddAssertion(ValueSet("max_concurrency_level", "8"))
+	w.AddAssertion(assert.ValueSet("max_concurrency_level", "8"))
 	return w
 }
 
 func (w *WarehouseResourceAssert) HasDefaultStatementQueuedTimeoutInSeconds() *WarehouseResourceAssert {
-	w.AddAssertion(ValueSet("statement_queued_timeout_in_seconds", "0"))
+	w.AddAssertion(assert.ValueSet("statement_queued_timeout_in_seconds", "0"))
 	return w
 }
 
 func (w *WarehouseResourceAssert) HasDefaultStatementTimeoutInSeconds() *WarehouseResourceAssert {
-	w.AddAssertion(ValueSet("statement_timeout_in_seconds", "172800"))
+	w.AddAssertion(assert.ValueSet("statement_timeout_in_seconds", "172800"))
 	return w
 }
 
 func (w *WarehouseResourceAssert) HasAllDefault() *WarehouseResourceAssert {
 	return w.HasDefaultMaxConcurrencyLevel().
-		HasNoType().
-		HasNoSize().
+		HasNoWarehouseType().
+		HasNoWarehouseSize().
 		HasNoMaxClusterCount().
 		HasNoMinClusterCount().
 		HasNoScalingPolicy().
-		HasAutoSuspend(r.IntDefaultString).
-		HasAutoResume(r.BooleanDefault).
+		HasAutoSuspendString(r.IntDefaultString).
+		HasAutoResumeString(r.BooleanDefault).
 		HasNoInitiallySuspended().
 		HasNoResourceMonitor().
-		HasEnableQueryAcceleration(r.BooleanDefault).
-		HasQueryAccelerationMaxScaleFactor(r.IntDefaultString).
+		HasEnableQueryAccelerationString(r.BooleanDefault).
+		HasQueryAccelerationMaxScaleFactorString(r.IntDefaultString).
 		HasDefaultMaxConcurrencyLevel().
 		HasDefaultStatementQueuedTimeoutInSeconds().
 		HasDefaultStatementTimeoutInSeconds()
