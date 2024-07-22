@@ -26,6 +26,7 @@ var (
 		gencommons.FirstLetter,
 		gencommons.TypeWithoutPointer,
 		gencommons.CamelToWords,
+		gencommons.RunMapper,
 	)).Parse(assertionsTemplateContent)
 
 	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, AssertionsTemplate}

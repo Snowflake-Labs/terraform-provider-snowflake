@@ -11,6 +11,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -96,7 +97,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -144,7 +145,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasStatementQueuedTimeoutInSecondsLevel("").
 						HasStatementTimeoutInSeconds(172800).
 						HasStatementTimeoutInSecondsLevel(""),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).

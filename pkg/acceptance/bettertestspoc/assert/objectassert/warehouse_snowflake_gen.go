@@ -298,8 +298,8 @@ func (w *WarehouseAssert) HasQueryAccelerationMaxScaleFactor(expected int) *Ware
 func (w *WarehouseAssert) HasResourceMonitor(expected sdk.AccountObjectIdentifier) *WarehouseAssert {
 	w.AddAssertion(func(t *testing.T, o *sdk.Warehouse) error {
 		t.Helper()
-		if o.ResourceMonitor != expected {
-			return fmt.Errorf("expected resource monitor: %v; got: %v", expected, o.ResourceMonitor)
+		if o.ResourceMonitor.Name() != expected.Name() {
+			return fmt.Errorf("expected resource monitor: %v; got: %v", expected.Name(), o.ResourceMonitor.Name())
 		}
 		return nil
 	})
