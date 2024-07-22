@@ -135,4 +135,10 @@ generate-snowflake-object-parameters-assertions: ## Generate snowflake object pa
 clean-snowflake-object-parameters-assertions: ## Clean snowflake object parameters assertions
 	rm -f ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/*_gen.go
 
+generate-resource-assertions: ## Generate resource assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceassert/generate.go
+
+clean-resource-assertions: ## Clean resource assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceassert/*_gen.go
+
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
