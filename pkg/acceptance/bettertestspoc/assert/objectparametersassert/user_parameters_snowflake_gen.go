@@ -3,6 +3,7 @@
 package objectparametersassert
 
 import (
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -1234,7 +1235,7 @@ func (u *UserParametersAssert) HasDefaultTwoDigitCenturyStartValueExplicit() *Us
 }
 
 func (u *UserParametersAssert) HasDefaultUnsupportedDdlActionValueExplicit() *UserParametersAssert {
-	return u.HasUnsupportedDdlAction(sdk.UnsupportedDDLActionIgnore)
+	return u.HasUnsupportedDdlAction(sdk.UnsupportedDDLAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore))))
 }
 
 func (u *UserParametersAssert) HasDefaultUseCachedResultValueExplicit() *UserParametersAssert {

@@ -71,7 +71,7 @@ func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjec
 		Parameters: parameters,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: []string{},
+			AdditionalStandardImports: snowflakeObjectParameters.AdditionalImports,
 		},
 	}
 }

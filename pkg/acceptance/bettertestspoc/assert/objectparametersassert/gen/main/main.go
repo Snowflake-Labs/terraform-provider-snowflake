@@ -87,11 +87,14 @@ var allObjectsParameters = []gen.SnowflakeObjectParameters{
 			{string(sdk.UserParameterTransactionAbortOnError), "bool", "false", "sdk.ParameterTypeAccount"},
 			{string(sdk.UserParameterTransactionDefaultIsolationLevel), "sdk.TransactionDefaultIsolationLevel", "sdk.TransactionDefaultIsolationLevelReadCommitted", "sdk.ParameterTypeSnowflakeDefault"},
 			{string(sdk.UserParameterTwoDigitCenturyStart), "int", "1970", "sdk.ParameterTypeSnowflakeDefault"},
-			{string(sdk.UserParameterUnsupportedDdlAction), "sdk.UnsupportedDDLAction", "sdk.UnsupportedDDLActionIgnore", "sdk.ParameterTypeSnowflakeDefault"},
+			// TODO: quick workaround for now: lowercase for ignore in snowflake by default but uppercase for FAIL
+			{string(sdk.UserParameterUnsupportedDdlAction), "sdk.UnsupportedDDLAction", "sdk.UnsupportedDDLAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore)))", "sdk.ParameterTypeSnowflakeDefault"},
 			{string(sdk.UserParameterUseCachedResult), "bool", "true", "sdk.ParameterTypeSnowflakeDefault"},
 			{string(sdk.UserParameterWeekOfYearPolicy), "int", "0", "sdk.ParameterTypeSnowflakeDefault"},
 			{string(sdk.UserParameterWeekStart), "int", "0", "sdk.ParameterTypeSnowflakeDefault"},
 		},
+		// for the quickfix above
+		AdditionalImports: []string{"strings"},
 	},
 	{
 		Name:   "Warehouse",
