@@ -68,7 +68,6 @@ func printUniqueTypes(allStructs []gencommons.StructDetails) {
 	}
 }
 
-// TODO: describe filtering: make generate-show-output-schemas SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES="sdk.Warehouse,sdk.User"
 // TODO: move this filter to commons and consider extracting this as a command line param
 func filterByNameFromEnv(o gencommons.StructDetails) bool {
 	allowedObjectNamesString := os.Getenv("SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES")

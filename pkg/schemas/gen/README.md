@@ -22,6 +22,11 @@ To generate all show outputs (with a cleanup first) run:
 make clean-show-output-schemas generate-show-output-schemas
 ```
 
+To generate only chosen subset of all objects run:
+```shell
+make clean-show-output-schemas generate-show-output-schemas SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES="sdk.Warehouse,sdk.User"
+```
+
 ##### Supported types
 
 The following types are supported currently in the generator (schema and mappings):
@@ -77,12 +82,10 @@ If you change the show output struct in the SDK:
 ##### Improvements
 
 Functional improvements:
-- handle the missing types (TODOs in [schema_field_mapper.go](./schema_field_mapper.go) and [struct_details_extractor_test.go](./struct_details_extractor_test.go))
+- handle the missing types (TODOs in [schema_field_mapper.go](./schema_field_mapper.go))
 - parametrize the generation, e.g.:
   - (optional) parametrize the output directory - currently, it's always written to `schemas` package
 - discover a change and generate as part of a `make pre-push`
 
 Implementation improvements:
-- add acceptance test for a `testStruct` (the one from [struct_details_extractor_test.go](./struct_details_extractor_test.go)) for the whole generation flow
-- test the generator part and improve error handling (TODOs in [generator.go](./generator.go))
 - (optional) consider different implementations of `Mapper` (e.g. TODO in [schema_field_mapper_test.go](./schema_field_mapper_test.go): `ugly comparison of functions with the current implementation of mapper` and not ideal implementation in the [to_schema_mapper.tmpl](./templates/to_schema_mapper.tmpl): `runMapper .Mapper $nameLowerCase "." .OriginalName`)

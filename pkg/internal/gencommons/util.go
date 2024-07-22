@@ -44,6 +44,7 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 }
 
 // WriteCodeToFile formats and saves content from the given buffer into file relative to the current working directory.
+// TODO [SNOW-1501905]: test
 func WriteCodeToFile(buffer *bytes.Buffer, fileName string) error {
 	wd, err := os.Getwd()
 	if err != nil {

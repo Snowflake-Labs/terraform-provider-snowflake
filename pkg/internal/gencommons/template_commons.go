@@ -7,6 +7,9 @@ import (
 	"text/template"
 )
 
+// TODO [SNOW-1501905]: describe all methods in this file
+// TODO [SNOW-1501905]: test all methods in this file
+
 func FirstLetterLowercase(in string) string {
 	return strings.ToLower(in[:1]) + in[1:]
 }

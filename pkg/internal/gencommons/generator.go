@@ -12,23 +12,21 @@ import (
 	"text/template"
 )
 
-// TODO: describe
+// TODO [SNOW-1501905]: describe
 type ObjectNameProvider interface {
 	ObjectName() string
 }
 
-// TODO: describe
-// TODO: use
-// TODO: better func
+// TODO [SNOW-1501905]: describe
+// TODO [SNOW-1501905]: better func
 type GenerationModel interface {
 	SomeFunc()
 }
 
-// TODO: add erorrs to any of these functions?
 type Generator[T ObjectNameProvider, M GenerationModel] struct {
 	objectsProvider func() []T
 	modelProvider   func(T) M
-	// TODO: add filename to model?
+	// TODO [SNOW-1501905]: consider adding filename to model?
 	filenameProvider func(T, M) string
 	templates        []*template.Template
 
@@ -64,7 +62,6 @@ func (g *Generator[T, _]) Run() error {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 
-	// TODO: describe running with build flags: make generate-show-output-schemas SF_TF_GENERATOR_ARGS='--dry-run additional-logs'
 	var additionalLogs = flag.Bool("additional-logs", false, "print additional object debug logs")
 	var dryRun = flag.Bool("dry-run", false, "generate to std out instead of saving")
 	flag.Parse()
@@ -109,7 +106,7 @@ func (g *Generator[T, _]) Run() error {
 	return nil
 }
 
-// TODO: temporary hacky solution to allow easy passing multiple args from the make command
+// TODO [SNOW-1501905]: temporary hacky solution to allow easy passing multiple args from the make command
 func preprocessArgs() {
 	rest := os.Args[1:]
 	newArgs := make([]string, 0)
