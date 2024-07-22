@@ -93,4 +93,14 @@ var allObjectsParameters = []gen.SnowflakeObjectParameters{
 			{string(sdk.UserParameterWeekStart), "int", "0", "sdk.ParameterTypeSnowflakeDefault"},
 		},
 	},
+	{
+		Name:   "Warehouse",
+		IdType: "sdk.AccountObjectIdentifier",
+		Level:  sdk.ParameterTypeWarehouse,
+		Parameters: []gen.SnowflakeParameter{
+			{string(sdk.WarehouseParameterMaxConcurrencyLevel), "int", "8", "sdk.ParameterTypeSnowflakeDefault"},
+			{string(sdk.WarehouseParameterStatementQueuedTimeoutInSeconds), "int", "0", "sdk.ParameterTypeSnowflakeDefault"},
+			{string(sdk.WarehouseParameterStatementTimeoutInSeconds), "int", "172800", "sdk.ParameterTypeSnowflakeDefault"},
+		},
+	},
 }

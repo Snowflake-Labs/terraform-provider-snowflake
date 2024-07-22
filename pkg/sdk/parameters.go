@@ -587,6 +587,14 @@ const (
 	UserParameterWeekStart                                UserParameter = "WEEK_START"
 )
 
+type WarehouseParameter string
+
+const (
+	WarehouseParameterMaxConcurrencyLevel             WarehouseParameter = "MAX_CONCURRENCY_LEVEL"
+	WarehouseParameterStatementQueuedTimeoutInSeconds WarehouseParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	WarehouseParameterStatementTimeoutInSeconds       WarehouseParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+)
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
