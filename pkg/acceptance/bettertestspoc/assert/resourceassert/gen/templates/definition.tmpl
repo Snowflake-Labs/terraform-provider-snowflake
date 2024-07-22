@@ -1,0 +1,22 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert/gen.SnowflakeObjectAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sResourceAssert" }}
+type {{ $assertName }} struct {
+*assert.ResourceAssert
+}
+
+func {{ .Name }}Resource(t *testing.T, name string) *{{ $assertName }} {
+t.Helper()
+
+return &{{ $assertName }}{
+ResourceAssert: NewResourceAssert(name, "resource"),
+}
+}
+
+func Imported{{ .Name }}Resource(t *testing.T, id string) *{{ $assertName }} {
+t.Helper()
+
+return &{{ $assertName }}{
+ResourceAssert: NewImportedResourceAssert(id, "imported resource"),
+}
+}

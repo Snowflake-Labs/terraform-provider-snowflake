@@ -15,6 +15,8 @@ type SchemaField struct {
 	Name string
 }
 
-func ExtractResourceSchemaDetails(schema map[string]*schema.Schema) ResourceSchemaDetails {
-	return ResourceSchemaDetails{}
+func ExtractResourceSchemaDetails(name string, schema map[string]*schema.Schema) ResourceSchemaDetails {
+	return ResourceSchemaDetails{
+		Name: name,
+	}
 }

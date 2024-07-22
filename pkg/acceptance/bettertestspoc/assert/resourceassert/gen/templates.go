@@ -11,5 +11,9 @@ var (
 	preambleTemplateContent string
 	PreambleTemplate, _     = template.New("preambleTemplate").Parse(preambleTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate}
+	//go:embed templates/definition.tmpl
+	definitionTemplateContent string
+	DefinitionTemplate, _     = template.New("definitionTemplate").Parse(definitionTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate}
 )
