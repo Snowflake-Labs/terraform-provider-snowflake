@@ -16,7 +16,7 @@ func WarehouseParameters(t *testing.T, name string) *WarehouseParametersAssert {
 	w := WarehouseParametersAssert{
 		NewResourceAssert(name, "parameters"),
 	}
-	w.assertions = append(w.assertions, ValueSet("parameters.#", "1"))
+	w.AddAssertion(ValueSet("parameters.#", "1"))
 	return &w
 }
 
@@ -25,36 +25,36 @@ func ImportedWarehouseParameters(t *testing.T, id string) *WarehouseParametersAs
 	w := WarehouseParametersAssert{
 		NewImportedResourceAssert(id, "imported parameters"),
 	}
-	w.assertions = append(w.assertions, ValueSet("parameters.#", "1"))
+	w.AddAssertion(ValueSet("parameters.#", "1"))
 	return &w
 }
 
 func (w *WarehouseParametersAssert) HasMaxConcurrencyLevel(expected int) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterValueSet("max_concurrency_level", strconv.Itoa(expected)))
+	w.AddAssertion(parameterValueSet("max_concurrency_level", strconv.Itoa(expected)))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementQueuedTimeoutInSeconds(expected int) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterValueSet("statement_queued_timeout_in_seconds", strconv.Itoa(expected)))
+	w.AddAssertion(parameterValueSet("statement_queued_timeout_in_seconds", strconv.Itoa(expected)))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementTimeoutInSeconds(expected int) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterValueSet("statement_timeout_in_seconds", strconv.Itoa(expected)))
+	w.AddAssertion(parameterValueSet("statement_timeout_in_seconds", strconv.Itoa(expected)))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasMaxConcurrencyLevelLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterLevelSet("max_concurrency_level", string(expected)))
+	w.AddAssertion(parameterLevelSet("max_concurrency_level", string(expected)))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementQueuedTimeoutInSecondsLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterLevelSet("statement_queued_timeout_in_seconds", string(expected)))
+	w.AddAssertion(parameterLevelSet("statement_queued_timeout_in_seconds", string(expected)))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementTimeoutInSecondsLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.assertions = append(w.assertions, parameterLevelSet("statement_timeout_in_seconds", string(expected)))
+	w.AddAssertion(parameterLevelSet("statement_timeout_in_seconds", string(expected)))
 	return w
 }

@@ -56,6 +56,10 @@ type ResourceAssertion struct {
 	resourceAssertionType resourceAssertionType
 }
 
+func (r *ResourceAssert) AddAssertion(assertion ResourceAssertion) {
+	r.assertions = append(r.assertions, assertion)
+}
+
 func ValueSet(fieldName string, expected string) ResourceAssertion {
 	return ResourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
