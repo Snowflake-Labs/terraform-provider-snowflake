@@ -212,7 +212,7 @@ func TestAcc_ScimIntegration_completeAzure(t *testing.T) {
 	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role := snowflakeroles.AadProvisioner
+	role := snowflakeroles.GenericScimProvisioner
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":                config.StringVariable(id.Name()),
@@ -345,7 +345,7 @@ func TestAcc_ScimIntegration_InvalidCreateWithSyncPasswordWithAzure(t *testing.T
 		return map[string]config.Variable{
 			"name":                config.StringVariable(id.Name()),
 			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientAzure)),
-			"run_as_role":         config.StringVariable(snowflakeroles.AadProvisioner.Name()),
+			"run_as_role":         config.StringVariable(snowflakeroles.GenericScimProvisioner.Name()),
 			"enabled":             config.BoolVariable(true),
 			"sync_password":       config.BoolVariable(false),
 			"network_policy_name": config.StringVariable(""),
@@ -359,7 +359,7 @@ func TestAcc_ScimIntegration_InvalidCreateWithSyncPasswordWithAzure(t *testing.T
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			"can not CREATE scim integration with field `sync_password` for scim_client = \"AZURE\"",
+			"can not CREATE scim integration with field `sync_password`",
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -376,7 +376,7 @@ func TestAcc_ScimIntegration_InvalidUpdateWithSyncPasswordWithAzure(t *testing.T
 		c := map[string]config.Variable{
 			"name":        config.StringVariable(id.Name()),
 			"scim_client": config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientAzure)),
-			"run_as_role": config.StringVariable(snowflakeroles.AadProvisioner.Name()),
+			"run_as_role": config.StringVariable(snowflakeroles.GenericScimProvisioner.Name()),
 			"enabled":     config.BoolVariable(true),
 		}
 		if complete {
@@ -394,7 +394,7 @@ func TestAcc_ScimIntegration_InvalidUpdateWithSyncPasswordWithAzure(t *testing.T
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		ErrorCheck: helpers.AssertErrorContainsPartsFunc(t, []string{
-			"can not SET and UNSET field `sync_password` for scim_client = \"AZURE\"",
+			"can not SET and UNSET field `sync_password`",
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -499,7 +499,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 
 func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	role := snowflakeroles.AadProvisioner
+	role := snowflakeroles.GenericScimProvisioner
 	resourceName := "snowflake_scim_integration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -508,6 +508,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 		},
 
 		Steps: []resource.TestStep{
+			// create resource with v0.92
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
@@ -520,6 +521,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 				),
 			},
+			// migrate to v0.93 - there is a diff due to new field sync_password in state
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
@@ -528,7 +530,10 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 					},
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						planchecks.ExpectChange(resourceName, "sync_password", tfjson.ActionUpdate, nil, sdk.String(r.BooleanDefault)),
+					},
 				},
 				Config: scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientAzure),
 				Check: resource.ComposeTestCheckFunc(
@@ -536,6 +541,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 				),
 				ExpectError: regexp.MustCompile("invalid property 'SYNC_PASSWORD' for 'INTEGRATION"),
 			},
+			// check with newest version - the value in state was set to boolean default, so there should be no diff
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientAzure),

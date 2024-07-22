@@ -167,7 +167,7 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 			return nil, err
 		}
 	}
-	if scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+	if strings.EqualFold(strings.TrimSpace(scimClient), string(sdk.ScimSecurityIntegrationScimClientAzure)) {
 		if err = d.Set("sync_password", BooleanDefault); err != nil {
 			return nil, err
 		}
@@ -207,7 +207,7 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v := d.Get("sync_password").(string); v != BooleanDefault {
-		if scimClient := d.Get("scim_client").(string); scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+		if scimClient := d.Get("scim_client").(string); strings.EqualFold(strings.TrimSpace(scimClient), string(sdk.ScimSecurityIntegrationScimClientAzure)) {
 			return diag.Diagnostics{
 				{
 					Severity: diag.Error,
@@ -318,7 +318,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 				return diag.FromErr(err)
 			}
 
-			if scimClient != string(sdk.ScimSecurityIntegrationScimClientAzure) {
+			if !strings.EqualFold(strings.TrimSpace(scimClient), string(sdk.ScimSecurityIntegrationScimClientAzure)) {
 				syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
 				if err != nil {
 					return diag.FromErr(err)
@@ -331,20 +331,11 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 		}
 
-		// These are all identity sets, needed for the case where:
-		// - previous config was empty (therefore Snowflake defaults had been used)
-		// - new config have the same values that are already in SF
-		if !d.GetRawConfig().IsNull() {
-			if v := d.GetRawConfig().AsValueMap()["network_policy"]; !v.IsNull() {
-				if err = d.Set("network_policy", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			if v := d.GetRawConfig().AsValueMap()["sync_password"]; !v.IsNull() {
-				if err = d.Set("sync_password", v.AsString()); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+		if err = setStateToValuesFromConfig(d, saml2IntegrationSchema, []string{
+			"network_policy",
+			"sync_password",
+		}); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecurityIntegrationToSchema(integration)}); err != nil {
@@ -377,7 +368,7 @@ func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("sync_password") {
-		if scimClient := d.Get("scim_client").(string); scimClient == string(sdk.ScimSecurityIntegrationScimClientAzure) {
+		if scimClient := d.Get("scim_client").(string); strings.EqualFold(strings.TrimSpace(scimClient), string(sdk.ScimSecurityIntegrationScimClientAzure)) {
 			return diag.Diagnostics{
 				{
 					Severity: diag.Error,

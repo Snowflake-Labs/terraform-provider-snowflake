@@ -6,6 +6,10 @@ across different versions.
 
 ## v0.93.0 ➞ v0.94.0
 
+### *(breaking change)* changes in snowflake_scim_integration
+
+In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
+
 ### *(new feature)* new snowflake_account_role resource
 
 Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
@@ -47,10 +51,10 @@ See reference [doc](https://docs.snowflake.com/en/sql-reference/sql/create-secur
 
 ### *(new feature)* snowflake_oauth_integration_for_custom_clients and snowflake_oauth_integration_for_partner_applications resources
 
-To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced 
+To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced
 to replace the previous `snowflake_oauth_integration`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into two more specialized resources.
-The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes). 
-This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`, 
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
+This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`,
 while other attributes align with `snowflake_oauth_integration_for_partner_applications`.
 
 ### *(new feature)* snowflake_security_integrations datasource
@@ -105,13 +109,17 @@ The fields listed below had diff suppress which removed '-' from strings. Now, t
 ### *(new feature)* snowflake_saml2_integration resource
 
 The new `snowflake_saml2_integration` is introduced and deprecates `snowflake_saml_integration`. It contains new fields
-and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed, 
+and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed,
 but we recommend to eventually migrate to the newer counterpart.
 
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`
 
 Now, the `sync_password` field will set the state value to `default` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
+> [!WARNING]
+> This change causes issues for Azure scim client (see [#2946](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2946)). The workaround is to remove the resource from the state with `terraform state rm`, add `sync_password = true` to the config, and import with `terraform import "snowflake_scim_integration.test" "aad_provisioning"`. After these steps, there should be no errors and no diff on this field. This behavior is fixed in v0.94 with state upgrader.
+
 
 #### *(behavior change)* Renamed fields
 
