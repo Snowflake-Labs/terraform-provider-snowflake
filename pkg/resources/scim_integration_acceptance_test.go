@@ -380,7 +380,7 @@ func TestAcc_ScimIntegration_InvalidUpdateWithSyncPasswordWithAzure(t *testing.T
 			"enabled":     config.BoolVariable(true),
 		}
 		if complete {
-			c["sync_password"] = config.BoolVariable(true)
+			c["sync_password"] = config.BoolVariable(false)
 			c["network_policy_name"] = config.StringVariable("")
 			c["comment"] = config.StringVariable("foo")
 		}
