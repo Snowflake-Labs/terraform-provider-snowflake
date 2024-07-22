@@ -8,6 +8,8 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -93,6 +95,24 @@ func SnowflakeParameterDefaultValueOnLevelSet[T ~string](parameterName T, parame
 
 func SnowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) SnowflakeParameterAssertion {
 	return SnowflakeParameterAssertion{parameterName: string(parameterName), parameterType: parameterType, assertionType: snowflakeParameterAssertionTypeLevel}
+}
+
+// ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
+// It goes through all the assertion accumulated earlier and gathers the results of the checks.
+func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
+	t.Helper()
+	return func(_ *terraform.State) error {
+		return s.runSnowflakeParametersAssertions(t)
+	}
+}
+
+// ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
+// It goes through all the assertion accumulated earlier and gathers the results of the checks.
+func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+	t.Helper()
+	return func(_ []*terraform.InstanceState) error {
+		return s.runSnowflakeParametersAssertions(t)
+	}
 }
 
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.

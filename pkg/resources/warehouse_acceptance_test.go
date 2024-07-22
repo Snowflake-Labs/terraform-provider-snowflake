@@ -12,6 +12,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -111,6 +112,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 					// we can still use normal checks
 					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
 				),
@@ -159,6 +163,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 				),
 			},
 			// RENAME
