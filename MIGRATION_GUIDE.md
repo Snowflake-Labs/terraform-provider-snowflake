@@ -25,6 +25,34 @@ Changes:
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
 
+### *(new feature)* new snowflake_account_role resource
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
+have the same features as the new one. The only difference is the deprecation message on the old resource.
+
+New fields:
+- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
+
+### *(breaking change)* refactored snowflake_roles data source
+
+Changes:
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
+- `pattern` was renamed to `like`
+- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
+### *(new feature)* snowflake_streamlit resource
+Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
+
+### *(new feature)* snowflake_streamlits datasource
+Added a new datasource enabling querying and filtering stremlits. Notes:
+- all results are stored in `streamlits` field.
+- `like`, `in`, and `limit` fields enable streamlits filtering.
+- SHOW STREAMLITS output is enclosed in `show_output` field inside `streamlits`.
+- Output from **DESC STREAMLIT** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `streamlits`.
+  **DESC STREAMLIT** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.
+  The additional parameters call **DESC STREAMLIT** (with `with_describe` turned on) **per streamlit** returned by **SHOW STREAMLITS**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ## v0.92.0 ➞ v0.93.0
 
 ### general changes
