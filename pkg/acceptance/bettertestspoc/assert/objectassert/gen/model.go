@@ -8,7 +8,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 )
 
-// TODO: extract to commons?
+// TODO [SNOW-1501905]: extract to commons?
 type PreambleModel struct {
 	PackageName               string
 	AdditionalStandardImports []string
@@ -66,7 +66,7 @@ func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeO
 func MapToSnowflakeObjectFieldAssertion(field gencommons.Field) SnowflakeObjectFieldAssertion {
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
 
-	// TODO: handle other mappings if needed
+	// TODO [SNOW-1501905]: handle other mappings if needed
 	mapper := gencommons.Identity
 	if concreteTypeWithoutPtr == "sdk.AccountObjectIdentifier" {
 		mapper = gencommons.Name

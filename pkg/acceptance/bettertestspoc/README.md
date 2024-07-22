@@ -451,3 +451,7 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
     w.assertions = append(w.assertions, valueSet("show_output.#", "0"))
 }
 ```
+- support other mappings if needed (TODO left in `assert/objectassert/gen/model.go`)
+- consider extracting preamble model to commons (TODOs left in `assert/objectassert/gen/model.go` and in `assert/objectparametersassert/gen/model.go`)
+- get a runtime name for the assertion creator (TODOs left in `assert/objectparametersassert/gen/model.go`)
+- use a better definition for each objet's snowflake parameters (TODO left in `assert/objectparametersassert/gen/main/main.go`)

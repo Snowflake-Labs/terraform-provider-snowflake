@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// TODO: extract to commons?
+// TODO [SNOW-1501905]: extract to commons?
 type PreambleModel struct {
 	PackageName               string
 	AdditionalStandardImports []string
@@ -33,7 +33,7 @@ func (m SnowflakeObjectParametersAssertionsModel) SomeFunc() {
 func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjectParameters) SnowflakeObjectParametersAssertionsModel {
 	parameters := make([]ParameterAssertionModel, len(snowflakeObjectParameters.Parameters))
 	for idx, p := range snowflakeObjectParameters.Parameters {
-		// TODO: get a runtime name for the assertion creator
+		// TODO [SNOW-1501905]: get a runtime name for the assertion creator
 		var assertionCreator string
 		switch {
 		case p.ParameterType == "bool":

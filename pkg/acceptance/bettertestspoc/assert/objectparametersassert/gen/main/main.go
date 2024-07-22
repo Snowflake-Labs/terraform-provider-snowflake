@@ -26,7 +26,7 @@ func getFilename(_ gen.SnowflakeObjectParameters, model gen.SnowflakeObjectParam
 	return gencommons.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
 }
 
-// TODO: use SDK definition after parameters rework (+ preprocessing here)
+// TODO [SNOW-1501905]: use SDK definition after parameters rework (+ preprocessing here)
 var allObjectsParameters = []gen.SnowflakeObjectParameters{
 	{
 		Name:   "User",
