@@ -4,8 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +49,7 @@ func TestInt_Users(t *testing.T) {
 	t.Cleanup(networkPolicyCleanup)
 
 	assertParametersSet := func(t *testing.T, id sdk.AccountObjectIdentifier) {
-		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
+		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
 			HasEnableUnredactedQuerySyntaxError(true).
 			HasNetworkPolicy(networkPolicy.ID().Name()).
 			HasPreventUnloadToInternalStages(true).
@@ -152,7 +154,7 @@ func TestInt_Users(t *testing.T) {
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
 			HasName(id.Name()).
 			HasHasPassword(true).
 			HasLoginName(strings.ToUpper(loginName)).
@@ -199,7 +201,7 @@ func TestInt_Users(t *testing.T) {
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
 			HasName(id.Name()).
 			HasHasPassword(true).
 			HasLoginName(strings.ToUpper(loginName)),
@@ -224,7 +226,7 @@ func TestInt_Users(t *testing.T) {
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
 			HasDefaults(id.Name()).
 			HasDisplayName(id.Name()).
 			HasOwner(currentRole.Name()),
@@ -273,7 +275,7 @@ func TestInt_Users(t *testing.T) {
 		user, err := client.Users.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, user.ID()).
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
 			HasName(user.Name).
 			HasCreatedOnNotEmpty().
 			// login name is always case-insensitive
@@ -362,7 +364,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+		assertions.AssertThatObject(t, objectassert.User(t, id).
 			HasDefaultRole(defaultRole),
 		)
 	})
@@ -381,7 +383,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+		assertions.AssertThatObject(t, objectassert.User(t, id).
 			HasDefaultRole(defaultRole),
 		)
 	})
@@ -422,7 +424,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, id).
+		assertions.AssertThatObject(t, objectassert.User(t, id).
 			// login name is always case-insensitive
 			HasLoginName(strings.ToUpper(randomWithHyphenAndMixedCase)).
 			HasDisplayName(randomWithHyphenAndMixedCase).
@@ -528,7 +530,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
+		assertions.AssertThatObject(t, assertions.UserParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -557,7 +559,7 @@ func TestInt_Users(t *testing.T) {
 
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserFromObject(t, user).
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
 			HasDefaults(user.Name).
 			HasDisplayName(user.Name).
 			HasOwner(currentRole.Name()),
@@ -592,7 +594,7 @@ func TestInt_Users(t *testing.T) {
 		err := client.Users.Alter(ctx, user.ID(), alterOpts)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, user.ID()).
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
 			HasName(user.Name).
 			HasCreatedOnNotEmpty().
 			// login name is always case-insensitive
@@ -649,7 +651,7 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, user.ID(), alterOpts)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.User(t, user.ID()).
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
 			HasDefaults(user.Name).
 			HasDisplayName("").
 			HasOwner(currentRole.Name()),
@@ -817,7 +819,7 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
 
-		objectAssert.AssertThatObject(t, objectAssert.UserParameters(t, id).
+		assertions.AssertThatObject(t, assertions.UserParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
