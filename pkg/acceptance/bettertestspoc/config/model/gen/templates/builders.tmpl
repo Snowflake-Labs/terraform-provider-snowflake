@@ -9,7 +9,7 @@
 
 {{ range .Attributes -}}
     {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
-    func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} string) *{{ $modelName }} {
+    func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
     {{ $modelVar }}.{{ $attributeNameCamel }} = tfconfig.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
     return {{ $modelVar }}
     }

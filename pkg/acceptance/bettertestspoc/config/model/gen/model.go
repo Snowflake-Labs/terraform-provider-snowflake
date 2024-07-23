@@ -6,6 +6,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // TODO [SNOW-1501905]: extract to commons?
@@ -36,13 +37,30 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSch
 		if slices.Contains([]string{resources.ShowOutputAttributeName, resources.ParametersAttributeName, resources.DescribeOutputAttributeName}, attr.Name) {
 			continue
 		}
+
+		// TODO: support the rest of attribute types
+		var attributeType string
+		var variableMethod string
+		switch attr.AttributeType {
+		case schema.TypeBool:
+			attributeType = "bool"
+			variableMethod = "BoolVariable"
+		case schema.TypeInt:
+			attributeType = "int"
+			variableMethod = "IntegerVariable"
+		case schema.TypeFloat:
+			attributeType = "float"
+			variableMethod = "FloatVariable"
+		case schema.TypeString:
+			attributeType = "string"
+			variableMethod = "StringVariable"
+		}
+
 		attributes = append(attributes, ResourceConfigBuilderAttributeModel{
-			Name: attr.Name,
-			// TODO: set attribute type to a proper value
-			AttributeType: "string",
-			Required:      attr.Required,
-			// TODO: set variable method to a proper value
-			VariableMethod: "StringVariable",
+			Name:           attr.Name,
+			AttributeType:  attributeType,
+			Required:       attr.Required,
+			VariableMethod: variableMethod,
 		})
 	}
 
