@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -80,7 +81,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultStatementTimeoutInSeconds().
 						// alternatively extension possible
 						HasAllDefault(),
-					assert.WarehouseShowOutput(t, "snowflake_warehouse.w").
+					resourceshowoutputassert.WarehouseShowOutput(t, "snowflake_warehouse.w").
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
 						HasMaxClusterCount(1).
@@ -88,7 +89,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasScalingPolicy(sdk.ScalingPolicyStandard).
 						HasAutoSuspend(600).
 						HasAutoResume(true).
-						HasResourceMonitor("").
+						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
@@ -143,7 +144,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					assert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
 					resourceparametersassert.ImportedWarehouseResourceParameters(t, warehouseId.Name()).
 						HasMaxConcurrencyLevel(8).
 						HasMaxConcurrencyLevelLevel("").
