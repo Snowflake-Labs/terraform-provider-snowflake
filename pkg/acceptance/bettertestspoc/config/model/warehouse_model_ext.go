@@ -1,8 +1,8 @@
-package config
+package model
 
 func BasicWarehouseModel(
 	name string,
 	comment string,
 ) *WarehouseModel {
-	return NewDefaultWarehouseModel(name).WithComment(comment)
+	return WarehouseWithDefaultMeta(name).WithComment(comment)
 }

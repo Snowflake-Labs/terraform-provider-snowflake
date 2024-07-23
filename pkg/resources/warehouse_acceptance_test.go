@@ -17,6 +17,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
@@ -43,9 +44,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	t.Cleanup(resourceMonitorCleanup)
 	resourceMonitorId := resourceMonitor.ID()
 
-	model := config.NewWarehouseModel("w", name).WithComment(comment)
+	warehouseModel := model.Warehouse("w", name).WithComment(comment)
 	// alternatively we can add an extension func
-	_ = config.BasicWarehouseModel(name, comment)
+	_ = model.BasicWarehouseModel(name, comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -56,7 +57,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModel(t, warehouseModel),
 				Check: assert.AssertThat(t,
 					resourceassert.WarehouseResource(t, "snowflake_warehouse.w").
 						HasNameString(name).

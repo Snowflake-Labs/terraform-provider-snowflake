@@ -10,6 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
+// TODO: add possibility to have depends_on to other resources (in meta?)
+// TODO: add a convenience method to use multiple configs from multiple models
+
 // ResourceModel is the base interface all of our config models will implement.
 // To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ResourceModel interface {
