@@ -7,11 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
-
-// to ensure sdk package is used
-var _ = sdk.Object{}
 
 type WarehouseModel struct {
 	AutoResume                      tfconfig.Variable `json:"auto_resume,omitempty"`
