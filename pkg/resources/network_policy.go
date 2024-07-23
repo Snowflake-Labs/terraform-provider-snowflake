@@ -92,10 +92,10 @@ func NetworkPolicy() *schema.Resource {
 		Description:   "Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.",
 
 		CustomizeDiff: customdiff.All(
-			// For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented and the implementation
-			// for ComputedIfAnyAttributeChanged has to be adjusted. The main issue lays in fields that have diff suppression.
-			// When the value in state and the value in config are different (which is normal with diff suppressions) show
-			// and describe outputs are constantly recomputed (which will appear in every terraform plan).
+			// For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented.
+			// The main issue lays in the old Terraform SDK and how its handling DiffSuppression and CustomizeDiff
+			// for complex types like Sets, Lists, and Maps. When every element of the Set is suppressed in custom diff,
+			// it returns true for d.HasChange anyway (it returns false for suppressed changes on primitive types like Number, Bool, String, etc.).
 			ComputedIfAnyAttributeChanged(
 				ShowOutputAttributeName,
 				// "allowed_network_rule_list",
