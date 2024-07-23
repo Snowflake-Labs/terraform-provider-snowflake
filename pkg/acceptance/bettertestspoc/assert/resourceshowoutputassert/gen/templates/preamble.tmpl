@@ -5,14 +5,14 @@
 package {{ .PackageName }}
 
 import (
-"strconv"
 "testing"
 {{- range .AdditionalStandardImports }}
 "{{- . }}"
 {{- end }}
 
-acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
+
+// to ensure sdk package is used
+var _ = sdk.Object{}

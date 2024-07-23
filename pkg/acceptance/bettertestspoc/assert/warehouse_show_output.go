@@ -1,7 +1,6 @@
 package assert
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,56 +29,56 @@ func ImportedWarehouseShowOutput(t *testing.T, id string) *WarehouseShowOutputAs
 }
 
 func (w *WarehouseShowOutputAssert) HasType(expected sdk.WarehouseType) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("type", string(expected)))
+	w.AddAssertion(ResourceShowOutputStringUnderlyingValueSet("type", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasSize(expected sdk.WarehouseSize) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("size", string(expected)))
+	w.AddAssertion(ResourceShowOutputStringUnderlyingValueSet("size", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasMaxClusterCount(expected int) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("max_cluster_count", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceShowOutputIntValueSet("max_cluster_count", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasMinClusterCount(expected int) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("min_cluster_count", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceShowOutputIntValueSet("min_cluster_count", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasScalingPolicy(expected sdk.ScalingPolicy) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("scaling_policy", string(expected)))
+	w.AddAssertion(ResourceShowOutputStringUnderlyingValueSet("scaling_policy", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasAutoSuspend(expected int) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("auto_suspend", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceShowOutputIntValueSet("auto_suspend", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasAutoResume(expected bool) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("auto_resume", strconv.FormatBool(expected)))
+	w.AddAssertion(ResourceShowOutputBoolValueSet("auto_resume", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasResourceMonitor(expected string) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("resource_monitor", expected))
+	w.AddAssertion(ResourceShowOutputValueSet("resource_monitor", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasComment(expected string) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("comment", expected))
+	w.AddAssertion(ResourceShowOutputValueSet("comment", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasEnableQueryAcceleration(expected bool) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("enable_query_acceleration", strconv.FormatBool(expected)))
+	w.AddAssertion(ResourceShowOutputBoolValueSet("enable_query_acceleration", expected))
 	return w
 }
 
 func (w *WarehouseShowOutputAssert) HasQueryAccelerationMaxScaleFactor(expected int) *WarehouseShowOutputAssert {
-	w.AddAssertion(showOutputValueSet("query_acceleration_max_scale_factor", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceShowOutputIntValueSet("query_acceleration_max_scale_factor", expected))
 	return w
 }

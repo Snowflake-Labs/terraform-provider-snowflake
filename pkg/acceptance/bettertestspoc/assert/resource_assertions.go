@@ -72,7 +72,23 @@ func ValueNotSet(fieldName string) ResourceAssertion {
 
 const showOutputPrefix = "show_output.0."
 
-func showOutputValueSet(fieldName string, expected string) ResourceAssertion {
+func ResourceShowOutputBoolValueSet(fieldName string, expected bool) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.FormatBool(expected))
+}
+
+func ResourceShowOutputIntValueSet(fieldName string, expected int) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.Itoa(expected))
+}
+
+func ResourceShowOutputFloatValueSet(fieldName string, expected float64) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.FormatFloat(expected, 'f', -1, 64))
+}
+
+func ResourceShowOutputStringUnderlyingValueSet[U ~string](fieldName string, expected U) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, string(expected))
+}
+
+func ResourceShowOutputValueSet(fieldName string, expected string) ResourceAssertion {
 	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 

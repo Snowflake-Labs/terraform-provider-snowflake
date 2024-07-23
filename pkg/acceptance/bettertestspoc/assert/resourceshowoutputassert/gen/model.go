@@ -2,7 +2,6 @@ package gen
 
 import (
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
@@ -15,10 +14,8 @@ type PreambleModel struct {
 }
 
 type ResourceShowOutputAssertionsModel struct {
-	Name    string
-	SdkType string
-	IdType  string
-	Fields  []ResourceShowOutputAssertionModel
+	Name       string
+	Attributes []ResourceShowOutputAssertionModel
 	PreambleModel
 }
 
@@ -26,56 +23,63 @@ func (m ResourceShowOutputAssertionsModel) SomeFunc() {
 }
 
 type ResourceShowOutputAssertionModel struct {
-	Name                  string
-	ConcreteType          string
-	IsOriginalTypePointer bool
-	Mapper                gencommons.Mapper
+	Name             string
+	ConcreteType     string
+	AssertionCreator string
+	Mapper           gencommons.Mapper
 }
 
 func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) ResourceShowOutputAssertionsModel {
-	name, _ := strings.CutPrefix(sdkObject.Name, "sdk.")
-	fields := make([]ResourceShowOutputAssertionModel, len(sdkObject.Fields))
-	imports := make(map[string]struct{})
+	attributes := make([]ResourceShowOutputAssertionModel, len(sdkObject.Fields))
 	for idx, field := range sdkObject.Fields {
-		fields[idx] = MapToSnowflakeObjectFieldAssertion(field)
-		additionalImport, isImportedType := field.GetImportedType()
-		if isImportedType {
-			imports[additionalImport] = struct{}{}
-		}
-	}
-	additionalImports := make([]string, 0)
-	for k := range imports {
-		if !slices.Contains([]string{"sdk"}, k) {
-			additionalImports = append(additionalImports, k)
-		}
+		attributes[idx] = MapToResourceShowOutputAssertion(field)
 	}
 
+	name, _ := strings.CutPrefix(sdkObject.Name, "sdk.")
 	packageWithGenerateDirective := os.Getenv("GOPACKAGE")
 	return ResourceShowOutputAssertionsModel{
-		Name:    name,
-		SdkType: sdkObject.Name,
-		IdType:  sdkObject.IdType,
-		Fields:  fields,
+		Name:       name,
+		Attributes: attributes,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: additionalImports,
+			AdditionalStandardImports: gencommons.AdditionalStandardImports(sdkObject.Fields),
 		},
 	}
 }
 
-func MapToSnowflakeObjectFieldAssertion(field gencommons.Field) ResourceShowOutputAssertionModel {
+func MapToResourceShowOutputAssertion(field gencommons.Field) ResourceShowOutputAssertionModel {
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
+	// TODO [SNOW-1501905]: get a runtime name for the assertion creator
+	var assertionCreator string
+	switch {
+	case concreteTypeWithoutPtr == "bool":
+		assertionCreator = "ResourceShowOutputBoolValueSet"
+	case concreteTypeWithoutPtr == "int":
+		assertionCreator = "ResourceShowOutputIntValueSet"
+	case concreteTypeWithoutPtr == "float64":
+		assertionCreator = "ResourceShowOutputFloatValueSet"
+	case concreteTypeWithoutPtr == "string":
+		assertionCreator = "ResourceShowOutputValueSet"
+	// TODO: distinguish between different enum types
+	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk."):
+		assertionCreator = "ResourceShowOutputStringUnderlyingValueSet"
+	default:
+		assertionCreator = "ResourceShowOutputValueSet"
+	}
 
 	// TODO [SNOW-1501905]: handle other mappings if needed
 	mapper := gencommons.Identity
-	if concreteTypeWithoutPtr == "sdk.AccountObjectIdentifier" {
+	switch concreteTypeWithoutPtr {
+	case "sdk.AccountObjectIdentifier":
 		mapper = gencommons.Name
+	case "time.Time":
+		mapper = gencommons.ToString
 	}
 
 	return ResourceShowOutputAssertionModel{
-		Name:                  field.Name,
-		ConcreteType:          field.ConcreteType,
-		IsOriginalTypePointer: field.IsPointer(),
-		Mapper:                mapper,
+		Name:             field.Name,
+		ConcreteType:     concreteTypeWithoutPtr,
+		AssertionCreator: assertionCreator,
+		Mapper:           mapper,
 	}
 }
