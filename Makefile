@@ -153,6 +153,12 @@ generate-resource-show-output-assertions: ## Generate resource parameters assert
 clean-resource-show-output-assertions: ## Clean resource parameters assertions
 	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/*_gen.go
 
+generate-resource-model-builders: ## Generate resource model builders
+	go generate ./pkg/acceptance/bettertestspoc/config/model/generate.go
+
+clean-resource-model-builder: ## Clean resource model builders
+	rm -f ./pkg/acceptance/bettertestspoc/config/model/*_gen.go
+
 clean-all-assertions: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions ## clean all generated assertions
 
 generate-all-assertions: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions ## generate all assertions
