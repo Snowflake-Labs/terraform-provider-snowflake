@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -323,20 +324,22 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return property.Name == "ALLOWED_USER_DOMAINS"
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to find allowed user domains, err = %w", err)
-	}
-	if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
-		return nil, err
+		log.Printf("[DEBUG] failed to find allowed user domains, err = %v", err)
+	} else {
+		if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
+			return nil, err
+		}
 	}
 
 	allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "ALLOWED_EMAIL_PATTERNS"
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to find allowed email patterns, err = %w", err)
-	}
-	if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
-		return nil, err
+		log.Printf("[DEBUG] failed to find allowed email patterns, err = %v", err)
+	} else {
+		if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
+			return nil, err
+		}
 	}
 
 	return []*schema.ResourceData{d}, nil
@@ -533,20 +536,22 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return property.Name == "ALLOWED_USER_DOMAINS"
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find allowed user domains, err = %w", err))
-		}
-		if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
-			return diag.FromErr(err)
+			log.Printf("[DEBUG] failed to find allowed user domains, err = %v", err)
+		} else {
+			if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 
 		allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "ALLOWED_EMAIL_PATTERNS"
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find allowed email patterns, err = %w", err))
-		}
-		if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
-			return diag.FromErr(err)
+			log.Printf("[DEBUG] failed to find allowed email patterns, err = %v", err)
+		} else {
+			if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 
 		if err := d.Set("comment", integration.Comment); err != nil {
