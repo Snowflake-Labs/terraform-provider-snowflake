@@ -162,7 +162,7 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthJwtBearerSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_assertion_issuer",
 		}); err != nil {

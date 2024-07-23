@@ -21,7 +21,7 @@ import (
 
 var privilegedRoles = []string{"ACCOUNTADMIN", "ORGADMIN", "SECURITYADMIN"}
 
-var oauthExternalIntegrationSchema = map[string]*schema.Schema{
+var externalOauthIntegrationSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -159,7 +159,7 @@ func ExternalOauthIntegration() *schema.Resource {
 		DeleteContext: DeleteContextExternalOauthIntegration,
 		Description:   "Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
-		Schema: oauthExternalIntegrationSchema,
+		Schema: externalOauthIntegrationSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
@@ -521,7 +521,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err = setStateToValuesFromConfig(d, externalOauthIntegrationSchema, []string{
 			"external_oauth_jws_keys_url",
 			"external_oauth_rsa_public_key",
 			"external_oauth_rsa_public_key_2",

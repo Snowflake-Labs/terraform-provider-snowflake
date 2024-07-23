@@ -331,7 +331,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, saml2IntegrationSchema, []string{
+		if err = setStateToValuesFromConfig(d, scimIntegrationSchema, []string{
 			"network_policy",
 			"sync_password",
 		}); err != nil {
