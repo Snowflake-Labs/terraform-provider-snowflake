@@ -32,7 +32,7 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 		}
 	}
 	variableSet2 := m()
-	variableSet2["attributes"] = config.ListVariable(config.StringVariable("type"))
+	variableSet2["attributes"] = config.SetVariable(config.StringVariable("type"))
 	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
