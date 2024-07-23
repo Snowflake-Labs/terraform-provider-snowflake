@@ -320,29 +320,26 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	allowedUserDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-		return property.Name == "ALLOWED_USER_DOMAINS"
-	})
-	if err != nil {
-		log.Printf("[DEBUG] failed to find allowed user domains, err = %v", err)
-	} else {
-		if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
-			return nil, err
-		}
+	if err := d.Set("allowed_user_domains", getOptionalListField(integrationProperties, "ALLOWED_USER_DOMAINS")); err != nil {
+		return nil, err
 	}
 
-	allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-		return property.Name == "ALLOWED_EMAIL_PATTERNS"
-	})
-	if err != nil {
-		log.Printf("[DEBUG] failed to find allowed email patterns, err = %v", err)
-	} else {
-		if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
-			return nil, err
-		}
+	if err := d.Set("allowed_email_patterns", getOptionalListField(integrationProperties, "ALLOWED_EMAIL_PATTERNS")); err != nil {
+		return nil, err
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func getOptionalListField(props []sdk.SecurityIntegrationProperty, propName string) []string {
+	found, err := collections.FindOne(props, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == propName
+	})
+	if err != nil {
+		log.Printf("[DEBUG] failed to find %s in object properties, err = %v", propName, err)
+		return make([]string, 0)
+	}
+	return sdk.ParseCommaSeparatedStringArray(found.Value, false)
 }
 
 func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -532,26 +529,12 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		allowedUserDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-			return property.Name == "ALLOWED_USER_DOMAINS"
-		})
-		if err != nil {
-			log.Printf("[DEBUG] failed to find allowed user domains, err = %v", err)
-		} else {
-			if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
-				return diag.FromErr(err)
-			}
+		if err := d.Set("allowed_user_domains", getOptionalListField(integrationProperties, "ALLOWED_USER_DOMAINS")); err != nil {
+			return diag.FromErr(err)
 		}
 
-		allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-			return property.Name == "ALLOWED_EMAIL_PATTERNS"
-		})
-		if err != nil {
-			log.Printf("[DEBUG] failed to find allowed email patterns, err = %v", err)
-		} else {
-			if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
-				return diag.FromErr(err)
-			}
+		if err := d.Set("allowed_email_patterns", getOptionalListField(integrationProperties, "ALLOWED_EMAIL_PATTERNS")); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("comment", integration.Comment); err != nil {
