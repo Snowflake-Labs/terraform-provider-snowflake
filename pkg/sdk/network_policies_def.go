@@ -1,8 +1,26 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"encoding/json"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+// NetworkRulesSnowflakeDto is needed to unpack the applied network rules from the JSON response from Snowflake
+type NetworkRulesSnowflakeDto struct {
+	FullyQualifiedRuleName string
+}
+
+func ParseNetworkRulesSnowflakeDto(networkRulesStringValue string) ([]NetworkRulesSnowflakeDto, error) {
+	var networkRules []NetworkRulesSnowflakeDto
+	err := json.Unmarshal([]byte(networkRulesStringValue), &networkRules)
+	if err != nil {
+		return nil, err
+	}
+	return networkRules, nil
+}
 
 var (
 	ip = g.NewQueryStruct("IP").
@@ -122,15 +140,17 @@ var (
 				Field("EntriesInBlockedNetworkRules", "int"),
 			g.NewQueryStruct("ShowNetworkPolicies").
 				Show().
-				SQL("NETWORK POLICIES"),
+				SQL("NETWORK POLICIES").
+				OptionalLike(),
 		).
+		ShowByIdOperation().
 		DescribeOperation(
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
 			g.DbStruct("describeNetworkPolicyDBRow").
 				Field("name", "string").
 				Field("value", "string"),
-			g.PlainStruct("NetworkPolicyDescription").
+			g.PlainStruct("NetworkPolicyProperty").
 				Field("Name", "string").
 				Field("Value", "string"),
 			g.NewQueryStruct("DescribeNetworkPolicy").

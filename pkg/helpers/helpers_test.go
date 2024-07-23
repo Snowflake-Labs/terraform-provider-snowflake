@@ -306,3 +306,84 @@ func TestParseRootLocation(t *testing.T) {
 		})
 	}
 }
+
+func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Ids           []string
+		Id            string
+		ShouldContain bool
+	}{
+		{
+			Name: "validation: nil Ids",
+			Id:   "id",
+		},
+		{
+			Name: "validation: empty Id",
+			Ids:  []string{"id"},
+			Id:   "",
+		},
+		{
+			Name: "validation: Ids with too many parts",
+			Ids:  []string{"this.id.has.too.many.parts"},
+			Id:   "id",
+		},
+		{
+			Name: "validation: Id with too many parts",
+			Ids:  []string{"id"},
+			Id:   "this.id.has.too.many.parts",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased Id",
+			Ids:  []string{"object", "db.schema", "db.schema.object"},
+			Id:   "\"OBJECT\"",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased id in Ids",
+			Ids:  []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:   "\"object\"",
+		},
+		{
+			Name:          "account object identifier in Ids",
+			Ids:           []string{"object", "db.schema", "db.schema.object"},
+			Id:            "\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\".\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "account object identifier in Ids upper-cased",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"OBJECT\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids upper-cased",
+			Ids:           []string{"object", "DB.SCHEMA", "db.schema.object"},
+			Id:            "\"DB\".\"SCHEMA\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids upper-cased",
+			Ids:           []string{"object", "db.schema", "DB.SCHEMA.OBJECT"},
+			Id:            "\"DB\".\"SCHEMA\".\"OBJECT\"",
+			ShouldContain: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			assert.Equal(t, tc.ShouldContain, ContainsIdentifierIgnoringQuotes(tc.Ids, tc.Id))
+		})
+	}
+}
