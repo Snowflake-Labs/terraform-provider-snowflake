@@ -1,0 +1,28 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert/gen.ResourceParametersAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sShowOutputAssert" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase }}
+type {{ $assertName }} struct {
+*assert.ResourceAssert
+}
+
+func {{ .Name }}ShowOutput(t *testing.T, name string) *{{ $assertName }} {
+t.Helper()
+
+{{ $assertVar }} := {{ $assertName }}{
+ResourceAssert: assert.NewResourceAssert(name, "show_output"),
+}
+{{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
+return &{{ $assertVar }}
+}
+
+func Imported{{ .Name }}ShowOutput(t *testing.T, id string) *{{ $assertName }} {
+t.Helper()
+
+{{ $assertVar }} := {{ $assertName }}{
+ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
+}
+{{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
+return &{{ $assertVar }}
+}
