@@ -15,3 +15,6 @@ tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
+
+// to ensure sdk package is used
+var _ = sdk.Object{}

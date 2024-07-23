@@ -17,13 +17,29 @@ type {{ $modelName }} struct {
 
 func {{ .Name }}(
 resourceName string,
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    {{ if .Required }}{{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},{{ end }}
+{{- end }}
 ) *{{ $modelName }} {
 {{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.Meta(resourceName, resources.{{ .Name }})}
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    {{ if .Required }}{{ $modelVar }}.With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }}) {{ end }}
+{{- end }}
 return {{ $modelVar }}
 }
 
 func {{ .Name }}WithDefaultMeta(
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    {{ if .Required }}{{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},{{ end }}
+{{- end }}
 ) *{{ $modelName }} {
 {{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.DefaultMeta(resources.{{ .Name }})}
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    {{ if .Required }}{{ $modelVar }}.With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }}) {{ end }}
+{{- end }}
 return {{ $modelVar }}
 }

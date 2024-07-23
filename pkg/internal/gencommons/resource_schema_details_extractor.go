@@ -18,8 +18,10 @@ func (s ResourceSchemaDetails) ObjectName() string {
 type SchemaAttribute struct {
 	Name          string
 	AttributeType schema.ValueType
+	Required      bool
 }
 
+// TODO: test
 func ExtractResourceSchemaDetails(name string, schema map[string]*schema.Schema) ResourceSchemaDetails {
 	orderedAttributeNames := make([]string, 0)
 	for key := range schema {
@@ -33,6 +35,7 @@ func ExtractResourceSchemaDetails(name string, schema map[string]*schema.Schema)
 		attributes = append(attributes, SchemaAttribute{
 			Name:          k,
 			AttributeType: s.Type,
+			Required:      s.Required,
 		})
 	}
 

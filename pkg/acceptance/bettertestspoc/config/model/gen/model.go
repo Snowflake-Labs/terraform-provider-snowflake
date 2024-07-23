@@ -26,6 +26,7 @@ func (m ResourceConfigBuilderModel) SomeFunc() {
 type ResourceConfigBuilderAttributeModel struct {
 	Name          string
 	AttributeType string
+	Required      bool
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSchemaDetails) ResourceConfigBuilderModel {
@@ -36,7 +37,9 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSch
 		}
 		attributes = append(attributes, ResourceConfigBuilderAttributeModel{
 			Name: attr.Name,
-			// TODO: set attribute type
+			// TODO: set attribute type to a proper value
+			AttributeType: "string",
+			Required:      attr.Required,
 		})
 	}
 
