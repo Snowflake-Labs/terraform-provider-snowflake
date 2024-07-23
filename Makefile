@@ -147,4 +147,10 @@ generate-resource-parameters-assertions: ## Generate resource parameters asserti
 clean-resource-parameters-assertions: ## Clean resource parameters assertions
 	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceparametersassert/*_gen.go
 
+generate-resource-show-output-assertions: ## Generate resource parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/generate.go
+
+clean-resource-show-output-assertions: ## Clean resource parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/*_gen.go
+
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
