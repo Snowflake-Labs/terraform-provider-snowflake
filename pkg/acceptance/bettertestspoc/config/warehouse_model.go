@@ -28,7 +28,7 @@ type WarehouseModel struct {
 	StatementQueuedTimeoutInSeconds config.Variable `json:"statement_queued_timeout_in_seconds,omitempty"`
 	StatementTimeoutInSeconds       config.Variable `json:"statement_timeout_in_seconds,omitempty"`
 
-	*resourceModelMeta
+	*ResourceModelMeta
 }
 
 /////////////////////////////////////////////////
@@ -39,7 +39,7 @@ func NewWarehouseModel(
 	resourceName string,
 	name string,
 ) *WarehouseModel {
-	m := &WarehouseModel{resourceModelMeta: meta(resourceName, resources.Warehouse)}
+	m := &WarehouseModel{ResourceModelMeta: Meta(resourceName, resources.Warehouse)}
 	m.WithName(name)
 	return m
 }
@@ -47,7 +47,7 @@ func NewWarehouseModel(
 func NewDefaultWarehouseModel(
 	name string,
 ) *WarehouseModel {
-	m := &WarehouseModel{resourceModelMeta: defaultMeta(resources.Warehouse)}
+	m := &WarehouseModel{ResourceModelMeta: DefaultMeta(resources.Warehouse)}
 	m.WithName(name)
 	return m
 }

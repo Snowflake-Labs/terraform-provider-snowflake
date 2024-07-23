@@ -1,0 +1,29 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen.ResourceConfigBuilderModel*/ -}}
+
+{{- $modelName := .Name | printf "%sModel" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $modelVar := FirstLetter $nameLowerCase }}
+
+type {{ $modelName }} struct {
+{{ range .Attributes -}}
+    {{ SnakeCaseToCamel .Name }} tfconfig.Variable `json:"{{ .Name }},omitempty"`
+{{ end }}
+*config.ResourceModelMeta
+}
+
+/////////////////////////////////////////////////
+// Basic builders (resource name and required) //
+/////////////////////////////////////////////////
+
+func {{ .Name }}(
+resourceName string,
+) *{{ $modelName }} {
+{{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.Meta(resourceName, resources.{{ .Name }})}
+return {{ $modelVar }}
+}
+
+func {{ .Name }}WithDefaultMeta(
+) *{{ $modelName }} {
+{{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.DefaultMeta(resources.{{ .Name }})}
+return {{ $modelVar }}
+}

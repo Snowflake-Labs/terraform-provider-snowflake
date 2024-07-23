@@ -11,39 +11,39 @@ import (
 )
 
 // ResourceModel is the base interface all of our config models will implement.
-// To allow easy implementation, resourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
+// To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ResourceModel interface {
 	Resource() resources.Resource
 	ResourceName() string
 	SetResourceName(name string)
 }
 
-type resourceModelMeta struct {
+type ResourceModelMeta struct {
 	name     string
 	resource resources.Resource
 }
 
-func (m *resourceModelMeta) Resource() resources.Resource {
+func (m *ResourceModelMeta) Resource() resources.Resource {
 	return m.resource
 }
 
-func (m *resourceModelMeta) ResourceName() string {
+func (m *ResourceModelMeta) ResourceName() string {
 	return m.name
 }
 
-func (m *resourceModelMeta) SetResourceName(name string) {
+func (m *ResourceModelMeta) SetResourceName(name string) {
 	m.name = name
 }
 
 // DefaultResourceName is exported to allow assertions against the resources using the default name.
 const DefaultResourceName = "test"
 
-func defaultMeta(resource resources.Resource) *resourceModelMeta {
-	return &resourceModelMeta{name: DefaultResourceName, resource: resource}
+func DefaultMeta(resource resources.Resource) *ResourceModelMeta {
+	return &ResourceModelMeta{name: DefaultResourceName, resource: resource}
 }
 
-func meta(resourceName string, resource resources.Resource) *resourceModelMeta {
-	return &resourceModelMeta{name: resourceName, resource: resource}
+func Meta(resourceName string, resource resources.Resource) *ResourceModelMeta {
+	return &ResourceModelMeta{name: resourceName, resource: resource}
 }
 
 // FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
