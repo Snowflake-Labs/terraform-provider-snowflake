@@ -14,7 +14,6 @@ import (
 )
 
 func TestAcc_CortexSearchService_basic(t *testing.T) {
-	t.Skipf("Skipped for now because of the <err: 090105 (22000): Cannot perform operation. This session does not have a current database. Call 'USE DATABASE', or use a qualified name.> problem.")
 	resourceName := "snowflake_cortex_search_service.css"
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -22,19 +21,20 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(id.Name()),
-			"on":         config.StringVariable("id"),
+			"on":         config.StringVariable("SOME_TEXT"),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf(`select "id" from %s"`, tableId.FullyQualifiedName())),
+			"query":      config.StringVariable(fmt.Sprintf("select SOME_TEXT from %s", tableId.FullyQualifiedName())),
 			"comment":    config.StringVariable("Terraform acceptance test"),
 			"table_name": config.StringVariable(tableId.Name()),
 		}
 	}
 	variableSet2 := m()
-	variableSet2["attributes"] = config.SetVariable(config.StringVariable("type"))
+	variableSet2["attributes"] = config.SetVariable(config.StringVariable("SOME_OTHER_TEXT"))
 	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+	variableSet2["query"] = config.StringVariable(fmt.Sprintf("select SOME_TEXT, SOME_OTHER_TEXT from %s", tableId.FullyQualifiedName()))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -56,16 +56,15 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "on", "id"),
+					resource.TestCheckResourceAttr(resourceName, "on", "SOME_TEXT"),
 					resource.TestCheckNoResourceAttr(resourceName, "attributes"),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from %s", tableId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select SOME_TEXT from %s", tableId.FullyQualifiedName())),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
 				),
 			},
-
 			{
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet2,
@@ -78,12 +77,13 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "on", "id"),
-					resource.TestCheckResourceAttr(resourceName, "attributes", "type"),
+					resource.TestCheckResourceAttr(resourceName, "on", "SOME_TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0", "SOME_OTHER_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
 					resource.TestCheckResourceAttr(resourceName, "target_lag", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
-					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from %s", tableId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select SOME_TEXT, SOME_OTHER_TEXT from %s", tableId.FullyQualifiedName())),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
 				),
 			},
@@ -94,6 +94,8 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// currently not set in read because the early implementation on Snowflake side did not return these values on SHOW/DESCRIBE
+				ImportStateVerifyIgnore: []string{"attributes", "on", "query", "target_lag", "warehouse"},
 			},
 		},
 	})

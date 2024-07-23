@@ -8,6 +8,10 @@ variable "on" {
   type = string
 }
 
+variable "attributes" {
+  type = set(string)
+}
+
 variable "database" {
   type = string
 }
