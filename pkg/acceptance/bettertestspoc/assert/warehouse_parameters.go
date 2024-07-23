@@ -1,7 +1,6 @@
 package assert
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,31 +29,31 @@ func ImportedWarehouseParameters(t *testing.T, id string) *WarehouseParametersAs
 }
 
 func (w *WarehouseParametersAssert) HasMaxConcurrencyLevel(expected int) *WarehouseParametersAssert {
-	w.AddAssertion(parameterValueSet("max_concurrency_level", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceParameterIntValueSet(sdk.WarehouseParameterMaxConcurrencyLevel, expected))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementQueuedTimeoutInSeconds(expected int) *WarehouseParametersAssert {
-	w.AddAssertion(parameterValueSet("statement_queued_timeout_in_seconds", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceParameterIntValueSet(sdk.WarehouseParameterStatementQueuedTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementTimeoutInSeconds(expected int) *WarehouseParametersAssert {
-	w.AddAssertion(parameterValueSet("statement_timeout_in_seconds", strconv.Itoa(expected)))
+	w.AddAssertion(ResourceParameterIntValueSet(sdk.WarehouseParameterStatementTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasMaxConcurrencyLevelLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.AddAssertion(parameterLevelSet("max_concurrency_level", string(expected)))
+	w.AddAssertion(ResourceParameterLevelSet(sdk.WarehouseParameterMaxConcurrencyLevel, expected))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementQueuedTimeoutInSecondsLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.AddAssertion(parameterLevelSet("statement_queued_timeout_in_seconds", string(expected)))
+	w.AddAssertion(ResourceParameterLevelSet(sdk.WarehouseParameterStatementQueuedTimeoutInSeconds, expected))
 	return w
 }
 
 func (w *WarehouseParametersAssert) HasStatementTimeoutInSecondsLevel(expected sdk.ParameterType) *WarehouseParametersAssert {
-	w.AddAssertion(parameterLevelSet("statement_timeout_in_seconds", string(expected)))
+	w.AddAssertion(ResourceParameterLevelSet(sdk.WarehouseParameterStatementTimeoutInSeconds, expected))
 	return w
 }

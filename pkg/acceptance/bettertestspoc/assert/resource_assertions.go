@@ -3,10 +3,12 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -80,12 +82,24 @@ const (
 	parametersLevelSuffix = ".0.level"
 )
 
-func parameterValueSet(fieldName string, expected string) ResourceAssertion {
-	return ResourceAssertion{fieldName: parametersPrefix + fieldName + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ResourceParameterBoolValueSet[T ~string](parameterName T, expected bool) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, strconv.FormatBool(expected))
 }
 
-func parameterLevelSet(fieldName string, expected string) ResourceAssertion {
-	return ResourceAssertion{fieldName: parametersPrefix + fieldName + parametersLevelSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ResourceParameterIntValueSet[T ~string](parameterName T, expected int) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, strconv.Itoa(expected))
+}
+
+func ResourceParameterStringUnderlyingValueSet[T ~string, U ~string](parameterName T, expected U) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, string(expected))
+}
+
+func ResourceParameterValueSet[T ~string](parameterName T, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + strings.ToLower(string(parameterName)) + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+}
+
+func ResourceParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + strings.ToLower(string(parameterName)) + parametersLevelSuffix, expectedValue: string(parameterType), resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new resource assertions.

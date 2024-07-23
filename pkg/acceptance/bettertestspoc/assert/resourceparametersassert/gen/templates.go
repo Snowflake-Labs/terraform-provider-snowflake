@@ -20,5 +20,13 @@ var (
 		gencommons.FirstLetter,
 	)).Parse(definitionTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate}
+	//go:embed templates/specific_checks.tmpl
+	specificChecksTemplateContent string
+	SpecificChecksTemplate, _     = template.New("specificChecksTemplate").Funcs(gencommons.BuildTemplateFuncMap(
+		gencommons.FirstLetterLowercase,
+		gencommons.FirstLetter,
+		gencommons.SnakeCaseToCamel,
+	)).Parse(specificChecksTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, SpecificChecksTemplate}
 )
