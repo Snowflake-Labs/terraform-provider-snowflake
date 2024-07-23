@@ -74,7 +74,7 @@ func Test_ExtractStructDetails(t *testing.T) {
 	t.Run("test struct details extraction", func(t *testing.T) {
 		structDetails := ExtractStructDetails(testStruct{})
 
-		assert.Equal(t, structDetails.Name, "gen.testStruct")
+		assert.Equal(t, structDetails.Name, "gencommons.testStruct")
 
 		assertFieldExtracted(structDetails.Fields[0], "unexportedString", "string", "string")
 		assertFieldExtracted(structDetails.Fields[1], "unexportedInt", "int", "int")

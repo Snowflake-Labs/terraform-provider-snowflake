@@ -115,7 +115,7 @@ func (u *UserParametersAssert) HasAllDefaults() *UserParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampOutputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampTypeMapping, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTimestampTzOutputFormat, sdk.ParameterTypeSnowflakeDefault).
-		HasDefaultParameterValueOnLevel(sdk.UserParameterTimezone, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.UserParameterTimezone, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTimeInputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTimeOutputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.UserParameterTraceLevel, sdk.ParameterTypeSnowflakeDefault).
