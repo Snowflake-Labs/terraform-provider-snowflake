@@ -21,5 +21,13 @@ var (
 		gencommons.SnakeCaseToCamel,
 	)).Parse(definitionTemplateContent)
 
-	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate}
+	//go:embed templates/builders.tmpl
+	buildersTemplateContent string
+	BuildersTemplate, _     = template.New("buildersTemplate").Funcs(gencommons.BuildTemplateFuncMap(
+		gencommons.FirstLetterLowercase,
+		gencommons.FirstLetter,
+		gencommons.SnakeCaseToCamel,
+	)).Parse(buildersTemplateContent)
+
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, BuildersTemplate}
 )

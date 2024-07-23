@@ -24,9 +24,10 @@ func (m ResourceConfigBuilderModel) SomeFunc() {
 }
 
 type ResourceConfigBuilderAttributeModel struct {
-	Name          string
-	AttributeType string
-	Required      bool
+	Name           string
+	AttributeType  string
+	Required       bool
+	VariableMethod string
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSchemaDetails) ResourceConfigBuilderModel {
@@ -40,6 +41,8 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails gencommons.ResourceSch
 			// TODO: set attribute type to a proper value
 			AttributeType: "string",
 			Required:      attr.Required,
+			// TODO: set variable method to a proper value
+			VariableMethod: "StringVariable",
 		})
 	}
 
