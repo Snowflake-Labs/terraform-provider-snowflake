@@ -121,6 +121,10 @@ type NetworkPolicy struct {
 	EntriesInBlockedNetworkRules int
 }
 
+func (v *NetworkPolicy) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
 // DescribeNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy.
 type DescribeNetworkPolicyOptions struct {
 	describe      bool                    `ddl:"static" sql:"DESCRIBE"`
