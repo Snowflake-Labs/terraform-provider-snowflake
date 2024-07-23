@@ -14,6 +14,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -91,7 +92,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
-					assert.WarehouseParameters(t, "snowflake_warehouse.w").
+					resourceparametersassert.WarehouseResourceParameters(t, "snowflake_warehouse.w").
 						HasMaxConcurrencyLevel(8).
 						HasStatementQueuedTimeoutInSeconds(0).
 						HasStatementTimeoutInSeconds(172800).
@@ -143,7 +144,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
 					assert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
-					assert.ImportedWarehouseParameters(t, warehouseId.Name()).
+					resourceparametersassert.ImportedWarehouseResourceParameters(t, warehouseId.Name()).
 						HasMaxConcurrencyLevel(8).
 						HasMaxConcurrencyLevelLevel("").
 						HasStatementQueuedTimeoutInSeconds(0).
