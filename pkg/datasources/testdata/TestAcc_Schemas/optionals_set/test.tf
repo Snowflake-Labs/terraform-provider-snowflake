@@ -1,9 +1,9 @@
 resource "snowflake_schema" "test" {
-  name                = var.name
-  database            = var.database
-  comment             = var.comment
-  is_transient        = true
-  with_managed_access = true
+  name         = var.name
+  database     = var.database
+  comment      = var.comment
+  is_transient = true
+  is_managed   = true
 }
 
 resource "snowflake_table" "test" {

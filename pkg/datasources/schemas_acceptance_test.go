@@ -9,6 +9,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAcc_Schemas_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	databaseId := acc.TestClient().Ids.DatabaseId()
 
@@ -98,6 +100,7 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 }
 
 func TestAcc_Schemas_Filtering(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	prefix := random.AlphaN(4)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
