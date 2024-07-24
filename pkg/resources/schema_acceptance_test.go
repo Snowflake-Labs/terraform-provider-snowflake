@@ -749,3 +749,66 @@ func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, schemaId sdk.Database
 		return nil
 	}
 }
+
+func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.DatabaseId()
+	resourceName := "snowflake_schema.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: schemav093(id.Name(), databaseId.Name(), true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "is_managed", "true"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   schemav094(id.Name(), databaseId.Name(), true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckNoResourceAttr(resourceName, "is_managed"),
+					resource.TestCheckResourceAttr(resourceName, "with_managed_access", "true"),
+				),
+			},
+		},
+	})
+}
+
+func schemav093(name, database string, isManaged bool) string {
+	s := `
+resource "snowflake_schema" "test" {
+	name             = "%s"
+	database		 = "%s"
+	is_managed		 = %t
+}
+`
+	return fmt.Sprintf(s, name, database, isManaged)
+}
+
+func schemav094(name, database string, isManaged bool) string {
+	s := `
+resource "snowflake_schema" "test" {
+	name             = "%s"
+	database		 = "%s"
+	with_managed_access		 = %t
+}
+`
+	return fmt.Sprintf(s, name, database, isManaged)
+}

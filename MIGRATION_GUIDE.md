@@ -6,6 +6,11 @@ across different versions.
 
 ## v0.93.0 ➞ v0.94.0
 
+### *(breaking change)* refactored snowflake_schema resource
+
+Changes:
+- renamed `is_managed` to `with_managed_access`
+
 ### *(new feature)* new snowflake_account_role resource
 
 Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to

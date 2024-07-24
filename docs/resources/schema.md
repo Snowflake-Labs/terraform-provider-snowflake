@@ -71,7 +71,6 @@ resource "snowflake_database" "primary" {
 - `replace_invalid_characters` (Boolean) Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.
 - `storage_serialization_policy` (String) The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: [COMPATIBLE OPTIMIZED]. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.
 - `suspend_task_after_num_failures` (Number) How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.
-- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 - `task_auto_retry_attempts` (Number) Maximum automatic retries allowed for a user task.
 - `trace_level` (String) Controls how trace events are ingested into the event table. Valid options are: [ALWAYS ON_EVENT OFF]. For information about levels, see [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters.html#label-trace-level).
 - `user_task_managed_initial_warehouse_size` (String) The initial size of warehouse to use for managed warehouses in the absence of history.
@@ -82,19 +81,6 @@ resource "snowflake_database" "primary" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--tag"></a>
-### Nested Schema for `tag`
-
-Required:
-
-- `name` (String) Tag name, e.g. department.
-- `value` (String) Tag value, e.g. marketing_info.
-
-Optional:
-
-- `database` (String) Name of the database that the tag was created in.
-- `schema` (String) Name of the schema that the tag was created in.
 
 ## Import
 
