@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -799,15 +799,16 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: schemav093(id.Name(), databaseId.Name(), true),
+				Config: schemav093(id.Name(), databaseId.Name(), true, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "is_managed", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_days", "10"),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   schemav094(id.Name(), databaseId.Name(), true),
+				Config:                   schemav094(id.Name(), databaseId.Name(), true, 10),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -815,30 +816,34 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckNoResourceAttr(resourceName, "is_managed"),
 					resource.TestCheckResourceAttr(resourceName, "with_managed_access", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "data_retention_days"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_time_in_days", "10"),
 				),
 			},
 		},
 	})
 }
 
-func schemav093(name, database string, isManaged bool) string {
+func schemav093(name, database string, isManaged bool, dataRetentionDays int) string {
 	s := `
 resource "snowflake_schema" "test" {
-	name             = "%s"
-	database		 = "%s"
-	is_managed		 = %t
+	name					= "%s"
+	database				= "%s"
+	is_managed				= %t
+	data_retention_days		= %d
 }
 `
-	return fmt.Sprintf(s, name, database, isManaged)
+	return fmt.Sprintf(s, name, database, isManaged, dataRetentionDays)
 }
 
-func schemav094(name, database string, isManaged bool) string {
+func schemav094(name, database string, isManaged bool, dataRetentionDays int) string {
 	s := `
 resource "snowflake_schema" "test" {
-	name             = "%s"
-	database		 = "%s"
-	with_managed_access		 = %t
+	name             				= "%s"
+	database		 				= "%s"
+	with_managed_access				= %t
+	data_retention_time_in_days		= %d
 }
 `
-	return fmt.Sprintf(s, name, database, isManaged)
+	return fmt.Sprintf(s, name, database, isManaged, dataRetentionDays)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -23,15 +24,17 @@ import (
 
 var schemaSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
+		DiffSuppressFunc: NormalizeAndCompareIdentifiers(),
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the schema.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "The database in which to create the schema.",
+		ForceNew:         true,
+		DiffSuppressFunc: NormalizeAndCompareIdentifiers(),
 	},
 	"with_managed_access": {
 		Type:        schema.TypeBool,
@@ -48,7 +51,7 @@ var schemaSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Computed:    true,
-		Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role.",
+		Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role. For more information, see [PIPE_EXECUTION_PAUSED](https://docs.snowflake.com/en/sql-reference/parameters#pipe-execution-paused).",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -225,6 +228,7 @@ func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	_, err := client.Databases.ShowByID(ctx, id.DatabaseId())
 	if err != nil {
+		log.Printf("[DEBUG] database %s for schema %s not found", id.DatabaseId().Name(), id.Name())
 		d.SetId("")
 	}
 

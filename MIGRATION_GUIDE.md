@@ -8,8 +8,36 @@ across different versions.
 
 ### *(breaking change)* refactored snowflake_schema resource
 
-Changes:
+Renamed fields:
 - renamed `is_managed` to `with_managed_access`
+- renamed `data_retention_days` to `data_retention_time_in_days`
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+Removed fields:
+- `tag`
+
+New fields:
+- the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
+    - `max_data_extension_time_in_days`
+    - `external_volume`
+    - `catalog`
+    - `replace_invalid_characters`
+    - `default_ddl_collation`
+    - `storage_serialization_policy`
+    - `log_level`
+    - `trace_level`
+    - `suspend_task_after_num_failures`
+    - `task_auto_retry_attempts`
+    - `user_task_managed_initial_warehouse_size`
+    - `user_task_timeout_ms`
+    - `user_task_minimum_trigger_interval_in_seconds`
+    - `quoted_identifiers_ignore_case`
+    - `enable_console_output`
+    - `pipe_execution_paused`
+- added `show_output` field that holds the response from SHOW SCHEMAS.
+- added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
+
+We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
 
 ### *(breaking change)* refactored snowflake_schemas datasource
 Changes:

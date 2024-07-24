@@ -26,7 +26,7 @@ resource "snowflake_schema" "schema" {
   is_transient        = true
   comment             = "my schema"
 
-  data_retention_time_in_days                   = 10
+  data_retention_time_in_days                   = 1
   max_data_extension_time_in_days               = 20
   external_volume                               = "<external_volume_name>"
   catalog                                       = "<catalog_name>"

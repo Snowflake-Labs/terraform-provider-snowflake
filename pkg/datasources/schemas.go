@@ -161,7 +161,7 @@ func ReadSchemas(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	}
 
 	if v, ok := d.GetOk("in"); ok {
-		in := v.([]interface{})[0].(map[string]interface{})
+		in := v.([]any)[0].(map[string]any)
 		if v, ok := in["account"]; ok {
 			if account := v.(bool); account {
 				opts.In = &sdk.SchemaIn{Account: sdk.Bool(account)}
