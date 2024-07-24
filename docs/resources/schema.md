@@ -76,7 +76,7 @@ resource "snowflake_schema" "schema" {
 - `user_task_managed_initial_warehouse_size` (String) The initial size of warehouse to use for managed warehouses in the absence of history.
 - `user_task_minimum_trigger_interval_in_seconds` (Number) Minimum amount of time between Triggered Task executions in seconds.
 - `user_task_timeout_ms` (Number) User task execution timeout in milliseconds.
-- `with_managed_access` (Boolean) Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
+- `with_managed_access` (Boolean) Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.
 
 ### Read-Only
 

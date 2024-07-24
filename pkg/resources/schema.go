@@ -36,7 +36,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"with_managed_access": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
+		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
@@ -148,7 +148,7 @@ func Schema() *schema.Resource {
 func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+	schemaParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
 		In: &sdk.ParametersIn{
 			Schema: id,
 		},
@@ -156,7 +156,7 @@ func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta an
 	if err != nil {
 		return nil, err
 	}
-	return warehouseParameters, nil
+	return schemaParameters, nil
 }
 
 func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -235,8 +235,8 @@ func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) di
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to query secondary database. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
+					Summary:  "Failed to query schema. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("schema name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
