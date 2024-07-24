@@ -1,1 +1,1 @@
-terraform import snowflake_network_policy.example policyname
+terraform import snowflake_network_policy.example "name"

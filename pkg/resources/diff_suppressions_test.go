@@ -80,3 +80,73 @@ func Test_IgnoreAfterCreation(t *testing.T) {
 		assert.True(t, result)
 	})
 }
+
+func Test_NormalizeAndCompareIdentifiersSet(t *testing.T) {
+	rawDataWithValues := func(values []any) *schema.ResourceData {
+		return schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+			"value": {
+				Required: true,
+				Type:     schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+		}, map[string]any{
+			"value": values,
+		})
+	}
+	emptyResourceData := rawDataWithValues([]any{})
+
+	t.Run("validation: size key", func(t *testing.T) {
+		assert.False(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.#", "1", "2", emptyResourceData))
+	})
+
+	t.Run("validation: case mismatch", func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{"SCHEMA.OBJECT.IDENTIFIER"})
+		assert.False(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.False(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+	})
+
+	t.Run("validation: case mismatch quoted identifier in the state", func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{`"SCHEMA"."OBJECT"."IDENTIFIER"`})
+		assert.False(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.False(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+	})
+
+	t.Run(`change suppressed from schema.object.identifier to "schema"."object"."identifier" with schema.object.identifier in state`, func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{"schema.object.identifier"})
+		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+	})
+
+	t.Run(`change suppressed from schema.object.identifier to "schema"."object"."identifier" with "schema"."object"."identifier" in state`, func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{`"schema"."object"."identifier"`})
+		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "schema.object.identifier", "", resourceData))
+		// TODO: Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", `"schema"."object"."identifier"`, resourceData))
+	})
+
+	t.Run(`change suppressed from "schema"."object"."identifier" to schema.object.identifier with schema.object.identifier in state`, func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{"schema.object.identifier"})
+		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", `"schema"."object"."identifier"`, "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", "schema.object.identifier", resourceData))
+	})
+
+	t.Run(`change suppressed from "schema"."object"."identifier" to schema.object.identifier with "schema"."object"."identifier" in state`, func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{`"schema"."object"."identifier"`})
+		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", `"schema"."object"."identifier"`, "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", "schema.object.identifier`, resourceData))
+	})
+
+	t.Run(`change suppressed from "SCHEMA"."OBJECT"."IDENTIFIER" to SCHEMA.OBJECT.IDENTIFIER with "SCHEMA"."OBJECT"."IDENTIFIER" in state`, func(t *testing.T) {
+		resourceData := rawDataWithValues([]any{`"SCHEMA"."OBJECT"."IDENTIFIER"`})
+		assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", `"SCHEMA"."OBJECT"."IDENTIFIER"`, "", resourceData))
+		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
+		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", "SCHEMA.OBJECT.IDENTIFIER", resourceData))
+	})
+}

@@ -35,7 +35,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
 	t.Cleanup(networkRuleCleanup)
 	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
@@ -264,7 +264,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
 	t.Cleanup(networkRuleCleanup)
 	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
