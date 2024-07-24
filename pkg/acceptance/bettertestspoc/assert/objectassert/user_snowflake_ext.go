@@ -1,4 +1,4 @@
-package assert
+package objectassert
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func (w *UserAssert) HasDefaults(name string) *UserAssert {
 }
 
 func (w *UserAssert) HasCreatedOnNotEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.CreatedOn == (time.Time{}) {
 			return fmt.Errorf("expected created on not empty; got: %v", o.CreatedOn)
@@ -50,7 +50,7 @@ func (w *UserAssert) HasCreatedOnNotEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasLastSuccessLoginEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.LastSuccessLogin != (time.Time{}) {
 			return fmt.Errorf("expected last success login empty; got: %v", o.LastSuccessLogin)
@@ -61,7 +61,7 @@ func (w *UserAssert) HasLastSuccessLoginEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasExpiresAtTimeEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.ExpiresAtTime != (time.Time{}) {
 			return fmt.Errorf("expected expires at time empty; got: %v", o.ExpiresAtTime)
@@ -72,7 +72,7 @@ func (w *UserAssert) HasExpiresAtTimeEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasLockedUntilTimeEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.LockedUntilTime != (time.Time{}) {
 			return fmt.Errorf("expected locked until time empty; got: %v", o.LockedUntilTime)
@@ -83,7 +83,7 @@ func (w *UserAssert) HasLockedUntilTimeEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasExpiresAtTimeNotEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.ExpiresAtTime == (time.Time{}) {
 			return fmt.Errorf("expected expires at time not empty; got: %v", o.ExpiresAtTime)
@@ -94,7 +94,7 @@ func (w *UserAssert) HasExpiresAtTimeNotEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasLockedUntilTimeNotEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.LockedUntilTime == (time.Time{}) {
 			return fmt.Errorf("expected locked until time not empty; got: %v", o.LockedUntilTime)
@@ -105,7 +105,7 @@ func (w *UserAssert) HasLockedUntilTimeNotEmpty() *UserAssert {
 }
 
 func (w *UserAssert) HasDefaultNamespaceId(expected sdk.DatabaseObjectIdentifier) *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(o.DefaultNamespace).FullyQualifiedName() != expected.FullyQualifiedName() {
 			return fmt.Errorf("expected default namespace: %v; got: %v", expected, o.DefaultNamespace)
@@ -116,7 +116,7 @@ func (w *UserAssert) HasDefaultNamespaceId(expected sdk.DatabaseObjectIdentifier
 }
 
 func (w *UserAssert) HasDaysToExpiryNotEmpty() *UserAssert {
-	w.assertions = append(w.assertions, func(t *testing.T, o *sdk.User) error {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.DaysToExpiry == "" {
 			return fmt.Errorf("expected days to expiry not empty; got: %v", o.DaysToExpiry)

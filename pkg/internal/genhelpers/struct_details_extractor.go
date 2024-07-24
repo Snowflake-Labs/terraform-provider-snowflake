@@ -1,13 +1,17 @@
-package gen
+package genhelpers
 
 import (
 	"reflect"
 	"strings"
 )
 
-type Struct struct {
+type StructDetails struct {
 	Name   string
 	Fields []Field
+}
+
+func (s StructDetails) ObjectName() string {
+	return s.Name
 }
 
 type Field struct {
@@ -24,7 +28,12 @@ func (f *Field) IsSlice() bool {
 	return strings.HasPrefix(f.ConcreteType, "[]")
 }
 
-func ExtractStructDetails(s any) Struct {
+func (f *Field) GetImportedType() (string, bool) {
+	parts := strings.Split(f.ConcreteType, ".")
+	return parts[0], len(parts) > 1
+}
+
+func ExtractStructDetails(s any) StructDetails {
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
@@ -54,5 +63,5 @@ func ExtractStructDetails(s any) Struct {
 
 		fields[i] = Field{currentName, currentType, underlyingType}
 	}
-	return Struct{v.Type().String(), fields}
+	return StructDetails{v.Type().String(), fields}
 }
