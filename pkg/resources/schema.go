@@ -205,10 +205,8 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
 		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
 		EnableConsoleOutput:                     enableConsoleOutput,
+		PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
 		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	}
-	if pipeExecutionPausedRaw := GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"); pipeExecutionPausedRaw != nil {
-		opts.PipeExecutionPaused = sdk.Pointer(*pipeExecutionPausedRaw)
 	}
 	if strings.EqualFold(strings.TrimSpace(name), "PUBLIC") {
 		opts.OrReplace = sdk.Pointer(true)
