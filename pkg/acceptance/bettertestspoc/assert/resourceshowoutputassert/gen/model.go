@@ -60,7 +60,7 @@ func MapToResourceShowOutputAssertion(field genhelpers.Field) ResourceShowOutput
 		assertionCreator = "ResourceShowOutputFloatValueSet"
 	case concreteTypeWithoutPtr == "string":
 		assertionCreator = "ResourceShowOutputValueSet"
-	// TODO: distinguish between different enum types
+	// TODO [SNOW-1501905]: distinguish between different enum types
 	case strings.HasPrefix(concreteTypeWithoutPtr, "sdk."):
 		assertionCreator = "ResourceShowOutputStringUnderlyingValueSet"
 	default:

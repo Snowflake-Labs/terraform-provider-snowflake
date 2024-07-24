@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
-// TODO: add possibility to have depends_on to other resources (in meta?)
-// TODO: add a convenience method to use multiple configs from multiple models
+// TODO [SNOW-1501905]: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
+// TODO [SNOW-1501905]: add possibility to have depends_on to other resources (in meta?)
+// TODO [SNOW-1501905]: add a convenience method to use multiple configs from multiple models
 
 // ResourceModel is the base interface all of our config models will implement.
 // To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
@@ -52,8 +52,8 @@ func Meta(resourceName string, resource resources.Resource) *ResourceModelMeta {
 
 // FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
-// TODO: use reflection to build config directly from model struct (or some other different way)
-// TODO: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
+// TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
+// TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
 func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 

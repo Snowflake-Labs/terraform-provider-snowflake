@@ -38,7 +38,7 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSch
 			continue
 		}
 
-		// TODO: support the rest of attribute types
+		// TODO [SNOW-1501905]: support the rest of attribute types
 		var attributeType string
 		var variableMethod string
 		switch attr.AttributeType {

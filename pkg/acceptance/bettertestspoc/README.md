@@ -298,11 +298,11 @@ it will result in:
 ## Known limitations/planned improvements
 - Test all the utilities for assertion/model construction (public interfaces, methods, functions).
 - Verify if all the config types are supported.
-- Consider a better implementation for the model conversion to config (TODO left).
-- Support additional methods for references in models (TODO left).
-- Support depends_on in models (TODO left).
-- Add a convenience function to concatenate multiple models (TODO left).
-- Add function to support using `ConfigFile:` in the acceptance tests.
+- Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
+- Support additional methods for references in models (TODO left in `config/config.go`).
+- Support depends_on in models (TODO left in `config/config.go`).
+- Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
+- Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.
 - Support `showOutputValueUnset` and add a second function for each `show_output` attribute.
 - Support `resourceAssertionTypeValueNotSet` for import checks (`panic` left currently).
@@ -321,3 +321,7 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - get a runtime name for the assertion creator (TODOs left in `assert/objectparametersassert/gen/model.go`)
 - use a better definition for each objet's snowflake parameters (TODO left in `assert/objectparametersassert/gen/main/main.go`)
 - add possibility to have enums generated in config builders (TODO left in `config/model/warehouse_model_ext.go`)
+- handle situations where snowflake default behaves inconsistently (TODO left in `assert/objectparametersassert/gen/object_parameters_def.go`)
+- handle attribute types in resource assertions (currently strings only; TODO left in `assert/resourceassert/gen/model.go`)
+- distinguish between different enum types (TODO left in `assert/resourceshowoutputassert/gen/templates.go`)
+- support the rest of attribute types in config model builders (TODO left in `config/model/gen/model.go`)

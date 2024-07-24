@@ -86,7 +86,7 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 			{ParameterName: string(sdk.UserParameterTransactionAbortOnError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeAccount"},
 			{ParameterName: string(sdk.UserParameterTransactionDefaultIsolationLevel), ParameterType: "sdk.TransactionDefaultIsolationLevel", DefaultValue: "sdk.TransactionDefaultIsolationLevelReadCommitted", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.UserParameterTwoDigitCenturyStart), ParameterType: "int", DefaultValue: "1970", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// TODO: quick workaround for now: lowercase for ignore in snowflake by default but uppercase for FAIL
+			// TODO [SNOW-1501905]: quick workaround for now: lowercase for ignore in snowflake by default but uppercase for FAIL
 			{ParameterName: string(sdk.UserParameterUnsupportedDdlAction), ParameterType: "sdk.UnsupportedDDLAction", DefaultValue: "sdk.UnsupportedDDLAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore)))", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.UserParameterUseCachedResult), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.UserParameterWeekOfYearPolicy), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
