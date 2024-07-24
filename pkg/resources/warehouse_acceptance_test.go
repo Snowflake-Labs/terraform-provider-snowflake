@@ -11,6 +11,8 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -96,7 +98,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -110,6 +112,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 					// we can still use normal checks
 					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
 				),
@@ -144,7 +149,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasStatementQueuedTimeoutInSecondsLevel("").
 						HasStatementTimeoutInSeconds(172800).
 						HasStatementTimeoutInSecondsLevel(""),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -158,6 +163,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 				),
 			},
 			// RENAME

@@ -1,6 +1,11 @@
-package gen
+package genhelpers
 
 import (
+	"bytes"
+	"fmt"
+	"go/format"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -36,4 +41,22 @@ func ColumnOutput(columnWidth int, columns ...string) string {
 		}
 	}
 	return sb.String()
+}
+
+// WriteCodeToFile formats and saves content from the given buffer into file relative to the current working directory.
+// TODO [SNOW-1501905]: test
+func WriteCodeToFile(buffer *bytes.Buffer, fileName string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
+	}
+	outputPath := filepath.Join(wd, fileName)
+	src, err := format.Source(buffer.Bytes())
+	if err != nil {
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
+	}
+	if err := os.WriteFile(outputPath, src, 0o600); err != nil {
+		return fmt.Errorf("writing code to file %s failed with err: %w", fileName, err)
+	}
+	return nil
 }
