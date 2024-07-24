@@ -9,10 +9,14 @@
 
 {{ range .Attributes -}}
     {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
-    func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
-        {{ $modelVar }}.{{ $attributeNameCamel }} = tfconfig.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
-        return {{ $modelVar }}
-    }
+    {{ if .AttributeType }}
+        func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
+            {{ $modelVar }}.{{ $attributeNameCamel }} = tfconfig.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
+            return {{ $modelVar }}
+        }
+    {{ else }}
+        // {{ .Name }} attribute type is not yet supported, so With{{ $attributeNameCamel }} can't be generated
+    {{ end }}
 
 {{ end -}}
 

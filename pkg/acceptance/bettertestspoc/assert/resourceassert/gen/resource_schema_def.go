@@ -25,4 +25,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Warehouse",
 		schema: resources.Warehouse().Schema,
 	},
+	{
+		name:   "User",
+		schema: resources.User().Schema,
+	},
 }
