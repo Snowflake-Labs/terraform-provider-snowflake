@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 // TODO [SNOW-1501905]: extract to commons?
@@ -26,10 +26,10 @@ type ResourceShowOutputAssertionModel struct {
 	Name             string
 	ConcreteType     string
 	AssertionCreator string
-	Mapper           gencommons.Mapper
+	Mapper           genhelpers.Mapper
 }
 
-func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) ResourceShowOutputAssertionsModel {
+func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) ResourceShowOutputAssertionsModel {
 	attributes := make([]ResourceShowOutputAssertionModel, len(sdkObject.Fields))
 	for idx, field := range sdkObject.Fields {
 		attributes[idx] = MapToResourceShowOutputAssertion(field)
@@ -42,12 +42,12 @@ func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) ResourceSh
 		Attributes: attributes,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: gencommons.AdditionalStandardImports(sdkObject.Fields),
+			AdditionalStandardImports: genhelpers.AdditionalStandardImports(sdkObject.Fields),
 		},
 	}
 }
 
-func MapToResourceShowOutputAssertion(field gencommons.Field) ResourceShowOutputAssertionModel {
+func MapToResourceShowOutputAssertion(field genhelpers.Field) ResourceShowOutputAssertionModel {
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
 	// TODO [SNOW-1501905]: get a runtime name for the assertion creator
 	var assertionCreator string
@@ -68,12 +68,12 @@ func MapToResourceShowOutputAssertion(field gencommons.Field) ResourceShowOutput
 	}
 
 	// TODO [SNOW-1501905]: handle other mappings if needed
-	mapper := gencommons.Identity
+	mapper := genhelpers.Identity
 	switch concreteTypeWithoutPtr {
 	case "sdk.AccountObjectIdentifier":
-		mapper = gencommons.Name
+		mapper = genhelpers.Name
 	case "time.Time":
-		mapper = gencommons.ToString
+		mapper = genhelpers.ToString
 	}
 
 	return ResourceShowOutputAssertionModel{

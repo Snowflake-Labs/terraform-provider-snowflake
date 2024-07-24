@@ -1,7 +1,7 @@
 package gen
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -24,11 +24,11 @@ var allStructs = []SdkObjectDef{
 	},
 }
 
-func GetSdkObjectDetails() []gencommons.SdkObjectDetails {
-	allSdkObjectsDetails := make([]gencommons.SdkObjectDetails, len(allStructs))
+func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {
+	allSdkObjectsDetails := make([]genhelpers.SdkObjectDetails, len(allStructs))
 	for idx, d := range allStructs {
-		structDetails := gencommons.ExtractStructDetails(d.ObjectStruct)
-		allSdkObjectsDetails[idx] = gencommons.SdkObjectDetails{
+		structDetails := genhelpers.ExtractStructDetails(d.ObjectStruct)
+		allSdkObjectsDetails[idx] = genhelpers.SdkObjectDetails{
 			IdType:        d.IdType,
 			ObjectType:    d.ObjectType,
 			StructDetails: structDetails,

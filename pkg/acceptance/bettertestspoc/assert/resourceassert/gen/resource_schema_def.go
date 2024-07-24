@@ -1,7 +1,7 @@
 package gen
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -11,11 +11,11 @@ type ResourceSchemaDef struct {
 	schema map[string]*schema.Schema
 }
 
-func GetResourceSchemaDetails() []gencommons.ResourceSchemaDetails {
+func GetResourceSchemaDetails() []genhelpers.ResourceSchemaDetails {
 	allResourceSchemas := allResourceSchemaDefs
-	allResourceSchemasDetails := make([]gencommons.ResourceSchemaDetails, len(allResourceSchemas))
+	allResourceSchemasDetails := make([]genhelpers.ResourceSchemaDetails, len(allResourceSchemas))
 	for idx, s := range allResourceSchemas {
-		allResourceSchemasDetails[idx] = gencommons.ExtractResourceSchemaDetails(s.name, s.schema)
+		allResourceSchemasDetails[idx] = genhelpers.ExtractResourceSchemaDetails(s.name, s.schema)
 	}
 	return allResourceSchemasDetails
 }

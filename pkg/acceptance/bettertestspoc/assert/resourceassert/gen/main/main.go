@@ -4,11 +4,11 @@ package main
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert/gen"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		gen.GetResourceSchemaDetails,
 		gen.ModelFromResourceSchemaDetails,
 		getFilename,
@@ -17,6 +17,6 @@ func main() {
 		RunAndHandleOsReturn()
 }
 
-func getFilename(_ gencommons.ResourceSchemaDetails, model gen.ResourceAssertionsModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_resource" + "_gen.go"
+func getFilename(_ genhelpers.ResourceSchemaDetails, model gen.ResourceAssertionsModel) string {
+	return genhelpers.ToSnakeCase(model.Name) + "_resource" + "_gen.go"
 }

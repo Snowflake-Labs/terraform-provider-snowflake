@@ -46,7 +46,7 @@ func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) SnowflakeO
 		Fields:  fields,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: gencommons.AdditionalStandardImports(sdkObject.Fields),
+			AdditionalStandardImports: genhelpers.AdditionalStandardImports(sdkObject.Fields),
 		},
 	}
 }

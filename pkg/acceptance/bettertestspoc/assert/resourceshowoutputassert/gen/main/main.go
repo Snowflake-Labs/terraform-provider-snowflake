@@ -6,11 +6,11 @@ import (
 	objectassertgen "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert/gen"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/gen"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		objectassertgen.GetSdkObjectDetails,
 		gen.ModelFromSdkObjectDetails,
 		getFilename,
@@ -19,6 +19,6 @@ func main() {
 		RunAndHandleOsReturn()
 }
 
-func getFilename(_ gencommons.SdkObjectDetails, model gen.ResourceShowOutputAssertionsModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_show_output" + "_gen.go"
+func getFilename(_ genhelpers.SdkObjectDetails, model gen.ResourceShowOutputAssertionsModel) string {
+	return genhelpers.ToSnakeCase(model.Name) + "_show_output" + "_gen.go"
 }

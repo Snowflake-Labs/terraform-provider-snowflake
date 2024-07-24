@@ -5,7 +5,7 @@ import (
 
 	_ "embed"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 var (
@@ -15,17 +15,17 @@ var (
 
 	//go:embed templates/definition.tmpl
 	definitionTemplateContent string
-	DefinitionTemplate, _     = template.New("definitionTemplate").Funcs(gencommons.BuildTemplateFuncMap(
-		gencommons.FirstLetterLowercase,
-		gencommons.FirstLetter,
+	DefinitionTemplate, _     = template.New("definitionTemplate").Funcs(genhelpers.BuildTemplateFuncMap(
+		genhelpers.FirstLetterLowercase,
+		genhelpers.FirstLetter,
 	)).Parse(definitionTemplateContent)
 
 	//go:embed templates/specific_checks.tmpl
 	specificChecksTemplateContent string
-	SpecificChecksTemplate, _     = template.New("specificChecksTemplate").Funcs(gencommons.BuildTemplateFuncMap(
-		gencommons.FirstLetterLowercase,
-		gencommons.FirstLetter,
-		gencommons.SnakeCaseToCamel,
+	SpecificChecksTemplate, _     = template.New("specificChecksTemplate").Funcs(genhelpers.BuildTemplateFuncMap(
+		genhelpers.FirstLetterLowercase,
+		genhelpers.FirstLetter,
+		genhelpers.SnakeCaseToCamel,
 	)).Parse(specificChecksTemplateContent)
 
 	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, SpecificChecksTemplate}
