@@ -142,12 +142,10 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	values := map[string]any{
 		"name":     s.Name,
 		"database": s.DatabaseName,
+		"comment":  s.Comment,
 		// reset the options before reading back from the DB
 		"is_transient": false,
 		"is_managed":   false,
-	}
-	if s.Comment != nil {
-		values["comment"] = *s.Comment
 	}
 
 	for k, v := range values {
@@ -184,7 +182,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		newId := sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), d.Get("name").(string))
 
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			NewName: newId,
+			NewName: sdk.Pointer(newId),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating schema name on %v err = %w", d.Id(), err)

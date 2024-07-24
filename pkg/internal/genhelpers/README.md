@@ -6,7 +6,7 @@ Because we generate a bunch of code in the project, and we tend to copy-paste si
 
 The main building blocks of this package are:
 - `generator.go` defining `Generator[T ObjectNameProvider, M GenerationModel] struct` allowing to create new generators
-- `mapper_commons.go` defining mappers that can be reused in the generated objects
+- `mappers.go` defining mappers that can be reused in the generated objects
 - `struct_details_extractor.go` allowing to parse any struct to retrieve its information (for the later generation purposes)
 - `template_commons.go` containing template helper functions and the easy way to use them without providing their name everytime
 - `util.go` with a variety of util functions
@@ -35,9 +35,9 @@ To create a new generator:
 4. Add two entries to our Makefile:
    - first for a cleanup, e.g. `rm -f ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/*_gen.go`
    - second for a generation itself, e.g. `go generate ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/generate.go`
-5By default, generator support the following command line flags (invokable with e.g. `make generate-show-output-schemas SF_TF_GENERATOR_ARGS='--dry-run additional-logs'`)
+5. By default, generator support the following command line flags (invokable with e.g. `make generate-show-output-schemas SF_TF_GENERATOR_ARGS='--dry-run --verbose'`)
    - `--dry-run` allowing to print the generated content to the command line instead of saving it to files
-   - `--additional-logs` allowing to see the all the additional debug logs
+   - `--verbose` allowing to see the all the additional debug logs
 
 ### Next steps
 
@@ -59,3 +59,4 @@ Implementation improvements:
 - extract a common filter by name filter (TODO left in the `pkg/schemas/gen/main`)
 - describe and test all the template helpers (TODOs left in `templates_commons.go`)
 - test writing to file (TODO left in `util.go`)
+- use commons in the SDK generator

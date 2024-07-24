@@ -8,13 +8,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
 	"golang.org/x/exp/maps"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		getStructDetails,
 		gen.ModelFromStructDetails,
 		getFilename,
@@ -26,32 +25,32 @@ func main() {
 		RunAndHandleOsReturn()
 }
 
-func getStructDetails() []gencommons.StructDetails {
+func getStructDetails() []genhelpers.StructDetails {
 	allObjects := append(gen.SdkShowResultStructs, gen.AdditionalStructs...)
-	allStructsDetails := make([]gencommons.StructDetails, len(allObjects))
+	allStructsDetails := make([]genhelpers.StructDetails, len(allObjects))
 	for idx, s := range allObjects {
-		allStructsDetails[idx] = gencommons.ExtractStructDetails(s)
+		allStructsDetails[idx] = genhelpers.ExtractStructDetails(s)
 	}
 	return allStructsDetails
 }
 
-func getFilename(_ gencommons.StructDetails, model gen.ShowResultSchemaModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_gen.go"
+func getFilename(_ genhelpers.StructDetails, model gen.ShowResultSchemaModel) string {
+	return genhelpers.ToSnakeCase(model.Name) + "_gen.go"
 }
 
-func printAllStructsFields(allStructs []gencommons.StructDetails) {
+func printAllStructsFields(allStructs []genhelpers.StructDetails) {
 	for _, s := range allStructs {
 		fmt.Println("===========================")
 		fmt.Printf("%s\n", s.Name)
 		fmt.Println("===========================")
 		for _, field := range s.Fields {
-			fmt.Println(gencommons.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
+			fmt.Println(genhelpers.ColumnOutput(40, field.Name, field.ConcreteType, field.UnderlyingType))
 		}
 		fmt.Println()
 	}
 }
 
-func printUniqueTypes(allStructs []gencommons.StructDetails) {
+func printUniqueTypes(allStructs []genhelpers.StructDetails) {
 	uniqueTypes := make(map[string]bool)
 	for _, s := range allStructs {
 		for _, f := range s.Fields {
@@ -69,7 +68,7 @@ func printUniqueTypes(allStructs []gencommons.StructDetails) {
 }
 
 // TODO: move this filter to commons and consider extracting this as a command line param
-func filterByNameFromEnv(o gencommons.StructDetails) bool {
+func filterByNameFromEnv(o genhelpers.StructDetails) bool {
 	allowedObjectNamesString := os.Getenv("SF_TF_GENERATOR_EXT_ALLOWED_OBJECT_NAMES")
 	if allowedObjectNamesString == "" {
 		return true

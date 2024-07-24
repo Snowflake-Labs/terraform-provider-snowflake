@@ -4,11 +4,11 @@ package main
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		gen.GetAllSnowflakeObjectParameters,
 		gen.ModelFromSnowflakeObjectParameters,
 		getFilename,
@@ -18,5 +18,5 @@ func main() {
 }
 
 func getFilename(_ gen.SnowflakeObjectParameters, model gen.SnowflakeObjectParametersAssertionsModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
+	return genhelpers.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
 }

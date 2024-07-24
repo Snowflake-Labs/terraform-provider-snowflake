@@ -1,4 +1,4 @@
-package gencommons
+package genhelpers
 
 import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 

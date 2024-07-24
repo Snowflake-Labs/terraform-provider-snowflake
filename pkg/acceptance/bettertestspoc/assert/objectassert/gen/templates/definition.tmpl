@@ -3,19 +3,19 @@
 {{ $assertName := .Name | printf "%sAssert" }}
 {{ $nameLowerCase := FirstLetterLowercase .Name }}
 type {{ $assertName }} struct {
-*assert.SnowflakeObjectAssert[{{ .SdkType }}, {{ .IdType }}]
+    *assert.SnowflakeObjectAssert[{{ .SdkType }}, {{ .IdType }}]
 }
 
 func {{ .Name }}(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
-t.Helper()
-return &{{ $assertName }}{
-assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType{{ .Name }}, id, acc.TestClient().{{ .Name }}.Show),
-}
+    t.Helper()
+    return &{{ $assertName }}{
+        assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType{{ .Name }}, id, acc.TestClient().{{ .Name }}.Show),
+    }
 }
 
 func {{ .Name }}FromObject(t *testing.T, {{ $nameLowerCase }} *{{ .SdkType }}) *{{ $assertName }} {
-t.Helper()
-return &{{ $assertName }}{
-assert.NewSnowflakeObjectAssertWithObject(sdk.ObjectType{{ .Name }}, {{ $nameLowerCase }}.ID(), {{ $nameLowerCase }}),
-}
+    t.Helper()
+    return &{{ $assertName }}{
+        assert.NewSnowflakeObjectAssertWithObject(sdk.ObjectType{{ .Name }}, {{ $nameLowerCase }}.ID(), {{ $nameLowerCase }}),
+    }
 }

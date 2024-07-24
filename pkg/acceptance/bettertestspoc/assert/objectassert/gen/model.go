@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 // TODO [SNOW-1501905]: extract to commons?
@@ -28,10 +28,10 @@ type SnowflakeObjectFieldAssertion struct {
 	Name                  string
 	ConcreteType          string
 	IsOriginalTypePointer bool
-	Mapper                gencommons.Mapper
+	Mapper                genhelpers.Mapper
 }
 
-func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeObjectAssertionsModel {
+func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) SnowflakeObjectAssertionsModel {
 	name, _ := strings.CutPrefix(sdkObject.Name, "sdk.")
 	fields := make([]SnowflakeObjectFieldAssertion, len(sdkObject.Fields))
 	for idx, field := range sdkObject.Fields {
@@ -51,13 +51,13 @@ func ModelFromSdkObjectDetails(sdkObject gencommons.SdkObjectDetails) SnowflakeO
 	}
 }
 
-func MapToSnowflakeObjectFieldAssertion(field gencommons.Field) SnowflakeObjectFieldAssertion {
+func MapToSnowflakeObjectFieldAssertion(field genhelpers.Field) SnowflakeObjectFieldAssertion {
 	concreteTypeWithoutPtr, _ := strings.CutPrefix(field.ConcreteType, "*")
 
 	// TODO [SNOW-1501905]: handle other mappings if needed
-	mapper := gencommons.Identity
+	mapper := genhelpers.Identity
 	if concreteTypeWithoutPtr == "sdk.AccountObjectIdentifier" {
-		mapper = gencommons.Name
+		mapper = genhelpers.Name
 	}
 
 	return SnowflakeObjectFieldAssertion{

@@ -1,4 +1,4 @@
-package gencommons
+package genhelpers
 
 import (
 	"bytes"
