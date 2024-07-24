@@ -5,7 +5,7 @@ resource "snowflake_schema" "schema" {
 }
 
 # resource with all fields set
-resource "snowflake_database" "primary" {
+resource "snowflake_schema" "schema" {
   name                = "schema_name"
   database            = "database_name"
   with_managed_access = true
