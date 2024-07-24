@@ -2,17 +2,18 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -29,30 +30,27 @@ var schemaSchema = map[string]*schema.Schema{
 		Description: "The database in which to create the schema.",
 		ForceNew:    true,
 	},
-	"comment": {
-		Type:        schema.TypeString,
+	"with_managed_access": {
+		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "Specifies a comment for the schema.",
+		Description: "Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     false,
-		Description: "Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 		ForceNew:    true,
+		Description: "Specifies the schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 	},
-	"is_managed": {
+	strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)): {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     false,
-		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
+		Computed:    true,
+		Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role.",
 	},
-	"data_retention_days": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Default:      IntDefault,
-		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema. Default value for this field is set to -1, which is a fallback to use Snowflake default.",
-		ValidateFunc: validation.IntBetween(-1, 90),
+	"comment": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies a comment for the schema.",
 	},
 	"tag": tagReferenceSchema,
 }
@@ -60,237 +58,295 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateSchema,
-		Read:   ReadSchema,
-		Update: UpdateSchema,
-		Delete: DeleteSchema,
-		Schema: schemaSchema,
+		CreateContext: CreateContextSchema,
+		ReadContext:   ReadContextSchema,
+		UpdateContext: UpdateContextSchema,
+		DeleteContext: DeleteContextSchema,
+
+		CustomizeDiff: ParametersCustomDiff(
+			schemaParametersProvider,
+			parameter{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterExternalVolume, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterCatalog, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterLogLevel, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterTraceLevel, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeSchema},
+			parameter{sdk.AccountParameterPipeExecutionPaused, valueTypeBool, sdk.ParameterTypeSchema},
+		),
+
+		Schema: helpers.MergeMaps(schemaSchema, DatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-// CreateSchema implements schema.CreateFunc.
-func CreateSchema(d *schema.ResourceData, meta interface{}) error {
+func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Schema: id,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return warehouseParameters, nil
+}
+
+func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
+	id := sdk.NewDatabaseObjectIdentifier(database, name)
 
-	ctx := context.Background()
-
-	createReq := &sdk.CreateSchemaOptions{
-		Transient:         GetPropertyAsPointer[bool](d, "is_transient"),
-		WithManagedAccess: GetPropertyAsPointer[bool](d, "is_managed"),
-		Tag:               getPropertyTags(d, "tag"),
-		Comment:           GetPropertyAsPointer[string](d, "comment"),
-	}
-
-	dataRetentionTimeInDays := GetPropertyAsPointer[int](d, "data_retention_days")
-	if dataRetentionTimeInDays != nil && *dataRetentionTimeInDays != IntDefault {
-		createReq.DataRetentionTimeInDays = dataRetentionTimeInDays
-	}
-
-	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), createReq)
+	dataRetentionTimeInDays,
+		maxDataExtensionTimeInDays,
+		externalVolume,
+		catalog,
+		replaceInvalidCharacters,
+		defaultDDLCollation,
+		storageSerializationPolicy,
+		logLevel,
+		traceLevel,
+		suspendTaskAfterNumFailures,
+		taskAutoRetryAttempts,
+		userTaskManagedInitialWarehouseSize,
+		userTaskTimeoutMs,
+		userTaskMinimumTriggerIntervalInSeconds,
+		quotedIdentifiersIgnoreCase,
+		enableConsoleOutput,
+		err := GetAllDatabaseParameters(d)
 	if err != nil {
-		return fmt.Errorf("error creating schema %v err = %w", name, err)
+		return diag.FromErr(err)
 	}
 
+	opts := &sdk.CreateSchemaOptions{
+		Transient:                               GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
+		WithManagedAccess:                       GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "with_managed_access"),
+		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
+		ExternalVolume:                          externalVolume,
+		Catalog:                                 catalog,
+		ReplaceInvalidCharacters:                replaceInvalidCharacters,
+		DefaultDDLCollation:                     defaultDDLCollation,
+		StorageSerializationPolicy:              storageSerializationPolicy,
+		LogLevel:                                logLevel,
+		TraceLevel:                              traceLevel,
+		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
+		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
+		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
+		UserTaskTimeoutMs:                       userTaskTimeoutMs,
+		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
+		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
+		EnableConsoleOutput:                     enableConsoleOutput,
+		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if pipeExecutionPausedRaw := GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"); pipeExecutionPausedRaw != nil {
+		opts.PipeExecutionPaused = sdk.Pointer(*pipeExecutionPausedRaw)
+	}
+	if strings.EqualFold(strings.TrimSpace(name), "PUBLIC") {
+		opts.OrReplace = sdk.Pointer(true)
+	}
+	if err := client.Schemas.Create(ctx, id, opts); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(helpers.EncodeSnowflakeID(database, name))
 
-	return ReadSchema(d, meta)
+	return ReadContextSchema(ctx, d, meta)
 }
 
-// ReadSchema implements schema.ReadFunc.
-func ReadSchema(d *schema.ResourceData, meta interface{}) error {
+func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
-	database, err := client.Databases.ShowByID(ctx, id.DatabaseId())
+	_, err := client.Databases.ShowByID(ctx, id.DatabaseId())
 	if err != nil {
 		d.SetId("")
 	}
 
-	s, err := client.Schemas.ShowByID(ctx, id)
+	schema, err := client.Schemas.ShowByID(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	var retentionTime int64
-	// "retention_time" may sometimes be empty string instead of an integer
-	{
-		rt := s.RetentionTime
-		if rt == "" {
-			rt = "0"
-		}
-
-		retentionTime, err = strconv.ParseInt(rt, 10, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != IntDefault || int64(database.RetentionTime) != retentionTime {
-		if err := d.Set("data_retention_days", retentionTime); err != nil {
-			return err
-		}
-	}
-
-	values := map[string]any{
-		"name":     s.Name,
-		"database": s.DatabaseName,
-		"comment":  s.Comment,
-		// reset the options before reading back from the DB
-		"is_transient": false,
-		"is_managed":   false,
-	}
-
-	for k, v := range values {
-		if err := d.Set(k, v); err != nil {
-			return err
-		}
-	}
-
-	if opts := s.Options; opts != nil && *opts != "" {
-		for _, opt := range strings.Split(*opts, ", ") {
-			switch opt {
-			case "TRANSIENT":
-				if err := d.Set("is_transient", true); err != nil {
-					return err
-				}
-			case "MANAGED ACCESS":
-				if err := d.Set("is_managed", true); err != nil {
-					return err
-				}
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query secondary database. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
 			}
 		}
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", schema.Name); err != nil {
+		return diag.FromErr(err)
 	}
 
+	if err := d.Set("is_transient", schema.IsTransient()); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("with_managed_access", schema.IsManagedAccess()); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("database", schema.DatabaseName); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("comment", schema.Comment); err != nil {
+		return diag.FromErr(err)
+	}
+
+	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Schema: id,
+		},
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+		return diags
+	}
+	pipeExecutionPaused, err := collections.FindOne(databaseParameters, func(property *sdk.Parameter) bool {
+		return property.Key == "PIPE_EXECUTION_PAUSED"
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("failed to find schema PIPE_EXECUTION_PAUSED parameter, err = %w", err))
+	}
+	value, err := strconv.ParseBool((*pipeExecutionPaused).Value)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("pipe_execution_paused", value); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
-// UpdateSchema implements schema.UpdateFunc.
-func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
+func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	if d.HasChange("name") {
-		newId := sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), d.Get("name").(string))
-
+		newId := sdk.NewDatabaseObjectIdentifier(d.Get("database").(string), d.Get("name").(string))
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			NewName: sdk.Pointer(newId),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating schema name on %v err = %w", d.Id(), err)
+			return diag.FromErr(err)
 		}
-
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 		id = newId
 	}
 
-	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		if comment != "" {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				Set: &sdk.SchemaSet{
-					Comment: sdk.String(comment.(string)),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
-			}
-		} else {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				Unset: &sdk.SchemaUnset{
-					Comment: sdk.Bool(true),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("is_managed") {
-		managed := d.Get("is_managed")
+	if d.HasChange("with_managed_access") {
 		var err error
-		if managed.(bool) {
+		if _, ok := d.GetOk("with_managed_access"); ok {
 			err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				EnableManagedAccess: sdk.Bool(true),
+				EnableManagedAccess: sdk.Pointer(true),
 			})
 		} else {
 			err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				DisableManagedAccess: sdk.Bool(true),
+				DisableManagedAccess: sdk.Pointer(true),
 			})
 		}
 		if err != nil {
-			return fmt.Errorf("error changing management state on %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error changing management state on %v err = %w", d.Id(), err))
 		}
 	}
 
-	if d.HasChange("data_retention_days") {
-		if days := d.Get("data_retention_days"); days.(int) != IntDefault {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				Set: &sdk.SchemaSet{
-					DataRetentionTimeInDays: sdk.Int(days.(int)),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error setting data retention days on %v err = %w", d.Id(), err)
-			}
+	set := new(sdk.SchemaSet)
+	unset := new(sdk.SchemaUnset)
+
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		if len(comment) > 0 {
+			set.Comment = &comment
 		} else {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				Unset: &sdk.SchemaUnset{
-					DataRetentionTimeInDays: sdk.Bool(true),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("error unsetting data retention days on %v err = %w", d.Id(), err)
-			}
+			unset.Comment = sdk.Bool(true)
 		}
 	}
 
-	if d.HasChange("tag") {
-		unsetTags, setTags := GetTagsDiff(d, "tag")
-
-		if len(unsetTags) > 0 {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				UnsetTag: unsetTags,
-			})
-			if err != nil {
-				return fmt.Errorf("error occurred when dropping tags on %v, err = %w", d.Id(), err)
-			}
-		}
-
-		if len(setTags) > 0 {
-			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-				SetTag: setTags,
-			})
-			if err != nil {
-				return fmt.Errorf("error occurred when setting tags on %v, err = %w", d.Id(), err)
-			}
+	if updateParamDiags := HandleSchemaParametersChanges(d, set, unset); len(updateParamDiags) > 0 {
+		return updateParamDiags
+	}
+	if (*set != sdk.SchemaSet{}) {
+		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+			Set: set,
+		})
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadSchema(d, meta)
+	if (*unset != sdk.SchemaUnset{}) {
+		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+			Unset: unset,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return ReadContextSchema(ctx, d, meta)
 }
 
-// DeleteSchema implements schema.DeleteFunc.
-func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+func HandleSchemaParametersChanges(d *schema.ResourceData, set *sdk.SchemaSet, unset *sdk.SchemaUnset) diag.Diagnostics {
+	return JoinDiags(
+		handleValuePropertyChange[int](d, "data_retention_time_in_days", &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
+		handleValuePropertyChange[int](d, "max_data_extension_time_in_days", &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
+		handleValuePropertyChangeWithMapping[string](d, "external_volume", &set.ExternalVolume, &unset.ExternalVolume, func(value string) (sdk.AccountObjectIdentifier, error) {
+			return sdk.NewAccountObjectIdentifier(value), nil
+		}),
+		handleValuePropertyChangeWithMapping[string](d, "catalog", &set.Catalog, &unset.Catalog, func(value string) (sdk.AccountObjectIdentifier, error) {
+			return sdk.NewAccountObjectIdentifier(value), nil
+		}),
+		handleValuePropertyChange[bool](d, "pipe_execution_paused", &set.PipeExecutionPaused, &unset.PipeExecutionPaused),
+		handleValuePropertyChange[bool](d, "replace_invalid_characters", &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
+		handleValuePropertyChange[string](d, "default_ddl_collation", &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
+		handleValuePropertyChangeWithMapping[string](d, "storage_serialization_policy", &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleValuePropertyChangeWithMapping[string](d, "log_level", &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
+		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
+		handleValuePropertyChange[int](d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
+		handleValuePropertyChange[int](d, "task_auto_retry_attempts", &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
+		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleValuePropertyChange[int](d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
+		handleValuePropertyChange[int](d, "user_task_minimum_trigger_interval_in_seconds", &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
+		handleValuePropertyChange[bool](d, "quoted_identifiers_ignore_case", &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
+		handleValuePropertyChange[bool](d, "enable_console_output", &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
+	)
+}
 
-	err := client.Schemas.Drop(ctx, id, new(sdk.DropSchemaOptions))
+func DeleteContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	client := meta.(*provider.Context).Client
+
+	err := client.Schemas.Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Pointer(true)})
 	if err != nil {
-		return fmt.Errorf("error deleting schema %v err = %w", d.Id(), err)
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Error deleting schema",
+				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
+			},
+		}
 	}
 
 	d.SetId("")
-
 	return nil
 }
