@@ -6,18 +6,18 @@
 {{ $assertVar := FirstLetter $nameLowerCase }}
 {{- range .Fields }}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ TypeWithoutPointer .ConcreteType }}) *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(func(t *testing.T, o *{{ $sdkType }}) error {
-    t.Helper()
-    {{ if .IsOriginalTypePointer -}}
-        if o.{{ .Name }} == nil {
-        return fmt.Errorf("expected {{ CamelToWords .Name }} to have value; got: nil")
-        }
-    {{ end -}}
-    if {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }} != {{ RunMapper .Mapper "expected" }} {
-    return fmt.Errorf("expected {{ CamelToWords .Name }}: %v; got: %v", {{ RunMapper .Mapper "expected" }}, {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }})
-    }
-    return nil
-    })
-    return {{ $assertVar }}
+        {{ $assertVar }}.AddAssertion(func(t *testing.T, o *{{ $sdkType }}) error {
+            t.Helper()
+            {{ if .IsOriginalTypePointer -}}
+            if o.{{ .Name }} == nil {
+                return fmt.Errorf("expected {{ CamelToWords .Name }} to have value; got: nil")
+            }
+            {{ end -}}
+            if {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }} != {{ RunMapper .Mapper "expected" }} {
+                return fmt.Errorf("expected {{ CamelToWords .Name }}: %v; got: %v", {{ RunMapper .Mapper "expected" }}, {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }})
+            }
+            return nil
+        })
+        return {{ $assertVar }}
     }
 {{ end }}

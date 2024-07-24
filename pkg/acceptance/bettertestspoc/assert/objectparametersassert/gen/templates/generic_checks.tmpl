@@ -9,26 +9,26 @@
 //////////////////////////////
 
 func ({{ $assertVar }} *{{ $assertName }}) HasBoolParameterValue(parameterName {{ $sdkParameterName }}, expected bool) *{{ $assertName }} {
-{{ $assertVar }}.AddAssertion(assert.SnowflakeParameterBoolValueSet(parameterName, expected))
-return {{ $assertVar }}
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterBoolValueSet(parameterName, expected))
+    return {{ $assertVar }}
 }
 
 func ({{ $assertVar }} *{{ $assertName }}) HasIntParameterValue(parameterName {{ $sdkParameterName }}, expected int) *{{ $assertName }} {
-{{ $assertVar }}.AddAssertion(assert.SnowflakeParameterIntValueSet(parameterName, expected))
-return {{ $assertVar }}
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterIntValueSet(parameterName, expected))
+    return {{ $assertVar }}
 }
 
 func ({{ $assertVar }} *{{ $assertName }}) HasStringParameterValue(parameterName {{ $sdkParameterName }}, expected string) *{{ $assertName }} {
-{{ $assertVar }}.AddAssertion(assert.SnowflakeParameterValueSet(parameterName, expected))
-return {{ $assertVar }}
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterValueSet(parameterName, expected))
+    return {{ $assertVar }}
 }
 
 func ({{ $assertVar }} *{{ $assertName }}) HasDefaultParameterValue(parameterName {{ $sdkParameterName }}) *{{ $assertName }} {
-{{ $assertVar }}.AddAssertion(assert.SnowflakeParameterDefaultValueSet(parameterName))
-return {{ $assertVar }}
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterDefaultValueSet(parameterName))
+    return {{ $assertVar }}
 }
 
 func ({{ $assertVar }} *{{ $assertName }}) HasDefaultParameterValueOnLevel(parameterName {{ $sdkParameterName }}, parameterType sdk.ParameterType) *{{ $assertName }} {
-{{ $assertVar }}.AddAssertion(assert.SnowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
-return {{ $assertVar }}
+    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterDefaultValueOnLevelSet(parameterName, parameterType))
+    return {{ $assertVar }}
 }

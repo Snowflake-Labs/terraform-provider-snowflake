@@ -2,19 +2,19 @@
 
 {{ $assertName := .Name | printf "%sParametersAssert" }}
 type {{ $assertName }} struct {
-*assert.SnowflakeParametersAssert[{{ .IdType }}]
+    *assert.SnowflakeParametersAssert[{{ .IdType }}]
 }
 
 func {{ .Name }}Parameters(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
-t.Helper()
-return &{{ $assertName }}{
-assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectType{{ .Name }}, acc.TestClient().Parameter.Show{{ .Name }}Parameters),
-}
+    t.Helper()
+    return &{{ $assertName }}{
+        assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectType{{ .Name }}, acc.TestClient().Parameter.Show{{ .Name }}Parameters),
+    }
 }
 
 func {{ .Name }}ParametersPrefetched(t *testing.T, id {{ .IdType }}, parameters []*sdk.Parameter) *{{ $assertName }} {
-t.Helper()
-return &{{ $assertName }}{
-assert.NewSnowflakeParametersAssertWithParameters(id, sdk.ObjectType{{ .Name }}, parameters),
-}
+    t.Helper()
+    return &{{ $assertName }}{
+        assert.NewSnowflakeParametersAssertWithParameters(id, sdk.ObjectType{{ .Name }}, parameters),
+    }
 }

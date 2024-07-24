@@ -4,12 +4,12 @@ package main
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert/gen"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		getSdkObjectDetails,
 		gen.ModelFromSdkObjectDetails,
 		getFilename,
@@ -24,11 +24,11 @@ type SdkObjectDef struct {
 	objectStruct any
 }
 
-func getSdkObjectDetails() []gencommons.SdkObjectDetails {
-	allSdkObjectsDetails := make([]gencommons.SdkObjectDetails, len(allStructs))
+func getSdkObjectDetails() []genhelpers.SdkObjectDetails {
+	allSdkObjectsDetails := make([]genhelpers.SdkObjectDetails, len(allStructs))
 	for idx, d := range allStructs {
-		structDetails := gencommons.ExtractStructDetails(d.objectStruct)
-		allSdkObjectsDetails[idx] = gencommons.SdkObjectDetails{
+		structDetails := genhelpers.ExtractStructDetails(d.objectStruct)
+		allSdkObjectsDetails[idx] = genhelpers.SdkObjectDetails{
 			IdType:        d.idType,
 			ObjectType:    d.objectType,
 			StructDetails: structDetails,
@@ -37,8 +37,8 @@ func getSdkObjectDetails() []gencommons.SdkObjectDetails {
 	return allSdkObjectsDetails
 }
 
-func getFilename(_ gencommons.SdkObjectDetails, model gen.SnowflakeObjectAssertionsModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_snowflake" + "_gen.go"
+func getFilename(_ genhelpers.SdkObjectDetails, model gen.SnowflakeObjectAssertionsModel) string {
+	return genhelpers.ToSnakeCase(model.Name) + "_snowflake" + "_gen.go"
 }
 
 var allStructs = []SdkObjectDef{

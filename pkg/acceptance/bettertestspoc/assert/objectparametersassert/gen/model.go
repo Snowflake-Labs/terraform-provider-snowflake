@@ -44,6 +44,7 @@ func ModelFromSnowflakeObjectParameters(snowflakeObjectParameters SnowflakeObjec
 			assertionCreator = "SnowflakeParameterValueSet"
 		case strings.HasPrefix(p.ParameterType, "sdk."):
 			assertionCreator = "SnowflakeParameterStringUnderlyingValueSet"
+		// TODO [SNOW-1501905]: handle other types if needed
 		default:
 			assertionCreator = "SnowflakeParameterValueSet"
 		}

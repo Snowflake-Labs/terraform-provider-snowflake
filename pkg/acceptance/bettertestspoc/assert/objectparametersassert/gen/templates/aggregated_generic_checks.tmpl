@@ -13,15 +13,15 @@
 // - have a default value by comparing current value of the sdk.Parameter with its default
 // - have an expected level
 func ({{ $assertVar }} *{{ $assertName }}) HasAllDefaults() *{{ $assertName }} {
-return {{ $assertVar }}.
-{{- range $index, $item := .Parameters }}
-    HasDefaultParameterValueOnLevel({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, {{ .DefaultLevel }}){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
-{{- end }}
+    return {{ $assertVar }}.
+    {{- range $index, $item := .Parameters }}
+        HasDefaultParameterValueOnLevel({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, {{ .DefaultLevel }}){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
+    {{- end }}
 }
 
 func ({{ $assertVar }} *{{ $assertName }}) HasAllDefaultsExplicit() *{{ $assertName }} {
-return {{ $assertVar }}.
-{{- range $index, $item := .Parameters }}
-    HasDefault{{ SnakeCaseToCamel .Name }}ValueExplicit(){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
-{{- end }}
+    return {{ $assertVar }}.
+    {{- range $index, $item := .Parameters }}
+        HasDefault{{ SnakeCaseToCamel .Name }}ValueExplicit(){{ if not (IsLastItem $index $parametersCount) }}.{{ end }}
+    {{- end }}
 }

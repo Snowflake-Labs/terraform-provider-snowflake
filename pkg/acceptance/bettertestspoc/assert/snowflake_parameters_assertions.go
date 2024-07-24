@@ -30,7 +30,7 @@ type SnowflakeParametersAssert[I sdk.ObjectIdentifier] struct {
 type snowflakeParameterAssertionType int
 
 const (
-	snowflakeParameterAssertionTypeExpectedValue = iota
+	snowflakeParameterAssertionTypeExpectedValue snowflakeParameterAssertionType = iota
 	snowflakeParameterAssertionTypeDefaultValue
 	snowflakeParameterAssertionTypeDefaultValueOnLevel
 	snowflakeParameterAssertionTypeLevel

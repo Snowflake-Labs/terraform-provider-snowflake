@@ -10,8 +10,8 @@
 
 {{ range .Parameters -}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}(expected {{ .Type }}) *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
-    return {{ $assertVar }}
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
+        return {{ $assertVar }}
     }
 
 {{ end -}}
@@ -22,8 +22,8 @@
 
 {{ range .Parameters -}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}Level(expected sdk.ParameterType) *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterLevelSet({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
-    return {{ $assertVar }}
+        {{ $assertVar }}.AddAssertion(assert.SnowflakeParameterLevelSet({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }}, expected))
+        return {{ $assertVar }}
     }
 
 {{ end -}}
@@ -34,7 +34,7 @@
 
 {{ range .Parameters -}}
     func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}Value() *{{ $assertName }} {
-    return {{ $assertVar }}.HasDefaultParameterValue({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }})
+        return {{ $assertVar }}.HasDefaultParameterValue({{ $sdkParameterName }}{{ SnakeCaseToCamel .Name }})
     }
 
 {{ end -}}
@@ -45,7 +45,7 @@
 
 {{ range .Parameters -}}
     func ({{ $assertVar }} *{{ $assertName }}) HasDefault{{ SnakeCaseToCamel .Name }}ValueExplicit() *{{ $assertName }} {
-    return {{ $assertVar }}.Has{{ SnakeCaseToCamel .Name }}({{ .DefaultValue }})
+        return {{ $assertVar }}.Has{{ SnakeCaseToCamel .Name }}({{ .DefaultValue }})
     }
 
 {{ end }}

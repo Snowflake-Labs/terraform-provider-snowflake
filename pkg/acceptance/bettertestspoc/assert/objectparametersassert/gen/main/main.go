@@ -4,12 +4,12 @@ package main
 
 import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert/gen"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 func main() {
-	gencommons.NewGenerator(
+	genhelpers.NewGenerator(
 		getAllSnowflakeObjectParameters,
 		gen.ModelFromSnowflakeObjectParameters,
 		getFilename,
@@ -23,7 +23,7 @@ func getAllSnowflakeObjectParameters() []gen.SnowflakeObjectParameters {
 }
 
 func getFilename(_ gen.SnowflakeObjectParameters, model gen.SnowflakeObjectParametersAssertionsModel) string {
-	return gencommons.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
+	return genhelpers.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
 }
 
 // TODO [SNOW-1501905]: use SDK definition after parameters rework (+ preprocessing here)

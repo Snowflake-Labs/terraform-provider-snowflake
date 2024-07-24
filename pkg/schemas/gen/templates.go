@@ -5,7 +5,7 @@ import (
 
 	_ "embed"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 var (
@@ -19,9 +19,9 @@ var (
 
 	//go:embed templates/to_schema_mapper.tmpl
 	toSchemaMapperTemplateContent string
-	ToSchemaMapperTemplate, _     = template.New("toSchemaMapperTemplate").Funcs(gencommons.BuildTemplateFuncMap(
-		gencommons.FirstLetterLowercase,
-		gencommons.RunMapper,
+	ToSchemaMapperTemplate, _     = template.New("toSchemaMapperTemplate").Funcs(genhelpers.BuildTemplateFuncMap(
+		genhelpers.FirstLetterLowercase,
+		genhelpers.RunMapper,
 	)).Parse(toSchemaMapperTemplateContent)
 
 	AllTemplates = []*template.Template{PreambleTemplate, SchemaTemplate, ToSchemaMapperTemplate}

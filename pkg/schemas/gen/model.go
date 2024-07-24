@@ -3,7 +3,7 @@ package gen
 import (
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/gencommons"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 type ShowResultSchemaModel struct {
@@ -15,7 +15,7 @@ type ShowResultSchemaModel struct {
 func (m ShowResultSchemaModel) SomeFunc() {
 }
 
-func ModelFromStructDetails(sdkStruct gencommons.StructDetails) ShowResultSchemaModel {
+func ModelFromStructDetails(sdkStruct genhelpers.StructDetails) ShowResultSchemaModel {
 	name, _ := strings.CutPrefix(sdkStruct.Name, "sdk.")
 	schemaFields := make([]SchemaField, len(sdkStruct.Fields))
 	for idx, field := range sdkStruct.Fields {
