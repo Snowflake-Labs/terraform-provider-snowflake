@@ -9,6 +9,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
@@ -54,6 +55,22 @@ var schemaSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the schema.",
 	},
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW SCHEMA` for the given object.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowSchemaSchema,
+		},
+	},
+	ParametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN SCHEMA` for the given object.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowSchemaParametersSchema,
+		},
+	},
 }
 
 // Schema returns a pointer to the resource representing a schema.
@@ -67,8 +84,29 @@ func Schema() *schema.Resource {
 		DeleteContext: DeleteContextSchema,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChanged(ParametersAttributeName,
+				strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)),
+				strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)),
+				strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds)),
+				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
+				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
+				strings.ToLower(string(sdk.ObjectParameterExternalVolume)),
+				strings.ToLower(string(sdk.ObjectParameterCatalog)),
+				strings.ToLower(string(sdk.ObjectParameterReplaceInvalidCharacters)),
+				strings.ToLower(string(sdk.ObjectParameterDefaultDDLCollation)),
+				strings.ToLower(string(sdk.ObjectParameterStorageSerializationPolicy)),
+				strings.ToLower(string(sdk.ObjectParameterLogLevel)),
+				strings.ToLower(string(sdk.ObjectParameterTraceLevel)),
+				strings.ToLower(string(sdk.ObjectParameterSuspendTaskAfterNumFailures)),
+				strings.ToLower(string(sdk.ObjectParameterTaskAutoRetryAttempts)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskTimeoutMs)),
+				strings.ToLower(string(sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds)),
+				strings.ToLower(string(sdk.ObjectParameterQuotedIdentifiersIgnoreCase)),
+				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
+				strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)),
+			),
 			ParametersCustomDiff(
 				schemaParametersProvider,
 				parameter{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
@@ -226,7 +264,7 @@ func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diag.FromErr(err)
 	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+	schemaParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
 		In: &sdk.ParametersIn{
 			Schema: id,
 		},
@@ -235,10 +273,10 @@ func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+	if diags := HandleDatabaseParameterRead(d, schemaParameters); diags != nil {
 		return diags
 	}
-	pipeExecutionPaused, err := collections.FindOne(databaseParameters, func(property *sdk.Parameter) bool {
+	pipeExecutionPaused, err := collections.FindOne(schemaParameters, func(property *sdk.Parameter) bool {
 		return property.Key == "PIPE_EXECUTION_PAUSED"
 	})
 	if err != nil {
@@ -249,6 +287,14 @@ func ReadContextSchema(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diag.FromErr(err)
 	}
 	if err := d.Set("pipe_execution_paused", value); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SchemaToSchema(schema)}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ParametersAttributeName, []map[string]any{schemas.SchemaParametersToSchema(schemaParameters)}); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil

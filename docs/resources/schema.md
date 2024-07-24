@@ -81,6 +81,253 @@ resource "snowflake_database" "primary" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `parameters` (List of Object) Outputs the result of `SHOW PARAMETERS IN SCHEMA` for the given object. (see [below for nested schema](#nestedatt--parameters))
+- `show_output` (List of Object) Outputs the result of `SHOW SCHEMA` for the given object. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--parameters"></a>
+### Nested Schema for `parameters`
+
+Read-Only:
+
+- `catalog` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--catalog))
+- `data_retention_time_in_days` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--data_retention_time_in_days))
+- `default_ddl_collation` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--default_ddl_collation))
+- `enable_console_output` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--enable_console_output))
+- `external_volume` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--external_volume))
+- `log_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--log_level))
+- `max_data_extension_time_in_days` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--max_data_extension_time_in_days))
+- `pipe_execution_paused` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--pipe_execution_paused))
+- `quoted_identifiers_ignore_case` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--quoted_identifiers_ignore_case))
+- `replace_invalid_characters` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--replace_invalid_characters))
+- `storage_serialization_policy` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--storage_serialization_policy))
+- `suspend_task_after_num_failures` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--suspend_task_after_num_failures))
+- `task_auto_retry_attempts` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--task_auto_retry_attempts))
+- `trace_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--trace_level))
+- `user_task_managed_initial_warehouse_size` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--user_task_managed_initial_warehouse_size))
+- `user_task_minimum_trigger_interval_in_seconds` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--user_task_minimum_trigger_interval_in_seconds))
+- `user_task_timeout_ms` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--user_task_timeout_ms))
+
+<a id="nestedobjatt--parameters--catalog"></a>
+### Nested Schema for `parameters.catalog`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--data_retention_time_in_days"></a>
+### Nested Schema for `parameters.data_retention_time_in_days`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--default_ddl_collation"></a>
+### Nested Schema for `parameters.default_ddl_collation`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--enable_console_output"></a>
+### Nested Schema for `parameters.enable_console_output`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--external_volume"></a>
+### Nested Schema for `parameters.external_volume`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--log_level"></a>
+### Nested Schema for `parameters.log_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--max_data_extension_time_in_days"></a>
+### Nested Schema for `parameters.max_data_extension_time_in_days`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--pipe_execution_paused"></a>
+### Nested Schema for `parameters.pipe_execution_paused`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--quoted_identifiers_ignore_case"></a>
+### Nested Schema for `parameters.quoted_identifiers_ignore_case`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--replace_invalid_characters"></a>
+### Nested Schema for `parameters.replace_invalid_characters`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--storage_serialization_policy"></a>
+### Nested Schema for `parameters.storage_serialization_policy`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--suspend_task_after_num_failures"></a>
+### Nested Schema for `parameters.suspend_task_after_num_failures`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--task_auto_retry_attempts"></a>
+### Nested Schema for `parameters.task_auto_retry_attempts`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--trace_level"></a>
+### Nested Schema for `parameters.trace_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--user_task_managed_initial_warehouse_size"></a>
+### Nested Schema for `parameters.user_task_managed_initial_warehouse_size`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--user_task_minimum_trigger_interval_in_seconds"></a>
+### Nested Schema for `parameters.user_task_minimum_trigger_interval_in_seconds`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--user_task_timeout_ms"></a>
+### Nested Schema for `parameters.user_task_timeout_ms`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `database_name` (String)
+- `dropped_on` (String)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `name` (String)
+- `options` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `retention_time` (String)
 
 ## Import
 
