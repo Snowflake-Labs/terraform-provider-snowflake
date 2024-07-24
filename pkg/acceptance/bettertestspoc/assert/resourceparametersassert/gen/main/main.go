@@ -20,5 +20,5 @@ func main() {
 }
 
 func getFilename(_ objectparametersassertgen.SnowflakeObjectParameters, model gen.ResourceParametersAssertionsModel) string {
-	return genhelpers.ToSnakeCase(model.Name) + "_parameters_snowflake" + "_gen.go"
+	return genhelpers.ToSnakeCase(model.Name) + "_resource_parameters" + "_gen.go"
 }
