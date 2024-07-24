@@ -6,7 +6,7 @@ across different versions.
 
 ## v0.93.0 ➞ v0.94.0
 
-### *(breaking change)* refactored snowflake_streamlits datasource
+### *(breaking change)* refactored snowflake_schemas datasource
 Changes:
 - `database` is removed and can be specified inside `in` field.
 - `like`, `in`, `starts_with`, and `limit` fields enable filtering.
