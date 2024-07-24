@@ -11,7 +11,107 @@ It contains the following packages:
 - `config` - the new `ResourceModel` abstraction resides here. It provides models for objects and the builder methods allowing better config preparation in the acceptance tests.
 It aims to be more readable than using `Config:` with hardcoded string or `ConfigFile:` for file that is not directly reachable from the test body. Also, it should be easier to reuse the models and prepare convenience extension methods. The models are already generated.
 
-## Usage
+## How it works
+### Adding new resource assertions
+Resource assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allStructs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
+- to add custom (not generated assertions) create file `abc_resource_ext.go` in the `assert/resourceassert` package. Example would be:
+```go
+func (w *WarehouseResourceAssert) HasDefaultMaxConcurrencyLevel() *WarehouseResourceAssert {
+    w.AddAssertion(assert.ValueSet("max_concurrency_level", "8"))
+    return w
+}
+```
+
+### Adding new resource show output assertions
+Resource show output assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allResourceSchemaDefs` slice in the `assert/objectassert/gen/sdk_object_def.go`
+- to add custom (not generated assertions) create file `abc_show_output_ext.go` in the `assert/resourceshowoutputassert` package. Example would be:
+```go
+func (u *UserShowOutputAssert) HasNameAndLoginName(expected string) *UserShowOutputAssert {
+	return u.
+		HasName(expected).
+		HasLoginName(expected)
+}
+```
+
+### Adding new resource parameters assertions
+Resource parameters assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allObjectsParameters` slice in the `assert/objectparametersassert/gen/object_parameters_def.go`
+- to add custom (not generated assertions) create file `warehouse_resource_parameters_ext.go` in the `assert/resourceparametersassert` package. Example would be:
+```go
+func (w *WarehouseResourceParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseResourceParametersAssert {
+	return w.
+		HasMaxConcurrencyLevel(8).
+		HasMaxConcurrencyLevelLevel("")
+}
+```
+
+### Adding new Snowflake object assertions
+Snowflake object assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allStructs` slice in the `assert/objectassert/gen/main/main.go`
+- to add custom (not generated assertions) create file `abc_snowflake_ext.go` in the `objectassert` package. Example would be:
+```go
+func (w *WarehouseAssert) HasStateOneOf(expected ...sdk.WarehouseState) *WarehouseAssert {
+    w.assertions = append(w.assertions, func(t *testing.T, o *sdk.Warehouse) error {
+        t.Helper()
+        if !slices.Contains(expected, o.State) {
+            return fmt.Errorf("expected state one of: %v; got: %v", expected, string(o.State))
+        }
+        return nil
+    })
+    return w
+}
+```
+
+### Adding new Snowflake object parameters assertions
+Snowflake object parameters assertions can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allObjectsParameters` slice in the `assert/objectparametersassert/gen/main/main.go`
+- make sure that test helper method `acc.TestClient().Parameter.ShowAbcParameters` exists in `/pkg/acceptance/helpers/parameter_client.go`
+- to add custom (not generated) assertions create file `abc_parameters_snowflake_ext.go` in the `objectparametersassert` package. Example would be:
+```go
+func (w *WarehouseParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseParametersAssert {
+    return w.
+        HasMaxConcurrencyLevel(8).
+        HasMaxConcurrencyLevelLevel("")
+}
+```
+
+### Adding new models
+Resource config model builders can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allResourceSchemaDefs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
+- to add custom (not generated) config builder methods create file `warehouse_model_ext` in the `config/model` package. Example would be:
+```go
+func BasicWarehouseModel(
+	name string,
+	comment string,
+) *WarehouseModel {
+	return WarehouseWithDefaultMeta(name).WithComment(comment)
+}
+
+func (w *WarehouseModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *WarehouseModel {
+	return w.WithWarehouseSize(string(warehouseSize))
+}
+```
+
+### Running the generators
+Each of the above assertion types/config models has its own generator and cleanup entry in our Makefile.
+You can generate config models with:
+```shell
+  make clean-resource-model-builder generate-resource-model-builder
+```
+
+You can use cli flags:
+```shell
+  make clean-resource-model-builder generate-resource-model-builder SF_TF_GENERATOR_ARGS='--dry-run --verbose'
+```
+
+To clean/generate all from this package run
+```shell
+  make clean-all-assertions-and-config-models generate-all-assertions-and-config-models
+```
+
+### Example usage in practice
 You can check the current example usage in `TestAcc_Warehouse_BasicFlows` and the `create: complete` inside `TestInt_Warehouses`. To see the output after invalid assertions:
 - add the following to the first step of `TestAcc_Warehouse_BasicFlows`
 ```go
@@ -193,88 +293,6 @@ it will result in:
         	            	object WAREHOUSE["VKSENEIT_535F314F_6549_348F_370E_AB430EE4BC7B"] assertion [12/13]: failed with error: expected enable query acceleration: false; got: true
         	            	object WAREHOUSE["VKSENEIT_535F314F_6549_348F_370E_AB430EE4BC7B"] assertion [13/13]: failed with error: expected query acceleration max scale factor: 12; got: 90
         	Test:       	TestInt_Warehouses/create:_complete
-```
-
-## Adding new resource assertions
-Resource assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allStructs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
-- to add custom (not generated assertions) create file `abc_resource_ext.go` in the `assert/resourceassert` package. Example would be:
-```go
-func (w *WarehouseResourceAssert) HasDefaultMaxConcurrencyLevel() *WarehouseResourceAssert {
-    w.AddAssertion(assert.ValueSet("max_concurrency_level", "8"))
-    return w
-}
-```
-
-## Adding new resource show output assertions
-Resource show output assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allResourceSchemaDefs` slice in the `assert/objectassert/gen/sdk_object_def.go`
-- to add custom (not generated assertions) create file `abc_show_output_ext.go` in the `assert/resourceshowoutputassert` package. Example would be:
-```go
-func (u *UserShowOutputAssert) HasNameAndLoginName(expected string) *UserShowOutputAssert {
-	return u.
-		HasName(expected).
-		HasLoginName(expected)
-}
-```
-
-## Adding new resource parameters assertions
-Resource parameters assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allObjectsParameters` slice in the `assert/objectparametersassert/gen/object_parameters_def.go`
-- to add custom (not generated assertions) create file `warehouse_resource_parameters_ext.go` in the `assert/resourceparametersassert` package. Example would be:
-```go
-func (w *WarehouseResourceParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseResourceParametersAssert {
-	return w.
-		HasMaxConcurrencyLevel(8).
-		HasMaxConcurrencyLevelLevel("")
-}
-```
-
-## Adding new Snowflake object assertions
-Snowflake object assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allStructs` slice in the `assert/objectassert/gen/main/main.go`
-- to add custom (not generated assertions) create file `abc_snowflake_ext.go` in the `objectassert` package. Example would be:
-```go
-func (w *WarehouseAssert) HasStateOneOf(expected ...sdk.WarehouseState) *WarehouseAssert {
-    w.assertions = append(w.assertions, func(t *testing.T, o *sdk.Warehouse) error {
-        t.Helper()
-        if !slices.Contains(expected, o.State) {
-            return fmt.Errorf("expected state one of: %v; got: %v", expected, string(o.State))
-        }
-        return nil
-    })
-    return w
-}
-```
-
-## Adding new Snowflake object parameters assertions
-Snowflake object parameters assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allObjectsParameters` slice in the `assert/objectparametersassert/gen/main/main.go`
-- make sure that test helper method `acc.TestClient().Parameter.ShowAbcParameters` exists in `/pkg/acceptance/helpers/parameter_client.go`
-- to add custom (not generated) assertions create file `abc_parameters_snowflake_ext.go` in the `objectparametersassert` package. Example would be:
-```go
-func (w *WarehouseParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehouseParametersAssert {
-    return w.
-        HasMaxConcurrencyLevel(8).
-        HasMaxConcurrencyLevelLevel("")
-}
-```
-
-## Adding new models
-Resource config model builders can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allResourceSchemaDefs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
-- to add custom (not generated) config builder methods create file `warehouse_model_ext` in the `config/model` package. Example would be:
-```go
-func BasicWarehouseModel(
-	name string,
-	comment string,
-) *WarehouseModel {
-	return WarehouseWithDefaultMeta(name).WithComment(comment)
-}
-
-func (w *WarehouseModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *WarehouseModel {
-	return w.WithWarehouseSize(string(warehouseSize))
-}
 ```
 
 ## Known limitations/planned improvements

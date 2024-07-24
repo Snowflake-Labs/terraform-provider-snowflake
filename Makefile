@@ -159,8 +159,8 @@ generate-resource-model-builders: ## Generate resource model builders
 clean-resource-model-builder: ## Clean resource model builders
 	rm -f ./pkg/acceptance/bettertestspoc/config/model/*_gen.go
 
-clean-all-assertions: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions ## clean all generated assertions
+clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builder ## clean all generated assertions and config models
 
-generate-all-assertions: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions ## generate all assertions
+generate-all-assertions-and-config-models: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions generate-resource-model-builders ## generate all assertions and config models
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
