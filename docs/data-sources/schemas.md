@@ -392,6 +392,7 @@ Read-Only:
 - `comment` (String)
 - `created_on` (String)
 - `database_name` (String)
+- `dropped_on` (String)
 - `is_current` (Boolean)
 - `is_default` (Boolean)
 - `name` (String)
