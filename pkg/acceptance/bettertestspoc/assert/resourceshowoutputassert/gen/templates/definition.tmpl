@@ -8,21 +8,21 @@ type {{ $assertName }} struct {
 }
 
 func {{ .Name }}ShowOutput(t *testing.T, name string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-{{ $assertVar }} := {{ $assertName }}{
-ResourceAssert: assert.NewResourceAssert(name, "show_output"),
-}
-{{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
-return &{{ $assertVar }}
+    {{ $assertVar }} := {{ $assertName }}{
+        ResourceAssert: assert.NewResourceAssert(name, "show_output"),
+    }
+    {{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
+    return &{{ $assertVar }}
 }
 
 func Imported{{ .Name }}ShowOutput(t *testing.T, id string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-{{ $assertVar }} := {{ $assertName }}{
-ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
-}
-{{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
-return &{{ $assertVar }}
+    {{ $assertVar }} := {{ $assertName }}{
+        ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
+    }
+    {{ $assertVar }}.AddAssertion(assert.ValueSet("show_output.#", "1"))
+    return &{{ $assertVar }}
 }

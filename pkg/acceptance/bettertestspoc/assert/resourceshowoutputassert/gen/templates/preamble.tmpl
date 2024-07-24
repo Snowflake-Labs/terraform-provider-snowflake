@@ -5,13 +5,13 @@
 package {{ .PackageName }}
 
 import (
-"testing"
-{{- range .AdditionalStandardImports }}
-"{{- . }}"
-{{- end }}
+    "testing"
+    {{- range .AdditionalStandardImports }}
+    "{{- . }}"
+    {{- end }}
 
-"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+    "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+    "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // to ensure sdk package is used

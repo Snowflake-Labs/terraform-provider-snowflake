@@ -4,25 +4,25 @@
 {{- $nameLowerCase := FirstLetterLowercase .Name -}}
 {{- $assertVar := FirstLetter $nameLowerCase }}
 type {{ $assertName }} struct {
-*assert.ResourceAssert
+    *assert.ResourceAssert
 }
 
 func {{ .Name }}ResourceParameters(t *testing.T, name string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-{{ $assertVar }} := {{ $assertName }}{
-ResourceAssert: assert.NewResourceAssert(name, "parameters"),
-}
-{{ $assertVar }}.AddAssertion(assert.ValueSet("parameters.#", "1"))
-return &{{ $assertVar }}
+    {{ $assertVar }} := {{ $assertName }}{
+        ResourceAssert: assert.NewResourceAssert(name, "parameters"),
+    }
+    {{ $assertVar }}.AddAssertion(assert.ValueSet("parameters.#", "1"))
+    return &{{ $assertVar }}
 }
 
 func Imported{{ .Name }}ResourceParameters(t *testing.T, id string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-{{ $assertVar }} := {{ $assertName }}{
-ResourceAssert: assert.NewImportedResourceAssert(id, "imported parameters"),
-}
-{{ $assertVar }}.AddAssertion(assert.ValueSet("parameters.#", "1"))
-return &{{ $assertVar }}
+    {{ $assertVar }} := {{ $assertName }}{
+        ResourceAssert: assert.NewImportedResourceAssert(id, "imported parameters"),
+    }
+    {{ $assertVar }}.AddAssertion(assert.ValueSet("parameters.#", "1"))
+    return &{{ $assertVar }}
 }

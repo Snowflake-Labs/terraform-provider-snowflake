@@ -9,8 +9,8 @@
 
 {{ range .Attributes -}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
-    return {{ $assertVar }}
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
+        return {{ $assertVar }}
     }
 
 {{ end -}}

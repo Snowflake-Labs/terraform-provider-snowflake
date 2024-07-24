@@ -2,21 +2,21 @@
 
 {{- $assertName := .Name | printf "%sResourceAssert" }}
 type {{ $assertName }} struct {
-*assert.ResourceAssert
+    *assert.ResourceAssert
 }
 
 func {{ .Name }}Resource(t *testing.T, name string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-return &{{ $assertName }}{
-ResourceAssert: assert.NewResourceAssert(name, "resource"),
-}
+    return &{{ $assertName }}{
+        ResourceAssert: assert.NewResourceAssert(name, "resource"),
+    }
 }
 
 func Imported{{ .Name }}Resource(t *testing.T, id string) *{{ $assertName }} {
-t.Helper()
+    t.Helper()
 
-return &{{ $assertName }}{
-ResourceAssert: assert.NewImportedResourceAssert(id, "imported resource"),
-}
+    return &{{ $assertName }}{
+        ResourceAssert: assert.NewImportedResourceAssert(id, "imported resource"),
+    }
 }
