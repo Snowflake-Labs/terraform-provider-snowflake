@@ -85,7 +85,7 @@ func TestInt_Users(t *testing.T) {
 			HasQueryTag("some_tag").
 			HasQuotedIdentifiersIgnoreCase(true).
 			HasRowsPerResultset(2).
-			HasS3StageVpceDnsName("vpce-some_dns-vpce.amazonaws.com").
+			HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
 			HasSearchPath("$public, $current").
 			HasSimulatedDataSharingConsumer("some_consumer").
 			HasStatementQueuedTimeoutInSeconds(10).
@@ -485,7 +485,7 @@ func TestInt_Users(t *testing.T) {
 				QueryTag:                                 sdk.String("some_tag"),
 				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
 				RowsPerResultset:                         sdk.Int(2),
-				S3StageVpceDnsName:                       sdk.String("vpce-some_dns-vpce.amazonaws.com"),
+				S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
 				SearchPath:                               sdk.String("$public, $current"),
 				SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
 				StatementQueuedTimeoutInSeconds:          sdk.Int(10),
