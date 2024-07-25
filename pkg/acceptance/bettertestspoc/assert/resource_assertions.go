@@ -3,10 +3,12 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -22,7 +24,7 @@ type ResourceAssert struct {
 	name       string
 	id         string
 	prefix     string
-	assertions []resourceAssertion
+	assertions []ResourceAssertion
 }
 
 // NewResourceAssert creates a ResourceAssert where the resource name should be used as a key for assertions.
@@ -30,7 +32,7 @@ func NewResourceAssert(name string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		name:       name,
 		prefix:     prefix,
-		assertions: make([]resourceAssertion, 0),
+		assertions: make([]ResourceAssertion, 0),
 	}
 }
 
@@ -39,7 +41,7 @@ func NewImportedResourceAssert(id string, prefix string) *ResourceAssert {
 	return &ResourceAssert{
 		id:         id,
 		prefix:     prefix,
-		assertions: make([]resourceAssertion, 0),
+		assertions: make([]ResourceAssertion, 0),
 	}
 }
 
@@ -50,24 +52,44 @@ const (
 	resourceAssertionTypeValueNotSet = "VALUE_NOT_SET"
 )
 
-type resourceAssertion struct {
+type ResourceAssertion struct {
 	fieldName             string
 	expectedValue         string
 	resourceAssertionType resourceAssertionType
 }
 
-func valueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func (r *ResourceAssert) AddAssertion(assertion ResourceAssertion) {
+	r.assertions = append(r.assertions, assertion)
 }
 
-func valueNotSet(fieldName string) resourceAssertion {
-	return resourceAssertion{fieldName: fieldName, resourceAssertionType: resourceAssertionTypeValueNotSet}
+func ValueSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+}
+
+func ValueNotSet(fieldName string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, resourceAssertionType: resourceAssertionTypeValueNotSet}
 }
 
 const showOutputPrefix = "show_output.0."
 
-func showOutputValueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ResourceShowOutputBoolValueSet(fieldName string, expected bool) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.FormatBool(expected))
+}
+
+func ResourceShowOutputIntValueSet(fieldName string, expected int) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.Itoa(expected))
+}
+
+func ResourceShowOutputFloatValueSet(fieldName string, expected float64) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, strconv.FormatFloat(expected, 'f', -1, 64))
+}
+
+func ResourceShowOutputStringUnderlyingValueSet[U ~string](fieldName string, expected U) ResourceAssertion {
+	return ResourceShowOutputValueSet(fieldName, string(expected))
+}
+
+func ResourceShowOutputValueSet(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
 const (
@@ -76,12 +98,24 @@ const (
 	parametersLevelSuffix = ".0.level"
 )
 
-func parameterValueSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ResourceParameterBoolValueSet[T ~string](parameterName T, expected bool) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, strconv.FormatBool(expected))
 }
 
-func parameterLevelSet(fieldName string, expected string) resourceAssertion {
-	return resourceAssertion{fieldName: parametersPrefix + fieldName + parametersLevelSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+func ResourceParameterIntValueSet[T ~string](parameterName T, expected int) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, strconv.Itoa(expected))
+}
+
+func ResourceParameterStringUnderlyingValueSet[T ~string, U ~string](parameterName T, expected U) ResourceAssertion {
+	return ResourceParameterValueSet(parameterName, string(expected))
+}
+
+func ResourceParameterValueSet[T ~string](parameterName T, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + strings.ToLower(string(parameterName)) + parametersValueSuffix, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+}
+
+func ResourceParameterLevelSet[T ~string](parameterName T, parameterType sdk.ParameterType) ResourceAssertion {
+	return ResourceAssertion{fieldName: parametersPrefix + strings.ToLower(string(parameterName)) + parametersLevelSuffix, expectedValue: string(parameterType), resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new resource assertions.

@@ -27,6 +27,10 @@ func TypeWithoutPointer(t string) string {
 	return without
 }
 
+func SnakeCase(name string) string {
+	return ToSnakeCase(name)
+}
+
 func CamelToWords(camel string) string {
 	return strings.ReplaceAll(ToSnakeCase(camel), "_", " ")
 }
