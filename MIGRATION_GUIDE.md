@@ -79,6 +79,10 @@ Added a new datasource enabling querying and filtering network policies. Notes:
   The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
+### *(fix)* snowflake_warehouse resource
+
+Because of the issue [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948), we are relaxing the validations for the Snowflake parameter values. Read more in [CHANGES_BEFORE_V1.md](v1-preparations/CHANGES_BEFORE_V1.md#validations).
+
 ## v0.92.0 ➞ v0.93.0
 
 ### general changes

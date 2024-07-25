@@ -665,12 +665,12 @@ func TestAcc_Warehouse_Validations(t *testing.T) {
 				ExpectError: regexp.MustCompile("invalid warehouse size: SMALLa"),
 			},
 			{
-				Config:      warehouseConfigWithMaxClusterCount(id.Name(), 100),
-				ExpectError: regexp.MustCompile(`expected max_cluster_count to be in the range \(1 - 10\), got 100`),
+				Config:      warehouseConfigWithMaxClusterCount(id.Name(), 0),
+				ExpectError: regexp.MustCompile(`expected max_cluster_count to be at least \(1\), got 0`),
 			},
 			{
-				Config:      warehouseConfigWithMinClusterCount(id.Name(), 100),
-				ExpectError: regexp.MustCompile(`expected min_cluster_count to be in the range \(1 - 10\), got 100`),
+				Config:      warehouseConfigWithMinClusterCount(id.Name(), 0),
+				ExpectError: regexp.MustCompile(`expected min_cluster_count to be at least \(1\), got 0`),
 			},
 			{
 				Config:      warehouseConfigWithScalingPolicy(id.Name(), "unknown"),
