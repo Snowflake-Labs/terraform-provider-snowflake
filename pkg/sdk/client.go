@@ -39,23 +39,23 @@ type Client struct {
 	ReplicationFunctions ReplicationFunctions
 
 	// DDL Commands
-	Accounts                 Accounts
-	Alerts                   Alerts
-	ApiIntegrations          ApiIntegrations
-	ApplicationPackages      ApplicationPackages
-	ApplicationRoles         ApplicationRoles
-	Applications             Applications
-	Comments                 Comments
-	CortexSearchServices     CortexSearchServices
-	DatabaseRoles            DatabaseRoles
-	Databases                Databases
-	DynamicTables            DynamicTables
-	ExternalFunctions        ExternalFunctions
-	ExternalTables           ExternalTables
-	EventTables              EventTables
-	FailoverGroups           FailoverGroups
-	FileFormats              FileFormats
-	Functions                Functions
+	Accounts             Accounts
+	Alerts               Alerts
+	ApiIntegrations      ApiIntegrations
+	ApplicationPackages  ApplicationPackages
+	ApplicationRoles     ApplicationRoles
+	Applications         Applications
+	Comments             Comments
+	CortexSearchServices CortexSearchServices
+	DatabaseRoles        DatabaseRoles
+	Databases            Databases
+	DynamicTables        DynamicTables
+	ExternalFunctions    ExternalFunctions
+	ExternalTables       ExternalTables
+	EventTables          EventTables
+	FailoverGroups       FailoverGroups
+	FileFormats          FileFormats
+	//Functions                Functions
 	Grants                   Grants
 	ManagedAccounts          ManagedAccounts
 	MaskingPolicies          MaskingPolicies
@@ -211,7 +211,7 @@ func (c *Client) initialize() {
 	c.EventTables = &eventTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
-	c.Functions = &functions{client: c}
+	//c.Functions = &functions{client: c}
 	c.Grants = &grants{client: c}
 	c.ManagedAccounts = &managedAccounts{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}

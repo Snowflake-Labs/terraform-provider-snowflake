@@ -19,7 +19,7 @@ type CreateForJavaFunctionRequest struct {
 	Temporary                  *bool
 	Secure                     *bool
 	IfNotExists                *bool
-	name                       SchemaObjectIdentifier // required
+	name                       SchemaObjectIdentifierWithArguments // required
 	Arguments                  []FunctionArgumentRequest
 	CopyGrants                 *bool
 	Returns                    FunctionReturnsRequest // required
@@ -73,7 +73,7 @@ type CreateForJavascriptFunctionRequest struct {
 	OrReplace             *bool
 	Temporary             *bool
 	Secure                *bool
-	name                  SchemaObjectIdentifier // required
+	name                  SchemaObjectIdentifierWithArguments // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	Returns               FunctionReturnsRequest // required
@@ -89,7 +89,7 @@ type CreateForPythonFunctionRequest struct {
 	Temporary                  *bool
 	Secure                     *bool
 	IfNotExists                *bool
-	name                       SchemaObjectIdentifier // required
+	name                       SchemaObjectIdentifierWithArguments // required
 	Arguments                  []FunctionArgumentRequest
 	CopyGrants                 *bool
 	Returns                    FunctionReturnsRequest // required
@@ -111,7 +111,7 @@ type CreateForScalaFunctionRequest struct {
 	Temporary             *bool
 	Secure                *bool
 	IfNotExists           *bool
-	name                  SchemaObjectIdentifier // required
+	name                  SchemaObjectIdentifierWithArguments // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	ResultDataType        DataType // required
@@ -131,7 +131,7 @@ type CreateForSQLFunctionRequest struct {
 	OrReplace             *bool
 	Temporary             *bool
 	Secure                *bool
-	name                  SchemaObjectIdentifier // required
+	name                  SchemaObjectIdentifierWithArguments // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	Returns               FunctionReturnsRequest // required
@@ -144,8 +144,8 @@ type CreateForSQLFunctionRequest struct {
 
 type AlterFunctionRequest struct {
 	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name              SchemaObjectIdentifierWithArguments // required
+	ArgumentDataTypes []DataType                          // required
 	RenameTo          *SchemaObjectIdentifier
 	SetComment        *string
 	SetLogLevel       *string
@@ -161,8 +161,8 @@ type AlterFunctionRequest struct {
 
 type DropFunctionRequest struct {
 	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name              SchemaObjectIdentifierWithArguments // required
+	ArgumentDataTypes []DataType                          // required
 }
 
 type ShowFunctionRequest struct {
@@ -171,6 +171,6 @@ type ShowFunctionRequest struct {
 }
 
 type DescribeFunctionRequest struct {
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name              SchemaObjectIdentifierWithArguments // required
+	ArgumentDataTypes []DataType                          // required
 }

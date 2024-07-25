@@ -232,7 +232,6 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	arguments    []DataType
 }
 
 func NewSchemaObjectIdentifierInSchema(schemaId DatabaseObjectIdentifier, name string) SchemaObjectIdentifier {
@@ -247,38 +246,12 @@ func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObje
 	}
 }
 
-func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, arguments []DataType) SchemaObjectIdentifier {
-	return SchemaObjectIdentifier{
-		databaseName: strings.Trim(databaseName, `"`),
-		schemaName:   strings.Trim(schemaName, `"`),
-		name:         strings.Trim(name, `"`),
-		arguments:    arguments,
-	}
-}
-
 func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	id := SchemaObjectIdentifier{}
 	id.databaseName = strings.Trim(parts[0], `"`)
 	id.schemaName = strings.Trim(parts[1], `"`)
-
-	// this is either a function or procedure
-	if strings.HasSuffix(parts[2], ")") {
-		idx := strings.LastIndex(parts[2], "(")
-		id.name = strings.Trim(parts[2][:idx], `"`)
-		strArgs := strings.Split(strings.Trim(parts[2][idx+1:], `)`), ",")
-		id.arguments = make([]DataType, 0)
-		for _, arg := range strArgs {
-			trimmedArg := strings.TrimSpace(strings.Trim(arg, `"`))
-			if trimmedArg == "" {
-				continue
-			}
-			dt, _ := ToDataType(trimmedArg)
-			id.arguments = append(id.arguments, dt)
-		}
-	} else { // this is every other kind of schema object
-		id.name = strings.Trim(parts[2], `"`)
-	}
+	id.name = strings.Trim(parts[2], `"`)
 	return id
 }
 
@@ -294,10 +267,6 @@ func (i SchemaObjectIdentifier) Name() string {
 	return i.name
 }
 
-func (i SchemaObjectIdentifier) Arguments() []DataType {
-	return i.arguments
-}
-
 func (i SchemaObjectIdentifier) SchemaId() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
 }
@@ -310,27 +279,73 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
 		return ""
 	}
-	if len(i.arguments) == 0 {
-		return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
-	}
-	// if this is a function or procedure, we need to include the arguments
-	args := make([]string, len(i.arguments))
-	for i, arg := range i.arguments {
-		args[i] = string(arg)
-	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(args, ", "))
+	return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
 }
 
-func (i SchemaObjectIdentifier) WithoutArguments() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.name)
+// TODO:
+// - Add parser
+// - Add to IsValidIdentifier
+// - Handle in the sql_builder
+// - Use in function,procedure,external_function
+// - Function (Test, Impl)
+// - Fix after arguments removed from SchemaObjectIdentifier
+// - Look for todos on SNOW-999049
+
+type SchemaObjectIdentifierWithArguments struct {
+	databaseName string
+	schemaName   string
+	name         string
+	arguments    []string
 }
 
-func (i SchemaObjectIdentifier) ArgumentsSignature() string {
-	arguments := make([]string, len(i.arguments))
-	for i, item := range i.arguments {
-		arguments[i] = string(item)
+func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, arguments ...string) SchemaObjectIdentifierWithArguments {
+	return SchemaObjectIdentifierWithArguments{
+		databaseName: strings.Trim(databaseName, `"`),
+		schemaName:   strings.Trim(schemaName, `"`),
+		name:         strings.Trim(name, `"`),
 	}
-	return fmt.Sprintf("%v(%v)", i.Name(), strings.Join(arguments, ","))
+}
+
+func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifierWithArguments {
+	parts := strings.Split(fullyQualifiedName, ".")
+	id := SchemaObjectIdentifierWithArguments{
+		databaseName: strings.Trim(parts[0], `"`),
+		schemaName:   strings.Trim(parts[1], `"`),
+		name:         strings.Trim(parts[2], `"`),
+		// TODO: Arguments
+	}
+	return id
+}
+
+func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaName() string {
+	return i.schemaName
+}
+
+func (i SchemaObjectIdentifierWithArguments) Name() string {
+	return i.name
+}
+
+func (i SchemaObjectIdentifierWithArguments) Arguments() []string {
+	return i.arguments
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaId() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
+}
+
+func (i SchemaObjectIdentifierWithArguments) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
+}
+
+func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
+	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.arguments) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(i.arguments, ","))
 }
 
 type TableColumnIdentifier struct {

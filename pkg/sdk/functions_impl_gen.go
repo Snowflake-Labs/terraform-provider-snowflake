@@ -57,8 +57,8 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 	return resultList, nil
 }
 
-func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Function, error) {
-	request := NewShowFunctionRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
+	request := NewShowFunctionRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
 	functions, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -66,8 +66,10 @@ func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*F
 	return collections.FindOne(functions, func(r Function) bool { return r.Name == id.Name() })
 }
 
-func (v *functions) Describe(ctx context.Context, request *DescribeFunctionRequest) ([]FunctionDetail, error) {
-	opts := request.toOpts()
+func (v *functions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error) {
+	opts := DescribeFunctionOptions{
+		name: id,
+	}
 	rows, err := validateAndQuery[functionDetailRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

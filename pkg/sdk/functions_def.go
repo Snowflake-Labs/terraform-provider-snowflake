@@ -39,7 +39,7 @@ var (
 var FunctionsDef = g.NewInterface(
 	"Functions",
 	"Function",
-	g.KindOfT[SchemaObjectIdentifier](),
+	g.KindOfT[SchemaObjectIdentifierWithArguments](),
 ).CustomOperation(
 	"CreateForJava",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler",
