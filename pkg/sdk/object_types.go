@@ -41,6 +41,7 @@ const (
 	ObjectTypeView                 ObjectType = "VIEW"
 	ObjectTypeMaterializedView     ObjectType = "MATERIALIZED VIEW"
 	ObjectTypeSequence             ObjectType = "SEQUENCE"
+	ObjectTypeSnapshot             ObjectType = "SNAPSHOT"
 	ObjectTypeFunction             ObjectType = "FUNCTION"
 	ObjectTypeExternalFunction     ObjectType = "EXTERNAL FUNCTION"
 	ObjectTypeProcedure            ObjectType = "PROCEDURE"
@@ -62,6 +63,7 @@ const (
 	ObjectTypeIcebergTable         ObjectType = "ICEBERG TABLE"
 	ObjectTypeExternalVolume       ObjectType = "EXTERNAL VOLUME"
 	ObjectTypeNetworkRule          ObjectType = "NETWORK RULE"
+	ObjectTypeNotebook             ObjectType = "NOTEBOOK"
 	ObjectTypePackagesPolicy       ObjectType = "PACKAGES POLICY"
 	ObjectTypeComputePool          ObjectType = "COMPUTE POOL"
 	ObjectTypeAggregationPolicy    ObjectType = "AGGREGATION POLICY"
@@ -107,6 +109,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeView:                 PluralObjectTypeViews,
 		ObjectTypeMaterializedView:     PluralObjectTypeMaterializedViews,
 		ObjectTypeSequence:             PluralObjectTypeSequences,
+		ObjectTypeSnapshot:             PluralObjectTypeSnapshots,
 		ObjectTypeFunction:             PluralObjectTypeFunctions,
 		ObjectTypeExternalFunction:     PluralObjectTypeExternalFunctions,
 		ObjectTypeProcedure:            PluralObjectTypeProcedures,
@@ -127,6 +130,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeIcebergTable:         PluralObjectTypeIcebergTables,
 		ObjectTypeExternalVolume:       PluralObjectTypeExternalVolumes,
 		ObjectTypeNetworkRule:          PluralObjectTypeNetworkRules,
+		ObjectTypeNotebook:             PluralObjectTypeNotebooks,
 		ObjectTypePackagesPolicy:       PluralObjectTypePackagesPolicies,
 		ObjectTypeComputePool:          PluralObjectTypeComputePool,
 		ObjectTypeAggregationPolicy:    PluralObjectTypeAggregationPolicies,
@@ -212,6 +216,7 @@ const (
 	PluralObjectTypeViews                  PluralObjectType = "VIEWS"
 	PluralObjectTypeMaterializedViews      PluralObjectType = "MATERIALIZED VIEWS"
 	PluralObjectTypeSequences              PluralObjectType = "SEQUENCES"
+	PluralObjectTypeSnapshots              PluralObjectType = "SNAPSHOTS"
 	PluralObjectTypeFunctions              PluralObjectType = "FUNCTIONS"
 	PluralObjectTypeExternalFunctions      PluralObjectType = "EXTERNAL FUNCTIONS"
 	PluralObjectTypeProcedures             PluralObjectType = "PROCEDURES"
@@ -232,6 +237,7 @@ const (
 	PluralObjectTypeIcebergTables          PluralObjectType = "ICEBERG TABLES"
 	PluralObjectTypeExternalVolumes        PluralObjectType = "EXTERNAL VOLUMES"
 	PluralObjectTypeNetworkRules           PluralObjectType = "NETWORK RULES"
+	PluralObjectTypeNotebooks              PluralObjectType = "NOTEBOOKS"
 	PluralObjectTypePackagesPolicies       PluralObjectType = "PACKAGES POLICIES"
 	PluralObjectTypeComputePool            PluralObjectType = "COMPUTE POOLS"
 	PluralObjectTypeAggregationPolicies    PluralObjectType = "AGGREGATION POLICIES"

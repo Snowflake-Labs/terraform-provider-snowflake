@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"regexp"
 	"strconv"
@@ -414,16 +415,18 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 		case "headers":
 			if row.Value != "" && row.Value != "null" {
 				// Format in Snowflake DB is: {"head1":"val1","head2":"val2"}
-				headerPairs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(row.Value, "{", ""), "}", ""), "\"", ""), ",")
-				headers := []interface{}{}
+				var jsonHeaders map[string]string
+				err := json.Unmarshal([]byte(row.Value), &jsonHeaders)
+				if err != nil {
+					return diag.Errorf("error unmarshalling headers: %v", err)
+				}
 
-				for _, headerPair := range headerPairs {
-					headerItem := strings.Split(headerPair, ":")
-
-					header := map[string]interface{}{}
-					header["name"] = headerItem[0]
-					header["value"] = headerItem[1]
-					headers = append(headers, header)
+				headers := make([]any, 0, len(jsonHeaders))
+				for key, value := range jsonHeaders {
+					headers = append(headers, map[string]any{
+						"name":  key,
+						"value": value,
+					})
 				}
 
 				if err := d.Set("header", headers); err != nil {
