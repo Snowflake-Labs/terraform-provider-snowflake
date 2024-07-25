@@ -147,11 +147,10 @@ var userSchema = map[string]*schema.Schema{
 
 func User() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateUser,
-		Read:   ReadUser,
-		ReadContext:,
-		Update: UpdateUser,
-		Delete: DeleteUser,
+		CreateContext: CreateUser,
+		UpdateContext: UpdateUser,
+		ReadContext:   GetReadUserFunc(true),
+		DeleteContext: DeleteUser,
 
 		Schema: userSchema,
 		Importer: &schema.ResourceImporter{
@@ -160,7 +159,7 @@ func User() *schema.Resource {
 	}
 }
 
-func CreateUser(d *schema.ResourceData, meta interface{}) error {
+func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	opts := &sdk.CreateUserOptions{
@@ -169,7 +168,6 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		SessionParameters: &sdk.SessionParameters{},
 	}
 	name := d.Get("name").(string)
-	ctx := context.Background()
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
 	if loginName, ok := d.GetOk("login_name"); ok {
@@ -192,7 +190,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
 		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(defaultNamespace.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
@@ -231,116 +229,116 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.Users.Create(ctx, objectIdentifier, opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
-	return ReadUser(d, meta)
+	return GetReadUserFunc(false)(ctx, d, meta)
 }
 
-func ReadUser(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
-	// requires the "MANAGE GRANTS" global privilege
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	ctx := context.Background()
-	user, err := client.Users.Describe(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
-			d.SetId("")
-			return nil
+func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
+		// requires the "MANAGE GRANTS" global privilege
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		user, err := client.Users.Describe(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
 		}
-		return err
-	}
 
-	u, err := client.Users.ShowByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query user. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
-				},
+		u, err := client.Users.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query user. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
+		}
+
+		userParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				User: id,
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := setStringProperty(d, "name", user.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "comment", user.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
+			return diag.FromErr(err)
+		}
+
+		var defaultSecondaryRoles []string
+		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
+			defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
+			defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
+			defaultSecondaryRoles = strings.Split(defaultRoles, ",")
+		}
+		if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
+			return diag.FromErr(err)
+		}
+		if user.RsaPublicKeyFp != nil {
+			if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
+				return diag.FromErr(err)
 			}
 		}
-		return diag.FromErr(err)
-	}
-
-	userParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			User: id,
-		},
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := setStringProperty(d, "name", user.Name); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "comment", user.Comment); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
-		return err
-	}
-	if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
-		return err
-	}
-
-	var defaultSecondaryRoles []string
-	if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
-		defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
-		defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
-		defaultSecondaryRoles = strings.Split(defaultRoles, ",")
-	}
-	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
-		return err
-	}
-	if user.RsaPublicKeyFp != nil {
-		if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
-			return err
+		if err := setStringProperty(d, "email", user.Email); err != nil {
+			return diag.FromErr(err)
 		}
-	}
-	if err := setStringProperty(d, "email", user.Email); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "last_name", user.LastName); err != nil {
-		return err
-	}
+		if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "last_name", user.LastName); err != nil {
+			return diag.FromErr(err)
+		}
 
-	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
-		return diag.FromErr(err)
-	}
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
+			return diag.FromErr(err)
+		}
 
-	if err = d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}); err != nil {
-		return diag.FromErr(err)
-	}
+		if err = d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}); err != nil {
+			return diag.FromErr(err)
+		}
 
-	return nil
+		return nil
+
+	}
 }
 
-func UpdateUser(d *schema.ResourceData, meta interface{}) error {
+func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
@@ -350,7 +348,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 			NewName: newID,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newID))
@@ -395,7 +393,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		_, n := d.GetChange("default_namespace")
 		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(n.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
@@ -453,23 +451,22 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	if runSet {
 		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadUser(d, meta)
+	return GetReadUserFunc(false)(ctx, d, meta)
 }
 
-func DeleteUser(d *schema.ResourceData, meta interface{}) error {
+func DeleteUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Users.Drop(ctx, objectIdentifier, &sdk.DropUserOptions{
+	err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
