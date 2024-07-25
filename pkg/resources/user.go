@@ -3,15 +3,16 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var userSchema = map[string]*schema.Schema{
@@ -126,12 +127,29 @@ var userSchema = map[string]*schema.Schema{
 	//    MINS_TO_BYPASS_MFA = <integer>
 	//    DISABLE_MFA = TRUE | FALSE
 	//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW USER` for the given user.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowUserSchema,
+		},
+	},
+	ParametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN USER` for the given user.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowUserParametersSchema,
+		},
+	},
 }
 
 func User() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateUser,
 		Read:   ReadUser,
+		ReadContext:,
 		Update: UpdateUser,
 		Delete: DeleteUser,
 
@@ -223,9 +241,9 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
 	// requires the "MANAGE GRANTS" global privilege
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	ctx := context.Background()
-	user, err := client.Users.Describe(ctx, objectIdentifier)
+	user, err := client.Users.Describe(ctx, id)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 			log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
@@ -233,6 +251,30 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		return err
+	}
+
+	u, err := client.Users.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query user. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
+	}
+
+	userParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			User: id,
+		},
+	})
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := setStringProperty(d, "name", user.Name); err != nil {
@@ -283,6 +325,15 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	if err := setStringProperty(d, "last_name", user.LastName); err != nil {
 		return err
 	}
+
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
