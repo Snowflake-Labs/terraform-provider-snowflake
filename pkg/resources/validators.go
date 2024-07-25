@@ -182,3 +182,25 @@ func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValida
 		return nil
 	}
 }
+
+func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaValidateDiagFunc {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		if value != nil {
+			if stringValue, ok := value.(string); ok {
+				if stringValue == notExpectedValue {
+					return diag.Diagnostics{
+						{
+							Severity: diag.Error,
+							Summary:  "Invalid value set",
+							Detail:   fmt.Sprintf("invalid value (%s) set for a field %v. %s", notExpectedValue, path, errorMessage),
+						},
+					}
+				}
+			} else {
+				return diag.Errorf("isNotEqualTo validator: expected string type, got %T", value)
+			}
+		}
+
+		return nil
+	}
+}

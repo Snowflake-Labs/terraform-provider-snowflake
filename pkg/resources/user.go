@@ -169,16 +169,20 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		opts.ObjectProperties.Disable = &disabled
 	}
 	if defaultWarehouse, ok := d.GetOk("default_warehouse"); ok {
-		opts.ObjectProperties.DefaultWarehosue = sdk.String(defaultWarehouse.(string))
+		opts.ObjectProperties.DefaultWarehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultWarehouse.(string)))
 	}
 	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
-		opts.ObjectProperties.DefaultNamespace = sdk.String(defaultNamespace.(string))
+		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(defaultNamespace.(string))
+		if err != nil {
+			return err
+		}
+		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
 	if displayName, ok := d.GetOk("display_name"); ok {
 		opts.ObjectProperties.DisplayName = sdk.String(displayName.(string))
 	}
 	if defaultRole, ok := d.GetOk("default_role"); ok {
-		opts.ObjectProperties.DefaultRole = sdk.String(defaultRole.(string))
+		opts.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultRole.(string)))
 	}
 	if v, ok := d.GetOk("default_secondary_roles"); ok {
 		roles := expandStringList(v.(*schema.Set).List())
@@ -186,7 +190,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		opts.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
+		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
@@ -333,17 +337,21 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("default_warehouse") {
 		runSet = true
 		_, n := d.GetChange("default_warehouse")
-		alterOptions.Set.ObjectProperties.DefaultWarehosue = sdk.String(n.(string))
+		alterOptions.Set.ObjectProperties.DefaultWarehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(n.(string)))
 	}
 	if d.HasChange("default_namespace") {
 		runSet = true
 		_, n := d.GetChange("default_namespace")
-		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.String(n.(string))
+		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(n.(string))
+		if err != nil {
+			return err
+		}
+		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
 	if d.HasChange("default_role") {
 		runSet = true
 		_, n := d.GetChange("default_role")
-		alterOptions.Set.ObjectProperties.DefaultRole = sdk.String(n.(string))
+		alterOptions.Set.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(n.(string)))
 	}
 	if d.HasChange("default_secondary_roles") {
 		runSet = true
@@ -353,7 +361,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		for _, role := range roles {
 			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
 		}
-		alterOptions.Set.ObjectProperties.DefaultSeconaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
+		alterOptions.Set.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if d.HasChange("rsa_public_key") {
 		runSet = true

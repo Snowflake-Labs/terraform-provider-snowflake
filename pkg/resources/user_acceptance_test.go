@@ -35,6 +35,7 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 	}
 }
 
+// TODO [SNOW-1348101]: handle 1-part default namespace
 func TestAcc_User(t *testing.T) {
 	r := require.New(t)
 	prefix := acc.TestClient().Ids.Alpha()
@@ -69,9 +70,9 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "FOO"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
 					checkBool("snowflake_user.w", "must_change_password", true),
 				),
@@ -94,9 +95,9 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "FOO"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -113,9 +114,9 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.net"),
 					checkBool("snowflake_user.w", "disabled", true),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "BAR"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "bar.baz"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", false),
 				),
 			},
@@ -192,7 +193,7 @@ resource "snowflake_user" "w" {
 	default_warehouse="foo"
 	default_role="foo"
 	default_secondary_roles=["ALL"]
-	default_namespace="foo"
+	default_namespace="foo.bar"
 	rsa_public_key = <<KEY
 %s
 KEY
@@ -222,7 +223,7 @@ resource "snowflake_user" "w" {
 	default_warehouse="bar"
 	default_role="bar"
 	default_secondary_roles=[]
-	default_namespace="bar"
+	default_namespace="bar.baz"
 }
 `
 	log.Printf("[DEBUG] s2 %s", s)

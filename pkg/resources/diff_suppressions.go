@@ -128,3 +128,34 @@ func IgnoreValuesFromSetIfParamSet(key, param string, values []string) schema.Sc
 		return slices.Contains(values, old)
 	}
 }
+
+// NormalizeAndCompareIdentifiersInSet is a diff suppression function that should be used at top-level TypeSet fields that
+// hold identifiers to avoid diffs like:
+// - "DATABASE"."SCHEMA"."OBJECT"
+// + DATABASE.SCHEMA.OBJECT
+// where both identifiers are pointing to the same object, but have different structure. When a diff occurs in the
+// list or set, we have to handle two suppressions (one that prevents adding and one that prevents the removal).
+// It's handled by the two statements with the help of helpers.ContainsIdentifierIgnoringQuotes and by getting
+// the current state of ids to compare against. The diff suppressions for lists and sets are running for each element one by one,
+// and the first diff is usually .# referring to the collection length (we skip those).
+func NormalizeAndCompareIdentifiersInSet(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(k, ".#") {
+			return false
+		}
+
+		if oldValue == "" && !d.GetRawState().IsNull() {
+			if helpers.ContainsIdentifierIgnoringQuotes(ctyValToSliceString(d.GetRawState().AsValueMap()[key].AsValueSet().Values()), newValue) {
+				return true
+			}
+		}
+
+		if newValue == "" {
+			if helpers.ContainsIdentifierIgnoringQuotes(expandStringList(d.Get(key).(*schema.Set).List()), oldValue) {
+				return true
+			}
+		}
+
+		return false
+	}
+}

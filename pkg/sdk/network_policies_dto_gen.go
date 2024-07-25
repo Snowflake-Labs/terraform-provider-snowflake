@@ -81,7 +81,9 @@ type DropNetworkPolicyRequest struct {
 	name     AccountObjectIdentifier // required
 }
 
-type ShowNetworkPolicyRequest struct{}
+type ShowNetworkPolicyRequest struct {
+	Like *Like
+}
 
 type DescribeNetworkPolicyRequest struct {
 	name AccountObjectIdentifier // required

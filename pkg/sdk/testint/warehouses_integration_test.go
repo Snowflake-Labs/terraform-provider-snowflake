@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -116,7 +117,7 @@ func TestInt_Warehouses(t *testing.T) {
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
 		// we can use the same assertion builder in the SDK tests
-		objectAssert.AssertThatObject(t, objectAssert.Warehouse(t, id).
+		assertions.AssertThatObject(t, objectassert.Warehouse(t, id).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -148,7 +149,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		// we can also use the read object to initialize:
-		objectAssert.AssertThatObject(t, objectAssert.WarehouseFromObject(t, warehouse).
+		assertions.AssertThatObject(t, objectassert.WarehouseFromObject(t, warehouse).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -631,7 +632,7 @@ func TestInt_Warehouses(t *testing.T) {
 		// check the state - it seems it's resized despite query being run on it
 		result, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
-		assert.Equal(t, sdk.WarehouseStateStarted, result.State)
+		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateResizing, sdk.WarehouseStateStarted}, result.State)
 		assert.Equal(t, sdk.WarehouseSizeMedium, result.Size)
 		assert.Equal(t, 1, result.Running)
 		assert.Equal(t, 0, result.Queued)

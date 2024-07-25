@@ -44,3 +44,7 @@ func AlphanumericN(num int) string {
 func AlphaN(num int) string {
 	return gofakeit.Password(true, true, false, false, false, num)
 }
+
+func Email() string {
+	return gofakeit.Email()
+}

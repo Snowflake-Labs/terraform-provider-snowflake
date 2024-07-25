@@ -48,6 +48,10 @@ func NewSnowflakeObjectAssertWithObject[T any, I sdk.ObjectIdentifier](objectTyp
 	}
 }
 
+func (s *SnowflakeObjectAssert[T, I]) AddAssertion(assertion assertSdk[*T]) {
+	s.assertions = append(s.assertions, assertion)
+}
+
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new Snowflake object assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
 func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {

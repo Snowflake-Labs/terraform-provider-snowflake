@@ -1,33 +1,14 @@
-##################################
-### using network rules
-##################################
-
-resource "snowflake_network_rule" "rule" {
-  name       = "rule"
-  database   = "EXAMPLE_DB"
-  schema     = "EXAMPLE_SCHEMA"
-  comment    = "A rule."
-  type       = "IPV4"
-  mode       = "INGRESS"
-  value_list = ["192.168.0.100/24", "29.254.123.20"]
+## Minimal
+resource "snowflake_network_policy" "basic" {
+  name = "network_policy_name"
 }
 
-resource "snowflake_network_policy" "policy" {
-  name    = "policy"
-  comment = "A policy."
-
-  allowed_network_rule_list = [snowflake_network_rule.rule.qualified_name]
-}
-
-
-##################################
-### using ip lists
-##################################
-
-resource "snowflake_network_policy" "policy" {
-  name    = "policy"
-  comment = "A policy."
-
-  allowed_ip_list = ["192.168.0.100/24"]
-  blocked_ip_list = ["192.168.0.101"]
+## Complete (with every optional set)
+resource "snowflake_network_policy" "basic" {
+  name                      = "network_policy_name"
+  allowed_network_rule_list = ["<fully qualified network rule id>"]
+  blocked_network_rule_list = ["<fully qualified network rule id>"]
+  allowed_ip_list           = ["192.168.1.0/24"]
+  blocked_ip_list           = ["192.168.1.99"]
+  comment                   = "my network policy"
 }

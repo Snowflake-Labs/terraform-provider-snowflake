@@ -44,7 +44,7 @@ jobs:
         run: mkdir $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > $HOME/.snowflake/config
 
       - run: make test
-        if: steps.create_config.conclusion == 'success'
+        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
         env:
           SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
           TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
@@ -57,14 +57,15 @@ jobs:
           TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
 
       - name: Setup Terraform
-        if: steps.create_config.conclusion == 'success'
+        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
         uses: hashicorp/setup-terraform@v3
+        id: setup_terraform
         with:
           terraform_version: 1.7.4
           terraform_wrapper: false
 
       - run: make test-acceptance
-        if: steps.create_config.conclusion == 'success'
+        if: ${{ !cancelled() && steps.setup_terraform.conclusion == 'success' }}
         env:
           SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
           TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}

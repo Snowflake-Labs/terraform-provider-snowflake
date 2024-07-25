@@ -147,9 +147,9 @@ func CreateCortexSearchService(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
-	if v, ok := d.GetOk("attributes"); ok && len(v.([]string)) > 0 {
+	if v, ok := d.GetOk("attributes"); ok && len(v.(*schema.Set).List()) > 0 {
 		attributes := sdk.AttributesRequest{
-			Columns: v.([]string),
+			Columns: expandStringList(v.(*schema.Set).List()),
 		}
 		request.WithAttributes(attributes)
 	}

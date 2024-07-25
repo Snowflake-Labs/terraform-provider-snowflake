@@ -12,8 +12,8 @@ func NewCreateNetworkPolicyRequest(
 	return &s
 }
 
-func (s *CreateNetworkPolicyRequest) WithOrReplace(OrReplace *bool) *CreateNetworkPolicyRequest {
-	s.OrReplace = OrReplace
+func (s *CreateNetworkPolicyRequest) WithOrReplace(OrReplace bool) *CreateNetworkPolicyRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
@@ -37,8 +37,8 @@ func (s *CreateNetworkPolicyRequest) WithBlockedIpList(BlockedIpList []IPRequest
 	return s
 }
 
-func (s *CreateNetworkPolicyRequest) WithComment(Comment *string) *CreateNetworkPolicyRequest {
-	s.Comment = Comment
+func (s *CreateNetworkPolicyRequest) WithComment(Comment string) *CreateNetworkPolicyRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -58,33 +58,33 @@ func NewAlterNetworkPolicyRequest(
 	return &s
 }
 
-func (s *AlterNetworkPolicyRequest) WithIfExists(IfExists *bool) *AlterNetworkPolicyRequest {
-	s.IfExists = IfExists
+func (s *AlterNetworkPolicyRequest) WithIfExists(IfExists bool) *AlterNetworkPolicyRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithSet(Set *NetworkPolicySetRequest) *AlterNetworkPolicyRequest {
-	s.Set = Set
+func (s *AlterNetworkPolicyRequest) WithSet(Set NetworkPolicySetRequest) *AlterNetworkPolicyRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithUnset(Unset *NetworkPolicyUnsetRequest) *AlterNetworkPolicyRequest {
-	s.Unset = Unset
+func (s *AlterNetworkPolicyRequest) WithUnset(Unset NetworkPolicyUnsetRequest) *AlterNetworkPolicyRequest {
+	s.Unset = &Unset
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithAdd(Add *AddNetworkRuleRequest) *AlterNetworkPolicyRequest {
-	s.Add = Add
+func (s *AlterNetworkPolicyRequest) WithAdd(Add AddNetworkRuleRequest) *AlterNetworkPolicyRequest {
+	s.Add = &Add
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithRemove(Remove *RemoveNetworkRuleRequest) *AlterNetworkPolicyRequest {
-	s.Remove = Remove
+func (s *AlterNetworkPolicyRequest) WithRemove(Remove RemoveNetworkRuleRequest) *AlterNetworkPolicyRequest {
+	s.Remove = &Remove
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithRenameTo(RenameTo *AccountObjectIdentifier) *AlterNetworkPolicyRequest {
-	s.RenameTo = RenameTo
+func (s *AlterNetworkPolicyRequest) WithRenameTo(RenameTo AccountObjectIdentifier) *AlterNetworkPolicyRequest {
+	s.RenameTo = &RenameTo
 	return s
 }
 
@@ -92,28 +92,28 @@ func NewNetworkPolicySetRequest() *NetworkPolicySetRequest {
 	return &NetworkPolicySetRequest{}
 }
 
-func (s *NetworkPolicySetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList *AllowedNetworkRuleListRequest) *NetworkPolicySetRequest {
-	s.AllowedNetworkRuleList = AllowedNetworkRuleList
+func (s *NetworkPolicySetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList AllowedNetworkRuleListRequest) *NetworkPolicySetRequest {
+	s.AllowedNetworkRuleList = &AllowedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList *BlockedNetworkRuleListRequest) *NetworkPolicySetRequest {
-	s.BlockedNetworkRuleList = BlockedNetworkRuleList
+func (s *NetworkPolicySetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList BlockedNetworkRuleListRequest) *NetworkPolicySetRequest {
+	s.BlockedNetworkRuleList = &BlockedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList *AllowedIPListRequest) *NetworkPolicySetRequest {
-	s.AllowedIpList = AllowedIpList
+func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList AllowedIPListRequest) *NetworkPolicySetRequest {
+	s.AllowedIpList = &AllowedIpList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList *BlockedIPListRequest) *NetworkPolicySetRequest {
-	s.BlockedIpList = BlockedIpList
+func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList BlockedIPListRequest) *NetworkPolicySetRequest {
+	s.BlockedIpList = &BlockedIpList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithComment(Comment *string) *NetworkPolicySetRequest {
-	s.Comment = Comment
+func (s *NetworkPolicySetRequest) WithComment(Comment string) *NetworkPolicySetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -157,28 +157,28 @@ func NewNetworkPolicyUnsetRequest() *NetworkPolicyUnsetRequest {
 	return &NetworkPolicyUnsetRequest{}
 }
 
-func (s *NetworkPolicyUnsetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList *bool) *NetworkPolicyUnsetRequest {
-	s.AllowedNetworkRuleList = AllowedNetworkRuleList
+func (s *NetworkPolicyUnsetRequest) WithAllowedNetworkRuleList(AllowedNetworkRuleList bool) *NetworkPolicyUnsetRequest {
+	s.AllowedNetworkRuleList = &AllowedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicyUnsetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList *bool) *NetworkPolicyUnsetRequest {
-	s.BlockedNetworkRuleList = BlockedNetworkRuleList
+func (s *NetworkPolicyUnsetRequest) WithBlockedNetworkRuleList(BlockedNetworkRuleList bool) *NetworkPolicyUnsetRequest {
+	s.BlockedNetworkRuleList = &BlockedNetworkRuleList
 	return s
 }
 
-func (s *NetworkPolicyUnsetRequest) WithAllowedIpList(AllowedIpList *bool) *NetworkPolicyUnsetRequest {
-	s.AllowedIpList = AllowedIpList
+func (s *NetworkPolicyUnsetRequest) WithAllowedIpList(AllowedIpList bool) *NetworkPolicyUnsetRequest {
+	s.AllowedIpList = &AllowedIpList
 	return s
 }
 
-func (s *NetworkPolicyUnsetRequest) WithBlockedIpList(BlockedIpList *bool) *NetworkPolicyUnsetRequest {
-	s.BlockedIpList = BlockedIpList
+func (s *NetworkPolicyUnsetRequest) WithBlockedIpList(BlockedIpList bool) *NetworkPolicyUnsetRequest {
+	s.BlockedIpList = &BlockedIpList
 	return s
 }
 
-func (s *NetworkPolicyUnsetRequest) WithComment(Comment *bool) *NetworkPolicyUnsetRequest {
-	s.Comment = Comment
+func (s *NetworkPolicyUnsetRequest) WithComment(Comment bool) *NetworkPolicyUnsetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -218,13 +218,18 @@ func NewDropNetworkPolicyRequest(
 	return &s
 }
 
-func (s *DropNetworkPolicyRequest) WithIfExists(IfExists *bool) *DropNetworkPolicyRequest {
-	s.IfExists = IfExists
+func (s *DropNetworkPolicyRequest) WithIfExists(IfExists bool) *DropNetworkPolicyRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
 func NewShowNetworkPolicyRequest() *ShowNetworkPolicyRequest {
 	return &ShowNetworkPolicyRequest{}
+}
+
+func (s *ShowNetworkPolicyRequest) WithLike(Like Like) *ShowNetworkPolicyRequest {
+	s.Like = &Like
+	return s
 }
 
 func NewDescribeNetworkPolicyRequest(

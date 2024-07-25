@@ -10,6 +10,16 @@ across different versions.
 
 In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
 
+### *(breaking change)* refactored snowflake_schemas datasource
+Changes:
+- `database` is removed and can be specified inside `in` field.
+- `like`, `in`, `starts_with`, and `limit` fields enable filtering.
+- SHOW SCHEMAS output is enclosed in `show_output` field inside `schemas`.
+- Added outputs from **DESC SCHEMA** and **SHOW PARAMETERS IN SCHEMA** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
+  The additional parameters call **DESC SCHEMA** (with `with_describe` turned on) and **SHOW PARAMETERS IN SCHEMA** (with `with_parameters` turned on) **per schema** returned by **SHOW SCHEMAS**.
+  The outputs of both commands are held in `schemas` entry, where **DESC SCHEMA** is saved in the `describe_output` field, and **SHOW PARAMETERS IN SCHEMA** in the `parameters` field.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
 ### *(new feature)* new snowflake_account_role resource
 
 Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
@@ -49,8 +59,28 @@ Added a new datasource enabling querying and filtering stremlits. Notes:
 - `like`, `in`, and `limit` fields enable streamlits filtering.
 - SHOW STREAMLITS output is enclosed in `show_output` field inside `streamlits`.
 - Output from **DESC STREAMLIT** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `streamlits`.
-  **DESC STREAMLIT** returns different properties based on the integration type. Consult the documentation to check which ones will be filled for which integration.
   The additional parameters call **DESC STREAMLIT** (with `with_describe` turned on) **per streamlit** returned by **SHOW STREAMLITS**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+### *(new feature)* refactored snowflake_network_policy resource
+
+No migration required.
+
+New behavior:
+- `name` is no longer marked as ForceNew parameter. When changed, now it will perform ALTER RENAME operation, instead of re-creating with the new name.
+- Additional validation was added to `blocked_ip_list` to inform about specifying `0.0.0.0/0` ip. More details in the [official documentation](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy#usage-notes).
+
+New fields:
+- `show_output` and `describe_output` added to hold the results returned by `SHOW` and `DESCRIBE` commands. Those fields will only be recomputed when specified fields change
+
+### *(new feature)* snowflake_network_policies datasource
+
+Added a new datasource enabling querying and filtering network policies. Notes:
+- all results are stored in `network_policies` field.
+- `like` field enables filtering.
+- SHOW NETWORK POLICIES output is enclosed in `show_output` field inside `network_policies`.
+- Output from **DESC NETWORK POLICY** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `network_policies`.
+  The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 ## v0.92.0 ➞ v0.93.0

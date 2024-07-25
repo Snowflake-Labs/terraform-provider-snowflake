@@ -307,3 +307,51 @@ func Test_IsValidAccountIdentifier(t *testing.T) {
 		})
 	}
 }
+
+func Test_isNotEqualTo(t *testing.T) {
+	testCases := []struct {
+		Name             string
+		Value            any
+		NotExpectedValue string
+		ExpectedError    string
+	}{
+		{
+			Name:             "nil value",
+			Value:            nil,
+			NotExpectedValue: "123",
+		},
+		{
+			Name:             "int value",
+			Value:            123,
+			NotExpectedValue: "123",
+			ExpectedError:    "isNotEqualTo validator: expected string type, got int",
+		},
+		{
+			Name:             "value equal to invalid one",
+			Value:            "123",
+			NotExpectedValue: "123",
+			ExpectedError:    "invalid value (123) set for a field [{{} path}]. error message.",
+		},
+		{
+			Name:             "value equal to valid one",
+			Value:            "456",
+			NotExpectedValue: "123",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			diag := isNotEqualTo(tt.NotExpectedValue, "error message.")(tt.Value, cty.GetAttrPath("path"))
+			if tt.ExpectedError != "" {
+				assert.Len(t, diag, 1)
+				if diag[0].Detail != "" {
+					assert.Contains(t, diag[0].Detail, tt.ExpectedError)
+				} else {
+					assert.Contains(t, diag[0].Summary, tt.ExpectedError)
+				}
+			} else {
+				assert.Len(t, diag, 0)
+			}
+		})
+	}
+}
