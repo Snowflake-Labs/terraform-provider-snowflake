@@ -9,9 +9,10 @@ var (
 	longSchemaObjectIdentifier     = NewSchemaObjectIdentifier(random.StringN(255), random.StringN(255), random.StringN(255))
 
 	// TODO: Add to the generator
-	emptyAccountObjectIdentifier  = NewAccountObjectIdentifier("")
-	emptyDatabaseObjectIdentifier = NewDatabaseObjectIdentifier("", "")
-	emptySchemaObjectIdentifier   = NewSchemaObjectIdentifier("", "", "")
+	emptyAccountObjectIdentifier             = NewAccountObjectIdentifier("")
+	emptyDatabaseObjectIdentifier            = NewDatabaseObjectIdentifier("", "")
+	emptySchemaObjectIdentifier              = NewSchemaObjectIdentifier("", "", "")
+	emptySchemaObjectIdentifierWithArguments = NewSchemaObjectIdentifierWithArguments("", "", "")
 )
 
 func randomSchemaObjectIdentifierWithArguments() SchemaObjectIdentifierWithArguments {

@@ -303,19 +303,21 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 		databaseName: strings.Trim(databaseName, `"`),
 		schemaName:   strings.Trim(schemaName, `"`),
 		name:         strings.Trim(name, `"`),
+		arguments:    arguments,
 	}
 }
 
-func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifierWithArguments {
-	parts := strings.Split(fullyQualifiedName, ".")
-	id := SchemaObjectIdentifierWithArguments{
-		databaseName: strings.Trim(parts[0], `"`),
-		schemaName:   strings.Trim(parts[1], `"`),
-		name:         strings.Trim(parts[2], `"`),
-		// TODO: Arguments
-	}
-	return id
-}
+// TODO:
+//func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifierWithArguments {
+//	parts := strings.Split(fullyQualifiedName, ".")
+//	id := SchemaObjectIdentifierWithArguments{
+//		databaseName: strings.Trim(parts[0], `"`),
+//		schemaName:   strings.Trim(parts[1], `"`),
+//		name:         strings.Trim(parts[2], `"`),
+//		// TODO: Arguments
+//	}
+//	return id
+//}
 
 func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
 	return i.databaseName
@@ -345,7 +347,7 @@ func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.arguments) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(i.arguments, ","))
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(i.arguments, ", "))
 }
 
 type TableColumnIdentifier struct {

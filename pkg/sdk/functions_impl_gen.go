@@ -67,7 +67,7 @@ func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithA
 }
 
 func (v *functions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error) {
-	opts := DescribeFunctionOptions{
+	opts := &DescribeFunctionOptions{
 		name: id,
 	}
 	rows, err := validateAndQuery[functionDetailRow](v.client, ctx, opts)

@@ -116,7 +116,7 @@ func (r *AlterExternalFunctionRequest) toOpts() *AlterExternalFunctionOptions {
 	opts := &AlterExternalFunctionOptions{
 		IfExists: r.IfExists,
 		// TODO:
-		//name:              r.name.WithoutArguments(),
+		//name:   			           r.name.WithoutArguments(),
 		ArgumentDataTypes: r.ArgumentDataTypes,
 	}
 	if r.Set != nil {
