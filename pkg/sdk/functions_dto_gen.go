@@ -19,7 +19,7 @@ type CreateForJavaFunctionRequest struct {
 	Temporary                  *bool
 	Secure                     *bool
 	IfNotExists                *bool
-	name                       SchemaObjectIdentifierWithArguments // required
+	name                       SchemaObjectIdentifier // required
 	Arguments                  []FunctionArgumentRequest
 	CopyGrants                 *bool
 	Returns                    FunctionReturnsRequest // required
@@ -73,7 +73,7 @@ type CreateForJavascriptFunctionRequest struct {
 	OrReplace             *bool
 	Temporary             *bool
 	Secure                *bool
-	name                  SchemaObjectIdentifierWithArguments // required
+	name                  SchemaObjectIdentifier // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	Returns               FunctionReturnsRequest // required
@@ -89,7 +89,7 @@ type CreateForPythonFunctionRequest struct {
 	Temporary                  *bool
 	Secure                     *bool
 	IfNotExists                *bool
-	name                       SchemaObjectIdentifierWithArguments // required
+	name                       SchemaObjectIdentifier // required
 	Arguments                  []FunctionArgumentRequest
 	CopyGrants                 *bool
 	Returns                    FunctionReturnsRequest // required
@@ -111,7 +111,7 @@ type CreateForScalaFunctionRequest struct {
 	Temporary             *bool
 	Secure                *bool
 	IfNotExists           *bool
-	name                  SchemaObjectIdentifierWithArguments // required
+	name                  SchemaObjectIdentifier // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	ResultDataType        DataType // required
@@ -131,7 +131,7 @@ type CreateForSQLFunctionRequest struct {
 	OrReplace             *bool
 	Temporary             *bool
 	Secure                *bool
-	name                  SchemaObjectIdentifierWithArguments // required
+	name                  SchemaObjectIdentifier // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
 	Returns               FunctionReturnsRequest // required

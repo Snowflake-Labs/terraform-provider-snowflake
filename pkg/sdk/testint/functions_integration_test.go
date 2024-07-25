@@ -34,8 +34,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	}
 
 	t.Run("create function for Java", func(t *testing.T) {
-		name := "echo_varchar"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
 		definition := `
 		class TestFunc {
@@ -47,7 +46,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR).WithDefaultValue("'abc'")
-		request := sdk.NewCreateForJavaFunctionRequest(id, *returns, "TestFunc.echoVarchar").
+		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, "TestFunc.echoVarchar").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -64,8 +63,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	})
 
 	t.Run("create function for Javascript", func(t *testing.T) {
-		name := "js_factorial"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeFloat)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 
 		definition := `
 		if (D <= 0) {
@@ -81,7 +79,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("d", sdk.DataTypeFloat)
-		request := sdk.NewCreateForJavascriptFunctionRequest(id, *returns, definition).
+		request := sdk.NewCreateForJavascriptFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput))
@@ -104,7 +102,7 @@ def dump(i):
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVariant)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("i", sdk.DataTypeNumber)
-		request := sdk.NewCreateForPythonFunctionRequest(id, *returns, "3.8", "dump").
+		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", "dump").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithFunctionDefinition(definition)
@@ -119,8 +117,7 @@ def dump(i):
 	})
 
 	t.Run("create function for Scala", func(t *testing.T) {
-		name := "echo_varchar"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
 		definition := `
 		class Echo {
@@ -130,7 +127,7 @@ def dump(i):
 		}`
 
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForScalaFunctionRequest(id, sdk.DataTypeVARCHAR, "Echo.echoVarchar").
+		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), sdk.DataTypeVARCHAR, "Echo.echoVarchar").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithRuntimeVersion("2.12").
@@ -153,7 +150,7 @@ def dump(i):
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
-		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
+		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithOrReplace(true).
 			WithComment("comment")
@@ -174,7 +171,7 @@ def dump(i):
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
+		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			WithComment("comment")
 		err := client.Functions.CreateForSQL(ctx, request)
@@ -242,7 +239,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
+		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true)
 		if withArguments {
 			argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
@@ -449,7 +446,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments, dts []sdk.DataType) func() {
+	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
 		return func() {
 			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
@@ -465,13 +462,13 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		definition := "3.141592654::FLOAT"
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).WithOrReplace(true)
+		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).WithOrReplace(true)
 
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
 		request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+		t.Cleanup(cleanupFunctionHandle(id))
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {

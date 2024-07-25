@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateForJavaFunctionRequest(
-	name SchemaObjectIdentifierWithArguments,
+	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
 	Handler string,
 ) *CreateForJavaFunctionRequest {
@@ -176,7 +176,7 @@ func (s *FunctionPackageRequest) WithPackage(Package string) *FunctionPackageReq
 }
 
 func NewCreateForJavascriptFunctionRequest(
-	name SchemaObjectIdentifierWithArguments,
+	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
 	FunctionDefinition string,
 ) *CreateForJavascriptFunctionRequest {
@@ -233,7 +233,7 @@ func (s *CreateForJavascriptFunctionRequest) WithComment(Comment string) *Create
 }
 
 func NewCreateForPythonFunctionRequest(
-	name SchemaObjectIdentifierWithArguments,
+	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
 	RuntimeVersion string,
 	Handler string,
@@ -322,7 +322,7 @@ func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefiniti
 }
 
 func NewCreateForScalaFunctionRequest(
-	name SchemaObjectIdentifierWithArguments,
+	name SchemaObjectIdentifier,
 	ResultDataType DataType,
 	Handler string,
 ) *CreateForScalaFunctionRequest {
@@ -409,7 +409,7 @@ func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinitio
 }
 
 func NewCreateForSQLFunctionRequest(
-	name SchemaObjectIdentifierWithArguments,
+	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
 	FunctionDefinition string,
 ) *CreateForSQLFunctionRequest {

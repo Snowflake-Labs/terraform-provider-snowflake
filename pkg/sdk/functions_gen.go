@@ -20,29 +20,29 @@ type Functions interface {
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
 type CreateForJavaFunctionOptions struct {
-	create                     bool                                `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                               `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary                  *bool                               `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                     *bool                               `ddl:"keyword" sql:"SECURE"`
-	function                   bool                                `ddl:"static" sql:"FUNCTION"`
-	IfNotExists                *bool                               `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	Arguments                  []FunctionArgument                  `ddl:"list,must_parentheses"`
-	CopyGrants                 *bool                               `ddl:"keyword" sql:"COPY GRANTS"`
-	Returns                    FunctionReturns                     `ddl:"keyword" sql:"RETURNS"`
-	ReturnNullValues           *ReturnNullValues                   `ddl:"keyword"`
-	languageJava               bool                                `ddl:"static" sql:"LANGUAGE JAVA"`
-	NullInputBehavior          *NullInputBehavior                  `ddl:"keyword"`
-	ReturnResultsBehavior      *ReturnResultsBehavior              `ddl:"keyword"`
-	RuntimeVersion             *string                             `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Comment                    *string                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Imports                    []FunctionImport                    `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Packages                   []FunctionPackage                   `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler                    string                              `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	ExternalAccessIntegrations []AccountObjectIdentifier           `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                            `ddl:"parameter,parentheses" sql:"SECRETS"`
-	TargetPath                 *string                             `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition         *string                             `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	function                   bool                      `ddl:"static" sql:"FUNCTION"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier    `ddl:"identifier"`
+	Arguments                  []FunctionArgument        `ddl:"list,must_parentheses"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Returns                    FunctionReturns           `ddl:"keyword" sql:"RETURNS"`
+	ReturnNullValues           *ReturnNullValues         `ddl:"keyword"`
+	languageJava               bool                      `ddl:"static" sql:"LANGUAGE JAVA"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
+	RuntimeVersion             *string                   `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Imports                    []FunctionImport          `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 type FunctionArgument struct {
@@ -79,90 +79,90 @@ type FunctionPackage struct {
 
 // CreateForJavascriptFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#javascript-handler.
 type CreateForJavascriptFunctionOptions struct {
-	create                bool                                `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                               `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary             *bool                               `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                *bool                               `ddl:"keyword" sql:"SECURE"`
-	function              bool                                `ddl:"static" sql:"FUNCTION"`
-	name                  SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	Arguments             []FunctionArgument                  `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                               `ddl:"keyword" sql:"COPY GRANTS"`
-	Returns               FunctionReturns                     `ddl:"keyword" sql:"RETURNS"`
-	ReturnNullValues      *ReturnNullValues                   `ddl:"keyword"`
-	languageJavascript    bool                                `ddl:"static" sql:"LANGUAGE JAVASCRIPT"`
-	NullInputBehavior     *NullInputBehavior                  `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior              `ddl:"keyword"`
-	Comment               *string                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                              `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary             *bool                  `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
+	function              bool                   `ddl:"static" sql:"FUNCTION"`
+	name                  SchemaObjectIdentifier `ddl:"identifier"`
+	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
+	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
+	Returns               FunctionReturns        `ddl:"keyword" sql:"RETURNS"`
+	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
+	languageJavascript    bool                   `ddl:"static" sql:"LANGUAGE JAVASCRIPT"`
+	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
+	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
+	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#python-handler.
 type CreateForPythonFunctionOptions struct {
-	create                     bool                                `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                               `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary                  *bool                               `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                     *bool                               `ddl:"keyword" sql:"SECURE"`
-	function                   bool                                `ddl:"static" sql:"FUNCTION"`
-	IfNotExists                *bool                               `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	Arguments                  []FunctionArgument                  `ddl:"list,must_parentheses"`
-	CopyGrants                 *bool                               `ddl:"keyword" sql:"COPY GRANTS"`
-	Returns                    FunctionReturns                     `ddl:"keyword" sql:"RETURNS"`
-	ReturnNullValues           *ReturnNullValues                   `ddl:"keyword"`
-	languagePython             bool                                `ddl:"static" sql:"LANGUAGE PYTHON"`
-	NullInputBehavior          *NullInputBehavior                  `ddl:"keyword"`
-	ReturnResultsBehavior      *ReturnResultsBehavior              `ddl:"keyword"`
-	RuntimeVersion             string                              `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Comment                    *string                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Imports                    []FunctionImport                    `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Packages                   []FunctionPackage                   `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler                    string                              `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	ExternalAccessIntegrations []AccountObjectIdentifier           `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                            `ddl:"parameter,parentheses" sql:"SECRETS"`
-	FunctionDefinition         *string                             `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	function                   bool                      `ddl:"static" sql:"FUNCTION"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier    `ddl:"identifier"`
+	Arguments                  []FunctionArgument        `ddl:"list,must_parentheses"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Returns                    FunctionReturns           `ddl:"keyword" sql:"RETURNS"`
+	ReturnNullValues           *ReturnNullValues         `ddl:"keyword"`
+	languagePython             bool                      `ddl:"static" sql:"LANGUAGE PYTHON"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
+	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Imports                    []FunctionImport          `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler.
 type CreateForScalaFunctionOptions struct {
-	create                bool                                `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                               `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary             *bool                               `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                *bool                               `ddl:"keyword" sql:"SECURE"`
-	function              bool                                `ddl:"static" sql:"FUNCTION"`
-	IfNotExists           *bool                               `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                  SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	Arguments             []FunctionArgument                  `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                               `ddl:"keyword" sql:"COPY GRANTS"`
-	ResultDataType        DataType                            `ddl:"parameter,no_equals" sql:"RETURNS"`
-	ReturnNullValues      *ReturnNullValues                   `ddl:"keyword"`
-	languageScala         bool                                `ddl:"static" sql:"LANGUAGE SCALA"`
-	NullInputBehavior     *NullInputBehavior                  `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior              `ddl:"keyword"`
-	RuntimeVersion        *string                             `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Comment               *string                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Imports               []FunctionImport                    `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Packages              []FunctionPackage                   `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler               string                              `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string                             `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition    *string                             `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary             *bool                  `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
+	function              bool                   `ddl:"static" sql:"FUNCTION"`
+	IfNotExists           *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                  SchemaObjectIdentifier `ddl:"identifier"`
+	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
+	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
+	ResultDataType        DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
+	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
+	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
+	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
+	RuntimeVersion        *string                `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Imports               []FunctionImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	FunctionDefinition    *string                `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.
 type CreateForSQLFunctionOptions struct {
-	create                bool                                `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                               `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary             *bool                               `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                *bool                               `ddl:"keyword" sql:"SECURE"`
-	function              bool                                `ddl:"static" sql:"FUNCTION"`
-	name                  SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	Arguments             []FunctionArgument                  `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                               `ddl:"keyword" sql:"COPY GRANTS"`
-	Returns               FunctionReturns                     `ddl:"keyword" sql:"RETURNS"`
-	ReturnNullValues      *ReturnNullValues                   `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior              `ddl:"keyword"`
-	Memoizable            *bool                               `ddl:"keyword" sql:"MEMOIZABLE"`
-	Comment               *string                             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                              `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary             *bool                  `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
+	function              bool                   `ddl:"static" sql:"FUNCTION"`
+	name                  SchemaObjectIdentifier `ddl:"identifier"`
+	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
+	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
+	Returns               FunctionReturns        `ddl:"keyword" sql:"RETURNS"`
+	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
+	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
+	Memoizable            *bool                  `ddl:"keyword" sql:"MEMOIZABLE"`
+	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.

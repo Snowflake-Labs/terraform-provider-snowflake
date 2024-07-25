@@ -50,7 +50,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -94,7 +94,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -123,7 +123,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -168,7 +168,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -206,7 +206,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
