@@ -288,23 +288,28 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 // - Handle in the sql_builder
 // - Use in function,procedure,external_function
 // - Function (Test, Impl)
-// - Fix after arguments removed from SchemaObjectIdentifier
+// - Fix after argumentDataTypes removed from SchemaObjectIdentifier
 // - Look for todos on SNOW-999049
 
+// TODO: Rename?
 type SchemaObjectIdentifierWithArguments struct {
-	databaseName string
-	schemaName   string
-	name         string
-	arguments    []string
+	databaseName      string
+	schemaName        string
+	name              string
+	argumentDataTypes []DataType
 }
 
-func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, arguments ...string) SchemaObjectIdentifierWithArguments {
+func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
 	return SchemaObjectIdentifierWithArguments{
-		databaseName: strings.Trim(databaseName, `"`),
-		schemaName:   strings.Trim(schemaName, `"`),
-		name:         strings.Trim(name, `"`),
-		arguments:    arguments,
+		databaseName:      strings.Trim(databaseName, `"`),
+		schemaName:        strings.Trim(schemaName, `"`),
+		name:              strings.Trim(name, `"`),
+		argumentDataTypes: argumentDataTypes,
 	}
+}
+
+func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdentifier, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), name, argumentDataTypes...)
 }
 
 // TODO:
@@ -331,8 +336,12 @@ func (i SchemaObjectIdentifierWithArguments) Name() string {
 	return i.name
 }
 
-func (i SchemaObjectIdentifierWithArguments) Arguments() []string {
-	return i.arguments
+func (i SchemaObjectIdentifierWithArguments) ArgumentDataTypes() []DataType {
+	return i.argumentDataTypes
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaObjectId() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.name)
 }
 
 func (i SchemaObjectIdentifierWithArguments) SchemaId() DatabaseObjectIdentifier {
@@ -344,10 +353,10 @@ func (i SchemaObjectIdentifierWithArguments) DatabaseId() AccountObjectIdentifie
 }
 
 func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
-	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.arguments) == 0 {
+	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.argumentDataTypes) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(i.arguments, ", "))
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ", "))
 }
 
 type TableColumnIdentifier struct {

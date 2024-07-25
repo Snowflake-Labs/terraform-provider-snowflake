@@ -431,7 +431,8 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 }
 
 func TestFunctions_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifierWithArguments()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *DropFunctionOptions {
 		return &DropFunctionOptions{
@@ -452,7 +453,8 @@ func TestFunctions_Drop(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DROP FUNCTION %s ()`, id.FullyQualifiedName())
+		opts.name = noArgsId
+		assertOptsValidAndSQLEquals(t, opts, `DROP FUNCTION %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -460,19 +462,18 @@ func TestFunctions_Drop(t *testing.T) {
 			name: id,
 		}
 		opts.IfExists = Bool(true)
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DROP FUNCTION IF EXISTS %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `DROP FUNCTION IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestFunctions_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
 
 	defaultOpts := func() *AlterFunctionOptions {
 		return &AlterFunctionOptions{
-			name:              id,
-			IfExists:          Bool(true),
-			ArgumentDataTypes: []DataType{DataTypeVARCHAR, DataTypeNumber},
+			name:     id,
+			IfExists: Bool(true),
 		}
 	}
 
@@ -503,62 +504,62 @@ func TestFunctions_Alter(t *testing.T) {
 		opts := defaultOpts()
 		target := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts.RenameTo = &target
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
 	})
 
 	t.Run("alter: set log level with no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = nil
+		opts.name = noArgsId
 		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s () SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("alter: set log level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set trace level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetTraceLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET TRACE_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET TRACE_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetComment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET COMMENT = 'comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set secure", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetSecure = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET SECURE`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET SECURE`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset log level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetLogLevel = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET LOG_LEVEL`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET LOG_LEVEL`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset trace level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetTraceLevel = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET TRACE_LEVEL`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET TRACE_LEVEL`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset secure", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetSecure = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET SECURE`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET SECURE`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetComment = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET COMMENT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {
@@ -569,7 +570,7 @@ func TestFunctions_Alter(t *testing.T) {
 				Value: "value1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET TAG "tag1" = 'value1'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET TAG "tag1" = 'value1'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset tags", func(t *testing.T) {
@@ -578,7 +579,7 @@ func TestFunctions_Alter(t *testing.T) {
 			NewAccountObjectIdentifier("tag1"),
 			NewAccountObjectIdentifier("tag2"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
@@ -615,7 +616,8 @@ func TestFunctions_Show(t *testing.T) {
 }
 
 func TestFunctions_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
 
 	defaultOpts := func() *DescribeFunctionOptions {
 		return &DescribeFunctionOptions{
@@ -636,12 +638,12 @@ func TestFunctions_Describe(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s ()`, id.FullyQualifiedName())
+		opts.name = noArgsId
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, id.FullyQualifiedName())
 	})
 }

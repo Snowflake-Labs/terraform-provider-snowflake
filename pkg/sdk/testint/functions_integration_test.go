@@ -23,9 +23,9 @@ func TestInt_CreateFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
 		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
@@ -35,7 +35,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 	t.Run("create function for Java", func(t *testing.T) {
 		name := "echo_varchar"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
 
 		definition := `
 		class TestFunc {
@@ -45,17 +45,17 @@ func TestInt_CreateFunctions(t *testing.T) {
 		}`
 		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR).WithDefaultValue(sdk.String("'abc'"))
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR).WithDefaultValue("'abc'")
 		request := sdk.NewCreateForJavaFunctionRequest(id, *returns, "TestFunc.echoVarchar").
-			WithOrReplace(sdk.Bool(true)).
+			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
-			WithTargetPath(&target).
-			WithFunctionDefinition(&definition)
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
+			WithTargetPath(target).
+			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForJava(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{"VARCHAR"}))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 	t.Run("create function for Javascript", func(t *testing.T) {
 		name := "js_factorial"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeFloat)
 
 		definition := `
 		if (D <= 0) {
@@ -79,15 +79,15 @@ func TestInt_CreateFunctions(t *testing.T) {
 		}`
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("d", sdk.DataTypeFloat)
 		request := sdk.NewCreateForJavascriptFunctionRequest(id, *returns, definition).
-			WithOrReplace(sdk.Bool(true)).
+			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput))
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput))
 		err := client.Functions.CreateForJavascript(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -96,21 +96,21 @@ func TestInt_CreateFunctions(t *testing.T) {
 	})
 
 	t.Run("create function for Python", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeNumber)
 
 		definition := `
 def dump(i):
 	print("Hello World!")`
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVariant)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("i", sdk.DataTypeNumber)
 		request := sdk.NewCreateForPythonFunctionRequest(id, *returns, "3.8", "dump").
-			WithOrReplace(sdk.Bool(true)).
+			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithFunctionDefinition(&definition)
+			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForPython(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{"int"}))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -120,7 +120,7 @@ def dump(i):
 
 	t.Run("create function for Scala", func(t *testing.T) {
 		name := "echo_varchar"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifier(name)
+		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
 
 		definition := `
 		class Echo {
@@ -131,13 +131,13 @@ def dump(i):
 
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForScalaFunctionRequest(id, sdk.DataTypeVARCHAR, "Echo.echoVarchar").
-			WithOrReplace(sdk.Bool(true)).
+			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithRuntimeVersion(sdk.String("2.12")).
-			WithFunctionDefinition(&definition)
+			WithRuntimeVersion("2.12").
+			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForScala(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -146,20 +146,20 @@ def dump(i):
 	})
 
 	t.Run("create function for SQL", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 
 		definition := "3.141592654::FLOAT"
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
 		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithOrReplace(sdk.Bool(true)).
-			WithComment(sdk.String("comment"))
+			WithOrReplace(true).
+			WithComment("comment")
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -168,18 +168,18 @@ def dump(i):
 	})
 
 	t.Run("create function for SQL with no arguments", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
 
 		definition := "3.141592654::FLOAT"
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
-			WithOrReplace(sdk.Bool(true)).
-			WithComment(sdk.String("comment"))
+			WithOrReplace(true).
+			WithComment("comment")
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id, nil))
+		t.Cleanup(cleanupFunctionHandle(id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
-	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool, withArguments bool) {
+	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool, withArguments bool) {
 		t.Helper()
 
 		function, err := client.Functions.ShowByID(ctx, id)
@@ -224,9 +224,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		assert.Equal(t, false, function.IsMemoizable)
 	}
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
 		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
@@ -236,14 +236,14 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 	createFunctionForSQLHandle := func(t *testing.T, cleanup bool, withArguments bool) *sdk.Function {
 		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 
 		definition := "3.141592654::FLOAT"
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
-			WithOrReplace(sdk.Bool(true))
+			WithOrReplace(true)
 		if withArguments {
 			argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
 			request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
@@ -251,31 +251,27 @@ func TestInt_OtherFunctions(t *testing.T) {
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		if cleanup {
-			if withArguments {
-				t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
-			} else {
-				t.Cleanup(cleanupFunctionHandle(id, nil))
-			}
+			t.Cleanup(cleanupFunctionHandle(id))
 		}
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 		return function
 	}
 
-	defaultAlterRequest := func(id sdk.SchemaObjectIdentifier) *sdk.AlterFunctionRequest {
-		return sdk.NewAlterFunctionRequest(id, []sdk.DataType{sdk.DataTypeFloat})
+	defaultAlterRequest := func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+		return sdk.NewAlterFunctionRequest(id)
 	}
 
 	t.Run("alter function: rename", func(t *testing.T) {
 		f := createFunctionForSQLHandle(t, false, true)
 
 		id := f.ID()
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithRenameTo(&nid))
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithRenameTo(nid.SchemaObjectId()))
 		if err != nil {
-			t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+			t.Cleanup(cleanupFunctionHandle(id))
 		} else {
-			t.Cleanup(cleanupFunctionHandle(nid, []sdk.DataType{sdk.DataTypeFloat}))
+			t.Cleanup(cleanupFunctionHandle(nid))
 		}
 		require.NoError(t, err)
 
@@ -291,7 +287,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(sdk.String("DEBUG")))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -300,7 +296,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetLogLevel(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetLogLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -309,7 +305,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(sdk.String("ALWAYS")))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -318,7 +314,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTraceLevel(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTraceLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -327,7 +323,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetComment(sdk.String("test comment")))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetComment("test comment"))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -336,7 +332,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -345,7 +341,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetSecure(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, true, true)
 	})
@@ -353,7 +349,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	t.Run("alter function: set secure with no arguments", func(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, false)
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id, nil).WithSetSecure(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, true, false)
 	})
@@ -362,7 +358,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetSecure(sdk.Bool(true)))
+		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -404,7 +400,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f1 := createFunctionForSQLHandle(t, true, true)
 		f2 := createFunctionForSQLHandle(t, true, true)
 
-		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(&sdk.Like{Pattern: &f1.Name}))
+		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(sdk.Like{Pattern: &f1.Name}))
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(functions))
@@ -413,17 +409,15 @@ func TestInt_OtherFunctions(t *testing.T) {
 	})
 
 	t.Run("show function for SQL: no matches", func(t *testing.T) {
-		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
+		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(functions))
 	})
 
 	t.Run("describe function for SQL", func(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
-		id := f.ID()
 
-		request := sdk.NewDescribeFunctionRequest(id, []sdk.DataType{sdk.DataTypeFloat})
-		details, err := client.Functions.Describe(ctx, request)
+		details, err := client.Functions.Describe(ctx, f.ID())
 		require.NoError(t, err)
 		pairs := make(map[string]string)
 		for _, detail := range details {
@@ -437,10 +431,8 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 	t.Run("describe function for SQL: no arguments", func(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, false)
-		id := f.ID()
 
-		request := sdk.NewDescribeFunctionRequest(id, nil)
-		details, err := client.Functions.Describe(ctx, request)
+		details, err := client.Functions.Describe(ctx, f.ID())
 		require.NoError(t, err)
 		pairs := make(map[string]string)
 		for _, detail := range details {
@@ -457,9 +449,9 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments, dts []sdk.DataType) func() {
 		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts))
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
@@ -467,13 +459,13 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		}
 	}
 
-	createFunctionForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+	createFunctionForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
 		t.Helper()
 
 		definition := "3.141592654::FLOAT"
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).WithOrReplace(sdk.Bool(true))
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).WithOrReplace(true)
 
 		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
 		request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
@@ -486,8 +478,8 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID())
 
 		createFunctionForSQLHandle(t, id1)
 		createFunctionForSQLHandle(t, id2)

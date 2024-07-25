@@ -328,29 +328,27 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 
 func (r *AlterFunctionRequest) toOpts() *AlterFunctionOptions {
 	opts := &AlterFunctionOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
-		RenameTo:          r.RenameTo,
-		SetComment:        r.SetComment,
-		SetLogLevel:       r.SetLogLevel,
-		SetTraceLevel:     r.SetTraceLevel,
-		SetSecure:         r.SetSecure,
-		UnsetSecure:       r.UnsetSecure,
-		UnsetLogLevel:     r.UnsetLogLevel,
-		UnsetTraceLevel:   r.UnsetTraceLevel,
-		UnsetComment:      r.UnsetComment,
-		SetTags:           r.SetTags,
-		UnsetTags:         r.UnsetTags,
+		IfExists:        r.IfExists,
+		name:            r.name,
+		RenameTo:        r.RenameTo,
+		SetComment:      r.SetComment,
+		SetLogLevel:     r.SetLogLevel,
+		SetTraceLevel:   r.SetTraceLevel,
+		SetSecure:       r.SetSecure,
+		UnsetSecure:     r.UnsetSecure,
+		UnsetLogLevel:   r.UnsetLogLevel,
+		UnsetTraceLevel: r.UnsetTraceLevel,
+		UnsetComment:    r.UnsetComment,
+		SetTags:         r.SetTags,
+		UnsetTags:       r.UnsetTags,
 	}
 	return opts
 }
 
 func (r *DropFunctionRequest) toOpts() *DropFunctionOptions {
 	opts := &DropFunctionOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	return opts
 }
@@ -392,8 +390,7 @@ func (r functionRow) convert() *Function {
 
 func (r *DescribeFunctionRequest) toOpts() *DescribeFunctionOptions {
 	opts := &DescribeFunctionOptions{
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		name: r.name,
 	}
 	return opts
 }

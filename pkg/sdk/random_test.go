@@ -15,8 +15,8 @@ var (
 	emptySchemaObjectIdentifierWithArguments = NewSchemaObjectIdentifierWithArguments("", "", "")
 )
 
-func randomSchemaObjectIdentifierWithArguments() SchemaObjectIdentifierWithArguments {
-	return NewSchemaObjectIdentifierWithArguments(random.StringN(12), random.StringN(12), random.StringN(12), random.StringN(12))
+func randomSchemaObjectIdentifierWithArguments(argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(random.StringN(12), random.StringN(12), random.StringN(12), argumentDataTypes...)
 }
 
 func randomSchemaObjectIdentifier() SchemaObjectIdentifier {

@@ -467,11 +467,9 @@ func (s *CreateForSQLFunctionRequest) WithComment(Comment string) *CreateForSQLF
 
 func NewAlterFunctionRequest(
 	name SchemaObjectIdentifierWithArguments,
-	ArgumentDataTypes []DataType,
 ) *AlterFunctionRequest {
 	s := AlterFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
@@ -537,11 +535,9 @@ func (s *AlterFunctionRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *Alte
 
 func NewDropFunctionRequest(
 	name SchemaObjectIdentifierWithArguments,
-	ArgumentDataTypes []DataType,
 ) *DropFunctionRequest {
 	s := DropFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
@@ -566,10 +562,8 @@ func (s *ShowFunctionRequest) WithIn(In In) *ShowFunctionRequest {
 
 func NewDescribeFunctionRequest(
 	name SchemaObjectIdentifierWithArguments,
-	ArgumentDataTypes []DataType,
 ) *DescribeFunctionRequest {
 	s := DescribeFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }

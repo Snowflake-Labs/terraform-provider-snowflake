@@ -115,9 +115,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.FileFormat: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FileFormats.ShowByID)
 	},
-	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Functions.ShowByID)
-	},
+	//resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+	//	return runShowById(ctx, id, client.Functions.ShowByID)
+	//},
 	resources.ManagedAccount: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ManagedAccounts.ShowByID)
 	},
