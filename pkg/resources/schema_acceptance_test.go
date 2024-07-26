@@ -550,12 +550,14 @@ func TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
-	databaseId := acc.TestClient().Ids.DatabaseId()
-	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	db, dbCleanup := acc.TestClient().Database.CreateDatabase(t)
+	t.Cleanup(dbCleanup)
+
+	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(db.ID())
 
 	configVariablesWithoutSchemaDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database": config.StringVariable(databaseId.Name()),
+			"database": config.StringVariable(db.ID().Name()),
 			"schema":   config.StringVariable(id.Name()),
 		}
 	}
@@ -584,7 +586,7 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 			// change param value in database
 			{
 				PreConfig: func() {
-					acc.TestClient().Database.UpdateDataRetentionTime(t, databaseId, 50)
+					acc.TestClient().Database.UpdateDataRetentionTime(t, db.ID(), 50)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(),
