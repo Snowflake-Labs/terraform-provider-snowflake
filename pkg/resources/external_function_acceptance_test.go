@@ -391,6 +391,53 @@ func TestAcc_ExternalFunction_issue2528(t *testing.T) {
 	})
 }
 
+// Proves that header parsing handles values wrapped in curly braces, e.g. `value = "{1}"`
+func TestAcc_ExternalFunction_HeaderParsing(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigIssueCurlyHeader(id),
+				// Previous implementation produces a plan with the following changes
+				//
+				// - header { # forces replacement
+				//   - name  = "name" -> null
+				//   - value = "0" -> null
+				// }
+				//
+				// + header { # forces replacement
+				//   + name  = "name"
+				//   + value = "{0}"
+				// }
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfigIssueCurlyHeader(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "header.0.name", "name"),
+					resource.TestCheckResourceAttr(resourceName, "header.0.value", "{0}"),
+				),
+			},
+		},
+	})
+}
+
 func externalFunctionConfig(database string, schema string, name string) string {
 	return externalFunctionConfigWithReturnNullAllowed(database, schema, name, nil)
 }
@@ -477,4 +524,39 @@ resource "snowflake_external_function" "f2" {
   url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 }
 `, database, schema, name, schema2)
+}
+
+func externalFunctionConfigIssueCurlyHeader(id sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+  name                 = "%[3]s"
+  api_provider         = "aws_api_gateway"
+  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+  enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+  name     = "%[3]s"
+  database = "%[1]s"
+  schema   = "%[2]s"
+  arg {
+    name = "ARG1"
+    type = "VARCHAR"
+  }
+  arg {
+    name = "ARG2"
+    type = "VARCHAR"
+  }
+  header {
+	name = "name"
+	value = "{0}"
+  }
+  return_type               = "VARIANT"
+  return_behavior           = "IMMUTABLE"
+  api_integration           = snowflake_api_integration.test_api_int.name
+  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+
+`, id.DatabaseName(), id.SchemaName(), id.Name())
 }
