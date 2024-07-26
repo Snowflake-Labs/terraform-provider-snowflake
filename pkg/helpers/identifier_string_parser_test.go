@@ -22,7 +22,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 	t.Run("returns read error", func(t *testing.T) {
 		input := `ab"c`
 
-		_, err := ParseIdentifierString(input)
+		_, err := parseIdentifierString(input)
 
 		require.ErrorContains(t, err, "unable to read identifier")
 		require.ErrorContains(t, err, `bare " in non-quoted-field`)
@@ -31,7 +31,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 	t.Run("returns error for empty input", func(t *testing.T) {
 		input := ""
 
-		_, err := ParseIdentifierString(input)
+		_, err := parseIdentifierString(input)
 
 		require.ErrorContains(t, err, "incompatible identifier")
 	})
@@ -39,7 +39,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 	t.Run("returns error for multiple lines", func(t *testing.T) {
 		input := "abc\ndef"
 
-		_, err := ParseIdentifierString(input)
+		_, err := parseIdentifierString(input)
 
 		require.ErrorContains(t, err, "incompatible identifier")
 	})
@@ -48,7 +48,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := "abc.def"
 		expected := []string{"abc", "def"}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -58,7 +58,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `"abc"."def"`
 		expected := []string{"abc", "def"}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -68,7 +68,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `"abc".def."ghi"`
 		expected := []string{"abc", "def", "ghi"}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -79,7 +79,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `"ab""c".def`
 		expected := []string{`ab"c`, "def"}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -89,7 +89,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `"ab.c".def`
 		expected := []string{`ab.c`, "def"}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -99,7 +99,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `""`
 		expected := []string{""}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)
@@ -109,7 +109,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		input := `""."."".".".""."".""."".""."".""."""""`
 		expected := []string{"", `.".`, `.".".".".".".".""`}
 
-		parts, err := ParseIdentifierString(input)
+		parts, err := parseIdentifierString(input)
 
 		require.NoError(t, err)
 		containsAll(t, parts, expected)

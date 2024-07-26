@@ -13,8 +13,6 @@ const (
 	ResourceIdDelimiter = '|'
 )
 
-type identifierParsingFunc func(string) ([]string, error)
-
 func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([]string, error) {
 	reader := csv.NewReader(strings.NewReader(identifier))
 	if opts != nil {
@@ -33,10 +31,22 @@ func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 	return lines[0], nil
 }
 
-func ParseIdentifierString(identifier string) ([]string, error) {
+func parseIdentifierString(identifier string) ([]string, error) {
 	return parseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
 		r.Comma = IdDelimiter
 	})
+}
+
+func parseIdentifier[T sdk.ObjectIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
+	var emptyIdentifier T
+	parts, err := parseIdentifierString(identifier)
+	if err != nil {
+		return emptyIdentifier, err
+	}
+	if len(parts) != expectedParts {
+		return emptyIdentifier, fmt.Errorf(`unexpected number of parts %[1]d in identifier %[2]s, expected %[3]d in a form of "%[4]s"`, len(parts), identifier, expectedParts, expectedFormat)
+	}
+	return constructFromParts(parts), nil
 }
 
 func ParseResourceIdentifier(identifier string) []string {
@@ -50,92 +60,51 @@ func EncodeResourceIdentifier(parts ...string) string {
 	return strings.Join(parts, string(ResourceIdDelimiter))
 }
 
-func parseAccountObjectIdentifier(identifier string, parser identifierParsingFunc) (sdk.AccountObjectIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.AccountObjectIdentifier{}, err
-	}
-	if len(parts) != 1 {
-		return sdk.AccountObjectIdentifier{}, fmt.Errorf(`unexpected number of parts %d in identifier %s, expected 1 in a form of "<account_object_name>"`, len(parts), identifier)
-	}
-	return sdk.NewAccountObjectIdentifier(parts[0]), nil
-}
-
 func ParseAccountObjectIdentifier(identifier string) (sdk.AccountObjectIdentifier, error) {
-	return parseAccountObjectIdentifier(identifier, ParseIdentifierString)
-}
-
-func parseDatabaseObjectIdentifier(identifier string, parser identifierParsingFunc, delimiter rune) (sdk.DatabaseObjectIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.DatabaseObjectIdentifier{}, err
-	}
-	if len(parts) != 2 {
-		return sdk.DatabaseObjectIdentifier{}, fmt.Errorf(`unexpected number of parts %d in identifier %s, expected 2 in a form of "<database_name>%c<database_object_name>"`, len(parts), identifier, delimiter)
-	}
-	return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]), nil
+	return parseIdentifier[sdk.AccountObjectIdentifier](
+		identifier, 1, "<account_object_name>",
+		func(parts []string) sdk.AccountObjectIdentifier {
+			return sdk.NewAccountObjectIdentifier(parts[0])
+		},
+	)
 }
 
 func ParseDatabaseObjectIdentifier(identifier string) (sdk.DatabaseObjectIdentifier, error) {
-	return parseDatabaseObjectIdentifier(identifier, ParseIdentifierString, IdDelimiter)
-}
-
-func parseSchemaObjectIdentifier(identifier string, parser identifierParsingFunc, delimiter rune) (sdk.SchemaObjectIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.SchemaObjectIdentifier{}, err
-	}
-	if len(parts) != 3 {
-		return sdk.SchemaObjectIdentifier{}, fmt.Errorf(`unexpected number of parts %[1]d in identifier %[2]s, expected 3 in a form of "<database_name>%[3]c<schema_name>%[3]c<schema_object_name>"`, len(parts), identifier, delimiter)
-	}
-	return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2]), nil
+	return parseIdentifier[sdk.DatabaseObjectIdentifier](
+		identifier, 2, "<database_name>.<database_object_name>",
+		func(parts []string) sdk.DatabaseObjectIdentifier {
+			return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1])
+		},
+	)
 }
 
 func ParseSchemaObjectIdentifier(identifier string) (sdk.SchemaObjectIdentifier, error) {
-	return parseSchemaObjectIdentifier(identifier, ParseIdentifierString, IdDelimiter)
-}
-
-func parseTableColumnObjectIdentifier(identifier string, parser identifierParsingFunc, delimiter rune) (sdk.TableColumnIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.TableColumnIdentifier{}, err
-	}
-	if len(parts) != 4 {
-		return sdk.TableColumnIdentifier{}, fmt.Errorf(`unexpected number of parts %[1]d in identifier %[2]s, expected 4 in a form of "<database_name>%[3]c<schema_name>%[3]c<table_name>%[3]c<table_column_name>"`, len(parts), identifier, delimiter)
-	}
-	return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
+	return parseIdentifier[sdk.SchemaObjectIdentifier](
+		identifier, 3, "<database_name>.<schema_name>.<schema_object_name>",
+		func(parts []string) sdk.SchemaObjectIdentifier {
+			return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+		},
+	)
 }
 
 func ParseTableColumnIdentifier(identifier string) (sdk.TableColumnIdentifier, error) {
-	return parseTableColumnObjectIdentifier(identifier, ParseIdentifierString, IdDelimiter)
-}
-
-func parseAccountIdentifier(identifier string, parser identifierParsingFunc, delimiter rune) (sdk.AccountIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.AccountIdentifier{}, err
-	}
-	if len(parts) != 2 {
-		return sdk.AccountIdentifier{}, fmt.Errorf(`unexpected number of parts %d in identifier %s, expected 2 in a form of "<organization_name>%c<account_name>"`, len(parts), identifier, delimiter)
-	}
-	return sdk.NewAccountIdentifier(parts[0], parts[1]), nil
+	return parseIdentifier[sdk.TableColumnIdentifier](
+		identifier, 4, "<database_name>.<schema_name>.<table_name>.<table_column_name>",
+		func(parts []string) sdk.TableColumnIdentifier {
+			return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
+		},
+	)
 }
 
 // ParseAccountIdentifier is implemented with an assumption that the recommended format is used that contains two parts,
 // organization name and account name.
 func ParseAccountIdentifier(identifier string) (sdk.AccountIdentifier, error) {
-	return parseAccountIdentifier(identifier, ParseIdentifierString, IdDelimiter)
-}
-
-func parseExternalObjectIdentifier(identifier string, parser identifierParsingFunc, delimiter rune) (sdk.ExternalObjectIdentifier, error) {
-	parts, err := parser(identifier)
-	if err != nil {
-		return sdk.ExternalObjectIdentifier{}, err
-	}
-	if len(parts) != 3 {
-		return sdk.ExternalObjectIdentifier{}, fmt.Errorf(`unexpected number of parts %[1]d in identifier %[2]s, expected 3 in a form of "<organization_name>%[3]c<account_name>%[3]c<external_object_name>"`, len(parts), identifier, delimiter)
-	}
-	return sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier(parts[0], parts[1]), sdk.NewAccountObjectIdentifier(parts[2])), nil
+	return parseIdentifier[sdk.AccountIdentifier](
+		identifier, 2, "<organization_name>.<account_name>",
+		func(parts []string) sdk.AccountIdentifier {
+			return sdk.NewAccountIdentifier(parts[0], parts[1])
+		},
+	)
 }
 
 // ParseExternalObjectIdentifier is implemented with an assumption that the identifier consists of three parts, because:
@@ -145,5 +114,10 @@ func parseExternalObjectIdentifier(identifier string, parser identifierParsingFu
 //     account identifier would be used as part of the identifier that would refer to the "lower level" object.
 //     Reference: https://docs.snowflake.com/en/user-guide/admin-account-identifier#where-are-account-identifiers-used.
 func ParseExternalObjectIdentifier(identifier string) (sdk.ExternalObjectIdentifier, error) {
-	return parseExternalObjectIdentifier(identifier, ParseIdentifierString, IdDelimiter)
+	return parseIdentifier[sdk.ExternalObjectIdentifier](
+		identifier, 3, "<organization_name>.<account_name>.<external_object_name>",
+		func(parts []string) sdk.ExternalObjectIdentifier {
+			return sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier(parts[0], parts[1]), sdk.NewAccountObjectIdentifier(parts[2]))
+		},
+	)
 }

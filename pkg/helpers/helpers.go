@@ -105,7 +105,7 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 // The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
 // inside database called "db", not a database called "db.name". In this case quotes should be used.
 func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
-	parts, err := ParseIdentifierString(identifier)
+	parts, err := parseIdentifierString(identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error)
 // DecodeSnowflakeAccountIdentifier decodes account identifier (usually passed as one of the parameter in tf configuration) into sdk.AccountIdentifier.
 // Check more in https://docs.snowflake.com/en/sql-reference/sql/create-account#required-parameters.
 func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier, error) {
-	parts, err := ParseIdentifierString(identifier)
+	parts, err := parseIdentifierString(identifier)
 	if err != nil {
 		return sdk.AccountIdentifier{}, err
 	}
