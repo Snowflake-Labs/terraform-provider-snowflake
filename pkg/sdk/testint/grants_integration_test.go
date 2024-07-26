@@ -266,12 +266,12 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		selectPrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool {
+		usagePrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool {
 			return g.Privilege == sdk.SchemaObjectPrivilegeUsage.String()
 		})
 		require.NoError(t, err)
-		assert.Equal(t, cortex.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
-		assert.Equal(t, sdk.ObjectTypeCortexSearchService, selectPrivilege.GrantedOn)
+		assert.Equal(t, cortex.ID().FullyQualifiedName(), usagePrivilege.Name.FullyQualifiedName())
+		assert.Equal(t, sdk.ObjectTypeCortexSearchService, usagePrivilege.GrantedOn)
 
 		// now revoke and verify that the grant(s) are gone
 		err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
