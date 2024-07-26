@@ -6,6 +6,10 @@ across different versions.
 
 ## v0.93.0 ➞ v0.94.0
 
+### *(breaking change)* changes in snowflake_scim_integration
+
+In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
+
 ### *(breaking change)* refactored snowflake_schemas datasource
 Changes:
 - `database` is removed and can be specified inside `in` field.
@@ -174,6 +178,10 @@ but we recommend to eventually migrate to the newer counterpart.
 #### *(behavior change)* Changed behavior of `sync_password`
 
 Now, the `sync_password` field will set the state value to `default` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
+> [!WARNING]
+> This change causes issues for Azure scim client (see [#2946](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2946)). The workaround is to remove the resource from the state with `terraform state rm`, add `sync_password = true` to the config, and import with `terraform import "snowflake_scim_integration.test" "aad_provisioning"`. After these steps, there should be no errors and no diff on this field. This behavior is fixed in v0.94 with state upgrader.
+
 
 #### *(behavior change)* Renamed fields
 

@@ -2,14 +2,14 @@
 page_title: "snowflake_api_authentication_integration_with_client_credentials Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage api authentication security integration objects with client credentials. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
 # snowflake_api_authentication_integration_with_client_credentials (Resource)
 
-
+Resource used to manage api authentication security integration objects with client credentials. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).
 
 ## Example Usage
 
