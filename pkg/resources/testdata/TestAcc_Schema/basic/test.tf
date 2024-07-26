@@ -1,4 +1,4 @@
 resource "snowflake_schema" "test" {
-  name     = var.schema
+  name     = var.name
   database = var.database
 }

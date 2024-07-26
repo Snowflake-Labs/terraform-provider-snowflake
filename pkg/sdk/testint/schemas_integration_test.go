@@ -619,7 +619,7 @@ func TestInt_Schemas(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Schemas.ShowByID(ctx, schema.ID())
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	t.Run("undrop", func(t *testing.T) {
@@ -634,7 +634,7 @@ func TestInt_Schemas(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Schemas.ShowByID(ctx, schema.ID())
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 
 		err = client.Schemas.Undrop(ctx, schema.ID())
 		require.NoError(t, err)

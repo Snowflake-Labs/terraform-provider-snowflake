@@ -5,11 +5,53 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.93.0 ➞ v0.94.0
-
 ### *(breaking change)* changes in snowflake_scim_integration
 
 In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
 
+
+### *(breaking change)* refactored snowflake_schema resource
+
+Renamed fields:
+- renamed `is_managed` to `with_managed_access`
+- renamed `data_retention_days` to `data_retention_time_in_days`
+
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+Removed fields:
+- `tag`
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+
+New fields:
+- the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
+    - `max_data_extension_time_in_days`
+    - `external_volume`
+    - `catalog`
+    - `replace_invalid_characters`
+    - `default_ddl_collation`
+    - `storage_serialization_policy`
+    - `log_level`
+    - `trace_level`
+    - `suspend_task_after_num_failures`
+    - `task_auto_retry_attempts`
+    - `user_task_managed_initial_warehouse_size`
+    - `user_task_timeout_ms`
+    - `user_task_minimum_trigger_interval_in_seconds`
+    - `quoted_identifiers_ignore_case`
+    - `enable_console_output`
+    - `pipe_execution_paused`
+- added `show_output` field that holds the response from SHOW SCHEMAS.
+- added `describe_output` field that holds the response from DESCRIBE SCHEMA. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. Otherwise, this field is not filled.
+- added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
+
+We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `is_transient` and `with_managed_access` was changed from boolean to string. This should not require updating existing configs (boolean value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings.
+
+Terraform should recreate resources for configs lacking `is_transient` (`DROP` and then `CREATE` will be run underneath). To prevent this behavior, please set `is_transient` field.
+
+Terraform should perform an action for configs lacking `with_managed_access` (`ALTER SCHEMA DISABLE MANAGED ACCESS` will be run underneath which should not affect the Snowflake object, because `MANAGED ACCESS` is not set by default)
 ### *(breaking change)* refactored snowflake_schemas datasource
 Changes:
 - `database` is removed and can be specified inside `in` field.
