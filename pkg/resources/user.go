@@ -333,6 +333,10 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
+		if diags := handleUserParameterRead(d, userParameters); diags != nil {
+			return diags
+		}
+
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
 			return diag.FromErr(err)
 		}

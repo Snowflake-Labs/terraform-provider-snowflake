@@ -3,11 +3,13 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -85,6 +87,7 @@ func init() {
 		//DiffSuppress schema.SchemaDiffSuppressFunc
 		//ValidateDiag schema.SchemaValidateDiagFunc
 	}
+	// TODO: move to the SDK
 	userParameterFields := []parameterDef{
 		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption)."},
@@ -173,6 +176,94 @@ func userParametersProvider(ctx context.Context, d ResourceIdProvider, meta any)
 		return nil, err
 	}
 	return userParameters, nil
+}
+
+// TODO: make generic based on type definition
+func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
+	for _, p := range warehouseParameters {
+		switch p.Key {
+		case
+			string(sdk.UserParameterClientMemoryLimit),
+			string(sdk.UserParameterClientPrefetchThreads),
+			string(sdk.UserParameterClientResultChunkSize),
+			string(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency),
+			string(sdk.UserParameterJsonIndent),
+			string(sdk.UserParameterLockTimeout),
+			string(sdk.UserParameterMultiStatementCount),
+			string(sdk.UserParameterRowsPerResultset),
+			string(sdk.UserParameterStatementQueuedTimeoutInSeconds),
+			string(sdk.UserParameterStatementTimeoutInSeconds),
+			string(sdk.UserParameterTwoDigitCenturyStart),
+			string(sdk.UserParameterWeekOfYearPolicy),
+			string(sdk.UserParameterWeekStart):
+			value, err := strconv.Atoi(p.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set(strings.ToLower(p.Key), value); err != nil {
+				return diag.FromErr(err)
+			}
+		case
+			string(sdk.UserParameterBinaryInputFormat),
+			string(sdk.UserParameterBinaryOutputFormat),
+			string(sdk.UserParameterClientTimestampTypeMapping),
+			string(sdk.UserParameterDateInputFormat),
+			string(sdk.UserParameterDateOutputFormat),
+			string(sdk.UserParameterGeographyOutputFormat),
+			string(sdk.UserParameterGeometryOutputFormat),
+			string(sdk.UserParameterLogLevel),
+			string(sdk.UserParameterQueryTag),
+			string(sdk.UserParameterS3StageVpceDnsName),
+			string(sdk.UserParameterSearchPath),
+			string(sdk.UserParameterSimulatedDataSharingConsumer),
+			string(sdk.UserParameterTimestampInputFormat),
+			string(sdk.UserParameterTimestampLtzOutputFormat),
+			string(sdk.UserParameterTimestampNtzOutputFormat),
+			string(sdk.UserParameterTimestampOutputFormat),
+			string(sdk.UserParameterTimestampTypeMapping),
+			string(sdk.UserParameterTimestampTzOutputFormat),
+			string(sdk.UserParameterTimezone),
+			string(sdk.UserParameterTimeInputFormat),
+			string(sdk.UserParameterTimeOutputFormat),
+			string(sdk.UserParameterTraceLevel),
+			string(sdk.UserParameterTransactionDefaultIsolationLevel),
+			string(sdk.UserParameterUnsupportedDdlAction),
+			string(sdk.UserParameterNetworkPolicy):
+			if err := d.Set(strings.ToLower(p.Key), p.Value); err != nil {
+				return diag.FromErr(err)
+			}
+		case
+			string(sdk.UserParameterAbortDetachedQuery),
+			string(sdk.UserParameterAutocommit),
+			string(sdk.UserParameterClientMetadataRequestUseConnectionCtx),
+			string(sdk.UserParameterClientResultColumnCaseInsensitive),
+			string(sdk.UserParameterClientSessionKeepAlive),
+			string(sdk.UserParameterEnableUnloadPhysicalTypeOptimization),
+			string(sdk.UserParameterErrorOnNondeterministicMerge),
+			string(sdk.UserParameterErrorOnNondeterministicUpdate),
+			string(sdk.UserParameterJdbcTreatDecimalAsInt),
+			string(sdk.UserParameterJdbcTreatTimestampNtzAsUtc),
+			string(sdk.UserParameterJdbcUseSessionTimezone),
+			string(sdk.UserParameterNoorderSequenceAsDefault),
+			string(sdk.UserParameterOdbcTreatDecimalAsInt),
+			string(sdk.UserParameterQuotedIdentifiersIgnoreCase),
+			string(sdk.UserParameterStrictJsonOutput),
+			string(sdk.UserParameterTimestampDayIsAlways24h),
+			string(sdk.UserParameterTransactionAbortOnError),
+			string(sdk.UserParameterUseCachedResult),
+			string(sdk.UserParameterEnableUnredactedQuerySyntaxError),
+			string(sdk.UserParameterPreventUnloadToInternalStages):
+			value, err := strconv.ParseBool(p.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set(strings.ToLower(p.Key), value); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // TODO: move this function
