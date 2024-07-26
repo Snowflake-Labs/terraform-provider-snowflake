@@ -786,6 +786,20 @@ const (
 	TimestampTypeMappingTz  TimestampTypeMapping = "TIMESTAMP_TZ"
 )
 
+// TODO [SNOW-1348101]: test
+func ToTimestampTypeMapping(s string) (TimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(TimestampTypeMappingLtz):
+		return TimestampTypeMappingLtz, nil
+	case string(TimestampTypeMappingNtz):
+		return TimestampTypeMappingNtz, nil
+	case string(TimestampTypeMappingTz):
+		return TimestampTypeMappingTz, nil
+	default:
+		return "", fmt.Errorf("invalid timestamp type mapping: %s", s)
+	}
+}
+
 type TransactionDefaultIsolationLevel string
 
 const (
