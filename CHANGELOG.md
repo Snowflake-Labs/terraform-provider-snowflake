@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.94.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.93.0...v0.94.0) (2024-07-26)
+
+
+### 🎉 **What's new:**
+
+* Add missing session parameters ([#2936](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2936)) ([4ce662d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4ce662d7360b2882c414074fc5aa021e1bd70433))
+* Adjust user SDK ([#2947](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2947)) ([1127bb3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1127bb3fbd5e21e3176acf3ffd012e18440bac1c))
+* Better tests poc ([#2917](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2917)) ([ef496c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ef496c23a28dde8fc6dff59d47ec79eb8f4e89d4))
+* Introduce assertions generators part1 ([#2952](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2952)) ([1582a9f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1582a9fe73d18bf89529bf12e391a2b300e42eaa))
+* Introduce assertions generators part2 ([#2956](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2956)) ([f715e8a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f715e8a990b72b62f87e526f7b30a7b6e9db5f19))
+* network policy v1 readiness ([#2914](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2914)) ([3408c3f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3408c3f704da9490e518a4206ed52396a2c2315c))
+* Rework schema datasource ([#2954](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2954)) ([f70e40e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f70e40e82a7f22e86276ab55ddf2584882229ccd))
+* Rework schema resource ([#2955](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2955)) ([400a5c8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/400a5c8f02af5134e7f5c5d1bb7f73cf89bf8627))
+* Role v1 readiness ([#2916](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2916)) ([32c7690](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/32c76906c2eb8571e4a995df20f6450ddd6f94b4))
+* Schema SDK upgrade ([#2945](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2945)) ([bca0836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bca083607978df37513937cf1b7b2b2dfbe55ef8))
+* Streamlit v1 readiness ([#2930](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2930)) ([aa42260](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/aa422601b23bf73891b0f50bd4df7944cde56670))
+
+
+### 🔧 **Misc**
+
+* Remove deprecation from unsafe execute ([#2941](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2941)) ([ed712d7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ed712d7e468269a01a66b9bfe77b5d8018783a30))
+* Update documentation ([#2931](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2931)) ([da98bc3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/da98bc3f5f37f721fed623d7ab110e75ff9557e2))
+
+
+### 🐛 **Bug fixes:**
+
+* ATTRIBUTE set(string) parsing for cortex search service ([#2953](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2953)) ([70a1c9a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/70a1c9a9f4a9982f678eba8cd8e795a02a414966))
+* external function header parsing and add missing privileges ([#2961](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2961)) ([9d882fe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9d882fe27332d4e49e1596721cba54ca0eb33b07))
+* Fix sync_password field for Azure scim clients ([#2950](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2950)) ([6781133](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/678113395f120305e002efc8d969307b0bbf244d))
+* Fix tests and relax warehouse validations ([#2959](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2959)) ([dd01ce9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dd01ce9f5cc4aedef9091a2238bc9f8c09905b84)), closes [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948)
+
 ## [0.93.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.92.0...v0.93.0) (2024-07-10)
 
 
