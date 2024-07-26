@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,6 +21,7 @@ func init() {
 		//DiffSuppress schema.SchemaDiffSuppressFunc
 		//ValidateDiag schema.SchemaValidateDiagFunc
 	}{
+		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption).", SnowflakeDocsReference: "abort-detached-query"},
 		{Name: sdk.UserParameterAutocommit, Type: schema.TypeBool, Description: "Specifies whether autocommit is enabled for the session. Autocommit determines whether a DML statement, when executed without an active transaction, is automatically committed after the statement successfully completes. For more information, see [Transactions](https://docs.snowflake.com/en/sql-reference/transactions).", SnowflakeDocsReference: "autocommit"},
 		{Name: sdk.UserParameterBinaryInputFormat, Type: schema.TypeString, Description: "The format of VARCHAR values passed as input to VARCHAR-to-BINARY conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output).", SnowflakeDocsReference: "binary-input-format"},
@@ -75,7 +77,7 @@ func init() {
 		{Name: sdk.UserParameterUseCachedResult, Type: schema.TypeBool, Description: "Specifies whether to reuse persisted query results, if available, when a matching query is submitted.", SnowflakeDocsReference: "use-cached-result"},
 		{Name: sdk.UserParameterWeekOfYearPolicy, Type: schema.TypeInt, Description: "Specifies how the weeks in a given year are computed. `0`: The semantics used are equivalent to the ISO semantics, in which a week belongs to a given year if at least 4 days of that week are in that year. `1`: January 1 is included in the first week of the year and December 31 is included in the last week of the year.", SnowflakeDocsReference: "week-of-year-policy"},
 		{Name: sdk.UserParameterWeekStart, Type: schema.TypeInt, Description: "Specifies the first day of the week (used by week-related date functions). `0`: Legacy Snowflake behavior is used (i.e. ISO-like semantics). `1` (Monday) to `7` (Sunday): All the week-related functions use weeks that start on the specified day of the week.", SnowflakeDocsReference: "week-start"},
-
+		// object params
 		{Name: sdk.UserParameterEnableUnredactedQuerySyntaxError, Type: schema.TypeBool, Description: "Controls whether query text is redacted if a SQL query fails due to a syntax or parsing error. If `FALSE`, the content of a failed query is redacted in the views, pages, and functions that provide a query history. Only users with a role that is granted or inherits the AUDIT privilege can set the ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR parameter. When using the ALTER USER command to set the parameter to `TRUE` for a particular user, modify the user that you want to see the query text, not the user who executed the query (if those are different users).", SnowflakeDocsReference: "enable-unredacted-query-syntax-error"},
 		{Name: sdk.UserParameterNetworkPolicy, Type: schema.TypeString, Description: "Specifies the network policy to enforce for your account. Network policies enable restricting access to your account based on users’ IP address. For more details, see [Controlling network traffic with network policies](https://docs.snowflake.com/en/user-guide/network-policies). Any existing network policy (created using [CREATE NETWORK POLICY](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy)).", SnowflakeDocsReference: "network-policy"},
 		{Name: sdk.UserParameterPreventUnloadToInternalStages, Type: schema.TypeBool, Description: "Specifies whether to prevent data unload operations to internal (Snowflake) stages using [COPY INTO <location>](https://docs.snowflake.com/en/sql-reference/sql/copy-into-location) statements.", SnowflakeDocsReference: "prevent-unload-to-internal-stages"},
@@ -86,11 +88,17 @@ func init() {
 
 		UserParametersSchema[fieldName] = &schema.Schema{
 			Type:        field.Type,
-			Description: field.Description,
+			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
 			Computed:    true,
 			Optional:    true,
 			//ValidateDiagFunc: field.ValidateDiag,
 			//DiffSuppressFunc: field.DiffSuppress,
 		}
 	}
+}
+
+// TODO: move this function
+func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
+	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))
+	return fmt.Sprintf("%s For more info, check [%s docs](%s).", description, parameter, link)
 }
