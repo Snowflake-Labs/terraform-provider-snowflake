@@ -4,6 +4,8 @@ type GlobalPrivilege string
 
 const (
 	GlobalPrivilegeCreateAccount             GlobalPrivilege = "CREATE ACCOUNT"
+	GlobalPrivilegeCreateApplication         GlobalPrivilege = "CREATE APPLICATION"
+	GlobalPrivilegeCreateApplicationPackage  GlobalPrivilege = "CREATE APPLICATION PACKAGE"
 	GlobalPrivilegeCreateComputePool         GlobalPrivilege = "CREATE COMPUTE POOL"
 	GlobalPrivilegeCreateDataExchangeListing GlobalPrivilege = "CREATE DATA EXCHANGE LISTING"
 	GlobalPrivilegeCreateDatabase            GlobalPrivilege = "CREATE DATABASE"
@@ -33,11 +35,14 @@ const (
 
 	GlobalPrivilegeExecuteAlert              GlobalPrivilege = "EXECUTE ALERT"
 	GlobalPrivilegeExecuteDataMetricFunction GlobalPrivilege = "EXECUTE DATA METRIC FUNCTION"
+	GlobalPrivilegeExecuteDataManagedAlert   GlobalPrivilege = "EXECUTE MANAGED ALERT"
+	GlobalPrivilegeExecuteDataManagedTask    GlobalPrivilege = "EXECUTE MANAGED TASK"
 	GlobalPrivilegeExecuteTask               GlobalPrivilege = "EXECUTE TASK"
 
 	GlobalPrivilegeImportShare GlobalPrivilege = "IMPORT SHARE"
 
 	GlobalPrivilegeManageAccountSupportCases      GlobalPrivilege = "MANAGE ACCOUNT SUPPORT CASES"
+	GlobalPrivilegeManageEventSharing             GlobalPrivilege = "MANAGE EVENT SHARING"
 	GlobalPrivilegeManageGrants                   GlobalPrivilege = "MANAGE GRANTS"
 	GlobalPrivilegeManageListingAutoFulfillment   GlobalPrivilege = "MANAGE LISTING AUTO FULFILLMENT"
 	GlobalPrivilegeManageOrganizationSupportCases GlobalPrivilege = "MANAGE ORGANIZATION SUPPORT CASES"
@@ -123,13 +128,16 @@ const (
 	SchemaPrivilegeAddSearchOptimization             SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
 	SchemaPrivilegeApplyBudget                       SchemaPrivilege = "APPLYBUDGET"
 	SchemaPrivilegeCreateAlert                       SchemaPrivilege = "CREATE ALERT"
+	SchemaPrivilegeCreateCortexSearchService         SchemaPrivilege = "CREATE CORTEX SEARCH SERVICE"
 	SchemaPrivilegeCreateDataset                     SchemaPrivilege = "CREATE DATASET"
+	SchemaPrivilegeCreateEventTable                  SchemaPrivilege = "CREATE EVENT TABLE"
 	SchemaPrivilegeCreateFileFormat                  SchemaPrivilege = "CREATE FILE FORMAT"
 	SchemaPrivilegeCreateFunction                    SchemaPrivilege = "CREATE FUNCTION"
 	SchemaPrivilegeCreateGitRepository               SchemaPrivilege = "CREATE GIT REPOSITORY"
 	SchemaPrivilegeCreateImageRepository             SchemaPrivilege = "CREATE IMAGE REPOSITORY"
 	SchemaPrivilegeCreateModel                       SchemaPrivilege = "CREATE MODEL"
 	SchemaPrivilegeCreateNetworkRule                 SchemaPrivilege = "CREATE NETWORK RULE"
+	SchemaPrivilegeCreateNotebook                    SchemaPrivilege = "CREATE NOTEBOOK"
 	SchemaPrivilegeCreatePipe                        SchemaPrivilege = "CREATE PIPE"
 	SchemaPrivilegeCreateProcedure                   SchemaPrivilege = "CREATE PROCEDURE"
 	SchemaPrivilegeCreateAggregationPolicy           SchemaPrivilege = "CREATE AGGREGATION POLICY"
@@ -151,7 +159,6 @@ const (
 	SchemaPrivilegeCreateSnowflakeMlAnomalyDetection SchemaPrivilege = "CREATE SNOWFLAKE.ML.ANOMALY_DETECTION"
 	SchemaPrivilegeCreateSnowflakeMlForecast         SchemaPrivilege = "CREATE SNOWFLAKE.ML.FORECAST"
 	SchemaPrivilegeCreateDynamicTable                SchemaPrivilege = "CREATE DYNAMIC TABLE"
-	SchemaPrivilegeCreateCortexSearchService         SchemaPrivilege = "CREATE CORTEX SEARCH SERVICE"
 	SchemaPrivilegeCreateExternalTable               SchemaPrivilege = "CREATE EXTERNAL TABLE"
 	SchemaPrivilegeCreateHybridTable                 SchemaPrivilege = "CREATE HYBRID TABLE"
 	SchemaPrivilegeCreateIcebergTable                SchemaPrivilege = "CREATE ICEBERG TABLE"
@@ -163,7 +170,6 @@ const (
 	SchemaPrivilegeModify                            SchemaPrivilege = "MODIFY"
 	SchemaPrivilegeMonitor                           SchemaPrivilege = "MONITOR"
 	SchemaPrivilegeUsage                             SchemaPrivilege = "USAGE"
-	SchemaPrivilegeCreateNotebook                    SchemaPrivilege = "CREATE NOTEBOOK"
 )
 
 func (p SchemaPrivilege) String() string {
@@ -178,6 +184,13 @@ const (
 	// For ALERT
 	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
 	SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE"
+
+	// For APPLICATION PACKAGE
+	SchemaObjectPrivilegeAttachListing  SchemaObjectPrivilege = "ATTACH LISTING"
+	SchemaObjectPrivilegeDevelop        SchemaObjectPrivilege = "DEVELOP"
+	SchemaObjectPrivilegeInstall        SchemaObjectPrivilege = "INSTALL"
+	SchemaObjectPrivilegeManageVersions SchemaObjectPrivilege = "MANAGE VERSIONS"
+	SchemaObjectPrivilegeManageReleases SchemaObjectPrivilege = "MANAGE RELEASES"
 
 	// For DYNAMIC TABLE
 	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
