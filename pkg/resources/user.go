@@ -152,7 +152,7 @@ func User() *schema.Resource {
 		ReadContext:   GetReadUserFunc(true),
 		DeleteContext: DeleteUser,
 
-		Schema: userSchema,
+		Schema: helpers.MergeMaps(userSchema, UserParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
