@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -344,4 +345,331 @@ func TestUserDescribe(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE USER %s", id.FullyQualifiedName())
 	})
+}
+
+func Test_User_ToGeographyOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  GeographyOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "geojson", want: GeographyOutputFormatGeoJSON},
+
+		// Supported Values
+		{input: string(GeographyOutputFormatGeoJSON), want: GeographyOutputFormatGeoJSON},
+		{input: string(GeographyOutputFormatWKT), want: GeographyOutputFormatWKT},
+		{input: string(GeographyOutputFormatWKB), want: GeographyOutputFormatWKB},
+		{input: string(GeographyOutputFormatEWKT), want: GeographyOutputFormatEWKT},
+		{input: string(GeographyOutputFormatEWKB), want: GeographyOutputFormatEWKB},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'GeoJSON'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToGeographyOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToGeographyOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToGeometryOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  GeometryOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "geojson", want: GeometryOutputFormatGeoJSON},
+
+		// Supported Values
+		{input: string(GeometryOutputFormatGeoJSON), want: GeometryOutputFormatGeoJSON},
+		{input: string(GeometryOutputFormatWKT), want: GeometryOutputFormatWKT},
+		{input: string(GeometryOutputFormatWKB), want: GeometryOutputFormatWKB},
+		{input: string(GeometryOutputFormatEWKT), want: GeometryOutputFormatEWKT},
+		{input: string(GeometryOutputFormatEWKB), want: GeometryOutputFormatEWKB},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'GeoJSON'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToGeometryOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToGeometryOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToBinaryInputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  BinaryInputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "hex", want: BinaryInputFormatHex},
+
+		// Supported Values
+		{input: string(BinaryInputFormatHex), want: BinaryInputFormatHex},
+		{input: string(BinaryInputFormatBase64), want: BinaryInputFormatBase64},
+		{input: string(BinaryInputFormatUTF8), want: BinaryInputFormatUTF8},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'HEX'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToBinaryInputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToBinaryInputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToBinaryOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  BinaryOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "hex", want: BinaryOutputFormatHex},
+
+		// Supported Values
+		{input: string(BinaryOutputFormatHex), want: BinaryOutputFormatHex},
+		{input: string(BinaryOutputFormatBase64), want: BinaryOutputFormatBase64},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'HEX'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToBinaryOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToBinaryOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToClientTimestampTypeMapping(t *testing.T) {
+	type test struct {
+		input string
+		want  ClientTimestampTypeMapping
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "timestamp_ltz", want: ClientTimestampTypeMappingLtz},
+
+		// Supported Values
+		{input: string(ClientTimestampTypeMappingLtz), want: ClientTimestampTypeMappingLtz},
+		{input: string(ClientTimestampTypeMappingNtz), want: ClientTimestampTypeMappingNtz},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'TIMESTAMP_LTZ'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToClientTimestampTypeMapping(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToClientTimestampTypeMapping(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToTimestampTypeMapping(t *testing.T) {
+	type test struct {
+		input string
+		want  TimestampTypeMapping
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "timestamp_ltz", want: TimestampTypeMappingLtz},
+
+		// Supported Values
+		{input: string(TimestampTypeMappingLtz), want: TimestampTypeMappingLtz},
+		{input: string(TimestampTypeMappingNtz), want: TimestampTypeMappingNtz},
+		{input: string(TimestampTypeMappingTz), want: TimestampTypeMappingTz},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'TIMESTAMP_LTZ'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToTimestampTypeMapping(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToTimestampTypeMapping(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToTransactionDefaultIsolationLevel(t *testing.T) {
+	type test struct {
+		input string
+		want  TransactionDefaultIsolationLevel
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "read committed", want: TransactionDefaultIsolationLevelReadCommitted},
+
+		// Supported Values
+		{input: string(TransactionDefaultIsolationLevelReadCommitted), want: TransactionDefaultIsolationLevelReadCommitted},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'READ COMMITTED'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToTransactionDefaultIsolationLevel(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToTransactionDefaultIsolationLevel(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToUnsupportedDDLAction(t *testing.T) {
+	type test struct {
+		input string
+		want  UnsupportedDDLAction
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "ignore", want: UnsupportedDDLActionIgnore},
+
+		// Supported Values
+		{input: string(UnsupportedDDLActionIgnore), want: UnsupportedDDLActionIgnore},
+		{input: string(UnsupportedDDLActionFail), want: UnsupportedDDLActionFail},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'IGNORE'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToUnsupportedDDLAction(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToUnsupportedDDLAction(tc.input)
+			require.Error(t, err)
+		})
+	}
 }

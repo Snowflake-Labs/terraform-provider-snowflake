@@ -672,10 +672,9 @@ const (
 	GeographyOutputFormatEWKB    GeographyOutputFormat = "EWKB"
 )
 
-// TODO [SNOW-1348101]: test
 func ToGeographyOutputFormat(s string) (GeographyOutputFormat, error) {
 	switch strings.ToUpper(s) {
-	case string(GeographyOutputFormatGeoJSON):
+	case strings.ToUpper(string(GeographyOutputFormatGeoJSON)):
 		return GeographyOutputFormatGeoJSON, nil
 	case string(GeographyOutputFormatWKT):
 		return GeographyOutputFormatWKT, nil
@@ -700,10 +699,9 @@ const (
 	GeometryOutputFormatEWKB    GeometryOutputFormat = "EWKB"
 )
 
-// TODO [SNOW-1348101]: test
 func ToGeometryOutputFormat(s string) (GeometryOutputFormat, error) {
 	switch strings.ToUpper(s) {
-	case string(GeometryOutputFormatGeoJSON):
+	case strings.ToUpper(string(GeometryOutputFormatGeoJSON)):
 		return GeometryOutputFormatGeoJSON, nil
 	case string(GeometryOutputFormatWKT):
 		return GeometryOutputFormatWKT, nil
@@ -726,7 +724,6 @@ const (
 	BinaryInputFormatUTF8   BinaryInputFormat = "UTF8"
 )
 
-// TODO [SNOW-1348101]: test
 func ToBinaryInputFormat(s string) (BinaryInputFormat, error) {
 	switch strings.ToUpper(s) {
 	case string(BinaryInputFormatHex):
@@ -747,7 +744,6 @@ const (
 	BinaryOutputFormatBase64 BinaryOutputFormat = "BASE64"
 )
 
-// TODO [SNOW-1348101]: test
 func ToBinaryOutputFormat(s string) (BinaryOutputFormat, error) {
 	switch strings.ToUpper(s) {
 	case string(BinaryOutputFormatHex):
@@ -766,7 +762,6 @@ const (
 	ClientTimestampTypeMappingNtz ClientTimestampTypeMapping = "TIMESTAMP_NTZ"
 )
 
-// TODO [SNOW-1348101]: test
 func ToClientTimestampTypeMapping(s string) (ClientTimestampTypeMapping, error) {
 	switch strings.ToUpper(s) {
 	case string(ClientTimestampTypeMappingLtz):
@@ -786,7 +781,6 @@ const (
 	TimestampTypeMappingTz  TimestampTypeMapping = "TIMESTAMP_TZ"
 )
 
-// TODO [SNOW-1348101]: test
 func ToTimestampTypeMapping(s string) (TimestampTypeMapping, error) {
 	switch strings.ToUpper(s) {
 	case string(TimestampTypeMappingLtz):
@@ -806,7 +800,6 @@ const (
 	TransactionDefaultIsolationLevelReadCommitted TransactionDefaultIsolationLevel = "READ COMMITTED"
 )
 
-// TODO [SNOW-1348101]: test
 func ToTransactionDefaultIsolationLevel(s string) (TransactionDefaultIsolationLevel, error) {
 	switch strings.ToUpper(s) {
 	case string(TransactionDefaultIsolationLevelReadCommitted):
@@ -823,7 +816,6 @@ const (
 	UnsupportedDDLActionFail   UnsupportedDDLAction = "FAIL"
 )
 
-// TODO [SNOW-1348101]: test
 func ToUnsupportedDDLAction(s string) (UnsupportedDDLAction, error) {
 	switch strings.ToUpper(s) {
 	case string(UnsupportedDDLActionIgnore):
