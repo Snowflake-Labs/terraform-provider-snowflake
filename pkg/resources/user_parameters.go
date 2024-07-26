@@ -266,6 +266,103 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 	return nil
 }
 
+// TODO: apply to the database too
+// TODO [SNOW-1348330]: consider using SessionParameters#setParam during parameters rework
+// (because currently setParam already is able to set the right parameter based on the string value input,
+// but GetConfigPropertyAsPointerAllowingZeroValue receives typed value,
+// so this would be unnecessary running in circles)
+// TODO [SNOW-1348101]: include mappers in the param definition (after moving it to the SDK: identity versus concrete)
+func handleUserParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateUserOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreate(d, sdk.UserParameterAbortDetachedQuery, &createOpts.SessionParameters.AbortDetachedQuery),
+		handleParameterCreate(d, sdk.UserParameterAutocommit, &createOpts.SessionParameters.Autocommit),
+		handleParameterCreateWithMapping(d, sdk.UserParameterBinaryInputFormat, &createOpts.SessionParameters.BinaryInputFormat, stringToStringEnumProvider(sdk.ToBinaryInputFormat)),
+		handleParameterCreateWithMapping(d, sdk.UserParameterBinaryOutputFormat, &createOpts.SessionParameters.BinaryOutputFormat, stringToStringEnumProvider(sdk.ToBinaryOutputFormat)),
+		handleParameterCreate(d, sdk.UserParameterClientMemoryLimit, &createOpts.SessionParameters.ClientMemoryLimit),
+		handleParameterCreate(d, sdk.UserParameterClientMetadataRequestUseConnectionCtx, &createOpts.SessionParameters.ClientMetadataRequestUseConnectionCtx),
+		handleParameterCreate(d, sdk.UserParameterClientPrefetchThreads, &createOpts.SessionParameters.ClientPrefetchThreads),
+		handleParameterCreate(d, sdk.UserParameterClientResultChunkSize, &createOpts.SessionParameters.ClientResultChunkSize),
+		handleParameterCreate(d, sdk.UserParameterClientResultColumnCaseInsensitive, &createOpts.SessionParameters.ClientResultColumnCaseInsensitive),
+		handleParameterCreate(d, sdk.UserParameterClientSessionKeepAlive, &createOpts.SessionParameters.ClientSessionKeepAlive),
+		handleParameterCreate(d, sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, &createOpts.SessionParameters.ClientSessionKeepAliveHeartbeatFrequency),
+		handleParameterCreateWithMapping(d, sdk.UserParameterClientTimestampTypeMapping, &createOpts.SessionParameters.ClientTimestampTypeMapping, stringToStringEnumProvider(sdk.ToClientTimestampTypeMapping)),
+		handleParameterCreate(d, sdk.UserParameterDateInputFormat, &createOpts.SessionParameters.DateInputFormat),
+		handleParameterCreate(d, sdk.UserParameterDateOutputFormat, &createOpts.SessionParameters.DateOutputFormat),
+		handleParameterCreate(d, sdk.UserParameterEnableUnloadPhysicalTypeOptimization, &createOpts.SessionParameters.EnableUnloadPhysicalTypeOptimization),
+		handleParameterCreate(d, sdk.UserParameterErrorOnNondeterministicMerge, &createOpts.SessionParameters.ErrorOnNondeterministicMerge),
+		handleParameterCreate(d, sdk.UserParameterErrorOnNondeterministicUpdate, &createOpts.SessionParameters.ErrorOnNondeterministicUpdate),
+		handleParameterCreateWithMapping(d, sdk.UserParameterGeographyOutputFormat, &createOpts.SessionParameters.GeographyOutputFormat, stringToStringEnumProvider(sdk.ToGeographyOutputFormat)),
+		handleParameterCreateWithMapping(d, sdk.UserParameterGeometryOutputFormat, &createOpts.SessionParameters.GeometryOutputFormat, stringToStringEnumProvider(sdk.ToGeometryOutputFormat)),
+		handleParameterCreate(d, sdk.UserParameterJdbcTreatDecimalAsInt, &createOpts.SessionParameters.JdbcTreatDecimalAsInt),
+		handleParameterCreate(d, sdk.UserParameterJdbcTreatTimestampNtzAsUtc, &createOpts.SessionParameters.JdbcTreatTimestampNtzAsUtc),
+		handleParameterCreate(d, sdk.UserParameterJdbcUseSessionTimezone, &createOpts.SessionParameters.JdbcUseSessionTimezone),
+		handleParameterCreate(d, sdk.UserParameterJsonIndent, &createOpts.SessionParameters.JSONIndent),
+		handleParameterCreate(d, sdk.UserParameterLockTimeout, &createOpts.SessionParameters.LockTimeout),
+		handleParameterCreateWithMapping(d, sdk.UserParameterLogLevel, &createOpts.SessionParameters.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),
+		handleParameterCreate(d, sdk.UserParameterMultiStatementCount, &createOpts.SessionParameters.MultiStatementCount),
+		handleParameterCreate(d, sdk.UserParameterNoorderSequenceAsDefault, &createOpts.SessionParameters.NoorderSequenceAsDefault),
+		handleParameterCreate(d, sdk.UserParameterOdbcTreatDecimalAsInt, &createOpts.SessionParameters.OdbcTreatDecimalAsInt),
+		handleParameterCreate(d, sdk.UserParameterQueryTag, &createOpts.SessionParameters.QueryTag),
+		handleParameterCreate(d, sdk.UserParameterQuotedIdentifiersIgnoreCase, &createOpts.SessionParameters.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.UserParameterRowsPerResultset, &createOpts.SessionParameters.RowsPerResultset),
+		handleParameterCreate(d, sdk.UserParameterS3StageVpceDnsName, &createOpts.SessionParameters.S3StageVpceDnsName),
+		handleParameterCreate(d, sdk.UserParameterSearchPath, &createOpts.SessionParameters.SearchPath),
+		handleParameterCreate(d, sdk.UserParameterSimulatedDataSharingConsumer, &createOpts.SessionParameters.SimulatedDataSharingConsumer),
+		handleParameterCreate(d, sdk.UserParameterStatementQueuedTimeoutInSeconds, &createOpts.SessionParameters.StatementQueuedTimeoutInSeconds),
+		handleParameterCreate(d, sdk.UserParameterStatementTimeoutInSeconds, &createOpts.SessionParameters.StatementTimeoutInSeconds),
+		handleParameterCreate(d, sdk.UserParameterStrictJsonOutput, &createOpts.SessionParameters.StrictJSONOutput),
+		handleParameterCreate(d, sdk.UserParameterTimestampDayIsAlways24h, &createOpts.SessionParameters.TimestampDayIsAlways24h),
+		handleParameterCreate(d, sdk.UserParameterTimestampInputFormat, &createOpts.SessionParameters.TimestampInputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimestampLtzOutputFormat, &createOpts.SessionParameters.TimestampLTZOutputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimestampNtzOutputFormat, &createOpts.SessionParameters.TimestampNTZOutputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimestampOutputFormat, &createOpts.SessionParameters.TimestampOutputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimestampTypeMapping, &createOpts.SessionParameters.TimestampTypeMapping),
+		handleParameterCreate(d, sdk.UserParameterTimestampTzOutputFormat, &createOpts.SessionParameters.TimestampTZOutputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimezone, &createOpts.SessionParameters.Timezone),
+		handleParameterCreate(d, sdk.UserParameterTimeInputFormat, &createOpts.SessionParameters.TimeInputFormat),
+		handleParameterCreate(d, sdk.UserParameterTimeOutputFormat, &createOpts.SessionParameters.TimeOutputFormat),
+		handleParameterCreateWithMapping(d, sdk.UserParameterTraceLevel, &createOpts.SessionParameters.TraceLevel, stringToStringEnumProvider(sdk.ToTraceLevel)),
+		handleParameterCreate(d, sdk.UserParameterTransactionAbortOnError, &createOpts.SessionParameters.TransactionAbortOnError),
+		handleParameterCreateWithMapping(d, sdk.UserParameterTransactionDefaultIsolationLevel, &createOpts.SessionParameters.TransactionDefaultIsolationLevel, stringToStringEnumProvider(sdk.ToTransactionDefaultIsolationLevel)),
+		handleParameterCreate(d, sdk.UserParameterTwoDigitCenturyStart, &createOpts.SessionParameters.TwoDigitCenturyStart),
+		handleParameterCreateWithMapping(d, sdk.UserParameterUnsupportedDdlAction, &createOpts.SessionParameters.UnsupportedDDLAction, stringToStringEnumProvider(sdk.ToUnsupportedDDLAction)),
+		handleParameterCreate(d, sdk.UserParameterUseCachedResult, &createOpts.SessionParameters.UseCachedResult),
+		handleParameterCreate(d, sdk.UserParameterWeekOfYearPolicy, &createOpts.SessionParameters.WeekOfYearPolicy),
+		handleParameterCreate(d, sdk.UserParameterWeekStart, &createOpts.SessionParameters.WeekStart),
+		handleParameterCreate(d, sdk.UserParameterEnableUnredactedQuerySyntaxError, &createOpts.ObjectParameters.EnableUnredactedQuerySyntaxError),
+		handleParameterCreateWithMapping(d, sdk.UserParameterNetworkPolicy, &createOpts.ObjectParameters.NetworkPolicy, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.UserParameterPreventUnloadToInternalStages, &createOpts.ObjectParameters.PreventUnloadToInternalStages),
+	)
+}
+
+func stringToAccountObjectIdentifier(value string) (sdk.AccountObjectIdentifier, error) {
+	return sdk.NewAccountObjectIdentifier(value), nil
+}
+
+func stringToStringEnumProvider[T ~string](mapper func(string) (T, error)) func(value string) (T, error) {
+	return func(value string) (T, error) {
+		return mapper(value)
+	}
+}
+
+// handleParameterCreate TODO: describe and test
+func handleParameterCreate[T any, P ~string](d *schema.ResourceData, parameterName P, createField **T) diag.Diagnostics {
+	return handleParameterCreateWithMapping[T, T](d, parameterName, createField, func(value T) (T, error) { return value, nil })
+}
+
+// handleValuePropertyChangeWithMapping TODO: describe
+func handleParameterCreateWithMapping[T, R any, P ~string](d *schema.ResourceData, parameterName P, createField **R, mapping func(value T) (R, error)) diag.Diagnostics {
+	key := strings.ToLower(string(parameterName))
+	if v := GetConfigPropertyAsPointerAllowingZeroValue[T](d, key); v != nil {
+		mappedValue, err := mapping(*v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		*createField = sdk.Pointer(mappedValue)
+	}
+	return nil
+}
+
 // TODO: move this function
 func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
 	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))

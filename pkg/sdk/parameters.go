@@ -672,6 +672,24 @@ const (
 	GeographyOutputFormatEWKB    GeographyOutputFormat = "EWKB"
 )
 
+// TODO [SNOW-1348101]: test
+func ToGeographyOutputFormat(s string) (GeographyOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(GeographyOutputFormatGeoJSON):
+		return GeographyOutputFormatGeoJSON, nil
+	case string(GeographyOutputFormatWKT):
+		return GeographyOutputFormatWKT, nil
+	case string(GeographyOutputFormatWKB):
+		return GeographyOutputFormatWKB, nil
+	case string(GeographyOutputFormatEWKT):
+		return GeographyOutputFormatEWKT, nil
+	case string(GeographyOutputFormatEWKB):
+		return GeographyOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geography output format: %s", s)
+	}
+}
+
 type GeometryOutputFormat string
 
 const (
@@ -682,6 +700,24 @@ const (
 	GeometryOutputFormatEWKB    GeometryOutputFormat = "EWKB"
 )
 
+// TODO [SNOW-1348101]: test
+func ToGeometryOutputFormat(s string) (GeometryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(GeometryOutputFormatGeoJSON):
+		return GeometryOutputFormatGeoJSON, nil
+	case string(GeometryOutputFormatWKT):
+		return GeometryOutputFormatWKT, nil
+	case string(GeometryOutputFormatWKB):
+		return GeometryOutputFormatWKB, nil
+	case string(GeometryOutputFormatEWKT):
+		return GeometryOutputFormatEWKT, nil
+	case string(GeometryOutputFormatEWKB):
+		return GeometryOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geometry output format: %s", s)
+	}
+}
+
 type BinaryInputFormat string
 
 const (
@@ -690,6 +726,20 @@ const (
 	BinaryInputFormatUTF8   BinaryInputFormat = "UTF8"
 )
 
+// TODO [SNOW-1348101]: test
+func ToBinaryInputFormat(s string) (BinaryInputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryInputFormatHex):
+		return BinaryInputFormatHex, nil
+	case string(BinaryInputFormatBase64):
+		return BinaryInputFormatBase64, nil
+	case string(BinaryInputFormatUTF8):
+		return BinaryInputFormatUTF8, nil
+	default:
+		return "", fmt.Errorf("invalid binary input format: %s", s)
+	}
+}
+
 type BinaryOutputFormat string
 
 const (
@@ -697,12 +747,36 @@ const (
 	BinaryOutputFormatBase64 BinaryOutputFormat = "BASE64"
 )
 
+// TODO [SNOW-1348101]: test
+func ToBinaryOutputFormat(s string) (BinaryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryOutputFormatHex):
+		return BinaryOutputFormatHex, nil
+	case string(BinaryOutputFormatBase64):
+		return BinaryOutputFormatBase64, nil
+	default:
+		return "", fmt.Errorf("invalid binary output format: %s", s)
+	}
+}
+
 type ClientTimestampTypeMapping string
 
 const (
 	ClientTimestampTypeMappingLtz ClientTimestampTypeMapping = "TIMESTAMP_LTZ"
 	ClientTimestampTypeMappingNtz ClientTimestampTypeMapping = "TIMESTAMP_NTZ"
 )
+
+// TODO [SNOW-1348101]: test
+func ToClientTimestampTypeMapping(s string) (ClientTimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(ClientTimestampTypeMappingLtz):
+		return ClientTimestampTypeMappingLtz, nil
+	case string(ClientTimestampTypeMappingNtz):
+		return ClientTimestampTypeMappingNtz, nil
+	default:
+		return "", fmt.Errorf("invalid client timestamp type mapping: %s", s)
+	}
+}
 
 type TimestampTypeMapping string
 
@@ -718,12 +792,34 @@ const (
 	TransactionDefaultIsolationLevelReadCommitted TransactionDefaultIsolationLevel = "READ COMMITTED"
 )
 
+// TODO [SNOW-1348101]: test
+func ToTransactionDefaultIsolationLevel(s string) (TransactionDefaultIsolationLevel, error) {
+	switch strings.ToUpper(s) {
+	case string(TransactionDefaultIsolationLevelReadCommitted):
+		return TransactionDefaultIsolationLevelReadCommitted, nil
+	default:
+		return "", fmt.Errorf("invalid transaction default isolation level: %s", s)
+	}
+}
+
 type UnsupportedDDLAction string
 
 const (
 	UnsupportedDDLActionIgnore UnsupportedDDLAction = "IGNORE"
 	UnsupportedDDLActionFail   UnsupportedDDLAction = "FAIL"
 )
+
+// TODO [SNOW-1348101]: test
+func ToUnsupportedDDLAction(s string) (UnsupportedDDLAction, error) {
+	switch strings.ToUpper(s) {
+	case string(UnsupportedDDLActionIgnore):
+		return UnsupportedDDLActionIgnore, nil
+	case string(UnsupportedDDLActionFail):
+		return UnsupportedDDLActionFail, nil
+	default:
+		return "", fmt.Errorf("invalid ddl action: %s", s)
+	}
+}
 
 // SessionParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#session-parameters.
 type SessionParameters struct {

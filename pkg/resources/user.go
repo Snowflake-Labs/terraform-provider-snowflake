@@ -179,6 +179,10 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
 
+	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
+	}
+
 	if loginName, ok := d.GetOk("login_name"); ok {
 		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
 	}
