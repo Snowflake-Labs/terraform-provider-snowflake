@@ -24,19 +24,6 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 	}
 }
 
-func NormalizeAndCompareIdentifiers() schema.SchemaDiffSuppressFunc {
-	return func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-		idNormalize := func(idRaw string) (string, error) {
-			id, err := helpers.DecodeSnowflakeParameterID(idRaw)
-			if err != nil {
-				return "", err
-			}
-			return id.FullyQualifiedName(), nil
-		}
-		return NormalizeAndCompare(idNormalize)(k, oldValue, newValue, d)
-	}
-}
-
 // NormalizeAndCompareIdentifiersInSet is a diff suppression function that should be used at top-level TypeSet fields that
 // hold identifiers to avoid diffs like:
 // - "DATABASE"."SCHEMA"."OBJECT"

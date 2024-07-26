@@ -20,7 +20,7 @@ Please rename these fields in your configuration files. State will be migrated a
 
 Removed fields:
 - `tag`
-The value of this field will be removed from the state automatically.
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
 
 New fields:
 - the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:

@@ -28,14 +28,14 @@ var schemaSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
-		DiffSuppressFunc: NormalizeAndCompareIdentifiers(),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "The database in which to create the schema.",
 		ForceNew:         true,
-		DiffSuppressFunc: NormalizeAndCompareIdentifiers(),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"with_managed_access": {
 		Type:             schema.TypeString,
@@ -107,7 +107,8 @@ func Schema() *schema.Resource {
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
 				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
@@ -186,11 +187,11 @@ func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 		return nil, err
 	}
 
-	if err := d.Set("is_transient", fmt.Sprintf("%t", s.IsTransient())); err != nil {
+	if err := d.Set("is_transient", booleanStringFromBool(s.IsTransient())); err != nil {
 		return nil, err
 	}
 
-	if err := d.Set("with_managed_access", fmt.Sprintf("%t", s.IsManagedAccess())); err != nil {
+	if err := d.Set("with_managed_access", booleanStringFromBool(s.IsManagedAccess())); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
@@ -293,7 +294,13 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 		if err != nil {
 			log.Printf("[DEBUG] database %s for schema %s not found", id.DatabaseId().Name(), id.Name())
 			d.SetId("")
-			return nil
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query database. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("database name: %s, Err: %s", id.DatabaseId(), err),
+				},
+			}
 		}
 
 		schema, err := client.Schemas.ShowByID(ctx, id)
@@ -355,10 +362,10 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"options", "is_transient", schema.IsTransient(), fmt.Sprintf("%t", schema.IsTransient()), func(x any) any {
+				showMapping{"options", "is_transient", schema.IsTransient(), booleanStringFromBool(schema.IsTransient()), func(x any) any {
 					return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "TRANSIENT")
 				}},
-				showMapping{"options", "with_managed_access", schema.IsManagedAccess(), fmt.Sprintf("%t", schema.IsManagedAccess()), func(x any) any {
+				showMapping{"options", "with_managed_access", schema.IsManagedAccess(), booleanStringFromBool(schema.IsManagedAccess()), func(x any) any {
 					return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "MANAGED ACCESS")
 				}},
 			); err != nil {
@@ -423,12 +430,13 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error handling with_managed_access on %v err = %w", d.Id(), err))
 			}
-		}
-		// managed access can not be UNSET to a default value
-		if err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			DisableManagedAccess: sdk.Pointer(true),
-		}); err != nil {
-			return diag.FromErr(fmt.Errorf("error handling with_managed_access on %v err = %w", d.Id(), err))
+		} else {
+			// managed access can not be UNSET to a default value
+			if err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				DisableManagedAccess: sdk.Pointer(true),
+			}); err != nil {
+				return diag.FromErr(fmt.Errorf("error handling with_managed_access on %v err = %w", d.Id(), err))
+			}
 		}
 	}
 
