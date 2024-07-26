@@ -1,15 +1,79 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var (
-	UserParametersSchema = make(map[string]*schema.Schema)
+	UserParametersSchema     = make(map[string]*schema.Schema)
+	UserParametersCustomDiff = ParametersCustomDiff(
+		userParametersProvider,
+		parameter[sdk.UserParameter]{sdk.UserParameterAbortDetachedQuery, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterAutocommit, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterBinaryInputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterBinaryOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientMemoryLimit, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientMetadataRequestUseConnectionCtx, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientPrefetchThreads, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientResultChunkSize, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientResultColumnCaseInsensitive, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientSessionKeepAlive, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterClientTimestampTypeMapping, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterDateInputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterDateOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterEnableUnloadPhysicalTypeOptimization, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterErrorOnNondeterministicMerge, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterErrorOnNondeterministicUpdate, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterGeographyOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterGeometryOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterJdbcTreatDecimalAsInt, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterJdbcTreatTimestampNtzAsUtc, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterJdbcUseSessionTimezone, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterJsonIndent, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterLockTimeout, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterLogLevel, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterMultiStatementCount, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterNoorderSequenceAsDefault, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterOdbcTreatDecimalAsInt, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterQueryTag, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterRowsPerResultset, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterS3StageVpceDnsName, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterSearchPath, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterSimulatedDataSharingConsumer, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterStrictJsonOutput, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampDayIsAlways24h, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampInputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampLtzOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampNtzOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampTypeMapping, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimestampTzOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimezone, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimeInputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTimeOutputFormat, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTraceLevel, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTransactionAbortOnError, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTransactionDefaultIsolationLevel, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterTwoDigitCenturyStart, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterUnsupportedDdlAction, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterUseCachedResult, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterWeekOfYearPolicy, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterWeekStart, valueTypeInt, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterEnableUnredactedQuerySyntaxError, valueTypeBool, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterNetworkPolicy, valueTypeString, sdk.ParameterTypeUser},
+		parameter[sdk.UserParameter]{sdk.UserParameterPreventUnloadToInternalStages, valueTypeBool, sdk.ParameterTypeUser},
+	)
 )
 
 func init() {
@@ -78,7 +142,6 @@ func init() {
 		{Name: sdk.UserParameterUseCachedResult, Type: schema.TypeBool, Description: "Specifies whether to reuse persisted query results, if available, when a matching query is submitted."},
 		{Name: sdk.UserParameterWeekOfYearPolicy, Type: schema.TypeInt, Description: "Specifies how the weeks in a given year are computed. `0`: The semantics used are equivalent to the ISO semantics, in which a week belongs to a given year if at least 4 days of that week are in that year. `1`: January 1 is included in the first week of the year and December 31 is included in the last week of the year."},
 		{Name: sdk.UserParameterWeekStart, Type: schema.TypeInt, Description: "Specifies the first day of the week (used by week-related date functions). `0`: Legacy Snowflake behavior is used (i.e. ISO-like semantics). `1` (Monday) to `7` (Sunday): All the week-related functions use weeks that start on the specified day of the week."},
-		// object params
 		{Name: sdk.UserParameterEnableUnredactedQuerySyntaxError, Type: schema.TypeBool, Description: "Controls whether query text is redacted if a SQL query fails due to a syntax or parsing error. If `FALSE`, the content of a failed query is redacted in the views, pages, and functions that provide a query history. Only users with a role that is granted or inherits the AUDIT privilege can set the ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR parameter. When using the ALTER USER command to set the parameter to `TRUE` for a particular user, modify the user that you want to see the query text, not the user who executed the query (if those are different users)."},
 		{Name: sdk.UserParameterNetworkPolicy, Type: schema.TypeString, Description: "Specifies the network policy to enforce for your account. Network policies enable restricting access to your account based on users’ IP address. For more details, see [Controlling network traffic with network policies](https://docs.snowflake.com/en/user-guide/network-policies). Any existing network policy (created using [CREATE NETWORK POLICY](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy))."},
 		{Name: sdk.UserParameterPreventUnloadToInternalStages, Type: schema.TypeBool, Description: "Specifies whether to prevent data unload operations to internal (Snowflake) stages using [COPY INTO <location>](https://docs.snowflake.com/en/sql-reference/sql/copy-into-location) statements."},
@@ -96,6 +159,20 @@ func init() {
 			//DiffSuppressFunc: field.DiffSuppress,
 		}
 	}
+}
+
+func userParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	userParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			User: id,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return userParameters, nil
 }
 
 // TODO: move this function
