@@ -11,10 +11,12 @@ across different versions.
 Renamed fields:
 - renamed `is_managed` to `with_managed_access`
 - renamed `data_retention_days` to `data_retention_time_in_days`
+
 Please rename these fields in your configuration files. State will be migrated automatically.
 
 Removed fields:
 - `tag`
+The value of this field will be removed from the state automatically.
 
 New fields:
 - the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
@@ -35,9 +37,17 @@ New fields:
     - `enable_console_output`
     - `pipe_execution_paused`
 - added `show_output` field that holds the response from SHOW SCHEMAS.
+- added `describe_output` field that holds the response from DESCRIBE SCHEMA.
 - added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
 
 We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `is_transient` and `with_managed_access` was changed from boolean to string. This should not require updating existing configs (boolean value should be accepted and state will be migrated to string automatically), however we recommend changing config values to strings.
+
+Terraform should recreate resources for configs lacking `is_transient` (`DROP` and then `CREATE` will be run underneath). To prevent this behavior, please set `is_transient` field.
+
+Terraform should perform an action for configs lacking `with_managed_access` (`ALTER SCHEMA DISABLE MANAGED ACCESS` will be run underneath which should not affect the Snowflake object, because `MANAGED ACCESS` is not set by default).
 
 ### *(breaking change)* refactored snowflake_schemas datasource
 Changes:

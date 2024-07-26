@@ -75,6 +75,11 @@ func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 }
 
 // IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
+func IgnoreChangeToCurrentSnowflakeValueInShowWithMapping(keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
+	return IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(ShowOutputAttributeName, keyInOutput, mapping)
+}
+
+// IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
 func IgnoreChangeToCurrentSnowflakeValueInShow(keyInOutput string) schema.SchemaDiffSuppressFunc {
 	return IgnoreChangeToCurrentSnowflakePlainValueInOutput(ShowOutputAttributeName, keyInOutput)
 }
@@ -96,6 +101,27 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput stri
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)[keyInOutput]
 				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
+				if new == fmt.Sprintf("%v", result) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+}
+
+// IgnoreChangeToCurrentSnowflakePlainValueInOutput should be used to ignore changes to the given attribute when its value is equal to value in provided `attrName`.
+func IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(attrName, keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
+	return func(_, _, new string, d *schema.ResourceData) bool {
+		if d.Id() == "" {
+			return false
+		}
+
+		if queryOutput, ok := d.GetOk(attrName); ok {
+			queryOutputList := queryOutput.([]any)
+			if len(queryOutputList) == 1 {
+				result := mapping(queryOutputList[0].(map[string]any)[keyInOutput])
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
 				if new == fmt.Sprintf("%v", result) {
 					return true
 				}

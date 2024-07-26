@@ -7,9 +7,12 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	acchelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -35,11 +38,13 @@ func TestAcc_Schema_basic(t *testing.T) {
 		"database": config.StringVariable(databaseId.Name()),
 	}
 
-	basicConfigVariablesWithTransient := config.Variables{
-		"name":         config.StringVariable(id.Name()),
-		"comment":      config.StringVariable("foo"),
-		"database":     config.StringVariable(databaseId.Name()),
-		"is_transient": config.BoolVariable(true),
+	basicConfigVariablesWithTransient := func(isTransient bool) config.Variables {
+		return config.Variables{
+			"name":         config.StringVariable(id.Name()),
+			"comment":      config.StringVariable("foo"),
+			"database":     config.StringVariable(databaseId.Name()),
+			"is_transient": config.BoolVariable(isTransient),
+		}
 	}
 
 	completeConfigVariables := config.Variables{
@@ -99,31 +104,31 @@ func TestAcc_Schema_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					params := acc.TestClient().Parameter.ShowAccountParameters(t)
-					*accountDataRetentionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
-					*accountMaxDataExtensionTimeInDays = helpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
-					*accountExternalVolume = helpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
-					*accountCatalog = helpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
-					*accountReplaceInvalidCharacters = helpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
-					*accountDefaultDdlCollation = helpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
-					*accountStorageSerializationPolicy = helpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
-					*accountLogLevel = helpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
-					*accountTraceLevel = helpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
-					*accountSuspendTaskAfterNumFailures = helpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
-					*accountTaskAutoRetryAttempts = helpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
-					*accountUserTaskMangedInitialWarehouseSize = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
-					*accountUserTaskTimeoutMs = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
-					*accountUserTaskMinimumTriggerIntervalInSeconds = helpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
-					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
-					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
-					*accountPipeExecutionPaused = helpers.FindParameter(t, params, sdk.AccountParameterPipeExecutionPaused).Value
+					*accountDataRetentionTimeInDays = acchelpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
+					*accountMaxDataExtensionTimeInDays = acchelpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
+					*accountExternalVolume = acchelpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
+					*accountCatalog = acchelpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
+					*accountReplaceInvalidCharacters = acchelpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
+					*accountDefaultDdlCollation = acchelpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
+					*accountStorageSerializationPolicy = acchelpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
+					*accountLogLevel = acchelpers.FindParameter(t, params, sdk.AccountParameterLogLevel).Value
+					*accountTraceLevel = acchelpers.FindParameter(t, params, sdk.AccountParameterTraceLevel).Value
+					*accountSuspendTaskAfterNumFailures = acchelpers.FindParameter(t, params, sdk.AccountParameterSuspendTaskAfterNumFailures).Value
+					*accountTaskAutoRetryAttempts = acchelpers.FindParameter(t, params, sdk.AccountParameterTaskAutoRetryAttempts).Value
+					*accountUserTaskMangedInitialWarehouseSize = acchelpers.FindParameter(t, params, sdk.AccountParameterUserTaskManagedInitialWarehouseSize).Value
+					*accountUserTaskTimeoutMs = acchelpers.FindParameter(t, params, sdk.AccountParameterUserTaskTimeoutMs).Value
+					*accountUserTaskMinimumTriggerIntervalInSeconds = acchelpers.FindParameter(t, params, sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds).Value
+					*accountQuotedIdentifiersIgnoreCase = acchelpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
+					*accountEnableConsoleOutput = acchelpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
+					*accountPipeExecutionPaused = acchelpers.FindParameter(t, params, sdk.AccountParameterPipeExecutionPaused).Value
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic"),
 				ConfigVariables: basicConfigVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseId.Name()),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", "false"),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", r.BooleanDefault),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", r.BooleanDefault),
 
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
@@ -142,16 +147,29 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "enable_console_output", accountEnableConsoleOutput),
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "pipe_execution_paused", accountPipeExecutionPaused),
+
+					resource.TestCheckResourceAttrSet("snowflake_schema.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttrSet("snowflake_schema.test", "show_output.0.is_current"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "show_output.0.database_name", databaseId.Name()),
+					resource.TestCheckResourceAttrSet("snowflake_schema.test", "show_output.0.owner"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "show_output.0.comment", ""),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "show_output.0.options", ""),
 				),
 			},
 			// import - without optionals
 			{
-				ConfigDirectory:         acc.ConfigurationDirectory("TestAcc_Schema/basic"),
-				ConfigVariables:         basicConfigVariables,
-				ResourceName:            "snowflake_schema.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"show_output.0.is_current"},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic"),
+				ConfigVariables: basicConfigVariables,
+				ResourceName:    "snowflake_schema.test",
+				ImportState:     true,
+				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "with_managed_access", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "is_transient", "false"),
+				),
 			},
 			// set other fields
 			{
@@ -224,8 +242,8 @@ func TestAcc_Schema_basic(t *testing.T) {
 			},
 			// unset
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic"),
-				ConfigVariables: basicConfigVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic_with_transient"),
+				ConfigVariables: basicConfigVariablesWithTransient(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionUpdate),
@@ -234,7 +252,7 @@ func TestAcc_Schema_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseId.Name()),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "false"),
 
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
@@ -259,7 +277,7 @@ func TestAcc_Schema_basic(t *testing.T) {
 			// set is_transient - recreate
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic_with_transient"),
-				ConfigVariables: basicConfigVariablesWithTransient,
+				ConfigVariables: basicConfigVariablesWithTransient(true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionDestroyBeforeCreate),
@@ -268,7 +286,7 @@ func TestAcc_Schema_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseId.Name()),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", "false"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "with_managed_access", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "is_transient", "true"),
 
 					resource.TestCheckResourceAttrPtr("snowflake_schema.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
@@ -430,15 +448,26 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 	name := "PUBLIC"
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
+			// PUBLIC can not be created in v0.93
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      schemav093(name, acc.TestDatabaseName),
+				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
 				ConfigVariables: map[string]config.Variable{
 					"name":                  config.StringVariable(name),
 					"database":              config.StringVariable(acc.TestDatabaseName),
@@ -451,7 +480,8 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
 				ConfigVariables: map[string]config.Variable{
 					"name":                  config.StringVariable(name),
 					"database":              config.StringVariable(acc.TestDatabaseName),
@@ -547,15 +577,16 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", "5"),
 					checkDatabaseAndSchemaDataRetentionTime(t, id, 5, 5),
 				),
 			},
+			// change param value in database
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", "5"),
 					checkDatabaseAndSchemaDataRetentionTime(t, id, 10, 10),
 				),
 			},
@@ -579,7 +610,7 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", "10"),
 					checkDatabaseAndSchemaDataRetentionTime(t, id, 10, 10),
 				),
 			},
@@ -635,7 +666,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", "5"),
 					checkDatabaseAndSchemaDataRetentionTime(t, id, 5, 5),
 				),
 			},
@@ -644,7 +675,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", r.IntDefaultString),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_time_in_days", "5"),
 					checkDatabaseAndSchemaDataRetentionTime(t, id, 5, 5),
 				),
 			},
@@ -667,9 +698,8 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 
 func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	schemaName := schemaId.Name()
 	configVariables := map[string]config.Variable{
-		"schema_name":   config.StringVariable(schemaName),
+		"schema_name":   config.StringVariable(schemaId.Name()),
 		"database_name": config.StringVariable(acc.TestDatabaseName),
 	}
 
@@ -735,7 +765,7 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),
 				ConfigVariables: configVariables,
 				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
-				ExpectError: regexp.MustCompile("error creating schema"),
+				ExpectError: regexp.MustCompile("Failed to create schema"),
 			},
 		},
 	})
@@ -780,7 +810,9 @@ func checkDatabaseAndSchemaDataRetentionTime(t *testing.T, schemaId sdk.Database
 	}
 }
 
-func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
+func TestAcc_Schema_migrateFromVersion093WithoutManagedAccess(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	resourceName := "snowflake_schema.test"
@@ -799,44 +831,103 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: schemav093(id.Name(), databaseId.Name(), true, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Config: schemav093(id.Name(), databaseId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "is_managed", "true"),
-					resource.TestCheckResourceAttr(resourceName, "data_retention_days", "10"),
+					resource.TestCheckResourceAttr(resourceName, "is_managed", "false"),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   schemav094(id.Name(), databaseId.Name(), true, 10),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
-				},
-				Check: resource.ComposeTestCheckFunc(
+				Config:                   schemav094(id.Name(), databaseId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckNoResourceAttr(resourceName, "is_managed"),
-					resource.TestCheckResourceAttr(resourceName, "with_managed_access", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "data_retention_days"),
-					resource.TestCheckResourceAttr(resourceName, "data_retention_time_in_days", "10"),
+					resource.TestCheckResourceAttr(resourceName, "with_managed_access", r.BooleanDefault),
 				),
 			},
 		},
 	})
 }
 
-func schemav093(name, database string, isManaged bool, dataRetentionDays int) string {
+func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseId := acc.TestClient().Ids.DatabaseId()
+	resourceName := "snowflake_schema.test"
+
+	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: schemav093WithIsManagedAndDataRetentionDays(id.Name(), databaseId.Name(), tag.SchemaName, tag.Name, "foo", true, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "is_managed", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_days", "10"),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.name", tag.Name),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "foo"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   schemav094WithManagedAccessAndDataRetentionTimeInDays(id.Name(), databaseId.Name(), true, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckNoResourceAttr(resourceName, "is_managed"),
+					resource.TestCheckResourceAttr(resourceName, "with_managed_access", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "data_retention_days"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_time_in_days", "10"),
+					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
+				),
+			},
+		},
+	})
+}
+
+func schemav093WithIsManagedAndDataRetentionDays(name, database, tagSchema, tagName, tagValue string, isManaged bool, dataRetentionDays int) string {
+	s := `
+resource "snowflake_schema" "test" {
+	name					= "%[1]s"
+	database				= "%[2]s"
+	is_managed				= %[6]t
+	data_retention_days		= %[7]d
+	tag {
+		name = "%[4]s"
+		value = "%[5]s"
+		schema = "%[3]s"
+		database = "%[2]s"
+	}
+}
+`
+	return fmt.Sprintf(s, name, database, tagSchema, tagName, tagValue, isManaged, dataRetentionDays)
+}
+
+func schemav093(name, database string) string {
 	s := `
 resource "snowflake_schema" "test" {
 	name					= "%s"
 	database				= "%s"
-	is_managed				= %t
-	data_retention_days		= %d
 }
 `
-	return fmt.Sprintf(s, name, database, isManaged, dataRetentionDays)
+	return fmt.Sprintf(s, name, database)
 }
 
-func schemav094(name, database string, isManaged bool, dataRetentionDays int) string {
+func schemav094WithManagedAccessAndDataRetentionTimeInDays(name, database string, isManaged bool, dataRetentionDays int) string {
 	s := `
 resource "snowflake_schema" "test" {
 	name             				= "%s"
@@ -846,4 +937,14 @@ resource "snowflake_schema" "test" {
 }
 `
 	return fmt.Sprintf(s, name, database, isManaged, dataRetentionDays)
+}
+
+func schemav094(name, database string) string {
+	s := `
+resource "snowflake_schema" "test" {
+	name             				= "%s"
+	database		 				= "%s"
+}
+`
+	return fmt.Sprintf(s, name, database)
 }

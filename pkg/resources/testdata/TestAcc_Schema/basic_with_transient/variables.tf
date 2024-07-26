@@ -7,5 +7,5 @@ variable "database" {
 }
 
 variable "is_transient" {
-  type = bool
+  type = string
 }

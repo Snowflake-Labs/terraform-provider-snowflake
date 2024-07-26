@@ -7,11 +7,11 @@ variable "database" {
 }
 
 variable "with_managed_access" {
-  type = bool
+  type = string
 }
 
 variable "is_transient" {
-  type = bool
+  type = string
 }
 
 variable "comment" {

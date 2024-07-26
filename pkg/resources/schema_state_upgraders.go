@@ -15,5 +15,7 @@ func v093SchemaStateUpgrader(ctx context.Context, rawState map[string]any, meta 
 	rawState["data_retention_time_in_days"] = rawState["data_retention_days"]
 	delete(rawState, "data_retention_days")
 
+	delete(rawState, "tag")
+
 	return rawState, nil
 }
