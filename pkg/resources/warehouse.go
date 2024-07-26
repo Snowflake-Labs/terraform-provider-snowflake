@@ -42,14 +42,14 @@ var warehouseSchema = map[string]*schema.Schema{
 	"max_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("max_cluster_count"),
 		Description:      "Specifies the maximum number of server clusters for the warehouse.",
 	},
 	"min_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("min_cluster_count"),
 		Description:      "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 	},

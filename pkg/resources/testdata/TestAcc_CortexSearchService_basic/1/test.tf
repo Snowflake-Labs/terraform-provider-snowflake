@@ -3,9 +3,15 @@ resource "snowflake_table" "t" {
   schema          = var.schema
   name            = var.table_name
   change_tracking = true
+
   column {
-    name = "id"
+    name = "ID"
     type = "NUMBER(38,0)"
+  }
+
+  column {
+    name = "SOME_TEXT"
+    type = "VARCHAR"
   }
 }
 

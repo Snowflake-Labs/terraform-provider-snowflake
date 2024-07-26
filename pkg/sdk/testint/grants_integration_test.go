@@ -241,6 +241,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on all: cortex search service", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
+		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		t.Cleanup(tableTestCleanup)
+		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
+		t.Cleanup(cortexCleanup)
 
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeUsage},
@@ -254,7 +258,31 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			},
 		}
 		err := client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		require.ErrorContains(t, err, "unexpected 'SEARCH'")
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+		usagePrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool {
+			return g.Privilege == sdk.SchemaObjectPrivilegeUsage.String()
+		})
+		require.NoError(t, err)
+		assert.Equal(t, cortex.ID().FullyQualifiedName(), usagePrivilege.Name.FullyQualifiedName())
+		assert.Equal(t, sdk.ObjectTypeCortexSearchService, usagePrivilege.GrantedOn)
+
+		// now revoke and verify that the grant(s) are gone
+		err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
+		require.NoError(t, err)
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(grants))
 	})
 
 	t.Run("on future schema object", func(t *testing.T) {
@@ -1117,6 +1145,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 		return ownershipGrantOnObject(sdk.ObjectTypePipe, pipe.ID())
 	}
 
+	ownershipGrantOnCortexSearchService := func(cortexSearchService *sdk.CortexSearchService) sdk.OwnershipGrantOn {
+		return ownershipGrantOnObject(sdk.ObjectTypeCortexSearchService, cortexSearchService.ID())
+	}
+
 	ownershipGrantOnTask := func(task *sdk.Task) sdk.OwnershipGrantOn {
 		return ownershipGrantOnObject(sdk.ObjectTypeTask, task.ID())
 	}
@@ -1281,7 +1313,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			new(sdk.GrantOwnershipOptions),
 		)
-		require.ErrorContains(t, err, "Invalid object type 'CORTEX_SEARCH_SERVICE' for privilege 'OWNERSHIP'")
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnCortexSearchService(cortex), role.ID())
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		grantOwnershipToRole(t, currentRole, ownershipGrantOnCortexSearchService(cortex), nil)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnCortexSearchService(cortex), currentRole)
 	})
 
 	t.Run("on pipe - with operate and monitor privileges granted", func(t *testing.T) {
