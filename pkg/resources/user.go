@@ -465,6 +465,19 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		_, n := d.GetChange("last_name")
 		alterOptions.Set.ObjectProperties.LastName = sdk.String(n.(string))
 	}
+
+	set := &sdk.UserSet{
+		SessionParameters: &sdk.SessionParameters{},
+		ObjectParameters:  &sdk.UserObjectParameters{},
+	}
+	unset := &sdk.UserUnset{
+		SessionParameters: &sdk.SessionParametersUnset{},
+		ObjectParameters:  &sdk.UserObjectParametersUnset{},
+	}
+	if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
+		return updateParamDiags
+	}
+
 	if runSet {
 		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
