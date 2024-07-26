@@ -15,6 +15,12 @@ create a resource with slightly different configuration in Snowflake (depending 
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 
+## Validations
+
+This point connects with the one on about the [default values](#default-values). First of all, we want to reduce the coupling between Snowflake and the provider. Secondly, some of the value limits are soft (consult issues [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948) and [#1919](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1919)) which makes it difficult to align provider validations with the custom setups. Lastly, some values depend on the Snowflake edition used.
+
+Because of all that, we plan to reduce the number of validations (mostly numeric) on the provider side. We won't get rid of them entirely, so that successful plans but apply failures can be limited, but please be aware that you may encounter them. 
+
 ## "Empty" values
 The [Terraform SDK v2](https://github.com/hashicorp/terraform-plugin-sdk) that is currently used in our provider detects the presence of the attribute based on its non-zero Golang value. This means, that it is not possible to distinguish the removal of the value inside a config from setting it explicitely to a zero value, e.g. `0` for the numeric value (check [this thread](https://discuss.hashicorp.com/t/is-it-possible-to-differentiate-between-a-zero-value-and-a-removed-property-in-the-terraform-provider-sdk/43131)). Before we migrate to the new recommended [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) we want to handle such cases the same way inside the provider. It means that:
 - boolean attributes will be migrated to the string attributes with two values: `"true"` and `"false"` settable in the config and the special third value `"default"` that will mean, that the given attribute is not set inside the config.

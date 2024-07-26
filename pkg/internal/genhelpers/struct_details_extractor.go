@@ -2,6 +2,7 @@ package genhelpers
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -64,4 +65,22 @@ func ExtractStructDetails(s any) StructDetails {
 		fields[i] = Field{currentName, currentType, underlyingType}
 	}
 	return StructDetails{v.Type().String(), fields}
+}
+
+// TODO: test
+func AdditionalStandardImports(fields []Field) []string {
+	imports := make(map[string]struct{})
+	for _, field := range fields {
+		additionalImport, isImportedType := field.GetImportedType()
+		if isImportedType {
+			imports[additionalImport] = struct{}{}
+		}
+	}
+	additionalImports := make([]string, 0)
+	for k := range imports {
+		if !slices.Contains([]string{"sdk"}, k) {
+			additionalImports = append(additionalImports, k)
+		}
+	}
+	return additionalImports
 }

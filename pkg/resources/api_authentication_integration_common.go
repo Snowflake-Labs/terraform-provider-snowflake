@@ -335,7 +335,7 @@ func handleApiAuthRead(d *schema.ResourceData,
 			return err
 		}
 	}
-	if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+	if err := setStateToValuesFromConfig(d, apiAuthCommonSchema, []string{
 		"oauth_access_token_validity",
 		"oauth_refresh_token_validity",
 		"oauth_client_id",

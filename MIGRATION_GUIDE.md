@@ -5,6 +5,10 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.93.0 ➞ v0.94.0
+### *(breaking change)* changes in snowflake_scim_integration
+
+In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
+
 
 ### *(breaking change)* refactored snowflake_schema resource
 
@@ -47,8 +51,7 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 
 Terraform should recreate resources for configs lacking `is_transient` (`DROP` and then `CREATE` will be run underneath). To prevent this behavior, please set `is_transient` field.
 
-Terraform should perform an action for configs lacking `with_managed_access` (`ALTER SCHEMA DISABLE MANAGED ACCESS` will be run underneath which should not affect the Snowflake object, because `MANAGED ACCESS` is not set by default).
-
+Terraform should perform an action for configs lacking `with_managed_access` (`ALTER SCHEMA DISABLE MANAGED ACCESS` will be run underneath which should not affect the Snowflake object, because `MANAGED ACCESS` is not set by default)
 ### *(breaking change)* refactored snowflake_schemas datasource
 Changes:
 - `database` is removed and can be specified inside `in` field.
@@ -121,6 +124,10 @@ Added a new datasource enabling querying and filtering network policies. Notes:
 - Output from **DESC NETWORK POLICY** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `network_policies`.
   The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+### *(fix)* snowflake_warehouse resource
+
+Because of the issue [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948), we are relaxing the validations for the Snowflake parameter values. Read more in [CHANGES_BEFORE_V1.md](v1-preparations/CHANGES_BEFORE_V1.md#validations).
 
 ## v0.92.0 ➞ v0.93.0
 
@@ -213,6 +220,10 @@ but we recommend to eventually migrate to the newer counterpart.
 #### *(behavior change)* Changed behavior of `sync_password`
 
 Now, the `sync_password` field will set the state value to `default` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
+> [!WARNING]
+> This change causes issues for Azure scim client (see [#2946](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2946)). The workaround is to remove the resource from the state with `terraform state rm`, add `sync_password = true` to the config, and import with `terraform import "snowflake_scim_integration.test" "aad_provisioning"`. After these steps, there should be no errors and no diff on this field. This behavior is fixed in v0.94 with state upgrader.
+
 
 #### *(behavior change)* Renamed fields
 

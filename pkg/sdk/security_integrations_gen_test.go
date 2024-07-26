@@ -415,6 +415,13 @@ func TestSecurityIntegrations_CreateScim(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateScimSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	})
 
+	t.Run("validation: conflicting SyncPassword for Azure ScimClient", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ScimClient = ScimSecurityIntegrationScimClientAzure
+		opts.SyncPassword = Pointer(true)
+		assertOptsInvalidJoinedErrors(t, opts, NewError("SyncPassword is not supported for Azure scim client"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Pointer(true)
