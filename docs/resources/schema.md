@@ -80,7 +80,7 @@ resource "snowflake_schema" "schema" {
 
 ### Read-Only
 
-- `describe_output` (List of Object) Outputs the result of `DESCRIBE SCHEMA` for the given object. (see [below for nested schema](#nestedatt--describe_output))
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE SCHEMA` for the given object. In order to handle this output, one must grant sufficient privileges, e.g. [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
 - `parameters` (List of Object) Outputs the result of `SHOW PARAMETERS IN SCHEMA` for the given object. (see [below for nested schema](#nestedatt--parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SCHEMA` for the given object. (see [below for nested schema](#nestedatt--show_output))
