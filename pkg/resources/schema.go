@@ -80,7 +80,7 @@ var schemaSchema = map[string]*schema.Schema{
 	DescribeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `DESCRIBE SCHEMA` for the given object.",
+		Description: "Outputs the result of `DESCRIBE SCHEMA` for the given object. In order to handle this output, one must grant sufficient privileges, e.g. [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema.",
 		Elem: &schema.Resource{
 			Schema: schemas.SchemaDescribeSchema,
 		},
@@ -355,11 +355,6 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		describeResult, err := client.Schemas.Describe(ctx, schema.ID())
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
 				showMapping{"options", "is_transient", schema.IsTransient(), booleanStringFromBool(schema.IsTransient()), func(x any) any {
@@ -380,8 +375,13 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set(DescribeOutputAttributeName, schemas.SchemaDescriptionToSchema(describeResult)); err != nil {
-			return diag.FromErr(err)
+		describeResult, err := client.Schemas.Describe(ctx, schema.ID())
+		if err != nil {
+			log.Printf("[DEBUG] describing schema: %s, err: %s", id.FullyQualifiedName(), err)
+		} else {
+			if err = d.Set(DescribeOutputAttributeName, schemas.SchemaDescriptionToSchema(describeResult)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.SchemaToSchema(schema)}); err != nil {

@@ -41,7 +41,7 @@ New fields:
     - `enable_console_output`
     - `pipe_execution_paused`
 - added `show_output` field that holds the response from SHOW SCHEMAS.
-- added `describe_output` field that holds the response from DESCRIBE SCHEMA.
+- added `describe_output` field that holds the response from DESCRIBE SCHEMA. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. Otherwise, this field is not filled.
 - added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
 
 We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
