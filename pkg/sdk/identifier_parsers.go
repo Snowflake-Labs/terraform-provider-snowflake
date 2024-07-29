@@ -8,7 +8,7 @@ import (
 
 const IdDelimiter = '.'
 
-// TODO: Temporarily exported will be made private in SNOW-TODO
+// TODO(SNOW-1495053): Temporarily exported, make as private
 func ParseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([]string, error) {
 	reader := csv.NewReader(strings.NewReader(identifier))
 	if opts != nil {
@@ -24,7 +24,7 @@ func ParseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 	return lines[0], nil
 }
 
-// TODO: Temporarily exported will be made private in SNOW-TODO
+// TODO(SNOW-1495053): Temporarily exported, make as private
 func ParseIdentifierString(identifier string) ([]string, error) {
 	return ParseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
 		r.Comma = IdDelimiter
@@ -52,7 +52,7 @@ func ParseAccountObjectIdentifier(identifier string) (AccountObjectIdentifier, e
 	)
 }
 
-// TODO(SNOW-1495051): Replace ParseObjectIdentifier
+// TODO(SNOW-1495053): Replace ParseObjectIdentifier
 // ParseObjectIdentifierString tries to guess the identifier by the number of parts it contains.
 // Because of the overlapping, in some cases, the output ObjectIdentifier can be one of the following implementations:
 // - AccountObjectIdentifier for one part

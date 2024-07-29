@@ -25,7 +25,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 		acc.TestClient().Account.GetAccountIdentifier(t),
 	})
 	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
 		// Have to wait; otherwise the secondary database removal can be not registered yet,
 		// resulting in an error in the cleanup below.
 		time.Sleep(time.Second)
@@ -162,7 +162,7 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
 	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
 		// Have to wait; otherwise the secondary database removal can be not registered yet,
 		// resulting in an error in the cleanup below.
 		time.Sleep(time.Second)
@@ -408,7 +408,7 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
 	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
 		// Have to wait; otherwise the secondary database removal can be not registered yet,
 		// resulting in an error in the cleanup below.
 		time.Sleep(time.Second)
