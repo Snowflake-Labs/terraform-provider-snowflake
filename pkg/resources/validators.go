@@ -38,7 +38,7 @@ func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
 // That's because sdk.ExternalObjectIdentifiers has varying parts count (2 or 3).
 //
 // To use this function, pass it as a validation function on identifier field with generic parameter set to the desired sdk.ObjectIdentifier implementation.
-func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() schema.SchemaValidateDiagFunc {
+func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier | sdk.ExternalObjectIdentifier]() schema.SchemaValidateDiagFunc {
 	return func(value any, path cty.Path) diag.Diagnostics {
 		if _, ok := value.(string); !ok {
 			return diag.Diagnostics{
@@ -51,26 +51,43 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			}
 		}
 
-		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
-		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
-			return nil
-		}
+		var id sdk.ObjectIdentifier
+		var err error
 
 		stringValue := value.(string)
-		id, err := helpers.DecodeSnowflakeParameterID(stringValue)
-		if err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Unable to parse the identifier",
-					Detail: fmt.Sprintf(
-						"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s",
-						stringValue,
-						getExpectedIdentifierRepresentationFromGeneric[T](),
-						err.Error(),
-					),
-					AttributePath: path,
-				},
+		if _, ok := any(sdk.ExternalObjectIdentifier{}).(T); ok {
+			id, err = sdk.ParseExternalObjectIdentifier(stringValue)
+			if err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Unable to parse the identifier",
+						Detail: fmt.Sprintf(
+							`Unable to parse the identifier: "%s". Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s`,
+							stringValue,
+							getExpectedIdentifierRepresentationFromGeneric[T](),
+							err.Error(),
+						),
+						AttributePath: path,
+					},
+				}
+			}
+		} else {
+			id, err = sdk.ParseObjectIdentifierString(stringValue)
+			if err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Unable to parse the identifier",
+						Detail: fmt.Sprintf(
+							`Unable to parse the identifier: "%s". Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s`,
+							stringValue,
+							getExpectedIdentifierRepresentationFromGeneric[T](),
+							err.Error(),
+						),
+						AttributePath: path,
+					},
+				}
 			}
 		}
 
@@ -80,9 +97,10 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 					Severity: diag.Error,
 					Summary:  "Invalid identifier type",
 					Detail: fmt.Sprintf(
-						"Expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
+						`Expected %s identifier type, but got: %T for id: "%s". The correct form of the fully qualified name for this field is: %s, but was %s`,
 						reflect.TypeOf(new(T)).Elem().Name(),
 						id,
+						stringValue,
 						getExpectedIdentifierRepresentationFromGeneric[T](),
 						getExpectedIdentifierRepresentationFromParam(id),
 					),
@@ -95,7 +113,7 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 	}
 }
 
-func getExpectedIdentifierRepresentationFromGeneric[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() string {
+func getExpectedIdentifierRepresentationFromGeneric[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier | sdk.ExternalObjectIdentifier]() string {
 	return getExpectedIdentifierForm(new(T))
 }
 
@@ -113,6 +131,8 @@ func getExpectedIdentifierForm(id any) string {
 		return "<database_name>.<schema_name>.<name>"
 	case sdk.TableColumnIdentifier, *sdk.TableColumnIdentifier:
 		return "<database_name>.<schema_name>.<table_name>.<column_name>"
+	case sdk.ExternalObjectIdentifier, *sdk.ExternalObjectIdentifier:
+		return "<organization_name>.<account_name>.<external_object_name>"
 	}
 	return ""
 }

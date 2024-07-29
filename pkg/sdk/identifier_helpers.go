@@ -183,9 +183,6 @@ func (i AccountObjectIdentifier) Name() string {
 }
 
 func (i AccountObjectIdentifier) FullyQualifiedName() string {
-	if i.name == "" {
-		return ""
-	}
 	return fmt.Sprintf(`"%v"`, i.name)
 }
 
@@ -222,9 +219,6 @@ func (i DatabaseObjectIdentifier) Name() string {
 }
 
 func (i DatabaseObjectIdentifier) FullyQualifiedName() string {
-	if i.name == "" && i.databaseName == "" {
-		return ""
-	}
 	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.name)
 }
 
@@ -307,9 +301,6 @@ func (i SchemaObjectIdentifier) DatabaseId() AccountObjectIdentifier {
 }
 
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {
-	if i.schemaName == "" && i.databaseName == "" && i.name == "" {
-		return ""
-	}
 	if len(i.arguments) == 0 {
 		return fmt.Sprintf(`"%v"."%v"."%v"`, i.databaseName, i.schemaName, i.name)
 	}
@@ -376,9 +367,6 @@ func (i TableColumnIdentifier) Name() string {
 }
 
 func (i TableColumnIdentifier) FullyQualifiedName() string {
-	if i.schemaName == "" && i.databaseName == "" && i.tableName == "" && i.columnName == "" {
-		return ""
-	}
 	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.databaseName, i.schemaName, i.tableName, i.columnName)
 }
 

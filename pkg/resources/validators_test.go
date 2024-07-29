@@ -57,6 +57,7 @@ func TestIsValidIdentifier(t *testing.T) {
 	databaseObjectIdentifierCheck := IsValidIdentifier[sdk.DatabaseObjectIdentifier]()
 	schemaObjectIdentifierCheck := IsValidIdentifier[sdk.SchemaObjectIdentifier]()
 	tableColumnIdentifierCheck := IsValidIdentifier[sdk.TableColumnIdentifier]()
+	externalObjectIdentifierCheck := IsValidIdentifier[sdk.ExternalObjectIdentifier]()
 
 	testCases := []struct {
 		Name       string
@@ -89,13 +90,26 @@ func TestIsValidIdentifier(t *testing.T) {
 			CheckingFn: tableColumnIdentifierCheck,
 		},
 		{
-			Name:       "correct form for account object identifier",
+			Name:       "validation: incorrect form for external object identifier - less parts than expected",
 			Value:      "a",
+			Error:      `unexpected number of parts 1 in identifier a, expected 3 in a form of "<organization_name>.<account_name>.<external_object_name>"`,
+			CheckingFn: externalObjectIdentifierCheck,
+		},
+		{
+			Name:       "validation: incorrect form for external object identifier - more parts than expected",
+			Value:      "a.b.c.d",
+			Error:      `unexpected number of parts 4 in identifier a.b.c.d, expected 3 in a form of "<organization_name>.<account_name>.<external_object_name>"`,
+			CheckingFn: externalObjectIdentifierCheck,
+		},
+		{
+			Name:       "validation: incorrect form for account object identifier - multiple parts",
+			Value:      "a.b",
+			Error:      `<name>, but was <database_name>.<name>`,
 			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{
-			Name:       "correct form for account object identifier - multiple parts",
-			Value:      "a.b",
+			Name:       "correct form for account object identifier",
+			Value:      "a",
 			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{
@@ -117,6 +131,11 @@ func TestIsValidIdentifier(t *testing.T) {
 			Name:       "correct form for table column identifier",
 			Value:      "a.b.c.d",
 			CheckingFn: tableColumnIdentifierCheck,
+		},
+		{
+			Name:       "correct form for external object identifier",
+			Value:      "org.acc.db",
+			CheckingFn: externalObjectIdentifierCheck,
 		},
 	}
 
@@ -159,6 +178,11 @@ func TestGetExpectedIdentifierFormGeneric(t *testing.T) {
 			Expected: "<database_name>.<schema_name>.<table_name>.<column_name>",
 			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
 		},
+		{
+			Name:     "external object identifier from generic parameter",
+			Expected: "<organization_name>.<account_name>.<external_object_name>",
+			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.ExternalObjectIdentifier](),
+		},
 	}
 
 	for _, tt := range testCases {
@@ -198,6 +222,12 @@ func TestGetExpectedIdentifierFormParam(t *testing.T) {
 			Expected:          "<database_name>.<schema_name>.<table_name>.<column_name>",
 			Identifier:        sdk.TableColumnIdentifier{},
 			IdentifierPointer: &sdk.TableColumnIdentifier{},
+		},
+		{
+			Name:              "external object identifier from generic parameter",
+			Expected:          "<organization_name>.<account_name>.<external_object_name>",
+			Identifier:        sdk.ExternalObjectIdentifier{},
+			IdentifierPointer: &sdk.ExternalObjectIdentifier{},
 		},
 	}
 

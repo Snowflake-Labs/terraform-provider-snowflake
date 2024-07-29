@@ -207,8 +207,10 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("as_replica_of", sdk.NewExternalObjectIdentifierFromFullyQualifiedName(replicationPrimaryDatabase.PrimaryDatabase).FullyQualifiedName()); err != nil {
-		return diag.FromErr(err)
+	if replicationPrimaryDatabase.PrimaryDatabase != nil {
+		if err := d.Set("as_replica_of", replicationPrimaryDatabase.PrimaryDatabase.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if err := d.Set("is_transient", secondaryDatabase.Transient); err != nil {

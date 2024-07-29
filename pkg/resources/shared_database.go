@@ -171,8 +171,10 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("from_share", sdk.NewExternalObjectIdentifierFromFullyQualifiedName(database.Origin).FullyQualifiedName()); err != nil {
-		return diag.FromErr(err)
+	if database.Origin != nil {
+		if err := d.Set("from_share", database.Origin.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// TODO(SNOW-1325381)

@@ -2,8 +2,6 @@ package resources
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -59,7 +57,7 @@ func (g *OnObjectGrantOwnershipData) String() string {
 	var parts []string
 	parts = append(parts, g.ObjectType.String())
 	parts = append(parts, g.ObjectName.FullyQualifiedName())
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 func (g *GrantOwnershipId) String() string {
@@ -81,13 +79,13 @@ func (g *GrantOwnershipId) String() string {
 	if len(data) > 0 {
 		parts = append(parts, data)
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
 	grantOwnershipId := new(GrantOwnershipId)
 
-	parts := strings.Split(id, helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(id)
 	if len(parts) < 5 {
 		return grantOwnershipId, sdk.NewError(`grant ownership identifier should hold at least 5 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|<grant_type>|<grant_data>"`)
 	}
