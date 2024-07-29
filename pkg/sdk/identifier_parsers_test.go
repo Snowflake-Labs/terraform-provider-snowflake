@@ -2,9 +2,10 @@ package sdk
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_ParseIdentifierString(t *testing.T) {
