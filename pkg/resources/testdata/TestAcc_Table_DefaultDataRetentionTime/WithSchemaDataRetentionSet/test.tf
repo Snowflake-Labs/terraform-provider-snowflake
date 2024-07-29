@@ -4,9 +4,9 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_schema" "test" {
-  database            = snowflake_database.test.name
-  name                = var.schema
-  data_retention_days = var.schema_data_retention_time
+  database                    = snowflake_database.test.name
+  name                        = var.schema
+  data_retention_time_in_days = var.schema_data_retention_time
 }
 
 resource "snowflake_table" "test" {

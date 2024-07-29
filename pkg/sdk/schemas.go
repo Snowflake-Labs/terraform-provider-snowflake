@@ -6,6 +6,8 @@ import (
 	"errors"
 	"slices"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var (
@@ -565,12 +567,7 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 	if err != nil {
 		return nil, err
 	}
-	for _, s := range schemas {
-		if s.ID() == id {
-			return &s, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindOne(schemas, func(r Schema) bool { return r.Name == id.Name() })
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {

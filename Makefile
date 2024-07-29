@@ -135,4 +135,32 @@ generate-snowflake-object-parameters-assertions: ## Generate snowflake object pa
 clean-snowflake-object-parameters-assertions: ## Clean snowflake object parameters assertions
 	rm -f ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/*_gen.go
 
+generate-resource-assertions: ## Generate resource assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceassert/generate.go
+
+clean-resource-assertions: ## Clean resource assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceassert/*_gen.go
+
+generate-resource-parameters-assertions: ## Generate resource parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceparametersassert/generate.go
+
+clean-resource-parameters-assertions: ## Clean resource parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceparametersassert/*_gen.go
+
+generate-resource-show-output-assertions: ## Generate resource parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/generate.go
+
+clean-resource-show-output-assertions: ## Clean resource parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/*_gen.go
+
+generate-resource-model-builders: ## Generate resource model builders
+	go generate ./pkg/acceptance/bettertestspoc/config/model/generate.go
+
+clean-resource-model-builder: ## Clean resource model builders
+	rm -f ./pkg/acceptance/bettertestspoc/config/model/*_gen.go
+
+clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builder ## clean all generated assertions and config models
+
+generate-all-assertions-and-config-models: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions generate-resource-model-builders ## generate all assertions and config models
+
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf

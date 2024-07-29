@@ -89,7 +89,8 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 		var result bool
 		for _, changedKey := range changedAttributeKeys {
 			if diff.HasChange(changedKey) {
-				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s\n", changedKey)
+				old, new := diff.GetChange(changedKey)
+				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s old: %s new: %s\n", changedKey, old, new)
 			}
 			result = result || diff.HasChange(changedKey)
 		}

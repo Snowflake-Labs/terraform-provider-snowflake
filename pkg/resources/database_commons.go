@@ -80,13 +80,13 @@ func init() {
 		{
 			Name:         sdk.ObjectParameterCatalog,
 			Type:         schema.TypeString,
-			Description:  "The database parameter that specifies the default catalog to use for Iceberg tables.",
+			Description:  "The database parameter that specifies the default catalog to use for Iceberg tables. For more information, see [CATALOG](https://docs.snowflake.com/en/sql-reference/parameters#catalog).",
 			ValidateDiag: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		{
 			Name:         sdk.ObjectParameterExternalVolume,
 			Type:         schema.TypeString,
-			Description:  "The database parameter that specifies the default external volume to use for Iceberg tables.",
+			Description:  "The database parameter that specifies the default external volume to use for Iceberg tables. For more information, see [EXTERNAL_VOLUME](https://docs.snowflake.com/en/sql-reference/parameters#external-volume).",
 			ValidateDiag: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		{
@@ -116,12 +116,12 @@ func init() {
 		{
 			Name:        sdk.ObjectParameterReplaceInvalidCharacters,
 			Type:        schema.TypeBool,
-			Description: "Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog.",
+			Description: "Specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�) in query results for an Iceberg table. You can only set this parameter for tables that use an external Iceberg catalog. For more information, see [REPLACE_INVALID_CHARACTERS](https://docs.snowflake.com/en/sql-reference/parameters#replace-invalid-characters).",
 		},
 		{
 			Name:         sdk.ObjectParameterStorageSerializationPolicy,
 			Type:         schema.TypeString,
-			Description:  fmt.Sprintf("The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake.", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
+			Description:  fmt.Sprintf("The storage serialization policy for Iceberg tables that use Snowflake as the catalog. Valid options are: %v. COMPATIBLE: Snowflake performs encoding and compression of data files that ensures interoperability with third-party compute engines. OPTIMIZED: Snowflake performs encoding and compression of data files that ensures the best table performance within Snowflake. For more information, see [STORAGE_SERIALIZATION_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#storage-serialization-policy).", sdk.AsStringList(sdk.AllStorageSerializationPolicies)),
 			ValidateDiag: StringInSlice(sdk.AsStringList(sdk.AllStorageSerializationPolicies), true),
 			DiffSuppress: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 				return strings.EqualFold(oldValue, newValue)
@@ -130,26 +130,26 @@ func init() {
 		{
 			Name:         sdk.ObjectParameterSuspendTaskAfterNumFailures,
 			Type:         schema.TypeInt,
-			Description:  "How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.",
+			Description:  "How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending. For more information, see [SUSPEND_TASK_AFTER_NUM_FAILURES](https://docs.snowflake.com/en/sql-reference/parameters#suspend-task-after-num-failures).",
 			ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		{
 			Name:         sdk.ObjectParameterTaskAutoRetryAttempts,
 			Type:         schema.TypeInt,
-			Description:  "Maximum automatic retries allowed for a user task.",
+			Description:  "Maximum automatic retries allowed for a user task. For more information, see [TASK_AUTO_RETRY_ATTEMPTS](https://docs.snowflake.com/en/sql-reference/parameters#task-auto-retry-attempts).",
 			ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		{
 			Name:         sdk.ObjectParameterUserTaskManagedInitialWarehouseSize,
 			Type:         schema.TypeString,
-			Description:  "The initial size of warehouse to use for managed warehouses in the absence of history.",
+			Description:  "The initial size of warehouse to use for managed warehouses in the absence of history. For more information, see [USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE](https://docs.snowflake.com/en/sql-reference/parameters#user-task-managed-initial-warehouse-size).",
 			ValidateDiag: sdkValidation(sdk.ToWarehouseSize),
 			DiffSuppress: NormalizeAndCompare(sdk.ToWarehouseSize),
 		},
 		{
 			Name:         sdk.ObjectParameterUserTaskTimeoutMs,
 			Type:         schema.TypeInt,
-			Description:  "User task execution timeout in milliseconds.",
+			Description:  "User task execution timeout in milliseconds. For more information, see [USER_TASK_TIMEOUT_MS](https://docs.snowflake.com/en/sql-reference/parameters#user-task-timeout-ms).",
 			ValidateDiag: validation.ToDiagFunc(validation.IntBetween(0, 86400000)),
 		},
 		{
@@ -161,7 +161,7 @@ func init() {
 		{
 			Name:        sdk.ObjectParameterQuotedIdentifiersIgnoreCase,
 			Type:        schema.TypeBool,
-			Description: "If true, the case of quoted identifiers is ignored.",
+			Description: "If true, the case of quoted identifiers is ignored. For more information, see [QUOTED_IDENTIFIERS_IGNORE_CASE](https://docs.snowflake.com/en/sql-reference/parameters#quoted-identifiers-ignore-case).",
 		},
 		{
 			Name:        sdk.ObjectParameterEnableConsoleOutput,
