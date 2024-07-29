@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 
@@ -23,7 +24,13 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		acc.TestClient().Account.GetAccountIdentifier(t),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// Have to wait; otherwise the secondary database removal can be not registered yet,
+		// resulting in an error in the cleanup below.
+		time.Sleep(time.Second)
+		primaryDatabaseCleanup()
+	})
 
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
@@ -154,7 +161,13 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// Have to wait; otherwise the secondary database removal can be not registered yet,
+		// resulting in an error in the cleanup below.
+		time.Sleep(time.Second)
+		primaryDatabaseCleanup()
+	})
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
@@ -394,7 +407,13 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172: Create a better solution for this type of situations
+		// Have to wait; otherwise the secondary database removal can be not registered yet,
+		// resulting in an error in the cleanup below.
+		time.Sleep(time.Second)
+		primaryDatabaseCleanup()
+	})
 
 	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
 	require.NoError(t, err)
