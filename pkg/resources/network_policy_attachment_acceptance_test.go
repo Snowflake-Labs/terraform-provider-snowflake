@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,9 +18,13 @@ import (
 )
 
 func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
-	user1 := acc.TestClient().Ids.Alpha()
-	user2 := acc.TestClient().Ids.Alpha()
-	policyNameUser := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	user1, user1Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user1Cleanup)
+	user2, user2Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user2Cleanup)
+	policyId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -31,17 +35,17 @@ func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: networkPolicyAttachmentConfigSingle(user1, policyNameUser),
+				Config: networkPolicyAttachmentConfigSingle(user1.ID(), policyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyNameUser),
+					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyId.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "set_for_account", "false"),
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "1"),
 				),
 			},
 			{
-				Config: networkPolicyAttachmentConfig(user1, user2, policyNameUser),
+				Config: networkPolicyAttachmentConfig(user1.ID(), user2.ID(), policyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyNameUser),
+					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "network_policy_name", policyId.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "set_for_account", "false"),
 					resource.TestCheckResourceAttr("snowflake_network_policy_attachment.test", "users.#", "2"),
 				),
@@ -98,46 +102,34 @@ func testAccCheckNetworkPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func networkPolicyAttachmentConfigSingle(user1, policyName string) string {
+func networkPolicyAttachmentConfigSingle(user1Id sdk.AccountObjectIdentifier, policyId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "test-user1" {
-	name = "%s"
-}
-
 resource "snowflake_network_policy" "test" {
-	name            = "%v"
+	name            = %[2]s
 	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 }
 
 resource "snowflake_network_policy_attachment" "test" {
 	network_policy_name = snowflake_network_policy.test.name
 	set_for_account     = false
-	users               = [snowflake_user.test-user1.name]
+	users               = [%[1]s]
 }
-`, user1, policyName)
+`, user1Id.FullyQualifiedName(), policyId.FullyQualifiedName())
 }
 
-func networkPolicyAttachmentConfig(user1, user2, policyName string) string {
+func networkPolicyAttachmentConfig(user1Id sdk.AccountObjectIdentifier, user2Id sdk.AccountObjectIdentifier, policyId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "test-user1" {
-	name = "%s"
-}
-
-resource "snowflake_user" "test-user2" {
-	name = "%s"
-}
-
 resource "snowflake_network_policy" "test" {
-	name            = "%v"
+	name            = %[3]s
 	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
 }
 
 resource "snowflake_network_policy_attachment" "test" {
 	network_policy_name = snowflake_network_policy.test.name
 	set_for_account     = false
-	users               = [snowflake_user.test-user1.name, snowflake_user.test-user2.name]
+	users               = [%[1]s, %[2]s]
 }
-`, user1, user2, policyName)
+`, user1Id.FullyQualifiedName(), user2Id.FullyQualifiedName(), policyId.FullyQualifiedName())
 }
 
 func networkPolicyAttachmentConfigAccount(policyName string) string {
