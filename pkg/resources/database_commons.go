@@ -196,62 +196,68 @@ func init() {
 	}
 }
 
-// TODO(SNOW-1480106): Change to smaller and safer return type
-func GetAllDatabaseParameters(d *schema.ResourceData) (
-	dataRetentionTimeInDays *int,
-	maxDataExtensionTimeInDays *int,
-	externalVolume *sdk.AccountObjectIdentifier,
-	catalog *sdk.AccountObjectIdentifier,
-	replaceInvalidCharacters *bool,
-	defaultDDLCollation *string,
-	storageSerializationPolicy *sdk.StorageSerializationPolicy,
-	logLevel *sdk.LogLevel,
-	traceLevel *sdk.TraceLevel,
-	suspendTaskAfterNumFailures *int,
-	taskAutoRetryAttempts *int,
-	userTaskManagedInitialWarehouseSize *sdk.WarehouseSize,
-	userTaskTimeoutMs *int,
-	userTaskMinimumTriggerIntervalInSeconds *int,
-	quotedIdentifiersIgnoreCase *bool,
-	enableConsoleOutput *bool,
-	err error,
-) {
-	dataRetentionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "data_retention_time_in_days")
-	maxDataExtensionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "max_data_extension_time_in_days")
-	if externalVolumeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "external_volume"); externalVolumeRaw != nil {
-		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(*externalVolumeRaw))
-	}
-	if catalogRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "catalog"); catalogRaw != nil {
-		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(*catalogRaw))
-	}
-	replaceInvalidCharacters = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "replace_invalid_characters")
-	defaultDDLCollation = GetConfigPropertyAsPointerAllowingZeroValue[string](d, "default_ddl_collation")
-	if storageSerializationPolicyRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
-		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(*storageSerializationPolicyRaw))
-	}
-	if logLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "log_level"); logLevelRaw != nil {
-		logLevel = sdk.Pointer(sdk.LogLevel(*logLevelRaw))
-	}
-	if traceLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "trace_level"); traceLevelRaw != nil {
-		traceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevelRaw))
-	}
-	suspendTaskAfterNumFailures = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "suspend_task_after_num_failures")
-	taskAutoRetryAttempts = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "task_auto_retry_attempts")
-	if userTaskManagedInitialWarehouseSizeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "user_task_managed_initial_warehouse_size"); userTaskManagedInitialWarehouseSizeRaw != nil {
-		var warehouseSize sdk.WarehouseSize
-		if warehouseSize, err = sdk.ToWarehouseSize(*userTaskManagedInitialWarehouseSizeRaw); err != nil {
-			return
-		}
-		userTaskManagedInitialWarehouseSize = sdk.Pointer(warehouseSize)
-	}
-	userTaskTimeoutMs = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_timeout_ms")
-	userTaskMinimumTriggerIntervalInSeconds = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_minimum_trigger_interval_in_seconds")
-	quotedIdentifiersIgnoreCase = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "quoted_identifiers_ignore_case")
-	enableConsoleOutput = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "enable_console_output")
-	return
+func handleDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateDatabaseOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreate(d, sdk.ObjectParameterDataRetentionTimeInDays, &createOpts.DataRetentionTimeInDays),
+		handleParameterCreate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &createOpts.MaxDataExtensionTimeInDays),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
+	)
 }
 
-func HandleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
+func handleSecondaryDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateSecondaryDatabaseOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreate(d, sdk.ObjectParameterDataRetentionTimeInDays, &createOpts.DataRetentionTimeInDays),
+		handleParameterCreate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &createOpts.MaxDataExtensionTimeInDays),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
+	)
+}
+
+func handleSharedDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateSharedDatabaseOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
+	)
+}
+
+func handleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
 	return JoinDiags(
 		handleParameterUpdate(d, sdk.ObjectParameterDataRetentionTimeInDays, &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
 		handleParameterUpdate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),

@@ -267,7 +267,6 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 	return nil
 }
 
-// TODO: apply to the database too
 // TODO [SNOW-1348330]: consider using SessionParameters#setParam during parameters rework
 // (because currently setParam already is able to set the right parameter based on the string value input,
 // but GetConfigPropertyAsPointerAllowingZeroValue receives typed value,
