@@ -10,9 +10,13 @@ across different versions.
 
 #### *(breaking change)* user parameters added to snowflake_user resource
 
-[//]: # (TODO: add reference to Snowflake parameters befoire V1, add to V1 info on incompatibilty with snowflake_object_parameter)
+On our road to V1 we changed the approach to Snowflake parameters on the object level; now, we add them directly to the resource. This is a **breaking change** because now:
+- Leaving the config empty does not set the default value on the object level but uses the one from hierarchy on Snowflake level instead (so after version bump, the diff running `UNSET` statements is expected).
+- This change is not compatible with `snowflake_object_parameter` - you have to set the parameter inside `snowflake_user` resource **IF** you manage users through terraform **AND** you want to set the parameter on the user level.
 
-The following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
+For more details, check the [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters).
+
+The following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added to the `snowflake_user` resource:
  - [ABORT_DETACHED_QUERY](https://docs.snowflake.com/en/sql-reference/parameters#abort-detached-query)
  - [AUTOCOMMIT](https://docs.snowflake.com/en/sql-reference/parameters#autocommit)
  - [BINARY_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#binary-input-format)
