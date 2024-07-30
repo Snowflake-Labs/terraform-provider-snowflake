@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -58,12 +56,6 @@ var schemaSchema = map[string]*schema.Schema{
 			return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "TRANSIENT")
 		}),
 	},
-	strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)): {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role. For more information, see [PIPE_EXECUTION_PAUSED](https://docs.snowflake.com/en/sql-reference/parameters#pipe-execution-paused).",
-	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -109,6 +101,7 @@ func Schema() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
+			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
 				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
@@ -128,29 +121,10 @@ func Schema() *schema.Resource {
 				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
 				strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)),
 			),
-			ParametersCustomDiff(
-				schemaParametersProvider,
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterExternalVolume, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterCatalog, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterLogLevel, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterTraceLevel, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter[sdk.ObjectParameter]{sdk.ObjectParameterPipeExecutionPaused, valueTypeBool, sdk.ParameterTypeSchema},
-			),
+			SchemaParametersCustomDiff,
 		),
 
-		Schema: helpers.MergeMaps(schemaSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(schemaSchema, SchemaParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSchema,
 		},
@@ -195,16 +169,6 @@ func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
-}
-
-func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-	return client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Schema: id,
-		},
-	})
 }
 
 func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -304,21 +268,8 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if diags := HandleDatabaseParameterRead(d, schemaParameters); diags != nil {
+		if diags := HandleSchemaParameterRead(d, schemaParameters); diags != nil {
 			return diags
-		}
-		pipeExecutionPaused, err := collections.FindOne(schemaParameters, func(property *sdk.Parameter) bool {
-			return property.Key == "PIPE_EXECUTION_PAUSED"
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find schema PIPE_EXECUTION_PAUSED parameter, err = %w", err))
-		}
-		value, err := strconv.ParseBool((*pipeExecutionPaused).Value)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)), value); err != nil {
-			return diag.FromErr(err)
 		}
 
 		if withExternalChangesMarking {
@@ -440,50 +391,6 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return ReadContextSchema(false)(ctx, d, meta)
-}
-
-func handleSchemaParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateSchemaOptions) diag.Diagnostics {
-	return JoinDiags(
-		handleParameterCreate(d, sdk.ObjectParameterDataRetentionTimeInDays, &createOpts.DataRetentionTimeInDays),
-		handleParameterCreate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &createOpts.MaxDataExtensionTimeInDays),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
-		handleParameterCreate(d, sdk.ObjectParameterPipeExecutionPaused, &createOpts.PipeExecutionPaused),
-		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
-		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
-		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
-		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
-		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
-		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
-		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
-		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
-		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
-	)
-}
-
-func handleSchemaParametersChanges(d *schema.ResourceData, set *sdk.SchemaSet, unset *sdk.SchemaUnset) diag.Diagnostics {
-	return JoinDiags(
-		handleParameterUpdate(d, sdk.ObjectParameterDataRetentionTimeInDays, &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
-		handleParameterUpdate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterExternalVolume, &set.ExternalVolume, &unset.ExternalVolume, stringToAccountObjectIdentifier),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterCatalog, &set.Catalog, &unset.Catalog, stringToAccountObjectIdentifier),
-		handleParameterUpdate(d, sdk.ObjectParameterPipeExecutionPaused, &set.PipeExecutionPaused, &unset.PipeExecutionPaused),
-		handleParameterUpdate(d, sdk.ObjectParameterReplaceInvalidCharacters, &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
-		handleParameterUpdate(d, sdk.ObjectParameterDefaultDDLCollation, &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterLogLevel, &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterTraceLevel, &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
-		handleParameterUpdate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
-		handleParameterUpdate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
-		handleParameterUpdateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
-		handleParameterUpdate(d, sdk.ObjectParameterUserTaskTimeoutMs, &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
-		handleParameterUpdate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
-		handleParameterUpdate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
-		handleParameterUpdate(d, sdk.ObjectParameterEnableConsoleOutput, &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
-	)
 }
 
 func DeleteContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

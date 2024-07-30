@@ -150,6 +150,7 @@ func init() {
 		{Name: sdk.UserParameterPreventUnloadToInternalStages, Type: schema.TypeBool, Description: "Specifies whether to prevent data unload operations to internal (Snowflake) stages using [COPY INTO <location>](https://docs.snowflake.com/en/sql-reference/sql/copy-into-location) statements."},
 	}
 
+	// TODO [SNOW-1348101][next PR]: extract this method after moving to SDK
 	for _, field := range userParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 
