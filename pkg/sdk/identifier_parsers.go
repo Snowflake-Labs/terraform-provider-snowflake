@@ -21,6 +21,11 @@ func ParseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
 	}
+	for _, part := range lines[0] {
+		if strings.Contains(part, `"`) {
+			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
+		}
+	}
 	return lines[0], nil
 }
 
