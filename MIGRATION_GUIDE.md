@@ -4,6 +4,74 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.94.0 ➞ v0.95.0
+
+### snowflake_warehouse resource changes
+
+#### *(breaking change)* user parameters added to snowflake_user resource
+
+[//]: # (TODO: add reference to Snowflake parameters befoire V1, add to V1 info on incompatibilty with snowflake_object_parameter)
+
+The following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
+ - [ABORT_DETACHED_QUERY](https://docs.snowflake.com/en/sql-reference/parameters#abort-detached-query)
+ - [AUTOCOMMIT](https://docs.snowflake.com/en/sql-reference/parameters#autocommit)
+ - [BINARY_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#binary-input-format)
+ - [BINARY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#binary-output-format)
+ - [CLIENT_MEMORY_LIMIT](https://docs.snowflake.com/en/sql-reference/parameters#client-memory-limit)
+ - [CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX](https://docs.snowflake.com/en/sql-reference/parameters#client-metadata-request-use-connection-ctx)
+ - [CLIENT_PREFETCH_THREADS](https://docs.snowflake.com/en/sql-reference/parameters#client-prefetch-threads)
+ - [CLIENT_RESULT_CHUNK_SIZE](https://docs.snowflake.com/en/sql-reference/parameters#client-result-chunk-size)
+ - [CLIENT_RESULT_COLUMN_CASE_INSENSITIVE](https://docs.snowflake.com/en/sql-reference/parameters#client-result-column-case-insensitive)
+ - [CLIENT_SESSION_KEEP_ALIVE](https://docs.snowflake.com/en/sql-reference/parameters#client-session-keep-alive)
+ - [CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY](https://docs.snowflake.com/en/sql-reference/parameters#client-session-keep-alive-heartbeat-frequency)
+ - [CLIENT_TIMESTAMP_TYPE_MAPPING](https://docs.snowflake.com/en/sql-reference/parameters#client-timestamp-type-mapping)
+ - [DATE_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#date-input-format)
+ - [DATE_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#date-output-format)
+ - [ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION](https://docs.snowflake.com/en/sql-reference/parameters#enable-unload-physical-type-optimization)
+ - [ERROR_ON_NONDETERMINISTIC_MERGE](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-merge)
+ - [ERROR_ON_NONDETERMINISTIC_UPDATE](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-update)
+ - [GEOGRAPHY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#geography-output-format)
+ - [GEOMETRY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#geometry-output-format)
+ - [JDBC_TREAT_DECIMAL_AS_INT](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-decimal-as-int)
+ - [JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-timestamp-ntz-as-utc)
+ - [JDBC_USE_SESSION_TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-use-session-timezone)
+ - [JSON_INDENT](https://docs.snowflake.com/en/sql-reference/parameters#json-indent)
+ - [LOCK_TIMEOUT](https://docs.snowflake.com/en/sql-reference/parameters#lock-timeout)
+ - [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#log-level)
+ - [MULTI_STATEMENT_COUNT](https://docs.snowflake.com/en/sql-reference/parameters#multi-statement-count)
+ - [NOORDER_SEQUENCE_AS_DEFAULT](https://docs.snowflake.com/en/sql-reference/parameters#noorder-sequence-as-default)
+ - [ODBC_TREAT_DECIMAL_AS_INT](https://docs.snowflake.com/en/sql-reference/parameters#odbc-treat-decimal-as-int)
+ - [QUERY_TAG](https://docs.snowflake.com/en/sql-reference/parameters#query-tag)
+ - [QUOTED_IDENTIFIERS_IGNORE_CASE](https://docs.snowflake.com/en/sql-reference/parameters#quoted-identifiers-ignore-case)
+ - [ROWS_PER_RESULTSET](https://docs.snowflake.com/en/sql-reference/parameters#rows-per-resultset)
+ - [S3_STAGE_VPCE_DNS_NAME](https://docs.snowflake.com/en/sql-reference/parameters#s3-stage-vpce-dns-name)
+ - [SEARCH_PATH](https://docs.snowflake.com/en/sql-reference/parameters#search-path)
+ - [SIMULATED_DATA_SHARING_CONSUMER](https://docs.snowflake.com/en/sql-reference/parameters#simulated-data-sharing-consumer)
+ - [STATEMENT_QUEUED_TIMEOUT_IN_SECONDS](https://docs.snowflake.com/en/sql-reference/parameters#statement-queued-timeout-in-seconds)
+ - [STATEMENT_TIMEOUT_IN_SECONDS](https://docs.snowflake.com/en/sql-reference/parameters#statement-timeout-in-seconds)
+ - [STRICT_JSON_OUTPUT](https://docs.snowflake.com/en/sql-reference/parameters#strict-json-output)
+ - [TIMESTAMP_DAY_IS_ALWAYS_24H](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-day-is-always-24h)
+ - [TIMESTAMP_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-input-format)
+ - [TIMESTAMP_LTZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-ltz-output-format)
+ - [TIMESTAMP_NTZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-ntz-output-format)
+ - [TIMESTAMP_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-output-format)
+ - [TIMESTAMP_TYPE_MAPPING](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-type-mapping)
+ - [TIMESTAMP_TZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-tz-output-format)
+ - [TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#timezone)
+ - [TIME_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#time-input-format)
+ - [TIME_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#time-output-format)
+ - [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#trace-level)
+ - [TRANSACTION_ABORT_ON_ERROR](https://docs.snowflake.com/en/sql-reference/parameters#transaction-abort-on-error)
+ - [TRANSACTION_DEFAULT_ISOLATION_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#transaction-default-isolation-level)
+ - [TWO_DIGIT_CENTURY_START](https://docs.snowflake.com/en/sql-reference/parameters#two-digit-century-start)
+ - [UNSUPPORTED_DDL_ACTION](https://docs.snowflake.com/en/sql-reference/parameters#unsupported-ddl-action)
+ - [USE_CACHED_RESULT](https://docs.snowflake.com/en/sql-reference/parameters#use-cached-result)
+ - [WEEK_OF_YEAR_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#week-of-year-policy)
+ - [WEEK_START](https://docs.snowflake.com/en/sql-reference/parameters#week-start)
+ - [ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR](https://docs.snowflake.com/en/sql-reference/parameters#enable-unredacted-query-syntax-error)
+ - [NETWORK_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#network-policy)
+ - [PREVENT_UNLOAD_TO_INTERNAL_STAGES](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages)
+
 ## v0.93.0 ➞ v0.94.0
 ### *(breaking change)* changes in snowflake_scim_integration
 
