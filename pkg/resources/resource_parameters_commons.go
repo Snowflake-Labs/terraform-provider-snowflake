@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -65,4 +66,9 @@ func stringToStringEnumProvider[T ~string](mapper func(string) (T, error)) func(
 	return func(value string) (T, error) {
 		return mapper(value)
 	}
+}
+
+func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
+	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))
+	return fmt.Sprintf("%s For more information, check [%s docs](%s).", description, parameter, link)
 }

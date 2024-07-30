@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	SchemaParametersSchema     = make(map[string]*schema.Schema)
-	SchemaParametersCustomDiff = ParametersCustomDiff(
+	schemaParametersSchema     = make(map[string]*schema.Schema)
+	schemaParametersCustomDiff = ParametersCustomDiff(
 		schemaParametersProvider,
 		parameter[sdk.ObjectParameter]{sdk.ObjectParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
 		parameter[sdk.ObjectParameter]{sdk.ObjectParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
@@ -58,7 +58,7 @@ func init() {
 			Optional:    true,
 		}
 	}
-	SchemaParametersSchema = helpers.MergeMaps(DatabaseParametersSchema, additionalSchemaParameters)
+	schemaParametersSchema = helpers.MergeMaps(databaseParametersSchema, additionalSchemaParameters)
 }
 
 func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
@@ -71,7 +71,7 @@ func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta an
 	})
 }
 
-func HandleSchemaParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
+func handleSchemaParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
 	for _, parameter := range databaseParameters {
 		switch parameter.Key {
 		case

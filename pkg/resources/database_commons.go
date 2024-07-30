@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	DatabaseParametersSchema              = make(map[string]*schema.Schema)
-	SharedDatabaseParametersSchema        = make(map[string]*schema.Schema)
+	databaseParametersSchema              = make(map[string]*schema.Schema)
+	sharedDatabaseParametersSchema        = make(map[string]*schema.Schema)
 	sharedDatabaseNotApplicableParameters = []sdk.ObjectParameter{
 		sdk.ObjectParameterDataRetentionTimeInDays,
 		sdk.ObjectParameterMaxDataExtensionTimeInDays,
 	}
-	DatabaseParametersCustomDiff = ParametersCustomDiff(
+	databaseParametersCustomDiff = ParametersCustomDiff(
 		databaseParametersProvider,
 		parameter[sdk.AccountParameter]{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
 		parameter[sdk.AccountParameter]{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
@@ -173,7 +173,7 @@ func init() {
 	for _, field := range databaseParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 
-		DatabaseParametersSchema[fieldName] = &schema.Schema{
+		databaseParametersSchema[fieldName] = &schema.Schema{
 			Type:             field.Type,
 			Description:      field.Description,
 			Computed:         true,
@@ -183,7 +183,7 @@ func init() {
 		}
 
 		if !slices.Contains(sharedDatabaseNotApplicableParameters, field.Name) {
-			SharedDatabaseParametersSchema[fieldName] = &schema.Schema{
+			sharedDatabaseParametersSchema[fieldName] = &schema.Schema{
 				Type:             field.Type,
 				Description:      field.Description,
 				ForceNew:         true,
@@ -278,7 +278,7 @@ func handleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSe
 	)
 }
 
-func HandleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
+func handleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
 	for _, parameter := range databaseParameters {
 		switch parameter.Key {
 		case

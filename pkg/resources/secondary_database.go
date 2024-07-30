@@ -45,8 +45,8 @@ func SecondaryDatabase() *schema.Resource {
 		DeleteContext: DeleteSecondaryDatabase,
 		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        helpers.MergeMaps(secondaryDatabaseSchema, DatabaseParametersSchema),
+		CustomizeDiff: databaseParametersCustomDiff,
+		Schema:        helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -196,7 +196,7 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, secondaryDatabaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, secondaryDatabaseParameters); diags != nil {
 		return diags
 	}
 

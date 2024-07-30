@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -14,8 +13,8 @@ import (
 )
 
 var (
-	UserParametersSchema     = make(map[string]*schema.Schema)
-	UserParametersCustomDiff = ParametersCustomDiff(
+	userParametersSchema     = make(map[string]*schema.Schema)
+	userParametersCustomDiff = ParametersCustomDiff(
 		userParametersProvider,
 		parameter[sdk.UserParameter]{sdk.UserParameterAbortDetachedQuery, valueTypeBool, sdk.ParameterTypeUser},
 		parameter[sdk.UserParameter]{sdk.UserParameterAutocommit, valueTypeBool, sdk.ParameterTypeUser},
@@ -154,7 +153,7 @@ func init() {
 	for _, field := range userParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 
-		UserParametersSchema[fieldName] = &schema.Schema{
+		userParametersSchema[fieldName] = &schema.Schema{
 			Type:        field.Type,
 			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
 			Computed:    true,
@@ -397,10 +396,4 @@ func handleUserParametersUpdate(d *schema.ResourceData, set *sdk.UserSet, unset 
 		handleParameterUpdateWithMapping(d, sdk.UserParameterNetworkPolicy, &set.ObjectParameters.NetworkPolicy, &unset.ObjectParameters.NetworkPolicy, stringToAccountObjectIdentifier),
 		handleParameterUpdate(d, sdk.UserParameterPreventUnloadToInternalStages, &set.ObjectParameters.PreventUnloadToInternalStages, &unset.ObjectParameters.PreventUnloadToInternalStages),
 	)
-}
-
-// TODO: move this function
-func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
-	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))
-	return fmt.Sprintf("%s For more information, check [%s docs](%s).", description, parameter, link)
 }

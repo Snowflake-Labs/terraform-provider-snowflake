@@ -121,10 +121,10 @@ func Schema() *schema.Resource {
 				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
 				strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)),
 			),
-			SchemaParametersCustomDiff,
+			schemaParametersCustomDiff,
 		),
 
-		Schema: helpers.MergeMaps(schemaSchema, SchemaParametersSchema),
+		Schema: helpers.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSchema,
 		},
@@ -268,7 +268,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if diags := HandleSchemaParameterRead(d, schemaParameters); diags != nil {
+		if diags := handleSchemaParameterRead(d, schemaParameters); diags != nil {
 			return diags
 		}
 

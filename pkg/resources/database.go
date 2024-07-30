@@ -84,12 +84,12 @@ func Database() *schema.Resource {
 		DeleteContext: DeleteDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		Schema: helpers.MergeMaps(databaseSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
+		CustomizeDiff: databaseParametersCustomDiff,
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -417,7 +417,7 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, databaseParameters); diags != nil {
 		return diags
 	}
 
