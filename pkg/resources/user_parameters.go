@@ -336,34 +336,6 @@ func handleUserParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateUs
 	)
 }
 
-func stringToAccountObjectIdentifier(value string) (sdk.AccountObjectIdentifier, error) {
-	return sdk.NewAccountObjectIdentifier(value), nil
-}
-
-func stringToStringEnumProvider[T ~string](mapper func(string) (T, error)) func(value string) (T, error) {
-	return func(value string) (T, error) {
-		return mapper(value)
-	}
-}
-
-// handleParameterCreate TODO: describe and test
-func handleParameterCreate[T any, P ~string](d *schema.ResourceData, parameterName P, createField **T) diag.Diagnostics {
-	return handleParameterCreateWithMapping[T, T](d, parameterName, createField, func(value T) (T, error) { return value, nil })
-}
-
-// handleParameterCreateWithMapping TODO: describe
-func handleParameterCreateWithMapping[T, R any, P ~string](d *schema.ResourceData, parameterName P, createField **R, mapping func(value T) (R, error)) diag.Diagnostics {
-	key := strings.ToLower(string(parameterName))
-	if v := GetConfigPropertyAsPointerAllowingZeroValue[T](d, key); v != nil {
-		mappedValue, err := mapping(*v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		*createField = sdk.Pointer(mappedValue)
-	}
-	return nil
-}
-
 func handleUserParametersUpdate(d *schema.ResourceData, set *sdk.UserSet, unset *sdk.UserUnset) diag.Diagnostics {
 	return JoinDiags(
 		handleParameterUpdate(d, sdk.UserParameterAbortDetachedQuery, &set.SessionParameters.AbortDetachedQuery, &unset.SessionParameters.AbortDetachedQuery),
@@ -425,31 +397,6 @@ func handleUserParametersUpdate(d *schema.ResourceData, set *sdk.UserSet, unset 
 		handleParameterUpdateWithMapping(d, sdk.UserParameterNetworkPolicy, &set.ObjectParameters.NetworkPolicy, &unset.ObjectParameters.NetworkPolicy, stringToAccountObjectIdentifier),
 		handleParameterUpdate(d, sdk.UserParameterPreventUnloadToInternalStages, &set.ObjectParameters.PreventUnloadToInternalStages, &unset.ObjectParameters.PreventUnloadToInternalStages),
 	)
-}
-
-// handleParameterUpdate calls internally handleParameterUpdateWithMapping with identity mapping
-func handleParameterUpdate[T any, P ~string](d *schema.ResourceData, parameterName P, setField **T, unsetField **bool) diag.Diagnostics {
-	return handleParameterUpdateWithMapping[T, T](d, parameterName, setField, unsetField, func(value T) (T, error) { return value, nil })
-}
-
-// handleParameterUpdateWithMapping checks schema.ResourceData for change in key's value. If there's a change detected
-// (or unknown value that basically indicates diff.SetNewComputed was called on the key), it checks if the value is set in the configuration.
-// If the value is set, setField (representing setter for a value) is set to the new planned value applying mapping beforehand in cases where enum values,
-// identifiers, etc. have to be set. Otherwise, unsetField is populated.
-func handleParameterUpdateWithMapping[T, R any, P ~string](d *schema.ResourceData, parameterName P, setField **R, unsetField **bool, mapping func(value T) (R, error)) diag.Diagnostics {
-	key := strings.ToLower(string(parameterName))
-	if d.HasChange(key) || !d.GetRawPlan().AsValueMap()[key].IsKnown() {
-		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
-			mappedValue, err := mapping(d.Get(key).(T))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			*setField = sdk.Pointer(mappedValue)
-		} else {
-			*unsetField = sdk.Bool(true)
-		}
-	}
-	return nil
 }
 
 // TODO: move this function
