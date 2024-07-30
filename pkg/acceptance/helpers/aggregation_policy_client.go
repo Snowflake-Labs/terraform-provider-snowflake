@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(SNOW-TODO): change raw sqls to proper client
+// TODO(SNOW-1564954): change raw sqls to proper client
 type AggregationPolicyClient struct {
 	context *TestClientContext
 	ids     *IdsGenerator

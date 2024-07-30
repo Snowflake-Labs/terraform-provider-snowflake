@@ -33,6 +33,7 @@ type TestClient struct {
 	PasswordPolicy            *PasswordPolicyClient
 	Pipe                      *PipeClient
 	ProjectionPolicy          *ProjectionPolicyClient
+	References                *ReferencesClient
 	ResourceMonitor           *ResourceMonitorClient
 	Role                      *RoleClient
 	RowAccessPolicy           *RowAccessPolicyClient
@@ -88,6 +89,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		PasswordPolicy:            NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                      NewPipeClient(context, idsGenerator),
 		ProjectionPolicy:          NewProjectionPolicyClient(context, idsGenerator),
+		References:                NewReferencesClient(context),
 		ResourceMonitor:           NewResourceMonitorClient(context, idsGenerator),
 		Role:                      NewRoleClient(context, idsGenerator),
 		RowAccessPolicy:           NewRowAccessPolicyClient(context, idsGenerator),

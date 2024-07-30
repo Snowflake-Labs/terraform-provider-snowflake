@@ -184,7 +184,7 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "comment")
-		rowAccessPolicyReferences, err := testClientHelper().RowAccessPolicy.GetAllPoliciesFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Len(t, rowAccessPolicyReferences, 2)
 		sort.Slice(rowAccessPolicyReferences, func(i, j int) bool {
@@ -218,6 +218,7 @@ func TestInt_Views(t *testing.T) {
 				).WithProjectionPolicy(
 					*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicy),
 				),
+				*sdk.NewViewColumnRequest("col2"),
 			})
 
 		id := request.GetName()
@@ -225,7 +226,7 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "")
-		rowAccessPolicyReferences, err := testClientHelper().RowAccessPolicy.GetAllPoliciesFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Len(t, rowAccessPolicyReferences, 2)
 		sort.Slice(rowAccessPolicyReferences, func(i, j int) bool {
@@ -424,7 +425,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err := testClientHelper().RowAccessPolicy.GetAllPoliciesFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
@@ -551,7 +552,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err := testClientHelper().RowAccessPolicy.GetAllPoliciesFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
@@ -564,7 +565,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err = testClientHelper().RowAccessPolicy.GetAllPoliciesFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err = testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
