@@ -79,7 +79,7 @@ var (
 )
 
 func init() {
-	// TODO: reuse this struct
+	// TODO [SNOW-1348101][next PR]: reuse this struct
 	type parameterDef struct {
 		Name        sdk.UserParameter
 		Type        schema.ValueType
@@ -87,7 +87,7 @@ func init() {
 		//DiffSuppress schema.SchemaDiffSuppressFunc
 		//ValidateDiag schema.SchemaValidateDiagFunc
 	}
-	// TODO: move to the SDK
+	// TODO [SNOW-1348101][next PR]: move to the SDK
 	userParameterFields := []parameterDef{
 		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption)."},
@@ -158,6 +158,7 @@ func init() {
 			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
 			Computed:    true,
 			Optional:    true,
+			// TODO [SNOW-1348101][next PR]: uncomment and fill out
 			//ValidateDiagFunc: field.ValidateDiag,
 			//DiffSuppressFunc: field.DiffSuppress,
 		}
@@ -178,7 +179,7 @@ func userParametersProvider(ctx context.Context, d ResourceIdProvider, meta any)
 	return userParameters, nil
 }
 
-// TODO: make generic based on type definition
+// TODO [SNOW-1348101][next PR]: make generic based on type definition
 func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
 	for _, p := range warehouseParameters {
 		switch p.Key {
@@ -350,7 +351,7 @@ func handleParameterCreate[T any, P ~string](d *schema.ResourceData, parameterNa
 	return handleParameterCreateWithMapping[T, T](d, parameterName, createField, func(value T) (T, error) { return value, nil })
 }
 
-// handleValuePropertyChangeWithMapping TODO: describe
+// handleParameterCreateWithMapping TODO: describe
 func handleParameterCreateWithMapping[T, R any, P ~string](d *schema.ResourceData, parameterName P, createField **R, mapping func(value T) (R, error)) diag.Diagnostics {
 	key := strings.ToLower(string(parameterName))
 	if v := GetConfigPropertyAsPointerAllowingZeroValue[T](d, key); v != nil {
@@ -426,12 +427,15 @@ func handleUserParametersUpdate(d *schema.ResourceData, set *sdk.UserSet, unset 
 	)
 }
 
-// handleParameterUpdate TODO: test and describe
+// handleParameterUpdate calls internally handleParameterUpdateWithMapping with identity mapping
 func handleParameterUpdate[T any, P ~string](d *schema.ResourceData, parameterName P, setField **T, unsetField **bool) diag.Diagnostics {
 	return handleParameterUpdateWithMapping[T, T](d, parameterName, setField, unsetField, func(value T) (T, error) { return value, nil })
 }
 
-// handleParameterUpdateWithMapping TODO: test and describe
+// handleParameterUpdateWithMapping checks schema.ResourceData for change in key's value. If there's a change detected
+// (or unknown value that basically indicates diff.SetNewComputed was called on the key), it checks if the value is set in the configuration.
+// If the value is set, setField (representing setter for a value) is set to the new planned value applying mapping beforehand in cases where enum values,
+// identifiers, etc. have to be set. Otherwise, unsetField is populated.
 func handleParameterUpdateWithMapping[T, R any, P ~string](d *schema.ResourceData, parameterName P, setField **R, unsetField **bool, mapping func(value T) (R, error)) diag.Diagnostics {
 	key := strings.ToLower(string(parameterName))
 	if d.HasChange(key) || !d.GetRawPlan().AsValueMap()[key].IsKnown() {
