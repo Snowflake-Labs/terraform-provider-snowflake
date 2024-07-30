@@ -10,7 +10,6 @@ import (
 )
 
 func Test_enrichWithReferenceToParameterDocs(t *testing.T) {
-
 	t.Run("formats the docs reference correctly", func(t *testing.T) {
 		description := random.Comment()
 
@@ -21,7 +20,6 @@ func Test_enrichWithReferenceToParameterDocs(t *testing.T) {
 }
 
 func Test_UserParametersSchema(t *testing.T) {
-
 	t.Run("description references parameter docs correctly", func(t *testing.T) {
 		require.True(t, strings.HasSuffix(UserParametersSchema["abort_detached_query"].Description, "For more info, check [ABORT_DETACHED_QUERY docs](https://docs.snowflake.com/en/sql-reference/parameters#abort-detached-query)."))
 	})

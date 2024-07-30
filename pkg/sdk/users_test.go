@@ -1,10 +1,10 @@
 package sdk
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserCreate(t *testing.T) {

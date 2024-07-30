@@ -84,8 +84,8 @@ func init() {
 		Name        sdk.UserParameter
 		Type        schema.ValueType
 		Description string
-		//DiffSuppress schema.SchemaDiffSuppressFunc
-		//ValidateDiag schema.SchemaValidateDiagFunc
+		// DiffSuppress schema.SchemaDiffSuppressFunc
+		// ValidateDiag schema.SchemaValidateDiagFunc
 	}
 	// TODO [SNOW-1348101][next PR]: move to the SDK
 	userParameterFields := []parameterDef{
@@ -160,8 +160,8 @@ func init() {
 			Computed:    true,
 			Optional:    true,
 			// TODO [SNOW-1348101][next PR]: uncomment and fill out
-			//ValidateDiagFunc: field.ValidateDiag,
-			//DiffSuppressFunc: field.DiffSuppress,
+			// ValidateDiagFunc: field.ValidateDiag,
+			// DiffSuppressFunc: field.DiffSuppress,
 		}
 	}
 }
@@ -402,5 +402,5 @@ func handleUserParametersUpdate(d *schema.ResourceData, set *sdk.UserSet, unset 
 // TODO: move this function
 func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
 	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))
-	return fmt.Sprintf("%s For more info, check [%s docs](%s).", description, parameter, link)
+	return fmt.Sprintf("%s For more information, check [%s docs](%s).", description, parameter, link)
 }

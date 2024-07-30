@@ -47,7 +47,7 @@ func init() {
 		{Name: sdk.ObjectParameterPipeExecutionPaused, Type: schema.TypeBool, Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role."},
 	}
 
-	var additionalSchemaParameters = make(map[string]*schema.Schema)
+	additionalSchemaParameters := make(map[string]*schema.Schema)
 	for _, field := range additionalSchemaParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 

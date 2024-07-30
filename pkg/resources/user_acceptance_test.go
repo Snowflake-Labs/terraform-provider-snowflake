@@ -349,8 +349,8 @@ func TestAcc_User_AllParameters(t *testing.T) {
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
-					// TODO [SNOW-1348101]: check setting parameters on resource level (such assertions not generated yet)
-					//resourceparametersassert.UserResourceParameters(t, "u").Has(),
+					// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
+					// resourceparametersassert.UserResourceParameters(t, "u").Has(),
 				),
 			},
 			// import when no parameter set
@@ -358,8 +358,8 @@ func TestAcc_User_AllParameters(t *testing.T) {
 				ResourceName:      "snowflake_user.u",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// TODO [SNOW-1348101]: check setting parameters on resource level (such assertions not generated yet)
-				//ImportStateCheck:  assert.AssertThatImport(t),
+				// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
+				// ImportStateCheck:  assert.AssertThatImport(t),
 			},
 			// set all parameters
 			{
@@ -559,8 +559,8 @@ func TestAcc_User_AllParameters(t *testing.T) {
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
-					// TODO [SNOW-1348101]: check setting parameters on resource level (such assertions not generated yet)
-					//resourceparametersassert.UserResourceParameters(t, "u").Has(),
+					// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
+					// resourceparametersassert.UserResourceParameters(t, "u").Has(),
 				),
 			},
 		},
