@@ -75,12 +75,9 @@ func Test_ParseIdentifierString(t *testing.T) {
 	// Quote inside must have a preceding quote (https://docs.snowflake.com/en/sql-reference/identifiers-syntax).
 	t.Run("returns parts correctly with quote inside", func(t *testing.T) {
 		input := `"ab""c".def`
-		expected := []string{`ab"c`, "def"}
+		_, err := ParseIdentifierString(input)
 
-		parts, err := ParseIdentifierString(input)
-
-		require.NoError(t, err)
-		containsAll(t, parts, expected)
+		require.ErrorContains(t, err, `unable to parse identifier: "ab""c".def, currently identifiers containing double quotes are not supported in the provider`)
 	})
 
 	t.Run("returns parts correctly with dots inside", func(t *testing.T) {
@@ -105,12 +102,9 @@ func Test_ParseIdentifierString(t *testing.T) {
 
 	t.Run("handled correctly double quotes", func(t *testing.T) {
 		input := `""."."".".".""."".""."".""."".""."""""`
-		expected := []string{"", `.".`, `.".".".".".".".""`}
 
-		parts, err := ParseIdentifierString(input)
-
-		require.NoError(t, err)
-		containsAll(t, parts, expected)
+		_, err := ParseIdentifierString(input)
+		require.ErrorContains(t, err, `unable to parse identifier: "".".""."."."".""."".""."".""."".""""", currently identifiers containing double quotes are not supported in the provider`)
 	})
 }
 
@@ -126,7 +120,7 @@ func Test_IdentifierParsers(t *testing.T) {
 		{IdentifierType: "AccountObjectIdentifier", Input: `a"b`, Error: "unable to read identifier: a\"b, err = parse error on line 1, column 2: bare \" in non-quoted-field"},
 		{IdentifierType: "AccountObjectIdentifier", Input: `abc.cde`, Error: `unexpected number of parts 2 in identifier abc.cde, expected 1 in a form of "<account_object_name>"`},
 		{IdentifierType: "AccountObjectIdentifier", Input: `""""`, Error: `unable to parse identifier: """", currently identifiers containing double quotes are not supported in the provider`},
-		{IdentifierType: "AccountObjectIdentifier", Input: `"a""bc"`, Error: `unable to parse identifier: "a""b", currently identifiers containing double quotes are not supported in the provider`},
+		{IdentifierType: "AccountObjectIdentifier", Input: `"a""bc"`, Error: `unable to parse identifier: "a""bc", currently identifiers containing double quotes are not supported in the provider`},
 		{IdentifierType: "AccountObjectIdentifier", Input: `""`, Expected: NewAccountObjectIdentifier(``)},
 		{IdentifierType: "AccountObjectIdentifier", Input: `abc`, Expected: NewAccountObjectIdentifier(`abc`)},
 		{IdentifierType: "AccountObjectIdentifier", Input: `"abc"`, Expected: NewAccountObjectIdentifier(`abc`)},

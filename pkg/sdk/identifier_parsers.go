@@ -21,19 +21,23 @@ func ParseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
 	}
-	for _, part := range lines[0] {
-		if strings.Contains(part, `"`) {
-			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
-		}
-	}
 	return lines[0], nil
 }
 
 // TODO(SNOW-1495053): Temporarily exported, make as private
 func ParseIdentifierString(identifier string) ([]string, error) {
-	return ParseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
+	parts, err := ParseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
 		r.Comma = IdDelimiter
 	})
+	if err != nil {
+		return nil, err
+	}
+	for _, part := range parts {
+		if strings.Contains(part, `"`) {
+			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
+		}
+	}
+	return parts, nil
 }
 
 func parseIdentifier[T ObjectIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
