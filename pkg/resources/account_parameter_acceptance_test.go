@@ -80,7 +80,9 @@ func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *
 	})
 }
 
+// TODO [SNOW-1528546]: unskip
 func TestAcc_AccountParameter_Issue2573(t *testing.T) {
+	t.Skipf("The cleanup for parameter is currently incorrect and this test messes with other ones. Skipping until SNOW-1528546 is resolved.")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },

@@ -25,11 +25,11 @@ func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
 }
 
-func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, accountParameter T, valueToString func(v any) string) schema.CustomizeDiffFunc {
+func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, param T, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(accountParameter) })
+		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
 		if err != nil {
-			log.Printf("[WARN] failed to find account parameter: %s", accountParameter)
+			log.Printf("[WARN] failed to find parameter: %s", param)
 			return nil
 		}
 		parameter := *foundParameter
