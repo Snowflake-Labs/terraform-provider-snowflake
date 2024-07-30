@@ -57,6 +57,12 @@ type In struct {
 	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 }
 
+type ExtendedIn struct {
+	In
+	Application        AccountObjectIdentifier `ddl:"identifier" sql:"APPLICATION"`
+	ApplicationPackage AccountObjectIdentifier `ddl:"identifier" sql:"APPLICATION PACKAGE"`
+}
+
 type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
 }

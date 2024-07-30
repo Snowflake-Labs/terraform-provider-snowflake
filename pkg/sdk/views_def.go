@@ -45,7 +45,8 @@ var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
 	OptionalText("check").
 	OptionalText("expression").
 	OptionalText("comment").
-	OptionalText("policy name")
+	OptionalText("policy name").
+	OptionalText("privacy domain")
 
 var viewDetails = g.PlainStruct("ViewDetails").
 	Text("Name").
@@ -58,22 +59,32 @@ var viewDetails = g.PlainStruct("ViewDetails").
 	OptionalBool("Check").
 	OptionalText("Expression").
 	OptionalText("Comment").
-	OptionalText("PolicyName")
+	OptionalText("PolicyName").
+	OptionalText("PrivacyDomain")
 
 var viewColumn = g.NewQueryStruct("ViewColumn").
-	Text("Name", g.KeywordOptions().DoubleQuotes().Required()).
-	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().NoEquals())
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
+	OptionalQueryStructField("ProjectionPolicy", viewColumnProjectionPolicy, g.KeywordOptions()).
+	OptionalQueryStructField("MaskingPolicy", viewColumnMaskingPolicy, g.KeywordOptions()).
+	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().NoEquals()).
+	OptionalTags()
 
 var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
-	Text("Name", g.KeywordOptions().Required()).
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	NamedListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
-	OptionalTags()
+	NamedListWithParens("USING", g.KindOfT[string](), nil) // TODO: double quotes here?
+
+var viewColumnProjectionPolicy = g.NewQueryStruct("ViewColumnProjectionPolicy").
+	Identifier("ProjectionPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required())
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
 	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+
+var viewAggregationPolicy = g.NewQueryStruct("ViewAggregationPolicy").
+	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
+	NamedListWithParens("ENTITY KEY", g.KindOfT[string](), g.KeywordOptions()). // TODO: double quotes here?
+	WithValidation(g.ValidIdentifier, "AggregationPolicy")
 
 var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
 	SQL("ADD").
@@ -90,11 +101,21 @@ var viewDropAndAddRowAccessPolicy = g.NewQueryStruct("ViewDropAndAddRowAccessPol
 	QueryStructField("Drop", viewDropRowAccessPolicy, g.KeywordOptions().Required()).
 	QueryStructField("Add", viewAddRowAccessPolicy, g.KeywordOptions().Required())
 
+var viewSetAggregationPolicy = g.NewQueryStruct("ViewSetAggregationPolicy").
+	SQL("SET").
+	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
+	NamedListWithParens("ENTITY KEY", g.KindOfT[string](), g.KeywordOptions()). // TODO: double quotes here?
+	OptionalSQL("FORCE").
+	WithValidation(g.ValidIdentifier, "AggregationPolicy")
+
+var viewUnsetAggregationPolicy = g.NewQueryStruct("ViewUnsetAggregationPolicy").
+	SQL("UNSET AGGREGATION POLICY")
+
 var viewSetColumnMaskingPolicy = g.NewQueryStruct("ViewSetColumnMaskingPolicy").
 	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
 	SQL("ALTER").
 	SQL("COLUMN").
-	Text("Name", g.KeywordOptions().Required()).
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SQL("SET").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
 	NamedListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
@@ -104,22 +125,39 @@ var viewUnsetColumnMaskingPolicy = g.NewQueryStruct("ViewUnsetColumnMaskingPolic
 	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
 	SQL("ALTER").
 	SQL("COLUMN").
-	Text("Name", g.KeywordOptions().Required()).
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SQL("UNSET").
 	SQL("MASKING POLICY")
+
+var viewSetProjectionPolicy = g.NewQueryStruct("ViewSetProjectionPolicy").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
+	SQL("SET").
+	Identifier("ProjectionPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required()).
+	OptionalSQL("FORCE")
+
+var viewUnsetProjectionPolicy = g.NewQueryStruct("ViewUnsetProjectionPolicy").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
+	SQL("UNSET").
+	SQL("PROJECTION POLICY")
 
 var viewSetColumnTags = g.NewQueryStruct("ViewSetColumnTags").
 	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
 	SQL("ALTER").
 	SQL("COLUMN").
-	Text("Name", g.KeywordOptions().Required()).
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SetTags()
 
 var viewUnsetColumnTags = g.NewQueryStruct("ViewUnsetColumnTags").
 	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
 	SQL("ALTER").
 	SQL("COLUMN").
-	Text("Name", g.KeywordOptions().Required()).
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	UnsetTags()
 
 var ViewsDef = g.NewInterface(
@@ -141,12 +179,12 @@ var ViewsDef = g.NewInterface(
 			IfNotExists().
 			Name().
 			ListQueryStructField("Columns", viewColumn, g.ListOptions().Parentheses()).
-			ListQueryStructField("ColumnsMaskingPolicies", viewColumnMaskingPolicy, g.ListOptions().NoParentheses().NoEquals()).
 			OptionalSQL("COPY GRANTS").
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			// In the current docs ROW ACCESS POLICY and TAG are specified twice.
 			// It is a mistake probably so here they are present only once.
 			OptionalQueryStructField("RowAccessPolicy", viewRowAccessPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("AggregationPolicy", viewAggregationPolicy, g.KeywordOptions()).
 			OptionalTags().
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
@@ -172,12 +210,18 @@ var ViewsDef = g.NewInterface(
 			OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
 			OptionalSQL("DROP ALL ROW ACCESS POLICIES").
+			OptionalQueryStructField("SetAggregationPolicy", viewSetAggregationPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("UnsetAggregationPolicy", viewUnsetAggregationPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("SetMaskingPolicyOnColumn", viewSetColumnMaskingPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("UnsetMaskingPolicyOnColumn", viewUnsetColumnMaskingPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("SetProjectionPolicyOnColumn", viewSetProjectionPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("UnsetProjectionPolicyOnColumn", viewUnsetProjectionPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("SetTagsOnColumn", viewSetColumnTags, g.KeywordOptions()).
 			OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"),
+			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "AddColumn", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn").
+			WithValidation(g.ConflictingFields, "IfExists", "SetSecure").
+			WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-view",
@@ -197,7 +241,7 @@ var ViewsDef = g.NewInterface(
 			Terse().
 			SQL("VIEWS").
 			OptionalLike().
-			OptionalIn().
+			OptionalExtendedIn().
 			OptionalStartsWith().
 			OptionalLimit(),
 	).

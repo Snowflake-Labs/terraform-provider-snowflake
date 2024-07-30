@@ -65,7 +65,7 @@ func ReadViews(d *schema.ResourceData, meta interface{}) error {
 
 	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
 	extractedViews, err := client.Views.Show(ctx, sdk.NewShowViewRequest().WithIn(
-		&sdk.In{Schema: schemaId},
+		sdk.ExtendedIn{In: sdk.In{Schema: schemaId}},
 	))
 	if err != nil {
 		log.Printf("[DEBUG] failed when searching views in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())

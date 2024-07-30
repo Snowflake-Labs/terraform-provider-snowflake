@@ -106,6 +106,10 @@ func (v *QueryStruct) OptionalIn() *QueryStruct {
 	return v.PredefinedQueryStructField("In", "*In", KeywordOptions().SQL("IN"))
 }
 
+func (v *QueryStruct) OptionalExtendedIn() *QueryStruct {
+	return v.PredefinedQueryStructField("In", "*ExtendedIn", KeywordOptions().SQL("IN"))
+}
+
 func (v *QueryStruct) OptionalStartsWith() *QueryStruct {
 	return v.PredefinedQueryStructField("StartsWith", "*string", ParameterOptions().NoEquals().SingleQuotes().SQL("STARTS WITH"))
 }

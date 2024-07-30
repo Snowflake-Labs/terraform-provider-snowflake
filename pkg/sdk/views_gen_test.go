@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -51,6 +52,32 @@ func TestViews_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateViewOptions.RowAccessPolicy", "On"))
 	})
 
+	t.Run("validation: valid identifier for [opts.MaskingPolicy.MaskingPolicy]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Columns = []ViewColumn{
+			{
+				Name: "foo",
+				MaskingPolicy: &ViewColumnMaskingPolicy{
+					MaskingPolicy: emptySchemaObjectIdentifier,
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: valid identifier for [opts.ProjectionPolicy.ProjectionPolicy]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Columns = []ViewColumn{
+			{
+				Name: "foo",
+				ProjectionPolicy: &ViewColumnProjectionPolicy{
+					ProjectionPolicy: emptySchemaObjectIdentifier,
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "CREATE VIEW %s AS %s", id.FullyQualifiedName(), sql)
@@ -58,38 +85,39 @@ func TestViews_Create(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		rowAccessPolicyId := randomSchemaObjectIdentifier()
+		aggregationPolicyId := randomSchemaObjectIdentifier()
 		tag1Id := randomSchemaObjectIdentifier()
 		tag2Id := randomSchemaObjectIdentifier()
 		maskingPolicy1Id := randomSchemaObjectIdentifier()
 		maskingPolicy2Id := randomSchemaObjectIdentifier()
 
 		req := NewCreateViewRequest(id, sql).
-			WithOrReplace(Bool(true)).
-			WithSecure(Bool(true)).
-			WithTemporary(Bool(true)).
-			WithRecursive(Bool(true)).
+			WithOrReplace(true).
+			WithSecure(true).
+			WithTemporary(true).
+			WithRecursive(true).
 			WithColumns([]ViewColumnRequest{
 				*NewViewColumnRequest("column_without_comment"),
-				*NewViewColumnRequest("column_with_comment").WithComment(String("column 2 comment")),
+				*NewViewColumnRequest("column_with_comment").WithComment("column 2 comment"),
+				*NewViewColumnRequest("column").WithMaskingPolicy(
+					*NewViewColumnMaskingPolicyRequest(maskingPolicy1Id).
+						WithUsing([]string{"a", "b"}),
+				).WithTag([]TagAssociation{{Name: tag1Id, Value: "v1"}}),
+				*NewViewColumnRequest("column 2").WithProjectionPolicy(
+					*NewViewColumnProjectionPolicyRequest(maskingPolicy2Id),
+				),
 			}).
-			WithColumnsMaskingPolicies([]ViewColumnMaskingPolicyRequest{
-				*NewViewColumnMaskingPolicyRequest("column", maskingPolicy1Id).
-					WithUsing([]string{"a", "b"}).
-					WithTag([]TagAssociation{{
-						Name:  tag1Id,
-						Value: "v1",
-					}}),
-				*NewViewColumnMaskingPolicyRequest("column 2", maskingPolicy2Id),
-			}).
-			WithCopyGrants(Bool(true)).
-			WithComment(String("comment")).
-			WithRowAccessPolicy(NewViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"c", "d"})).
+			WithCopyGrants(true).
+			WithComment("comment").
+			WithRowAccessPolicy(*NewViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"c", "d"})).
+			WithAggregationPolicy(*NewViewAggregationPolicyRequest(aggregationPolicyId).WithEntityKey([]string{"column_with_comment"})).
 			WithTag([]TagAssociation{{
 				Name:  tag2Id,
 				Value: "v2",
 			}})
 
-		assertOptsValidAndSQLEquals(t, req.toOpts(), `CREATE OR REPLACE SECURE TEMPORARY RECURSIVE VIEW %s ("column_without_comment", "column_with_comment" COMMENT 'column 2 comment') column MASKING POLICY %s USING (a, b) TAG (%s = 'v1'), column 2 MASKING POLICY %s COPY GRANTS COMMENT = 'comment' ROW ACCESS POLICY %s ON (c, d) TAG (%s = 'v2') AS %s`, id.FullyQualifiedName(), maskingPolicy1Id.FullyQualifiedName(), tag1Id.FullyQualifiedName(), maskingPolicy2Id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName(), tag2Id.FullyQualifiedName(), sql)
+		assertOptsValidAndSQLEquals(t, req.toOpts(), `CREATE OR REPLACE SECURE TEMPORARY RECURSIVE VIEW %s `+
+			`("column_without_comment", "column_with_comment" COMMENT 'column 2 comment', "column" MASKING POLICY %s USING (a, b) TAG (%s = 'v1'), "column 2" PROJECTION POLICY %s) COPY GRANTS COMMENT = 'comment' ROW ACCESS POLICY %s ON (c, d) AGGREGATION POLICY %s ENTITY KEY (column_with_comment) TAG (%s = 'v2') AS %s`, id.FullyQualifiedName(), maskingPolicy1Id.FullyQualifiedName(), tag1Id.FullyQualifiedName(), maskingPolicy2Id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName(), aggregationPolicyId.FullyQualifiedName(), tag2Id.FullyQualifiedName(), sql)
 	})
 }
 
@@ -116,14 +144,28 @@ func TestViews_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetChangeTracking = Bool(true)
 		opts.DropAllRowAccessPolicies = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
+	})
+
+	t.Run("validation: conflicting fields for [opts.IfExists opts.SetSecure]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.SetSecure = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterViewOptions", "IfExists", "SetSecure"))
+	})
+
+	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetSecure]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.UnsetSecure = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterViewOptions", "IfExists", "UnsetSecure"))
 	})
 
 	t.Run("validation: valid identifier for [opts.DropRowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
@@ -303,6 +345,24 @@ func TestViews_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP ALL ROW ACCESS POLICIES", id.FullyQualifiedName())
 	})
 
+	t.Run("set aggregation policy", func(t *testing.T) {
+		aggregationPolicyId := randomSchemaObjectIdentifier()
+
+		opts := defaultOpts()
+		opts.SetAggregationPolicy = &ViewSetAggregationPolicy{
+			AggregationPolicy: aggregationPolicyId,
+			EntityKey:         []string{"a", "b"},
+			Force:             Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET AGGREGATION POLICY %s ENTITY KEY (a, b) FORCE", id.FullyQualifiedName(), aggregationPolicyId.FullyQualifiedName())
+	})
+
+	t.Run("unset aggregation policy", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetAggregationPolicy = &ViewUnsetAggregationPolicy{}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s UNSET AGGREGATION POLICY", id.FullyQualifiedName())
+	})
+
 	t.Run("set masking policy on column", func(t *testing.T) {
 		maskingPolicyId := randomSchemaObjectIdentifier()
 
@@ -313,7 +373,7 @@ func TestViews_Alter(t *testing.T) {
 			Using:         []string{"a", "b"},
 			Force:         Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN column SET MASKING POLICY %s USING (a, b) FORCE", id.FullyQualifiedName(), maskingPolicyId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN \"column\" SET MASKING POLICY %s USING (a, b) FORCE", id.FullyQualifiedName(), maskingPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("unset masking policy on column", func(t *testing.T) {
@@ -321,7 +381,27 @@ func TestViews_Alter(t *testing.T) {
 		opts.UnsetMaskingPolicyOnColumn = &ViewUnsetColumnMaskingPolicy{
 			Name: "column",
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN column UNSET MASKING POLICY", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN \"column\" UNSET MASKING POLICY", id.FullyQualifiedName())
+	})
+
+	t.Run("set projection policy on column", func(t *testing.T) {
+		projectionPolicyId := randomSchemaObjectIdentifier()
+
+		opts := defaultOpts()
+		opts.SetProjectionPolicyOnColumn = &ViewSetProjectionPolicy{
+			Name:             "column",
+			ProjectionPolicy: projectionPolicyId,
+			Force:            Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN \"column\" SET PROJECTION POLICY %s FORCE", id.FullyQualifiedName(), projectionPolicyId.FullyQualifiedName())
+	})
+
+	t.Run("unset projection policy on column", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetProjectionPolicyOnColumn = &ViewUnsetProjectionPolicy{
+			Name: "column",
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN \"column\" UNSET PROJECTION POLICY", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags on column", func(t *testing.T) {
@@ -339,7 +419,7 @@ func TestViews_Alter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN column SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN "column" SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags on column", func(t *testing.T) {
@@ -351,7 +431,7 @@ func TestViews_Alter(t *testing.T) {
 				NewAccountObjectIdentifier("tag2"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN column UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN "column" UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
@@ -398,14 +478,56 @@ func TestViews_Show(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "SHOW VIEWS")
 	})
 
+	t.Run("in database", func(t *testing.T) {
+		id := randomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.In = &ExtendedIn{
+			In: In{
+				Database: id,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN DATABASE %s", id.FullyQualifiedName()))
+	})
+
+	t.Run("in schema", func(t *testing.T) {
+		id := randomDatabaseObjectIdentifier()
+		opts := defaultOpts()
+		opts.In = &ExtendedIn{
+			In: In{
+				Schema: id,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN SCHEMA %s", id.FullyQualifiedName()))
+	})
+
+	t.Run("in application", func(t *testing.T) {
+		id := randomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.In = &ExtendedIn{
+			Application: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN APPLICATION %s", id.FullyQualifiedName()))
+	})
+
+	t.Run("in application package", func(t *testing.T) {
+		id := randomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.In = &ExtendedIn{
+			ApplicationPackage: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN APPLICATION PACKAGE %s", id.FullyQualifiedName()))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{
 			Pattern: String("myaccount"),
 		}
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
 		opts.StartsWith = String("abc")
 		opts.Limit = &LimitFrom{Rows: Int(10)}

@@ -10,6 +10,7 @@ type TestClient struct {
 	Ids *IdsGenerator
 
 	Account                   *AccountClient
+	AggregationPolicy         *AggregationPolicyClient
 	Alert                     *AlertClient
 	ApiIntegration            *ApiIntegrationClient
 	Application               *ApplicationClient
@@ -31,6 +32,7 @@ type TestClient struct {
 	Parameter                 *ParameterClient
 	PasswordPolicy            *PasswordPolicyClient
 	Pipe                      *PipeClient
+	ProjectionPolicy          *ProjectionPolicyClient
 	ResourceMonitor           *ResourceMonitorClient
 	Role                      *RoleClient
 	RowAccessPolicy           *RowAccessPolicyClient
@@ -63,6 +65,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Ids: idsGenerator,
 
 		Account:                   NewAccountClient(context),
+		AggregationPolicy:         NewAggregationPolicyClient(context, idsGenerator),
 		Alert:                     NewAlertClient(context, idsGenerator),
 		ApiIntegration:            NewApiIntegrationClient(context, idsGenerator),
 		Application:               NewApplicationClient(context, idsGenerator),
@@ -84,6 +87,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Parameter:                 NewParameterClient(context),
 		PasswordPolicy:            NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                      NewPipeClient(context, idsGenerator),
+		ProjectionPolicy:          NewProjectionPolicyClient(context, idsGenerator),
 		ResourceMonitor:           NewResourceMonitorClient(context, idsGenerator),
 		Role:                      NewRoleClient(context, idsGenerator),
 		RowAccessPolicy:           NewRowAccessPolicyClient(context, idsGenerator),
