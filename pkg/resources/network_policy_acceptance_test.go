@@ -376,19 +376,19 @@ func TestAcc_NetworkPolicy_InvalidNetworkRuleIds(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      networkPolicyConfigInvalidAllowedNetworkRules(id.Name()),
-				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier for id: "a\.b\.c\.d"\. The correct form of the fully`),
+				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier\. The correct form of the fully qualified name for`),
 			},
 			{
 				Config:      networkPolicyConfigInvalidAllowedNetworkRules(id.Name()),
-				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier for id: "a\.b"\. The correct form of the fully`),
+				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier\. The correct form of the fully qualified name`),
 			},
 			{
 				Config:      networkPolicyConfigInvalidBlockedNetworkRules(id.Name()),
-				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier for id: "a\.b\.c\.d"\. The correct form of the fully`),
+				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier\. The correct form of the fully qualified name for`),
 			},
 			{
 				Config:      networkPolicyConfigInvalidBlockedNetworkRules(id.Name()),
-				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier for id: "a\.b"\. The correct form of the fully`),
+				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier\. The correct form of the fully qualified name`),
 			},
 		},
 	})
