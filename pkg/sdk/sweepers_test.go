@@ -73,16 +73,44 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 		}
 	})
 
+	// TODO [SNOW-955520]:
+	t.Run("sweep databases", func(t *testing.T) {
+		t.Skipf("Used for manual sweeping; will be addressed during SNOW-955520")
+		for _, c := range allClients {
+			err := nukeDatabases(c, "")()
+			assert.NoError(t, err)
+		}
+	})
+
+	// TODO [SNOW-955520]:
+	t.Run("sweep warehouses", func(t *testing.T) {
+		t.Skipf("Used for manual sweeping; will be addressed during SNOW-955520")
+		for _, c := range allClients {
+			err := nukeWarehouses(c, "")()
+			assert.NoError(t, err)
+		}
+	})
+
 	// TODO [SNOW-955520]: nuke stale objects (e.g. created more than 2 weeks ago)
 }
 
 // TODO [SNOW-955520]: generalize nuke methods (sweepers too)
 func nukeWarehouses(client *Client, prefix string) func() error {
+	protectedWarehouses := []string{
+		"SNOWFLAKE",
+		"SYSTEM$STREAMLIT_NOTEBOOK_WH",
+	}
+
 	return func() error {
 		log.Printf("[DEBUG] Nuking warehouses with prefix %s\n", prefix)
 		ctx := context.Background()
 
-		whs, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{Like: &Like{Pattern: String(prefix)}})
+		var like *Like = nil
+		if prefix != "" {
+			like = &Like{Pattern: String(prefix)}
+		}
+
+		whs, err := client.Warehouses.Show(ctx, &ShowWarehouseOptions{Like: like})
 		if err != nil {
 			return fmt.Errorf("sweeping warehouses ended with error, err = %w", err)
 		}
@@ -90,7 +118,7 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 		log.Printf("[DEBUG] Found %d warehouses matching search criteria\n", len(whs))
 		for idx, wh := range whs {
 			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...\n", idx+1, len(whs), wh.ID().FullyQualifiedName())
-			if wh.Name != "SNOWFLAKE" && wh.CreatedOn.Before(time.Now().Add(-4*time.Hour)) {
+			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), &DropWarehouseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping warehouse %s, resulted in error %v\n", wh.ID().FullyQualifiedName(), err)
@@ -105,11 +133,20 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 }
 
 func nukeDatabases(client *Client, prefix string) func() error {
+	protectedDatabases := []string{
+		"SNOWFLAKE",
+		"MFA_ENFORCEMENT_POLICY",
+	}
+
 	return func() error {
 		log.Printf("[DEBUG] Nuking databases with prefix %s\n", prefix)
 		ctx := context.Background()
 
-		dbs, err := client.Databases.Show(ctx, &ShowDatabasesOptions{Like: &Like{Pattern: String(prefix)}})
+		var like *Like = nil
+		if prefix != "" {
+			like = &Like{Pattern: String(prefix)}
+		}
+		dbs, err := client.Databases.Show(ctx, &ShowDatabasesOptions{Like: like})
 		if err != nil {
 			return fmt.Errorf("sweeping databases ended with error, err = %w", err)
 		}
@@ -117,7 +154,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 		log.Printf("[DEBUG] Found %d databases matching search criteria\n", len(dbs))
 		for idx, db := range dbs {
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())
-			if db.Name != "SNOWFLAKE" && db.CreatedOn.Before(time.Now().Add(-4*time.Hour)) {
+			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				log.Printf("[DEBUG] Dropping database %s, created at: %s\n", db.ID().FullyQualifiedName(), db.CreatedOn.String())
 				if err := client.Databases.Drop(ctx, db.ID(), &DropDatabaseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping database %s, resulted in error %v\n", db.ID().FullyQualifiedName(), err)
