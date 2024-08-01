@@ -449,6 +449,7 @@ func TestAcc_Schema_Rename(t *testing.T) {
 
 func TestAcc_Schema_ManagePublic(t *testing.T) {
 	name := "PUBLIC"
+	schemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -500,6 +501,28 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "false"),
 				),
+			},
+			// make sure the schema wasn't dropped
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				PreConfig: func() {
+					x := acc.TestClient().Schema.ShowWithOptions(t, &sdk.ShowSchemaOptions{
+						History: sdk.Pointer(true),
+						Like: &sdk.Like{
+							Pattern: sdk.String(schemaId.Name()),
+						},
+					})
+					require.Len(t, x, 1)
+					require.Zero(t, x[0].DroppedOn)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
+				ConfigVariables: map[string]config.Variable{
+					"name":                  config.StringVariable(name),
+					"database":              config.StringVariable(acc.TestDatabaseName),
+					"pipe_execution_paused": config.BoolVariable(false),
+				},
+				ImportState:  true,
+				ResourceName: "snowflake_schema.test",
 			},
 		},
 	})

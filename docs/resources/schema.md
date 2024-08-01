@@ -53,7 +53,7 @@ resource "snowflake_schema" "schema" {
 ### Required
 
 - `database` (String) The database in which to create the schema.
-- `name` (String) Specifies the identifier for the schema; must be unique for the database in which the schema is created.
+- `name` (String) Specifies the identifier for the schema; must be unique for the database in which the schema is created. When the name is `PUBLIC`, during creation the provider checks if this schema has already been created and, in such case, `ALTER` is used to match the desired state.
 
 ### Optional
 

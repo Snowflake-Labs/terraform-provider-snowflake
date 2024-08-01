@@ -27,7 +27,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created.",
+		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created. When the name is `PUBLIC`, during creation the provider checks if this schema has already been created and, in such case, `ALTER` is used to match the desired state.",
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
@@ -213,73 +213,90 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	database := d.Get("database").(string)
 	id := sdk.NewDatabaseObjectIdentifier(database, name)
 
-	dataRetentionTimeInDays,
-		maxDataExtensionTimeInDays,
-		externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
+	create := true
+
+	if strings.EqualFold(strings.TrimSpace(name), "PUBLIC") {
+		_, err := client.Schemas.ShowByID(ctx, id)
+		if err != nil {
+			if !errors.Is(err, sdk.ErrObjectNotFound) {
+				return diag.FromErr(err)
+			}
+			// there is no PUBLIC schema, we need to create it
+		} else {
+			// there is already a PUBLIC schema, so we need to alter it instead
+			create = false
+		}
+	}
+	if create {
+		dataRetentionTimeInDays,
+			maxDataExtensionTimeInDays,
+			externalVolume,
+			catalog,
+			replaceInvalidCharacters,
+			defaultDDLCollation,
+			storageSerializationPolicy,
+			logLevel,
+			traceLevel,
+			suspendTaskAfterNumFailures,
+			taskAutoRetryAttempts,
+			userTaskManagedInitialWarehouseSize,
+			userTaskTimeoutMs,
+			userTaskMinimumTriggerIntervalInSeconds,
+			quotedIdentifiersIgnoreCase,
+			enableConsoleOutput,
+			err := GetAllDatabaseParameters(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		opts := &sdk.CreateSchemaOptions{
+			DataRetentionTimeInDays:                 dataRetentionTimeInDays,
+			MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
+			ExternalVolume:                          externalVolume,
+			Catalog:                                 catalog,
+			ReplaceInvalidCharacters:                replaceInvalidCharacters,
+			DefaultDDLCollation:                     defaultDDLCollation,
+			StorageSerializationPolicy:              storageSerializationPolicy,
+			LogLevel:                                logLevel,
+			TraceLevel:                              traceLevel,
+			SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
+			TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
+			UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
+			UserTaskTimeoutMs:                       userTaskTimeoutMs,
+			UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
+			QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
+			EnableConsoleOutput:                     enableConsoleOutput,
+			PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
+			Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+		}
+		if v := d.Get("is_transient").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			opts.Transient = sdk.Bool(parsed)
+		}
+		if v := d.Get("with_managed_access").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			opts.WithManagedAccess = sdk.Bool(parsed)
+		}
+		if err := client.Schemas.Create(ctx, id, opts); err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Failed to create schema.",
+					Detail:   fmt.Sprintf("schema name: %s, err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+	} else {
+		d.SetId(helpers.EncodeSnowflakeID(database, name))
+		return UpdateContextSchema(ctx, d, meta)
 	}
 
-	opts := &sdk.CreateSchemaOptions{
-		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	}
-	if v := d.Get("is_transient").(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		opts.Transient = sdk.Bool(parsed)
-	}
-	if v := d.Get("with_managed_access").(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		opts.WithManagedAccess = sdk.Bool(parsed)
-	}
-	if strings.EqualFold(strings.TrimSpace(name), "PUBLIC") {
-		opts.OrReplace = sdk.Pointer(true)
-	}
-	if err := client.Schemas.Create(ctx, id, opts); err != nil {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to create schema.",
-				Detail:   fmt.Sprintf("schema name: %s, err: %s", id.FullyQualifiedName(), err),
-			},
-		}
-	}
 	d.SetId(helpers.EncodeSnowflakeID(database, name))
 
 	return ReadContextSchema(false)(ctx, d, meta)
@@ -399,7 +416,7 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
-	if d.HasChange("name") {
+	if d.HasChange("name") && !d.GetRawState().IsNull() {
 		newId := sdk.NewDatabaseObjectIdentifier(d.Get("database").(string), d.Get("name").(string))
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			NewName: sdk.Pointer(newId),
