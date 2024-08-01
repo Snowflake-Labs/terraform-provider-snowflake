@@ -1,9 +1,10 @@
 package testint
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
@@ -184,11 +185,11 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "comment")
-		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Len(t, rowAccessPolicyReferences, 2)
-		sort.Slice(rowAccessPolicyReferences, func(i, j int) bool {
-			return rowAccessPolicyReferences[i].PolicyKind < rowAccessPolicyReferences[j].PolicyKind
+		slices.SortFunc(rowAccessPolicyReferences, func(x, y helpers.PolicyReference) int {
+			return cmp.Compare(x.PolicyKind, y.PolicyKind)
 		})
 
 		assertPolicyReference(t, rowAccessPolicyReferences[0], aggregationPolicy, "AGGREGATION_POLICY", view.ID(), nil)
@@ -214,11 +215,10 @@ func TestInt_Views(t *testing.T) {
 			WithTemporary(true).
 			WithColumns([]sdk.ViewColumnRequest{
 				*sdk.NewViewColumnRequest("col1").WithMaskingPolicy(
-					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()),
+					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]string{"col1"}),
 				).WithProjectionPolicy(
 					*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicy),
 				),
-				*sdk.NewViewColumnRequest("col2"),
 			})
 
 		id := request.GetName()
@@ -226,11 +226,11 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "")
-		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Len(t, rowAccessPolicyReferences, 2)
-		sort.Slice(rowAccessPolicyReferences, func(i, j int) bool {
-			return rowAccessPolicyReferences[i].PolicyKind < rowAccessPolicyReferences[j].PolicyKind
+		slices.SortFunc(rowAccessPolicyReferences, func(x, y helpers.PolicyReference) int {
+			return cmp.Compare(x.PolicyKind, y.PolicyKind)
 		})
 
 		assertPolicyReference(t, rowAccessPolicyReferences[0], maskingPolicy.ID(), "MASKING_POLICY", view.ID(), sdk.Pointer("col1"))
@@ -412,6 +412,7 @@ func TestInt_Views(t *testing.T) {
 		assert.Equal(t, 1, len(alteredViewDetails))
 		assert.Empty(t, alteredViewDetails[0].PolicyName)
 	})
+
 	t.Run("alter view: set and unset projection policy on column", func(t *testing.T) {
 		projectionPolicy, projectionPolicyCleanup := testClientHelper().ProjectionPolicy.CreateProjectionPolicy(t)
 		t.Cleanup(projectionPolicyCleanup)
@@ -425,7 +426,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
@@ -437,7 +438,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 
@@ -495,7 +496,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 
 		assertPolicyReference(t, *rowAccessPolicyReference, rowAccessPolicy.ID(), "ROW_ACCESS_POLICY", view.ID(), nil)
@@ -505,7 +506,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
@@ -513,7 +514,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), rowAccessPolicyReference.PolicyName)
 
@@ -525,7 +526,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), rowAccessPolicyReference.PolicyName)
 
@@ -534,7 +535,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 
@@ -552,7 +553,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err := testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
@@ -565,7 +566,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReferences, err = testClientHelper().References.GetAllPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err = testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		require.Len(t, rowAccessPolicyReferences, 1)
 
@@ -576,7 +577,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 

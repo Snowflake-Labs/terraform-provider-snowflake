@@ -224,7 +224,7 @@ func TestInt_EventTables(t *testing.T) {
 		err := client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err := testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
+		e, err := testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", e.PolicyKind)
@@ -237,7 +237,7 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
@@ -245,7 +245,7 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 
@@ -257,7 +257,7 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), e.PolicyName)
 
@@ -266,7 +266,7 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetOneRowAccessPolicyFor(t, table.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 }

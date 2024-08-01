@@ -62,6 +62,9 @@ var viewDetails = g.PlainStruct("ViewDetails").
 	OptionalText("PolicyName").
 	OptionalText("PrivacyDomain")
 
+// var viewColumnMaskingPolicyUsing = g.NewQueryStruct("ViewColumnMaskingPolicyUsing").
+// 	Text("Name", g.KeywordOptions().Required().DoubleQuotes())
+
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	OptionalQueryStructField("ProjectionPolicy", viewColumnProjectionPolicy, g.KeywordOptions()).
@@ -71,7 +74,7 @@ var viewColumn = g.NewQueryStruct("ViewColumn").
 
 var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	NamedListWithParens("USING", g.KindOfT[string](), nil) // TODO: double quotes here?
+	NamedListWithParens("USING", g.KindOfT[string](), g.KeywordOptions().DoubleQuotes()) // TODO: double quotes here?
 
 var viewColumnProjectionPolicy = g.NewQueryStruct("ViewColumnProjectionPolicy").
 	Identifier("ProjectionPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required())
