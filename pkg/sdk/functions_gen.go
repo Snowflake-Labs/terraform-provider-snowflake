@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"strings"
 )
 
 type Functions interface {
@@ -221,15 +223,16 @@ type functionRow struct {
 }
 
 type Function struct {
-	CreatedOn          string
-	Name               string
-	SchemaName         string
-	IsBuiltin          bool
-	IsAggregate        bool
-	IsAnsi             bool
-	MinNumArguments    int
-	MaxNumArguments    int
-	Arguments          string
+	CreatedOn       string
+	Name            string
+	SchemaName      string
+	IsBuiltin       bool
+	IsAggregate     bool
+	IsAnsi          bool
+	MinNumArguments int
+	MaxNumArguments int
+	// TODO(SNOW-function refactor): Remove raw arguments
+	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
 	IsTableFunction    bool
@@ -240,10 +243,40 @@ type Function struct {
 	IsMemoizable       bool
 }
 
-func (v *Function) ID() SchemaObjectIdentifierWithArguments {
-	// return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
-	// TODO:
-	return SchemaObjectIdentifierWithArguments{}
+// parseFunctionArgumentsFromDetails parses arguments from signature that is contained in function details
+func parseFunctionArgumentsFromDetails(details []FunctionDetail) ([]DataType, error) {
+	signatureProperty, err := collections.FindOne(details, func(detail FunctionDetail) bool { return detail.Property == "signature" })
+	if err != nil {
+		return nil, err
+	}
+	// signature has a structure of (<column name> <data type>, ...); column names can contain commas and other special characters,
+	// and they're not escaped, meaning for names such as `"a,b.c|d e" NUMBER` the signature will contain `(a,b.c|d e NUMBER)`.
+	arguments := make([]DataType, 0)
+	// TODO(TODO - ticket number): Handle arguments with comma in the name (right now this could break for arguments containing dots)
+	for _, arg := range strings.Split(strings.Trim(signatureProperty.Value, "()"), ",") {
+		// single argument has a structure of <column name> <data type>
+		argumentSignatureParts := strings.Split(strings.TrimSpace(arg), " ")
+		arguments = append(arguments, DataType(argumentSignatureParts[len(argumentSignatureParts)-1]))
+	}
+	return arguments, nil
+}
+
+func parseFunctionArgumentsFromString(arguments string) []DataType {
+	// TODO what about data types with parentheses
+	argListBegin := strings.LastIndex(arguments, "(")
+	argListEnd := strings.LastIndex(arguments, ")")
+	return collections.Map(
+		ParseCommaSeparatedStringArray(arguments[argListBegin+1:argListEnd], false),
+		func(dataType string) DataType { return DataType(dataType) },
+	)
+}
+
+func (v *Function) ID(details []FunctionDetail) (SchemaObjectIdentifierWithArguments, error) {
+	arguments, err := parseFunctionArgumentsFromDetails(details)
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, arguments...), nil
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

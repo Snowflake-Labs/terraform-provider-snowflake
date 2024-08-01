@@ -91,7 +91,7 @@ func FunctionToSchema(function *sdk.Function) map[string]any {
 	functionSchema["is_ansi"] = function.IsAnsi
 	functionSchema["min_num_arguments"] = function.MinNumArguments
 	functionSchema["max_num_arguments"] = function.MaxNumArguments
-	functionSchema["arguments"] = function.Arguments
+	functionSchema["arguments"] = function.ArgumentsRaw
 	functionSchema["description"] = function.Description
 	functionSchema["catalog_name"] = function.CatalogName
 	functionSchema["is_table_function"] = function.IsTableFunction

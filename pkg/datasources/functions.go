@@ -92,7 +92,7 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 
 	entities := []map[string]interface{}{}
 	for _, item := range functions {
-		signature, err := parseArguments(item.Arguments)
+		signature, err := parseArguments(item.ArgumentsRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}

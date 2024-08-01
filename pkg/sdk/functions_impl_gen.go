@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
@@ -63,6 +62,7 @@ func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithA
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Should compare arguments
 	return collections.FindOne(functions, func(r Function) bool { return r.Name == id.Name() })
 }
 
@@ -371,7 +371,7 @@ func (r functionRow) convert() *Function {
 		IsAnsi:             r.IsAnsi == "Y",
 		MinNumArguments:    r.MinNumArguments,
 		MaxNumArguments:    r.MaxNumArguments,
-		Arguments:          r.Arguments,
+		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
 		CatalogName:        r.CatalogName,
 		IsTableFunction:    r.IsTableFunction == "Y",

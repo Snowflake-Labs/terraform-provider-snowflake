@@ -185,7 +185,7 @@ func TestAcc_Function_complex(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 	name := id.Name()
 	comment := random.Comment()
 	resourceName := "snowflake_function.f"

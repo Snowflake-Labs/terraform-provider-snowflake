@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"os"
 	"slices"
 	"strings"

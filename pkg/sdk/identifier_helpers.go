@@ -312,16 +312,53 @@ func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdent
 	return NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), name, argumentDataTypes...)
 }
 
-// TODO:
-//func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifierWithArguments {
-//	parts := strings.Split(fullyQualifiedName, ".")
-//	id := SchemaObjectIdentifierWithArguments{
-//		databaseName: strings.Trim(parts[0], `"`),
-//		schemaName:   strings.Trim(parts[1], `"`),
-//		name:         strings.Trim(parts[2], `"`),
-//		// TODO: Arguments
+func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
+	// TODO: This is wrong
+	argsBegin := strings.LastIndex(fullyQualifiedName, "(")
+	parts, err := parseIdentifierStringWithOpts(fullyQualifiedName[:argsBegin], func(r *csv.Reader) {
+		r.Comma = '.'
+	})
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	return NewSchemaObjectIdentifierWithArguments(
+		parts[0],
+		parts[1],
+		parts[2],
+		parseFunctionArgumentsFromString(fullyQualifiedName[argsBegin:])...,
+	), nil
+}
+
+// TODO: Remove this func
+func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([]string, error) {
+	reader := csv.NewReader(strings.NewReader(identifier))
+	if opts != nil {
+		opts(reader)
+	}
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
+	}
+	if lines == nil {
+		return make([]string, 0), nil
+	}
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	return lines[0], nil
+}
+
+// TODO: Move to resource package (or use FullyQUalifiedName and NewFromFullyQualifiedName because it will be needed anyway for things like returned ids from SHOW GRANTS)
+//func NewSchemaObjectIdentifierWithArgumentsFromResourceIdentifier(resourceId string) SchemaObjectIdentifierWithArguments {
+//	// TODO: use standard parsing method
+//	resourceIdParts := strings.Split(resourceId, "|")
+//	schemaObjectId := NewSchemaObjectIdentifierFromFullyQualifiedName(resourceIdParts[0])
+//	argumentSlice := resourceIdParts[1:]
+//	arguments := make([]DataType, len(argumentSlice))
+//	for i, argument := range argumentSlice {
+//		arguments[i] = DataType(argument)
 //	}
-//	return id
+//	return NewSchemaObjectIdentifierWithArguments(schemaObjectId.DatabaseName(), schemaObjectId.SchemaName(), schemaObjectId.Name(), arguments...)
 //}
 
 func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
@@ -356,8 +393,18 @@ func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.argumentDataTypes) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ", "))
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ","))
 }
+
+// TODO: Move to resource package
+//func (i SchemaObjectIdentifierWithArguments) AsResourceIdentifier() string {
+//	// TODO: use standard encoding method
+//	resourceId := []string{
+//		i.SchemaObjectId().FullyQualifiedName(),
+//	}
+//	resourceId = append(resourceId, AsStringList(i.ArgumentDataTypes())...)
+//	return strings.Join(resourceId, "|")
+//}
 
 type TableColumnIdentifier struct {
 	databaseName string

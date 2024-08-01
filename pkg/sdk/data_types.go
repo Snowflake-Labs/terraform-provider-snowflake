@@ -89,6 +89,11 @@ func ToDataType(s string) (DataType, error) {
 		return DataTypeTime, nil
 	}
 
+	vectorSynonyms := []string{"VECTOR"}
+	if slices.ContainsFunc(vectorSynonyms, func(e string) bool { return strings.HasPrefix(dType, e) }) {
+		return DataType(dType), nil
+	}
+
 	return "", fmt.Errorf("invalid data type: %s", s)
 }
 

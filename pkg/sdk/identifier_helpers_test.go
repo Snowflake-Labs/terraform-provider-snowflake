@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,5 +82,24 @@ func TestDatabaseObjectIdentifier(t *testing.T) {
 		identifier := DatabaseObjectIdentifier{"aaa", "bbb"}
 
 		assert.Equal(t, `"aaa"."bbb"`, identifier.FullyQualifiedName())
+	})
+}
+
+// TODO: test cases
+func TestSchemaObjectIdentifierWithArguments(t *testing.T) {
+	t.Run("create new from fully qualified name", func(t *testing.T) {
+		testCases := []struct {
+			Input SchemaObjectIdentifierWithArguments
+		}{
+			{Input: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, DataTypeNumber, DataTypeTimestampTZ)},
+		}
+
+		for _, testCase := range testCases {
+			t.Run(fmt.Sprintf("processing %s", testCase.Input.FullyQualifiedName()), func(t *testing.T) {
+				parsedId, err := NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(testCase.Input.FullyQualifiedName())
+				require.NoError(t, err)
+				require.Equal(t, testCase.Input.FullyQualifiedName(), parsedId.FullyQualifiedName())
+			})
+		}
 	})
 }
