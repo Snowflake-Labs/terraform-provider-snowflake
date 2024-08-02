@@ -77,8 +77,10 @@ func enrichWithReferenceToParameterDocs[T ~string](parameter T, description stri
 	return fmt.Sprintf("%s For more information, check [%s docs](%s).", description, parameter, link)
 }
 
-type showParametersFunc[T sdk.ObjectIdentifier] func(ctx context.Context, id T) ([]*sdk.Parameter, error)
-type showParametersFuncProvider[T sdk.ObjectIdentifier] func(client *sdk.Client) showParametersFunc[T]
+type (
+	showParametersFunc[T sdk.ObjectIdentifier]         func(ctx context.Context, id T) ([]*sdk.Parameter, error)
+	showParametersFuncProvider[T sdk.ObjectIdentifier] func(client *sdk.Client) showParametersFunc[T]
+)
 
 // parametersProvider is a generic function that can be used with ParametersCustomDiff
 func parametersProvider[T sdk.ObjectIdentifier](
