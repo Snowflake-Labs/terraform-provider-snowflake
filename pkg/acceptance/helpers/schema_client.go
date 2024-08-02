@@ -95,3 +95,12 @@ func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *SchemaClient) ShowWithOptions(t *testing.T, opts *sdk.ShowSchemaOptions) []sdk.Schema {
+	t.Helper()
+	ctx := context.Background()
+
+	schemas, err := c.client().Show(ctx, opts)
+	require.NoError(t, err)
+	return schemas
+}
