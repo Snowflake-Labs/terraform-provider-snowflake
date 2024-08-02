@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.94.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.94.0...v0.94.1) (2024-08-02)
+
+
+### 🐛 **Bug fixes:**
+
+* Use ALTER for managing PUBLIC schemas that exist ([#2973](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2973)) ([567e9be](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/567e9be5efb0be731fa7ee56143b8ca4326bd037))
+
 ## [0.94.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.93.0...v0.94.0) (2024-07-26)
 
 
