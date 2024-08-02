@@ -259,11 +259,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		schemaParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Schema: id,
-			},
-		})
+		schemaParameters, err := client.Schemas.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}

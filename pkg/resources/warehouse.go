@@ -379,11 +379,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Warehouse: id,
-			},
-		})
+		warehouseParameters, err := client.Warehouses.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}

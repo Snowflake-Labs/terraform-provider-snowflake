@@ -187,11 +187,7 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	secondaryDatabaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: secondaryDatabaseId,
-		},
-	})
+	secondaryDatabaseParameters, err := client.Databases.ShowParameters(ctx, secondaryDatabaseId)
 	if err != nil {
 		return diag.FromErr(err)
 	}

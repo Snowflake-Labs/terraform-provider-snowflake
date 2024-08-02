@@ -156,11 +156,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
+	databaseParameters, err := client.Databases.ShowParameters(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}

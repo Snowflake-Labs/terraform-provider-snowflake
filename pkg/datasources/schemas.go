@@ -205,11 +205,7 @@ func ReadSchemas(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 
 		var schemaParameters []map[string]any
 		if d.Get("with_parameters").(bool) {
-			parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-				In: &sdk.ParametersIn{
-					Schema: schema.ID(),
-				},
-			})
+			parameters, err := client.Schemas.ShowParameters(ctx, schema.ID())
 			if err != nil {
 				return diag.FromErr(err)
 			}

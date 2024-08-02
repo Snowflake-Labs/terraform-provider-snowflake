@@ -285,11 +285,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		userParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				User: id,
-			},
-		})
+		userParameters, err := client.Users.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}

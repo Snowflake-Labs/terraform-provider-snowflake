@@ -103,11 +103,7 @@ func ReadWarehouses(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 		var warehouseParameters []map[string]any
 		if d.Get("with_parameters").(bool) {
-			parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-				In: &sdk.ParametersIn{
-					Warehouse: warehouse.ID(),
-				},
-			})
+			parameters, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
 			if err != nil {
 				return diag.FromErr(err)
 			}
