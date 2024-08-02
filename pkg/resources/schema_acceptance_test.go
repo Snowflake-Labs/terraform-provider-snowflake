@@ -1,8 +1,10 @@
 package resources_test
 
 import (
+	"cmp"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -499,6 +501,9 @@ func TestAcc_Schema_ManagePublicVersion_0_94_0(t *testing.T) {
 						},
 					})
 					require.Len(t, schemas, 2)
+					slices.SortFunc(schemas, func(x, y sdk.Schema) int {
+						return cmp.Compare(x.DroppedOn.Unix(), y.DroppedOn.Unix())
+					})
 					require.Zero(t, schemas[0].DroppedOn)
 					require.NotZero(t, schemas[1].DroppedOn)
 				},

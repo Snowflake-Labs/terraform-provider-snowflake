@@ -5,7 +5,7 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.94.0 ➞ v0.94.1
-### *(breaking change)* changes in snowflake_schema
+### changes in snowflake_schema
 
 In order to avoid dropping `PUBLIC` schemas, we have decided to use `ALTER` instead of `OR REPLACE` during creation. In the future we are planning to use `CREATE OR ALTER` when it becomes available for schems.
 
