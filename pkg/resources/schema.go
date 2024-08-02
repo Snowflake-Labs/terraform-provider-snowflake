@@ -213,88 +213,81 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	database := d.Get("database").(string)
 	id := sdk.NewDatabaseObjectIdentifier(database, name)
 
-	create := true
-
 	if strings.EqualFold(strings.TrimSpace(name), "PUBLIC") {
 		_, err := client.Schemas.ShowByID(ctx, id)
-		if err != nil {
-			if !errors.Is(err, sdk.ErrObjectNotFound) {
-				return diag.FromErr(err)
-			}
-			// there is no PUBLIC schema, we need to create it
-		} else {
+		if err != nil && !errors.Is(err, sdk.ErrObjectNotFound) {
+			return diag.FromErr(err)
+		} else if err == nil {
 			// there is already a PUBLIC schema, so we need to alter it instead
-			create = false
+			log.Printf("[DEBUG] found PUBLIC schema during creation, updating...")
+			d.SetId(helpers.EncodeSnowflakeID(database, name))
+			return UpdateContextSchema(ctx, d, meta)
 		}
 	}
-	if create {
-		dataRetentionTimeInDays,
-			maxDataExtensionTimeInDays,
-			externalVolume,
-			catalog,
-			replaceInvalidCharacters,
-			defaultDDLCollation,
-			storageSerializationPolicy,
-			logLevel,
-			traceLevel,
-			suspendTaskAfterNumFailures,
-			taskAutoRetryAttempts,
-			userTaskManagedInitialWarehouseSize,
-			userTaskTimeoutMs,
-			userTaskMinimumTriggerIntervalInSeconds,
-			quotedIdentifiersIgnoreCase,
-			enableConsoleOutput,
-			err := GetAllDatabaseParameters(d)
+	// there is no PUBLIC schema, so we continue with creating
+	dataRetentionTimeInDays,
+		maxDataExtensionTimeInDays,
+		externalVolume,
+		catalog,
+		replaceInvalidCharacters,
+		defaultDDLCollation,
+		storageSerializationPolicy,
+		logLevel,
+		traceLevel,
+		suspendTaskAfterNumFailures,
+		taskAutoRetryAttempts,
+		userTaskManagedInitialWarehouseSize,
+		userTaskTimeoutMs,
+		userTaskMinimumTriggerIntervalInSeconds,
+		quotedIdentifiersIgnoreCase,
+		enableConsoleOutput,
+		err := GetAllDatabaseParameters(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	opts := &sdk.CreateSchemaOptions{
+		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
+		ExternalVolume:                          externalVolume,
+		Catalog:                                 catalog,
+		ReplaceInvalidCharacters:                replaceInvalidCharacters,
+		DefaultDDLCollation:                     defaultDDLCollation,
+		StorageSerializationPolicy:              storageSerializationPolicy,
+		LogLevel:                                logLevel,
+		TraceLevel:                              traceLevel,
+		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
+		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
+		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
+		UserTaskTimeoutMs:                       userTaskTimeoutMs,
+		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
+		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
+		EnableConsoleOutput:                     enableConsoleOutput,
+		PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
+		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if v := d.Get("is_transient").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
-		opts := &sdk.CreateSchemaOptions{
-			DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-			MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-			ExternalVolume:                          externalVolume,
-			Catalog:                                 catalog,
-			ReplaceInvalidCharacters:                replaceInvalidCharacters,
-			DefaultDDLCollation:                     defaultDDLCollation,
-			StorageSerializationPolicy:              storageSerializationPolicy,
-			LogLevel:                                logLevel,
-			TraceLevel:                              traceLevel,
-			SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-			TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-			UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-			UserTaskTimeoutMs:                       userTaskTimeoutMs,
-			UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-			QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-			EnableConsoleOutput:                     enableConsoleOutput,
-			PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
-			Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+		opts.Transient = sdk.Bool(parsed)
+	}
+	if v := d.Get("with_managed_access").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
+		if err != nil {
+			return diag.FromErr(err)
 		}
-		if v := d.Get("is_transient").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			opts.Transient = sdk.Bool(parsed)
+		opts.WithManagedAccess = sdk.Bool(parsed)
+	}
+	if err := client.Schemas.Create(ctx, id, opts); err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to create schema.",
+				Detail:   fmt.Sprintf("schema name: %s, err: %s", id.FullyQualifiedName(), err),
+			},
 		}
-		if v := d.Get("with_managed_access").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			opts.WithManagedAccess = sdk.Bool(parsed)
-		}
-		if err := client.Schemas.Create(ctx, id, opts); err != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to create schema.",
-					Detail:   fmt.Sprintf("schema name: %s, err: %s", id.FullyQualifiedName(), err),
-				},
-			}
-		}
-	} else {
-		d.SetId(helpers.EncodeSnowflakeID(database, name))
-		return UpdateContextSchema(ctx, d, meta)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(database, name))
