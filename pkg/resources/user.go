@@ -259,7 +259,13 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
 				d.SetId("")
-				return nil
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query user. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
 			}
 			return diag.FromErr(err)
 		}
@@ -306,9 +312,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		var defaultSecondaryRoles []string
 		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
-			defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
-			defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
-			defaultSecondaryRoles = strings.Split(defaultRoles, ",")
+			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, false)
 		}
 		if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 			return diag.FromErr(err)

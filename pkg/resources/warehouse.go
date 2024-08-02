@@ -150,17 +150,11 @@ var warehouseSchema = map[string]*schema.Schema{
 }
 
 func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Warehouse: id,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return warehouseParameters, nil
+	return parametersProvider(ctx, d, meta.(*provider.Context), warehouseParametersProviderFunc)
+}
+
+func warehouseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
+	return c.Warehouses.ShowParameters
 }
 
 func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {

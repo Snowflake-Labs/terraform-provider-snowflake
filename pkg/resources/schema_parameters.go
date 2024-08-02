@@ -62,13 +62,11 @@ func init() {
 }
 
 func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-	return client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Schema: id,
-		},
-	})
+	return parametersProvider(ctx, d, meta.(*provider.Context), schemaParametersProviderFunc)
+}
+
+func schemaParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.DatabaseObjectIdentifier] {
+	return c.Schemas.ShowParameters
 }
 
 func handleSchemaParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {

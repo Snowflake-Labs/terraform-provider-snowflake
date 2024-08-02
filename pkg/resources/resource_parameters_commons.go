@@ -1,9 +1,12 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,4 +75,19 @@ func stringToStringEnumProvider[T ~string](mapper func(string) (T, error)) func(
 func enrichWithReferenceToParameterDocs[T ~string](parameter T, description string) string {
 	link := fmt.Sprintf("https://docs.snowflake.com/en/sql-reference/parameters#%s", strings.ReplaceAll(strings.ToLower(string(parameter)), "_", "-"))
 	return fmt.Sprintf("%s For more information, check [%s docs](%s).", description, parameter, link)
+}
+
+type showParametersFunc[T sdk.ObjectIdentifier] func(ctx context.Context, id T) ([]*sdk.Parameter, error)
+type showParametersFuncProvider[T sdk.ObjectIdentifier] func(client *sdk.Client) showParametersFunc[T]
+
+// parametersProvider is a generic function that can be used with ParametersCustomDiff
+func parametersProvider[T sdk.ObjectIdentifier](
+	ctx context.Context,
+	d ResourceIdProvider,
+	meta *provider.Context,
+	showParametersFuncProvider showParametersFuncProvider[T],
+) ([]*sdk.Parameter, error) {
+	client := meta.Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(T)
+	return showParametersFuncProvider(client)(ctx, id)
 }
