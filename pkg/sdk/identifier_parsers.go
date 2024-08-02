@@ -33,6 +33,7 @@ func ParseIdentifierString(identifier string) ([]string, error) {
 		return nil, err
 	}
 	for _, part := range parts {
+		// TODO(SNOW-1571674): Remove the validation
 		if strings.Contains(part, `"`) {
 			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
 		}

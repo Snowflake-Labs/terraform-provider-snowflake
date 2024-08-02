@@ -25,13 +25,6 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
 
-	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
-		// It's needed, because we have to wait for Snowflake to "register" the cleanup after this test.
-		// Without it, the next test would fail.
-		time.Sleep(time.Second * 60)
-	})
-
 	var (
 		accountExternalVolume                          = new(string)
 		accountCatalog                                 = new(string)
@@ -180,6 +173,24 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 		"quoted_identifiers_ignore_case":                config.BoolVariable(true),
 		"enable_console_output":                         config.BoolVariable(true),
 	}
+
+	// TODO(SNOW-1562172): Create a better solution for this type of situations
+	// We have to create test database from share before the actual test to check if the newly created share is ready
+	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
+	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool {
+		database, err := acc.TestClient().Database.Show(t, testId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

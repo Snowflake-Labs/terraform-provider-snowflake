@@ -21,15 +21,12 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		acc.TestClient().Account.GetAccountIdentifier(t),
 	})
 	t.Cleanup(func() {
 		// TODO(SNOW-1562172): Create a better solution for this type of situations
-		// Have to wait; otherwise the secondary database removal can be not registered yet,
-		// resulting in an error in the cleanup below.
-		time.Sleep(time.Second)
-		primaryDatabaseCleanup()
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -158,15 +155,12 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
 	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
-		// Have to wait; otherwise the secondary database removal can be not registered yet,
-		// resulting in an error in the cleanup below.
-		time.Sleep(time.Second)
-		primaryDatabaseCleanup()
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
@@ -404,15 +398,12 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
 	})
 	t.Cleanup(func() {
-		// TODO(SNOW-1562172: Create a better solution for this type of situations
-		// Have to wait; otherwise the secondary database removal can be not registered yet,
-		// resulting in an error in the cleanup below.
-		time.Sleep(time.Second)
-		primaryDatabaseCleanup()
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
 	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
