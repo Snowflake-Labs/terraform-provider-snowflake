@@ -17,17 +17,17 @@ func defaultTestClient(t *testing.T) *Client {
 	return client
 }
 
-func testSecondaryClient(t *testing.T) *Client {
+func secondaryTestClient(t *testing.T) *Client {
 	t.Helper()
 	return testClient(t, testprofiles.Secondary)
 }
 
-func testThirdClient(t *testing.T) *Client {
+func thirdTestClient(t *testing.T) *Client {
 	t.Helper()
 	return testClient(t, testprofiles.Third)
 }
 
-func testFourthClient(t *testing.T) *Client {
+func fourthTestClient(t *testing.T) *Client {
 	t.Helper()
 	return testClient(t, testprofiles.Fourth)
 }

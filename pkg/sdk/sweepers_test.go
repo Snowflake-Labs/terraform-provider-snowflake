@@ -20,7 +20,7 @@ func TestSweepAll(t *testing.T) {
 
 	t.Run("sweep after tests", func(t *testing.T) {
 		client := defaultTestClient(t)
-		secondaryClient := testSecondaryClient(t)
+		secondaryClient := secondaryTestClient(t)
 
 		err := SweepAfterIntegrationTests(client, random.IntegrationTestsSuffix)
 		assert.NoError(t, err)
@@ -40,28 +40,38 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
 
 	client := defaultTestClient(t)
-	secondaryClient := testSecondaryClient(t)
-	thirdClient := testThirdClient(t)
-	fourthClient := testFourthClient(t)
+	secondaryClient := secondaryTestClient(t)
+	thirdClient := thirdTestClient(t)
+	fourthClient := fourthTestClient(t)
 
 	allClients := []*Client{client, secondaryClient, thirdClient, fourthClient}
 
+	// can't use extracted IntegrationTestPrefix and AcceptanceTestPrefix until sweepers reside in the SDK package (cyclic)
+	const integrationTestPrefix = "int_test_"
+	const acceptanceTestPrefix = "acc_test_"
+
 	t.Run("sweep integration test precreated objects", func(t *testing.T) {
+		integrationTestWarehousesPrefix := fmt.Sprintf("%swh_%", integrationTestPrefix)
+		integrationTestDatabasesPrefix := fmt.Sprintf("%sdb_%", integrationTestPrefix)
+
 		for _, c := range allClients {
-			err := nukeWarehouses(c, "int_test_wh_%")()
+			err := nukeWarehouses(c, integrationTestWarehousesPrefix)()
 			assert.NoError(t, err)
 
-			err = nukeDatabases(c, "int_test_db_%")()
+			err = nukeDatabases(c, integrationTestDatabasesPrefix)()
 			assert.NoError(t, err)
 		}
 	})
 
 	t.Run("sweep acceptance tests precreated objects", func(t *testing.T) {
+		acceptanceTestWarehousesPrefix := fmt.Sprintf("%swh_%", acceptanceTestPrefix)
+		acceptanceTestDatabasesPrefix := fmt.Sprintf("%sdb_%", acceptanceTestPrefix)
+
 		for _, c := range allClients {
-			err := nukeWarehouses(c, "acc_test_wh_%")()
+			err := nukeWarehouses(c, acceptanceTestWarehousesPrefix)()
 			assert.NoError(t, err)
 
-			err = nukeDatabases(c, "acc_test_db_%")()
+			err = nukeDatabases(c, acceptanceTestDatabasesPrefix)()
 			assert.NoError(t, err)
 		}
 	})
