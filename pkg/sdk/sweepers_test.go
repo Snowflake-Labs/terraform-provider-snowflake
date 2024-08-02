@@ -51,8 +51,8 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 	const acceptanceTestPrefix = "acc_test_"
 
 	t.Run("sweep integration test precreated objects", func(t *testing.T) {
-		integrationTestWarehousesPrefix := fmt.Sprintf("%swh_%", integrationTestPrefix)
-		integrationTestDatabasesPrefix := fmt.Sprintf("%sdb_%", integrationTestPrefix)
+		integrationTestWarehousesPrefix := fmt.Sprintf("%swh_%%", integrationTestPrefix)
+		integrationTestDatabasesPrefix := fmt.Sprintf("%sdb_%%", integrationTestPrefix)
 
 		for _, c := range allClients {
 			err := nukeWarehouses(c, integrationTestWarehousesPrefix)()
@@ -64,8 +64,8 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 	})
 
 	t.Run("sweep acceptance tests precreated objects", func(t *testing.T) {
-		acceptanceTestWarehousesPrefix := fmt.Sprintf("%swh_%", acceptanceTestPrefix)
-		acceptanceTestDatabasesPrefix := fmt.Sprintf("%sdb_%", acceptanceTestPrefix)
+		acceptanceTestWarehousesPrefix := fmt.Sprintf("%swh_%%", acceptanceTestPrefix)
+		acceptanceTestDatabasesPrefix := fmt.Sprintf("%sdb_%%", acceptanceTestPrefix)
 
 		for _, c := range allClients {
 			err := nukeWarehouses(c, acceptanceTestWarehousesPrefix)()
