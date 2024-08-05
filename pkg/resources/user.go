@@ -308,7 +308,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		var defaultSecondaryRoles []string
 		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
-			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, false)
+			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, true)
 		}
 		if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
 			return diag.FromErr(err)
