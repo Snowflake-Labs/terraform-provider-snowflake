@@ -270,42 +270,6 @@ var ViewsDef = g.NewInterface(
 		doubleQuotedStringDef,
 		dataMetricFunctionDef,
 	).
-	// AlterOperation(
-	// 	"https://docs.snowflake.com/en/sql-reference/sql/alter-view",
-	// 	g.NewQueryStruct("AlterView").
-	// 		Alter().
-	// 		SQL("VIEW").
-	// 		IfExists().
-	// 		Name().
-	// 		OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-	// 		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
-	// 		OptionalSQL("UNSET COMMENT").
-	// 		OptionalSQL("SET SECURE").
-	// 		OptionalBooleanAssignment("SET CHANGE_TRACKING", nil).
-	// 		OptionalSQL("UNSET SECURE").
-	// 		OptionalSetTags().
-	// 		OptionalUnsetTags().
-	// 		OptionalQueryStructField("AddDataMetricFunction", viewAddDataMetricFunction, g.KeywordOptions()).
-	// 		OptionalQueryStructField("DropDataMetricFunction", viewDropDataMetricFunction, g.KeywordOptions()).
-	// 		OptionalQueryStructField("SetDataMetricSchedule", viewSetDataMetricSchedule, g.KeywordOptions()).
-	// 		OptionalQueryStructField("UnsetDataMetricSchedule", viewUnsetDataMetricSchedule, g.KeywordOptions()).
-	// 		OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
-	// 		OptionalSQL("DROP ALL ROW ACCESS POLICIES").
-	// 		OptionalQueryStructField("SetAggregationPolicy", viewSetAggregationPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("UnsetAggregationPolicy", viewUnsetAggregationPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("SetMaskingPolicyOnColumn", viewSetColumnMaskingPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("UnsetMaskingPolicyOnColumn", viewUnsetColumnMaskingPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("SetProjectionPolicyOnColumn", viewSetProjectionPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("UnsetProjectionPolicyOnColumn", viewUnsetProjectionPolicy, g.KeywordOptions()).
-	// 		OptionalQueryStructField("SetTagsOnColumn", viewSetColumnTags, g.KeywordOptions()).
-	// 		OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
-	// 		WithValidation(g.ValidIdentifier, "name").
-	// 		WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "AddColumn", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn").
-	// 		WithValidation(g.ConflictingFields, "IfExists", "SetSecure").
-	// 		WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
-	// ).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-view",
 		g.NewQueryStruct("DropView").

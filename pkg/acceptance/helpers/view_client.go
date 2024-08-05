@@ -61,3 +61,10 @@ func (c *ViewClient) DropViewFunc(t *testing.T, id sdk.SchemaObjectIdentifier) f
 		require.NoError(t, err)
 	}
 }
+
+func (c *ViewClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.View, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}

@@ -7,7 +7,11 @@ import (
 	"slices"
 	"testing"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -25,20 +29,20 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewWithOptions := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
 		t.Helper()
-		assert.NotEmpty(t, view.CreatedOn)
-		assert.Equal(t, id.Name(), view.Name)
-		// Kind is filled out only in TERSE response.
-		assert.Empty(t, view.Kind)
-		assert.Empty(t, view.Reserved)
-		assert.Equal(t, testDb(t).Name, view.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, view.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", view.Owner)
-		assert.Equal(t, comment, view.Comment)
-		assert.NotEmpty(t, view.Text)
-		assert.Equal(t, isSecure, view.IsSecure)
-		assert.Equal(t, false, view.IsMaterialized)
-		assert.Equal(t, "ROLE", view.OwnerRoleType)
-		assert.Equal(t, "OFF", view.ChangeTracking)
+		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasKind("").
+			HasReserved("").
+			HasDatabaseName(testDb(t).Name).
+			HasSchemaName(testSchema(t).Name).
+			HasOwner(snowflakeroles.Accountadmin.Name()).
+			HasComment(comment).
+			HasNonEmptyText().
+			HasIsSecure(isSecure).
+			HasIsMaterialized(false).
+			HasOwnerRoleType("ROLE").
+			HasChangeTracking("OFF"))
 	}
 
 	assertView := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
@@ -48,21 +52,21 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewTerse := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assert.NotEmpty(t, view.CreatedOn)
-		assert.Equal(t, id.Name(), view.Name)
-		assert.Equal(t, "VIEW", view.Kind)
-		assert.Equal(t, testDb(t).Name, view.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, view.SchemaName)
-
-		// all below are not contained in the terse response, that's why all of them we expect to be empty
-		assert.Empty(t, view.Reserved)
-		assert.Empty(t, view.Owner)
-		assert.Empty(t, view.Comment)
-		assert.Empty(t, view.Text)
-		assert.Empty(t, view.IsSecure)
-		assert.Empty(t, view.IsMaterialized)
-		assert.Empty(t, view.OwnerRoleType)
-		assert.Empty(t, view.ChangeTracking)
+		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasKind("VIEW").
+			HasDatabaseName(testDb(t).Name).
+			HasSchemaName(testSchema(t).Name).
+			// all below are not contained in the terse response, that's why all of them we expect to be empty
+			HasReserved("").
+			HasOwner("").
+			HasComment("").
+			HasText("").
+			HasIsSecure(false).
+			HasIsMaterialized(false).
+			HasOwnerRoleType("").
+			HasChangeTracking(""))
 	}
 
 	assertViewDetailsRow := func(t *testing.T, viewDetails *sdk.ViewDetails) {

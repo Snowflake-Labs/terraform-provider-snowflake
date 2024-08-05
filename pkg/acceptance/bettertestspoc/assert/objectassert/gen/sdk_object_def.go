@@ -22,6 +22,11 @@ var allStructs = []SdkObjectDef{
 		ObjectType:   sdk.ObjectTypeWarehouse,
 		ObjectStruct: sdk.Warehouse{},
 	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeView,
+		ObjectStruct: sdk.View{},
+	},
 }
 
 func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {
