@@ -46,7 +46,7 @@ func SharedDatabase() *schema.Resource {
 		DeleteContext: DeleteSharedDatabase,
 		Description:   "A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).",
 
-		Schema: helpers.MergeMaps(sharedDatabaseSchema, SharedDatabaseParametersSchema),
+		Schema: helpers.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -59,44 +59,16 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	externalShareId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("from_share").(string))
 
-	_, _, externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = client.Databases.CreateShared(ctx, id, externalShareId, &sdk.CreateSharedDatabaseOptions{
+	opts := &sdk.CreateSharedDatabaseOptions{
 		// TODO(SNOW-1325381)
 		// Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	})
+		Comment: GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if parametersCreateDiags := handleSharedDatabaseParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
+	}
+
+	err := client.Databases.CreateShared(ctx, id, externalShareId, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -186,16 +158,12 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
+	databaseParameters, err := client.Databases.ShowParameters(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, databaseParameters); diags != nil {
 		return diags
 	}
 

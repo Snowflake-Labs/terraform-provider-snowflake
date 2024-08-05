@@ -45,8 +45,8 @@ func SecondaryDatabase() *schema.Resource {
 		DeleteContext: DeleteSecondaryDatabase,
 		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
-		Schema:        helpers.MergeMaps(secondaryDatabaseSchema, DatabaseParametersSchema),
+		CustomizeDiff: databaseParametersCustomDiff,
+		Schema:        helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -59,47 +59,15 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	secondaryDatabaseId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	primaryDatabaseId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("as_replica_of").(string))
 
-	dataRetentionTimeInDays,
-		maxDataExtensionTimeInDays,
-		externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
+	opts := &sdk.CreateSecondaryDatabaseOptions{
+		Transient: GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
+		Comment:   GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if parametersCreateDiags := handleSecondaryDatabaseParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
 	}
 
-	err = client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, &sdk.CreateSecondaryDatabaseOptions{
-		Transient:                               GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
-		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	})
+	err := client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -128,7 +96,7 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 	databaseSetRequest := new(sdk.DatabaseSet)
 	databaseUnsetRequest := new(sdk.DatabaseUnset)
 
-	if updateParamDiags := HandleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+	if updateParamDiags := handleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
 	}
 
@@ -221,16 +189,12 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	secondaryDatabaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: secondaryDatabaseId,
-		},
-	})
+	secondaryDatabaseParameters, err := client.Databases.ShowParameters(ctx, secondaryDatabaseId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, secondaryDatabaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, secondaryDatabaseParameters); diags != nil {
 		return diags
 	}
 

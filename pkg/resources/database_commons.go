@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,45 +15,39 @@ import (
 )
 
 var (
-	DatabaseParametersSchema              = make(map[string]*schema.Schema)
-	SharedDatabaseParametersSchema        = make(map[string]*schema.Schema)
+	databaseParametersSchema              = make(map[string]*schema.Schema)
+	sharedDatabaseParametersSchema        = make(map[string]*schema.Schema)
 	sharedDatabaseNotApplicableParameters = []sdk.ObjectParameter{
 		sdk.ObjectParameterDataRetentionTimeInDays,
 		sdk.ObjectParameterMaxDataExtensionTimeInDays,
 	}
-	DatabaseParametersCustomDiff = ParametersCustomDiff(
+	databaseParametersCustomDiff = ParametersCustomDiff(
 		databaseParametersProvider,
-		parameter{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterExternalVolume, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterCatalog, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterLogLevel, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterTraceLevel, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeDatabase},
-		parameter{sdk.AccountParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterExternalVolume, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterCatalog, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterLogLevel, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterTraceLevel, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeDatabase},
+		parameter[sdk.AccountParameter]{sdk.AccountParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeDatabase},
 	)
 )
 
 func databaseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return databaseParameters, nil
+	return parametersProvider(ctx, d, meta.(*provider.Context), databaseParametersProviderFunc)
+}
+
+func databaseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
+	return c.Databases.ShowParameters
 }
 
 func init() {
@@ -173,7 +166,7 @@ func init() {
 	for _, field := range databaseParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 
-		DatabaseParametersSchema[fieldName] = &schema.Schema{
+		databaseParametersSchema[fieldName] = &schema.Schema{
 			Type:             field.Type,
 			Description:      field.Description,
 			Computed:         true,
@@ -183,7 +176,7 @@ func init() {
 		}
 
 		if !slices.Contains(sharedDatabaseNotApplicableParameters, field.Name) {
-			SharedDatabaseParametersSchema[fieldName] = &schema.Schema{
+			sharedDatabaseParametersSchema[fieldName] = &schema.Schema{
 				Type:             field.Type,
 				Description:      field.Description,
 				ForceNew:         true,
@@ -196,111 +189,89 @@ func init() {
 	}
 }
 
-// TODO(SNOW-1480106): Change to smaller and safer return type
-func GetAllDatabaseParameters(d *schema.ResourceData) (
-	dataRetentionTimeInDays *int,
-	maxDataExtensionTimeInDays *int,
-	externalVolume *sdk.AccountObjectIdentifier,
-	catalog *sdk.AccountObjectIdentifier,
-	replaceInvalidCharacters *bool,
-	defaultDDLCollation *string,
-	storageSerializationPolicy *sdk.StorageSerializationPolicy,
-	logLevel *sdk.LogLevel,
-	traceLevel *sdk.TraceLevel,
-	suspendTaskAfterNumFailures *int,
-	taskAutoRetryAttempts *int,
-	userTaskManagedInitialWarehouseSize *sdk.WarehouseSize,
-	userTaskTimeoutMs *int,
-	userTaskMinimumTriggerIntervalInSeconds *int,
-	quotedIdentifiersIgnoreCase *bool,
-	enableConsoleOutput *bool,
-	err error,
-) {
-	dataRetentionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "data_retention_time_in_days")
-	maxDataExtensionTimeInDays = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "max_data_extension_time_in_days")
-	if externalVolumeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "external_volume"); externalVolumeRaw != nil {
-		externalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifier(*externalVolumeRaw))
-	}
-	if catalogRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "catalog"); catalogRaw != nil {
-		catalog = sdk.Pointer(sdk.NewAccountObjectIdentifier(*catalogRaw))
-	}
-	replaceInvalidCharacters = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "replace_invalid_characters")
-	defaultDDLCollation = GetConfigPropertyAsPointerAllowingZeroValue[string](d, "default_ddl_collation")
-	if storageSerializationPolicyRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "storage_serialization_policy"); storageSerializationPolicyRaw != nil {
-		storageSerializationPolicy = sdk.Pointer(sdk.StorageSerializationPolicy(*storageSerializationPolicyRaw))
-	}
-	if logLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "log_level"); logLevelRaw != nil {
-		logLevel = sdk.Pointer(sdk.LogLevel(*logLevelRaw))
-	}
-	if traceLevelRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "trace_level"); traceLevelRaw != nil {
-		traceLevel = sdk.Pointer(sdk.TraceLevel(*traceLevelRaw))
-	}
-	suspendTaskAfterNumFailures = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "suspend_task_after_num_failures")
-	taskAutoRetryAttempts = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "task_auto_retry_attempts")
-	if userTaskManagedInitialWarehouseSizeRaw := GetConfigPropertyAsPointerAllowingZeroValue[string](d, "user_task_managed_initial_warehouse_size"); userTaskManagedInitialWarehouseSizeRaw != nil {
-		var warehouseSize sdk.WarehouseSize
-		if warehouseSize, err = sdk.ToWarehouseSize(*userTaskManagedInitialWarehouseSizeRaw); err != nil {
-			return
-		}
-		userTaskManagedInitialWarehouseSize = sdk.Pointer(warehouseSize)
-	}
-	userTaskTimeoutMs = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_timeout_ms")
-	userTaskMinimumTriggerIntervalInSeconds = GetConfigPropertyAsPointerAllowingZeroValue[int](d, "user_task_minimum_trigger_interval_in_seconds")
-	quotedIdentifiersIgnoreCase = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "quoted_identifiers_ignore_case")
-	enableConsoleOutput = GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "enable_console_output")
-	return
-}
-
-func HandleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
+func handleDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateDatabaseOptions) diag.Diagnostics {
 	return JoinDiags(
-		handleValuePropertyChange[int](d, "data_retention_time_in_days", &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
-		handleValuePropertyChange[int](d, "max_data_extension_time_in_days", &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
-		handleValuePropertyChangeWithMapping[string](d, "external_volume", &set.ExternalVolume, &unset.ExternalVolume, func(value string) (sdk.AccountObjectIdentifier, error) {
-			return sdk.NewAccountObjectIdentifier(value), nil
-		}),
-		handleValuePropertyChangeWithMapping[string](d, "catalog", &set.Catalog, &unset.Catalog, func(value string) (sdk.AccountObjectIdentifier, error) {
-			return sdk.NewAccountObjectIdentifier(value), nil
-		}),
-		handleValuePropertyChange[bool](d, "replace_invalid_characters", &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
-		handleValuePropertyChange[string](d, "default_ddl_collation", &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
-		handleValuePropertyChangeWithMapping[string](d, "storage_serialization_policy", &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
-		handleValuePropertyChangeWithMapping[string](d, "log_level", &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
-		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
-		handleValuePropertyChange[int](d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
-		handleValuePropertyChange[int](d, "task_auto_retry_attempts", &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
-		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
-		handleValuePropertyChange[int](d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
-		handleValuePropertyChange[int](d, "user_task_minimum_trigger_interval_in_seconds", &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
-		handleValuePropertyChange[bool](d, "quoted_identifiers_ignore_case", &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
-		handleValuePropertyChange[bool](d, "enable_console_output", &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
+		handleParameterCreate(d, sdk.ObjectParameterDataRetentionTimeInDays, &createOpts.DataRetentionTimeInDays),
+		handleParameterCreate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &createOpts.MaxDataExtensionTimeInDays),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
 	)
 }
 
-// handleValuePropertyChange calls internally handleValuePropertyChangeWithMapping with identity mapping
-func handleValuePropertyChange[T any](d *schema.ResourceData, key string, setField **T, unsetField **bool) diag.Diagnostics {
-	return handleValuePropertyChangeWithMapping[T, T](d, key, setField, unsetField, func(value T) (T, error) { return value, nil })
+func handleSecondaryDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateSecondaryDatabaseOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreate(d, sdk.ObjectParameterDataRetentionTimeInDays, &createOpts.DataRetentionTimeInDays),
+		handleParameterCreate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &createOpts.MaxDataExtensionTimeInDays),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
+	)
 }
 
-// handleValuePropertyChangeWithMapping checks schema.ResourceData for change in key's value. If there's a change detected
-// (or unknown value that basically indicates diff.SetNewComputed was called on the key), it checks if the value is set in the configuration.
-// If the value is set, setField (representing setter for a value) is set to the new planned value applying mapping beforehand in cases where enum values,
-// identifiers, etc. have to be set. Otherwise, unsetField is populated.
-func handleValuePropertyChangeWithMapping[T, R any](d *schema.ResourceData, key string, setField **R, unsetField **bool, mapping func(value T) (R, error)) diag.Diagnostics {
-	if d.HasChange(key) || !d.GetRawPlan().AsValueMap()[key].IsKnown() {
-		if !d.GetRawConfig().AsValueMap()[key].IsNull() {
-			mappedValue, err := mapping(d.Get(key).(T))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			*setField = sdk.Pointer(mappedValue)
-		} else {
-			*unsetField = sdk.Bool(true)
-		}
-	}
-	return nil
+func handleSharedDatabaseParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateSharedDatabaseOptions) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterExternalVolume, &createOpts.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterCatalog, &createOpts.Catalog, stringToAccountObjectIdentifier),
+		handleParameterCreate(d, sdk.ObjectParameterReplaceInvalidCharacters, &createOpts.ReplaceInvalidCharacters),
+		handleParameterCreate(d, sdk.ObjectParameterDefaultDDLCollation, &createOpts.DefaultDDLCollation),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &createOpts.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterLogLevel, &createOpts.LogLevel, sdk.ToLogLevel),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterTraceLevel, &createOpts.TraceLevel, sdk.ToTraceLevel),
+		handleParameterCreate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &createOpts.SuspendTaskAfterNumFailures),
+		handleParameterCreate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &createOpts.TaskAutoRetryAttempts),
+		handleParameterCreateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &createOpts.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskTimeoutMs, &createOpts.UserTaskTimeoutMs),
+		handleParameterCreate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &createOpts.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterCreate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &createOpts.QuotedIdentifiersIgnoreCase),
+		handleParameterCreate(d, sdk.ObjectParameterEnableConsoleOutput, &createOpts.EnableConsoleOutput),
+	)
 }
 
-func HandleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
+func handleDatabaseParametersChanges(d *schema.ResourceData, set *sdk.DatabaseSet, unset *sdk.DatabaseUnset) diag.Diagnostics {
+	return JoinDiags(
+		handleParameterUpdate(d, sdk.ObjectParameterDataRetentionTimeInDays, &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
+		handleParameterUpdate(d, sdk.ObjectParameterMaxDataExtensionTimeInDays, &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterExternalVolume, &set.ExternalVolume, &unset.ExternalVolume, stringToAccountObjectIdentifier),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterCatalog, &set.Catalog, &unset.Catalog, stringToAccountObjectIdentifier),
+		handleParameterUpdate(d, sdk.ObjectParameterReplaceInvalidCharacters, &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
+		handleParameterUpdate(d, sdk.ObjectParameterDefaultDDLCollation, &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterStorageSerializationPolicy, &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterLogLevel, &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterTraceLevel, &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
+		handleParameterUpdate(d, sdk.ObjectParameterSuspendTaskAfterNumFailures, &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
+		handleParameterUpdate(d, sdk.ObjectParameterTaskAutoRetryAttempts, &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
+		handleParameterUpdateWithMapping(d, sdk.ObjectParameterUserTaskManagedInitialWarehouseSize, &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
+		handleParameterUpdate(d, sdk.ObjectParameterUserTaskTimeoutMs, &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
+		handleParameterUpdate(d, sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds, &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
+		handleParameterUpdate(d, sdk.ObjectParameterQuotedIdentifiersIgnoreCase, &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
+		handleParameterUpdate(d, sdk.ObjectParameterEnableConsoleOutput, &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
+	)
+}
+
+func handleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*sdk.Parameter) diag.Diagnostics {
 	for _, parameter := range databaseParameters {
 		switch parameter.Key {
 		case

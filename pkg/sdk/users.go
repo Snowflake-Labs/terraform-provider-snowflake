@@ -23,6 +23,7 @@ type Users interface {
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
+	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Users = (*users)(nil)
@@ -604,4 +605,12 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *users) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			User: id,
+		},
+	})
 }

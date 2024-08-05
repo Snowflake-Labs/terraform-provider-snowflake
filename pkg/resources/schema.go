@@ -6,21 +6,16 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 var schemaSchema = map[string]*schema.Schema{
@@ -57,12 +52,6 @@ var schemaSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("options", func(x any) any {
 			return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "TRANSIENT")
 		}),
-	},
-	strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)): {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role. For more information, see [PIPE_EXECUTION_PAUSED](https://docs.snowflake.com/en/sql-reference/parameters#pipe-execution-paused).",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -109,6 +98,7 @@ func Schema() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
+			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
 				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
@@ -128,29 +118,10 @@ func Schema() *schema.Resource {
 				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
 				strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)),
 			),
-			ParametersCustomDiff(
-				schemaParametersProvider,
-				parameter{sdk.AccountParameterDataRetentionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterMaxDataExtensionTimeInDays, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterExternalVolume, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterCatalog, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterReplaceInvalidCharacters, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterDefaultDDLCollation, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterStorageSerializationPolicy, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterLogLevel, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterTraceLevel, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterSuspendTaskAfterNumFailures, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterTaskAutoRetryAttempts, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterUserTaskManagedInitialWarehouseSize, valueTypeString, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterUserTaskTimeoutMs, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterUserTaskMinimumTriggerIntervalInSeconds, valueTypeInt, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterQuotedIdentifiersIgnoreCase, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterEnableConsoleOutput, valueTypeBool, sdk.ParameterTypeSchema},
-				parameter{sdk.AccountParameterPipeExecutionPaused, valueTypeBool, sdk.ParameterTypeSchema},
-			),
+			schemaParametersCustomDiff,
 		),
 
-		Schema: helpers.MergeMaps(schemaSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSchema,
 		},
@@ -197,16 +168,6 @@ func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-	return client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Schema: id,
-		},
-	})
-}
-
 func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
@@ -224,48 +185,14 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 			return UpdateContextSchema(ctx, d, meta)
 		}
 	}
-	// there is no PUBLIC schema, so we continue with creating
-	dataRetentionTimeInDays,
-		maxDataExtensionTimeInDays,
-		externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
 	opts := &sdk.CreateSchemaOptions{
-		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		PipeExecutionPaused:                     GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "pipe_execution_paused"),
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+		Comment: GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
 	}
+	if parametersCreateDiags := handleSchemaParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
+	}
+
 	if v := d.Get("is_transient").(string); v != BooleanDefault {
 		parsed, err := booleanStringToBool(v)
 		if err != nil {
@@ -339,30 +266,13 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		schemaParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Schema: id,
-			},
-		})
+		schemaParameters, err := client.Schemas.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		if diags := HandleDatabaseParameterRead(d, schemaParameters); diags != nil {
+		if diags := handleSchemaParameterRead(d, schemaParameters); diags != nil {
 			return diags
-		}
-		pipeExecutionPaused, err := collections.FindOne(schemaParameters, func(property *sdk.Parameter) bool {
-			return property.Key == "PIPE_EXECUTION_PAUSED"
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find schema PIPE_EXECUTION_PAUSED parameter, err = %w", err))
-		}
-		value, err := strconv.ParseBool((*pipeExecutionPaused).Value)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)), value); err != nil {
-			return diag.FromErr(err)
 		}
 
 		if withExternalChangesMarking {
@@ -462,7 +372,7 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	if updateParamDiags := HandleSchemaParametersChanges(d, set, unset); len(updateParamDiags) > 0 {
+	if updateParamDiags := handleSchemaParametersChanges(d, set, unset); len(updateParamDiags) > 0 {
 		return updateParamDiags
 	}
 	if (*set != sdk.SchemaSet{}) {
@@ -484,32 +394,6 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return ReadContextSchema(false)(ctx, d, meta)
-}
-
-func HandleSchemaParametersChanges(d *schema.ResourceData, set *sdk.SchemaSet, unset *sdk.SchemaUnset) diag.Diagnostics {
-	return JoinDiags(
-		handleValuePropertyChange[int](d, "data_retention_time_in_days", &set.DataRetentionTimeInDays, &unset.DataRetentionTimeInDays),
-		handleValuePropertyChange[int](d, "max_data_extension_time_in_days", &set.MaxDataExtensionTimeInDays, &unset.MaxDataExtensionTimeInDays),
-		handleValuePropertyChangeWithMapping[string](d, "external_volume", &set.ExternalVolume, &unset.ExternalVolume, func(value string) (sdk.AccountObjectIdentifier, error) {
-			return sdk.NewAccountObjectIdentifier(value), nil
-		}),
-		handleValuePropertyChangeWithMapping[string](d, "catalog", &set.Catalog, &unset.Catalog, func(value string) (sdk.AccountObjectIdentifier, error) {
-			return sdk.NewAccountObjectIdentifier(value), nil
-		}),
-		handleValuePropertyChange[bool](d, "pipe_execution_paused", &set.PipeExecutionPaused, &unset.PipeExecutionPaused),
-		handleValuePropertyChange[bool](d, "replace_invalid_characters", &set.ReplaceInvalidCharacters, &unset.ReplaceInvalidCharacters),
-		handleValuePropertyChange[string](d, "default_ddl_collation", &set.DefaultDDLCollation, &unset.DefaultDDLCollation),
-		handleValuePropertyChangeWithMapping[string](d, "storage_serialization_policy", &set.StorageSerializationPolicy, &unset.StorageSerializationPolicy, sdk.ToStorageSerializationPolicy),
-		handleValuePropertyChangeWithMapping[string](d, "log_level", &set.LogLevel, &unset.LogLevel, sdk.ToLogLevel),
-		handleValuePropertyChangeWithMapping[string](d, "trace_level", &set.TraceLevel, &unset.TraceLevel, sdk.ToTraceLevel),
-		handleValuePropertyChange[int](d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
-		handleValuePropertyChange[int](d, "task_auto_retry_attempts", &set.TaskAutoRetryAttempts, &unset.TaskAutoRetryAttempts),
-		handleValuePropertyChangeWithMapping[string](d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
-		handleValuePropertyChange[int](d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
-		handleValuePropertyChange[int](d, "user_task_minimum_trigger_interval_in_seconds", &set.UserTaskMinimumTriggerIntervalInSeconds, &unset.UserTaskMinimumTriggerIntervalInSeconds),
-		handleValuePropertyChange[bool](d, "quoted_identifiers_ignore_case", &set.QuotedIdentifiersIgnoreCase, &unset.QuotedIdentifiersIgnoreCase),
-		handleValuePropertyChange[bool](d, "enable_console_output", &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
-	)
 }
 
 func DeleteContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

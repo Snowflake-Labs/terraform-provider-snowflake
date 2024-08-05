@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -59,7 +59,11 @@ func TestAcc_ObjectParameterAccount(t *testing.T) {
 }
 
 func TestAcc_UserParameter(t *testing.T) {
-	userName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	user, userCleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(userCleanup)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -69,7 +73,7 @@ func TestAcc_UserParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: userParameterConfigBasic(userName, "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true"),
+				Config: userParameterConfigBasic(user.ID(), "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
@@ -105,19 +109,15 @@ resource "snowflake_object_parameter" "p" {
 	return fmt.Sprintf(s, key, value, databaseName)
 }
 
-func userParameterConfigBasic(userName string, key string, value string) string {
-	s := `
-resource "snowflake_user" "user" {
-	name = "%s"
-}
+func userParameterConfigBasic(userId sdk.AccountObjectIdentifier, key string, value string) string {
+	return fmt.Sprintf(`
 resource "snowflake_object_parameter" "p" {
-	key = "%s"
-	value = "%s"
+	key = "%[2]s"
+	value = "%[3]s"
 	object_type = "USER"
 	object_identifier {
-		name = snowflake_user.user.name
+		name = %[1]s
 	}
 }
-`
-	return fmt.Sprintf(s, userName, key, value)
+`, userId.FullyQualifiedName(), key, value)
 }
