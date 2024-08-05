@@ -1,8 +1,10 @@
 package resources_test
 
 import (
+	"cmp"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -447,8 +449,9 @@ func TestAcc_Schema_Rename(t *testing.T) {
 	})
 }
 
-func TestAcc_Schema_ManagePublic(t *testing.T) {
+func TestAcc_Schema_ManagePublicVersion_0_94_0(t *testing.T) {
 	name := "PUBLIC"
+	schemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -469,13 +472,13 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
-				ConfigVariables: map[string]config.Variable{
-					"name":                  config.StringVariable(name),
-					"database":              config.StringVariable(acc.TestDatabaseName),
-					"pipe_execution_paused": config.BoolVariable(true),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
 				},
+				Config: schemav094WithPipeExecutionPaused(name, acc.TestDatabaseName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
@@ -483,13 +486,28 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Schema/basic_with_pipe_execution_paused"),
-				ConfigVariables: map[string]config.Variable{
-					"name":                  config.StringVariable(name),
-					"database":              config.StringVariable(acc.TestDatabaseName),
-					"pipe_execution_paused": config.BoolVariable(false),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
 				},
+				PreConfig: func() {
+					// In v0.94 `CREATE OR REPLACE` was called, so we should see a DROP event.
+					schemas := acc.TestClient().Schema.ShowWithOptions(t, &sdk.ShowSchemaOptions{
+						History: sdk.Pointer(true),
+						Like: &sdk.Like{
+							Pattern: sdk.String(schemaId.Name()),
+						},
+					})
+					require.Len(t, schemas, 2)
+					slices.SortFunc(schemas, func(x, y sdk.Schema) int {
+						return cmp.Compare(x.DroppedOn.Unix(), y.DroppedOn.Unix())
+					})
+					require.Zero(t, schemas[0].DroppedOn)
+					require.NotZero(t, schemas[1].DroppedOn)
+				},
+				Config: schemav094WithPipeExecutionPaused(name, acc.TestDatabaseName, false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionUpdate),
@@ -499,6 +517,70 @@ func TestAcc_Schema_ManagePublic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
+	name := "PUBLIC"
+
+	// use a separate db because this test relies on schema history
+	db, cleanupDb := acc.TestClient().Database.CreateDatabase(t)
+	t.Cleanup(cleanupDb)
+	schemaId := sdk.NewDatabaseObjectIdentifier(db.Name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
+		Steps: []resource.TestStep{
+			// PUBLIC can not be created in v0.93
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.93.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      schemav093(name, db.Name),
+				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   schemav094WithPipeExecutionPaused(name, db.Name, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.Name),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "true"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				PreConfig: func() {
+					// In newer versions, ALTER was called, so we should not see a DROP event.
+					schemas := acc.TestClient().Schema.ShowWithOptions(t, &sdk.ShowSchemaOptions{
+						History: sdk.Pointer(true),
+						Like: &sdk.Like{
+							Pattern: sdk.String(schemaId.Name()),
+						},
+					})
+					require.Len(t, schemas, 1)
+					require.Zero(t, schemas[0].DroppedOn)
+				},
+				Config: schemav094WithPipeExecutionPaused(name, db.Name, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.Name),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "true"),
 				),
 			},
 		},
@@ -948,4 +1030,15 @@ resource "snowflake_schema" "test" {
 }
 `
 	return fmt.Sprintf(s, name, database)
+}
+
+func schemav094WithPipeExecutionPaused(name, database string, pipeExecutionPaused bool) string {
+	s := `
+resource "snowflake_schema" "test" {
+	name             				= "%s"
+	database		 				= "%s"
+	pipe_execution_paused			= %t
+}
+`
+	return fmt.Sprintf(s, name, database, pipeExecutionPaused)
 }

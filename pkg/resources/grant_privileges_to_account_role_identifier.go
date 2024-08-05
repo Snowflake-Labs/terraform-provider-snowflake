@@ -30,10 +30,7 @@ type OnAccountObjectGrantData struct {
 }
 
 func (d *OnAccountObjectGrantData) String() string {
-	return strings.Join([]string{
-		d.ObjectType.String(),
-		d.ObjectName.FullyQualifiedName(),
-	}, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(d.ObjectType.String(), d.ObjectName.FullyQualifiedName())
 }
 
 type GrantPrivilegesToAccountRoleId struct {
@@ -61,13 +58,13 @@ func (g *GrantPrivilegesToAccountRoleId) String() string {
 	if len(data) > 0 {
 		parts = append(parts, data)
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 func ParseGrantPrivilegesToAccountRoleId(id string) (GrantPrivilegesToAccountRoleId, error) {
 	var accountRoleId GrantPrivilegesToAccountRoleId
 
-	parts := strings.Split(id, helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(id)
 	if len(parts) < 5 {
 		return accountRoleId, sdk.NewError(`account role identifier should hold at least 5 parts "<role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>"`)
 	}

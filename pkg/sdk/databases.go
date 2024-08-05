@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -50,7 +51,7 @@ type Database struct {
 	Name          string
 	IsDefault     bool
 	IsCurrent     bool
-	Origin        string
+	Origin        *ExternalObjectIdentifier
 	Owner         string
 	Comment       string
 	Options       string
@@ -97,8 +98,14 @@ func (row databaseRow) convert() *Database {
 	if row.IsCurrent.Valid {
 		database.IsCurrent = row.IsCurrent.String == "Y"
 	}
-	if row.Origin.Valid {
-		database.Origin = row.Origin.String
+	if row.Origin.Valid && row.Origin.String != "" {
+		originId, err := ParseExternalObjectIdentifier(row.Origin.String)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] unable to parse origin ID: %v", row.Origin.String)
+		} else {
+			database.Origin = &originId
+		}
 	}
 	if row.Owner.Valid {
 		database.Owner = row.Owner.String

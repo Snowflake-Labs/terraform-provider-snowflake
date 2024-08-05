@@ -50,14 +50,20 @@ func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountO
 
 func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
+	return func() { require.NoError(t, c.DropDatabase(t, id)) }
+}
+
+func (c *DatabaseClient) DropDatabase(t *testing.T, id sdk.AccountObjectIdentifier) error {
+	t.Helper()
 	ctx := context.Background()
 
-	return func() {
-		err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
-		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
-		require.NoError(t, err)
+	if err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)}); err != nil {
+		return err
 	}
+	if err := c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *DatabaseClient) CreateSecondaryDatabaseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
