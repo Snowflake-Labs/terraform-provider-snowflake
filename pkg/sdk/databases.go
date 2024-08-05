@@ -37,6 +37,7 @@ type Databases interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
 	Use(ctx context.Context, id AccountObjectIdentifier) error
+	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Databases = (*databases)(nil)
@@ -851,4 +852,12 @@ func (v *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 func (v *databases) Use(ctx context.Context, id AccountObjectIdentifier) error {
 	// proxy to sessions
 	return v.client.Sessions.UseDatabase(ctx, id)
+}
+
+func (v *databases) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Database: id,
+		},
+	})
 }

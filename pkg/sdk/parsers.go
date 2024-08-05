@@ -32,7 +32,7 @@ func ParseCommaSeparatedStringArray(value string, trimQuotes bool) []string {
 	for i, item := range listItems {
 		trimmedListItems[i] = strings.TrimSpace(item)
 		if trimQuotes {
-			trimmedListItems[i] = strings.Trim(trimmedListItems[i], "'")
+			trimmedListItems[i] = strings.Trim(trimmedListItems[i], "'\"")
 		}
 	}
 	return trimmedListItems

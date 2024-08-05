@@ -146,11 +146,7 @@ func ReadDatabases(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 
 		var databaseParameters []map[string]any
 		if d.Get("with_parameters").(bool) {
-			parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-				In: &sdk.ParametersIn{
-					Database: database.ID(),
-				},
-			})
+			parameters, err := client.Databases.ShowParameters(ctx, database.ID())
 			if err != nil {
 				return diag.FromErr(err)
 			}

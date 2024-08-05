@@ -114,7 +114,8 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		assert.Equal(t, databaseId.Name(), database.Name)
 		assert.Equal(t, comment, database.Comment)
 
-		params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+		params, err := client.Databases.ShowParameters(ctx, databaseId)
+		require.NoError(t, err)
 		assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 			t.Helper()
 			assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
@@ -226,7 +227,8 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+	params, err := client.Databases.ShowParameters(ctx, databaseId)
+	require.NoError(t, err)
 	assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
 		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
@@ -310,7 +312,8 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	assert.Equal(t, databaseId.Name(), database.Name)
 	assert.Equal(t, comment, database.Comment)
 
-	params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseId)
+	params, err := client.Databases.ShowParameters(ctx, databaseId)
+	require.NoError(t, err)
 	assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
 		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
@@ -492,7 +495,8 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			params := testClientHelper().Parameter.ShowDatabaseParameters(t, databaseTest.ID())
+			params, err := client.Databases.ShowParameters(ctx, databaseTest.ID())
+			require.NoError(t, err)
 			assertDatabaseParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, "42")
 			assertDatabaseParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, "42")
 			assertDatabaseParameterEquals(t, params, sdk.AccountParameterExternalVolume, externalVolumeTest.Name())
@@ -532,7 +536,8 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			params = testClientHelper().Parameter.ShowDatabaseParameters(t, databaseTest.ID())
+			params, err = client.Databases.ShowParameters(ctx, databaseTest.ID())
+			require.NoError(t, err)
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
 			assertDatabaseParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)

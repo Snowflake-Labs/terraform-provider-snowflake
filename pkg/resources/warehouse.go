@@ -150,24 +150,18 @@ var warehouseSchema = map[string]*schema.Schema{
 }
 
 func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Warehouse: id,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return warehouseParameters, nil
+	return parametersProvider(ctx, d, meta.(*provider.Context), warehouseParametersProviderFunc)
+}
+
+func warehouseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
+	return c.Warehouses.ShowParameters
 }
 
 func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {
 	return JoinDiags(
-		handleValuePropertyChange[int](d, "max_concurrency_level", &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
-		handleValuePropertyChange[int](d, "statement_queued_timeout_in_seconds", &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
-		handleValuePropertyChange[int](d, "statement_timeout_in_seconds", &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
+		handleParameterUpdate(d, sdk.ObjectParameterMaxConcurrencyLevel, &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
+		handleParameterUpdate(d, sdk.ObjectParameterStatementQueuedTimeoutInSeconds, &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
+		handleParameterUpdate(d, sdk.ObjectParameterStatementTimeoutInSeconds, &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
 	)
 }
 
@@ -215,9 +209,9 @@ func Warehouse() *schema.Resource {
 			}),
 			ParametersCustomDiff(
 				warehouseParametersProvider,
-				parameter{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
-				parameter{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
-				parameter{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
 			),
 		),
 
@@ -385,11 +379,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Warehouse: id,
-			},
-		})
+		warehouseParameters, err := client.Warehouses.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}

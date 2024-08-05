@@ -44,7 +44,8 @@ func TestInt_Schemas(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, schemaId.Name(), database.Name)
 
-		params := testClientHelper().Parameter.ShowSchemaParameters(t, schemaId)
+		params, err := client.Schemas.ShowParameters(ctx, schemaId)
+		require.NoError(t, err)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
@@ -217,7 +218,8 @@ func TestInt_Schemas(t *testing.T) {
 		assert.Equal(t, schemaId.Name(), schema.Name)
 		assert.Equal(t, comment, schema.Comment)
 
-		params := testClientHelper().Parameter.ShowSchemaParameters(t, schemaId)
+		params, err := client.Schemas.ShowParameters(ctx, schemaId)
+		require.NoError(t, err)
 		assertParameterEquals := func(t *testing.T, parameterName sdk.AccountParameter, expected string) {
 			t.Helper()
 			assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
@@ -331,7 +333,8 @@ func TestInt_Schemas(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		params := testClientHelper().Parameter.ShowSchemaParameters(t, schemaTest.ID())
+		params, err := client.Schemas.ShowParameters(ctx, schemaTest.ID())
+		require.NoError(t, err)
 		assertParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, "42")
 		assertParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, "42")
 		assertParameterEquals(t, params, sdk.AccountParameterExternalVolume, externalVolumeTest.Name())
@@ -373,7 +376,8 @@ func TestInt_Schemas(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		params = testClientHelper().Parameter.ShowSchemaParameters(t, schemaTest.ID())
+		params, err = client.Schemas.ShowParameters(ctx, schemaTest.ID())
+		require.NoError(t, err)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)

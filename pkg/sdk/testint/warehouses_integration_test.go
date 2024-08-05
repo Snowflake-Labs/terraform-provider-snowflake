@@ -284,7 +284,8 @@ func TestInt_Warehouses(t *testing.T) {
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
-		parameters := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parameters, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 
 		assert.Equal(t, "8", helpers.FindParameter(t, parameters, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
@@ -297,10 +298,11 @@ func TestInt_Warehouses(t *testing.T) {
 				StatementTimeoutInSeconds:       sdk.Int(86400),
 			},
 		}
-		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		parametersAfterSet := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parametersAfterSet, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 		assert.Equal(t, "4", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "2", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
 		assert.Equal(t, "86400", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementTimeoutInSeconds).Value)
@@ -315,7 +317,8 @@ func TestInt_Warehouses(t *testing.T) {
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		parametersAfterUnset := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parametersAfterUnset, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 		assert.Equal(t, "8", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "0", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
 		assert.Equal(t, "172800", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementTimeoutInSeconds).Value)

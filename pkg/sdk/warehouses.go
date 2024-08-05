@@ -28,6 +28,7 @@ type Warehouses interface {
 	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
+	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Warehouses = (*warehouses)(nil)
@@ -620,4 +621,12 @@ func (v *Warehouse) ID() AccountObjectIdentifier {
 
 func (v *Warehouse) ObjectType() ObjectType {
 	return ObjectTypeWarehouse
+}
+
+func (c *warehouses) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {
+	return c.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Warehouse: id,
+		},
+	})
 }

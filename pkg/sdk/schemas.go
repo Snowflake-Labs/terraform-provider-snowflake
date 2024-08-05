@@ -28,6 +28,7 @@ type Schemas interface {
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
 	Use(ctx context.Context, id DatabaseObjectIdentifier) error
+	ShowParameters(ctx context.Context, id DatabaseObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Schemas = (*schemas)(nil)
@@ -572,4 +573,12 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {
 	return v.client.Sessions.UseSchema(ctx, id)
+}
+
+func (v *schemas) ShowParameters(ctx context.Context, id DatabaseObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Schema: id,
+		},
+	})
 }

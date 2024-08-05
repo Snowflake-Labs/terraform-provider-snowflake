@@ -84,12 +84,12 @@ func Database() *schema.Resource {
 		DeleteContext: DeleteDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		Schema: helpers.MergeMaps(databaseSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
+		CustomizeDiff: databaseParametersCustomDiff,
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -107,47 +107,15 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	dataRetentionTimeInDays,
-		maxDataExtensionTimeInDays,
-		externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
+	opts := &sdk.CreateDatabaseOptions{
+		Transient: GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
+		Comment:   GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if parametersCreateDiags := handleDatabaseParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
 	}
 
-	err = client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
-		Transient:                               GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
-		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	})
+	err := client.Databases.Create(ctx, id, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -235,7 +203,7 @@ func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	databaseSetRequest := new(sdk.DatabaseSet)
 	databaseUnsetRequest := new(sdk.DatabaseUnset)
 
-	if updateParamDiags := HandleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+	if updateParamDiags := handleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
 	}
 
@@ -440,16 +408,12 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		}
 	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
+	databaseParameters, err := client.Databases.ShowParameters(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, databaseParameters); diags != nil {
 		return diags
 	}
 

@@ -48,9 +48,8 @@ func TestInt_Users(t *testing.T) {
 	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
 
-	assertParametersSet := func(t *testing.T, id sdk.AccountObjectIdentifier) {
-		t.Helper()
-		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
+	assertParametersSet := func(userParametersAssert *objectparametersassert.UserParametersAssert) {
+		assertions.AssertThatObject(t, userParametersAssert.
 			HasEnableUnredactedQuerySyntaxError(true).
 			HasNetworkPolicy(networkPolicy.ID().Name()).
 			HasPreventUnloadToInternalStages(true).
@@ -521,7 +520,12 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertParametersSet(t, id)
+		assertParametersSet(objectparametersassert.UserParameters(t, id))
+
+		// check that ShowParameters works too
+		parameters, err := client.Users.ShowParameters(ctx, id)
+		require.NoError(t, err)
+		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 	})
 
 	t.Run("create: with all parameters default", func(t *testing.T) {
@@ -532,6 +536,14 @@ func TestInt_Users(t *testing.T) {
 		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
 		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		// check that ShowParameters works too
+		parameters, err := client.Users.ShowParameters(ctx, id)
+		require.NoError(t, err)
+		assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -736,7 +748,12 @@ func TestInt_Users(t *testing.T) {
 		err = client.Users.Alter(ctx, id, alterOpts)
 		require.NoError(t, err)
 
-		assertParametersSet(t, id)
+		assertParametersSet(objectparametersassert.UserParameters(t, id))
+
+		// check that ShowParameters works too
+		parameters, err := client.Users.ShowParameters(ctx, id)
+		require.NoError(t, err)
+		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 
 		// unset is split into two because:
 		// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
@@ -821,6 +838,14 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 
 		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		// check that ShowParameters works too
+		parameters, err = client.Users.ShowParameters(ctx, id)
+		require.NoError(t, err)
+		assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)

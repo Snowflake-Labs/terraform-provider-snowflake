@@ -13,23 +13,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func StringParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func StringParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return value.(string) })
 }
 
-func IntParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func IntParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.Itoa(value.(int)) })
 }
 
-func BoolParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
 }
 
-func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, accountParameter sdk.AccountParameter, valueToString func(v any) string) schema.CustomizeDiffFunc {
+func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, param T, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(accountParameter) })
+		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
 		if err != nil {
-			log.Printf("[WARN] failed to find account parameter: %s", accountParameter)
+			log.Printf("[WARN] failed to find parameter: %s", param)
 			return nil
 		}
 		parameter := *foundParameter
@@ -98,8 +98,8 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	})
 }
 
-type parameter struct {
-	parameterName sdk.AccountParameter
+type parameter[T ~string] struct {
+	parameterName T
 	valueType     valueType
 	parameterType sdk.ParameterType
 }
@@ -116,7 +116,7 @@ type ResourceIdProvider interface {
 	Id() string
 }
 
-func ParametersCustomDiff(parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter) schema.CustomizeDiffFunc {
+func ParametersCustomDiff[T ~string](parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter[T]) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		if d.Id() == "" {
 			return nil
