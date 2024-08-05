@@ -46,15 +46,15 @@ type ViewColumnProjectionPolicy struct {
 }
 type ViewColumnMaskingPolicy struct {
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
+	Using         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"USING"`
 }
 type ViewRowAccessPolicy struct {
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+	On              []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
 type ViewAggregationPolicy struct {
 	AggregationPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"AGGREGATION POLICY"`
-	EntityKey         []string               `ddl:"keyword,parentheses" sql:"ENTITY KEY"`
+	EntityKey         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
 }
 
 // AlterViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-view.
@@ -71,6 +71,10 @@ type AlterViewOptions struct {
 	UnsetSecure                   *bool                          `ddl:"keyword" sql:"UNSET SECURE"`
 	SetTags                       []TagAssociation               `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags                     []ObjectIdentifier             `ddl:"keyword" sql:"UNSET TAG"`
+	AddDataMetricFunction         *ViewAddDataMetricFunction     `ddl:"keyword"`
+	DropDataMetricFunction        *ViewDropDataMetricFunction    `ddl:"keyword"`
+	SetDataMetricSchedule         *ViewSetDataMetricSchedule     `ddl:"keyword"`
+	UnsetDataMetricSchedule       *ViewUnsetDataMetricSchedule   `ddl:"keyword"`
 	AddRowAccessPolicy            *ViewAddRowAccessPolicy        `ddl:"keyword"`
 	DropRowAccessPolicy           *ViewDropRowAccessPolicy       `ddl:"keyword"`
 	DropAndAddRowAccessPolicy     *ViewDropAndAddRowAccessPolicy `ddl:"list,no_parentheses"`
@@ -84,10 +88,47 @@ type AlterViewOptions struct {
 	SetTagsOnColumn               *ViewSetColumnTags             `ddl:"keyword"`
 	UnsetTagsOnColumn             *ViewUnsetColumnTags           `ddl:"keyword"`
 }
+type DoubleQuotedString struct {
+	Name string `ddl:"keyword,double_quotes"`
+}
+type ViewDataMetricFunction struct {
+	DataMetricFunction SchemaObjectIdentifier `ddl:"identifier"`
+	On                 []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
+}
+type ViewAddDataMetricFunction struct {
+	add                bool                     `ddl:"static" sql:"ADD"`
+	DataMetricFunction []ViewDataMetricFunction `ddl:"parameter,no_equals" sql:"DATA METRIC FUNCTION"`
+}
+type ViewDropDataMetricFunction struct {
+	drop               bool                     `ddl:"static" sql:"DROP"`
+	DataMetricFunction []ViewDataMetricFunction `ddl:"parameter,no_equals" sql:"DATA METRIC FUNCTION"`
+}
+type ViewSetDataMetricSchedule struct {
+	setDataMetricSchedule bool           `ddl:"static" sql:"SET DATA_METRIC_SCHEDULE ="`
+	Minutes               *ViewMinute    `ddl:"keyword"`
+	UsingCron             *ViewUsingCron `ddl:"keyword"`
+	TriggerOnChanges      *bool          `ddl:"keyword,single_quotes" sql:"TRIGGER_ON_CHANGES"`
+}
+type ViewMinute struct {
+	prefix  bool `ddl:"static" sql:"'"`
+	Minutes int  `ddl:"keyword"`
+	suffix  bool `ddl:"static" sql:"MINUTE'"`
+}
+type ViewUsingCron struct {
+	prefix bool   `ddl:"static" sql:"'USING CRON"`
+	Cron   string `ddl:"keyword"`
+	suffix bool   `ddl:"static" sql:"'"`
+}
+type ViewTriggerOnChanges struct {
+	triggerOnChanges bool `ddl:"static" sql:"TRIGGER_ON_CHANGES"`
+}
+type ViewUnsetDataMetricSchedule struct {
+	unsetDataMetricSchedule bool `ddl:"static" sql:"UNSET DATA_METRIC_SCHEDULE"`
+}
 type ViewAddRowAccessPolicy struct {
 	add             bool                   `ddl:"static" sql:"ADD"`
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+	On              []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
 type ViewDropRowAccessPolicy struct {
 	drop            bool                   `ddl:"static" sql:"DROP"`
@@ -100,7 +141,7 @@ type ViewDropAndAddRowAccessPolicy struct {
 type ViewSetAggregationPolicy struct {
 	set               bool                   `ddl:"static" sql:"SET"`
 	AggregationPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"AGGREGATION POLICY"`
-	EntityKey         []string               `ddl:"keyword,parentheses" sql:"ENTITY KEY"`
+	EntityKey         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
 	Force             *bool                  `ddl:"keyword" sql:"FORCE"`
 }
 type ViewUnsetAggregationPolicy struct {
@@ -112,7 +153,7 @@ type ViewSetColumnMaskingPolicy struct {
 	Name          string                 `ddl:"keyword,double_quotes"`
 	set           bool                   `ddl:"static" sql:"SET"`
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
+	Using         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"USING"`
 	Force         *bool                  `ddl:"keyword" sql:"FORCE"`
 }
 type ViewUnsetColumnMaskingPolicy struct {

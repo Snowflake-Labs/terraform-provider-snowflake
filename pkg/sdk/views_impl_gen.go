@@ -129,6 +129,42 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 		DropAllRowAccessPolicies: r.DropAllRowAccessPolicies,
 	}
 
+	if r.AddDataMetricFunction != nil {
+		opts.AddDataMetricFunction = &ViewAddDataMetricFunction{
+			DataMetricFunction: r.AddDataMetricFunction.DataMetricFunction,
+		}
+	}
+
+	if r.DropDataMetricFunction != nil {
+		opts.DropDataMetricFunction = &ViewDropDataMetricFunction{
+			DataMetricFunction: r.DropDataMetricFunction.DataMetricFunction,
+		}
+	}
+
+	if r.SetDataMetricSchedule != nil {
+
+		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
+			TriggerOnChanges: r.SetDataMetricSchedule.TriggerOnChanges,
+		}
+
+		if r.SetDataMetricSchedule.Minutes != nil {
+			opts.SetDataMetricSchedule.Minutes = &ViewMinute{
+				Minutes: r.SetDataMetricSchedule.Minutes.Minutes,
+			}
+		}
+
+		if r.SetDataMetricSchedule.UsingCron != nil {
+			opts.SetDataMetricSchedule.UsingCron = &ViewUsingCron{
+				Cron: r.SetDataMetricSchedule.UsingCron.Cron,
+			}
+		}
+
+	}
+
+	if r.UnsetDataMetricSchedule != nil {
+		opts.UnsetDataMetricSchedule = &ViewUnsetDataMetricSchedule{}
+	}
+
 	if r.AddRowAccessPolicy != nil {
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
 			RowAccessPolicy: r.AddRowAccessPolicy.RowAccessPolicy,

@@ -113,14 +113,14 @@ func NewViewColumnMaskingPolicyRequest(
 	return &s
 }
 
-func (s *ViewColumnMaskingPolicyRequest) WithUsing(Using []string) *ViewColumnMaskingPolicyRequest {
+func (s *ViewColumnMaskingPolicyRequest) WithUsing(Using []DoubleQuotedString) *ViewColumnMaskingPolicyRequest {
 	s.Using = Using
 	return s
 }
 
 func NewViewRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
-	On []string,
+	On []DoubleQuotedString,
 ) *ViewRowAccessPolicyRequest {
 	s := ViewRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
@@ -136,7 +136,7 @@ func NewViewAggregationPolicyRequest(
 	return &s
 }
 
-func (s *ViewAggregationPolicyRequest) WithEntityKey(EntityKey []string) *ViewAggregationPolicyRequest {
+func (s *ViewAggregationPolicyRequest) WithEntityKey(EntityKey []DoubleQuotedString) *ViewAggregationPolicyRequest {
 	s.EntityKey = EntityKey
 	return s
 }
@@ -191,6 +191,26 @@ func (s *AlterViewRequest) WithSetTags(SetTags []TagAssociation) *AlterViewReque
 
 func (s *AlterViewRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterViewRequest {
 	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterViewRequest) WithAddDataMetricFunction(AddDataMetricFunction ViewAddDataMetricFunctionRequest) *AlterViewRequest {
+	s.AddDataMetricFunction = &AddDataMetricFunction
+	return s
+}
+
+func (s *AlterViewRequest) WithDropDataMetricFunction(DropDataMetricFunction ViewDropDataMetricFunctionRequest) *AlterViewRequest {
+	s.DropDataMetricFunction = &DropDataMetricFunction
+	return s
+}
+
+func (s *AlterViewRequest) WithSetDataMetricSchedule(SetDataMetricSchedule ViewSetDataMetricScheduleRequest) *AlterViewRequest {
+	s.SetDataMetricSchedule = &SetDataMetricSchedule
+	return s
+}
+
+func (s *AlterViewRequest) WithUnsetDataMetricSchedule(UnsetDataMetricSchedule ViewUnsetDataMetricScheduleRequest) *AlterViewRequest {
+	s.UnsetDataMetricSchedule = &UnsetDataMetricSchedule
 	return s
 }
 
@@ -254,9 +274,64 @@ func (s *AlterViewRequest) WithUnsetTagsOnColumn(UnsetTagsOnColumn ViewUnsetColu
 	return s
 }
 
+func NewViewAddDataMetricFunctionRequest(
+	DataMetricFunction []ViewDataMetricFunction,
+) *ViewAddDataMetricFunctionRequest {
+	s := ViewAddDataMetricFunctionRequest{}
+	s.DataMetricFunction = DataMetricFunction
+	return &s
+}
+
+func NewViewDropDataMetricFunctionRequest(
+	DataMetricFunction []ViewDataMetricFunction,
+) *ViewDropDataMetricFunctionRequest {
+	s := ViewDropDataMetricFunctionRequest{}
+	s.DataMetricFunction = DataMetricFunction
+	return &s
+}
+
+func NewViewSetDataMetricScheduleRequest() *ViewSetDataMetricScheduleRequest {
+	return &ViewSetDataMetricScheduleRequest{}
+}
+
+func (s *ViewSetDataMetricScheduleRequest) WithMinutes(Minutes ViewMinuteRequest) *ViewSetDataMetricScheduleRequest {
+	s.Minutes = &Minutes
+	return s
+}
+
+func (s *ViewSetDataMetricScheduleRequest) WithUsingCron(UsingCron ViewUsingCronRequest) *ViewSetDataMetricScheduleRequest {
+	s.UsingCron = &UsingCron
+	return s
+}
+
+func (s *ViewSetDataMetricScheduleRequest) WithTriggerOnChanges(TriggerOnChanges bool) *ViewSetDataMetricScheduleRequest {
+	s.TriggerOnChanges = &TriggerOnChanges
+	return s
+}
+
+func NewViewMinuteRequest(
+	Minutes int,
+) *ViewMinuteRequest {
+	s := ViewMinuteRequest{}
+	s.Minutes = Minutes
+	return &s
+}
+
+func NewViewUsingCronRequest(
+	Cron string,
+) *ViewUsingCronRequest {
+	s := ViewUsingCronRequest{}
+	s.Cron = Cron
+	return &s
+}
+
+func NewViewUnsetDataMetricScheduleRequest() *ViewUnsetDataMetricScheduleRequest {
+	return &ViewUnsetDataMetricScheduleRequest{}
+}
+
 func NewViewAddRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
-	On []string,
+	On []DoubleQuotedString,
 ) *ViewAddRowAccessPolicyRequest {
 	s := ViewAddRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
@@ -290,7 +365,7 @@ func NewViewSetAggregationPolicyRequest(
 	return &s
 }
 
-func (s *ViewSetAggregationPolicyRequest) WithEntityKey(EntityKey []string) *ViewSetAggregationPolicyRequest {
+func (s *ViewSetAggregationPolicyRequest) WithEntityKey(EntityKey []DoubleQuotedString) *ViewSetAggregationPolicyRequest {
 	s.EntityKey = EntityKey
 	return s
 }
@@ -314,7 +389,7 @@ func NewViewSetColumnMaskingPolicyRequest(
 	return &s
 }
 
-func (s *ViewSetColumnMaskingPolicyRequest) WithUsing(Using []string) *ViewSetColumnMaskingPolicyRequest {
+func (s *ViewSetColumnMaskingPolicyRequest) WithUsing(Using []DoubleQuotedString) *ViewSetColumnMaskingPolicyRequest {
 	s.Using = Using
 	return s
 }

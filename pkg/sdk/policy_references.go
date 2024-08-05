@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 )
 
 var _ convertibleRow[PolicyReference] = new(policyReferenceDBRow)
@@ -31,6 +33,35 @@ const (
 	PolicyEntityDomainUser        PolicyEntityDomain = "USER"
 	PolicyEntityDomainView        PolicyEntityDomain = "VIEW"
 )
+
+var AllPolicyEntityDomains = []PolicyEntityDomain{
+	PolicyEntityDomainAccount,
+	PolicyEntityDomainIntegration,
+	PolicyEntityDomainTable,
+	PolicyEntityDomainTag,
+	PolicyEntityDomainUser,
+	PolicyEntityDomainView,
+}
+
+func ToPolicyEntityDomain(s string) (PolicyEntityDomain, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(PolicyEntityDomainAccount):
+		return PolicyEntityDomainAccount, nil
+	case string(PolicyEntityDomainIntegration):
+		return PolicyEntityDomainIntegration, nil
+	case string(PolicyEntityDomainTable):
+		return PolicyEntityDomainTable, nil
+	case string(PolicyEntityDomainTag):
+		return PolicyEntityDomainTag, nil
+	case string(PolicyEntityDomainUser):
+		return PolicyEntityDomainUser, nil
+	case string(PolicyEntityDomainView):
+		return PolicyEntityDomainView, nil
+	default:
+		return "", fmt.Errorf("invalid PolicyEntityDomain: %s", s)
+	}
+}
 
 type policyReferenceFunctionArguments struct {
 	refEntityName   []ObjectIdentifier  `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_NAME"`

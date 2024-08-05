@@ -34,6 +34,7 @@ var view = g.PlainStruct("View").
 	Text("OwnerRoleType").
 	Text("ChangeTracking")
 
+// TODO [SNOW-965322]: extract common type for describe
 var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
 	Text("name").
 	Field("type", "DataType").
@@ -62,8 +63,21 @@ var viewDetails = g.PlainStruct("ViewDetails").
 	OptionalText("PolicyName").
 	OptionalText("PrivacyDomain")
 
-// var viewColumnMaskingPolicyUsing = g.NewQueryStruct("ViewColumnMaskingPolicyUsing").
-// 	Text("Name", g.KeywordOptions().Required().DoubleQuotes())
+var doubleQuotedStringDef = g.NewQueryStruct("DoubleQuotedString").
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes())
+
+var viewMinute = g.NewQueryStruct("ViewMinute").
+	Number("Minutes", g.KeywordOptions().Required()).
+	SQL("MINUTE")
+
+var viewUsingCron = g.NewQueryStruct("ViewUsingCron").
+	SQL("USING CRON").
+	Text("Cron", g.KeywordOptions().Required())
+
+var dataMetricFunctionDef = g.NewQueryStruct("ViewDataMetricFunction").
+	Identifier("DataMetricFunction", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
+	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
+	WithValidation(g.ValidIdentifier, "DataMetricFunction")
 
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
@@ -74,25 +88,43 @@ var viewColumn = g.NewQueryStruct("ViewColumn").
 
 var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	NamedListWithParens("USING", g.KindOfT[string](), g.KeywordOptions().DoubleQuotes()) // TODO: double quotes here?
+	ListAssignment("USING", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses())
 
 var viewColumnProjectionPolicy = g.NewQueryStruct("ViewColumnProjectionPolicy").
 	Identifier("ProjectionPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required())
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
+	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewAggregationPolicy = g.NewQueryStruct("ViewAggregationPolicy").
 	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
-	NamedListWithParens("ENTITY KEY", g.KindOfT[string](), g.KeywordOptions()). // TODO: double quotes here?
+	ListAssignment("ENTITY KEY", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "AggregationPolicy")
+
+var viewAddDataMetricFunction = g.NewQueryStruct("ViewAddDataMetricFunction").
+	SQL("ADD").
+	ListAssignment("DATA METRIC FUNCTION", "ViewDataMetricFunction", g.ParameterOptions().NoEquals().Required())
+
+var viewDropDataMetricFunction = g.NewQueryStruct("ViewDropDataMetricFunction").
+	SQL("DROP").
+	ListAssignment("DATA METRIC FUNCTION", "ViewDataMetricFunction", g.ParameterOptions().NoEquals().Required())
+
+var viewSetDataMetricSchedule = g.NewQueryStruct("ViewSetDataMetricSchedule").
+	SQL("SET DATA_METRIC_SCHEDULE =").
+	OptionalQueryStructField("Minutes", viewMinute, g.KeywordOptions()).
+	OptionalQueryStructField("UsingCron", viewUsingCron, g.KeywordOptions()).
+	OptionalSQL("TRIGGER_ON_CHANGES").
+	WithValidation(g.ExactlyOneValueSet, "Minutes", "UsingCron", "TriggerOnChanges")
+
+var viewUnsetDataMetricSchedule = g.NewQueryStruct("ViewUnsetDataMetricSchedule").
+	SQL("UNSET DATA_METRIC_SCHEDULE")
 
 var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
 	SQL("ADD").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
+	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewDropRowAccessPolicy = g.NewQueryStruct("ViewDropRowAccessPolicy").
@@ -107,7 +139,7 @@ var viewDropAndAddRowAccessPolicy = g.NewQueryStruct("ViewDropAndAddRowAccessPol
 var viewSetAggregationPolicy = g.NewQueryStruct("ViewSetAggregationPolicy").
 	SQL("SET").
 	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
-	NamedListWithParens("ENTITY KEY", g.KindOfT[string](), g.KeywordOptions()). // TODO: double quotes here?
+	ListAssignment("ENTITY KEY", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
 	OptionalSQL("FORCE").
 	WithValidation(g.ValidIdentifier, "AggregationPolicy")
 
@@ -121,7 +153,7 @@ var viewSetColumnMaskingPolicy = g.NewQueryStruct("ViewSetColumnMaskingPolicy").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SQL("SET").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	NamedListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
+	ListAssignment("USING", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
 	OptionalSQL("FORCE")
 
 var viewUnsetColumnMaskingPolicy = g.NewQueryStruct("ViewUnsetColumnMaskingPolicy").
@@ -194,7 +226,8 @@ var ViewsDef = g.NewInterface(
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	).
-	AlterOperation(
+	CustomOperation(
+		"Alter",
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-view",
 		g.NewQueryStruct("AlterView").
 			Alter().
@@ -209,6 +242,10 @@ var ViewsDef = g.NewInterface(
 			OptionalSQL("UNSET SECURE").
 			OptionalSetTags().
 			OptionalUnsetTags().
+			OptionalQueryStructField("AddDataMetricFunction", viewAddDataMetricFunction, g.KeywordOptions()).
+			OptionalQueryStructField("DropDataMetricFunction", viewDropDataMetricFunction, g.KeywordOptions()).
+			OptionalQueryStructField("SetDataMetricSchedule", viewSetDataMetricSchedule, g.KeywordOptions()).
+			OptionalQueryStructField("UnsetDataMetricSchedule", viewUnsetDataMetricSchedule, g.KeywordOptions()).
 			OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
@@ -222,10 +259,53 @@ var ViewsDef = g.NewInterface(
 			OptionalQueryStructField("SetTagsOnColumn", viewSetColumnTags, g.KeywordOptions()).
 			OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "AddColumn", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn").
+			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking",
+				"UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule",
+				"AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy",
+				"DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn",
+				"UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn",
+				"UnsetTagsOnColumn").
 			WithValidation(g.ConflictingFields, "IfExists", "SetSecure").
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
+		doubleQuotedStringDef,
+		dataMetricFunctionDef,
 	).
+	// AlterOperation(
+	// 	"https://docs.snowflake.com/en/sql-reference/sql/alter-view",
+	// 	g.NewQueryStruct("AlterView").
+	// 		Alter().
+	// 		SQL("VIEW").
+	// 		IfExists().
+	// 		Name().
+	// 		OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+	// 		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
+	// 		OptionalSQL("UNSET COMMENT").
+	// 		OptionalSQL("SET SECURE").
+	// 		OptionalBooleanAssignment("SET CHANGE_TRACKING", nil).
+	// 		OptionalSQL("UNSET SECURE").
+	// 		OptionalSetTags().
+	// 		OptionalUnsetTags().
+	// 		OptionalQueryStructField("AddDataMetricFunction", viewAddDataMetricFunction, g.KeywordOptions()).
+	// 		OptionalQueryStructField("DropDataMetricFunction", viewDropDataMetricFunction, g.KeywordOptions()).
+	// 		OptionalQueryStructField("SetDataMetricSchedule", viewSetDataMetricSchedule, g.KeywordOptions()).
+	// 		OptionalQueryStructField("UnsetDataMetricSchedule", viewUnsetDataMetricSchedule, g.KeywordOptions()).
+	// 		OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
+	// 		OptionalSQL("DROP ALL ROW ACCESS POLICIES").
+	// 		OptionalQueryStructField("SetAggregationPolicy", viewSetAggregationPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("UnsetAggregationPolicy", viewUnsetAggregationPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("SetMaskingPolicyOnColumn", viewSetColumnMaskingPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("UnsetMaskingPolicyOnColumn", viewUnsetColumnMaskingPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("SetProjectionPolicyOnColumn", viewSetProjectionPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("UnsetProjectionPolicyOnColumn", viewUnsetProjectionPolicy, g.KeywordOptions()).
+	// 		OptionalQueryStructField("SetTagsOnColumn", viewSetColumnTags, g.KeywordOptions()).
+	// 		OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
+	// 		WithValidation(g.ValidIdentifier, "name").
+	// 		WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "AddColumn", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn").
+	// 		WithValidation(g.ConflictingFields, "IfExists", "SetSecure").
+	// 		WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
+	// ).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-view",
 		g.NewQueryStruct("DropView").

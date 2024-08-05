@@ -44,17 +44,17 @@ type ViewColumnProjectionPolicyRequest struct {
 
 type ViewColumnMaskingPolicyRequest struct {
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []string
+	Using         []DoubleQuotedString
 }
 
 type ViewRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string               // required
+	On              []DoubleQuotedString   // required
 }
 
 type ViewAggregationPolicyRequest struct {
 	AggregationPolicy SchemaObjectIdentifier // required
-	EntityKey         []string
+	EntityKey         []DoubleQuotedString
 }
 
 type AlterViewRequest struct {
@@ -68,6 +68,10 @@ type AlterViewRequest struct {
 	UnsetSecure                   *bool
 	SetTags                       []TagAssociation
 	UnsetTags                     []ObjectIdentifier
+	AddDataMetricFunction         *ViewAddDataMetricFunctionRequest
+	DropDataMetricFunction        *ViewDropDataMetricFunctionRequest
+	SetDataMetricSchedule         *ViewSetDataMetricScheduleRequest
+	UnsetDataMetricSchedule       *ViewUnsetDataMetricScheduleRequest
 	AddRowAccessPolicy            *ViewAddRowAccessPolicyRequest
 	DropRowAccessPolicy           *ViewDropRowAccessPolicyRequest
 	DropAndAddRowAccessPolicy     *ViewDropAndAddRowAccessPolicyRequest
@@ -82,9 +86,33 @@ type AlterViewRequest struct {
 	UnsetTagsOnColumn             *ViewUnsetColumnTagsRequest
 }
 
+type ViewAddDataMetricFunctionRequest struct {
+	DataMetricFunction []ViewDataMetricFunction // required
+}
+
+type ViewDropDataMetricFunctionRequest struct {
+	DataMetricFunction []ViewDataMetricFunction // required
+}
+
+type ViewSetDataMetricScheduleRequest struct {
+	Minutes          *ViewMinuteRequest
+	UsingCron        *ViewUsingCronRequest
+	TriggerOnChanges *bool
+}
+
+type ViewMinuteRequest struct {
+	Minutes int // required
+}
+
+type ViewUsingCronRequest struct {
+	Cron string // required
+}
+
+type ViewUnsetDataMetricScheduleRequest struct{}
+
 type ViewAddRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string               // required
+	On              []DoubleQuotedString   // required
 }
 
 type ViewDropRowAccessPolicyRequest struct {
@@ -98,7 +126,7 @@ type ViewDropAndAddRowAccessPolicyRequest struct {
 
 type ViewSetAggregationPolicyRequest struct {
 	AggregationPolicy SchemaObjectIdentifier // required
-	EntityKey         []string
+	EntityKey         []DoubleQuotedString
 	Force             *bool
 }
 
@@ -107,7 +135,7 @@ type ViewUnsetAggregationPolicyRequest struct{}
 type ViewSetColumnMaskingPolicyRequest struct {
 	Name          string                 // required
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []string
+	Using         []DoubleQuotedString
 	Force         *bool
 }
 

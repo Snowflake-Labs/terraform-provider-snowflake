@@ -103,6 +103,16 @@ func TestInt_Views(t *testing.T) {
 		}
 	}
 
+	assertDataMetricFunctionReference := func(t *testing.T, dataMetricFunctionReference helpers.DataMetricFunctionReference,
+		viewId sdk.SchemaObjectIdentifier,
+		schedule string,
+	) {
+		t.Helper()
+		assert.Equal(t, viewId.Name(), dataMetricFunctionReference.RefEntityName)
+		assert.Equal(t, "View", dataMetricFunctionReference.RefEntityDomain)
+		assert.Equal(t, schedule, dataMetricFunctionReference.Schedule)
+	}
+
 	cleanupViewProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
@@ -169,12 +179,12 @@ func TestInt_Views(t *testing.T) {
 			WithSecure(true).
 			WithTemporary(true).
 			WithColumns([]sdk.ViewColumnRequest{
-				*sdk.NewViewColumnRequest("COLUMN_WITH_COMMENT").WithComment("column comment"),
+				*sdk.NewViewColumnRequest("column_with_comment").WithComment("column comment"),
 			}).
 			WithCopyGrants(true).
 			WithComment("comment").
-			WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"column_with_comment"})).
-			WithAggregationPolicy(*sdk.NewViewAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]string{"column_with_comment"})).
+			WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"column_with_comment"}})).
+			WithAggregationPolicy(*sdk.NewViewAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{"column_with_comment"}})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -199,7 +209,7 @@ func TestInt_Views(t *testing.T) {
 		refArgColumnNames := sdk.ParseCommaSeparatedStringArray(rowAccessPolicyReferences[1].RefArgColumnNames.String, true)
 		assert.Len(t, refArgColumnNames, 1)
 		// TODO: should ParseCommaSeparatedStringArray support other quotes?
-		assert.Equal(t, `"COLUMN_WITH_COMMENT"`, refArgColumnNames[0])
+		assert.Equal(t, `"column_with_comment"`, refArgColumnNames[0])
 	})
 
 	t.Run("create view: masking and projection policies", func(t *testing.T) {
@@ -211,11 +221,10 @@ func TestInt_Views(t *testing.T) {
 
 		request := createViewBasicRequest(t).
 			WithOrReplace(true).
-			WithSecure(true).
-			WithTemporary(true).
+			WithRecursive(true).
 			WithColumns([]sdk.ViewColumnRequest{
 				*sdk.NewViewColumnRequest("col1").WithMaskingPolicy(
-					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]string{"col1"}),
+					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]sdk.DoubleQuotedString{{"col1"}}),
 				).WithProjectionPolicy(
 					*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicy),
 				),
@@ -225,7 +234,8 @@ func TestInt_Views(t *testing.T) {
 
 		view := createViewWithRequest(t, request)
 
-		assertViewWithOptions(t, view, id, true, "")
+		assertViewWithOptions(t, view, id, false, "")
+		assert.Contains(t, view.Text, "RECURSIVE VIEW")
 		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Len(t, rowAccessPolicyReferences, 2)
@@ -492,7 +502,7 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// add policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"ID"}}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -510,7 +520,7 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"ID"}}))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -521,7 +531,7 @@ func TestInt_Views(t *testing.T) {
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(*sdk.NewViewDropAndAddRowAccessPolicyRequest(
 			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
-			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []string{"ID"}),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []sdk.DoubleQuotedString{{"ID"}}),
 		))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -531,6 +541,81 @@ func TestInt_Views(t *testing.T) {
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop all policies
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
+		require.Error(t, err, "no rows in result set")
+	})
+
+	t.Run("alter view: add and drop data metrics", func(t *testing.T) {
+		view := createView(t)
+		id := view.ID()
+
+		dataMetricFunction, dataMetricFunctionCleanup := testClientHelper().DataMetricFunctionClient.CreateDataMetricFunction(t, id)
+		t.Cleanup(dataMetricFunctionCleanup)
+		dataMetricFunction2, dataMetricFunction2Cleanup := testClientHelper().DataMetricFunctionClient.CreateDataMetricFunction(t, id)
+		t.Cleanup(dataMetricFunction2Cleanup)
+
+		// set cron schedule
+		cron := "5 * * * * UTC"
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest().WithUsingCron(sdk.ViewUsingCronRequest{Cron: cron}))
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// add data metric function
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.DoubleQuotedString{{"ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences, err := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		require.Len(t, dataMetricFunctionReferences, 1)
+
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
+
+		// remove function
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.DoubleQuotedString{{"ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences, err = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		require.Len(t, dataMetricFunctionReferences, 0)
+
+		// add two functions
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.DoubleQuotedString{{"ID"}},
+			},
+			{
+				DataMetricFunction: dataMetricFunction2,
+				On:                 []sdk.DoubleQuotedString{{"ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences, err = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		require.Len(t, dataMetricFunctionReferences, 2)
+
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[1], view.ID(), cron)
+
+		// drop all functions
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -549,7 +634,7 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// set policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]string{"ID"}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{"ID"}}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -561,7 +646,7 @@ func TestInt_Views(t *testing.T) {
 
 		// set policy with force
 		alterRequest = sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy2).
-			WithEntityKey([]string{"ID"}).
+			WithEntityKey([]sdk.DoubleQuotedString{{"ID"}}).
 			WithForce(true))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
