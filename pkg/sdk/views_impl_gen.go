@@ -142,7 +142,6 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 	}
 
 	if r.SetDataMetricSchedule != nil {
-
 		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
 			TriggerOnChanges: r.SetDataMetricSchedule.TriggerOnChanges,
 		}
@@ -158,7 +157,6 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 				Cron: r.SetDataMetricSchedule.UsingCron.Cron,
 			}
 		}
-
 	}
 
 	if r.UnsetDataMetricSchedule != nil {

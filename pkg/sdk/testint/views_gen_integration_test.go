@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1016430]: add tests for setting recursive on creation
 func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -183,8 +182,8 @@ func TestInt_Views(t *testing.T) {
 			}).
 			WithCopyGrants(true).
 			WithComment("comment").
-			WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"column_with_comment"}})).
-			WithAggregationPolicy(*sdk.NewViewAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{"column_with_comment"}})).
+			WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{Value: "column_with_comment"}})).
+			WithAggregationPolicy(*sdk.NewViewAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{Value: "column_with_comment"}})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -224,7 +223,7 @@ func TestInt_Views(t *testing.T) {
 			WithRecursive(true).
 			WithColumns([]sdk.ViewColumnRequest{
 				*sdk.NewViewColumnRequest("col1").WithMaskingPolicy(
-					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]sdk.DoubleQuotedString{{"col1"}}),
+					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]sdk.DoubleQuotedString{{Value: "col1"}}),
 				).WithProjectionPolicy(
 					*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicy),
 				),
@@ -502,7 +501,7 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// add policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"ID"}}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{Value: "ID"}}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -520,7 +519,7 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{"ID"}}))
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.DoubleQuotedString{{Value: "ID"}}))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -531,7 +530,7 @@ func TestInt_Views(t *testing.T) {
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(*sdk.NewViewDropAndAddRowAccessPolicyRequest(
 			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
-			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []sdk.DoubleQuotedString{{"ID"}}),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []sdk.DoubleQuotedString{{Value: "ID"}}),
 		))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -568,7 +567,7 @@ func TestInt_Views(t *testing.T) {
 		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
 			{
 				DataMetricFunction: dataMetricFunction,
-				On:                 []sdk.DoubleQuotedString{{"ID"}},
+				On:                 []sdk.DoubleQuotedString{{Value: "ID"}},
 			},
 		}))
 		err = client.Views.Alter(ctx, alterRequest)
@@ -584,7 +583,7 @@ func TestInt_Views(t *testing.T) {
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
 			{
 				DataMetricFunction: dataMetricFunction,
-				On:                 []sdk.DoubleQuotedString{{"ID"}},
+				On:                 []sdk.DoubleQuotedString{{Value: "ID"}},
 			},
 		}))
 		err = client.Views.Alter(ctx, alterRequest)
@@ -598,11 +597,11 @@ func TestInt_Views(t *testing.T) {
 		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
 			{
 				DataMetricFunction: dataMetricFunction,
-				On:                 []sdk.DoubleQuotedString{{"ID"}},
+				On:                 []sdk.DoubleQuotedString{{Value: "ID"}},
 			},
 			{
 				DataMetricFunction: dataMetricFunction2,
-				On:                 []sdk.DoubleQuotedString{{"ID"}},
+				On:                 []sdk.DoubleQuotedString{{Value: "ID"}},
 			},
 		}))
 		err = client.Views.Alter(ctx, alterRequest)
@@ -634,7 +633,7 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// set policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{"ID"}}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.DoubleQuotedString{{Value: "ID"}}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -646,7 +645,7 @@ func TestInt_Views(t *testing.T) {
 
 		// set policy with force
 		alterRequest = sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy2).
-			WithEntityKey([]sdk.DoubleQuotedString{{"ID"}}).
+			WithEntityKey([]sdk.DoubleQuotedString{{Value: "ID"}}).
 			WithForce(true))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)

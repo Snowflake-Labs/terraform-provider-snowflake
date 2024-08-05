@@ -64,7 +64,7 @@ var viewDetails = g.PlainStruct("ViewDetails").
 	OptionalText("PrivacyDomain")
 
 var doubleQuotedStringDef = g.NewQueryStruct("DoubleQuotedString").
-	Text("Name", g.KeywordOptions().Required().DoubleQuotes())
+	Text("Value", g.KeywordOptions().Required().DoubleQuotes())
 
 var viewMinute = g.NewQueryStruct("ViewMinute").
 	Number("Minutes", g.KeywordOptions().Required()).

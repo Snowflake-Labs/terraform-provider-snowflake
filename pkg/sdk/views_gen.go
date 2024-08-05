@@ -89,7 +89,7 @@ type AlterViewOptions struct {
 	UnsetTagsOnColumn             *ViewUnsetColumnTags           `ddl:"keyword"`
 }
 type DoubleQuotedString struct {
-	Name string `ddl:"keyword,double_quotes"`
+	Value string `ddl:"keyword,double_quotes"`
 }
 type ViewDataMetricFunction struct {
 	DataMetricFunction SchemaObjectIdentifier `ddl:"identifier"`
