@@ -48,6 +48,7 @@ var functionSchema = map[string]*schema.Schema{
 					},
 					Description: "The argument name",
 				},
+				// TODO(SNOW-1596962): Fully support VECTOR data type sdk.ParseFunctionArgumentsFromString could be a base for another function that takes argument names into consideration.
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,

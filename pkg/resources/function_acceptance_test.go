@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -237,7 +236,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-func TestAcc_Function_Version0941_ResourceIdMigration(t *testing.T) {
+func TestAcc_Function_Version0941_EnsureSmoothResourceIdMigration(t *testing.T) {
 	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
 	resourceName := "snowflake_function.f"
 
@@ -255,17 +254,16 @@ func TestAcc_Function_Version0941_ResourceIdMigration(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: functionConfigWithVector(acc.TestDatabaseName, acc.TestSchemaName, name, ""),
+				Config: functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, VECTOR(INT, 20), FLOAT, NUMBER, VECTOR(FLOAT, 10))`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 				),
-				ExpectError: regexp.MustCompile("Error: invalid data type: VECTOR\\(INT, 20\\)"),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   functionConfigWithVector(acc.TestDatabaseName, acc.TestSchemaName, name, ""),
+				Config:                   functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, VECTOR(INT, 20), FLOAT, NUMBER, VECTOR(FLOAT, 10))`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 				),
 			},
 		},
@@ -313,39 +311,30 @@ func TestAcc_Function_Rename(t *testing.T) {
 	})
 }
 
-func functionConfigWithVector(database string, schema string, name string, comment string) string {
+func functionConfigWithMoreArguments(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_function" "f" {
   database        = "%[1]s"
   schema          = "%[2]s"
   name            = "%[3]s"
-  comment         = "%[4]s"
   return_type     = "VARCHAR"
   return_behavior = "IMMUTABLE"
   statement       = "SELECT A"
 
   arguments {
     name = "A"
-    type = "VARCHAR(200)"
+    type = "VARCHAR"
   }
   arguments {
     name = "B"
-    type = "VECTOR(INT, 20)"
-  }
-  arguments {
-    name = "C"
     type = "FLOAT"
   }
   arguments {
-    name = "D"
-    type = "NUMBER(10, 2)"
-  }
-  arguments {
-    name = "E"
-    type = "VECTOR(FLOAT, 10)"
+    name = "C"
+    type = "NUMBER"
   }
 }
-`, database, schema, name, comment)
+`, database, schema, name)
 }
 
 func functionConfig(database string, schema string, name string, comment string) string {
