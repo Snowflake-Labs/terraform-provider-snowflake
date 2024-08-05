@@ -70,7 +70,9 @@ func ReplicationDatabaseToSchema(replicationDatabase *sdk.ReplicationDatabase) m
 	replicationDatabaseSchema["name"] = replicationDatabase.Name
 	replicationDatabaseSchema["comment"] = replicationDatabase.Comment
 	replicationDatabaseSchema["is_primary"] = replicationDatabase.IsPrimary
-	replicationDatabaseSchema["primary_database"] = replicationDatabase.PrimaryDatabase
+	if replicationDatabase.PrimaryDatabase != nil {
+		replicationDatabaseSchema["primary_database"] = replicationDatabase.PrimaryDatabase.FullyQualifiedName()
+	}
 	replicationDatabaseSchema["replication_allowed_to_accounts"] = replicationDatabase.ReplicationAllowedToAccounts
 	replicationDatabaseSchema["failover_allowed_to_accounts"] = replicationDatabase.FailoverAllowedToAccounts
 	replicationDatabaseSchema["organization_name"] = replicationDatabase.OrganizationName

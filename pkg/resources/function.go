@@ -508,7 +508,6 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
 	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
-	// TODO: Create upgrader for id migration
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }

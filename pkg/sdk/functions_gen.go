@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"strings"
 )
 
 type Functions interface {
@@ -241,24 +239,6 @@ type Function struct {
 	IsExternalFunction bool
 	Language           string
 	IsMemoizable       bool
-}
-
-// parseFunctionArgumentsFromDetails parses arguments from signature that is contained in function details
-func parseFunctionArgumentsFromDetails(details []FunctionDetail) ([]DataType, error) {
-	signatureProperty, err := collections.FindOne(details, func(detail FunctionDetail) bool { return detail.Property == "signature" })
-	if err != nil {
-		return nil, err
-	}
-	// signature has a structure of (<column name> <data type>, ...); column names can contain commas and other special characters,
-	// and they're not escaped, meaning for names such as `"a,b.c|d e" NUMBER` the signature will contain `(a,b.c|d e NUMBER)`.
-	arguments := make([]DataType, 0)
-	// TODO(TODO - ticket number): Handle arguments with comma in the name (right now this could break for arguments containing dots)
-	for _, arg := range strings.Split(strings.Trim(signatureProperty.Value, "()"), ",") {
-		// single argument has a structure of <column name> <data type>
-		argumentSignatureParts := strings.Split(strings.TrimSpace(arg), " ")
-		arguments = append(arguments, DataType(argumentSignatureParts[len(argumentSignatureParts)-1]))
-	}
-	return arguments, nil
 }
 
 func (v *Function) ID() SchemaObjectIdentifierWithArguments {
