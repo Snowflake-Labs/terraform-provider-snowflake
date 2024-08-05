@@ -1,9 +1,12 @@
 package sdk
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"log"
 	"strings"
 )
 
@@ -261,14 +264,46 @@ func parseFunctionArgumentsFromDetails(details []FunctionDetail) ([]DataType, er
 	return arguments, nil
 }
 
-func parseFunctionArgumentsFromString(arguments string) []DataType {
-	// TODO what about data types with parentheses
-	argListBegin := strings.LastIndex(arguments, "(")
-	argListEnd := strings.LastIndex(arguments, ")")
-	return collections.Map(
-		ParseCommaSeparatedStringArray(arguments[argListBegin+1:argListEnd], false),
-		func(dataType string) DataType { return DataType(dataType) },
-	)
+// Move to sdk/identifier_parsers.go
+func parseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
+	dataTypes := make([]DataType, 0)
+
+	stringBuffer := bytes.NewBufferString(arguments)
+	for stringBuffer.Len() > 0 {
+
+		// we use another buffer to peek into next data type
+		peekBuffer := bytes.NewBufferString(stringBuffer.String())
+		peekDataType, _ := peekBuffer.ReadString(',')
+		peekDataType = strings.TrimSpace(peekDataType)
+
+		// For function purposes only Vector needs special case
+		switch {
+		case strings.HasPrefix(peekDataType, "VECTOR"):
+			vectorDataType, _ := stringBuffer.ReadString(')')
+			vectorDataType = strings.TrimSpace(vectorDataType)
+			if stringBuffer.Len() > 0 {
+				commaByte, err := stringBuffer.ReadByte()
+				if commaByte != ',' {
+					return nil, fmt.Errorf("expected a comma delimited string but found %s", string(commaByte))
+				}
+				if err != nil {
+					return nil, err
+				}
+			}
+			log.Println("Adding vec:", vectorDataType)
+			dataTypes = append(dataTypes, DataType(vectorDataType))
+		default:
+			dataType, err := stringBuffer.ReadString(',')
+			if err == nil {
+				dataType = dataType[:len(dataType)-1]
+			}
+			dataType = strings.TrimSpace(dataType)
+			log.Println("Adding:", dataType)
+			dataTypes = append(dataTypes, DataType(dataType))
+		}
+	}
+
+	return dataTypes, nil
 }
 
 func (v *Function) ID(details []FunctionDetail) (SchemaObjectIdentifierWithArguments, error) {

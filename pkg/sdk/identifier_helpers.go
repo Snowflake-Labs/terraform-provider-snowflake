@@ -313,11 +313,15 @@ func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdent
 }
 
 func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
-	// TODO: This is wrong
-	argsBegin := strings.LastIndex(fullyQualifiedName, "(")
-	parts, err := parseIdentifierStringWithOpts(fullyQualifiedName[:argsBegin], func(r *csv.Reader) {
+	splitIdIndex := strings.IndexRune(fullyQualifiedName, '(')
+	parts, err := parseIdentifierStringWithOpts(fullyQualifiedName[:splitIdIndex], func(r *csv.Reader) {
 		r.Comma = '.'
 	})
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	arguments := fullyQualifiedName[splitIdIndex:]
+	dataTypes, err := parseFunctionArgumentsFromString(arguments[1 : len(arguments)-1])
 	if err != nil {
 		return SchemaObjectIdentifierWithArguments{}, err
 	}
@@ -325,7 +329,7 @@ func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualified
 		parts[0],
 		parts[1],
 		parts[2],
-		parseFunctionArgumentsFromString(fullyQualifiedName[argsBegin:])...,
+		dataTypes...,
 	), nil
 }
 
@@ -344,6 +348,15 @@ func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 	}
 	if len(lines) != 1 {
 		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	for _, part := range lines[0] {
+		// TODO(SNOW-1571674): Remove the validation
+		if strings.Contains(part, `"`) {
+			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
+		}
+		if strings.ContainsAny(part, `()`) {
+			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing '(' or ')' parentheses are not supported in the provider`, identifier)
+		}
 	}
 	return lines[0], nil
 }
