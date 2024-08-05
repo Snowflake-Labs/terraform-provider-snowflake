@@ -1,12 +1,9 @@
 package sdk
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"log"
 	"strings"
 )
 
@@ -226,15 +223,15 @@ type functionRow struct {
 }
 
 type Function struct {
-	CreatedOn       string
-	Name            string
-	SchemaName      string
-	IsBuiltin       bool
-	IsAggregate     bool
-	IsAnsi          bool
-	MinNumArguments int
-	MaxNumArguments int
-	// TODO(SNOW-function refactor): Remove raw arguments
+	CreatedOn          string
+	Name               string
+	SchemaName         string
+	IsBuiltin          bool
+	IsAggregate        bool
+	IsAnsi             bool
+	MinNumArguments    int
+	MaxNumArguments    int
+	Arguments          []DataType
 	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
@@ -264,54 +261,8 @@ func parseFunctionArgumentsFromDetails(details []FunctionDetail) ([]DataType, er
 	return arguments, nil
 }
 
-// Move to sdk/identifier_parsers.go
-func parseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
-	dataTypes := make([]DataType, 0)
-
-	stringBuffer := bytes.NewBufferString(arguments)
-	for stringBuffer.Len() > 0 {
-
-		// we use another buffer to peek into next data type
-		peekBuffer := bytes.NewBufferString(stringBuffer.String())
-		peekDataType, _ := peekBuffer.ReadString(',')
-		peekDataType = strings.TrimSpace(peekDataType)
-
-		// For function purposes only Vector needs special case
-		switch {
-		case strings.HasPrefix(peekDataType, "VECTOR"):
-			vectorDataType, _ := stringBuffer.ReadString(')')
-			vectorDataType = strings.TrimSpace(vectorDataType)
-			if stringBuffer.Len() > 0 {
-				commaByte, err := stringBuffer.ReadByte()
-				if commaByte != ',' {
-					return nil, fmt.Errorf("expected a comma delimited string but found %s", string(commaByte))
-				}
-				if err != nil {
-					return nil, err
-				}
-			}
-			log.Println("Adding vec:", vectorDataType)
-			dataTypes = append(dataTypes, DataType(vectorDataType))
-		default:
-			dataType, err := stringBuffer.ReadString(',')
-			if err == nil {
-				dataType = dataType[:len(dataType)-1]
-			}
-			dataType = strings.TrimSpace(dataType)
-			log.Println("Adding:", dataType)
-			dataTypes = append(dataTypes, DataType(dataType))
-		}
-	}
-
-	return dataTypes, nil
-}
-
-func (v *Function) ID(details []FunctionDetail) (SchemaObjectIdentifierWithArguments, error) {
-	arguments, err := parseFunctionArgumentsFromDetails(details)
-	if err != nil {
-		return SchemaObjectIdentifierWithArguments{}, err
-	}
-	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, arguments...), nil
+func (v *Function) ID() SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

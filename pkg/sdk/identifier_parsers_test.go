@@ -80,6 +80,27 @@ func Test_ParseIdentifierString(t *testing.T) {
 		require.ErrorContains(t, err, `unable to parse identifier: "ab""c".def, currently identifiers containing double quotes are not supported in the provider`)
 	})
 
+	t.Run("returns error when identifier contains opening parenthesis", func(t *testing.T) {
+		input := `"ab(c".def`
+		_, err := ParseIdentifierString(input)
+
+		require.ErrorContains(t, err, `unable to parse identifier: "ab(c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+	})
+
+	t.Run("returns error when identifier contains closing parenthesis", func(t *testing.T) {
+		input := `"ab)c".def`
+		_, err := ParseIdentifierString(input)
+
+		require.ErrorContains(t, err, `unable to parse identifier: "ab)c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+	})
+
+	t.Run("returns error when identifier contains opening and closing parentheses", func(t *testing.T) {
+		input := `"ab()c".def`
+		_, err := ParseIdentifierString(input)
+
+		require.ErrorContains(t, err, `unable to parse identifier: "ab()c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+	})
+
 	t.Run("returns parts correctly with dots inside", func(t *testing.T) {
 		input := `"ab.c".def`
 		expected := []string{`ab.c`, "def"}
@@ -246,6 +267,34 @@ func Test_ParseObjectIdentifierString(t *testing.T) {
 			} else {
 				assert.Equal(t, testCase.Expected, id)
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_ParseFunctionArgumentsFromString(t *testing.T) {
+	testCases := []struct {
+		Arguments string
+		Expected  []DataType
+		Error     string
+	}{
+		{Arguments: `()`, Expected: []DataType{}},
+		{Arguments: `(FLOAT, NUMBER, TIME)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `FLOAT, NUMBER, TIME`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `(FLOAT, NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
+		{Arguments: `FLOAT, NUMBER, VECTOR(FLOAT, 20)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
+		{Arguments: `(VECTOR(FLOAT, 10), NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataType("VECTOR(FLOAT, 10)"), DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
+		{Arguments: `VECTOR(FLOAT, 10)| NUMBER, VECTOR(FLOAT, 20)`, Error: "expected a comma delimited string but found |"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("parsing function arguments %s", testCase.Arguments), func(t *testing.T) {
+			dataTypes, err := ParseFunctionArgumentsFromString(testCase.Arguments)
+			if testCase.Error != "" {
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.Expected, dataTypes)
 			}
 		})
 	}

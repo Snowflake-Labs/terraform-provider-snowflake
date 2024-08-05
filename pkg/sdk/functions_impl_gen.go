@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"log"
+	"strings"
 )
 
 var _ Functions = (*functions)(nil)
@@ -379,6 +381,15 @@ func (r functionRow) convert() *Function {
 		IsExternalFunction: r.IsExternalFunction == "Y",
 		Language:           r.Language,
 	}
+	arguments := strings.TrimLeft(r.Arguments, r.Name)
+	returnIndex := strings.Index(arguments, ") RETURN ")
+	dataTypes, err := ParseFunctionArgumentsFromString(arguments[:returnIndex+1])
+	if err != nil {
+		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
+	} else {
+		e.Arguments = dataTypes
+	}
+
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
 	}

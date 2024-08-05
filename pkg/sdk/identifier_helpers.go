@@ -320,8 +320,7 @@ func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualified
 	if err != nil {
 		return SchemaObjectIdentifierWithArguments{}, err
 	}
-	arguments := fullyQualifiedName[splitIdIndex:]
-	dataTypes, err := parseFunctionArgumentsFromString(arguments[1 : len(arguments)-1])
+	dataTypes, err := ParseFunctionArgumentsFromString(fullyQualifiedName[splitIdIndex:])
 	if err != nil {
 		return SchemaObjectIdentifierWithArguments{}, err
 	}

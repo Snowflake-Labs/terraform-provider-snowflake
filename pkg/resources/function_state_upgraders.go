@@ -33,6 +33,7 @@ func parseV085FunctionId(v string) (*v085FunctionId, error) {
 		ArgTypes:     args,
 	}, nil
 }
+
 func v085FunctionIdStateUpgrader(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return rawState, nil
