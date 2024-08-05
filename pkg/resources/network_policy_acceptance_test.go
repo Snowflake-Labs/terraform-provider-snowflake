@@ -363,6 +363,37 @@ func TestAcc_NetworkPolicy_InvalidBlockedIpListValue(t *testing.T) {
 	})
 }
 
+func TestAcc_NetworkPolicy_InvalidNetworkRuleIds(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
+		Steps: []resource.TestStep{
+			{
+				Config:      networkPolicyConfigInvalidAllowedNetworkRules(id.Name()),
+				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier\. The correct form of the fully qualified name for`),
+			},
+			{
+				Config:      networkPolicyConfigInvalidAllowedNetworkRules(id.Name()),
+				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier\. The correct form of the fully qualified name`),
+			},
+			{
+				Config:      networkPolicyConfigInvalidBlockedNetworkRules(id.Name()),
+				ExpectError: regexp.MustCompile(`sdk\.TableColumnIdentifier\. The correct form of the fully qualified name for`),
+			},
+			{
+				Config:      networkPolicyConfigInvalidBlockedNetworkRules(id.Name()),
+				ExpectError: regexp.MustCompile(`sdk\.DatabaseObjectIdentifier\. The correct form of the fully qualified name`),
+			},
+		},
+	})
+}
+
 func networkPolicyConfigBasic(name string) string {
 	return fmt.Sprintf(`resource "snowflake_network_policy" "test" {
 		name = "%v"
@@ -373,6 +404,20 @@ func networkPolicyConfigInvalidBlockedIpListValue(name string) string {
 	return fmt.Sprintf(`resource "snowflake_network_policy" "test" {
 		name = "%v"
 		blocked_ip_list = ["1.1.1.1", "0.0.0.0/0"]
+	}`, name)
+}
+
+func networkPolicyConfigInvalidAllowedNetworkRules(name string) string {
+	return fmt.Sprintf(`resource "snowflake_network_policy" "test" {
+		name = "%v"
+		allowed_network_rule_list = ["a.b", "a.b.c.d"]
+	}`, name)
+}
+
+func networkPolicyConfigInvalidBlockedNetworkRules(name string) string {
+	return fmt.Sprintf(`resource "snowflake_network_policy" "test" {
+		name = "%v"
+		blocked_network_rule_list = ["a.b", "a.b.c.d"]
 	}`, name)
 }
 

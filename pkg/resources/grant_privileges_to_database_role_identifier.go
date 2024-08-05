@@ -39,7 +39,7 @@ func (g *GrantPrivilegesToDatabaseRoleId) String() string {
 	}
 	parts = append(parts, string(g.Kind))
 	parts = append(parts, g.Data.String())
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type OnDatabaseGrantData struct {
@@ -53,7 +53,7 @@ func (d *OnDatabaseGrantData) String() string {
 func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseRoleId, error) {
 	var databaseRoleId GrantPrivilegesToDatabaseRoleId
 
-	parts := strings.Split(id, helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(id)
 	if len(parts) < 6 {
 		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}

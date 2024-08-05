@@ -4,16 +4,16 @@ import (
 	"context"
 	"regexp"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
@@ -173,6 +173,24 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 		"quoted_identifiers_ignore_case":                config.BoolVariable(true),
 		"enable_console_output":                         config.BoolVariable(true),
 	}
+
+	// TODO(SNOW-1562172): Create a better solution for this type of situations
+	// We have to create test database from share before the actual test to check if the newly created share is ready
+	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
+	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool {
+		database, err := acc.TestClient().Database.Show(t, testId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

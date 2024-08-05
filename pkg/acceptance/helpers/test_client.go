@@ -27,6 +27,7 @@ type TestClient struct {
 	ExternalVolume               *ExternalVolumeClient
 	FailoverGroup                *FailoverGroupClient
 	FileFormat                   *FileFormatClient
+	Grant                        *GrantClient
 	MaskingPolicy                *MaskingPolicyClient
 	MaterializedView             *MaterializedViewClient
 	NetworkPolicy                *NetworkPolicyClient
@@ -85,6 +86,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		ExternalVolume:               NewExternalVolumeClient(context, idsGenerator),
 		FailoverGroup:                NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:                   NewFileFormatClient(context, idsGenerator),
+		Grant:                        NewGrantClient(context, idsGenerator),
 		MaskingPolicy:                NewMaskingPolicyClient(context, idsGenerator),
 		MaterializedView:             NewMaterializedViewClient(context, idsGenerator),
 		NetworkPolicy:                NewNetworkPolicyClient(context, idsGenerator),

@@ -29,18 +29,18 @@ type GrantPrivilegesToShareId struct {
 }
 
 func (id *GrantPrivilegesToShareId) String() string {
-	return strings.Join([]string{
+	return helpers.EncodeResourceIdentifier(
 		id.ShareName.FullyQualifiedName(),
 		strings.Join(id.Privileges, ","),
 		string(id.Kind),
 		id.Identifier.FullyQualifiedName(),
-	}, helpers.IDDelimiter)
+	)
 }
 
 func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, error) {
 	var grantPrivilegesToShareId GrantPrivilegesToShareId
 
-	parts := strings.Split(idString, helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(idString)
 	if len(parts) != 4 {
 		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
 	}

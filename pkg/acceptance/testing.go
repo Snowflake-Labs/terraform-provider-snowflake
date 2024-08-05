@@ -24,10 +24,12 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
+const AcceptanceTestPrefix = "acc_test_"
+
 var (
-	TestDatabaseName  = "acc_test_db_" + random.AcceptanceTestsSuffix
-	TestSchemaName    = "acc_test_sc_" + random.AcceptanceTestsSuffix
-	TestWarehouseName = "acc_test_wh_" + random.AcceptanceTestsSuffix
+	TestDatabaseName  = fmt.Sprintf("%sdb_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
+	TestSchemaName    = fmt.Sprintf("%ssc_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
+	TestWarehouseName = fmt.Sprintf("%swh_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
 )
 
 var (
