@@ -100,6 +100,10 @@ func NewExternalObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string
 	}
 }
 
+func (i ExternalObjectIdentifier) AccountIdentifier() AccountIdentifier {
+	return i.accountIdentifier
+}
+
 func (i ExternalObjectIdentifier) Name() string {
 	return i.objectIdentifier.Name()
 }
@@ -135,6 +139,14 @@ func NewAccountIdentifierFromFullyQualifiedName(fullyQualifiedName string) Accou
 	organizationName := strings.Trim(parts[0], `"`)
 	accountName := strings.Trim(parts[1], `"`)
 	return NewAccountIdentifier(organizationName, accountName)
+}
+
+func (i AccountIdentifier) OrganizationName() string {
+	return i.organizationName
+}
+
+func (i AccountIdentifier) AccountName() string {
+	return i.accountName
 }
 
 func (i AccountIdentifier) Name() string {

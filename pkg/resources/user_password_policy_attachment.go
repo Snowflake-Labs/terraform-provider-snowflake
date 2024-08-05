@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -14,10 +13,11 @@ import (
 
 var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	"user_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "User name of the user you want to attach the password policy to",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "User name of the user you want to attach the password policy to",
+		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"password_policy_name": {
 		Type:             schema.TypeString,
@@ -57,7 +57,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error 
 		return err
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(userName.FullyQualifiedName(), passwordPolicy.FullyQualifiedName()))
+	d.SetId(helpers.EncodeResourceIdentifier(userName.FullyQualifiedName(), passwordPolicy.FullyQualifiedName()))
 
 	return ReadUserPasswordPolicyAttachment(d, meta)
 }
@@ -66,7 +66,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
-	parts := strings.Split(d.Id(), helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(d.Id())
 	if len(parts) != 2 {
 		return fmt.Errorf("required id format 'user_name|password_policy_name', but got: '%s'", d.Id())
 	}

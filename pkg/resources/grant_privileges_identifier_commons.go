@@ -39,7 +39,7 @@ func (d *OnSchemaGrantData) String() string {
 	case OnAllSchemasInDatabaseSchemaGrantKind, OnFutureSchemasInDatabaseSchemaGrantKind:
 		parts = append(parts, d.DatabaseName.FullyQualifiedName())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type OnSchemaObjectGrantData struct {
@@ -57,7 +57,7 @@ func (d *OnSchemaObjectGrantData) String() string {
 	case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
 		parts = append(parts, d.OnAllOrFuture.String())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type BulkOperationGrantKind string
@@ -84,7 +84,7 @@ func (d *BulkOperationGrantData) String() string {
 	case InSchemaBulkOperationGrantKind:
 		parts = append(parts, d.Schema.FullyQualifiedName())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGrantData {

@@ -83,7 +83,11 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("is_current", database.IsCurrent); err != nil {
 		return err
 	}
-	if err := d.Set("origin", database.Origin); err != nil {
+	var origin string
+	if database.Origin != nil {
+		origin = database.Origin.FullyQualifiedName()
+	}
+	if err := d.Set("origin", origin); err != nil {
 		return err
 	}
 	if err := d.Set("retention_time", database.RetentionTime); err != nil {
