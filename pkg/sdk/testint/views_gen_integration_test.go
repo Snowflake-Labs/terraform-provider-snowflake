@@ -211,8 +211,7 @@ func TestInt_Views(t *testing.T) {
 		assert.True(t, rowAccessPolicyReferences[1].RefArgColumnNames.Valid)
 		refArgColumnNames := sdk.ParseCommaSeparatedStringArray(rowAccessPolicyReferences[1].RefArgColumnNames.String, true)
 		assert.Len(t, refArgColumnNames, 1)
-		// TODO: should ParseCommaSeparatedStringArray support other quotes?
-		assert.Equal(t, `"column_with_comment"`, refArgColumnNames[0])
+		assert.Equal(t, "column_with_comment", refArgColumnNames[0])
 	})
 
 	t.Run("create view: masking and projection policies", func(t *testing.T) {
