@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
@@ -261,16 +262,14 @@ func TestInt_OtherFunctions(t *testing.T) {
 		return function
 	}
 
-	defaultAlterRequest := func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-		return sdk.NewAlterFunctionRequest(id)
-	}
-
 	t.Run("alter function: rename", func(t *testing.T) {
 		f := createFunctionForSQLHandle(t, false, true)
 
 		id := f.ID()
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithRenameTo(nid.SchemaObjectId()))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithRenameTo(nid.SchemaObjectId()))
 		if err != nil {
 			t.Cleanup(cleanupFunctionHandle(id))
 		} else {
@@ -290,7 +289,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -299,7 +300,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetLogLevel(true))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithUnsetLogLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -308,7 +311,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -317,7 +322,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTraceLevel(true))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithUnsetTraceLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -326,7 +333,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetComment("test comment"))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithSetComment("test comment"))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -335,7 +344,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(true))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithUnsetComment(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -344,7 +355,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetSecure(true))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithSetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, true, true)
 	})
@@ -361,7 +374,9 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetSecure(true))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithUnsetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -376,14 +391,18 @@ func TestInt_OtherFunctions(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTags(setTags))
+		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithSetTags(setTags))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
-		err = client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTags(unsetTags))
+		err = client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
+			return sdk.NewAlterFunctionRequest(id)
+		}(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -503,64 +522,9 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 	})
 
 	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {
-		// This test proves that every detailed data type (e.g. VARCHAR(20) and NUMBER(10, 0)) is generalized
-		// (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types correctly to
-		// their generalized counterparts.
-
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		args := []sdk.FunctionArgumentRequest{
-			*sdk.NewFunctionArgumentRequest("A", "NUMBER(2, 0)"),
-			*sdk.NewFunctionArgumentRequest("B", "DECIMAL"),
-			*sdk.NewFunctionArgumentRequest("C", "INTEGER"),
-			*sdk.NewFunctionArgumentRequest("D", sdk.DataTypeFloat),
-			*sdk.NewFunctionArgumentRequest("E", "DOUBLE"),
-			*sdk.NewFunctionArgumentRequest("F", "VARCHAR(20)"),
-			*sdk.NewFunctionArgumentRequest("G", "CHAR"),
-			*sdk.NewFunctionArgumentRequest("H", sdk.DataTypeString),
-			*sdk.NewFunctionArgumentRequest("I", "TEXT"),
-			*sdk.NewFunctionArgumentRequest("J", sdk.DataTypeBinary),
-			*sdk.NewFunctionArgumentRequest("K", "VARBINARY"),
-			*sdk.NewFunctionArgumentRequest("L", sdk.DataTypeBoolean),
-			*sdk.NewFunctionArgumentRequest("M", sdk.DataTypeDate),
-			*sdk.NewFunctionArgumentRequest("N", "DATETIME"),
-			*sdk.NewFunctionArgumentRequest("O", sdk.DataTypeTime),
-			*sdk.NewFunctionArgumentRequest("P", sdk.DataTypeTimestamp),
-			*sdk.NewFunctionArgumentRequest("R", sdk.DataTypeTimestampLTZ),
-			*sdk.NewFunctionArgumentRequest("S", sdk.DataTypeTimestampNTZ),
-			*sdk.NewFunctionArgumentRequest("T", sdk.DataTypeTimestampTZ),
-			*sdk.NewFunctionArgumentRequest("U", sdk.DataTypeVariant),
-			*sdk.NewFunctionArgumentRequest("V", sdk.DataTypeObject),
-			*sdk.NewFunctionArgumentRequest("W", sdk.DataTypeArray),
-			*sdk.NewFunctionArgumentRequest("X", sdk.DataTypeGeography),
-			*sdk.NewFunctionArgumentRequest("Y", sdk.DataTypeGeometry),
-			*sdk.NewFunctionArgumentRequest("Z", "VECTOR(INT, 16)"),
-		}
-		err := client.Functions.CreateForPython(ctx, sdk.NewCreateForPythonFunctionRequest(
-			id,
-			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVariant)),
-			"3.8",
-			"add",
-		).
-			WithArguments(args).
-			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, R, S, T, U, V, W, X, Y, Z): A + A"),
-		)
-		require.NoError(t, err)
-
-		dataTypes := make([]sdk.DataType, len(args))
-		for i, arg := range args {
-			dataTypes[i], err = sdk.ToDataType(string(arg.ArgDataType))
-			require.NoError(t, err)
-		}
-		idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), dataTypes...)
-
-		_, err = client.Functions.ShowByID(ctx, idWithArguments)
-		require.NoError(t, err)
-	})
-
-	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {
-		// This test proves that every detailed data type (e.g. VARCHAR(20) and NUMBER(10, 0)) is generalized
-		// (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types correctly to
-		// their generalized counterparts.
+		// This test proves that every detailed data types (e.g. VARCHAR(20) and NUMBER(10, 0)) are generalized
+		// on Snowflake side (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types
+		// correctly to their generalized counterparts (same as in Snowflake).
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		args := []sdk.FunctionArgumentRequest{

@@ -232,7 +232,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	// TODO(next prs ???): left right now for backward compatibility for procedures and externalFunctions
+	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
 	arguments []DataType
 }
 
@@ -334,16 +334,6 @@ func (i SchemaObjectIdentifier) ArgumentsSignature() string {
 	return fmt.Sprintf("%v(%v)", i.Name(), strings.Join(arguments, ","))
 }
 
-// TODO:
-// - Add parser
-// - Add to IsValidIdentifier
-// - Handle in the sql_builder
-// - Use in function,procedure,external_function
-// - Function (Test, Impl)
-// - Fix after argumentDataTypes removed from SchemaObjectIdentifier
-// - Look for todos on SNOW-999049
-
-// TODO: Rename?
 type SchemaObjectIdentifierWithArguments struct {
 	databaseName      string
 	schemaName        string
@@ -366,9 +356,7 @@ func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdent
 
 func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
 	splitIdIndex := strings.IndexRune(fullyQualifiedName, '(')
-	parts, err := parseIdentifierStringWithOpts(fullyQualifiedName[:splitIdIndex], func(r *csv.Reader) {
-		r.Comma = '.'
-	})
+	parts, err := ParseIdentifierString(fullyQualifiedName[:splitIdIndex])
 	if err != nil {
 		return SchemaObjectIdentifierWithArguments{}, err
 	}
@@ -383,47 +371,6 @@ func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualified
 		dataTypes...,
 	), nil
 }
-
-// TODO: Remove this func
-func parseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([]string, error) {
-	reader := csv.NewReader(strings.NewReader(identifier))
-	if opts != nil {
-		opts(reader)
-	}
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
-	}
-	if lines == nil {
-		return make([]string, 0), nil
-	}
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
-	}
-	for _, part := range lines[0] {
-		// TODO(SNOW-1571674): Remove the validation
-		if strings.Contains(part, `"`) {
-			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
-		}
-		if strings.ContainsAny(part, `()`) {
-			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing '(' or ')' parentheses are not supported in the provider`, identifier)
-		}
-	}
-	return lines[0], nil
-}
-
-// TODO: Move to resource package (or use FullyQUalifiedName and NewFromFullyQualifiedName because it will be needed anyway for things like returned ids from SHOW GRANTS)
-//func NewSchemaObjectIdentifierWithArgumentsFromResourceIdentifier(resourceId string) SchemaObjectIdentifierWithArguments {
-//	// TODO: use standard parsing method
-//	resourceIdParts := strings.Split(resourceId, "|")
-//	schemaObjectId := NewSchemaObjectIdentifierFromFullyQualifiedName(resourceIdParts[0])
-//	argumentSlice := resourceIdParts[1:]
-//	arguments := make([]DataType, len(argumentSlice))
-//	for i, argument := range argumentSlice {
-//		arguments[i] = DataType(argument)
-//	}
-//	return NewSchemaObjectIdentifierWithArguments(schemaObjectId.DatabaseName(), schemaObjectId.SchemaName(), schemaObjectId.Name(), arguments...)
-//}
 
 func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
 	return i.databaseName
@@ -459,16 +406,6 @@ func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ","))
 }
-
-// TODO: Move to resource package
-//func (i SchemaObjectIdentifierWithArguments) AsResourceIdentifier() string {
-//	// TODO: use standard encoding method
-//	resourceId := []string{
-//		i.SchemaObjectId().FullyQualifiedName(),
-//	}
-//	resourceId = append(resourceId, AsStringList(i.ArgumentDataTypes())...)
-//	return strings.Join(resourceId, "|")
-//}
 
 type TableColumnIdentifier struct {
 	databaseName string

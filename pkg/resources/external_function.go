@@ -3,16 +3,17 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 var externalFunctionSchema = map[string]*schema.Schema{

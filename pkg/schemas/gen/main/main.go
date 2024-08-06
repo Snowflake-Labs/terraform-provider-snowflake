@@ -4,10 +4,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas/gen"
 	"golang.org/x/exp/maps"

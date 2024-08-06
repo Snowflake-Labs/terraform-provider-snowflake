@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"encoding/csv"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 type v085ExternalFunctionId struct {

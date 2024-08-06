@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 type v085FunctionId struct {

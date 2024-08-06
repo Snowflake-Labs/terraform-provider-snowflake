@@ -2,6 +2,9 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -9,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"strings"
-	"testing"
 )
 
 func testAccProcedure(t *testing.T, configDirectory string) {

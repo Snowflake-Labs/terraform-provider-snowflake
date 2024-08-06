@@ -3,6 +3,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -10,9 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"regexp"
-	"strings"
 )
 
 var languages = []string{"javascript", "scala", "java", "sql", "python"}

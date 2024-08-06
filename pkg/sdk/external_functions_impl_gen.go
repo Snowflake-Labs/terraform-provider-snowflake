@@ -2,6 +2,9 @@ package sdk
 
 import (
 	"context"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ ExternalFunctions = (*externalFunctions)(nil)
@@ -31,32 +34,30 @@ func (v *externalFunctions) Show(ctx context.Context, request *ShowExternalFunct
 }
 
 func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error) {
-	return nil, nil
-	// TODO
-	//arguments := id.Arguments()
-	//externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().
-	//	WithIn(&In{Schema: id.SchemaId()}).
-	//	WithLike(&Like{Pattern: String(id.Name())}))
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return collections.FindOne(externalFunctions, func(r ExternalFunction) bool {
-	//	database := strings.Trim(r.CatalogName, `"`)
-	//	schema := strings.Trim(r.SchemaName, `"`)
-	//	if r.Name != id.Name() || database != id.DatabaseName() || schema != id.SchemaName() {
-	//		return false
-	//	}
-	//	var sb strings.Builder
-	//	sb.WriteString("(")
-	//	for i, argument := range arguments {
-	//		sb.WriteString(string(argument))
-	//		if i < len(arguments)-1 {
-	//			sb.WriteString(", ")
-	//		}
-	//	}
-	//	sb.WriteString(")")
-	//	return strings.Contains(r.Arguments, sb.String())
-	//})
+	arguments := id.Arguments()
+	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().
+		WithIn(&In{Schema: id.SchemaId()}).
+		WithLike(&Like{Pattern: String(id.Name())}))
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindOne(externalFunctions, func(r ExternalFunction) bool {
+		database := strings.Trim(r.CatalogName, `"`)
+		schema := strings.Trim(r.SchemaName, `"`)
+		if r.Name != id.Name() || database != id.DatabaseName() || schema != id.SchemaName() {
+			return false
+		}
+		var sb strings.Builder
+		sb.WriteString("(")
+		for i, argument := range arguments {
+			sb.WriteString(string(argument))
+			if i < len(arguments)-1 {
+				sb.WriteString(", ")
+			}
+		}
+		sb.WriteString(")")
+		return strings.Contains(r.Arguments, sb.String())
+	})
 }
 
 func (v *externalFunctions) Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error) {
@@ -70,23 +71,20 @@ func (v *externalFunctions) Describe(ctx context.Context, request *DescribeExter
 
 func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions {
 	opts := &CreateExternalFunctionOptions{
-		OrReplace: r.OrReplace,
-		Secure:    r.Secure,
-		// TODO:
-		// name:      r.name.WithoutArguments(),
-
+		OrReplace:             r.OrReplace,
+		Secure:                r.Secure,
+		name:                  r.name.WithoutArguments(),
 		ResultDataType:        r.ResultDataType,
 		ReturnNullValues:      r.ReturnNullValues,
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Comment:               r.Comment,
 		ApiIntegration:        r.ApiIntegration,
-
-		MaxBatchRows:       r.MaxBatchRows,
-		Compression:        r.Compression,
-		RequestTranslator:  r.RequestTranslator,
-		ResponseTranslator: r.ResponseTranslator,
-		As:                 r.As,
+		MaxBatchRows:          r.MaxBatchRows,
+		Compression:           r.Compression,
+		RequestTranslator:     r.RequestTranslator,
+		ResponseTranslator:    r.ResponseTranslator,
+		As:                    r.As,
 	}
 	if r.Arguments != nil {
 		s := make([]ExternalFunctionArgument, len(r.Arguments))
@@ -114,9 +112,8 @@ func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions 
 
 func (r *AlterExternalFunctionRequest) toOpts() *AlterExternalFunctionOptions {
 	opts := &AlterExternalFunctionOptions{
-		IfExists: r.IfExists,
-		// TODO:
-		// name:   			           r.name.WithoutArguments(),
+		IfExists:          r.IfExists,
+		name:              r.name.WithoutArguments(),
 		ArgumentDataTypes: r.ArgumentDataTypes,
 	}
 	if r.Set != nil {
