@@ -26,9 +26,10 @@ var databaseSchema = map[string]*schema.Schema{
 		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
 	},
 	"drop_public_schema_on_creation": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Specifies whether to drop public schema on creation or not. Modifying the parameter after database is already created won't have any effect.",
+		Type:             schema.TypeBool,
+		Optional:         true,
+		Description:      "Specifies whether to drop public schema on creation or not. Modifying the parameter after database is already created won't have any effect.",
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,

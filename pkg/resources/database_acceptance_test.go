@@ -1173,7 +1173,7 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				Config: databaseWithPublicSchemaConfig(id, false),
+				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					doesNotContainPublicSchema(t, id),
@@ -1181,7 +1181,12 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 			},
 			// Change in parameter shouldn't change the state Snowflake
 			{
-				Config: databaseWithPublicSchemaConfig(id, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					doesNotContainPublicSchema(t, id),
@@ -1203,7 +1208,7 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				Config: databaseWithPublicSchemaConfig(id, true),
+				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					containsPublicSchema(t, id),
@@ -1211,7 +1216,12 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 			},
 			// Change in parameter shouldn't change the state Snowflake
 			{
-				Config: databaseWithPublicSchemaConfig(id, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					containsPublicSchema(t, id),
@@ -1247,7 +1257,7 @@ resource "snowflake_database" "test" {
 	name = "%s"
 	drop_public_schema_on_creation = %s
 }
-`, id.Name(), strconv.FormatBool(!withPublicSchema))
+`, id.Name(), strconv.FormatBool(withDropPublicSchema))
 }
 
 /*
