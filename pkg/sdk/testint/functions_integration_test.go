@@ -267,9 +267,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 		id := f.ID()
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithRenameTo(nid.SchemaObjectId()))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(nid.SchemaObjectId()))
 		if err != nil {
 			t.Cleanup(cleanupFunctionHandle(id))
 		} else {
@@ -289,9 +287,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -300,9 +296,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithUnsetLogLevel(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetLogLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})

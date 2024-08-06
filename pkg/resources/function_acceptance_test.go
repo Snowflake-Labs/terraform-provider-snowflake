@@ -236,7 +236,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-func TestAcc_Function_Version0941_EnsureSmoothResourceIdMigration(t *testing.T) {
+func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
 	resourceName := "snowflake_function.f"
 
