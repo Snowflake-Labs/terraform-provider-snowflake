@@ -2,9 +2,11 @@ package resources_test
 
 import (
 	"fmt"
-	"regexp"
+	"slices"
 	"strconv"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -15,7 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -1160,233 +1161,232 @@ resource "snowflake_database" "test" {
 `, id.Name(), strconv.Quote(enableToAccount))
 }
 
-func TestAcc_Database_UpgradeFromShare(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-
+func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
-
-	shareExternalId := createShareableDatabase(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, shareExternalId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.provider", secondaryClientLocator),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.share", shareExternalId.Name()),
-				),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromShareNewAfterUpgrade(id),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromShareNew(id, shareExternalId),
-				ResourceName:             "snowflake_shared_database.test",
-				ImportStateId:            id.FullyQualifiedName(),
-				ImportState:              true,
-			},
-		},
-	})
-}
-
-func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_share = {
-		provider = "%s"
-		share = "%s"
-	}
-}
-`, id.Name(), secondaryClientLocator, externalShare.Name())
-}
-
-func databaseStateUpgraderFromShareNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-}
-`, id.Name())
-}
-
-func databaseStateUpgraderFromShareNew(id sdk.AccountObjectIdentifier, externalShare sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_shared_database" "test" {
-	name = "%s"
-	from_share = %s
-}
-`, id.Name(), strconv.Quote(externalShare.FullyQualifiedName()))
-}
-
-func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	_, primaryDatabaseId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		acc.TestClient().Account.GetAccountIdentifier(t),
-	})
-	t.Cleanup(databaseCleanup)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderFromReplicaOld(id, primaryDatabaseId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_replica", primaryDatabaseId.FullyQualifiedName()),
-				),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromReplicaNewAfterUpgrade(id),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromReplicaNew(id, primaryDatabaseId),
-				ResourceName:             "snowflake_secondary_database.test",
-				ImportStateId:            id.FullyQualifiedName(),
-				ImportState:              true,
-			},
-		},
-	})
-}
-
-func databaseStateUpgraderFromReplicaOld(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_replica = %s
-}
-`, id.Name(), strconv.Quote(primaryDatabaseId.FullyQualifiedName()))
-}
-
-func databaseStateUpgraderFromReplicaNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0
-}
-`, id.Name())
-}
-
-func databaseStateUpgraderFromReplicaNew(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_secondary_database" "test" {
-	name = "%s"
-	as_replica_of = %s
-}
-`, id.Name(), strconv.Quote(id.FullyQualifiedName()))
-}
-
-func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	cloneId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderFromDatabaseOld(id, cloneId),
+				Config: databaseWithPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "id", cloneId.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "name", cloneId.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "from_database", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					doesNotContainPublicSchema(t, id),
 				),
 			},
+			// Change in parameter shouldn't change the state Snowflake
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromDatabaseNewAfterUpgrade(id, cloneId),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromDatabaseNew(id, cloneId),
-				ResourceName:             "snowflake_database.cloned",
-				ImportStateId:            cloneId.FullyQualifiedName(),
-				ImportState:              true,
+				Config: databaseWithPublicSchemaConfig(id, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					doesNotContainPublicSchema(t, id),
+				),
 			},
 		},
 	})
 }
 
-func databaseStateUpgraderFromDatabaseOld(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
+func TestAcc_Database_WithPublicSchema(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				Config: databaseWithPublicSchemaConfig(id, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					containsPublicSchema(t, id),
+				),
+			},
+			// Change in parameter shouldn't change the state Snowflake
+			{
+				Config: databaseWithPublicSchemaConfig(id, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+					containsPublicSchema(t, id),
+				),
+			},
+		},
+	})
+}
+
+func doesNotContainPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
+	t.Helper()
+	return func(state *terraform.State) error {
+		if slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
+			return fmt.Errorf("expected database %s to not contain public schema", id.FullyQualifiedName())
+		}
+		return nil
+	}
+}
+
+func containsPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
+	t.Helper()
+	return func(state *terraform.State) error {
+		if !slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
+			return fmt.Errorf("expected database %s to contain public schema", id.FullyQualifiedName())
+		}
+		return nil
+	}
+}
+
+func databaseWithPublicSchemaConfig(id sdk.AccountObjectIdentifier, withPublicSchema bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
+	drop_public_schema_on_creation = %s
+}
+`, id.Name(), strconv.FormatBool(!withPublicSchema))
+}
+
+/*
+Test database upgrade from share
+
+step: 1
+version: 0.92.0
+config:
+resource "snowflake_share" "test" {
+  provider = snowflake.second_account
+  name = "test_share"
+  accounts = ["<primary_account_organization_name>.<primary_account_account_name>"]
+}
+
+resource "snowflake_database" "test" {
+  provider = snowflake.second_account
+  name = "test_database"
+}
+
+resource "snowflake_grant_privileges_to_share" "test" {
+  provider = snowflake.second_account
+  privileges = ["USAGE"]
+  on_database = snowflake_database.test.name
+  to_share = snowflake_share.test.name
+}
+
+resource "snowflake_database" "from_share" {
+  depends_on = [ snowflake_grant_privileges_to_share.test ]
+  name = snowflake_database.test.name
+  from_share = {
+    provider = "<second_account_account_locator>"
+    share = snowflake_share.test.name
+  }
+}
+
+step: 2
+version: newest
+expect error (after terraform plan): failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead
+
+step: 3
+version: newest
+action: remove database from share from the state (terraform state rm)
+
+step: 4
+version: newest
+action:
+- modify database from share to look like this:
+resource "snowflake_shared_database" "from_share" {
+  depends_on = [ snowflake_grant_privileges_to_share.test ]
+  name = snowflake_database.test.name
+  from_share = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_share.test.name}\""
+}
+- run terraform plan and validate if the state is empty
+*/
+
+/*
+Test database upgrade from replica
+
+step: 1
+version: 0.92.0
+config:
+resource "snowflake_database" "primary" {
+	provider = snowflake.second_account
+	name = "test"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+  replication_configuration {
+    accounts             = ["<second_account_account_locator>"]
+    ignore_edition_check = true
+  }
+}
+
+resource "snowflake_database" "secondary" {
+	name = "test"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	from_replica = "<second_account_account_locator>.\"${snowflake_database.primary.name}\""
+}
+
+step: 2
+version: newest
+expect error (after terraform plan): failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead
+
+step: 3
+version: newest
+action: remove secondary database from state (terraform state rm)
+
+step: 4
+version: newest
+action:
+- modify primary database to look like this:
+resource "snowflake_database" "primary" {
+	provider = snowflake.second_account
+	name = "test"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+  replication {
+    enable_to_account {
+      account_identifier = "<second_account_organization_name>.<second_account_account_name>"
+      with_failover      = true
+    }
+    ignore_edition_check = true
+  }
+}
+
+- change secondary database config and run terraform import for secondary database (changed config under)
+resource "snowflake_secondary_database" "secondary" {
+	name = "test"
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	from_replica = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_database.primary.name}\""
+}
+- run terraform plan and validate if the state is empty
+*/
+
+/*
+Test database upgrade from cloned database
+
+step: 1
+version: 0.92.0
+config:
+resource "snowflake_database" "test" {
+	name = "test"
 	data_retention_time_in_days = 0 # to avoid in-place update to -1
 }
 
 resource "snowflake_database" "cloned" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
+	name = "cloned"
 	from_database = snowflake_database.test.name
-}
-`, id.Name(), secondId.Name())
-}
-
-func databaseStateUpgraderFromDatabaseNewAfterUpgrade(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0
+	data_retention_time_in_days = 0 # to avoid in-place update to -1
 }
 
-resource "snowflake_database" "cloned" {
-	name = "%s"
-	data_retention_time_in_days = 0
-}
-`, id.Name(), secondId.Name())
-}
+step: 2
+version: newest
+expect error (after terraform plan): failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead...
 
-func databaseStateUpgraderFromDatabaseNew(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-}
+step: 3
+version: newest
+action: remove cloned database from state (terraform state rm)
 
-resource "snowflake_database" "cloned" {
-	name = "%s"
-}
-`, id.Name(), secondId.Name())
-}
+step: 4
+version: newest
+action:
+- import cloned database into state
+- run terraform plan and validate if the state is empty
+*/

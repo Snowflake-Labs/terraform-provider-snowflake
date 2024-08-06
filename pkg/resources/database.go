@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 
 	"github.com/hashicorp/go-cty/cty"
 
@@ -21,6 +24,11 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
+	},
+	"drop_public_schema_on_creation": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies whether to drop public schema on creation or not. Modifying the parameter after database is already created won't have any effect.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
@@ -123,6 +131,24 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	var diags diag.Diagnostics
+
+	if d.Get("drop_public_schema_on_creation").(bool) {
+		var dropSchemaErrs []error
+		err := util.Retry(3, time.Second, func() (error, bool) {
+			if err := client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(id.Name(), "PUBLIC"), &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)}); err != nil {
+				dropSchemaErrs = append(dropSchemaErrs, err)
+				return nil, false
+			}
+			return nil, true
+		})
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to drop public schema on creation (failed after 3 attempts)",
+				Detail:   fmt.Sprintf("The '%s' database was created successfully, but the provider was not able to remove public schema on creation. Please drop the public schema manually. Original errors: %s", id.Name(), errors.Join(dropSchemaErrs...)),
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("replication"); ok {
 		replicationConfiguration := v.([]any)[0].(map[string]any)
