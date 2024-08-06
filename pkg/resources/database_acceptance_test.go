@@ -1241,7 +1241,7 @@ func containsPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource
 	}
 }
 
-func databaseWithPublicSchemaConfig(id sdk.AccountObjectIdentifier, withPublicSchema bool) string {
+func databaseWithDropPublicSchemaConfig(id sdk.AccountObjectIdentifier, withDropPublicSchema bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
