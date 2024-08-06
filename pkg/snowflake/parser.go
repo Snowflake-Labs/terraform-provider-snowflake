@@ -25,13 +25,14 @@ func NewViewSelectStatementExtractor(input string) *ViewSelectStatementExtractor
 }
 
 func (e *ViewSelectStatementExtractor) Extract() (string, error) {
-	fmt.Printf("[DEBUG] extracting view query %s\n", string(e.input))
 	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()
 	e.consumeToken("or replace")
 	e.consumeSpace()
 	e.consumeToken("secure")
+	e.consumeSpace()
+	e.consumeToken("temporary")
 	e.consumeSpace()
 	e.consumeToken("recursive")
 	e.consumeSpace()
@@ -40,17 +41,67 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeToken("if not exists")
 	e.consumeSpace()
 	e.consumeID()
-	// TODO column list
 	e.consumeSpace()
 	e.consumeToken("copy grants")
 	e.consumeComment()
 	e.consumeSpace()
 	e.consumeComment()
 	e.consumeSpace()
+	e.extractRowAccessPolicy()
+	e.extractAggregationPolicy()
 	e.consumeToken("as")
 	e.consumeSpace()
 
+	fmt.Printf("[DEBUG] extracted statement %s from view query %s\n", string(e.input[e.pos:]), string(e.input))
+
 	return string(e.input[e.pos:]), nil
+}
+
+func (e *ViewSelectStatementExtractor) extractRowAccessPolicy() {
+	ok := e.consumeToken("row access policy")
+	if !ok {
+		return
+	}
+	e.consumeSpace()
+	e.consumeID()
+	e.consumeSpace()
+	e.consumeToken("on")
+	e.consumeSpace()
+	e.extractIdentifierList()
+	e.consumeSpace()
+}
+
+func (e *ViewSelectStatementExtractor) extractAggregationPolicy() {
+	ok := e.consumeToken("aggregation policy")
+	if !ok {
+		return
+	}
+	e.consumeSpace()
+	e.consumeID()
+	e.consumeSpace()
+	e.consumeToken("entity key")
+	e.consumeSpace()
+	e.extractIdentifierList()
+	e.consumeSpace()
+}
+
+func (e *ViewSelectStatementExtractor) extractIdentifierList() {
+	e.consumeSpace()
+	if !e.consumeToken("(") {
+		return
+	}
+	for {
+		e.consumeSpace()
+		e.consumeID()
+		if e.input[e.pos-1] == ')' {
+			break
+		}
+		e.consumeSpace()
+		if e.consumeToken(")") {
+			break
+		}
+	}
+	e.consumeSpace()
 }
 
 func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error) {

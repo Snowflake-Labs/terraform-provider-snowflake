@@ -2,28 +2,58 @@
 page_title: "snowflake_view Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage view objects. For more information, check view documentation https://docs.snowflake.com/en/sql-reference/sql/create-view.
 ---
+
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
 
 # snowflake_view (Resource)
 
-
+Resource used to manage view objects. For more information, check [view documentation](https://docs.snowflake.com/en/sql-reference/sql/create-view).
 
 ## Example Usage
 
 ```terraform
+# basic resource
 resource "snowflake_view" "view" {
-  database = "database"
-  schema   = "schema"
-  name     = "view"
-
-  comment = "comment"
-
-  statement  = <<-SQL
+  database  = "database"
+  schema    = "schema"
+  name      = "view"
+  statement = <<-SQL
     select * from foo;
 SQL
-  or_replace = false
-  is_secure  = false
+}
+
+# recursive view
+resource "snowflake_view" "view" {
+  database     = "database"
+  schema       = "schema"
+  name         = "view"
+  is_recursive = "true"
+  statement    = <<-SQL
+    select * from foo;
+SQL
+}
+# resource with attached policies
+resource "snowflake_view" "test" {
+  database        = "database"
+  schema          = "schema"
+  name            = "view"
+  comment         = "comment"
+  is_secure       = "true"
+  change_tracking = "true"
+  is_temporary    = "true"
+  row_access_policy {
+    policy_name = "row_access_policy"
+    on          = ["id"]
+  }
+  aggregation_policy {
+    policy_name = "aggregation_policy"
+    entity_key  = ["id"]
+  }
+  statement = <<-SQL
+    select id from foo;
+SQL
 }
 ```
 
@@ -39,29 +69,80 @@ SQL
 
 ### Optional
 
+- `aggregation_policy` (Block List, Max: 1) Specifies the aggregation policy to set on a view. (see [below for nested schema](#nestedblock--aggregation_policy))
+- `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.
-- `is_secure` (Boolean) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views.
+- `is_recursive` (String) Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
+- `is_secure` (String) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
+- `is_temporary` (String) Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `or_replace` (Boolean) Overwrites the View if it exists.
-- `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `row_access_policy` (Block List) Specifies the row access policy to set on a view. (see [below for nested schema](#nestedblock--row_access_policy))
 
 ### Read-Only
 
-- `created_on` (String) The timestamp at which the view was created.
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE VIEW` for the given view. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW VIEW` for the given view. (see [below for nested schema](#nestedatt--show_output))
 
-<a id="nestedblock--tag"></a>
-### Nested Schema for `tag`
+<a id="nestedblock--aggregation_policy"></a>
+### Nested Schema for `aggregation_policy`
 
 Required:
 
-- `name` (String) Tag name, e.g. department.
-- `value` (String) Tag value, e.g. marketing_info.
+- `policy_name` (String) Aggregation policy name.
 
 Optional:
 
-- `database` (String) Name of the database that the tag was created in.
-- `schema` (String) Name of the schema that the tag was created in.
+- `entity_key` (Set of String) Defines which columns uniquely identify an entity within the view.
+
+
+<a id="nestedblock--row_access_policy"></a>
+### Nested Schema for `row_access_policy`
+
+Required:
+
+- `on` (Set of String) Defines which columns are affected by the policy.
+- `policy_name` (String) Row access policy name.
+
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `check` (String)
+- `comment` (String)
+- `default` (String)
+- `expression` (String)
+- `is_nullable` (Boolean)
+- `is_primary` (Boolean)
+- `is_unique` (Boolean)
+- `kind` (String)
+- `name` (String)
+- `policy_name` (String)
+- `privacy_domain` (String)
+- `type` (String)
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `change_tracking` (String)
+- `comment` (String)
+- `created_on` (String)
+- `database_name` (String)
+- `is_materialized` (Boolean)
+- `is_secure` (Boolean)
+- `kind` (String)
+- `name` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `reserved` (String)
+- `schema_name` (String)
+- `text` (String)
 
 ## Import
 

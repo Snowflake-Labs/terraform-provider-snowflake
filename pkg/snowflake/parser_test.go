@@ -3,6 +3,8 @@ package snowflake
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestViewSelectStatementExtractor_Extract(t *testing.T) {
@@ -32,7 +34,8 @@ from bar;`
 
 	full := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	issue2640 := `CREATE OR REPLACE SECURE VIEW "CLASSIFICATION" comment = 'Classification View of the union of classification tables' AS select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION`
-
+	withRowAccessAndAggregationPolicy := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap   AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	withRowAccessAndAggregationPolicyWithEntityKey := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	type args struct {
 		input string
 	}
@@ -57,6 +60,8 @@ from bar;`
 		{"identifier", args{identifier}, "select * from bar;", false},
 		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 		{"issue2640", args{issue2640}, "select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION", false},
+		{"with row access policy and aggregation policy", args{withRowAccessAndAggregationPolicy}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+		{"with row access policy and aggregation policy with entity key", args{withRowAccessAndAggregationPolicyWithEntityKey}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -67,9 +72,7 @@ from bar;`
 				t.Errorf("ViewSelectStatementExtractor.Extract() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("ViewSelectStatementExtractor.Extract() = '%v', want '%v'", got, tt.want)
-			}
+			require.Equal(t, tt.want, got)
 		})
 	}
 }

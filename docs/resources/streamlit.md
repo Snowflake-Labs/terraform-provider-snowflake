@@ -60,7 +60,7 @@ resource "snowflake_streamlit" "streamlit" {
 
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE STREAMLIT` for the given streamlit. (see [below for nested schema](#nestedatt--describe_output))
 - `id` (String) The ID of this resource.
-- `show_output` (List of Object) Outputs the result of `SHOW STREAMLIT` for the given streamli. (see [below for nested schema](#nestedatt--show_output))
+- `show_output` (List of Object) Outputs the result of `SHOW STREAMLIT` for the given streamlit. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

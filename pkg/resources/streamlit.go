@@ -83,7 +83,7 @@ var streamlitSchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW STREAMLIT` for the given streamli.",
+		Description: "Outputs the result of `SHOW STREAMLIT` for the given streamlit.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowStreamlitSchema,
 		},

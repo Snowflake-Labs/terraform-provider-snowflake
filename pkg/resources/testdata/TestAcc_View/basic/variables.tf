@@ -13,11 +13,3 @@ variable "schema" {
 variable "statement" {
   type = string
 }
-
-variable "tag1Name" {
-  type = string
-}
-
-variable "tag2Name" {
-  type = string
-}

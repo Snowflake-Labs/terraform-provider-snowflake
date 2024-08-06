@@ -2,37 +2,44 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var space = regexp.MustCompile(`\s+`)
-
 var viewSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the view. Don't use the | character.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "The database in which to create the view. Don't use the | character.",
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schema in which to create the view. Don't use the | character.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "The schema in which to create the view. Don't use the | character.",
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"or_replace": {
 		Type:        schema.TypeBool,
@@ -52,15 +59,185 @@ var viewSchema = map[string]*schema.Schema{
 		RequiredWith: []string{"or_replace"},
 	},
 	"is_secure": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_secure"),
+		Description:      booleanStringFieldDescription("Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views."),
 	},
+	"is_temporary": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		Description:      booleanStringFieldDescription("Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session."),
+	},
+	"is_recursive": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		Description:      booleanStringFieldDescription("Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression)."),
+	},
+	"change_tracking": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("change_tracking", func(x any) any {
+			return x.(string) == "ON"
+		}),
+		// DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("change_tracking"),
+		Description: booleanStringFieldDescription("Specifies to enable or disable change tracking on the table."),
+	},
+	// TODO(next pr): support remaining fields
+	// "data_metric_functions": {
+	// 	Type:     schema.TypeSet,
+	// 	Optional: true,
+	// 	Elem: &schema.Resource{
+	// 		Schema: map[string]*schema.Schema{
+	// 			"metric_name": {
+	// 				Type:        schema.TypeString,
+	// 				Optional:    true,
+	// 				Description: "Identifier of the data metric function to add to the table or view or drop from the table or view.",
+	// 			},
+	// 			"column_name": {
+	// 				Type:        schema.TypeString,
+	// 				Optional:    true,
+	// 				Description: "The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.",
+	// 			},
+	// 		},
+	// 	},
+	// 	Description: "Data metric functions used for the view.",
+	// },
+	// "data_metric_schedule": {
+	// 	Type:     schema.TypeList,
+	// 	Optional: true,
+	// 	MaxItems: 1,
+	// 	Elem: &schema.Resource{
+	// 		Schema: map[string]*schema.Schema{
+	// 			"minutes": {
+	// 				Type:        schema.TypeInt,
+	// 				Optional:    true,
+	// 				Description: "Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron` and `trigger_on_changes`.",
+	// 				// TODO: move to sdk
+	// 				ValidateFunc:  validation.IntInSlice([]int{5, 15, 30, 60, 720, 1440}),
+	// 				ConflictsWith: []string{"data_metric_schedule.using_cron", "data_metric_schedule.trigger_on_changes"},
+	// 			},
+	// 			"using_cron": {
+	// 				Type:        schema.TypeString,
+	// 				Optional:    true,
+	// 				Description: "Specifies a cron expression and time zone for periodically running the data metric function. Supports a subset of standard cron utility syntax. Conflicts with `minutes` and `trigger_on_changes`.",
+	// 				// TODO: validate?
+	// 				ConflictsWith: []string{"data_metric_schedule.minutes", "data_metric_schedule.trigger_on_changes"},
+	// 			},
+	// 			"trigger_on_changes": {
+	// 				Type:          schema.TypeString,
+	// 				Optional:      true,
+	// 				Default:       BooleanDefault,
+	// 				Description:   booleanStringFieldDescription("Specifies that the DMF runs when a DML operation modifies the table, such as inserting a new row or deleting a row. Conflicts with `minutes` and `using_cron`."),
+	// 				ConflictsWith: []string{"data_metric_schedule.minutes", "data_metric_schedule.using_cron"},
+	// 			},
+	// 		},
+	// 	},
+	// 	Description: "Specifies the schedule to run the data metric function periodically.",
+	// },
+	// "columns": {
+	// 	Type:     schema.TypeList,
+	// 	Optional: true,
+	// 	Elem: &schema.Resource{
+	// 		Schema: map[string]*schema.Schema{
+	// 			"column_name": {
+	// 				Type:        schema.TypeString,
+	// 				Required:    true,
+	// 				Description: "Specifies affected column name.",
+	// 			},
+	// 			"masking_policy": {
+	// 				Type:     schema.TypeList,
+	// 				Optional: true,
+	// 				Elem: &schema.Resource{
+	// 					Schema: map[string]*schema.Schema{
+	// 						// TODO: change to `name`? in other policies as well
+	// 						"policy_name": {
+	// 							Type:        schema.TypeString,
+	// 							Required:    true,
+	// 							Description: "Specifies the masking policy to set on a column.",
+	// 						},
+	// 						"using": {
+	// 							Type:     schema.TypeList,
+	// 							Optional: true,
+	// 							Elem: &schema.Schema{
+	// 								Type: schema.TypeString,
+	// 							},
+	// 							Description: "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
+	// 						},
+	// 					},
+	// 				},
+	// 			},
+	// 			"projection_policy": {
+	// 				Type:             schema.TypeString,
+	// 				Optional:         true,
+	// 				DiffSuppressFunc: DiffSuppressStatement,
+	// 				Description:      "Specifies the projection policy to set on a column.",
+	// 			},
+	// 		},
+	// 	},
+	// 	Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
+	// },
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the view.",
+	},
+	"row_access_policy": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"policy_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					DiffSuppressFunc: suppressIdentifierQuoting,
+					Description:      "Row access policy name.",
+				},
+				"on": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "Defines which columns are affected by the policy.",
+				},
+			},
+		},
+		Description: "Specifies the row access policy to set on a view.",
+	},
+	"aggregation_policy": {
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"policy_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					DiffSuppressFunc: suppressIdentifierQuoting,
+					Description:      "Aggregation policy name.",
+				},
+				"entity_key": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "Defines which columns uniquely identify an entity within the view.",
+				},
+			},
+		},
+		Description: "Specifies the aggregation policy to set on a view.",
 	},
 	"statement": {
 		Type:             schema.TypeString,
@@ -68,156 +245,364 @@ var viewSchema = map[string]*schema.Schema{
 		Description:      "Specifies the query used to create the view.",
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
-	"created_on": {
-		Type:        schema.TypeString,
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "The timestamp at which the view was created.",
+		Description: "Outputs the result of `SHOW VIEW` for the given view.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowViewSchema,
+		},
 	},
-	"tag": tagReferenceSchema,
+	DescribeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE VIEW` for the given view.",
+		Elem: &schema.Resource{
+			Schema: schemas.ViewDescribeSchema,
+		},
+	},
 }
 
 // View returns a pointer to the resource representing a view.
 func View() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateView,
-		Read:   ReadView,
-		Update: UpdateView,
-		Delete: DeleteView,
+		SchemaVersion: 1,
+
+		CreateContext: CreateView,
+		ReadContext:   ReadView(true),
+		UpdateContext: UpdateView,
+		DeleteContext: DeleteView,
+		Description:   "Resource used to manage view objects. For more information, check [view documentation](https://docs.snowflake.com/en/sql-reference/sql/create-view).",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "change_tracking", "is_secure", "statement"),
+		),
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportView,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v094ViewStateUpgrader,
+			},
 		},
 	}
 }
 
-// CreateView implements schema.CreateFunc.
-func CreateView(d *schema.ResourceData, meta interface{}) error {
+func ImportView(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	log.Printf("[DEBUG] Starting view import")
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
+	v, err := client.Views.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("name", v.Name); err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("change_tracking", booleanStringFromBool(v.IsChangeTracking())); err != nil {
+		return nil, err
+	}
+	if err := d.Set("is_recursive", booleanStringFromBool(v.IsRecursive())); err != nil {
+		return nil, err
+	}
+	if err := d.Set("is_secure", booleanStringFromBool(v.IsSecure)); err != nil {
+		return nil, err
+	}
+	if err := d.Set("is_temporary", booleanStringFromBool(v.IsTemporary())); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	req, err := prepareCreateRequest(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	id := req.GetName()
+
+	err = client.Views.Create(ctx, req)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating view %v err = %w", id.Name(), err))
+	}
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
+
+	if v := d.Get("change_tracking").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
+		}
+	}
+
+	return ReadView(false)(ctx, d, meta)
+}
+
+type resourceDataGetter interface {
+	Get(string) any
+}
+
+func prepareCreateRequest(d resourceDataGetter) (*sdk.CreateViewRequest, error) {
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	s := d.Get("statement").(string)
-	createRequest := sdk.NewCreateViewRequest(id, s)
+	statement := d.Get("statement").(string)
+	req := sdk.NewCreateViewRequest(id, statement)
 
-	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		createRequest.WithOrReplace(true)
+	if v := d.Get("or_replace"); v.(bool) {
+		req.WithOrReplace(true)
 	}
 
-	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		createRequest.WithSecure(true)
+	if v := d.Get("copy_grants"); v.(bool) {
+		req.WithCopyGrants(true)
 	}
 
-	if v, ok := d.GetOk("copy_grants"); ok && v.(bool) {
-		createRequest.WithCopyGrants(true)
-	}
-
-	if v, ok := d.GetOk("comment"); ok {
-		createRequest.WithComment(v.(string))
-	}
-
-	err := client.Views.Create(ctx, createRequest)
-	if err != nil {
-		return fmt.Errorf("error creating view %v err = %w", name, err)
-	}
-
-	// TODO [SNOW-1348118]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
-	// Will be discussed with parser topic during resources redesign.
-	if _, ok := d.GetOk("tag"); ok {
-		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
+	if v := d.Get("is_secure").(string); v != BooleanDefault {
+		parsed, err := strconv.ParseBool(v)
 		if err != nil {
-			return fmt.Errorf("error setting tags on view %v, err = %w", id, err)
+			return nil, err
 		}
+		req.WithSecure(parsed)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	if v := d.Get("is_temporary").(string); v != BooleanDefault {
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, err
+		}
+		req.WithTemporary(parsed)
+	}
 
-	return ReadView(d, meta)
+	if v := d.Get("is_recursive").(string); v != BooleanDefault {
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, err
+		}
+		req.WithRecursive(parsed)
+	}
+
+	if v := d.Get("comment").(string); len(v) > 0 {
+		req.WithComment(v)
+	}
+
+	if v := d.Get("row_access_policy"); len(v.([]any)) > 0 {
+		req.WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(extractPolicyWithColumns(v, "on")))
+	}
+
+	if v := d.Get("aggregation_policy"); len(v.([]any)) > 0 {
+		id, columns := extractPolicyWithColumns(v, "entity_key")
+		aggregationPolicyReq := sdk.NewViewAggregationPolicyRequest(id)
+		if len(columns) > 0 {
+			aggregationPolicyReq.WithEntityKey(columns)
+		}
+		req.WithAggregationPolicy(*aggregationPolicyReq)
+	}
+	return req, nil
 }
 
-// ReadView implements schema.ReadFunc.
-func ReadView(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+func extractPolicyWithColumns(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column) {
+	policyConfig := v.([]any)[0].(map[string]any)
+	columnsRaw := expandStringList(policyConfig[columnsKey].(*schema.Set).List())
+	columns := make([]sdk.Column, len(columnsRaw))
+	for i := range columnsRaw {
+		columns[i] = sdk.Column{Value: columnsRaw[i]}
+	}
+	return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(policyConfig["policy_name"].(string)), columns
+}
 
-	view, err := client.Views.ShowByID(ctx, id)
-	if err != nil {
-		log.Printf("[DEBUG] view (%s) not found", d.Id())
-		d.SetId("")
+func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+		view, err := client.Views.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query view. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("View: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
+		}
+
+		if err = d.Set("name", view.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("database", view.DatabaseName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("schema", view.SchemaName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("comment", view.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObjectInShow(d,
+				showMapping{"is_secure", "is_secure", view.IsSecure, booleanStringFromBool(view.IsSecure), nil},
+				showMapping{"text", "is_recursive", view.IsRecursive(), booleanStringFromBool(view.IsRecursive()), func(x any) any {
+					return strings.Contains(x.(string), "RECURSIVE")
+				}},
+				showMapping{"text", "is_temporary", view.IsTemporary(), booleanStringFromBool(view.IsTemporary()), func(x any) any {
+					return strings.Contains(x.(string), "TEMPORARY")
+				}},
+				showMapping{"change_tracking", "change_tracking", view.IsChangeTracking(), booleanStringFromBool(view.IsChangeTracking()), func(x any) any {
+					return x.(string) == "ON"
+				}},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if err = setStateToValuesFromConfig(d, viewSchema, []string{
+			"change_tracking",
+			"is_recursive",
+			"is_secure",
+			"is_temporary",
+		}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = handlePolicyReferences(ctx, client, id, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if view.Text != "" {
+			// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+			extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
+			statement, err := extractor.Extract()
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err = d.Set("statement", statement); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			return diag.FromErr(fmt.Errorf("error reading view %v, err = %w, `text` is missing; if the view is secure then the role used by the provider must own the view (consult https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)", d.Id(), err))
+		}
+
+		describeResult, err := client.Views.Describe(ctx, view.ID())
+		if err != nil {
+			log.Printf("[DEBUG] describing view: %s, err: %s", id.FullyQualifiedName(), err)
+		} else {
+			if err = d.Set(DescribeOutputAttributeName, schemas.ViewDescriptionToSchema(describeResult)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.ViewToSchema(view)}); err != nil {
+			return diag.FromErr(err)
+		}
 		return nil
 	}
-
-	if err = d.Set("name", view.Name); err != nil {
-		return err
-	}
-	if err = d.Set("is_secure", view.IsSecure); err != nil {
-		return err
-	}
-	if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
-		return err
-	}
-	if err = d.Set("comment", view.Comment); err != nil {
-		return err
-	}
-	if err = d.Set("schema", view.SchemaName); err != nil {
-		return err
-	}
-	if err = d.Set("database", view.DatabaseName); err != nil {
-		return err
-	}
-	if err = d.Set("created_on", view.CreatedOn); err != nil {
-		return err
-	}
-
-	if view.Text != "" {
-		// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
-		extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
-		substringOfQuery, err := extractor.Extract()
-		if err != nil {
-			return err
-		}
-		if err = d.Set("statement", substringOfQuery); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("error reading view %v, err = %w, `text` is missing; if the view is secure then the role used by the provider must own the view (consult https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)", d.Id(), err)
-	}
-
-	return nil
 }
 
-// UpdateView implements schema.UpdateFunc.
-func UpdateView(d *schema.ResourceData, meta interface{}) error {
+func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
+	// ensure a warehouse is selected for the session to get policy references
+	cleanupWarehouse, err := ensureWarehouse(ctx, client)
+	if err != nil {
+		return err
+	}
+	defer cleanupWarehouse()
+
+	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
+	if err != nil {
+		return err
+	}
+	for _, p := range policyRefs {
+		policyName := sdk.NewSchemaObjectIdentifier(*p.PolicyDb, *p.PolicySchema, p.PolicyName)
+		switch p.PolicyKind {
+		case string(sdk.PolicyKindAggregationPolicy):
+			var entityKey []string
+			if p.RefArgColumnNames != nil {
+				entityKey = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
+			}
+			if err = d.Set("aggregation_policy", []map[string]any{{
+				"policy_name": policyName.FullyQualifiedName(),
+				"entity_key":  entityKey,
+			}}); err != nil {
+				return err
+			}
+		case string(sdk.PolicyKindRowAccessPolicy):
+			var on []string
+			if p.RefArgColumnNames != nil {
+				on = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
+			}
+			if err = d.Set("row_access_policy", []map[string]any{{
+				"policy_name": policyName.FullyQualifiedName(),
+				"on":          on,
+			}}); err != nil {
+				return err
+			}
+		default:
+			log.Printf("[WARN] unexpected policy kind %v in policy references returned from Snowflake", p.PolicyKind)
+		}
+	}
+	return err
+}
+
+type viewWithReplaceDataResourceGetter struct {
+	d *schema.ResourceData
+}
+
+func (g *viewWithReplaceDataResourceGetter) Get(name string) any {
+	old, new := g.d.GetChange(name)
+	if name == "statement" {
+		return new
+	}
+	return old
+}
+
+func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	// The only way to update the statement field in a view is to perform create or replace with the new statement.
-	// In case of any statement change, create or replace will be performed with all the old parameters, except statement
-	// and copy grants (which is always set to true to keep the permissions from the previous state).
+	// change on this field can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
 	if d.HasChange("statement") {
-		oldIsSecure, _ := d.GetChange("is_secure")
-		oldComment, _ := d.GetChange("comment")
-		oldTags, _ := d.GetChange("tag")
-
-		createRequest := sdk.NewCreateViewRequest(id, d.Get("statement").(string)).
-			WithOrReplace(true).
-			WithCopyGrants(true).
-			WithComment(oldComment.(string)).
-			WithTag(getTagsFromList(oldTags.([]any)))
-
-		if oldIsSecure.(bool) {
-			createRequest.WithSecure(true)
+		// TODO: extract this common code with CreateView
+		req, err := prepareCreateRequest(&viewWithReplaceDataResourceGetter{d})
+		if err != nil {
+			return diag.FromErr(err)
 		}
 
-		err := client.Views.Create(ctx, createRequest)
+		err = client.Views.Create(ctx, req.WithOrReplace(true))
 		if err != nil {
-			return fmt.Errorf("error when changing property on %v and performing create or replace to update view statements, err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error when changing property on %v and performing create or replace to update view statements, err = %w", d.Id(), err))
+		}
+		if v := d.Get("change_tracking").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
+			}
 		}
 	}
 
@@ -226,7 +611,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(newId))
 		if err != nil {
-			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error renaming view %v err = %w", d.Id(), err))
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
@@ -237,63 +622,130 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		if comment := d.Get("comment").(string); comment == "" {
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetComment(true))
 			if err != nil {
-				return fmt.Errorf("error unsetting comment for view %v", d.Id())
+				return diag.FromErr(fmt.Errorf("error unsetting comment for view %v", d.Id()))
 			}
 		} else {
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetComment(comment))
 			if err != nil {
-				return fmt.Errorf("error updating comment for view %v", d.Id())
+				return diag.FromErr(fmt.Errorf("error setting comment for view %v", d.Id()))
 			}
 		}
 	}
 
 	if d.HasChange("is_secure") {
-		if d.Get("is_secure").(bool) {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(true))
+		if v := d.Get("is_secure").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
-				return fmt.Errorf("error setting secure for view %v", d.Id())
+				return diag.FromErr(err)
+			}
+			if parsed {
+				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(parsed))
+			} else {
+				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(parsed))
+			}
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting is_secure for view %v: %w", d.Id(), err))
 			}
 		} else {
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(true))
 			if err != nil {
-				return fmt.Errorf("error unsetting secure for view %v", d.Id())
+				return diag.FromErr(fmt.Errorf("error unsetting is_secure for view %v: %w", d.Id(), err))
+			}
+		}
+	}
+	if d.HasChange("change_tracking") {
+		if v := d.Get("change_tracking").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting change_tracking for view %v: %w", d.Id(), err))
+			}
+		} else {
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(false))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error unsetting change_tracking for view %v: %w", d.Id(), err))
 			}
 		}
 	}
 
-	if d.HasChange("tag") {
-		unsetTags, setTags := GetTagsDiff(d, "tag")
-
-		if len(unsetTags) > 0 {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags))
-			if err != nil {
-				return fmt.Errorf("error unsetting tags on %v, err = %w", d.Id(), err)
+	if d.HasChange("row_access_policy") {
+		var addReq *sdk.ViewAddRowAccessPolicyRequest
+		var dropReq *sdk.ViewDropRowAccessPolicyRequest
+		if v, ok := d.GetOk("row_access_policy"); ok {
+			rowAccessPolicyConfig := v.([]any)[0].(map[string]any)
+			columnsRaw := expandStringList(rowAccessPolicyConfig["on"].(*schema.Set).List())
+			columns := make([]sdk.Column, len(columnsRaw))
+			for i := range columnsRaw {
+				columns[i] = sdk.Column{Value: columnsRaw[i]}
 			}
+			addReq = sdk.NewViewAddRowAccessPolicyRequest(
+				sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rowAccessPolicyConfig["policy_name"].(string)),
+				columns)
 		}
-
-		if len(setTags) > 0 {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(setTags))
+		old, _ := d.GetChange("row_access_policy")
+		if len(old.([]any)) > 0 {
+			oldPolicy := old.([]any)[0].(map[string]any)
+			dropReq = sdk.NewViewDropRowAccessPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(oldPolicy["policy_name"].(string)))
+		}
+		req := sdk.NewAlterViewRequest(id)
+		if addReq != nil && dropReq != nil { // nolint
+			req.WithDropAndAddRowAccessPolicy(*sdk.NewViewDropAndAddRowAccessPolicyRequest(*dropReq, *addReq))
+		} else if addReq != nil {
+			req.WithAddRowAccessPolicy(*addReq)
+		} else if dropReq != nil {
+			req.WithDropRowAccessPolicy(*dropReq)
+		}
+		err := client.Views.Alter(ctx, req)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error altering row_access_policy for view %v: %w", d.Id(), err))
+		}
+	}
+	if d.HasChange("aggregation_policy") {
+		if v, ok := d.GetOk("aggregation_policy"); ok {
+			rowAccessPolicyConfig := v.([]any)[0].(map[string]any)
+			columnsRaw := expandStringList(rowAccessPolicyConfig["entity_key"].(*schema.Set).List())
+			columns := make([]sdk.Column, len(columnsRaw))
+			for i := range columnsRaw {
+				columns[i] = sdk.Column{Value: columnsRaw[i]}
+			}
+			aggregationPolicyReq := sdk.NewViewSetAggregationPolicyRequest(
+				sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rowAccessPolicyConfig["policy_name"].(string))).WithForce(true)
+			if len(columns) > 0 {
+				aggregationPolicyReq.WithEntityKey(columns)
+			}
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*aggregationPolicyReq))
 			if err != nil {
-				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error setting aggregation policy for view %v: %w", d.Id(), err))
+			}
+		} else {
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error unsetting aggregation policy for view %v", d.Id()))
 			}
 		}
 	}
 
-	return ReadView(d, meta)
+	return ReadView(false)(ctx, d, meta)
 }
 
-// DeleteView implements schema.DeleteFunc.
-func DeleteView(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+func DeleteView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	client := meta.(*provider.Context).Client
 
-	err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+	err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id).WithIfExists(true))
 	if err != nil {
-		return err
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Error deleting view",
+				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
+			},
+		}
 	}
 
 	d.SetId("")
-
 	return nil
 }
