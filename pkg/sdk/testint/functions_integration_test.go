@@ -305,9 +305,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -316,9 +314,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithUnsetTraceLevel(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetTraceLevel(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -327,9 +323,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithSetComment("test comment"))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetComment("test comment"))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -338,9 +332,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithUnsetComment(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetComment(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -349,9 +341,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithSetSecure(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, true, true)
 	})
@@ -368,9 +358,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithUnsetSecure(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -385,18 +373,14 @@ func TestInt_OtherFunctions(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		err := client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithSetTags(setTags))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
-		err = client.Functions.Alter(ctx, func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterFunctionRequest {
-			return sdk.NewAlterFunctionRequest(id)
-		}(id).WithUnsetTags(unsetTags))
+		err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})

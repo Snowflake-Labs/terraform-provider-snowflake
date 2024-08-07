@@ -517,7 +517,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
 
-	id, err := sdk.NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -651,7 +651,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id, err := sdk.NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -699,7 +699,7 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id, err := sdk.NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

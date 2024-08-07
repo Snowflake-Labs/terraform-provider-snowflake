@@ -354,24 +354,6 @@ func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdent
 	return NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), name, argumentDataTypes...)
 }
 
-func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
-	splitIdIndex := strings.IndexRune(fullyQualifiedName, '(')
-	parts, err := ParseIdentifierString(fullyQualifiedName[:splitIdIndex])
-	if err != nil {
-		return SchemaObjectIdentifierWithArguments{}, err
-	}
-	dataTypes, err := ParseFunctionArgumentsFromString(fullyQualifiedName[splitIdIndex:])
-	if err != nil {
-		return SchemaObjectIdentifierWithArguments{}, err
-	}
-	return NewSchemaObjectIdentifierWithArguments(
-		parts[0],
-		parts[1],
-		parts[2],
-		dataTypes...,
-	), nil
-}
-
 func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
 	return i.databaseName
 }

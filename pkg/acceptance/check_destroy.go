@@ -53,7 +53,7 @@ func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource)
 	case resources.ExternalFunction:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
 	case resources.Function:
-		return sdk.NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(rs.Primary.ID)
+		return sdk.ParseSchemaObjectIdentifierWithArguments(rs.Primary.ID)
 	case resources.Procedure:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
 	default:

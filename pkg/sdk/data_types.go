@@ -9,8 +9,14 @@ import (
 // DataType is based on https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
 type DataType string
 
+var allowedVectorInnerTypes = []DataType{
+	DataTypeInt,
+	DataTypeFloat,
+}
+
 const (
 	DataTypeNumber       DataType = "NUMBER"
+	DataTypeInt          DataType = "INT"
 	DataTypeFloat        DataType = "FLOAT"
 	DataTypeVARCHAR      DataType = "VARCHAR"
 	DataTypeString       DataType = "STRING"
