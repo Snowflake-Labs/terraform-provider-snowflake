@@ -2,11 +2,8 @@ package resources_test
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -1176,7 +1173,7 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					doesNotContainPublicSchema(t, id),
+					snowflakechecks.DoesNotContainPublicSchema(t, id),
 				),
 			},
 			// Change in parameter shouldn't change the state Snowflake
@@ -1189,7 +1186,7 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					doesNotContainPublicSchema(t, id),
+					snowflakechecks.DoesNotContainPublicSchema(t, id),
 				),
 			},
 		},
@@ -1211,7 +1208,7 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					containsPublicSchema(t, id),
+					snowflakechecks.ContainsPublicSchema(t, id),
 				),
 			},
 			// Change in parameter shouldn't change the state Snowflake
@@ -1224,31 +1221,11 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					containsPublicSchema(t, id),
+					snowflakechecks.ContainsPublicSchema(t, id),
 				),
 			},
 		},
 	})
-}
-
-func doesNotContainPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
-	t.Helper()
-	return func(state *terraform.State) error {
-		if slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
-			return fmt.Errorf("expected database %s to not contain public schema", id.FullyQualifiedName())
-		}
-		return nil
-	}
-}
-
-func containsPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
-	t.Helper()
-	return func(state *terraform.State) error {
-		if !slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
-			return fmt.Errorf("expected database %s to contain public schema", id.FullyQualifiedName())
-		}
-		return nil
-	}
 }
 
 func databaseWithDropPublicSchemaConfig(id sdk.AccountObjectIdentifier, withDropPublicSchema bool) string {
@@ -1259,144 +1236,3 @@ resource "snowflake_database" "test" {
 }
 `, id.Name(), strconv.FormatBool(withDropPublicSchema))
 }
-
-/*
-Test database upgrade from share
-
-step: 1
-version: 0.92.0
-config:
-resource "snowflake_share" "test" {
-  provider = snowflake.second_account
-  name = "test_share"
-  accounts = ["<primary_account_organization_name>.<primary_account_account_name>"]
-}
-
-resource "snowflake_database" "test" {
-  provider = snowflake.second_account
-  name = "test_database"
-}
-
-resource "snowflake_grant_privileges_to_share" "test" {
-  provider = snowflake.second_account
-  privileges = ["USAGE"]
-  on_database = snowflake_database.test.name
-  to_share = snowflake_share.test.name
-}
-
-resource "snowflake_database" "from_share" {
-  depends_on = [ snowflake_grant_privileges_to_share.test ]
-  name = snowflake_database.test.name
-  from_share = {
-    provider = "<second_account_account_locator>"
-    share = snowflake_share.test.name
-  }
-}
-
-step: 2
-version: newest
-expect error (after terraform plan): failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead
-
-step: 3
-version: newest
-action: remove database from share from the state (terraform state rm)
-
-step: 4
-version: newest
-action:
-- modify database from share to look like this:
-resource "snowflake_shared_database" "from_share" {
-  depends_on = [ snowflake_grant_privileges_to_share.test ]
-  name = snowflake_database.test.name
-  from_share = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_share.test.name}\""
-}
-- run terraform plan and validate if the state is empty
-*/
-
-/*
-Test database upgrade from replica
-
-step: 1
-version: 0.92.0
-config:
-resource "snowflake_database" "primary" {
-	provider = snowflake.second_account
-	name = "test"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-  replication_configuration {
-    accounts             = ["<second_account_account_locator>"]
-    ignore_edition_check = true
-  }
-}
-
-resource "snowflake_database" "secondary" {
-	name = "test"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_replica = "<second_account_account_locator>.\"${snowflake_database.primary.name}\""
-}
-
-step: 2
-version: newest
-expect error (after terraform plan): failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead
-
-step: 3
-version: newest
-action: remove secondary database from state (terraform state rm)
-
-step: 4
-version: newest
-action:
-- modify primary database to look like this:
-resource "snowflake_database" "primary" {
-	provider = snowflake.second_account
-	name = "test"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-  replication {
-    enable_to_account {
-      account_identifier = "<second_account_organization_name>.<second_account_account_name>"
-      with_failover      = true
-    }
-    ignore_edition_check = true
-  }
-}
-
-- change secondary database config and run terraform import for secondary database (changed config under)
-resource "snowflake_secondary_database" "secondary" {
-	name = "test"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_replica = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_database.primary.name}\""
-}
-- run terraform plan and validate if the state is empty
-*/
-
-/*
-Test database upgrade from cloned database
-
-step: 1
-version: 0.92.0
-config:
-resource "snowflake_database" "test" {
-	name = "test"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-}
-
-resource "snowflake_database" "cloned" {
-	name = "cloned"
-	from_database = snowflake_database.test.name
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-}
-
-step: 2
-version: newest
-expect error (after terraform plan): failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead...
-
-step: 3
-version: newest
-action: remove cloned database from state (terraform state rm)
-
-step: 4
-version: newest
-action:
-- import cloned database into state
-- run terraform plan and validate if the state is empty
-*/
