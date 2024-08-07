@@ -136,7 +136,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		view := createMaterializedViewWithRequest(t, request)
 
 		assertMaterializedViewWithOptions(t, view, id, true, "comment", fmt.Sprintf(`LINEAR("%s")`, "COLUMN_WITH_COMMENT"))
-		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
 		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)

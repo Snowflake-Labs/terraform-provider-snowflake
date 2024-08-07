@@ -49,7 +49,7 @@ func (w *WarehouseResourceParametersAssert) HasDefaultMaxConcurrencyLevel() *War
 
 ### Adding new Snowflake object assertions
 Snowflake object assertions can be generated automatically. For object `abc` do the following:
-- add object you want to generate to `allStructs` slice in the `assert/objectassert/gen/main/main.go`
+- add object you want to generate to `allStructs` slice in the `assert/objectassert/gen/sdk_object_def.go`
 - to add custom (not generated assertions) create file `abc_snowflake_ext.go` in the `objectassert` package. Example would be:
 ```go
 func (w *WarehouseAssert) HasStateOneOf(expected ...sdk.WarehouseState) *WarehouseAssert {
@@ -77,7 +77,7 @@ func (w *WarehouseParametersAssert) HasDefaultMaxConcurrencyLevel() *WarehousePa
 }
 ```
 
-### Adding new models
+### Adding new resource config model builders
 Resource config model builders can be generated automatically. For object `abc` do the following:
 - add object you want to generate to `allResourceSchemaDefs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
 - to add custom (not generated) config builder methods create file `warehouse_model_ext` in the `config/model` package. Example would be:
