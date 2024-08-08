@@ -71,22 +71,20 @@ func (v *externalFunctions) Describe(ctx context.Context, request *DescribeExter
 
 func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions {
 	opts := &CreateExternalFunctionOptions{
-		OrReplace: r.OrReplace,
-		Secure:    r.Secure,
-		name:      r.name.WithoutArguments(),
-
+		OrReplace:             r.OrReplace,
+		Secure:                r.Secure,
+		name:                  r.name.WithoutArguments(),
 		ResultDataType:        r.ResultDataType,
 		ReturnNullValues:      r.ReturnNullValues,
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Comment:               r.Comment,
 		ApiIntegration:        r.ApiIntegration,
-
-		MaxBatchRows:       r.MaxBatchRows,
-		Compression:        r.Compression,
-		RequestTranslator:  r.RequestTranslator,
-		ResponseTranslator: r.ResponseTranslator,
-		As:                 r.As,
+		MaxBatchRows:          r.MaxBatchRows,
+		Compression:           r.Compression,
+		RequestTranslator:     r.RequestTranslator,
+		ResponseTranslator:    r.ResponseTranslator,
+		As:                    r.As,
 	}
 	if r.Arguments != nil {
 		s := make([]ExternalFunctionArgument, len(r.Arguments))

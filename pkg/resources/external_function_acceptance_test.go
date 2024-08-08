@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -226,7 +225,7 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
@@ -450,30 +449,30 @@ func externalFunctionConfigWithReturnNullAllowed(database string, schema string,
 
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
-  name                 = "%[3]s"
-  api_provider         = "aws_api_gateway"
-  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
-  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
-  enabled              = true
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
 }
 
 resource "snowflake_external_function" "f" {
-  name     = "%[3]s"
-  database = "%[1]s"
-  schema   = "%[2]s"
-  arg {
-    name = "ARG1"
-    type = "VARCHAR"
-  }
-  arg {
-    name = "ARG2"
-    type = "VARCHAR"
-  }
-  return_type               = "VARIANT"
-  return_behavior           = "IMMUTABLE"
-  api_integration           = snowflake_api_integration.test_api_int.name
-  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
-  %[4]s
+ name     = "%[3]s"
+ database = "%[1]s"
+ schema   = "%[2]s"
+ arg {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+ arg {
+   name = "ARG2"
+   type = "VARCHAR"
+ }
+ return_type               = "VARIANT"
+ return_behavior           = "IMMUTABLE"
+ api_integration           = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+ %[4]s
 }
 
 `, database, schema, name, returnNullAllowedText)
@@ -482,46 +481,46 @@ resource "snowflake_external_function" "f" {
 func externalFunctionConfigIssue2528(database string, schema string, name string, schema2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
-  name                 = "%[3]s"
-  api_provider         = "aws_api_gateway"
-  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
-  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
-  enabled              = true
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
 }
 
 resource "snowflake_schema" "s2" {
-  database            = "%[1]s"
-  name                = "%[4]s"
+ database            = "%[1]s"
+ name                = "%[4]s"
 }
 
 resource "snowflake_external_function" "f" {
-  name     = "%[3]s"
-  database = "%[1]s"
-  schema   = "%[2]s"
-  arg {
-    name = "SNS_NOTIF"
-    type = "OBJECT"
-  }
-  return_type = "VARIANT"
-  return_behavior = "VOLATILE"
-  api_integration = snowflake_api_integration.test_api_int.name
-  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+ name     = "%[3]s"
+ database = "%[1]s"
+ schema   = "%[2]s"
+ arg {
+   name = "SNS_NOTIF"
+   type = "OBJECT"
+ }
+ return_type = "VARIANT"
+ return_behavior = "VOLATILE"
+ api_integration = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 }
 
 resource "snowflake_external_function" "f2" {
-  depends_on = [snowflake_schema.s2]
+ depends_on = [snowflake_schema.s2]
 
-  name     = "%[3]s"
-  database = "%[1]s"
-  schema   = "%[4]s"
-  arg {
-    name = "SNS_NOTIF"
-    type = "OBJECT"
-  }
-  return_type = "VARIANT"
-  return_behavior = "VOLATILE"
-  api_integration = snowflake_api_integration.test_api_int.name
-  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+ name     = "%[3]s"
+ database = "%[1]s"
+ schema   = "%[4]s"
+ arg {
+   name = "SNS_NOTIF"
+   type = "OBJECT"
+ }
+ return_type = "VARIANT"
+ return_behavior = "VOLATILE"
+ api_integration = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 }
 `, database, schema, name, schema2)
 }
@@ -529,33 +528,33 @@ resource "snowflake_external_function" "f2" {
 func externalFunctionConfigIssueCurlyHeader(id sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
-  name                 = "%[3]s"
-  api_provider         = "aws_api_gateway"
-  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
-  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
-  enabled              = true
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
 }
 
 resource "snowflake_external_function" "f" {
-  name     = "%[3]s"
-  database = "%[1]s"
-  schema   = "%[2]s"
-  arg {
-    name = "ARG1"
-    type = "VARCHAR"
-  }
-  arg {
-    name = "ARG2"
-    type = "VARCHAR"
-  }
-  header {
+ name     = "%[3]s"
+ database = "%[1]s"
+ schema   = "%[2]s"
+ arg {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+ arg {
+   name = "ARG2"
+   type = "VARCHAR"
+ }
+ header {
 	name = "name"
 	value = "{0}"
-  }
-  return_type               = "VARIANT"
-  return_behavior           = "IMMUTABLE"
-  api_integration           = snowflake_api_integration.test_api_int.name
-  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+ }
+ return_type               = "VARIANT"
+ return_behavior           = "IMMUTABLE"
+ api_integration           = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 }
 
 `, id.DatabaseName(), id.SchemaName(), id.Name())

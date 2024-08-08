@@ -39,7 +39,7 @@ var (
 var FunctionsDef = g.NewInterface(
 	"Functions",
 	"Function",
-	g.KindOfT[SchemaObjectIdentifier](),
+	g.KindOfT[SchemaObjectIdentifierWithArguments](),
 ).CustomOperation(
 	"CreateForJava",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler",
@@ -50,7 +50,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -94,7 +94,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -123,7 +123,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -168,7 +168,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
 		IfNotExists().
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -206,7 +206,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
 		SQL("FUNCTION").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
@@ -231,7 +231,6 @@ var FunctionsDef = g.NewInterface(
 		SQL("FUNCTION").
 		IfExists().
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("SET LOG_LEVEL", g.ParameterOptions().SingleQuotes()).
@@ -253,7 +252,6 @@ var FunctionsDef = g.NewInterface(
 		SQL("FUNCTION").
 		IfExists().
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/show-user-functions",
@@ -311,6 +309,5 @@ var FunctionsDef = g.NewInterface(
 		Describe().
 		SQL("FUNCTION").
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		WithValidation(g.ValidIdentifier, "name"),
 )

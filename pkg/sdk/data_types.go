@@ -9,8 +9,14 @@ import (
 // DataType is based on https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
 type DataType string
 
+var allowedVectorInnerTypes = []DataType{
+	DataTypeInt,
+	DataTypeFloat,
+}
+
 const (
 	DataTypeNumber       DataType = "NUMBER"
+	DataTypeInt          DataType = "INT"
 	DataTypeFloat        DataType = "FLOAT"
 	DataTypeVARCHAR      DataType = "VARCHAR"
 	DataTypeString       DataType = "STRING"
@@ -87,6 +93,11 @@ func ToDataType(s string) (DataType, error) {
 	timeSynonyms := []string{"TIME"}
 	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTime, nil
+	}
+
+	vectorSynonyms := []string{"VECTOR"}
+	if slices.ContainsFunc(vectorSynonyms, func(e string) bool { return strings.HasPrefix(dType, e) }) {
+		return DataType(dType), nil
 	}
 
 	return "", fmt.Errorf("invalid data type: %s", s)

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -318,7 +317,7 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schemaName, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schemaName, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextExternalFunction(ctx, d, meta)
 }
@@ -476,7 +475,7 @@ func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	req := sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments())
+	req := sdk.NewAlterFunctionRequest(sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), id.Arguments()...))
 	if d.HasChange("comment") {
 		_, new := d.GetChange("comment")
 		if new == "" {
@@ -496,7 +495,7 @@ func DeleteContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	req := sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())
+	req := sdk.NewDropFunctionRequest(sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), id.Arguments()...))
 	if err := client.Functions.Drop(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}

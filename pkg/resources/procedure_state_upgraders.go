@@ -55,7 +55,7 @@ func v085ProcedureStateUpgrader(ctx context.Context, rawState map[string]interfa
 		argDataTypes[i] = argDataType
 	}
 
-	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(parsedV085ProcedureId.DatabaseName, parsedV085ProcedureId.SchemaName, parsedV085ProcedureId.ProcedureName, argDataTypes)
+	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArgumentsOld(parsedV085ProcedureId.DatabaseName, parsedV085ProcedureId.SchemaName, parsedV085ProcedureId.ProcedureName, argDataTypes)
 	rawState["id"] = schemaObjectIdentifierWithArguments.FullyQualifiedName()
 
 	return rawState, nil

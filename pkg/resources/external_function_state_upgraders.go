@@ -60,7 +60,7 @@ func v085ExternalFunctionStateUpgrader(ctx context.Context, rawState map[string]
 		}
 	}
 
-	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(parsedV085ExternalFunctionId.DatabaseName, parsedV085ExternalFunctionId.SchemaName, parsedV085ExternalFunctionId.ExternalFunctionName, argDataTypes)
+	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArgumentsOld(parsedV085ExternalFunctionId.DatabaseName, parsedV085ExternalFunctionId.SchemaName, parsedV085ExternalFunctionId.ExternalFunctionName, argDataTypes)
 	rawState["id"] = schemaObjectIdentifierWithArguments.FullyQualifiedName()
 
 	oldDatabase := rawState["database"].(string)

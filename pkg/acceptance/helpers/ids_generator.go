@@ -77,12 +77,24 @@ func (c *IdsGenerator) RandomSchemaObjectIdentifierWithPrefix(prefix string) sdk
 	return sdk.NewSchemaObjectIdentifierInSchema(c.SchemaId(), c.AlphaWithPrefix(prefix))
 }
 
-func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments []sdk.DataType) sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments)
-}
-
 func (c *IdsGenerator) RandomSchemaObjectIdentifierInSchema(schemaId sdk.DatabaseObjectIdentifier) sdk.SchemaObjectIdentifier {
 	return sdk.NewSchemaObjectIdentifierInSchema(schemaId, c.Alpha())
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsOld(arguments ...sdk.DataType) sdk.SchemaObjectIdentifier {
+	return sdk.NewSchemaObjectIdentifierWithArgumentsOld(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments)
+}
+
+func (c *IdsGenerator) NewSchemaObjectIdentifierWithArguments(name string, arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), name, arguments...)
+}
+
+func (c *IdsGenerator) NewSchemaObjectIdentifierWithArgumentsInSchema(name string, schemaId sdk.DatabaseObjectIdentifier, argumentDataTypes ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId, name, argumentDataTypes...)
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments...)
 }
 
 func (c *IdsGenerator) Alpha() string {

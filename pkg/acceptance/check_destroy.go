@@ -27,7 +27,10 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 			}
 			t.Logf("found resource %s in state", resource)
 			ctx := context.Background()
-			id := decodeSnowflakeId(rs, resource)
+			id, err := decodeSnowflakeId(rs, resource)
+			if err != nil {
+				return err
+			}
 			if id == nil {
 				return fmt.Errorf("could not get the id of %s", resource)
 			}
@@ -45,16 +48,16 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 	}
 }
 
-func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource) sdk.ObjectIdentifier {
+func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource) (sdk.ObjectIdentifier, error) {
 	switch resource {
 	case resources.ExternalFunction:
-		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
 	case resources.Function:
-		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
+		return sdk.ParseSchemaObjectIdentifierWithArguments(rs.Primary.ID)
 	case resources.Procedure:
-		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
 	default:
-		return helpers.DecodeSnowflakeID(rs.Primary.ID)
+		return helpers.DecodeSnowflakeID(rs.Primary.ID), nil
 	}
 }
 
@@ -213,7 +216,7 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 }
 
-func runShowById[T any, U sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier](ctx context.Context, id sdk.ObjectIdentifier, show func(ctx context.Context, id U) (T, error)) error {
+func runShowById[T any, U sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier | sdk.SchemaObjectIdentifierWithArguments](ctx context.Context, id sdk.ObjectIdentifier, show func(ctx context.Context, id U) (T, error)) error {
 	idCast, err := asId[U](id)
 	if err != nil {
 		return err
@@ -222,7 +225,7 @@ func runShowById[T any, U sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdenti
 	return err
 }
 
-func asId[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier](id sdk.ObjectIdentifier) (*T, error) {
+func asId[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier | sdk.SchemaObjectIdentifierWithArguments](id sdk.ObjectIdentifier) (*T, error) {
 	if idCast, ok := id.(T); !ok {
 		return nil, fmt.Errorf("expected %s identifier type, but got: %T", reflect.TypeOf(new(T)).Elem().Name(), id)
 	} else {

@@ -185,7 +185,7 @@ func TestAcc_Function_complex(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 	name := id.Name()
 	comment := random.Comment()
 	resourceName := "snowflake_function.f"
@@ -218,13 +218,52 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 				),
 			},
 		},
@@ -270,6 +309,32 @@ func TestAcc_Function_Rename(t *testing.T) {
 			},
 		},
 	})
+}
+
+func functionConfigWithMoreArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement       = "SELECT A"
+
+  arguments {
+    name = "A"
+    type = "VARCHAR"
+  }
+  arguments {
+    name = "B"
+    type = "FLOAT"
+  }
+  arguments {
+    name = "C"
+    type = "NUMBER"
+  }
+}
+`, database, schema, name)
 }
 
 func functionConfig(database string, schema string, name string, comment string) string {

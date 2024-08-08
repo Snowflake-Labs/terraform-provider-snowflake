@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/go-cty/cty"
@@ -50,6 +49,7 @@ var functionSchema = map[string]*schema.Schema{
 					},
 					Description: "The argument name",
 				},
+				// TODO(SNOW-1596962): Fully support VECTOR data type sdk.ParseFunctionArgumentsFromString could be a base for another function that takes argument names into consideration.
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -159,7 +159,6 @@ var functionSchema = map[string]*schema.Schema{
 	},
 }
 
-// Function returns a pointer to the resource representing a stored function.
 func Function() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -225,11 +224,11 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	// create request with required
 	request := sdk.NewCreateForJavaFunctionRequest(id, *returns, handler)
 	functionDefinition := d.Get("statement").(string)
-	request.WithFunctionDefinition(sdk.String(functionDefinition))
+	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
-		request.WithSecure(sdk.Bool(v.(bool)))
+		request.WithSecure(v.(bool))
 	}
 	arguments, diags := parseFunctionArguments(d)
 	if diags != nil {
@@ -239,16 +238,16 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 		request.WithArguments(arguments)
 	}
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+		request.WithNullInputBehavior(sdk.NullInputBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
-		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("runtime_version"); ok {
-		request.WithRuntimeVersion(sdk.String(v.(string)))
+		request.WithRuntimeVersion(v.(string))
 	}
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.FunctionImportRequest{}
@@ -265,7 +264,7 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 		request.WithPackages(packages)
 	}
 	if v, ok := d.GetOk("target_path"); ok {
-		request.WithTargetPath(sdk.String(v.(string)))
+		request.WithTargetPath(v.(string))
 	}
 
 	if err := client.Functions.CreateForJava(ctx, request); err != nil {
@@ -275,7 +274,7 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	for _, item := range arguments {
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -297,11 +296,11 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	handler := d.Get("handler").(string)
 	// create request with required
 	request := sdk.NewCreateForScalaFunctionRequest(id, returnDataType, handler)
-	request.WithFunctionDefinition(sdk.String(functionDefinition))
+	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
-		request.WithSecure(sdk.Bool(v.(bool)))
+		request.WithSecure(v.(bool))
 	}
 	arguments, diags := parseFunctionArguments(d)
 	if diags != nil {
@@ -311,16 +310,16 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		request.WithArguments(arguments)
 	}
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+		request.WithNullInputBehavior(sdk.NullInputBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
-		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("runtime_version"); ok {
-		request.WithRuntimeVersion(sdk.String(v.(string)))
+		request.WithRuntimeVersion(v.(string))
 	}
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.FunctionImportRequest{}
@@ -337,7 +336,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		request.WithPackages(packages)
 	}
 	if v, ok := d.GetOk("target_path"); ok {
-		request.WithTargetPath(sdk.String(v.(string)))
+		request.WithTargetPath(v.(string))
 	}
 
 	if err := client.Functions.CreateForScala(ctx, request); err != nil {
@@ -347,7 +346,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, item := range arguments {
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -370,7 +369,7 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
-		request.WithSecure(sdk.Bool(v.(bool)))
+		request.WithSecure(v.(bool))
 	}
 	arguments, diags := parseFunctionArguments(d)
 	if diags != nil {
@@ -380,10 +379,10 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 		request.WithArguments(arguments)
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
-		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 
 	if err := client.Functions.CreateForSQL(ctx, request); err != nil {
@@ -393,7 +392,7 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	for _, item := range arguments {
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -415,11 +414,11 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	handler := d.Get("handler").(string)
 	// create request with required
 	request := sdk.NewCreateForPythonFunctionRequest(id, *returns, version, handler)
-	request.WithFunctionDefinition(sdk.String(functionDefinition))
+	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
-		request.WithSecure(sdk.Bool(v.(bool)))
+		request.WithSecure(v.(bool))
 	}
 	arguments, diags := parseFunctionArguments(d)
 	if diags != nil {
@@ -429,14 +428,14 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 		request.WithArguments(arguments)
 	}
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+		request.WithNullInputBehavior(sdk.NullInputBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
-		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.FunctionImportRequest{}
@@ -460,7 +459,7 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, item := range arguments {
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -483,7 +482,7 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
-		request.WithSecure(sdk.Bool(v.(bool)))
+		request.WithSecure(v.(bool))
 	}
 	arguments, diags := parseFunctionArguments(d)
 	if diags != nil {
@@ -493,13 +492,13 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 		request.WithArguments(arguments)
 	}
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+		request.WithNullInputBehavior(sdk.NullInputBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
-		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
 	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(sdk.String(v.(string)))
+		request.WithComment(v.(string))
 	}
 
 	if err := client.Functions.CreateForJavascript(ctx, request); err != nil {
@@ -509,7 +508,7 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	for _, item := range arguments {
 		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -518,7 +517,10 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", id.Name()); err != nil {
 		return diag.FromErr(err)
 	}
@@ -534,7 +536,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	for i, arg := range arguments {
 		argumentTypes[i] = arg.(map[string]interface{})["type"].(string)
 	}
-	functionDetails, err := client.Functions.Describe(ctx, sdk.NewDescribeFunctionRequest(id.WithoutArguments(), id.Arguments()))
+	functionDetails, err := client.Functions.Describe(ctx, id)
 	if err != nil {
 		// if function is not found then mark resource to be removed from state file during apply or refresh
 		d.SetId("")
@@ -630,37 +632,34 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// Show functions to set is_secure and comment
-	request := sdk.NewShowFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.Name())})
-	functions, err := client.Functions.Show(ctx, request)
+	function, err := client.Functions.ShowByID(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	for _, function := range functions {
-		signature := strings.Split(function.Arguments, " RETURN ")[0]
-		signature = strings.ReplaceAll(signature, " ", "")
-		id.FullyQualifiedName()
-		if signature == id.ArgumentsSignature() {
-			if err := d.Set("is_secure", function.IsSecure); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("comment", function.Description); err != nil {
-				return diag.FromErr(err)
-			}
-		}
+
+	if err := d.Set("is_secure", function.IsSecure); err != nil {
+		return diag.FromErr(err)
 	}
+
+	if err := d.Set("comment", function.Description); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return diags
 }
 
 func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	if d.HasChange("name") {
 		name := d.Get("name").(string)
-		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name, id.Arguments())
+		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name, id.ArgumentDataTypes()...)
 
-		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments()))); err != nil {
+		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(newId.SchemaObjectId())); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -671,11 +670,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("is_secure") {
 		secure := d.Get("is_secure")
 		if secure.(bool) {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetSecure(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true)); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetSecure(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -684,11 +683,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetComment(sdk.String(comment.(string)))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetComment(comment.(string))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetComment(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetComment(true)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -700,8 +699,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())); err != nil {
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
@@ -762,13 +764,13 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		for _, item := range columns {
 			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, item.ColumnDataType))
 		}
-		returns.WithTable(sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
+		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
 	} else {
 		returnDataType, diags := convertFunctionDataType(s)
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType))
 	}
 	return returns, nil
 }

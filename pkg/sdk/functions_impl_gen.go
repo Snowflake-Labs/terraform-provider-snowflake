@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -57,17 +59,19 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 	return resultList, nil
 }
 
-func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Function, error) {
-	request := NewShowFunctionRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
+	request := NewShowFunctionRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
 	functions, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(functions, func(r Function) bool { return r.Name == id.Name() })
+	return collections.FindOne(functions, func(r Function) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
-func (v *functions) Describe(ctx context.Context, request *DescribeFunctionRequest) ([]FunctionDetail, error) {
-	opts := request.toOpts()
+func (v *functions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error) {
+	opts := &DescribeFunctionOptions{
+		name: id,
+	}
 	rows, err := validateAndQuery[functionDetailRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
@@ -326,29 +330,27 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 
 func (r *AlterFunctionRequest) toOpts() *AlterFunctionOptions {
 	opts := &AlterFunctionOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
-		RenameTo:          r.RenameTo,
-		SetComment:        r.SetComment,
-		SetLogLevel:       r.SetLogLevel,
-		SetTraceLevel:     r.SetTraceLevel,
-		SetSecure:         r.SetSecure,
-		UnsetSecure:       r.UnsetSecure,
-		UnsetLogLevel:     r.UnsetLogLevel,
-		UnsetTraceLevel:   r.UnsetTraceLevel,
-		UnsetComment:      r.UnsetComment,
-		SetTags:           r.SetTags,
-		UnsetTags:         r.UnsetTags,
+		IfExists:        r.IfExists,
+		name:            r.name,
+		RenameTo:        r.RenameTo,
+		SetComment:      r.SetComment,
+		SetLogLevel:     r.SetLogLevel,
+		SetTraceLevel:   r.SetTraceLevel,
+		SetSecure:       r.SetSecure,
+		UnsetSecure:     r.UnsetSecure,
+		UnsetLogLevel:   r.UnsetLogLevel,
+		UnsetTraceLevel: r.UnsetTraceLevel,
+		UnsetComment:    r.UnsetComment,
+		SetTags:         r.SetTags,
+		UnsetTags:       r.UnsetTags,
 	}
 	return opts
 }
 
 func (r *DropFunctionRequest) toOpts() *DropFunctionOptions {
 	opts := &DropFunctionOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	return opts
 }
@@ -371,7 +373,7 @@ func (r functionRow) convert() *Function {
 		IsAnsi:             r.IsAnsi == "Y",
 		MinNumArguments:    r.MinNumArguments,
 		MaxNumArguments:    r.MaxNumArguments,
-		Arguments:          r.Arguments,
+		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
 		CatalogName:        r.CatalogName,
 		IsTableFunction:    r.IsTableFunction == "Y",
@@ -379,6 +381,15 @@ func (r functionRow) convert() *Function {
 		IsExternalFunction: r.IsExternalFunction == "Y",
 		Language:           r.Language,
 	}
+	arguments := strings.TrimLeft(r.Arguments, r.Name)
+	returnIndex := strings.Index(arguments, ") RETURN ")
+	dataTypes, err := ParseFunctionArgumentsFromString(arguments[:returnIndex+1])
+	if err != nil {
+		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
+	} else {
+		e.Arguments = dataTypes
+	}
+
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
 	}
@@ -390,8 +401,7 @@ func (r functionRow) convert() *Function {
 
 func (r *DescribeFunctionRequest) toOpts() *DescribeFunctionOptions {
 	opts := &DescribeFunctionOptions{
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		name: r.name,
 	}
 	return opts
 }

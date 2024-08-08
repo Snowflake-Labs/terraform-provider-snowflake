@@ -244,6 +244,7 @@ func (row grantRow) convert() *Grant {
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
 	}
+	// TODO(SNOW-1058419): Add parser for function/procedure/external_function identifier representations returned by Snowflake (it's different from the standard identifier for those objects).
 
 	var grantedOn ObjectType
 	// true for current grants

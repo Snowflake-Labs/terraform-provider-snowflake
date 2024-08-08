@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -281,7 +280,7 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schema, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
@@ -333,7 +332,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schema, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
@@ -395,7 +394,7 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schema, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
@@ -446,7 +445,7 @@ func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interf
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schema, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
@@ -516,7 +515,7 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	for _, item := range args {
 		argTypes = append(argTypes, item.ArgDataType)
 	}
-	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schema, name, argTypes)
 	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
@@ -657,7 +656,7 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
-		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), d.Get("name").(string), id.Arguments())
+		newId := sdk.NewSchemaObjectIdentifierWithArgumentsOld(id.DatabaseName(), id.SchemaName(), d.Get("name").(string), id.Arguments())
 
 		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments())))
 		if err != nil {

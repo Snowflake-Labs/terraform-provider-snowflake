@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -245,20 +244,20 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 func procedureConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
-  database    = "%[1]s"
-  schema      = "%[2]s"
-  name        = "%[3]s"
-  language    = "JAVASCRIPT"
-  return_type = "VARCHAR"
-  statement   = <<EOT
-    return "Hi"
-  EOT
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "JAVASCRIPT"
+ return_type = "VARCHAR"
+ statement   = <<EOT
+   return "Hi"
+ EOT
 }
 `, database, schema, name)
 }
 
 func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(sdk.DataTypeVARCHAR, sdk.DataTypeNumber)
 	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
@@ -301,7 +300,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 
 // TODO [SNOW-1348106]: diff suppression for the return type (the same with functions); finish this test
 func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
@@ -347,24 +346,24 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 func sqlProcedureConfigArgsPermanentDiff(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
-  database    = "%[1]s"
-  schema      = "%[2]s"
-  name        = "%[3]s"
-  language    = "SQL"
-  return_type = "NUMBER(38,0)"
-  arguments {
-    name = "arg1"
-    type = "VARCHAR"
-  }
-  arguments {
-    name = "MY_INT"
-    type = "int"
-  }
-  statement   = <<EOT
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "SQL"
+ return_type = "NUMBER(38,0)"
+ arguments {
+   name = "arg1"
+   type = "VARCHAR"
+ }
+ arguments {
+   name = "MY_INT"
+   type = "int"
+ }
+ statement   = <<EOT
 BEGIN
-  RETURN 13.4;
+ RETURN 13.4;
 END;
-  EOT
+ EOT
 }
 `, database, schema, name)
 }
@@ -372,20 +371,20 @@ END;
 func sqlProcedureConfigReturnTypePermanentDiff(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
-  database    = "%[1]s"
-  schema      = "%[2]s"
-  name        = "%[3]s"
-  language    = "SQL"
-  return_type = "TABLE (NUM1 NUMBER(10,2))"
-  arguments {
-    name = "ARG1"
-    type = "VARCHAR"
-  }
-  statement   = <<EOT
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "SQL"
+ return_type = "TABLE (NUM1 NUMBER(10,2))"
+ arguments {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+ statement   = <<EOT
 BEGIN
-  RETURN 13.4;
+ RETURN 13.4;
 END;
-  EOT
+ EOT
 }
 `, database, schema, name)
 }

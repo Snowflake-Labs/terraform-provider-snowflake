@@ -55,7 +55,7 @@ func v085FunctionIdStateUpgrader(ctx context.Context, rawState map[string]interf
 		argDataTypes[i] = argDataType
 	}
 
-	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(parsedV085FunctionId.DatabaseName, parsedV085FunctionId.SchemaName, parsedV085FunctionId.FunctionName, argDataTypes)
+	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArgumentsOld(parsedV085FunctionId.DatabaseName, parsedV085FunctionId.SchemaName, parsedV085FunctionId.FunctionName, argDataTypes)
 	rawState["id"] = schemaObjectIdentifierWithArguments.FullyQualifiedName()
 
 	return rawState, nil

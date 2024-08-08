@@ -20,7 +20,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	cleanupExternalFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
 		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.WithoutArguments(), dts).WithIfExists(sdk.Bool(true)))
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), dts...)).WithIfExists(true))
 			require.NoError(t, err)
 		}
 	}
@@ -28,7 +28,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	// TODO [SNOW-999049]: id returned on purpose; address during identifiers rework
 	createExternalFunction := func(t *testing.T) (*sdk.ExternalFunction, sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(defaultDataTypes)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(defaultDataTypes...)
 		argument := sdk.NewExternalFunctionArgumentRequest("x", defaultDataTypes[0])
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, sdk.Pointer(integration.ID()), as).
@@ -77,7 +77,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	}
 
 	t.Run("create external function", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(defaultDataTypes)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(defaultDataTypes...)
 		argument := sdk.NewExternalFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
 		headers := []sdk.ExternalFunctionHeaderRequest{
 			{
@@ -111,7 +111,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("create external function without arguments", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsOld()
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, sdk.Pointer(integration.ID()), as)
 		err := client.ExternalFunctions.Create(ctx, request)

@@ -1,8 +1,11 @@
 package sdk
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
+	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -36,6 +39,10 @@ func ParseIdentifierString(identifier string) ([]string, error) {
 		// TODO(SNOW-1571674): Remove the validation
 		if strings.Contains(part, `"`) {
 			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
+		}
+		// TODO(SNOW-1571674): Remove the validation
+		if strings.ContainsAny(part, `()`) {
+			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`, identifier)
 		}
 	}
 	return parts, nil
@@ -139,4 +146,98 @@ func ParseExternalObjectIdentifier(identifier string) (ExternalObjectIdentifier,
 			return NewExternalObjectIdentifier(NewAccountIdentifier(parts[0], parts[1]), NewAccountObjectIdentifier(parts[2]))
 		},
 	)
+}
+
+func ParseSchemaObjectIdentifierWithArguments(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
+	splitIdIndex := strings.IndexRune(fullyQualifiedName, '(')
+	parts, err := ParseIdentifierString(fullyQualifiedName[:splitIdIndex])
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	dataTypes, err := ParseFunctionArgumentsFromString(fullyQualifiedName[splitIdIndex:])
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	return NewSchemaObjectIdentifierWithArguments(
+		parts[0],
+		parts[1],
+		parts[2],
+		dataTypes...,
+	), nil
+}
+
+// ParseFunctionArgumentsFromString parses function argument from arguments string with optional argument names.
+// Varying types are not supported (e.g. VARCHAR(200)), because Snowflake outputs them in shortened version
+// (VARCHAR in this case). The only exception is newly added type VECTOR which has the following structure
+// VECTOR(<type>, n) where <type> right now can be either INT or FLOAT and n is the number of elements in the VECTOR.
+// Snowflake returns vectors with their exact type and this function supports it.
+func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
+	dataTypes := make([]DataType, 0)
+
+	if len(arguments) > 0 && arguments[0] == '(' && arguments[len(arguments)-1] == ')' {
+		arguments = arguments[1 : len(arguments)-1]
+	}
+	stringBuffer := bytes.NewBufferString(arguments)
+
+	for stringBuffer.Len() > 0 {
+		// We use another buffer to peek into next data type (needed for vector parsing)
+		peekDataType, _ := bytes.NewBufferString(stringBuffer.String()).ReadString(',')
+		peekDataType = strings.TrimSpace(peekDataType)
+
+		switch {
+		// For now, only vectors need special parsing behavior
+		case strings.HasPrefix(peekDataType, "VECTOR"):
+			vectorDataType, err := stringBuffer.ReadString(')')
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse vector type, couldn't find the closing bracket, err = %w", err)
+			}
+
+			vectorDataType = strings.TrimSpace(vectorDataType)
+			vectorTypeBuffer := bytes.NewBufferString(vectorDataType)
+			if _, err := vectorTypeBuffer.ReadString('('); err != nil {
+				return nil, fmt.Errorf("failed to parse vector type, couldn't find the opening bracket, err = %w", err)
+			}
+
+			vectorInnerType, err := vectorTypeBuffer.ReadString(',')
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse vector inner type: %w", err)
+			}
+
+			vectorInnerType = vectorInnerType[:len(vectorInnerType)-1]
+			if !slices.Contains(allowedVectorInnerTypes, DataType(vectorInnerType)) {
+				return nil, fmt.Errorf("invalid vector inner type: %s, allowed vector types are: %v", vectorInnerType, allowedVectorInnerTypes)
+			}
+
+			vectorSize, err := vectorTypeBuffer.ReadString(')')
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse vector size: %w", err)
+			}
+
+			vectorSize = strings.TrimSpace(vectorSize[:len(vectorSize)-1])
+			_, err = strconv.ParseInt(vectorSize, 0, 8)
+			if err != nil {
+				return nil, fmt.Errorf("invalid vector size: %s (not a number): %w", vectorSize, err)
+			}
+
+			if stringBuffer.Len() > 0 {
+				commaByte, err := stringBuffer.ReadByte()
+				if commaByte != ',' {
+					return nil, fmt.Errorf("expected a comma delimited string but found %s", string(commaByte))
+				}
+				if err != nil {
+					return nil, err
+				}
+			}
+			dataTypes = append(dataTypes, DataType(vectorDataType))
+		default:
+			dataType, err := stringBuffer.ReadString(',')
+			if err == nil {
+				dataType = dataType[:len(dataType)-1]
+			}
+			dataType = strings.TrimSpace(dataType)
+			dataTypes = append(dataTypes, DataType(dataType))
+		}
+	}
+
+	return dataTypes, nil
 }
