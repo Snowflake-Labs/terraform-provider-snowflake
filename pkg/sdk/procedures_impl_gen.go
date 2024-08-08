@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -58,12 +60,11 @@ func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([
 }
 
 func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	procedures, err := v.Show(ctx, NewShowProcedureRequest())
+	procedures, err := v.Show(ctx, NewShowProcedureRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(procedures, func(r Procedure) bool { return r.Name == id.Name() })
+	return collections.FindOne(procedures, func(r Procedure) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
 func (v *procedures) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error) {
@@ -394,11 +395,19 @@ func (r procedureRow) convert() *Procedure {
 		IsAnsi:             r.IsAnsi == "Y",
 		MinNumArguments:    r.MinNumArguments,
 		MaxNumArguments:    r.MaxNumArguments,
-		Arguments:          r.Arguments,
+		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
 		CatalogName:        r.CatalogName,
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
+	}
+	arguments := strings.TrimLeft(r.Arguments, r.Name)
+	returnIndex := strings.Index(arguments, ") RETURN ")
+	dataTypes, err := ParseFunctionArgumentsFromString(arguments[:returnIndex+1])
+	if err != nil {
+		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
+	} else {
+		e.Arguments = dataTypes
 	}
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
@@ -425,7 +434,9 @@ func (r procedureDetailRow) convert() *ProcedureDetail {
 
 func (r *CallProcedureRequest) toOpts() *CallProcedureOptions {
 	opts := &CallProcedureOptions{
+		call:              false,
 		name:              r.name,
+		CallArguments:     r.CallArguments,
 		ScriptingVariable: r.ScriptingVariable,
 	}
 	return opts

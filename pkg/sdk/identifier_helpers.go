@@ -232,7 +232,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	// TODO(next prs ???): left right now for backward compatibility for procedures and externalFunctions
+	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
 	arguments []DataType
 }
 
@@ -343,21 +343,15 @@ type SchemaObjectIdentifierWithArguments struct {
 
 func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
 	return SchemaObjectIdentifierWithArguments{
-		databaseName: strings.Trim(databaseName, `"`),
-		schemaName:   strings.Trim(schemaName, `"`),
-		name:         strings.Trim(name, `"`),
+		databaseName:      strings.Trim(databaseName, `"`),
+		schemaName:        strings.Trim(schemaName, `"`),
+		name:              strings.Trim(name, `"`),
+		argumentDataTypes: argumentDataTypes,
 	}
 }
 
-func NewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName(fullyQualifiedName string) SchemaObjectIdentifierWithArguments {
-	parts := strings.Split(fullyQualifiedName, ".")
-	id := SchemaObjectIdentifierWithArguments{
-		databaseName: strings.Trim(parts[0], `"`),
-		schemaName:   strings.Trim(parts[1], `"`),
-		name:         strings.Trim(parts[2], `"`),
-		// TODO: Arguments
-	}
-	return id
+func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdentifier, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), name, argumentDataTypes...)
 }
 
 func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
@@ -392,7 +386,7 @@ func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.argumentDataTypes) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(i.arguments, ","))
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ","))
 }
 
 type TableColumnIdentifier struct {

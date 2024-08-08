@@ -226,7 +226,8 @@ type Procedure struct {
 	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
-	Arguments          string
+	Arguments          []DataType
+	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
 	IsTableFunction    bool
@@ -235,8 +236,7 @@ type Procedure struct {
 }
 
 func (v *Procedure) ID() SchemaObjectIdentifierWithArguments {
-	//return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
-	return NewSchemaObjectIdentifierWithArguments("", "", "", "")
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
 }
 
 // DescribeProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-procedure.

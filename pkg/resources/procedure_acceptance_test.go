@@ -225,8 +225,13 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -240,6 +245,8 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 		},
 	})
 }
+
+// TODO: test new state upgrader
 
 func procedureConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`

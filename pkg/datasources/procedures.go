@@ -103,7 +103,7 @@ func ReadContextProcedures(ctx context.Context, d *schema.ResourceData, meta int
 		procedureMap["database"] = procedure.CatalogName
 		procedureMap["schema"] = procedure.SchemaName
 		procedureMap["comment"] = procedure.Description
-		procedureSignatureMap, err := parseArguments(procedure.Arguments)
+		procedureSignatureMap, err := parseArguments(procedure.ArgumentsRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}

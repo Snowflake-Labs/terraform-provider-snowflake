@@ -359,6 +359,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		assert.Equal(t, 1, procedure.MinNumArguments)
 		assert.Equal(t, 1, procedure.MaxNumArguments)
 		assert.NotEmpty(t, procedure.Arguments)
+		assert.NotEmpty(t, procedure.ArgumentsRaw)
 		assert.NotEmpty(t, procedure.Description)
 		assert.NotEmpty(t, procedure.CatalogName)
 		assert.Equal(t, false, procedure.IsTableFunction)
@@ -769,7 +770,6 @@ def filter_by_role(session, name, role):
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
 
-		id = sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, "filterByRole", sdk.DataTypeVARCHAR)
 		ca := []string{fmt.Sprintf(`'%s'`, tid.FullyQualifiedName()), "'dev'"}
 		err = client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(id.SchemaObjectId()).WithCallArguments(ca))
 		require.NoError(t, err)
@@ -1011,8 +1011,8 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID())
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.DataTypeVARCHAR)
 
 		createProcedureForSQLHandle(t, id1)
 		createProcedureForSQLHandle(t, id2)

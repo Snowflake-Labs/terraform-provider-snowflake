@@ -60,3 +60,5 @@ func v085ProcedureStateUpgrader(ctx context.Context, rawState map[string]interfa
 
 	return rawState, nil
 }
+
+// TODO: state upgrader for empty args (without '()')

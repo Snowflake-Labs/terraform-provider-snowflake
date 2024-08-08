@@ -236,40 +236,6 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
-	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
-	resourceName := "snowflake_function.f"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Function),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
-				),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
-				),
-			},
-		},
-	})
-}
-
 func TestAcc_Function_Rename(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
 	newName := acc.TestClient().Ids.Alpha()
@@ -309,32 +275,6 @@ func TestAcc_Function_Rename(t *testing.T) {
 			},
 		},
 	})
-}
-
-func functionConfigWithMoreArguments(database string, schema string, name string) string {
-	return fmt.Sprintf(`
-resource "snowflake_function" "f" {
-  database        = "%[1]s"
-  schema          = "%[2]s"
-  name            = "%[3]s"
-  return_type     = "VARCHAR"
-  return_behavior = "IMMUTABLE"
-  statement       = "SELECT A"
-
-  arguments {
-    name = "A"
-    type = "VARCHAR"
-  }
-  arguments {
-    name = "B"
-    type = "FLOAT"
-  }
-  arguments {
-    name = "C"
-    type = "NUMBER"
-  }
-}
-`, database, schema, name)
 }
 
 func functionConfig(database string, schema string, name string, comment string) string {
@@ -392,6 +332,116 @@ resource "snowflake_function" "f" {
   statement = <<EOT
     SELECT 12,13.4
   EOT
+}
+`, database, schema, name)
+}
+
+// TODO: test new state upgrader
+
+func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func functionConfigWithMoreArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement       = "SELECT A"
+
+  arguments {
+    name = "A"
+    type = "VARCHAR"
+  }
+  arguments {
+    name = "B"
+    type = "FLOAT"
+  }
+  arguments {
+    name = "C"
+    type = "NUMBER"
+  }
+}
+`, database, schema, name)
+}
+
+func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: functionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				// TODO: Fails
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   functionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"()`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func functionConfigWithoutArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement       = "SELECT 'abc'"
 }
 `, database, schema, name)
 }
