@@ -257,7 +257,7 @@ resource "snowflake_procedure" "p" {
 }
 
 func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR, sdk.DataTypeNumber)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(sdk.DataTypeVARCHAR, sdk.DataTypeNumber)
 	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
