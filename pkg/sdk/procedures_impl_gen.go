@@ -405,7 +405,7 @@ func (r procedureRow) convert() *Procedure {
 	returnIndex := strings.Index(arguments, ") RETURN ")
 	dataTypes, err := ParseFunctionArgumentsFromString(arguments[:returnIndex+1])
 	if err != nil {
-		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
+		log.Printf("[DEBUG] failed to parse procedure arguments, err = %s", err)
 	} else {
 		e.Arguments = dataTypes
 	}

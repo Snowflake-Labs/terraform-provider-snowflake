@@ -44,11 +44,10 @@ type ExternalFunctionContextHeaderRequest struct {
 }
 
 type AlterExternalFunctionRequest struct {
-	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
-	Set               *ExternalFunctionSetRequest
-	Unset             *ExternalFunctionUnsetRequest
+	IfExists *bool
+	name     SchemaObjectIdentifierWithArguments // required
+	Set      *ExternalFunctionSetRequest
+	Unset    *ExternalFunctionUnsetRequest
 }
 
 type ExternalFunctionSetRequest struct {
@@ -74,10 +73,8 @@ type ExternalFunctionUnsetRequest struct {
 
 type ShowExternalFunctionRequest struct {
 	Like *Like
-	In   *In
 }
 
 type DescribeExternalFunctionRequest struct {
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name SchemaObjectIdentifierWithArguments // required
 }
