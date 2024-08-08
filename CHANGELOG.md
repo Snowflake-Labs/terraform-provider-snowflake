@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.95.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.94.1...v0.95.0) (2024-08-08)
+
+
+### 🎉 **What's new:**
+
+* Add identifier parsers ([#2957](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2957)) ([824ec52](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/824ec52228afcdec282672018fc41c35a42a429d))
+* Add identifier with arguments ([#2979](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2979)) ([00ae1c5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/00ae1c5a3384e31697830d84e9c53f9dce2cb6e6))
+* Add user parameters to resource ([#2968](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2968)) ([f4ae380](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f4ae38086c9a17259aff698f80a21e8d14f748e7))
+* Upgrade view sdk ([#2969](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2969)) ([ef2d50a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ef2d50a5d69b296eaa32aa39a089a956379e3a6c))
+
+
+### 🐛 **Bug fixes:**
+
+* database tests and introduce a new parameter ([#2981](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2981)) ([3bae7f6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3bae7f634f86c938bf7f00170f25ee1f102d9abb))
+* Nuke users ([#2971](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2971)) ([0d90cc9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0d90cc948eccc2e281860d341281d13c27805a0b))
+
 ## [0.94.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.94.0...v0.94.1) (2024-08-02)
 
 
