@@ -461,7 +461,9 @@ resource "snowflake_database" "test" {
 }
 ```
 
-If you had `from_database` set, it should migrate automatically.
+If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove 
+the database from state to later import it in the newer version of the provider.
+Otherwise, it may cause issues when migrating to v0.93.0.
 For now, we're dropping the possibility to create a clone database from other databases.
 The only way will be to clone a database manually and import it as `snowflake_database`, but if
 cloned databases diverge in behavior from standard databases, it may cause issues.

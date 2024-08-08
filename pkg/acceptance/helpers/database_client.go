@@ -146,3 +146,13 @@ func (c *DatabaseClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sd
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *DatabaseClient) Describe(t *testing.T, id sdk.AccountObjectIdentifier) *sdk.DatabaseDetails {
+	t.Helper()
+	ctx := context.Background()
+
+	details, err := c.client().Describe(ctx, id)
+	require.NoError(t, err)
+
+	return details
+}
