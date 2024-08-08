@@ -403,7 +403,8 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 }
 
 func TestProcedures_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *DropProcedureOptions {
 		return &DropProcedureOptions{
@@ -417,31 +418,31 @@ func TestProcedures_Drop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
+		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DROP PROCEDURE %s ()`, id.FullyQualifiedName())
+		opts.name = noArgsId
+		assertOptsValidAndSQLEquals(t, opts, `DROP PROCEDURE %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DROP PROCEDURE IF EXISTS %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `DROP PROCEDURE IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestProcedures_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *AlterProcedureOptions {
 		return &AlterProcedureOptions{
-			name:              id,
-			IfExists:          Bool(true),
-			ArgumentDataTypes: []DataType{DataTypeVARCHAR, DataTypeNumber},
+			name:     id,
+			IfExists: Bool(true),
 		}
 	}
 
@@ -452,7 +453,7 @@ func TestProcedures_Alter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
+		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -467,45 +468,45 @@ func TestProcedures_Alter(t *testing.T) {
 		opts := defaultOpts()
 		target := randomSchemaObjectIdentifierInSchema(id.SchemaId())
 		opts.RenameTo = &target
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
 	})
 
 	t.Run("alter: execute as", func(t *testing.T) {
 		opts := defaultOpts()
 		executeAs := ExecuteAsCaller
 		opts.ExecuteAs = &executeAs
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) EXECUTE AS CALLER`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s EXECUTE AS CALLER`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set log level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set log level with no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = nil
+		opts.name = noArgsId
 		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s () SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("alter: set trace level", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetTraceLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) SET TRACE_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET TRACE_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetComment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) SET COMMENT = 'comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetComment = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) UNSET COMMENT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {
@@ -516,7 +517,7 @@ func TestProcedures_Alter(t *testing.T) {
 				Value: "value1",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) SET TAG "tag1" = 'value1'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET TAG "tag1" = 'value1'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset tags", func(t *testing.T) {
@@ -525,7 +526,7 @@ func TestProcedures_Alter(t *testing.T) {
 			NewAccountObjectIdentifier("tag1"),
 			NewAccountObjectIdentifier("tag2"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s (VARCHAR, NUMBER) UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
@@ -562,7 +563,8 @@ func TestProcedures_Show(t *testing.T) {
 }
 
 func TestProcedures_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *DescribeProcedureOptions {
 		return &DescribeProcedureOptions{
@@ -577,19 +579,19 @@ func TestProcedures_Describe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
+		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PROCEDURE %s ()`, id.FullyQualifiedName())
+		opts.name = noArgsId
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PROCEDURE %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PROCEDURE %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PROCEDURE %s`, id.FullyQualifiedName())
 	})
 }
 
@@ -615,6 +617,7 @@ func TestProcedures_Call(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.name = id
 		assertOptsValidAndSQLEquals(t, opts, `CALL %s ()`, id.FullyQualifiedName())
 	})
 

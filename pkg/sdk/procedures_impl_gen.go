@@ -57,17 +57,19 @@ func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([
 	return resultList, nil
 }
 
-func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Procedure, error) {
-	request := NewShowProcedureRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
-	procedures, err := v.Show(ctx, request)
+func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	procedures, err := v.Show(ctx, NewShowProcedureRequest())
 	if err != nil {
 		return nil, err
 	}
 	return collections.FindOne(procedures, func(r Procedure) bool { return r.Name == id.Name() })
 }
 
-func (v *procedures) Describe(ctx context.Context, request *DescribeProcedureRequest) ([]ProcedureDetail, error) {
-	opts := request.toOpts()
+func (v *procedures) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error) {
+	opts := &DescribeProcedureOptions{
+		name: id,
+	}
 	rows, err := validateAndQuery[procedureDetailRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
@@ -352,26 +354,24 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 
 func (r *AlterProcedureRequest) toOpts() *AlterProcedureOptions {
 	opts := &AlterProcedureOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
-		RenameTo:          r.RenameTo,
-		SetComment:        r.SetComment,
-		SetLogLevel:       r.SetLogLevel,
-		SetTraceLevel:     r.SetTraceLevel,
-		UnsetComment:      r.UnsetComment,
-		SetTags:           r.SetTags,
-		UnsetTags:         r.UnsetTags,
-		ExecuteAs:         r.ExecuteAs,
+		IfExists:      r.IfExists,
+		name:          r.name,
+		RenameTo:      r.RenameTo,
+		SetComment:    r.SetComment,
+		SetLogLevel:   r.SetLogLevel,
+		SetTraceLevel: r.SetTraceLevel,
+		UnsetComment:  r.UnsetComment,
+		SetTags:       r.SetTags,
+		UnsetTags:     r.UnsetTags,
+		ExecuteAs:     r.ExecuteAs,
 	}
 	return opts
 }
 
 func (r *DropProcedureRequest) toOpts() *DropProcedureOptions {
 	opts := &DropProcedureOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	return opts
 }
@@ -408,8 +408,7 @@ func (r procedureRow) convert() *Procedure {
 
 func (r *DescribeProcedureRequest) toOpts() *DescribeProcedureOptions {
 	opts := &DescribeProcedureOptions{
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		name: r.name,
 	}
 	return opts
 }
@@ -427,7 +426,6 @@ func (r procedureDetailRow) convert() *ProcedureDetail {
 func (r *CallProcedureRequest) toOpts() *CallProcedureOptions {
 	opts := &CallProcedureOptions{
 		name:              r.name,
-		CallArguments:     r.CallArguments,
 		ScriptingVariable: r.ScriptingVariable,
 	}
 	return opts

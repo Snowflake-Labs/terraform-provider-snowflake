@@ -5,6 +5,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"io"
 	"log"
 	"os"

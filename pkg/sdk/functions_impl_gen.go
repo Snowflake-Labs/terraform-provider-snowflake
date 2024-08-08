@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"log"
+	"strings"
 )
 
 var _ Functions = (*functions)(nil)

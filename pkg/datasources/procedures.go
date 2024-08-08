@@ -77,10 +77,10 @@ func ReadContextProcedures(ctx context.Context, d *schema.ResourceData, meta int
 
 	req := sdk.NewShowProcedureRequest()
 	if databaseName != "" {
-		req.WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)})
+		req.WithIn(sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)})
 	}
 	if schemaName != "" {
-		req.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
+		req.WithIn(sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
 	}
 	procedures, err := client.Procedures.Show(ctx, req)
 	if err != nil {

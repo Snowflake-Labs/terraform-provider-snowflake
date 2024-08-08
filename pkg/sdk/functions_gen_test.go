@@ -431,8 +431,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 }
 
 func TestFunctions_Drop(t *testing.T) {
-	noArgsId := randomSchemaObjectIdentifierWithArguments()
-	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropFunctionOptions {
 		return &DropFunctionOptions{
@@ -467,8 +466,7 @@ func TestFunctions_Drop(t *testing.T) {
 }
 
 func TestFunctions_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
-	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterFunctionOptions {
 		return &AlterFunctionOptions{
@@ -616,8 +614,7 @@ func TestFunctions_Show(t *testing.T) {
 }
 
 func TestFunctions_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
-	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DescribeFunctionOptions {
 		return &DescribeFunctionOptions{
