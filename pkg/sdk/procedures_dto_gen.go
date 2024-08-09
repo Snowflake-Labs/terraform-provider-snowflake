@@ -145,23 +145,21 @@ type ProcedureSQLReturnsRequest struct {
 }
 
 type AlterProcedureRequest struct {
-	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
-	RenameTo          *SchemaObjectIdentifier
-	SetComment        *string
-	SetLogLevel       *string
-	SetTraceLevel     *string
-	UnsetComment      *bool
-	SetTags           []TagAssociation
-	UnsetTags         []ObjectIdentifier
-	ExecuteAs         *ExecuteAs
+	IfExists      *bool
+	name          SchemaObjectIdentifierWithArguments // required
+	RenameTo      *SchemaObjectIdentifier
+	SetComment    *string
+	SetLogLevel   *string
+	SetTraceLevel *string
+	UnsetComment  *bool
+	SetTags       []TagAssociation
+	UnsetTags     []ObjectIdentifier
+	ExecuteAs     *ExecuteAs
 }
 
 type DropProcedureRequest struct {
-	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	IfExists *bool
+	name     SchemaObjectIdentifierWithArguments // required
 }
 
 type ShowProcedureRequest struct {
@@ -170,8 +168,7 @@ type ShowProcedureRequest struct {
 }
 
 type DescribeProcedureRequest struct {
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name SchemaObjectIdentifierWithArguments // required
 }
 
 type CallProcedureRequest struct {

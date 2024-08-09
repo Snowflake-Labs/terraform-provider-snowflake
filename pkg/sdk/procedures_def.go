@@ -66,7 +66,7 @@ var procedureWithClause = g.NewQueryStruct("ProcedureWithClause").
 var ProceduresDef = g.NewInterface(
 	"Procedures",
 	"Procedure",
-	g.KindOfT[SchemaObjectIdentifier](),
+	g.KindOfT[SchemaObjectIdentifierWithArguments](),
 ).CustomOperation(
 	"CreateForJava",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-procedure#java-handler",
@@ -75,7 +75,7 @@ var ProceduresDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("PROCEDURE").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
@@ -119,7 +119,7 @@ var ProceduresDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("PROCEDURE").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
@@ -143,7 +143,7 @@ var ProceduresDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("PROCEDURE").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
@@ -186,7 +186,7 @@ var ProceduresDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("PROCEDURE").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
@@ -228,7 +228,7 @@ var ProceduresDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("PROCEDURE").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
@@ -254,7 +254,6 @@ var ProceduresDef = g.NewInterface(
 		SQL("PROCEDURE").
 		IfExists().
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("SET LOG_LEVEL", g.ParameterOptions().SingleQuotes()).
@@ -273,7 +272,6 @@ var ProceduresDef = g.NewInterface(
 		SQL("PROCEDURE").
 		IfExists().
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/show-procedures",
@@ -325,14 +323,13 @@ var ProceduresDef = g.NewInterface(
 		Describe().
 		SQL("PROCEDURE").
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", "[]DataType", g.KeywordOptions().MustParentheses().Required()).
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"Call",
 	"https://docs.snowflake.com/en/sql-reference/sql/call",
 	g.NewQueryStruct("Call").
 		SQL("CALL").
-		Name().
+		Identifier("name", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidIdentifier, "name"),

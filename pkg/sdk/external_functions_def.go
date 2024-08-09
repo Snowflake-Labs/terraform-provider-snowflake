@@ -46,7 +46,7 @@ var externalFunctionUnset = g.NewQueryStruct("ExternalFunctionUnset").
 var ExternalFunctionsDef = g.NewInterface(
 	"ExternalFunctions",
 	"ExternalFunction",
-	g.KindOfT[SchemaObjectIdentifier](),
+	g.KindOfT[SchemaObjectIdentifierWithArguments](),
 ).CreateOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/create-external-function",
 	g.NewQueryStruct("CreateExternalFunction").
@@ -54,7 +54,7 @@ var ExternalFunctionsDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("SECURE").
 		SQL("EXTERNAL FUNCTION").
-		Name().
+		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 		ListQueryStructField(
 			"Arguments",
 			externalFunctionArgument,
@@ -92,7 +92,6 @@ var ExternalFunctionsDef = g.NewInterface(
 		SQL("FUNCTION").
 		IfExists().
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", g.KindOfTSlice[DataType](), g.KeywordOptions().MustParentheses().Required()).
 		OptionalQueryStructField(
 			"Set",
 			externalFunctionSet,
@@ -148,7 +147,8 @@ var ExternalFunctionsDef = g.NewInterface(
 	g.NewQueryStruct("ShowFunctions").
 		Show().
 		SQL("EXTERNAL FUNCTIONS").
-		OptionalLike(),
+		OptionalLike().
+		OptionalIn(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
@@ -162,6 +162,5 @@ var ExternalFunctionsDef = g.NewInterface(
 		Describe().
 		SQL("FUNCTION").
 		Name().
-		PredefinedQueryStructField("ArgumentDataTypes", g.KindOfTSlice[DataType](), g.KeywordOptions().MustParentheses().Required()).
 		WithValidation(g.ValidIdentifier, "name"),
 )

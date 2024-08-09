@@ -14,8 +14,8 @@ type Procedures interface {
 	Alter(ctx context.Context, request *AlterProcedureRequest) error
 	Drop(ctx context.Context, request *DropProcedureRequest) error
 	Show(ctx context.Context, request *ShowProcedureRequest) ([]Procedure, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Procedure, error)
-	Describe(ctx context.Context, request *DescribeProcedureRequest) ([]ProcedureDetail, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error)
 	Call(ctx context.Context, request *CallProcedureRequest) error
 	CreateAndCallForJava(ctx context.Context, request *CreateAndCallForJavaProcedureRequest) error
 	CreateAndCallForScala(ctx context.Context, request *CreateAndCallForScalaProcedureRequest) error
@@ -170,28 +170,26 @@ type ProcedureSQLReturns struct {
 
 // AlterProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-procedure.
 type AlterProcedureOptions struct {
-	alter             bool                    `ddl:"static" sql:"ALTER"`
-	procedure         bool                    `ddl:"static" sql:"PROCEDURE"`
-	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name              SchemaObjectIdentifier  `ddl:"identifier"`
-	ArgumentDataTypes []DataType              `ddl:"keyword,must_parentheses"`
-	RenameTo          *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SetComment        *string                 `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	SetLogLevel       *string                 `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
-	SetTraceLevel     *string                 `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
-	UnsetComment      *bool                   `ddl:"keyword" sql:"UNSET COMMENT"`
-	SetTags           []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags         []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	ExecuteAs         *ExecuteAs              `ddl:"keyword"`
+	alter         bool                                `ddl:"static" sql:"ALTER"`
+	procedure     bool                                `ddl:"static" sql:"PROCEDURE"`
+	IfExists      *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifierWithArguments `ddl:"identifier"`
+	RenameTo      *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
+	SetComment    *string                             `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	SetLogLevel   *string                             `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
+	SetTraceLevel *string                             `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
+	UnsetComment  *bool                               `ddl:"keyword" sql:"UNSET COMMENT"`
+	SetTags       []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags     []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
+	ExecuteAs     *ExecuteAs                          `ddl:"keyword"`
 }
 
 // DropProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-procedure.
 type DropProcedureOptions struct {
-	drop              bool                   `ddl:"static" sql:"DROP"`
-	procedure         bool                   `ddl:"static" sql:"PROCEDURE"`
-	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+	drop      bool                                `ddl:"static" sql:"DROP"`
+	procedure bool                                `ddl:"static" sql:"PROCEDURE"`
+	IfExists  *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name      SchemaObjectIdentifierWithArguments `ddl:"identifier"`
 }
 
 // ShowProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-procedures.
@@ -228,7 +226,8 @@ type Procedure struct {
 	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
-	Arguments          string
+	Arguments          []DataType
+	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
 	IsTableFunction    bool
@@ -236,16 +235,15 @@ type Procedure struct {
 	IsSecure           bool
 }
 
-func (v *Procedure) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
+func (v *Procedure) ID() SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
 }
 
 // DescribeProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-procedure.
 type DescribeProcedureOptions struct {
-	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
-	procedure         bool                   `ddl:"static" sql:"PROCEDURE"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+	describe  bool                                `ddl:"static" sql:"DESCRIBE"`
+	procedure bool                                `ddl:"static" sql:"PROCEDURE"`
+	name      SchemaObjectIdentifierWithArguments `ddl:"identifier"`
 }
 
 type procedureDetailRow struct {
@@ -286,7 +284,6 @@ type CreateAndCallForJavaProcedureOptions struct {
 	CallArguments       []string                `ddl:"keyword,must_parentheses"`
 	ScriptingVariable   *string                 `ddl:"parameter,no_quotes,no_equals" sql:"INTO"`
 }
-
 type ProcedureWithClause struct {
 	prefix     bool                    `ddl:"static" sql:","`
 	CteName    AccountObjectIdentifier `ddl:"identifier"`
