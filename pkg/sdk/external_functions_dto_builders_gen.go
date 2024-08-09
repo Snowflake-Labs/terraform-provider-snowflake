@@ -226,6 +226,11 @@ func (s *ShowExternalFunctionRequest) WithLike(Like Like) *ShowExternalFunctionR
 	return s
 }
 
+func (s *ShowExternalFunctionRequest) WithIn(In In) *ShowExternalFunctionRequest {
+	s.In = &In
+	return s
+}
+
 func NewDescribeExternalFunctionRequest(
 	name SchemaObjectIdentifierWithArguments,
 ) *DescribeExternalFunctionRequest {

@@ -559,3 +559,133 @@ resource "snowflake_external_function" "f" {
 
 `, id.DatabaseName(), id.SchemaName(), id.Name())
 }
+
+func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func externalFunctionConfigWithMoreArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+ database = "%[1]s"
+ schema   = "%[2]s"
+ name     = "%[3]s"
+
+ arg {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+
+ arg {
+   name = "ARG2"
+   type = "FLOAT"
+ }
+
+ arg {
+   name = "ARG3"
+   type = "NUMBER"
+ }
+
+ return_type               = "VARIANT"
+ return_behavior           = "IMMUTABLE"
+ api_integration           = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+`, database, schema, name)
+}
+
+func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"()`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func externalFunctionConfigWithoutArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+ database = "%[1]s"
+ schema   = "%[2]s"
+ name     = "%[3]s"
+
+ return_type               = "VARIANT"
+ return_behavior           = "IMMUTABLE"
+ api_integration           = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+
+`, database, schema, name)
+}

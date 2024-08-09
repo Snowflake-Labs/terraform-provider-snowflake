@@ -403,10 +403,6 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		return procedure
 	}
 
-	defaultAlterRequest := func(id sdk.SchemaObjectIdentifierWithArguments) *sdk.AlterProcedureRequest {
-		return sdk.NewAlterProcedureRequest(id)
-	}
-
 	t.Run("alter procedure: rename", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, false)
 
@@ -414,7 +410,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		nidWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(nid.DatabaseName(), nid.SchemaName(), nid.Name(), id.ArgumentDataTypes()...)
 
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithRenameTo(nid))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(nid))
 		if err != nil {
 			t.Cleanup(cleanupProcedureHandle(id))
 		} else {
@@ -434,7 +430,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel("DEBUG"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetLogLevel("DEBUG"))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -443,7 +439,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel("ALWAYS"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetTraceLevel("ALWAYS"))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -452,7 +448,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetComment("comment"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetComment("comment"))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -461,7 +457,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(true))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnsetComment(true))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -470,7 +466,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -485,14 +481,14 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetTags(setTags))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
-		err = client.Procedures.Alter(ctx, defaultAlterRequest(id).WithUnsetTags(unsetTags))
+		err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})

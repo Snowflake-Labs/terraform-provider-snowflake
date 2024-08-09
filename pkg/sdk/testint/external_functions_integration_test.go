@@ -25,10 +25,9 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		}
 	}
 
-	// TODO [SNOW-999049]: id returned on purpose; address during identifiers rework
 	createExternalFunction := func(t *testing.T) *sdk.ExternalFunction {
 		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(defaultDataTypes[0])
 		argument := sdk.NewExternalFunctionArgumentRequest("x", defaultDataTypes[0])
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), sdk.DataTypeVariant, sdk.Pointer(integration.ID()), as).
@@ -211,28 +210,27 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.NotContains(t, es, *e2)
 	})
 
-	// TODO: Uncomment
-	//t.Run("show external function: with in", func(t *testing.T) {
-	//	otherDb, otherDbCleanup := testClientHelper().Database.CreateDatabase(t)
-	//	t.Cleanup(otherDbCleanup)
-	//
-	//	e1 := createExternalFunction(t)
-	//
-	//	es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: e1.ID().SchemaId()}))
-	//	require.NoError(t, err)
-	//
-	//	require.Contains(t, es, *e1)
-	//
-	//	es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: testClientHelper().Ids.DatabaseId()}))
-	//	require.NoError(t, err)
-	//
-	//	require.Contains(t, es, *e1)
-	//
-	//	es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: otherDb.ID()}))
-	//	require.NoError(t, err)
-	//
-	//	require.Empty(t, es)
-	//})
+	t.Run("show external function: with in", func(t *testing.T) {
+		otherDb, otherDbCleanup := testClientHelper().Database.CreateDatabase(t)
+		t.Cleanup(otherDbCleanup)
+
+		e1 := createExternalFunction(t)
+
+		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(sdk.In{Schema: e1.ID().SchemaId()}))
+		require.NoError(t, err)
+
+		require.Contains(t, es, *e1)
+
+		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(sdk.In{Database: testClientHelper().Ids.DatabaseId()}))
+		require.NoError(t, err)
+
+		require.Contains(t, es, *e1)
+
+		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(sdk.In{Database: otherDb.ID()}))
+		require.NoError(t, err)
+
+		require.Empty(t, es)
+	})
 
 	t.Run("show external function: no matches", func(t *testing.T) {
 		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))

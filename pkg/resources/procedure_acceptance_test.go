@@ -246,8 +246,6 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-// TODO: test new state upgrader
-
 func procedureConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
@@ -392,6 +390,121 @@ BEGIN
  RETURN 13.4;
 END;
  EOT
+}
+`, database, schema, name)
+}
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithMoreArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "SQL"
+  return_type = "NUMBER(38,0)"
+  statement   = <<EOT
+    BEGIN
+      RETURN 13.4;
+    END;
+  EOT
+
+  arguments {
+    name = "A"
+    type = "VARCHAR"
+  }
+  arguments {
+    name = "B"
+    type = "FLOAT"
+  }
+  arguments {
+    name = "C"
+    type = "NUMBER"
+  }
+}
+`, database, schema, name)
+}
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"()`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithoutArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "SQL"
+  return_type = "NUMBER(38,0)"
+  statement   = <<EOT
+    BEGIN
+      RETURN 13.4;
+    END;
+  EOT
 }
 `, database, schema, name)
 }

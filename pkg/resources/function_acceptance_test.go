@@ -336,8 +336,6 @@ resource "snowflake_function" "f" {
 `, database, schema, name)
 }
 
-// TODO: test new state upgrader
-
 func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
 	resourceName := "snowflake_function.f"
@@ -422,7 +420,6 @@ func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t 
 				),
 			},
 			{
-				// TODO: Fails
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   functionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(

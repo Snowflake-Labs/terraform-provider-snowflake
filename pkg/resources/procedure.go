@@ -3,16 +3,17 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
+	"regexp"
+	"slices"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"regexp"
-	"slices"
-	"strings"
 )
 
 var procedureSchema = map[string]*schema.Schema{
@@ -175,7 +176,7 @@ var procedureSchema = map[string]*schema.Schema{
 // Procedure returns a pointer to the resource representing a stored procedure.
 func Procedure() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 
 		CreateContext: CreateContextProcedure,
 		ReadContext:   ReadContextProcedure,
@@ -193,6 +194,12 @@ func Procedure() *schema.Resource {
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v085ProcedureStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0941ResourceIdentifierWithArguments,
 			},
 		},
 	}
@@ -697,7 +704,7 @@ func DeleteContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id)); err != nil {
+	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
