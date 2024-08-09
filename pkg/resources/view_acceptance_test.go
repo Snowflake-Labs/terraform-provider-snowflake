@@ -25,6 +25,7 @@ import (
 )
 
 func TestAcc_View_basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeVARCHAR)
@@ -280,6 +281,7 @@ func TestAcc_View_recursive(t *testing.T) {
 }
 
 func TestAcc_View_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	// use a simple table to test change_tracking, otherwise it fails with: Change tracking is not supported on queries with joins of type '[LEFT_OUTER_JOIN]'

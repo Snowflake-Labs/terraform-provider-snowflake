@@ -287,6 +287,7 @@ resource "snowflake_view" "test" {
 	database = "%[1]s"
 	schema   = "%[2]s"
 	name     = "%[4]s"
+	change_tracking = true
 
 	statement = "select * from \"${snowflake_table.test.name}\""
 }

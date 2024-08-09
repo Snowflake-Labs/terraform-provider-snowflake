@@ -31,7 +31,7 @@ func (c *AggregationPolicyClient) CreateAggregationPolicy(t *testing.T) (sdk.Sch
 	ctx := context.Background()
 
 	id := c.ids.RandomSchemaObjectIdentifier()
-	_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`CREATE AGGREGATION POLICY %s AS () RETURNS AGGREGATION_CONSTRAINT -> AGGREGATION_CONSTRAINT(MIN_GROUP_SIZE => 5)`, id.Name()))
+	_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`CREATE AGGREGATION POLICY %s AS () RETURNS AGGREGATION_CONSTRAINT -> AGGREGATION_CONSTRAINT(MIN_GROUP_SIZE => 5)`, id.FullyQualifiedName()))
 	require.NoError(t, err)
 	return id, c.DropAggregationPolicyFunc(t, id)
 }
