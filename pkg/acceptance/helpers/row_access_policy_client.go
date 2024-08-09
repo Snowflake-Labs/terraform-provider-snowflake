@@ -26,10 +26,15 @@ func (c *RowAccessPolicyClient) client() sdk.RowAccessPolicies {
 
 func (c *RowAccessPolicyClient) CreateRowAccessPolicy(t *testing.T) (*sdk.RowAccessPolicy, func()) {
 	t.Helper()
+	return c.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
+}
+
+func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithDataType(t *testing.T, datatype sdk.DataType) (*sdk.RowAccessPolicy, func()) {
+	t.Helper()
 	ctx := context.Background()
 
 	id := c.ids.RandomSchemaObjectIdentifier()
-	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeNumber)
+	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", datatype)
 	body := "true"
 	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
 

@@ -44,17 +44,17 @@ type ViewColumnProjectionPolicyRequest struct {
 
 type ViewColumnMaskingPolicyRequest struct {
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []DoubleQuotedString
+	Using         []Column
 }
 
 type ViewRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []DoubleQuotedString   // required
+	On              []Column               // required
 }
 
 type ViewAggregationPolicyRequest struct {
 	AggregationPolicy SchemaObjectIdentifier // required
-	EntityKey         []DoubleQuotedString
+	EntityKey         []Column
 }
 
 type AlterViewRequest struct {
@@ -112,7 +112,7 @@ type ViewUnsetDataMetricScheduleRequest struct{}
 
 type ViewAddRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []DoubleQuotedString   // required
+	On              []Column               // required
 }
 
 type ViewDropRowAccessPolicyRequest struct {
@@ -126,7 +126,7 @@ type ViewDropAndAddRowAccessPolicyRequest struct {
 
 type ViewSetAggregationPolicyRequest struct {
 	AggregationPolicy SchemaObjectIdentifier // required
-	EntityKey         []DoubleQuotedString
+	EntityKey         []Column
 	Force             *bool
 }
 
@@ -135,7 +135,7 @@ type ViewUnsetAggregationPolicyRequest struct{}
 type ViewSetColumnMaskingPolicyRequest struct {
 	Name          string                 // required
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []DoubleQuotedString
+	Using         []Column
 	Force         *bool
 }
 

@@ -6,7 +6,20 @@ across different versions.
 
 ## v0.94.x ➞ v0.95.0
 
-### snowflake_warehouse resource changes
+### snowflake_view resource changes
+New fields:
+  - `row_access_policy`
+  - `aggregation_policy`
+  - `change_tracking`
+- added `show_output` field that holds the response from SHOW VIEWS.
+- added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
+
+#### *(breaking change)* Removed fields from snowflake_view resource
+Removed fields:
+- `tag`
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+
+### snowflake_user resource changes
 
 #### *(breaking change)* user parameters added to snowflake_user resource
 

@@ -113,14 +113,14 @@ func NewViewColumnMaskingPolicyRequest(
 	return &s
 }
 
-func (s *ViewColumnMaskingPolicyRequest) WithUsing(Using []DoubleQuotedString) *ViewColumnMaskingPolicyRequest {
+func (s *ViewColumnMaskingPolicyRequest) WithUsing(Using []Column) *ViewColumnMaskingPolicyRequest {
 	s.Using = Using
 	return s
 }
 
 func NewViewRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
-	On []DoubleQuotedString,
+	On []Column,
 ) *ViewRowAccessPolicyRequest {
 	s := ViewRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
@@ -136,7 +136,7 @@ func NewViewAggregationPolicyRequest(
 	return &s
 }
 
-func (s *ViewAggregationPolicyRequest) WithEntityKey(EntityKey []DoubleQuotedString) *ViewAggregationPolicyRequest {
+func (s *ViewAggregationPolicyRequest) WithEntityKey(EntityKey []Column) *ViewAggregationPolicyRequest {
 	s.EntityKey = EntityKey
 	return s
 }
@@ -331,7 +331,7 @@ func NewViewUnsetDataMetricScheduleRequest() *ViewUnsetDataMetricScheduleRequest
 
 func NewViewAddRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
-	On []DoubleQuotedString,
+	On []Column,
 ) *ViewAddRowAccessPolicyRequest {
 	s := ViewAddRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
@@ -365,7 +365,7 @@ func NewViewSetAggregationPolicyRequest(
 	return &s
 }
 
-func (s *ViewSetAggregationPolicyRequest) WithEntityKey(EntityKey []DoubleQuotedString) *ViewSetAggregationPolicyRequest {
+func (s *ViewSetAggregationPolicyRequest) WithEntityKey(EntityKey []Column) *ViewSetAggregationPolicyRequest {
 	s.EntityKey = EntityKey
 	return s
 }
@@ -389,7 +389,7 @@ func NewViewSetColumnMaskingPolicyRequest(
 	return &s
 }
 
-func (s *ViewSetColumnMaskingPolicyRequest) WithUsing(Using []DoubleQuotedString) *ViewSetColumnMaskingPolicyRequest {
+func (s *ViewSetColumnMaskingPolicyRequest) WithUsing(Using []Column) *ViewSetColumnMaskingPolicyRequest {
 	s.Using = Using
 	return s
 }

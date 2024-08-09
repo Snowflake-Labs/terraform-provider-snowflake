@@ -63,7 +63,7 @@ var viewDetails = g.PlainStruct("ViewDetails").
 	OptionalText("PolicyName").
 	OptionalText("PrivacyDomain")
 
-var doubleQuotedStringDef = g.NewQueryStruct("DoubleQuotedString").
+var columnDef = g.NewQueryStruct("Column").
 	Text("Value", g.KeywordOptions().Required().DoubleQuotes())
 
 var viewMinute = g.NewQueryStruct("ViewMinute").
@@ -76,7 +76,7 @@ var viewUsingCron = g.NewQueryStruct("ViewUsingCron").
 
 var dataMetricFunctionDef = g.NewQueryStruct("ViewDataMetricFunction").
 	Identifier("DataMetricFunction", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
-	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
+	ListAssignment("ON", "Column", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "DataMetricFunction")
 
 var viewColumn = g.NewQueryStruct("ViewColumn").
@@ -88,19 +88,19 @@ var viewColumn = g.NewQueryStruct("ViewColumn").
 
 var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	ListAssignment("USING", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses())
+	ListAssignment("USING", "Column", g.ParameterOptions().NoEquals().Parentheses())
 
 var viewColumnProjectionPolicy = g.NewQueryStruct("ViewColumnProjectionPolicy").
 	Identifier("ProjectionPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required())
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
+	ListAssignment("ON", "Column", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewAggregationPolicy = g.NewQueryStruct("ViewAggregationPolicy").
 	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
-	ListAssignment("ENTITY KEY", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
+	ListAssignment("ENTITY KEY", "Column", g.ParameterOptions().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "AggregationPolicy")
 
 var viewAddDataMetricFunction = g.NewQueryStruct("ViewAddDataMetricFunction").
@@ -124,7 +124,7 @@ var viewUnsetDataMetricSchedule = g.NewQueryStruct("ViewUnsetDataMetricSchedule"
 var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
 	SQL("ADD").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	ListAssignment("ON", "DoubleQuotedString", g.ParameterOptions().Required().NoEquals().Parentheses()).
+	ListAssignment("ON", "Column", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewDropRowAccessPolicy = g.NewQueryStruct("ViewDropRowAccessPolicy").
@@ -139,7 +139,7 @@ var viewDropAndAddRowAccessPolicy = g.NewQueryStruct("ViewDropAndAddRowAccessPol
 var viewSetAggregationPolicy = g.NewQueryStruct("ViewSetAggregationPolicy").
 	SQL("SET").
 	Identifier("AggregationPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("AGGREGATION POLICY").Required()).
-	ListAssignment("ENTITY KEY", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
+	ListAssignment("ENTITY KEY", "Column", g.ParameterOptions().NoEquals().Parentheses()).
 	OptionalSQL("FORCE").
 	WithValidation(g.ValidIdentifier, "AggregationPolicy")
 
@@ -153,7 +153,7 @@ var viewSetColumnMaskingPolicy = g.NewQueryStruct("ViewSetColumnMaskingPolicy").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SQL("SET").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	ListAssignment("USING", "DoubleQuotedString", g.ParameterOptions().NoEquals().Parentheses()).
+	ListAssignment("USING", "Column", g.ParameterOptions().NoEquals().Parentheses()).
 	OptionalSQL("FORCE")
 
 var viewUnsetColumnMaskingPolicy = g.NewQueryStruct("ViewUnsetColumnMaskingPolicy").
@@ -267,7 +267,7 @@ var ViewsDef = g.NewInterface(
 				"UnsetTagsOnColumn").
 			WithValidation(g.ConflictingFields, "IfExists", "SetSecure").
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
-		doubleQuotedStringDef,
+		columnDef,
 		dataMetricFunctionDef,
 	).
 	DropOperation(
