@@ -167,10 +167,10 @@ func ParseSchemaObjectIdentifierWithArguments(fullyQualifiedName string) (Schema
 }
 
 // ParseFunctionArgumentsFromString parses function argument from arguments string with optional argument names.
-// Varying types are not supported (e.g. VARCHAR(200)), because Snowflake outputs them in shortened version
-// (VARCHAR in this case). The only exception is newly added type VECTOR which has the following structure
+// Varying types are not supported (e.g. VARCHAR(200)), because Snowflake outputs them in a shortened version
+// (VARCHAR in this case). The only exception is newly added type VECTOR that has the following structure
 // VECTOR(<type>, n) where <type> right now can be either INT or FLOAT and n is the number of elements in the VECTOR.
-// Snowflake returns vectors with their exact type and this function supports it.
+// Snowflake returns vectors with their exact type, and this function supports it.
 func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 	dataTypes := make([]DataType, 0)
 
@@ -180,9 +180,18 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 	stringBuffer := bytes.NewBufferString(arguments)
 
 	for stringBuffer.Len() > 0 {
+		stringBuffer = bytes.NewBufferString(strings.TrimSpace(stringBuffer.String()))
+
+		// When a function is created with a default value for an argument, in the SHOW output ("arguments" column)
+		// the argument's data type is prefixed with "DEFAULT ", e.g. "(DEFAULT INT, DEFAULT VARCHAR)".
+		if strings.HasPrefix(stringBuffer.String(), "DEFAULT") {
+			if _, err := stringBuffer.ReadString(' '); err != nil {
+				return nil, fmt.Errorf("failed to skip default keyword, err = %w", err)
+			}
+		}
+
 		// We use another buffer to peek into next data type (needed for vector parsing)
 		peekDataType, _ := bytes.NewBufferString(stringBuffer.String()).ReadString(',')
-		peekDataType = strings.TrimSpace(peekDataType)
 
 		switch {
 		// For now, only vectors need special parsing behavior
@@ -234,7 +243,6 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 			if err == nil {
 				dataType = dataType[:len(dataType)-1]
 			}
-			dataType = strings.TrimSpace(dataType)
 			dataTypes = append(dataTypes, DataType(dataType))
 		}
 	}

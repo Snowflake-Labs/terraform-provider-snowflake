@@ -255,8 +255,13 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -298,8 +303,13 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePrese
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
