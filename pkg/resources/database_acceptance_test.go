@@ -368,6 +368,7 @@ func TestAcc_Database_Complete(t *testing.T) {
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 

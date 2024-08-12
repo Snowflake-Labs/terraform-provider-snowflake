@@ -105,6 +105,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeOauthIntegrationForPartnerApplications,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func OauthIntegrationForPartnerApplications() *schema.Resource {
@@ -288,7 +289,9 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
 			return diag.FromErr(err)
 		}

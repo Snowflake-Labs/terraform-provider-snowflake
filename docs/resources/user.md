@@ -121,6 +121,7 @@ resource "snowflake_user" "user" {
 
 ### Read-Only
 
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `has_rsa_public_key` (Boolean) Will be true if user as an RSA key set.
 - `id` (String) The ID of this resource.
 - `parameters` (List of Object) Outputs the result of `SHOW PARAMETERS IN USER` for the given user. (see [below for nested schema](#nestedatt--parameters))

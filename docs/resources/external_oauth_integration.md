@@ -86,6 +86,7 @@ resource "snowflake_external_oauth_integration" "test" {
 ### Read-Only
 
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--describe_output))
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `related_parameters` (List of Object) Paramteres related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))

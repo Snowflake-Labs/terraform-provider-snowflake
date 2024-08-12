@@ -15,13 +15,13 @@ import (
 )
 
 func TestAcc_DynamicTable_basic(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_dynamic_table.dt"
-	tableName := name + "_table"
+	tableName := id.Name() + "_table"
 	newWarehouseName := acc.TestClient().Ids.Alpha()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
+			"name":       config.StringVariable(id.Name()),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"warehouse":  config.StringVariable(acc.TestWarehouseName),
@@ -56,7 +56,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
@@ -94,7 +95,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),

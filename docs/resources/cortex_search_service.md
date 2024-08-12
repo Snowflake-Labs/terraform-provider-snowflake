@@ -75,6 +75,7 @@ resource "snowflake_cortex_search_service" "test" {
 ### Read-Only
 
 - `created_on` (String) Creation date for the given Cortex search service.
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 
 ## Import

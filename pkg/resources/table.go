@@ -8,10 +8,13 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -196,24 +199,34 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
-	"qualified_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Qualified name of the table.",
-	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Table() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTable,
-		Read:   ReadTable,
-		Update: UpdateTable,
-		Delete: DeleteTable,
+		SchemaVersion: 1,
+		Create:        CreateTable,
+		Read:          ReadTable,
+		Update:        UpdateTable,
+		Delete:        DeleteTable,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: tableSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_94_1_TableStateUpgrader,
+			},
 		},
 	}
 }
@@ -643,6 +656,9 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	var schemaRetentionTime int64
 	// "retention_time" may sometimes be empty string instead of an integer
 	{
@@ -672,7 +688,6 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"column":          toColumnConfig(tableDescription),
 		"cluster_by":      table.GetClusterByKeys(),
 		"change_tracking": table.ChangeTracking,
-		"qualified_name":  id.FullyQualifiedName(),
 	}
 	if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault || int64(table.RetentionTime) != schemaRetentionTime {
 		toSet["data_retention_time_in_days"] = table.RetentionTime

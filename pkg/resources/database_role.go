@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,6 +31,7 @@ var databaseRoleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database role.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // DatabaseRole returns a pointer to the resource representing a database role.
@@ -51,10 +53,10 @@ func DatabaseRole() *schema.Resource {
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
 	ctx := context.Background()
-	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, objectIdentifier)
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] database role (%s) not found", d.Id())
@@ -62,11 +64,15 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
+
 	if err := d.Set("name", databaseRole.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("database", objectIdentifier.DatabaseName()); err != nil {
+	if err := d.Set("database", id.DatabaseName()); err != nil {
 		return err
 	}
 

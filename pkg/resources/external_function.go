@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -177,6 +178,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Date and time when the external function was created.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // ExternalFunction returns a pointer to the resource representing an external function.
@@ -333,6 +335,9 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Some properties can come from the SHOW EXTERNAL FUNCTION call
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", externalFunction.Name); err != nil {
 		return diag.FromErr(err)
 	}

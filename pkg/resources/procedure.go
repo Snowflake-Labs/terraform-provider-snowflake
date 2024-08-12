@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -171,6 +173,7 @@ var procedureSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The handler method for Java / Python procedures.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // Procedure returns a pointer to the resource representing a stored procedure.
@@ -182,6 +185,10 @@ func Procedure() *schema.Resource {
 		ReadContext:   ReadContextProcedure,
 		UpdateContext: UpdateContextProcedure,
 		DeleteContext: DeleteContextProcedure,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: procedureSchema,
 		Importer: &schema.ResourceImporter{
@@ -525,6 +532,9 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", id.Name()); err != nil {
 		return diag.FromErr(err)
 	}

@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -106,11 +109,7 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the masking policy.",
 	},
-	"qualified_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Specifies the qualified identifier for the masking policy.",
-	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // DatabaseName|SchemaName|MaskingPolicyName.
@@ -118,14 +117,28 @@ var maskingPolicySchema = map[string]*schema.Schema{
 // MaskingPolicy returns a pointer to the resource representing a masking policy.
 func MaskingPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateMaskingPolicy,
-		Read:   ReadMaskingPolicy,
-		Update: UpdateMaskingPolicy,
-		Delete: DeleteMaskingPolicy,
+		SchemaVersion: 1,
+		Create:        CreateMaskingPolicy,
+		Read:          ReadMaskingPolicy,
+		Update:        UpdateMaskingPolicy,
+		Delete:        DeleteMaskingPolicy,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: maskingPolicySchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_94_1_MaskingPolicyStateUpgrader,
+			},
 		},
 	}
 }
@@ -186,13 +199,17 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 // ReadMaskingPolicy implements schema.ReadFunc.
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
-	maskingPolicy, err := client.MaskingPolicies.ShowByID(ctx, objectIdentifier)
+	maskingPolicy, err := client.MaskingPolicies.ShowByID(ctx, id)
 	if err != nil {
 		return err
 	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
+
 	if err := d.Set("name", maskingPolicy.Name); err != nil {
 		return err
 	}
@@ -213,7 +230,7 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, objectIdentifier)
+	maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -237,9 +254,6 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		{"column": columns},
 	}
 	if err := d.Set("signature", signature); err != nil {
-		return err
-	}
-	if err := d.Set("qualified_name", objectIdentifier.FullyQualifiedName()); err != nil {
 		return err
 	}
 

@@ -17,13 +17,13 @@ import (
 func testAccProcedure(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
+			"name":       config.StringVariable(oldId.Name()),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"comment":    config.StringVariable("Terraform acceptance test"),
@@ -31,7 +31,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 		}
 	}
 	variableSet2 := m()
-	variableSet2["name"] = config.StringVariable(newName)
+	variableSet2["name"] = config.StringVariable(newId.Name())
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 	variableSet2["execute_as"] = config.StringVariable("OWNER")
 
@@ -52,7 +52,8 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", oldId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
@@ -76,7 +77,8 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "name", newId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),

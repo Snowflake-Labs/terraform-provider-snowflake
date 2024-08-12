@@ -47,6 +47,8 @@ func TestAcc_User(t *testing.T) {
 	r := require.New(t)
 	prefix := acc.TestClient().Ids.Alpha()
 	prefix2 := acc.TestClient().Ids.Alpha()
+	id := sdk.NewAccountObjectIdentifier(prefix)
+	id2 := sdk.NewAccountObjectIdentifier(prefix)
 
 	comment := random.Comment()
 	newComment := random.Comment()
@@ -80,6 +82,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id.FullyQualifiedName()),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
 					checkBool("snowflake_user.w", "must_change_password", true),
 				),
@@ -105,6 +108,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id2.FullyQualifiedName()),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -125,6 +129,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "bar.baz"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", false),
+					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id2.FullyQualifiedName()),
 				),
 			},
 			// IMPORT

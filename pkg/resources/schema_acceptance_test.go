@@ -402,8 +402,8 @@ func TestAcc_Schema_complete(t *testing.T) {
 }
 
 func TestAcc_Schema_Rename(t *testing.T) {
-	oldSchemaName := acc.TestClient().Ids.Alpha()
-	newSchemaName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := "Terraform acceptance test"
 
 	resource.Test(t, resource.TestCase{
@@ -417,12 +417,13 @@ func TestAcc_Schema_Rename(t *testing.T) {
 			{
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(oldSchemaName),
+					"name":     config.StringVariable(oldId.Name()),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"comment":  config.StringVariable(comment),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldId.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", comment),
 				),
@@ -430,7 +431,7 @@ func TestAcc_Schema_Rename(t *testing.T) {
 			{
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(newSchemaName),
+					"name":     config.StringVariable(newId.Name()),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"comment":  config.StringVariable(comment),
 				},
@@ -440,7 +441,8 @@ func TestAcc_Schema_Rename(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", comment),
 				),

@@ -135,10 +135,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 }
 
 func TestAcc_Table(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-
-	table2Name := acc.TestClient().Ids.Alpha()
-	table3Name := acc.TestClient().Ids.Alpha()
+	table1Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	table2Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	table3Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -149,9 +148,10 @@ func TestAcc_Table(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -167,9 +167,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig2(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig2(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -186,9 +187,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig3(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig3(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -203,9 +205,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig4(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig4(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -219,9 +222,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig5(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig5(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -235,9 +239,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig6(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig6(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -254,9 +259,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig7(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig7(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -274,9 +280,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig8(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig8(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -295,9 +302,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig9CreateTableWithColumnComment(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig9CreateTableWithColumnComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -316,9 +324,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig10AlterTableColumnComment(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig10AlterTableColumnComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -337,9 +346,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig11AlterTableAddColumnWithComment(table2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig11AlterTableAddColumnWithComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
@@ -362,9 +372,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig12CreateTableWithDataRetention(table3Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig12CreateTableWithDataRetention(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "10"),
@@ -379,9 +390,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig13AlterTableDataRetention(table3Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig13AlterTableDataRetention(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "0"),
@@ -396,9 +408,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig14AlterTableEnableChangeTracking(table3Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig14AlterTableEnableChangeTracking(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "0"),
@@ -413,9 +426,10 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig15CreateTableWithChangeTracking(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig15CreateTableWithChangeTracking(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
@@ -1364,8 +1378,8 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_TableRename(t *testing.T) {
-	oldTableName := acc.TestClient().Ids.Alpha()
-	newTableName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	oldComment := acc.TestClient().Ids.Alpha()
 	newComment := acc.TestClient().Ids.Alpha()
 
@@ -1378,9 +1392,10 @@ func TestAcc_TableRename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName, oldComment),
+				Config: tableConfigWithName(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName, oldComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldTableName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", oldComment),
@@ -1392,14 +1407,15 @@ func TestAcc_TableRename(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfigWithName(newTableName, acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				Config: tableConfigWithName(newId.Name(), acc.TestDatabaseName, acc.TestSchemaName, newComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newTableName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", newComment),
@@ -1966,4 +1982,41 @@ resource "snowflake_table" "test_table" {
   }
 }
 `, database, schema, name)
+}
+
+func TestAcc_Table_migrateFromVersion_0_94_1(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_table.test_table"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: tableConfig(id.Name(), id.DatabaseName(), id.SchemaName()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfig(id.Name(), id.DatabaseName(), id.SchemaName()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckNoResourceAttr(resourceName, "qualified_name"),
+				),
+			},
+		},
+	})
 }

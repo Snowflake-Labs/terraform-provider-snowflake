@@ -63,7 +63,7 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 func TestAcc_Stream_OnTable(t *testing.T) {
 	tableName := acc.TestClient().Ids.Alpha()
 	tableName2 := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -74,9 +74,10 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
 		Steps: []resource.TestStep{
 			{
-				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName, name),
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName, id.Name()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -87,9 +88,10 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 				},
 			},
 			{
-				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName2, name),
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName2, id.Name()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName2)),

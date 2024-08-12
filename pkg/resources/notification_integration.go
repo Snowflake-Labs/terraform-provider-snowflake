@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -144,6 +145,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The GCP service account identifier that Snowflake will use when assuming the GCP role",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // NotificationIntegration returns a pointer to the resource representing a notification integration.
@@ -244,7 +246,9 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	if c := integration.Category; c != "NOTIFICATION" {
 		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
-
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	if err := d.Set("name", integration.Name); err != nil {
 		return err
 	}

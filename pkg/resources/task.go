@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -118,6 +119,7 @@ var taskSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // difference find keys in 'a' but not in 'b'.
@@ -175,6 +177,9 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] task (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, taskId.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err := d.Set("enabled", task.IsStarted()); err != nil {

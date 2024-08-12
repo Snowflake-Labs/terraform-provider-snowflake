@@ -205,6 +205,7 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", externalShareId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
 
