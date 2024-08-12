@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -254,4 +255,85 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_invalidIncom
 			},
 		},
 	})
+}
+
+func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_authentication_integration_with_authorization_code_grant" "test" {
+  enabled             = true
+  name                = "%s"
+  oauth_client_id     = "foo"
+  oauth_client_secret = "foo"
+}
+`, name)
 }

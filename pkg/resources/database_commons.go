@@ -43,7 +43,7 @@ var (
 )
 
 func databaseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	return parametersProvider(ctx, d, meta.(*provider.Context), databaseParametersProviderFunc)
+	return parametersProvider(ctx, d, meta.(*provider.Context), databaseParametersProviderFunc, sdk.ParseAccountObjectIdentifier)
 }
 
 func databaseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {

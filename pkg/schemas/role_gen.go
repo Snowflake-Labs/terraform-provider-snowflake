@@ -56,7 +56,7 @@ var _ = ShowRoleSchema
 func RoleToSchema(role *sdk.Role) map[string]any {
 	roleSchema := make(map[string]any)
 	roleSchema["created_on"] = role.CreatedOn.String()
-	roleSchema["name"] = role.Name
+	roleSchema["name"] = role.Name.Name()
 	roleSchema["is_default"] = role.IsDefault
 	roleSchema["is_current"] = role.IsCurrent
 	roleSchema["is_inherited"] = role.IsInherited

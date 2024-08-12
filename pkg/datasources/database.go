@@ -67,8 +67,8 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(database.Name)
-	if err := d.Set("name", database.Name); err != nil {
+	d.SetId(database.Name.Name())
+	if err := d.Set("name", database.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", database.Comment); err != nil {

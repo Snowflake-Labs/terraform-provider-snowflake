@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -137,11 +138,18 @@ func (r streamlitsRow) convert() *Streamlit {
 	e := &Streamlit{
 		CreatedOn:     r.CreatedOn,
 		Name:          r.Name,
-		DatabaseName:  r.DatabaseName,
 		SchemaName:    r.SchemaName,
 		Owner:         r.Owner,
 		UrlId:         r.UrlId,
 		OwnerRoleType: r.OwnerRoleType,
+	}
+	if r.DatabaseName != "" {
+		databaseId, err := ParseAccountObjectIdentifier(r.DatabaseName)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing database name: %v", err)
+		}
+		e.DatabaseName = databaseId
 	}
 	if r.Title.Valid {
 		e.Title = r.Title.String
@@ -149,8 +157,13 @@ func (r streamlitsRow) convert() *Streamlit {
 	if r.Comment.Valid {
 		e.Comment = r.Comment.String
 	}
-	if r.QueryWarehouse.Valid {
-		e.QueryWarehouse = r.QueryWarehouse.String
+	if r.QueryWarehouse.Valid && r.QueryWarehouse.String != "" {
+		warehouseId, err := ParseAccountObjectIdentifier(r.QueryWarehouse.String)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing streamlit name: %v", err)
+		}
+		e.QueryWarehouse = warehouseId
 	}
 	return e
 }

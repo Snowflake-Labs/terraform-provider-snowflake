@@ -28,7 +28,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 
 		database, err := client.Databases.ShowByID(ctx, databaseID)
 		require.NoError(t, err)
-		assert.Equal(t, databaseID.Name(), database.Name)
+		assert.Equal(t, databaseID.Name(), database.Name.Name())
 	})
 
 	t.Run("as clone", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 
 		database, err := client.Databases.ShowByID(ctx, databaseID)
 		require.NoError(t, err)
-		assert.Equal(t, databaseID.Name(), database.Name)
+		assert.Equal(t, databaseID.Name(), database.Name.Name())
 	})
 
 	t.Run("complete", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 
 		database, err := client.Databases.ShowByID(ctx, databaseId)
 		require.NoError(t, err)
-		assert.Equal(t, databaseId.Name(), database.Name)
+		assert.Equal(t, databaseId.Name(), database.Name.Name())
 		assert.Equal(t, comment, database.Comment)
 
 		params, err := client.Databases.ShowParameters(ctx, databaseId)
@@ -224,7 +224,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 	database, err := client.Databases.ShowByID(ctx, databaseId)
 	require.NoError(t, err)
 
-	assert.Equal(t, databaseId.Name(), database.Name)
+	assert.Equal(t, databaseId.Name(), database.Name.Name())
 	assert.Equal(t, comment, database.Comment)
 
 	params, err := client.Databases.ShowParameters(ctx, databaseId)
@@ -309,7 +309,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 	database, err := client.Databases.ShowByID(ctx, databaseId)
 	require.NoError(t, err)
 
-	assert.Equal(t, databaseId.Name(), database.Name)
+	assert.Equal(t, databaseId.Name(), database.Name.Name())
 	assert.Equal(t, comment, database.Comment)
 
 	params, err := client.Databases.ShowParameters(ctx, databaseId)
@@ -456,7 +456,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 			database, err := client.Databases.ShowByID(ctx, newName)
 			require.NoError(t, err)
-			assert.Equal(t, newName.Name(), database.Name)
+			assert.Equal(t, newName.Name(), database.Name.Name())
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - setting and unsetting parameters", testCase.DatabaseType), func(t *testing.T) {
@@ -676,7 +676,7 @@ func TestInt_DatabasesAlterReplication(t *testing.T) {
 		database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
 		require.NoError(t, err)
 
-		assert.Equal(t, sharedDatabase.ID().Name(), database.Name)
+		assert.Equal(t, sharedDatabase.ID().Name(), database.Name.Name())
 		assert.Equal(t, 1, database.RetentionTime)
 		assert.Equal(t, comment, database.Comment)
 
@@ -688,7 +688,7 @@ func TestInt_DatabasesAlterReplication(t *testing.T) {
 		database, err = client.Databases.ShowByID(ctx, sharedDatabase.ID())
 		require.NoError(t, err)
 
-		assert.Equal(t, sharedDatabase.ID().Name(), database.Name)
+		assert.Equal(t, sharedDatabase.ID().Name(), database.Name.Name())
 		assert.Equal(t, 1, database.RetentionTime)
 		assert.Equal(t, comment, database.Comment)
 	})
@@ -823,7 +823,7 @@ func TestInt_DatabasesUndrop(t *testing.T) {
 	database, err := client.Databases.ShowByID(ctx, databaseTest.ID())
 	require.NoError(t, err)
 
-	assert.Equal(t, databaseTest.Name, database.Name)
+	assert.Equal(t, databaseTest.Name.Name(), database.Name.Name())
 }
 
 func TestInt_DatabasesShow(t *testing.T) {
@@ -854,7 +854,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, &sdk.ShowDatabasesOptions{
 			Terse: sdk.Bool(true),
 			Like: &sdk.Like{
-				Pattern: sdk.String(databaseTest.Name),
+				Pattern: sdk.String(databaseTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
@@ -862,7 +862,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		database, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
 		require.NoError(t, err)
 
-		assert.Equal(t, databaseTest.Name, database.Name)
+		assert.Equal(t, databaseTest.Name.Name(), database.Name.Name())
 		assert.NotEmpty(t, database.CreatedOn)
 		assert.Empty(t, database.DroppedOn)
 		assert.Empty(t, database.Owner)
@@ -875,7 +875,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, &sdk.ShowDatabasesOptions{
 			History: sdk.Bool(true),
 			Like: &sdk.Like{
-				Pattern: sdk.String(databaseTest3.Name),
+				Pattern: sdk.String(databaseTest3.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
@@ -883,13 +883,13 @@ func TestInt_DatabasesShow(t *testing.T) {
 		droppedDatabase, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest3.Name })
 		require.NoError(t, err)
 
-		assert.Equal(t, databaseTest3.Name, droppedDatabase.Name)
+		assert.Equal(t, databaseTest3.Name.Name(), droppedDatabase.Name.Name())
 		assert.NotEmpty(t, droppedDatabase.DroppedOn)
 	})
 
 	t.Run("with like starts with", func(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, &sdk.ShowDatabasesOptions{
-			StartsWith: sdk.String(databaseTest.Name),
+			StartsWith: sdk.String(databaseTest.Name.Name()),
 			LimitFrom: &sdk.LimitFrom{
 				Rows: sdk.Int(1),
 			},
@@ -899,7 +899,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		database, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
 		require.NoError(t, err)
 
-		assert.Equal(t, databaseTest.Name, database.Name)
+		assert.Equal(t, databaseTest.Name.Name(), database.Name.Name())
 	})
 
 	t.Run("when searching a non-existent database", func(t *testing.T) {

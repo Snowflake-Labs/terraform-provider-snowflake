@@ -123,7 +123,7 @@ var _ = ShowWarehouseSchema
 
 func WarehouseToSchema(warehouse *sdk.Warehouse) map[string]any {
 	warehouseSchema := make(map[string]any)
-	warehouseSchema["name"] = warehouse.Name
+	warehouseSchema["name"] = warehouse.Name.Name()
 	warehouseSchema["state"] = string(warehouse.State)
 	warehouseSchema["type"] = string(warehouse.Type)
 	warehouseSchema["size"] = string(warehouse.Size)

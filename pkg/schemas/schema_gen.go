@@ -64,7 +64,7 @@ func SchemaToSchema(schema *sdk.Schema) map[string]any {
 	schemaSchema["name"] = schema.Name
 	schemaSchema["is_default"] = schema.IsDefault
 	schemaSchema["is_current"] = schema.IsCurrent
-	schemaSchema["database_name"] = schema.DatabaseName
+	schemaSchema["database_name"] = schema.DatabaseName.Name()
 	schemaSchema["owner"] = schema.Owner
 	schemaSchema["comment"] = schema.Comment
 	if schema.Options != nil {

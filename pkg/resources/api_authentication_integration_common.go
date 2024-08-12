@@ -13,10 +13,11 @@ import (
 
 var apiAuthCommonSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {
 		Type:        schema.TypeBool,
@@ -210,7 +211,7 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 ) error {
-	if err := d.Set("name", integration.Name); err != nil {
+	if err := d.Set("name", integration.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("enabled", integration.Enabled); err != nil {
@@ -278,7 +279,7 @@ func handleApiAuthRead(d *schema.ResourceData,
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
-	if err := d.Set("name", integration.Name); err != nil {
+	if err := d.Set("name", integration.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", integration.Comment); err != nil {

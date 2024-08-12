@@ -49,12 +49,12 @@ func TestInt_Streamlits(t *testing.T) {
 
 		require.NotEmpty(t, e.CreatedOn)
 		require.Equal(t, id.Name(), e.Name)
-		require.Equal(t, id.DatabaseName(), e.DatabaseName)
+		require.Equal(t, id.DatabaseName(), e.DatabaseName.Name())
 		require.Equal(t, id.SchemaName(), e.SchemaName)
 		require.Empty(t, e.Title)
 		require.Equal(t, "ACCOUNTADMIN", e.Owner)
 		require.Equal(t, comment, e.Comment)
-		require.Equal(t, warehouse, e.QueryWarehouse)
+		require.Equal(t, warehouse, e.QueryWarehouse.Name())
 		require.NotEmpty(t, e.UrlId)
 		require.Equal(t, "ROLE", e.OwnerRoleType)
 	}
@@ -305,14 +305,14 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, 1, len(streamlits))
 		sl := streamlits[0]
 		require.Equal(t, e.Name, sl.Name)
-		require.Equal(t, e.DatabaseName, sl.DatabaseName)
+		require.Equal(t, e.DatabaseName.Name(), sl.DatabaseName.Name())
 		require.Equal(t, e.SchemaName, sl.SchemaName)
 		require.Equal(t, e.UrlId, sl.UrlId)
 		require.Equal(t, e.CreatedOn, sl.CreatedOn)
 		require.Empty(t, sl.Title)
 		require.Empty(t, sl.Owner)
 		require.Empty(t, sl.Comment)
-		require.Empty(t, sl.QueryWarehouse)
+		require.Empty(t, sl.QueryWarehouse.Name())
 		require.Empty(t, sl.OwnerRoleType)
 	})
 

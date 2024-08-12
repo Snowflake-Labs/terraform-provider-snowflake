@@ -16,15 +16,17 @@ import (
 
 var secondaryDatabaseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"as_replica_of": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "A fully qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "A fully qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
@@ -62,8 +64,15 @@ func SecondaryDatabase() *schema.Resource {
 func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	secondaryDatabaseId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-	primaryDatabaseId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("as_replica_of").(string))
+	secondaryDatabaseId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	primaryDatabaseId, err := sdk.ParseExternalObjectIdentifier(d.Get("as_replica_of").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	opts := &sdk.CreateSecondaryDatabaseOptions{
 		Transient: GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
@@ -73,29 +82,37 @@ func CreateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 		return parametersCreateDiags
 	}
 
-	err := client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, opts)
+	err = client.Databases.CreateSecondary(ctx, secondaryDatabaseId, primaryDatabaseId, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(secondaryDatabaseId))
+	d.SetId(secondaryDatabaseId.Name())
 
 	return ReadSecondaryDatabase(ctx, d, meta)
 }
 
 func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	secondaryDatabaseId := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	secondaryDatabaseId, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("name") {
-		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
+		newId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = client.Databases.Alter(ctx, secondaryDatabaseId, &sdk.AlterDatabaseOptions{
 			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+
+		d.SetId(newId.Name())
 		secondaryDatabaseId = newId
 	}
 
@@ -138,7 +155,10 @@ func UpdateSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta a
 
 func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	secondaryDatabaseId := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	secondaryDatabaseId, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	secondaryDatabase, err := client.Databases.ShowByID(ctx, secondaryDatabaseId)
 	if err != nil {
@@ -180,7 +200,7 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", secondaryDatabase.Name); err != nil {
+	if err := d.Set("name", secondaryDatabase.Name.Name()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -212,9 +232,12 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 
 func DeleteSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
+	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {

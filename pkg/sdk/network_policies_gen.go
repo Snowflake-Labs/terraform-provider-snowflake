@@ -114,7 +114,7 @@ type showNetworkPolicyDBRow struct {
 
 type NetworkPolicy struct {
 	CreatedOn                    string
-	Name                         string
+	Name                         AccountObjectIdentifier
 	Comment                      string
 	EntriesInAllowedIpList       int
 	EntriesInBlockedIpList       int
@@ -123,7 +123,7 @@ type NetworkPolicy struct {
 }
 
 func (v *NetworkPolicy) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+	return v.Name
 }
 
 // DescribeNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy.

@@ -279,7 +279,7 @@ func TestAcc_SecurityIntegrations_ExternalOauth(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_issuer.0.value", issuer),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_jws_keys_url.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name.Name()),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_snowflake_user_mapping_attribute.0.value", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
@@ -330,7 +330,7 @@ func TestAcc_SecurityIntegrations_OauthForCustomClients(t *testing.T) {
 			"blocked_roles_list":                    config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"), config.StringVariable(blockedRole.ID().Name())),
 			"comment":                               config.StringVariable(comment),
 			"enabled":                               config.BoolVariable(true),
-			"network_policy":                        config.StringVariable(networkPolicy.Name),
+			"network_policy":                        config.StringVariable(networkPolicy.Name.Name()),
 			"oauth_allow_non_tls_redirect_uri":      config.BoolVariable(true),
 			"oauth_allowed_authorization_endpoints": config.SetVariable(config.StringVariable("http://allowed.com")),
 			"oauth_allowed_token_endpoints":         config.SetVariable(config.StringVariable("http://allowed.com")),
@@ -371,7 +371,7 @@ func TestAcc_SecurityIntegrations_OauthForCustomClients(t *testing.T) {
 					// resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.network_policy.0.value", networkPolicy.Name.Name()),
 					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_rsa_public_key_fp.0.value"),
 					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.oauth_client_rsa_public_key_2_fp.0.value"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.comment.0.value", comment),
@@ -588,7 +588,7 @@ func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
 	configVariables := config.Variables{
 		"name":           config.StringVariable(id.Name()),
 		"comment":        config.StringVariable(comment),
-		"network_policy": config.StringVariable(networkPolicy.Name),
+		"network_policy": config.StringVariable(networkPolicy.Name.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -613,7 +613,7 @@ func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.enabled.0.value", "false"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.network_policy.0.value", networkPolicy.Name.Name()),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.run_as_role.0.value", "GENERIC_SCIM_PROVISIONER"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.sync_password.0.value", "true"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.comment.0.value", comment),

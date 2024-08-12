@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -183,5 +185,21 @@ func IgnoreValuesFromSetIfParamSet(key, param string, values []string) schema.Sc
 			return numOld == numNew
 		}
 		return slices.Contains(values, old)
+	}
+}
+
+func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+	if oldValue == "" || newValue == "" {
+		return false
+	} else {
+		oldId, err := sdk.ParseIdentifierString(oldValue)
+		if err != nil {
+			return false
+		}
+		newId, err := sdk.ParseIdentifierString(newValue)
+		if err != nil {
+			return false
+		}
+		return slices.Equal(oldId, newId)
 	}
 }

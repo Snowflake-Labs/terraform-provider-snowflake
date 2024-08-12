@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -340,6 +341,113 @@ func TestForceNewIfChangeToEmptySet(t *testing.T) {
 				tt.rawConfigValue,
 			)
 			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func TestComputedIfAnyAttributeChangedWithSuppressDiff(t *testing.T) {
+	suppressFunc := schema.SchemaDiffSuppressFunc(func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+		return strings.Trim(oldValue, `"`) == strings.Trim(newValue, `"`)
+	})
+	tests := []struct {
+		name           string
+		stateValue     map[string]string
+		rawConfigValue map[string]any
+		expectDiff     bool
+	}{
+		{
+			name: "no change",
+			stateValue: map[string]string{
+				"value":          "foo",
+				"computed_value": "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value": "foo",
+			},
+			expectDiff: false,
+		},
+		{
+			name: "no change - quotes in config",
+			stateValue: map[string]string{
+				"value":          "foo",
+				"computed_value": "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value": "\"foo\"",
+			},
+			expectDiff: false,
+		},
+		{
+			name: "no change - quotes in state",
+			stateValue: map[string]string{
+				"value":          "\"foo\"",
+				"computed_value": "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value": "foo",
+			},
+			expectDiff: false,
+		},
+		{
+			name: "name change",
+			stateValue: map[string]string{
+				"value":          "foo",
+				"computed_value": "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value": "bar",
+			},
+			expectDiff: true,
+		},
+		{
+			name: "name and quoting change",
+			stateValue: map[string]string{
+				"value":          "\"foo\"",
+				"computed_value": "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value": "bar",
+			},
+			expectDiff: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.ComputedIfAnyAttributeChangedWithSuppressDiff(
+				"computed_value",
+				suppressFunc,
+				"value",
+			)
+			provider := &schema.Provider{
+				ResourcesMap: map[string]*schema.Resource{
+					"test": {
+						Schema: map[string]*schema.Schema{
+							"value": {
+								Type:             schema.TypeString,
+								Required:         true,
+								DiffSuppressFunc: suppressFunc,
+							},
+							"computed_value": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+						CustomizeDiff: customDiff,
+					},
+				},
+			}
+			diff := calculateDiffFromAttributes(
+				t,
+				provider,
+				tt.stateValue,
+				tt.rawConfigValue,
+			)
+			if tt.expectDiff {
+				require.NotNil(t, diff)
+				assert.True(t, diff.Attributes["computed_value"].NewComputed)
+			} else {
+				require.Nil(t, diff)
+			}
 		})
 	}
 }

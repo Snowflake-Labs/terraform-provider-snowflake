@@ -23,7 +23,7 @@ func TestInt_Streams(t *testing.T) {
 		assert.NotNil(t, s)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
+		assert.Equal(t, db.Name.Name(), s.DatabaseName)
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Equal(t, "some comment", *s.Comment)
 		assert.Equal(t, sourceType, *s.SourceType)
@@ -268,7 +268,7 @@ func TestInt_Streams(t *testing.T) {
 
 		assert.NotNil(t, stream)
 		assert.Equal(t, id.Name(), stream.Name)
-		assert.Equal(t, db.Name, stream.DatabaseName)
+		assert.Equal(t, db.Name.Name(), stream.DatabaseName)
 		assert.Equal(t, schema.Name, stream.SchemaName)
 		assert.Equal(t, table.Name, *stream.TableOn)
 		assert.Nil(t, stream.Comment)
@@ -410,7 +410,7 @@ func TestInt_Streams(t *testing.T) {
 		assert.NotNil(t, s)
 
 		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
+		assert.Equal(t, db.Name.Name(), s.DatabaseName)
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, "some comment", *s.Comment)

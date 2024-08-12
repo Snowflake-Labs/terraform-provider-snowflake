@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type Roles interface {
 
 type Role struct {
 	CreatedOn       time.Time
-	Name            string
+	Name            AccountObjectIdentifier
 	IsDefault       bool
 	IsCurrent       bool
 	IsInherited     bool
@@ -32,7 +33,7 @@ type Role struct {
 }
 
 func (v *Role) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+	return v.Name
 }
 
 func (v *Role) ObjectType() ObjectType {
@@ -55,10 +56,17 @@ type roleDBRow struct {
 func (row roleDBRow) convert() *Role {
 	role := &Role{
 		CreatedOn:       row.CreatedOn,
-		Name:            row.Name,
 		AssignedToUsers: row.AssignedToUsers,
 		GrantedToRoles:  row.GrantedToRoles,
 		GrantedRoles:    row.GrantedRoles,
+	}
+	if row.Name != "" {
+		roleName, err := ParseAccountObjectIdentifier(row.Name)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing role name: %v", err)
+		}
+		role.Name = roleName
 	}
 	if row.IsDefault.Valid {
 		role.IsDefault = row.IsDefault.String == "Y"

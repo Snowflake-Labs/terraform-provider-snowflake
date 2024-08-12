@@ -40,17 +40,20 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
-	roleName := d.Get("name").(string)
-
-	role, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(roleName))
+	roleId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
 	if err != nil {
-		log.Printf("[DEBUG] role (%s) not found", roleName)
+		return err
+	}
+
+	role, err := client.Roles.ShowByID(ctx, roleId)
+	if err != nil {
+		log.Printf("[DEBUG] role (%s) not found", roleId.Name())
 		d.SetId("")
 		return nil
 	}
 
-	d.SetId(role.Name)
-	if err := d.Set("name", role.Name); err != nil {
+	d.SetId(role.Name.Name())
+	if err := d.Set("name", role.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", role.Comment); err != nil {

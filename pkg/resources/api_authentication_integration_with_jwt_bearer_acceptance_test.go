@@ -1,7 +1,10 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
@@ -211,4 +214,90 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_invalidIncomplete(t *test
 			},
 		},
 	})
+}
+
+func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	// TODO [SNOW-1452191]: unskip
+	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithJwtBearer),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: apiAuthenticationIntegrationWithJwtBearerBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   apiAuthenticationIntegrationWithJwtBearerBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_IdentifierQuotingDiffSuppression(t *testing.T) {
+	// TODO [SNOW-1452191]: unskip
+	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithJwtBearer),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             apiAuthenticationIntegrationWithJwtBearerBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   apiAuthenticationIntegrationWithJwtBearerBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func apiAuthenticationIntegrationWithJwtBearerBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_authentication_integration_with_jwt_bearer" "test" {
+  enabled             = true
+  name                = "%s"
+  oauth_client_id     = "foo"
+  oauth_client_secret = "foo"
+  oauth_assertion_issuer = "foo"
+}
+`, name)
 }

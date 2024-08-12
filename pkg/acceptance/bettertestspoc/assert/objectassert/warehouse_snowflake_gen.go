@@ -34,8 +34,8 @@ func WarehouseFromObject(t *testing.T, warehouse *sdk.Warehouse) *WarehouseAsser
 func (w *WarehouseAssert) HasName(expected string) *WarehouseAssert {
 	w.AddAssertion(func(t *testing.T, o *sdk.Warehouse) error {
 		t.Helper()
-		if o.Name != expected {
-			return fmt.Errorf("expected name: %v; got: %v", expected, o.Name)
+		if o.Name.Name() != expected {
+			return fmt.Errorf("expected name: %v; got: %v", expected, o.Name.Name())
 		}
 		return nil
 	})

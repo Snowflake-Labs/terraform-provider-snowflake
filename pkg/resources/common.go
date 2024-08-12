@@ -3,7 +3,6 @@ package resources
 import (
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,23 +25,6 @@ func DiffSuppressStatement(_, old, new string, _ *schema.ResourceData) bool {
 
 func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))
-}
-
-// TODO [SNOW-999049]: address during identifiers rework
-func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
-	if oldValue == "" || newValue == "" {
-		return false
-	} else {
-		oldId, err := helpers.DecodeSnowflakeParameterID(oldValue)
-		if err != nil {
-			return false
-		}
-		newId, err := helpers.DecodeSnowflakeParameterID(newValue)
-		if err != nil {
-			return false
-		}
-		return oldId.FullyQualifiedName() == newId.FullyQualifiedName()
-	}
 }
 
 // TODO [SNOW-1325214]: address during stage resource rework

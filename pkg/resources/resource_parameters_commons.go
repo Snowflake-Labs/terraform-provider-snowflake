@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -88,8 +87,12 @@ func parametersProvider[T sdk.ObjectIdentifier](
 	d ResourceIdProvider,
 	meta *provider.Context,
 	showParametersFuncProvider showParametersFuncProvider[T],
+	idParser func(string) (T, error),
 ) ([]*sdk.Parameter, error) {
 	client := meta.Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(T)
+	id, err := idParser(d.Id())
+	if err != nil {
+		return nil, err
+	}
 	return showParametersFuncProvider(client)(ctx, id)
 }

@@ -16,15 +16,17 @@ import (
 
 var sharedDatabaseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the database; must be unique for your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the database; must be unique for your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"from_share": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -63,8 +65,15 @@ func SharedDatabase() *schema.Resource {
 func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-	externalShareId := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("from_share").(string))
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	externalShareId, err := sdk.ParseExternalObjectIdentifier(d.Get("from_share").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	opts := &sdk.CreateSharedDatabaseOptions{
 		// TODO(SNOW-1325381)
@@ -75,29 +84,37 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		return parametersCreateDiags
 	}
 
-	err := client.Databases.CreateShared(ctx, id, externalShareId, opts)
+	err = client.Databases.CreateShared(ctx, id, externalShareId, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 
 	return ReadSharedDatabase(ctx, d, meta)
 }
 
 func UpdateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("name") {
-		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+		newId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+
+		d.SetId(newId.Name())
 		id = newId
 	}
 
@@ -129,7 +146,10 @@ func UpdateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 
 func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
@@ -149,7 +169,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", database.Name); err != nil {
+	if err := d.Set("name", database.Name.Name()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -182,9 +202,12 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func DeleteSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
+	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {

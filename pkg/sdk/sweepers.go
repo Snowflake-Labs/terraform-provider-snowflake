@@ -151,7 +151,7 @@ func getDatabaseSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping databases ended with error, err = %w", err)
 		}
 		for _, db := range dbs {
-			if strings.HasSuffix(db.Name, suffix) && db.Name != "SNOWFLAKE" {
+			if strings.HasSuffix(db.Name.Name(), suffix) && db.Name.Name() != "SNOWFLAKE" {
 				log.Printf("[DEBUG] Dropping database %s", db.ID().FullyQualifiedName())
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
 					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
@@ -178,7 +178,7 @@ func getWarehouseSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping warehouses ended with error, err = %w", err)
 		}
 		for _, wh := range whs {
-			if strings.HasSuffix(wh.Name, suffix) && wh.Name != "SNOWFLAKE" {
+			if strings.HasSuffix(wh.Name.Name(), suffix) && wh.Name.Name() != "SNOWFLAKE" {
 				log.Printf("[DEBUG] Dropping warehouse %s", wh.ID().FullyQualifiedName())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return fmt.Errorf("sweeping warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err)
@@ -201,7 +201,7 @@ func getRoleSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping roles ended with error, err = %w", err)
 		}
 		for _, role := range roles {
-			if strings.HasSuffix(role.Name, suffix) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
+			if strings.HasSuffix(role.Name.Name(), suffix) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name.Name()) {
 				log.Printf("[DEBUG] Dropping role %s", role.ID().FullyQualifiedName())
 				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
 					return fmt.Errorf("sweeping role %s ended with error, err = %w", role.ID().FullyQualifiedName(), err)

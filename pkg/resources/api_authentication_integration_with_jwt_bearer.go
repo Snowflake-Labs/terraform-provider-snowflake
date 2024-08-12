@@ -59,7 +59,10 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with jwt bearer import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -97,7 +100,12 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
+
+	id, err := sdk.ParseAccountObjectIdentifier(commonCreate.name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id, commonCreate.enabled, d.Get("oauth_assertion_issuer").(string), commonCreate.oauthClientId, commonCreate.oauthClientSecret)
 	req.WithOauthGrantJwtBearer(true)
 	req.Comment = commonCreate.comment
@@ -114,14 +122,17 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 	return ReadContextApiAuthenticationIntegrationWithJwtBearer(false)(ctx, d, meta)
 }
 
 func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -174,7 +185,10 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 
 func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	commonSet, commonUnset, err := handleApiAuthUpdate(d)
 	if err != nil {
 		return diag.FromErr(err)
@@ -209,10 +223,13 @@ func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 }
 
 func DeleteContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

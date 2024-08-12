@@ -414,7 +414,7 @@ const (
 )
 
 type Warehouse struct {
-	Name                            string
+	Name                            AccountObjectIdentifier
 	State                           WarehouseState
 	Type                            WarehouseType
 	Size                            WarehouseSize
@@ -484,7 +484,6 @@ func (row warehouseDBRow) convert() *Warehouse {
 		size = WarehouseSize(strings.ToUpper(row.Size))
 	}
 	wh := &Warehouse{
-		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
 		Type:                            WarehouseType(row.Type),
 		Size:                            size,
@@ -505,6 +504,14 @@ func (row warehouseDBRow) convert() *Warehouse {
 		QueryAccelerationMaxScaleFactor: row.QueryAccelerationMaxScaleFactor,
 		ScalingPolicy:                   ScalingPolicy(row.ScalingPolicy),
 	}
+	if row.Name != "" {
+		warehouseName, err := ParseAccountObjectIdentifier(row.Name)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing warehouse name: %v", err)
+		}
+		wh.Name = warehouseName
+	}
 	if val, err := strconv.ParseFloat(row.Available, 64); err != nil {
 		wh.Available = val
 	}
@@ -524,7 +531,12 @@ func (row warehouseDBRow) convert() *Warehouse {
 		wh.OwnerRoleType = row.OwnerRoleType.String
 	}
 	if row.ResourceMonitor != "null" {
-		wh.ResourceMonitor = NewAccountObjectIdentifierFromFullyQualifiedName(row.ResourceMonitor)
+		resourceMonitorId, err := ParseAccountObjectIdentifier(row.ResourceMonitor)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing resource monitor name: %v", err)
+		}
+		wh.ResourceMonitor = resourceMonitorId
 	}
 	return wh
 }
@@ -616,7 +628,7 @@ func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (
 }
 
 func (v *Warehouse) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+	return v.Name
 }
 
 func (v *Warehouse) ObjectType() ObjectType {

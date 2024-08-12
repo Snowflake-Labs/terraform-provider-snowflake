@@ -72,7 +72,7 @@ var _ = ShowDatabaseSchema
 func DatabaseToSchema(database *sdk.Database) map[string]any {
 	databaseSchema := make(map[string]any)
 	databaseSchema["created_on"] = database.CreatedOn.String()
-	databaseSchema["name"] = database.Name
+	databaseSchema["name"] = database.Name.Name()
 	databaseSchema["is_default"] = database.IsDefault
 	databaseSchema["is_current"] = database.IsCurrent
 	if database.Origin != nil {

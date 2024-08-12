@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -671,4 +672,85 @@ func TestAcc_OauthIntegrationForPartnerApplications_Invalid(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_OauthIntegrationForPartnerApplications_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.OauthIntegrationForPartnerApplications),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: oauthIntegrationForPartnerApplicationsBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   oauthIntegrationForPartnerApplicationsBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_OauthIntegrationForPartnerApplications_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.OauthIntegrationForPartnerApplications),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             oauthIntegrationForPartnerApplicationsBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   oauthIntegrationForPartnerApplicationsBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func oauthIntegrationForPartnerApplicationsBasicConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_oauth_integration_for_partner_applications" "test" {
+  name               = "%s"
+  oauth_client       = "LOOKER"
+  oauth_redirect_uri = "https://example.com"
+  blocked_roles_list = [ "ACCOUNTADMIN", "SECURITYADMIN" ]
+}
+`, name)
 }

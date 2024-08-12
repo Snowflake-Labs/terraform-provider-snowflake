@@ -109,7 +109,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
-	expected := warehouse.Name
+	expected := warehouse.Name.Name()
 	assert.Equal(t, expected, actual)
 }
 
@@ -128,8 +128,7 @@ func TestInt_UseDatabase(t *testing.T) {
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
-	expected := database.Name
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, database.Name.Name(), actual)
 }
 
 func TestInt_UseSchema(t *testing.T) {

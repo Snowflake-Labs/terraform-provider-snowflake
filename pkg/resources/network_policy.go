@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,9 +18,10 @@ import (
 
 var networkPolicySchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the network policy; must be unique for the account in which the network policy is created.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the network policy; must be unique for the account in which the network policy is created.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"allowed_network_rule_list": {
 		Type: schema.TypeSet,
@@ -122,7 +122,11 @@ func NetworkPolicy() *schema.Resource {
 }
 
 func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateNetworkPolicyRequest(id)
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -130,11 +134,19 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-		req.WithAllowedNetworkRuleList(parseNetworkRulesList(v))
+		allowedNetworkRuleList, err := parseNetworkRulesList(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		req.WithAllowedNetworkRuleList(allowedNetworkRuleList)
 	}
 
 	if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-		req.WithBlockedNetworkRuleList(parseNetworkRulesList(v))
+		blockedNetworkRuleList, err := parseNetworkRulesList(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		req.WithBlockedNetworkRuleList(blockedNetworkRuleList)
 	}
 
 	if v, ok := d.GetOk("allowed_ip_list"); ok {
@@ -146,7 +158,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	client := meta.(*provider.Context).Client
-	err := client.NetworkPolicies.Create(ctx, req)
+	err = client.NetworkPolicies.Create(ctx, req)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -157,14 +169,17 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 
 	return ReadContextNetworkPolicy(ctx, d, meta)
 }
 
 func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, id)
 	if err != nil {
@@ -190,7 +205,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	if err = d.Set("name", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()); err != nil {
+	if err = d.Set("name", networkPolicy.Name.Name()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -226,7 +241,11 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 			return diag.FromErr(err)
 		}
 		for _, networkRule := range networkRules {
-			allowedNetworkRules = append(allowedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
+			networkRuleId, err := sdk.ParseSchemaObjectIdentifier(networkRule.FullyQualifiedRuleName)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			allowedNetworkRules = append(allowedNetworkRules, networkRuleId.FullyQualifiedName())
 		}
 	}
 	if err = d.Set("allowed_network_rule_list", allowedNetworkRules); err != nil {
@@ -240,7 +259,11 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 			return diag.FromErr(err)
 		}
 		for _, networkRule := range networkRules {
-			blockedNetworkRules = append(blockedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
+			networkRuleId, err := sdk.ParseSchemaObjectIdentifier(networkRule.FullyQualifiedRuleName)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			blockedNetworkRules = append(blockedNetworkRules, networkRuleId.FullyQualifiedName())
 		}
 	}
 	if err = d.Set("blocked_network_rule_list", blockedNetworkRules); err != nil {
@@ -260,19 +283,25 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 
 func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewNetworkPolicySetRequest(), sdk.NewNetworkPolicyUnsetRequest()
 
 	if d.HasChange("name") {
-		helpers.EncodeSnowflakeID()
-		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-
-		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(id).WithRenameTo(newId))
+		newId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(id).WithRenameTo(newId))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(newId.Name())
 		id = newId
 	}
 
@@ -286,7 +315,11 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("allowed_network_rule_list") {
 		if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-			set.WithAllowedNetworkRuleList(*sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(parseNetworkRulesList(v)))
+			allowedNetworkRuleList, err := parseNetworkRulesList(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.WithAllowedNetworkRuleList(*sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(allowedNetworkRuleList))
 		} else {
 			unset.WithAllowedNetworkRuleList(true)
 		}
@@ -294,7 +327,11 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("blocked_network_rule_list") {
 		if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-			set.WithBlockedNetworkRuleList(*sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(parseNetworkRulesList(v)))
+			blockedNetworkRuleList, err := parseNetworkRulesList(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.WithBlockedNetworkRuleList(*sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(blockedNetworkRuleList))
 		} else {
 			unset.WithBlockedNetworkRuleList(true)
 		}
@@ -332,10 +369,13 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 }
 
 func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(true))
+	err = client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -361,11 +401,15 @@ func parseIPList(v interface{}) []sdk.IPRequest {
 }
 
 // parseNetworkRulesList is a helper function to parse a given network rule list from ResourceData.
-func parseNetworkRulesList(v interface{}) []sdk.SchemaObjectIdentifier {
+func parseNetworkRulesList(v interface{}) ([]sdk.SchemaObjectIdentifier, error) {
 	networkRules := expandStringList(v.(*schema.Set).List())
 	networkRuleIdentifiers := make([]sdk.SchemaObjectIdentifier, len(networkRules))
-	for i, v := range networkRules {
-		networkRuleIdentifiers[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v)
+	for i, networkRuleFullyQualifiedName := range networkRules {
+		networkRuleId, err := sdk.ParseSchemaObjectIdentifier(networkRuleFullyQualifiedName)
+		if err != nil {
+			return nil, err
+		}
+		networkRuleIdentifiers[i] = networkRuleId
 	}
-	return networkRuleIdentifiers
+	return networkRuleIdentifiers, nil
 }

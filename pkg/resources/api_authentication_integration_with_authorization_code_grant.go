@@ -61,7 +61,10 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with authorization code grant import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -100,7 +103,12 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
+
+	id, err := sdk.ParseAccountObjectIdentifier(commonCreate.name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, commonCreate.enabled, commonCreate.oauthClientId, commonCreate.oauthClientSecret)
 	req.WithOauthGrantAuthorizationCode(true)
 	req.Comment = commonCreate.comment
@@ -126,14 +134,17 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 	return ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(false)(ctx, d, meta)
 }
 
 func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -189,7 +200,11 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 
 func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	commonSet, commonUnset, err := handleApiAuthUpdate(d)
 	if err != nil {
 		return diag.FromErr(err)
@@ -234,10 +249,13 @@ func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 }
 
 func DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

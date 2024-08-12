@@ -202,7 +202,7 @@ func ReadDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err := d.Set("name", database.Name); err != nil {
+	if err := d.Set("name", database.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", database.Comment); err != nil {

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -21,10 +20,11 @@ import (
 
 var scimIntegrationSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "String that specifies the identifier (i.e. name) for the integration; must be unique in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "String that specifies the identifier (i.e. name) for the integration; must be unique in your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {
 		Type:             schema.TypeBool,
@@ -133,7 +133,10 @@ func SCIMIntegration() *schema.Resource {
 func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting scim integration import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -145,7 +148,7 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.Name); err != nil {
+	if err = d.Set("name", integration.Name.Name()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
@@ -189,7 +192,10 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	scimClient, err := sdk.ToScimSecurityIntegrationScimClientOption(d.Get("scim_client").(string))
 	if err != nil {
@@ -233,7 +239,7 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 
 	return ReadContextSCIMIntegration(false)(ctx, d, meta)
 }
@@ -241,7 +247,10 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -280,7 +289,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
 		}
 
-		if err := d.Set("name", integration.Name); err != nil {
+		if err := d.Set("name", integration.Name.Name()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -356,7 +365,11 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 
 func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewScimIntegrationSetRequest(), sdk.NewScimIntegrationUnsetRequest()
 
 	if d.HasChange("enabled") {
@@ -412,10 +425,13 @@ func UpdateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 }
 
 func DeleteContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

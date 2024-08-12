@@ -162,7 +162,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	assertSecurityIntegration := func(t *testing.T, si *sdk.SecurityIntegration, id sdk.AccountObjectIdentifier, siType string, enabled bool, comment string) {
 		t.Helper()
-		assert.Equal(t, id.Name(), si.Name)
+		assert.Equal(t, id.Name(), si.Name.Name())
 		assert.Equal(t, siType, si.IntegrationType)
 		assert.Equal(t, enabled, si.Enabled)
 		assert.Equal(t, comment, si.Comment)
@@ -424,7 +424,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_JWS_KEYS_URL", Type: "Object", Value: "http://example.com", Default: ""})
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name, Default: "[]"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST", Type: "List", Value: role1.Name.Name(), Default: "[]"})
 
 		assertSecurityIntegration(t, integration, id, "EXTERNAL_OAUTH - CUSTOM", false, "")
 	})
@@ -453,7 +453,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			externalOauthScopeMappingAttribute:         "scp",
 			externalOauthRsaPublicKey:                  rsaKey,
 			externalOauthRsaPublicKey2:                 rsaKey,
-			externalOauthBlockedRolesList:              role1.Name,
+			externalOauthBlockedRolesList:              role1.Name.Name(),
 			externalOauthAudienceList:                  "foo",
 			externalOauthTokenUserMappingClaim:         "['foo']",
 			externalOauthSnowflakeUserMappingAttribute: string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName),
@@ -484,7 +484,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "12345",
 			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
-			blockedRolesList:        role1.Name,
+			blockedRolesList:        role1.Name.Name(),
 			comment:                 "a",
 		})
 
@@ -503,7 +503,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			r.WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
 				WithComment("a").
 				WithEnabled(true).
-				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithNetworkPolicy(networkPolicy.Name).
 				WithOauthAllowNonTlsRedirectUri(true).
 				WithOauthClientRsaPublicKey(rsaKey).
 				WithOauthClientRsaPublicKey2(rsaKey).
@@ -521,9 +521,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "12345",
 			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
-			preAuthorizedRolesList:  role2.Name,
-			blockedRolesList:        role1.Name,
-			networkPolicy:           networkPolicy.Name,
+			preAuthorizedRolesList:  role2.Name.Name(),
+			blockedRolesList:        role1.Name.Name(),
+			networkPolicy:           networkPolicy.Name.Name(),
 			comment:                 "a",
 		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true", rsaKeyHash, rsaKeyHash)
 
@@ -578,13 +578,13 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		_, id := createSCIMIntegration(t, func(r *sdk.CreateScimSecurityIntegrationRequest) {
 			r.WithComment("a").
-				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithNetworkPolicy(networkPolicy.Name).
 				WithSyncPassword(false)
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "a")
+		assertSCIMDescribe(details, "true", networkPolicy.Name.Name(), "GENERIC_SCIM_PROVISIONER", "false", "a")
 
 		si, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -890,7 +890,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			externalOauthAnyRoleMode:                   string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable),
 			externalOauthRsaPublicKey:                  rsaKey,
 			externalOauthRsaPublicKey2:                 rsaKey,
-			externalOauthBlockedRolesList:              role1.Name,
+			externalOauthBlockedRolesList:              role1.Name.Name(),
 			externalOauthAudienceList:                  "foo",
 			externalOauthTokenUserMappingClaim:         "['bar']",
 			externalOauthSnowflakeUserMappingAttribute: string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress),
@@ -1053,7 +1053,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithEnabled(true).
 					WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
 					WithComment("a").
-					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithNetworkPolicy(networkPolicy.Name).
 					WithOauthAllowNonTlsRedirectUri(true).
 					WithOauthClientRsaPublicKey(rsaKey).
 					WithOauthClientRsaPublicKey2(rsaKey).
@@ -1075,9 +1075,9 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			oauthIssueRefreshTokens: "true",
 			refreshTokenValidity:    "22222",
 			useSecondaryRoles:       string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit),
-			preAuthorizedRolesList:  role2.Name,
-			blockedRolesList:        role1.Name,
-			networkPolicy:           networkPolicy.Name,
+			preAuthorizedRolesList:  role2.Name.Name(),
+			blockedRolesList:        role1.Name.Name(),
+			networkPolicy:           networkPolicy.Name.Name(),
 			comment:                 "a",
 		}, "true", string(sdk.OauthSecurityIntegrationClientTypePublic), "true", rsaKeyHash, rsaKeyHash)
 
@@ -1160,8 +1160,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSaml2SpInitiatedLoginPageLabel("label").
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
-			// TODO(SNOW-1479617): fix after format clarification
-			// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
+				// TODO(SNOW-1479617): fix after format clarification
+				// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
 			)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
@@ -1257,7 +1257,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		setRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
 				*sdk.NewScimIntegrationSetRequest().
-					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithNetworkPolicy(networkPolicy.Name).
 					WithEnabled(false).
 					WithSyncPassword(false).
 					WithComment(sdk.StringAllowEmpty{Value: "altered"}),
@@ -1268,7 +1268,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "false", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
+		assertSCIMDescribe(details, "false", networkPolicy.Name.Name(), "GENERIC_SCIM_PROVISIONER", "false", "altered")
 
 		unsetRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithUnset(

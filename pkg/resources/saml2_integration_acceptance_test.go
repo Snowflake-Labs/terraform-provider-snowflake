@@ -1050,3 +1050,89 @@ func TestAcc_Saml2Integration_DefaultValues(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_Saml2Integration_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	cert := random.GenerateX509(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: saml2IntegrationBasicConfig(id.Name(), cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   saml2IntegrationBasicConfig(id.Name(), cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Saml2Integration_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	cert := random.GenerateX509(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             saml2IntegrationBasicConfig(quotedId, cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   saml2IntegrationBasicConfig(quotedId, cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func saml2IntegrationBasicConfig(name string, cert string) string {
+	return fmt.Sprintf(`
+resource "snowflake_saml2_integration" "test" {
+  name            = "%s"
+  saml2_issuer    = "http://example.com"
+  saml2_sso_url   = "http://example.com"
+  saml2_provider  = "CUSTOM"
+  saml2_x509_cert = <<EOT
+%s
+EOT
+}
+`, name, cert)
+}

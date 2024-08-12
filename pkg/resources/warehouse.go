@@ -21,9 +21,10 @@ import (
 
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Identifier for the virtual warehouse; must be unique for your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Identifier for the virtual warehouse; must be unique for your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"warehouse_type": {
 		Type:             schema.TypeString,
@@ -151,7 +152,7 @@ var warehouseSchema = map[string]*schema.Schema{
 }
 
 func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	return parametersProvider(ctx, d, meta.(*provider.Context), warehouseParametersProviderFunc)
+	return parametersProvider(ctx, d, meta.(*provider.Context), warehouseParametersProviderFunc, sdk.ParseAccountObjectIdentifier)
 }
 
 func warehouseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
@@ -205,7 +206,8 @@ func Warehouse() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
@@ -238,7 +240,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 		return nil, err
 	}
 
-	if err = d.Set("name", w.Name); err != nil {
+	if err = d.Set("name", w.Name.Name()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("warehouse_type", w.Type); err != nil {
@@ -356,7 +358,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
@@ -405,7 +407,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err = d.Set("name", w.Name); err != nil {
+		if err = d.Set("name", w.Name.Name()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("comment", w.Comment); err != nil {
@@ -459,7 +461,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+		d.SetId(newId.Name())
 		id = newId
 	}
 

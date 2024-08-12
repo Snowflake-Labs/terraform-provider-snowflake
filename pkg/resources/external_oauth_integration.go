@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -23,10 +22,11 @@ var privilegedRoles = []string{"ACCOUNTADMIN", "ORGADMIN", "SECURITYADMIN"}
 
 var externalOauthIntegrationSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"external_oauth_type": {
 		Type:             schema.TypeString,
@@ -191,7 +191,10 @@ func ExternalOauthIntegration() *schema.Resource {
 func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting external oauth integration import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -203,7 +206,7 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.Name); err != nil {
+	if err = d.Set("name", integration.Name.Name()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
@@ -319,7 +322,10 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	for _, v := range externalOauthTokenUserMappingClaimRaw {
 		externalOauthTokenUserMappingClaim = append(externalOauthTokenUserMappingClaim, sdk.TokenUserMappingClaim{Claim: v})
 	}
-	id := sdk.NewAccountObjectIdentifier(name)
+	id, err := sdk.ParseAccountObjectIdentifier(name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	req := sdk.NewCreateExternalOauthSecurityIntegrationRequest(id, enabled, integrationType, externalOauthIssuer, externalOauthTokenUserMappingClaim, externalOauthSnowflakeUserMappingAttribute)
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -391,7 +397,7 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(id.Name())
 
 	return ReadContextExternalOauthIntegration(false)(ctx, d, meta)
 }
@@ -399,7 +405,10 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -426,7 +435,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("name", integration.Name); err != nil {
+		if err := d.Set("name", integration.Name.Name()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("comment", integration.Comment); err != nil {
@@ -560,7 +569,11 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 
 func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewExternalOauthIntegrationSetRequest(), sdk.NewExternalOauthIntegrationUnsetRequest()
 
 	if d.HasChange("comment") {
@@ -711,10 +724,13 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 }
 
 func DeleteContextExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

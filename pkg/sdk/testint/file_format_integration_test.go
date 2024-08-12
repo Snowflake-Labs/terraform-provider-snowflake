@@ -520,7 +520,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 
 		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
 		require.NoError(t, err)
-		assert.Equal(t, testDb(t).Name, fileFormat.Name.DatabaseName())
+		assert.Equal(t, testDb(t).Name.Name(), fileFormat.Name.DatabaseName())
 		assert.Equal(t, testSchema(t).Name, fileFormat.Name.SchemaName())
 		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
 	})

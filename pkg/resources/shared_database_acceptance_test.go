@@ -2,7 +2,9 @@ package resources_test
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
@@ -317,4 +319,122 @@ func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 	require.NoError(t, err)
 
 	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
+}
+
+func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	externalShareId := createShareableDatabase(t)
+
+	// TODO(SNOW-1562172): Create a better solution for this type of situations
+	// We have to create test database from share before the actual test to check if the newly created share is ready
+	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
+	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool {
+		database, err := acc.TestClient().Database.Show(t, testId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func sharedDatabaseConfigBasic(name, externalShareId string) string {
+	return fmt.Sprintf(`resource "snowflake_shared_database" "test" {
+		name = "%v"
+		from_share = %v
+	}`, name, strconv.Quote(externalShareId))
+}
+
+func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	externalShareId := createShareableDatabase(t)
+	unquotedExternalShareId := fmt.Sprintf("%s.%s.%s", externalShareId.AccountIdentifier().OrganizationName(), externalShareId.AccountIdentifier().AccountName(), externalShareId.Name())
+
+	// TODO(SNOW-1562172): Create a better solution for this type of situations
+	// We have to create test database from share before the actual test to check if the newly created share is ready
+	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
+	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool {
+		database, err := acc.TestClient().Database.Show(t, testId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+		},
+	})
 }

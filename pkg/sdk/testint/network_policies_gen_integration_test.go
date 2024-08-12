@@ -43,7 +43,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
 		return collections.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
-			return t.Name == name
+			return t.Name.Name() == name
 		})
 	}
 
@@ -360,7 +360,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 		np, err := findNetworkPolicy(nps, newID.Name())
 		require.NoError(t, err)
-		assert.Equal(t, newID.Name(), np.Name)
+		assert.Equal(t, newID.Name(), np.Name.Name())
 		assert.Equal(t, *req.Comment, np.Comment)
 		assert.Equal(t, len(req.AllowedIpList), np.EntriesInAllowedIpList)
 		assert.Equal(t, len(req.BlockedIpList), np.EntriesInBlockedIpList)

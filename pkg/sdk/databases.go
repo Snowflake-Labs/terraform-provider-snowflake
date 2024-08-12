@@ -48,7 +48,7 @@ type databases struct {
 
 type Database struct {
 	CreatedOn     time.Time
-	Name          string
+	Name          AccountObjectIdentifier
 	IsDefault     bool
 	IsCurrent     bool
 	Origin        *ExternalObjectIdentifier
@@ -64,7 +64,7 @@ type Database struct {
 }
 
 func (v *Database) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+	return v.Name
 }
 
 func (v *Database) ObjectType() ObjectType {
@@ -90,7 +90,14 @@ type databaseRow struct {
 func (row databaseRow) convert() *Database {
 	database := &Database{
 		CreatedOn: row.CreatedOn,
-		Name:      row.Name,
+	}
+	if row.Name != "" {
+		databaseName, err := ParseAccountObjectIdentifier(row.Name)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing database name: %v", err)
+		}
+		database.Name = databaseName
 	}
 	if row.IsDefault.Valid {
 		database.IsDefault = row.IsDefault.String == "Y"

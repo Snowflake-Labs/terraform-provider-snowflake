@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -125,7 +126,7 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name.Name() == id.Name() })
 }
 
 func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
@@ -676,11 +677,18 @@ func (r *ShowSecurityIntegrationRequest) toOpts() *ShowSecurityIntegrationOption
 
 func (r securityIntegrationShowRow) convert() *SecurityIntegration {
 	s := &SecurityIntegration{
-		Name:            r.Name,
 		IntegrationType: r.Type,
 		Enabled:         r.Enabled,
 		CreatedOn:       r.CreatedOn,
 		Category:        r.Category,
+	}
+	if r.Name != "" {
+		roleName, err := ParseAccountObjectIdentifier(r.Name)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] Error parsing security integration name: %v", err)
+		}
+		s.Name = roleName
 	}
 	if r.Comment.Valid {
 		s.Comment = r.Comment.String

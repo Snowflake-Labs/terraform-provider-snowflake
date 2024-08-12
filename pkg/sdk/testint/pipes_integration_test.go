@@ -157,7 +157,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		t.Helper()
 		assert.NotEmpty(t, pipeDetails.CreatedOn)
 		assert.Equal(t, expectedName, pipeDetails.Name)
-		assert.Equal(t, testDb(t).Name, pipeDetails.DatabaseName)
+		assert.Equal(t, testDb(t).Name.Name(), pipeDetails.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, pipeDetails.SchemaName)
 		assert.Equal(t, copyStatement, pipeDetails.Definition)
 		assert.Equal(t, "ACCOUNTADMIN", pipeDetails.Owner)
