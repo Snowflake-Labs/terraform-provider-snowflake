@@ -266,7 +266,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, false, true)
 
 		id := f.ID()
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(nid.SchemaObjectId()))
 		if err != nil {
 			t.Cleanup(cleanupFunctionHandle(id))
