@@ -6,7 +6,17 @@ across different versions.
 
 ## v0.94.x ➞ v0.95.0
 
-### snowflake_warehouse resource changes
+### New `fully_qualified_name` field in all resources.
+We added a new `fully_qualified_name` to all resources. This should help with referencing other resources in fields that expect a fully qualified name. For example, instead of
+writing
+
+```object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””```
+
+ now we can write
+
+```object_name = snowflake_table.fully_qualified_name```
+
+### snowflake_user resource changes
 
 #### *(breaking change)* user parameters added to snowflake_user resource
 
@@ -461,7 +471,7 @@ resource "snowflake_database" "test" {
 }
 ```
 
-If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove 
+If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove
 the database from state to later import it in the newer version of the provider.
 Otherwise, it may cause issues when migrating to v0.93.0.
 For now, we're dropping the possibility to create a clone database from other databases.
