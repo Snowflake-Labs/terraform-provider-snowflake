@@ -179,7 +179,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_account_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_schema.my_schema.fully_qualified_name}\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
 }
 
@@ -190,7 +190,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_account_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_schema.my_schema.fully_qualified_name}\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
   all_privileges    = true
   with_grant_option = true
