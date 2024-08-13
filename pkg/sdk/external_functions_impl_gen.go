@@ -171,10 +171,10 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 		e.Arguments = dataTypes
 	}
 	if r.SchemaName.Valid {
-		e.SchemaName = r.SchemaName.String
+		e.SchemaName = strings.Trim(r.SchemaName.String, `"`)
 	}
 	if r.CatalogName.Valid {
-		e.CatalogName = r.CatalogName.String
+		e.CatalogName = strings.Trim(r.CatalogName.String, `"`)
 	}
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"

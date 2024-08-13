@@ -499,6 +499,29 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, id2, e2Id)
 	})
 
+	t.Run("show function by id - different name, same arguments", func(t *testing.T) {
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
+		testClientHelper().Function.CreateWithIdentifier(t, id2)
+
+		es, err := client.Functions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
+	t.Run("show function by id - same name, different arguments", func(t *testing.T) {
+		name := testClientHelper().Ids.Alpha()
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
+		testClientHelper().Function.CreateWithIdentifier(t, id2)
+
+		es, err := client.Functions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
 	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {
 		// This test proves that every detailed data types (e.g. VARCHAR(20) and NUMBER(10, 0)) are generalized
 		// on Snowflake side (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types

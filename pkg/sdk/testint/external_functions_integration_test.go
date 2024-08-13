@@ -246,6 +246,29 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.Equal(t, *e, *es)
 	})
 
+	t.Run("show external function by id - different name, same arguments", func(t *testing.T) {
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		e := testClientHelper().ExternalFunction.CreateWithIdentifier(t, integration.ID(), id1)
+		testClientHelper().ExternalFunction.CreateWithIdentifier(t, integration.ID(), id2)
+
+		es, err := client.ExternalFunctions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
+	t.Run("show external function by id - same name, different arguments", func(t *testing.T) {
+		name := testClientHelper().Ids.Alpha()
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		e := testClientHelper().ExternalFunction.CreateWithIdentifier(t, integration.ID(), id1)
+		testClientHelper().ExternalFunction.CreateWithIdentifier(t, integration.ID(), id2)
+
+		es, err := client.ExternalFunctions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
 	t.Run("describe external function", func(t *testing.T) {
 		e := createExternalFunction(t)
 

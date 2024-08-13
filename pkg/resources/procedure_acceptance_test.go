@@ -508,3 +508,63 @@ resource "snowflake_procedure" "p" {
 }
 `, database, schema, name)
 }
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_ArgumentSynonyms(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithArgumentSynonyms(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(NUMBER, VARCHAR)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithArgumentSynonyms(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(NUMBER, VARCHAR)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithArgumentSynonyms(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement   = <<EOT
+    BEGIN
+      RETURN B;
+    END;
+  EOT
+
+  arguments {
+    name = "A"
+    type = "INT"
+  }
+  arguments {
+    name = "B"
+    type = "TEXT"
+  }
+}
+`, database, schema, name)
+}

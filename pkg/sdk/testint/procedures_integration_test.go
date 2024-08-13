@@ -216,7 +216,7 @@ func TestInt_CreateProcedures(t *testing.T) {
 	t.Run("create procedure for Python: returns result data type", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#running-concurrent-tasks-with-worker-processes
 		name := "joblib_multiprocessing_proc"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, "INT")
+		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeInt)
 
 		definition := `
 import joblib
@@ -227,7 +227,7 @@ def joblib_multiprocessing(session, i):
 
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeString)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewProcedureArgumentRequest("i", "INT")
+		argument := sdk.NewProcedureArgumentRequest("i", sdk.DataTypeInt)
 		packages := []sdk.ProcedurePackageRequest{
 			*sdk.NewProcedurePackageRequest("snowflake-snowpark-python"),
 			*sdk.NewProcedurePackageRequest("joblib"),
@@ -1020,5 +1020,28 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 		e2, err := client.Procedures.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
+	})
+
+	t.Run("show procedure by id - different name, same arguments", func(t *testing.T) {
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+
+		es, err := client.Procedures.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
+	t.Run("show procedure by id - same name, different arguments", func(t *testing.T) {
+		name := testClientHelper().Ids.Alpha()
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+
+		es, err := client.Procedures.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
 	})
 }
