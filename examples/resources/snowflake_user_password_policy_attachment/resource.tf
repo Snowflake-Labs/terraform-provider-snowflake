@@ -8,6 +8,6 @@ resource "snowflake_password_policy" "pp" {
 }
 
 resource "snowflake_user_password_policy_attachment" "ppa" {
-  password_policy_name = "\"${snowflake_password_policy.pp.database}\".\"${snowflake_password_policy.pp.schema}\".\"${snowflake_password_policy.pp.name}\""
+  password_policy_name = snowflake_password_policy.pp.fully_qualified_name
   user_name            = snowflake_user.user.name
 }

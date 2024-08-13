@@ -187,7 +187,7 @@ func Procedure() *schema.Resource {
 		DeleteContext: DeleteContextProcedure,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name", "arguments"),
 		),
 
 		Schema: procedureSchema,

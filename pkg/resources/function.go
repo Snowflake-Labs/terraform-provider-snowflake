@@ -172,7 +172,7 @@ func Function() *schema.Resource {
 		DeleteContext: DeleteContextFunction,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name", "arguments"),
 		),
 
 		Schema: functionSchema,

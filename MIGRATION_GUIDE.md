@@ -16,6 +16,8 @@ writing
 
 ```object_name = snowflake_table.fully_qualified_name```
 
+See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
+
 Some of the resources are excluded from this change:
 - deprecated resources
   - `snowflake_database_old`
@@ -35,7 +37,7 @@ Some of the resources are excluded from this change:
   - grant resources
 
 #### *(breaking change)* removed `qualified_name` from `snowflake_masking_policy`, `snowflake_network_rule`, `snowflake_password_policy` and `snowflake_table`
-Because of introducing a new field for all of the resources, `qualified_name` was removed from `snowflake_masking_policy`, `snowflake_network_rule`,  `snowflake_password_policy` and `snowflake_table`. State is automatically migrated.
+Because of introducing a new `fully_qualified_name` field for all of the resources, `qualified_name` was removed from `snowflake_masking_policy`, `snowflake_network_rule`,  `snowflake_password_policy` and `snowflake_table`. Please adjust your configurations. State is automatically migrated.
 
 ### snowflake_user resource changes
 

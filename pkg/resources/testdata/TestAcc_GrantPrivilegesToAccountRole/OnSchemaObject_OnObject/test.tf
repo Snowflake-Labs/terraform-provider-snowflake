@@ -17,6 +17,6 @@ resource "snowflake_grant_privileges_to_account_role" "test" {
 
   on_schema_object {
     object_type = "TABLE"
-    object_name = "\"${var.database}\".\"${var.schema}\".\"${var.table_name}\""
+    object_name = snowflake_table.test.fully_qualified_name
   }
 }
