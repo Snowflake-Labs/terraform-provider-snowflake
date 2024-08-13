@@ -172,7 +172,8 @@ func Function() *schema.Resource {
 		DeleteContext: DeleteContextFunction,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name", "arguments"),
+			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: functionSchema,

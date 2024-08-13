@@ -1763,7 +1763,7 @@ resource "snowflake_table" "test_table" {
 	column {
 		name = "column1"
 		type = "VARCHAR(16)"
-		masking_policy = snowflake_masking_policy.%[4]s.qualified_name
+		masking_policy = snowflake_masking_policy.%[4]s.fully_qualified_name
 	}
 }
 `

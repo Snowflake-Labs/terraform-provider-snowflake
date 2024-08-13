@@ -13,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -197,9 +196,8 @@ func ExternalFunction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "arg"),
-		),
+		// TODO(SNOW-1348352): add `name` and `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
+		// This can't be done now because this function compares values without diff suppress.
 
 		StateUpgraders: []schema.StateUpgrader{
 			{

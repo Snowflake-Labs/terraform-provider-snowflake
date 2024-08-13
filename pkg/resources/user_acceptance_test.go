@@ -48,7 +48,7 @@ func TestAcc_User(t *testing.T) {
 	prefix := acc.TestClient().Ids.Alpha()
 	prefix2 := acc.TestClient().Ids.Alpha()
 	id := sdk.NewAccountObjectIdentifier(prefix)
-	id2 := sdk.NewAccountObjectIdentifier(prefix)
+	id2 := sdk.NewAccountObjectIdentifier(prefix2)
 
 	comment := random.Comment()
 	newComment := random.Comment()
@@ -238,8 +238,9 @@ resource "snowflake_user" "w" {
 	default_namespace="bar.baz"
 }
 `
+	s = fmt.Sprintf(s, prefix, prefix)
 	log.Printf("[DEBUG] s2 %s", s)
-	return fmt.Sprintf(s, prefix, prefix)
+	return s
 }
 
 // TestAcc_User_issue2058 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2058 issue.

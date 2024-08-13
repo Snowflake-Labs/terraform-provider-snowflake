@@ -59,9 +59,9 @@ resource "snowflake_table" "table" {
 resource "snowflake_table_column_masking_policy_application" "application" {
   provider = snowflake.masking # Apply masking policy with masking_admin role
 
-  table          = snowflake_table.table.qualified_name
+  table          = snowflake_table.table.fully_qualified_name
   column         = "secret"
-  masking_policy = snowflake_masking_policy.policy.qualified_name
+  masking_policy = snowflake_masking_policy.policy.fully_qualified_name
 }
 ```
 

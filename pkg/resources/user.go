@@ -286,12 +286,12 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}
 			return diag.FromErr(err)
 		}
-		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		userParameters, err := client.Users.ShowParameters(ctx, id)
+		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		userParameters, err := client.Users.ShowParameters(ctx, id)
-		if err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
