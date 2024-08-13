@@ -301,7 +301,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      tableConstraintUniqueConfigUsingFullyQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:      tableConstraintUniqueConfigUsingQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
 			},
 			// fixed in the current version
@@ -370,6 +370,28 @@ func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testin
 			},
 		},
 	})
+}
+
+func tableConstraintUniqueConfigUsingQualifiedName(n string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "t" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+
+	column {
+		name = "col1"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource "snowflake_table_constraint" "unique" {
+	name     = "%s"
+	type     = "UNIQUE"
+	table_id = snowflake_table.t.qualified_name
+	columns  = ["col1"]
+}
+`, n, databaseName, schemaName, n)
 }
 
 func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {

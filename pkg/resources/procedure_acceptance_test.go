@@ -17,8 +17,8 @@ import (
 func testAccProcedure(t *testing.T, configDirectory string) {
 	t.Helper()
 
-	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {

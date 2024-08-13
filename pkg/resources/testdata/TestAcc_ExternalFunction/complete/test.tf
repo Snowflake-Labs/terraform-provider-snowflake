@@ -54,7 +54,7 @@ resource "snowflake_external_function" "external_function" {
     value = "snowflake"
   }
   max_batch_rows            = 500
-  request_translator        = snowflake_function.test_func_req_translator.fully_qualified_name
-  response_translator       = snowflake_function.test_func_res_translator.fully_qualified_name
+  request_translator        = "${var.database}.${var.schema}.${snowflake_function.test_func_req_translator.name}"
+  response_translator       = "${var.database}.${var.schema}.${snowflake_function.test_func_res_translator.name}"
   url_of_proxy_and_resource = var.url_of_proxy_and_resource
 }
