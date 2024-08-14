@@ -13,7 +13,7 @@ import (
 
 // TODO [SNOW-1007539]: use email of our service user (verified email address is required)
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
-	emailIntegrationName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
 	resource.Test(t, resource.TestCase{
@@ -25,9 +25,10 @@ func TestAcc_EmailNotificationIntegration(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.EmailNotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: emailNotificationIntegrationConfig(emailIntegrationName, verifiedEmail),
+				Config: emailNotificationIntegrationConfig(id.Name(), verifiedEmail),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "allowed_recipients.0", verifiedEmail),
 				),
 			},

@@ -12,11 +12,11 @@ import (
 )
 
 func TestAcc_Tag(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_tag.t"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":           config.StringVariable(name),
+			"name":           config.StringVariable(id.Name()),
 			"database":       config.StringVariable(acc.TestDatabaseName),
 			"schema":         config.StringVariable(acc.TestSchemaName),
 			"comment":        config.StringVariable("Terraform acceptance test"),
@@ -42,7 +42,8 @@ func TestAcc_Tag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.#", "1"),
@@ -56,7 +57,8 @@ func TestAcc_Tag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
 				ConfigVariables: variableSet2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.0", "alv1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.1", "alv2"),
@@ -68,7 +70,8 @@ func TestAcc_Tag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
 				ConfigVariables: variableSet3,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
 				),
 			},

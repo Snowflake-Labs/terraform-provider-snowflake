@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -157,6 +159,7 @@ var functionSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Function() *schema.Resource {
@@ -167,6 +170,11 @@ func Function() *schema.Resource {
 		ReadContext:   ReadContextFunction,
 		UpdateContext: UpdateContextFunction,
 		DeleteContext: DeleteContextFunction,
+
+		CustomizeDiff: customdiff.All(
+			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: functionSchema,
 		Importer: &schema.ResourceImporter{
@@ -519,6 +527,9 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
 	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", id.Name()); err != nil {

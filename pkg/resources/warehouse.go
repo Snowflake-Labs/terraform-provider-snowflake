@@ -147,6 +147,7 @@ var warehouseSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowWarehouseParametersSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
@@ -204,6 +205,7 @@ func Warehouse() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
@@ -400,7 +402,9 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				return diag.FromErr(err)
 			}
 		}
-
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 		if err = d.Set("name", w.Name); err != nil {
 			return diag.FromErr(err)
 		}

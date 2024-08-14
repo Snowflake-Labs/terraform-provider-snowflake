@@ -144,6 +144,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeOauthIntegrationForCustomClients,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func OauthIntegrationForCustomClients() *schema.Resource {
@@ -371,7 +372,9 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 		if err := d.Set("name", integration.Name); err != nil {
 			return diag.FromErr(err)
 		}

@@ -56,6 +56,7 @@ resource "snowflake_storage_integration" "integration" {
 - `azure_consent_url` (String) The consent URL that is used to create an Azure Snowflake service principle inside your tenant.
 - `azure_multi_tenant_app_name` (String) This is the name of the Snowflake client application created for your account.
 - `created_on` (String) Date and time when the storage integration was created.
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `storage_aws_external_id` (String) The external ID that Snowflake will use when assuming the AWS role.
 - `storage_aws_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.

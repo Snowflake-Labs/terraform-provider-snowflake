@@ -19,7 +19,7 @@ func TestAcc_Share(t *testing.T) {
 	var account3 string
 
 	shareComment := "Created by a Terraform acceptance test"
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -30,15 +30,16 @@ func TestAcc_Share(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Share),
 		Steps: []resource.TestStep{
 			{
-				Config: shareConfig(name, shareComment),
+				Config: shareConfig(id.Name(), shareComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_share.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_share.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_share.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_share.test", "comment", shareComment),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "0"),
 				),
 			},
 			{
-				Config: shareConfigTwoAccounts(name, shareComment, account2, account3),
+				Config: shareConfigTwoAccounts(id.Name(), shareComment, account2, account3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.0", account2),
@@ -46,14 +47,14 @@ func TestAcc_Share(t *testing.T) {
 				),
 			},
 			{
-				Config: shareConfigOneAccount(name, shareComment, account2),
+				Config: shareConfigOneAccount(id.Name(), shareComment, account2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.0", account2),
 				),
 			},
 			{
-				Config: shareConfig(name, shareComment),
+				Config: shareConfig(id.Name(), shareComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "0"),
 				),

@@ -13,7 +13,7 @@ import (
 )
 
 func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const gcpOtherPubsubSubscriptionName = "projects/project-1234/subscriptions/other"
@@ -27,10 +27,11 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				Config: googleAutoConfig(id.Name(), gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", gcpPubsubSubscriptionName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
@@ -39,10 +40,11 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 			},
 			// change parameters
 			{
-				Config: googleAutoConfig(accName, gcpOtherPubsubSubscriptionName),
+				Config: googleAutoConfig(id.Name(), gcpOtherPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", gcpOtherPubsubSubscriptionName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),

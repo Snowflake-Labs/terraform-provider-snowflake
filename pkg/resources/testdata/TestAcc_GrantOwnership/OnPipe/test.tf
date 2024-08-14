@@ -31,6 +31,6 @@ resource "snowflake_grant_ownership" "test" {
 
   on {
     object_type = "PIPE"
-    object_name = "\"${snowflake_pipe.test.database}\".\"${snowflake_pipe.test.schema}\".\"${snowflake_pipe.test.name}\""
+    object_name = snowflake_pipe.test.fully_qualified_name
   }
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -35,6 +36,7 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "A comment for the email integration.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // EmailNotificationIntegration returns a pointer to the resource representing a notification integration.
@@ -101,6 +103,10 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
 		d.SetId("")
+		return err
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 

@@ -26,7 +26,7 @@ resource "snowflake_grant_ownership" "test" {
 
   on {
     object_type = "TASK"
-    object_name = "\"${snowflake_task.test.database}\".\"${snowflake_task.test.schema}\".\"${snowflake_task.test.name}\""
+    object_name = snowflake_task.test.fully_qualified_name
   }
 }
 
@@ -35,6 +35,6 @@ resource "snowflake_grant_ownership" "child" {
 
   on {
     object_type = "TASK"
-    object_name = "\"${snowflake_task.child.database}\".\"${snowflake_task.child.schema}\".\"${snowflake_task.child.name}\""
+    object_name = snowflake_task.child.fully_qualified_name
   }
 }

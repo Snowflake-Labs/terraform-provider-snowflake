@@ -15,6 +15,6 @@ resource "snowflake_grant_ownership" "test" {
 
   on {
     object_type = "TASK"
-    object_name = "\"${snowflake_task.test.database}\".\"${snowflake_task.test.schema}\".\"${snowflake_task.test.name}\""
+    object_name = snowflake_task.test.fully_qualified_name
   }
 }

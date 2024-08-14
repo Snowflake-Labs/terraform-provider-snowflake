@@ -6,10 +6,12 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -61,7 +63,8 @@ var materializedViewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // MaterializedView returns a pointer to the resource representing a view.
@@ -71,6 +74,10 @@ func MaterializedView() *schema.Resource {
 		Read:   ReadMaterializedView,
 		Update: UpdateMaterializedView,
 		Delete: DeleteMaterializedView,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: materializedViewSchema,
 		Importer: &schema.ResourceImporter{
@@ -142,7 +149,9 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	if err := d.Set("name", materializedView.Name); err != nil {
 		return err
 	}

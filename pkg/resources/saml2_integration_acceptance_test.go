@@ -592,6 +592,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
@@ -648,6 +649,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_issuer", issuer),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sso_url", validUrl),

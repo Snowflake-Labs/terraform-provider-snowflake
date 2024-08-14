@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -196,12 +198,8 @@ var tableSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies whether to enable change tracking on the table. Default false.",
 	},
-	"qualified_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Qualified name of the table.",
-	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Table() *schema.Resource {
@@ -210,6 +208,10 @@ func Table() *schema.Resource {
 		Read:   ReadTable,
 		Update: UpdateTable,
 		Delete: DeleteTable,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: tableSchema,
 		Importer: &schema.ResourceImporter{
@@ -643,6 +645,9 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	var schemaRetentionTime int64
 	// "retention_time" may sometimes be empty string instead of an integer
 	{
@@ -672,7 +677,6 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"column":          toColumnConfig(tableDescription),
 		"cluster_by":      table.GetClusterByKeys(),
 		"change_tracking": table.ChangeTracking,
-		"qualified_name":  id.FullyQualifiedName(),
 	}
 	if v := d.Get("data_retention_time_in_days"); v.(int) != IntDefault || int64(table.RetentionTime) != schemaRetentionTime {
 		toSet["data_retention_time_in_days"] = table.RetentionTime

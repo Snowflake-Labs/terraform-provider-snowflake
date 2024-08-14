@@ -90,6 +90,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeScimSecurityIntegrationSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func SCIMIntegration() *schema.Resource {
@@ -269,6 +270,9 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 					},
 				}
 			}
+			return diag.FromErr(err)
+		}
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 

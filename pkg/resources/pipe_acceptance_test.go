@@ -12,7 +12,7 @@ import (
 )
 
 func TestAcc_Pipe(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -23,9 +23,10 @@ func TestAcc_Pipe(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Pipe),
 		Steps: []resource.TestStep{
 			{
-				Config: pipeConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: pipeConfig(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "comment", "Terraform acceptance test"),

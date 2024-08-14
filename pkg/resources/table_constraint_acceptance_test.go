@@ -68,11 +68,11 @@ resource "snowflake_table" "fk_t" {
 resource "snowflake_table_constraint" "fk" {
 	name="%s"
 	type= "FOREIGN KEY"
-	table_id = snowflake_table.t.qualified_name
+	table_id = snowflake_table.t.fully_qualified_name
 	columns = ["col1"]
 	foreign_key_properties {
 	  references {
-		table_id = snowflake_table.fk_t.qualified_name
+		table_id = snowflake_table.fk_t.fully_qualified_name
 		columns = ["fk_col1"]
 	  }
 	}
@@ -129,7 +129,7 @@ resource "snowflake_table" "t" {
 resource "snowflake_table_constraint" "pk" {
 	name = "%[4]s"
 	type = "PRIMARY KEY"
-	table_id = snowflake_table.t.qualified_name
+	table_id = snowflake_table.t.fully_qualified_name
 	columns = ["col1"]
 	enable = false
 	deferrable = false
@@ -209,7 +209,7 @@ resource "snowflake_table" "t" {
 resource "snowflake_table_constraint" "unique" {
 	name="%s"
 	type= "UNIQUE"
-	table_id = snowflake_table.t.qualified_name
+	table_id = snowflake_table.t.fully_qualified_name
 	columns = ["col1"]
 	enforced = true
 	deferrable = false
@@ -301,7 +301,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      tableConstraintUniqueConfigUsingFullyQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:      tableConstraintUniqueConfigUsingQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
 			},
 			// fixed in the current version
@@ -372,7 +372,7 @@ func TestAcc_TableConstraint_ProperlyHandles_EmptyForeignKeyProperties(t *testin
 	})
 }
 
-func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {
+func tableConstraintUniqueConfigUsingQualifiedName(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
 	name     = "%s"
@@ -389,6 +389,28 @@ resource "snowflake_table_constraint" "unique" {
 	name     = "%s"
 	type     = "UNIQUE"
 	table_id = snowflake_table.t.qualified_name
+	columns  = ["col1"]
+}
+`, n, databaseName, schemaName, n)
+}
+
+func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "t" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+
+	column {
+		name = "col1"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource "snowflake_table_constraint" "unique" {
+	name     = "%s"
+	type     = "UNIQUE"
+	table_id = snowflake_table.t.fully_qualified_name
 	columns  = ["col1"]
 }
 `, n, databaseName, schemaName, n)
@@ -422,17 +444,17 @@ func tableConstraintEmptyForeignKeyProperties(name string, databaseName string, 
 		name     = "%[3]s"
 		database = "%[1]s"
 		schema   = "%[2]s"
-	
+
 		column {
 			name = "col1"
 			type = "NUMBER(38,0)"
 		}
 	}
-	
+
 	resource "snowflake_table_constraint" "unique" {
 		name = "%[3]s"
 		type = "FOREIGN KEY"
-		table_id = snowflake_table.t.qualified_name
+		table_id = snowflake_table.t.fully_qualified_name
 		columns = ["col1"]
 		foreign_key_properties {
 		}
@@ -446,22 +468,22 @@ func tableConstraintForeignKeyProperties(name string, databaseName string, schem
 		name     = "%[3]s"
 		database = "%[1]s"
 		schema   = "%[2]s"
-	
+
 		column {
 			name = "col1"
 			type = "NUMBER(38,0)"
 		}
 	}
-	
+
 	resource "snowflake_table_constraint" "unique" {
 		name = "%[3]s"
 		type = "FOREIGN KEY"
-		table_id = snowflake_table.t.qualified_name
+		table_id = snowflake_table.t.fully_qualified_name
 		columns = ["col1"]
 		foreign_key_properties {
 			references {
 				columns = ["col1"]
-				table_id = snowflake_table.t.qualified_name
+				table_id = snowflake_table.t.fully_qualified_name
 			}
 		}
 	}

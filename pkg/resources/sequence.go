@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -58,11 +59,7 @@ var sequenceSchema = map[string]*schema.Schema{
 				string(sdk.ValuesBehaviorOrder),
 			}, false),
 	},
-	"fully_qualified_name": {
-		Type:        schema.TypeString,
-		Description: "The fully qualified name of the sequence.",
-		Computed:    true,
-	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Sequence() *schema.Resource {
@@ -150,7 +147,7 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("fully_qualified_name", id.FullyQualifiedName()); err != nil {
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 	return nil

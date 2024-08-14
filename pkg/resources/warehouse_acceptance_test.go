@@ -121,6 +121,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasAllDefaultsExplicit(),
 					// we can still use normal checks
 					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "fully_qualified_name", warehouseId.FullyQualifiedName())),
 				),
 			},
 			// IMPORT after empty config (in this method, most of the attributes will be filled with the defaults acquired from Snowflake)
@@ -129,6 +130,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "fully_qualified_name", warehouseId.FullyQualifiedName())),
 					resourceassert.ImportedWarehouseResource(t, warehouseId.Name()).
 						HasNameString(name).
 						HasWarehouseTypeString(string(sdk.WarehouseTypeStandard)).
@@ -182,6 +184,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "fully_qualified_name", warehouseId2.FullyQualifiedName()),
 				),
 			},
 			// Change config but use defaults for every attribute (but not the parameters) - expect no changes (because these are already SF values) except computed show_output (follow-up why suppress diff is not taken into account in has changes?)

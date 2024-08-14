@@ -152,13 +152,13 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_complete(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"database":                  config.StringVariable(acc.TestDatabaseName),
 			"schema":                    config.StringVariable(acc.TestSchemaName),
-			"name":                      config.StringVariable(accName),
+			"name":                      config.StringVariable(id.Name()),
 			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
 			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
 			"comment":                   config.StringVariable("Terraform acceptance test"),
@@ -182,7 +182,8 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalFunction/complete"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", accName),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "arg.#", "0"),
@@ -199,8 +200,8 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "header.0.name", "x-custom-header"),
 					resource.TestCheckResourceAttr(resourceName, "header.0.value", "snowflake"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_rows", "500"),
-					resource.TestCheckResourceAttr(resourceName, "request_translator", fmt.Sprintf("%s.%s.%s%s", acc.TestDatabaseName, acc.TestSchemaName, accName, "_request_translator")),
-					resource.TestCheckResourceAttr(resourceName, "response_translator", fmt.Sprintf("%s.%s.%s%s", acc.TestDatabaseName, acc.TestSchemaName, accName, "_response_translator")),
+					resource.TestCheckResourceAttr(resourceName, "request_translator", fmt.Sprintf("%s.%s.%s%s", acc.TestDatabaseName, acc.TestSchemaName, id.Name(), "_request_translator")),
+					resource.TestCheckResourceAttr(resourceName, "response_translator", fmt.Sprintf("%s.%s.%s%s", acc.TestDatabaseName, acc.TestSchemaName, id.Name(), "_response_translator")),
 				),
 			},
 			{

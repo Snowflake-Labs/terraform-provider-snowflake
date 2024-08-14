@@ -67,8 +67,8 @@ resource "snowflake_table" "table" {
 }
 
 resource "snowflake_table_column_masking_policy_application" "mpa" {
-	table          = snowflake_table.table.qualified_name
+	table          = snowflake_table.table.fully_qualified_name
 	column         = "secret"
-	masking_policy = snowflake_masking_policy.test.qualified_name
+	masking_policy = snowflake_masking_policy.test.fully_qualified_name
 }`, databaseName, schemaName, databaseName, schemaName)
 }

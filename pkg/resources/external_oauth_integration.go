@@ -147,6 +147,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowExternalOauthParametersSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func ExternalOauthIntegration() *schema.Resource {
@@ -421,6 +422,9 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
+		}
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
 		}
 		if err := d.Set("name", integration.Name); err != nil {
 			return diag.FromErr(err)

@@ -149,6 +149,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeSaml2IntegrationSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func SAML2Integration() *schema.Resource {
@@ -477,6 +478,9 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
+		}
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {

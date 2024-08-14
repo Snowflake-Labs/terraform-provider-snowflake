@@ -10,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -43,6 +44,7 @@ var tagSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "List of allowed values for the tag.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 var tagReferenceSchema = &schema.Schema{
@@ -120,6 +122,9 @@ func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	tag, err := client.Tags.ShowByID(ctx, id)
 	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", tag.Name); err != nil {

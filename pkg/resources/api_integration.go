@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -114,6 +115,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Date and time when the API integration was created.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // APIIntegration returns a pointer to the resource representing an api integration.
@@ -225,6 +227,10 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	// Note: category must be API or something is broken
 	if c := integration.Category; c != "API" {
 		return fmt.Errorf("expected %v to be an api integration, got %v", id, c)
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err := d.Set("name", integration.Name); err != nil {

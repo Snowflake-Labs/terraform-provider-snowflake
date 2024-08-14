@@ -199,6 +199,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_complete(t *testi
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_auth_method", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_id", "foo"),

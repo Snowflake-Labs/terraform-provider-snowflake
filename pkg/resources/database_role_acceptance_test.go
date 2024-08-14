@@ -14,7 +14,7 @@ import (
 
 func TestAcc_DatabaseRole(t *testing.T) {
 	resourceName := "snowflake_database_role.test_db_role"
-	dbRoleName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := random.Comment()
 	comment2 := random.Comment()
 
@@ -27,17 +27,19 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.DatabaseRole),
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment),
+				Config: databaseRoleConfig(id.Name(), acc.TestDatabaseName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
-				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment2),
+				Config: databaseRoleConfig(id.Name(), acc.TestDatabaseName, comment2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
 				),

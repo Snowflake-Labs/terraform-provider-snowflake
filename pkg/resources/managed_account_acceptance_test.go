@@ -20,7 +20,7 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	// TODO [SNOW-1011985]: unskip the tests
 	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
-	accName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	adminName := acc.TestClient().Ids.Alpha()
 	adminPass := acc.TestClient().Ids.AlphaWithPrefix("A1")
 
@@ -33,9 +33,10 @@ func TestAcc_ManagedAccount(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ManagedAccount),
 		Steps: []resource.TestStep{
 			{
-				Config: managedAccountConfig(accName, adminName, adminPass),
+				Config: managedAccountConfig(id.Name(), adminName, adminPass),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_name", adminName),
 					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_password", adminPass),
 					resource.TestCheckResourceAttr("snowflake_managed_account.test", "comment", managedAccountComment),
