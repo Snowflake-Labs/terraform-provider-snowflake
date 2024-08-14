@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func testAccProcedure(t *testing.T, configDirectory string) {
+func testAccProcedure(t *testing.T, configDirectory string, args ...sdk.DataType) {
 	t.Helper()
 
-	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(args...)
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(args...)
 
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
@@ -100,7 +100,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 }
 
 func TestAcc_Procedure_SQL(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/sql")
+	testAccProcedure(t, "TestAcc_Procedure/sql", sdk.DataTypeVARCHAR)
 }
 
 /*
@@ -115,11 +115,11 @@ func TestAcc_Procedure_Javascript(t *testing.T) {
 }
 
 func TestAcc_Procedure_Java(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/java")
+	testAccProcedure(t, "TestAcc_Procedure/java", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 }
 
 func TestAcc_Procedure_Scala(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/scala")
+	testAccProcedure(t, "TestAcc_Procedure/scala", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 }
 
 func TestAcc_Procedure_complex(t *testing.T) {
