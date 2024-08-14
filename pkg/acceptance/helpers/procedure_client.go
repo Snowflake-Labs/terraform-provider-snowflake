@@ -2,9 +2,10 @@ package helpers
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type ProcedureClient struct {
@@ -39,8 +40,7 @@ func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObject
 		sdk.NewCreateForSQLProcedureRequest(
 			id.SchemaObjectId(),
 			*sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeInt)),
-			"SELECT 1",
-		).WithArguments(argumentRequests),
+			`BEGIN RETURN 1; END`).WithArguments(argumentRequests),
 	)
 	require.NoError(t, err)
 

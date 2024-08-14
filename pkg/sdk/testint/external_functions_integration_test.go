@@ -2,7 +2,6 @@ package testint
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -51,7 +50,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 		require.NotEmpty(t, e.CreatedOn)
 		require.Equal(t, id.Name(), e.Name)
-		require.Equal(t, fmt.Sprintf(`"%v"`, id.SchemaName()), e.SchemaName)
+		require.Equal(t, id.SchemaName(), e.SchemaName)
 		require.Equal(t, false, e.IsBuiltin)
 		require.Equal(t, false, e.IsAggregate)
 		require.Equal(t, false, e.IsAnsi)
