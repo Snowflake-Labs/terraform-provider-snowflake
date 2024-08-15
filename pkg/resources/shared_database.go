@@ -21,9 +21,10 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
 	"from_share": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// TODO(SNOW-1495079): Add validation when ExternalObjectIdentifier will be available in IsValidIdentifier
 		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
 	},
 	"comment": {

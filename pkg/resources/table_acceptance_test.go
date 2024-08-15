@@ -2020,3 +2020,73 @@ func TestAcc_Table_migrateFromVersion_0_94_1(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_Table_SuppressQuotingOnDefaultSequence_issue2644(t *testing.T) {
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_table.test_table"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             tableConfigWithSequence(name, databaseName, schemaName),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigWithSequence(name, databaseName, schemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.0.default.0.sequence", sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name).FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithSequence(name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test_database" {
+	name = "%[2]s"
+}
+
+resource "snowflake_schema" "test_schema" {
+	depends_on = [snowflake_database.test_database]
+	name = "%[3]s"
+	database = "%[2]s"
+}
+
+resource "snowflake_sequence" "test_sequence" {
+	depends_on = [snowflake_schema.test_schema]
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
+}
+
+resource "snowflake_table" "test_table" {
+	depends_on = [snowflake_sequence.test_sequence]
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	data_retention_time_in_days = 1
+	comment  = "Terraform acceptance test"
+	column {
+		name = "column1"
+		type = "NUMBER"
+		default {
+			sequence = "%[2]s.%[3]s.%[1]s"
+		}
+	}
+}
+`, name, databaseName, schemaName)
+}
