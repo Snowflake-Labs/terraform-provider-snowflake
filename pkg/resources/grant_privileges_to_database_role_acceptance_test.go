@@ -629,8 +629,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunction(t *testing.
 	acc.TestAccPreCheck(t)
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	function, functionCleanup := acc.TestClient().Function.CreateFunction(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(databaseRoleId.FullyQualifiedName()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -684,8 +683,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithoutArgum
 	acc.TestAccPreCheck(t)
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	function, functionCleanup := acc.TestClient().Function.CreateFunctionWithoutArguments(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(databaseRoleId.FullyQualifiedName()),
 		"function_name": config.StringVariable(function.ID().Name()),

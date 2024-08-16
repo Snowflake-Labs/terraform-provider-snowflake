@@ -342,8 +342,7 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunction(t *testing.T) {
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
-	function, functionCleanup := acc.TestClient().Function.CreateFunction(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -390,8 +389,7 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t 
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
-	function, functionCleanup := acc.TestClient().Function.CreateFunctionWithoutArguments(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),

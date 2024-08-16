@@ -41,7 +41,7 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 			id.SchemaObjectId(),
 			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeInt)),
 			"SELECT 1",
-		).WithArguments(argumentRequests),
+		).WithArguments(argumentRequests).WithSecure(true),
 	)
 	require.NoError(t, err)
 
@@ -53,53 +53,4 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	require.NoError(t, err)
 
 	return function
-}
-
-func (c *FunctionClient) CreateFunction(t *testing.T) (*sdk.Function, func()) {
-	t.Helper()
-	definition := "3.141592654::FLOAT"
-	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-	dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-	argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
-	return c.CreateFunctionWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithSecure(true).
-			WithArguments([]sdk.FunctionArgumentRequest{*argument}),
-	)
-}
-
-func (c *FunctionClient) CreateFunctionWithoutArguments(t *testing.T) (*sdk.Function, func()) {
-	t.Helper()
-	definition := "3.141592654::FLOAT"
-	id := c.ids.RandomSchemaObjectIdentifierWithArguments()
-	dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
-	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-	return c.CreateFunctionWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithSecure(true),
-	)
-}
-
-func (c *FunctionClient) CreateFunctionWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, request *sdk.CreateForSQLFunctionRequest) (*sdk.Function, func()) {
-	t.Helper()
-	ctx := context.Background()
-
-	err := c.client().CreateForSQL(ctx, request)
-	require.NoError(t, err)
-
-	Function, err := c.client().ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return Function, c.DropFunctionFunc(t, id)
-}
-
-func (c *FunctionClient) DropFunctionFunc(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) func() {
-	t.Helper()
-	ctx := context.Background()
-
-	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true))
-		require.NoError(t, err)
-	}
 }

@@ -450,8 +450,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunction(t *testing.T
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	function, functionCleanup := acc.TestClient().Function.CreateFunction(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(roleFullyQualifiedName),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -506,8 +505,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunctionWithoutArgume
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	function, functionCleanup := acc.TestClient().Function.CreateFunctionWithoutArguments(t)
-	t.Cleanup(functionCleanup)
+	function := acc.TestClient().Function.Create(t)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(roleFullyQualifiedName),
 		"function_name": config.StringVariable(function.ID().Name()),
