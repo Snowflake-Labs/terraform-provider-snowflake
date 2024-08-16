@@ -141,7 +141,7 @@ func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalCh
 			return diag.FromErr(err)
 		}
 
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
 		}); err != nil {
 			return diag.FromErr(err)

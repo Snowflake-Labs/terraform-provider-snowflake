@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -93,6 +94,7 @@ var streamSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the stream.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Stream() *schema.Resource {
@@ -231,6 +233,9 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 	if err := d.Set("name", stream.Name); err != nil {
 		return err

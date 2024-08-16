@@ -52,6 +52,7 @@ resource "snowflake_dynamic_table" "dt" {
 - `cluster_by` (String) The clustering key for the dynamic table.
 - `created_on` (String) Time when this dynamic table was created.
 - `data_timestamp` (String) Timestamp of the data in the base object(s) that is included in the dynamic table.
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `is_clone` (Boolean) TRUE if the dynamic table has been cloned, else FALSE.
 - `is_replica` (Boolean) TRUE if the dynamic table is a replica. else FALSE.

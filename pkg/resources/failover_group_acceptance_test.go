@@ -16,7 +16,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -28,9 +28,10 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),
+				Config: failoverGroupBasic(id.Name(), accountName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),

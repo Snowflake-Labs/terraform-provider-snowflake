@@ -53,7 +53,7 @@ resource "snowflake_password_policy" "pa" {
 }
 
 resource "snowflake_account_password_policy_attachment" "att" {
-	password_policy = snowflake_password_policy.pa.qualified_name
+	password_policy = snowflake_password_policy.pa.fully_qualified_name
 }
 `
 	return fmt.Sprintf(s, databaseName, schemaName, prefix)

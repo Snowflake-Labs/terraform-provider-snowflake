@@ -87,11 +87,11 @@ func TestAcc_StorageIntegration_AWSObjectACL_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	awsRoleArn := "arn:aws:iam::000000000001:/role/test"
 	configVariables := func(set bool) config.Variables {
 		variables := config.Variables{
-			"name":         config.StringVariable(name),
+			"name":         config.StringVariable(id.Name()),
 			"aws_role_arn": config.StringVariable(awsRoleArn),
 			"allowed_locations": config.SetVariable(
 				config.StringVariable("s3://foo/"),
@@ -124,7 +124,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(false),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
@@ -138,7 +139,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(true),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", "some comment"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
@@ -155,7 +157,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(false),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),

@@ -1,11 +1,13 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -102,12 +104,12 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	m := func(maxAgeDays int) map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":         config.StringVariable(name),
+			"name":         config.StringVariable(oldId.Name()),
 			"database":     config.StringVariable(acc.TestDatabaseName),
 			"schema":       config.StringVariable(acc.TestSchemaName),
 			"max_age_days": config.IntegerVariable(maxAgeDays),
@@ -115,7 +117,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 	}
 
 	configValueWithNewName := m(10)
-	configValueWithNewName["name"] = config.StringVariable(newName)
+	configValueWithNewName["name"] = config.StringVariable(newId.Name())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -131,6 +133,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 				ConfigVariables: m(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "fully_qualified_name", oldId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -152,7 +155,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(newName),
+					"name":     config.StringVariable(newId.Name()),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"schema":   config.StringVariable(acc.TestSchemaName),
 				},
@@ -162,14 +165,15 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", newName),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "90"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(name),
+					"name":     config.StringVariable(oldId.Name()),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"schema":   config.StringVariable(acc.TestSchemaName),
 				},
@@ -179,4 +183,50 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_PasswordPolicy_migrateFromVersion_0_94_1(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_password_policy.pa"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: passwordPolicyBasicConfig(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   passwordPolicyBasicConfig(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckNoResourceAttr(resourceName, "qualified_name"),
+				),
+			},
+		},
+	})
+}
+
+func passwordPolicyBasicConfig(id sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_password_policy" "pa" {
+  name     = "%s"
+  database = "%s"
+  schema   = "%s"
+}`, id.Name(), id.DatabaseName(), id.SchemaName())
 }

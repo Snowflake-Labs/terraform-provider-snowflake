@@ -81,6 +81,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeApiAuthSecurityIntegrationSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 type commonApiAuthSet struct {
@@ -268,11 +269,15 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 }
 
 func handleApiAuthRead(d *schema.ResourceData,
+	id sdk.AccountObjectIdentifier,
 	integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 	withExternalChangesMarking bool,
 	extraFieldsDescribeMappings []describeMapping,
 ) error {
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	if err := d.Set("name", integration.Name); err != nil {
 		return err
 	}

@@ -21,3 +21,9 @@ var DescribePropertyListSchema = &schema.Schema{
 		Schema: ShowSecurityIntegrationPropertySchema,
 	},
 }
+
+var FullyQualifiedNameSchema = &schema.Schema{
+	Type:        schema.TypeString,
+	Computed:    true,
+	Description: "Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).",
+}

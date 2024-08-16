@@ -293,12 +293,12 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 	const dummyAzureTenantId = "00000000-0000-0000-0000-000000000000"
 	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":             config.StringVariable(name),
+			"name":             config.StringVariable(id.Name()),
 			"api_provider":     config.StringVariable("aws_api_gateway"),
 			"api_aws_role_arn": config.StringVariable(dummyAwsApiRoleArn),
 			"api_allowed_prefixes": config.ListVariable(
@@ -314,7 +314,7 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 	}
 	m2 := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":                    config.StringVariable(name),
+			"name":                    config.StringVariable(id.Name()),
 			"azure_tenant_id":         config.StringVariable(dummyAzureTenantId),
 			"azure_ad_application_id": config.StringVariable(dummyAzureAdApplicationId),
 			"api_allowed_prefixes": config.ListVariable(
@@ -341,7 +341,8 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_provider", "aws_api_gateway"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_aws_role_arn", dummyAwsApiRoleArn),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_allowed_prefixes.#", "1"),
@@ -360,7 +361,8 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m2(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_provider", "azure_api_management"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "azure_tenant_id", dummyAzureTenantId),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "azure_ad_application_id", dummyAzureAdApplicationId),

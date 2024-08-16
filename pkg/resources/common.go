@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const FullyQualifiedNameAttributeName = "fully_qualified_name"
+
 // DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
 // runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully
 // round-trip queries, so we cannot do a simple character-wise comparison to detect changes.

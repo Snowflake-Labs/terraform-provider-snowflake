@@ -7,10 +7,12 @@ import (
 	"regexp"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -73,7 +75,8 @@ var viewSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The timestamp at which the view was created.",
 	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // View returns a pointer to the resource representing a view.
@@ -83,6 +86,10 @@ func View() *schema.Resource {
 		Read:   ReadView,
 		Update: UpdateView,
 		Delete: DeleteView,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
@@ -150,6 +157,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err = d.Set("name", view.Name); err != nil {

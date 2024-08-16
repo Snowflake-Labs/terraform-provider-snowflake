@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -99,6 +100,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description: "A list of warehouses to apply the resource monitor to.",
 		Elem:        &schema.Schema{Type: schema.TypeString},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // ResourceMonitor returns a pointer to the resource representing a resource monitor.
@@ -229,11 +231,14 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 // ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	ctx := context.Background()
-	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, objectIdentifier)
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
 	if err != nil {
+		return err
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 

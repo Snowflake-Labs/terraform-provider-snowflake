@@ -9,6 +9,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,6 +38,7 @@ var shareSchema = map[string]*schema.Schema{
 			"in the form of 'organization_name.account_name",
 		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // Share returns a pointer to the resource representing a share.
@@ -161,6 +163,9 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	share, err := client.Shares.ShowByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("error reading share (%v) err = %w", d.Id(), err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 	if err := d.Set("name", share.Name.Name()); err != nil {
 		return err

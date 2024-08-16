@@ -579,6 +579,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
@@ -620,6 +621,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "false"),

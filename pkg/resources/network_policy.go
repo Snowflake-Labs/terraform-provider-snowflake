@@ -79,6 +79,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeNetworkPolicySchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func NetworkPolicy() *schema.Resource {
@@ -111,6 +112,7 @@ func NetworkPolicy() *schema.Resource {
 				"allowed_ip_list",
 				"blocked_ip_list",
 			),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Importer: &schema.ResourceImporter{
@@ -183,6 +185,9 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.Name(), err),
 			},
 		}
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err = d.Set("name", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()); err != nil {

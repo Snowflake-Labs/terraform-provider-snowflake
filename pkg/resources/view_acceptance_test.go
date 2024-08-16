@@ -184,6 +184,8 @@ func TestAcc_View_Tags(t *testing.T) {
 func TestAcc_View_Rename(t *testing.T) {
 	viewName := acc.TestClient().Ids.Alpha()
 	newViewName := acc.TestClient().Ids.Alpha()
+	viewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName)
+	newViewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, newViewName)
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
 	m := func() map[string]config.Variable {
@@ -215,6 +217,7 @@ func TestAcc_View_Rename(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", viewId.FullyQualifiedName()),
 				),
 			},
 			// rename with one param changed
@@ -229,6 +232,7 @@ func TestAcc_View_Rename(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newViewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "new comment"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", newViewId.FullyQualifiedName()),
 				),
 			},
 		},

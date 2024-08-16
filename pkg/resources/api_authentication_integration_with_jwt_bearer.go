@@ -156,7 +156,7 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_assertion_issuer", "oauth_assertion_issuer", oauthAssertionIssuer.Value, oauthAssertionIssuer.Value, nil},
 		}); err != nil {

@@ -134,6 +134,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "OKTA"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role2.Name()),
@@ -189,6 +190,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),

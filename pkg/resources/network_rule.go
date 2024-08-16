@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -58,11 +59,7 @@ var networkRuleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the network rule.",
 	},
-	"qualified_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Qualified name of the network rule.",
-	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // NetworkRule returns a pointer to the resource representing a network rule.
@@ -168,7 +165,7 @@ func ReadContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta in
 	if err = d.Set("comment", networkRule.Comment); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("qualified_name", id.FullyQualifiedName()); err != nil {
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

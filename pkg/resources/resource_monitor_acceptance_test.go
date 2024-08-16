@@ -18,7 +18,7 @@ import (
 
 func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -29,9 +29,10 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitorConfig(name, acc.TestWarehouseName),
+				Config: resourceMonitorConfig(id.Name(), acc.TestWarehouseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "40"),
@@ -41,9 +42,10 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: resourceMonitorConfig2(name, 75),
+				Config: resourceMonitorConfig2(id.Name(), 75),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
@@ -53,9 +55,10 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 			},
 			// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
 			{
-				Config: resourceMonitorConfig2(name, 60),
+				Config: resourceMonitorConfig2(id.Name(), 60),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),

@@ -237,8 +237,8 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_Function_Rename(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 	comment := random.Comment()
 	newComment := random.Comment()
 	resourceName := "snowflake_function.f"
@@ -252,16 +252,18 @@ func TestAcc_Function_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, oldId.Name(), comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", oldId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
-				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, newName, newComment),
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, newId.Name(), newComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "name", newId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "comment", newComment),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

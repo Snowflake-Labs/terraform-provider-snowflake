@@ -160,6 +160,7 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 				Config: materializedViewConfig(acc.TestWarehouseName, tableId, viewId, queryEscaped, "Terraform test resource", true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewId.Name()),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "fully_qualified_name", viewId.FullyQualifiedName()),
 				),
 			},
 			// rename with one param change
@@ -167,6 +168,7 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 				Config: materializedViewConfig(acc.TestWarehouseName, tableId, newViewId, queryEscaped, "Terraform test resource", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", newViewId.Name()),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "fully_qualified_name", newViewId.FullyQualifiedName()),
 				),
 			},
 		},

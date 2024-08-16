@@ -12,10 +12,10 @@ import (
 )
 
 func TestAcc_RowAccessPolicy(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
+			"name":     config.StringVariable(id.Name()),
 			"database": config.StringVariable(acc.TestDatabaseName),
 			"schema":   config.StringVariable(acc.TestSchemaName),
 		}
@@ -33,7 +33,8 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test"),
@@ -47,7 +48,8 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test - changed comment"),
@@ -61,7 +63,8 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test - changed comment"),

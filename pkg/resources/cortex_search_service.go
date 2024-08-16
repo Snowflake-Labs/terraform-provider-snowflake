@@ -8,6 +8,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -73,6 +74,7 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Creation date for the given Cortex search service.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // CortexSearchService returns a pointer to the resource representing a Cortex search service.
@@ -108,6 +110,9 @@ func ReadCortexSearchService(ctx context.Context, d *schema.ResourceData, meta a
 				},
 			}
 		}
+		return diag.FromErr(err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", cortexSearchService.Name); err != nil {

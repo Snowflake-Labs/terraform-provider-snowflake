@@ -43,7 +43,7 @@ resource "snowflake_database_role" "test" {
 }
 
 resource "snowflake_grant_ownership" "test" {
-  database_role_name  = "\"${snowflake_database_role.test.database}\".\"${snowflake_database_role.test.name}\""
+  database_role_name  = snowflake_database_role.test.fully_qualified_name
   outbound_privileges = "REVOKE"
   on {
     object_type = "SCHEMA"

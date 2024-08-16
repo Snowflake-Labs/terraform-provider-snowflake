@@ -91,6 +91,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
 
@@ -118,6 +119,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
 
