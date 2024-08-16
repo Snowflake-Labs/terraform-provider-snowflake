@@ -49,17 +49,14 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NotEmpty(t, e.CreatedOn)
-		require.Equal(t, id.Name(), e.Name)
-		require.Equal(t, id.SchemaName(), e.SchemaName)
+		require.Equal(t, id, e.ID())
 		require.Equal(t, false, e.IsBuiltin)
 		require.Equal(t, false, e.IsAggregate)
 		require.Equal(t, false, e.IsAnsi)
 		if len(id.ArgumentDataTypes()) > 0 {
-			require.NotEmpty(t, e.Arguments)
 			require.Equal(t, 1, e.MinNumArguments)
 			require.Equal(t, 1, e.MaxNumArguments)
 		} else {
-			require.Empty(t, e.Arguments)
 			require.Equal(t, 0, e.MinNumArguments)
 			require.Equal(t, 0, e.MaxNumArguments)
 		}
