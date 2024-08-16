@@ -75,7 +75,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
+		assert.Equal(t, testDb(t).Name.Name(), task.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
 

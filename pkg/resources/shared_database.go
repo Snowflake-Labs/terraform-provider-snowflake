@@ -52,7 +52,7 @@ func SharedDatabase() *schema.Resource {
 		Description:   "A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 		),
 
 		Schema: helpers.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),

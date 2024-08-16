@@ -112,7 +112,7 @@ func NetworkPolicy() *schema.Resource {
 				"allowed_ip_list",
 				"blocked_ip_list",
 			),
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 		),
 
 		Importer: &schema.ResourceImporter{
