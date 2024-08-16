@@ -51,7 +51,8 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			}
 		}
 
-		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): with sdk.AccountObjectIdentifier{} (or a new type of identifier) we should be able to validate individual part of the identifier field (e.g. "database" or "schema" field)
 		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
 			return nil
 		}
