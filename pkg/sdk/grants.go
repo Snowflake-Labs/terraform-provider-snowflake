@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"log"
-	"slices"
 	"strings"
 	"time"
 )
@@ -262,8 +261,7 @@ func (row grantRow) convert() *Grant {
 
 	var name ObjectIdentifier
 	var err error
-	// external function is represented as FUNCTION
-	if slices.Contains([]string{"FUNCTION", "PROCEDURE"}, row.GrantedOn) {
+	if ObjectType(row.GrantedOn).IsWithArguments() {
 		name, err = ParseSchemaObjectIdentifierWithArgumentsAndReturnType(row.Name)
 	} else {
 		name, err = ParseObjectIdentifierString(row.Name)

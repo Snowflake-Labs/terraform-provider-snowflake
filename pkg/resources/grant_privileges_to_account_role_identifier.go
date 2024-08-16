@@ -2,7 +2,6 @@ package resources
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -140,7 +139,7 @@ func ParseGrantPrivilegesToAccountRoleId(id string) (GrantPrivilegesToAccountRol
 			}
 			objectType := sdk.ObjectType(parts[6])
 			var id sdk.ObjectIdentifier
-			if slices.Contains([]sdk.ObjectType{sdk.ObjectTypeFunction, sdk.ObjectTypeProcedure, sdk.ObjectTypeExternalFunction}, objectType) {
+			if objectType.IsWithArguments() {
 				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(parts[7])
 				if err != nil {

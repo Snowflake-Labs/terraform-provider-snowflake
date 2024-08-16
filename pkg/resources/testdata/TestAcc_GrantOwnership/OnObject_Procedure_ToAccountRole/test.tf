@@ -34,6 +34,6 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_account_role.test.name
   on {
     object_type = "PROCEDURE"
-    object_name = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_procedure.test.name}\"(FLOAT)"
+    object_name = snowflake_procedure.test.fully_qualified_name
   }
 }

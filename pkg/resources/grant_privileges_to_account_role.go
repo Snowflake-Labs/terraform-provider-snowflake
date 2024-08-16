@@ -1076,7 +1076,7 @@ func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, err
 		case objectTypeOk && objectNameOk:
 			objectType := sdk.ObjectType(objectType)
 			var id sdk.ObjectIdentifier
-			if slices.Contains([]sdk.ObjectType{sdk.ObjectTypeFunction, sdk.ObjectTypeProcedure, sdk.ObjectTypeExternalFunction}, objectType) {
+			if objectType.IsWithArguments() {
 				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
 				if err != nil {
