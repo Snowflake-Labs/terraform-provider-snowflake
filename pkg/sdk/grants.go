@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
 	"time"
 )
@@ -128,12 +129,12 @@ type grantPrivilegeToShareOptions struct {
 }
 
 type ShareGrantOn struct {
-	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
-	Table    *OnTable                 `ddl:"-"`
-	Tag      SchemaObjectIdentifier   `ddl:"identifier" sql:"TAG"`
-	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
+	Database AccountObjectIdentifier             `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier            `ddl:"identifier" sql:"SCHEMA"`
+	Function SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"FUNCTION"`
+	Table    *OnTable                            `ddl:"-"`
+	Tag      SchemaObjectIdentifier              `ddl:"identifier" sql:"TAG"`
+	View     SchemaObjectIdentifier              `ddl:"identifier" sql:"VIEW"`
 }
 
 type OnTable struct {
@@ -231,20 +232,15 @@ func (row grantRow) convert() *Grant {
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
 	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
-		// TODO(SNOW-1058419): Change this logic during identifiers rework
-		parts := strings.Split(row.GranteeName, ".")
-		switch {
-		case len(parts) == 1:
-			granteeName = NewAccountObjectIdentifier(parts[0])
-		case len(parts) == 2:
-			granteeName = NewAccountObjectIdentifier(parts[1])
-		default:
+		index := strings.IndexRune(row.GranteeName, '.')
+		if index == -1 {
 			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
+		} else {
+			granteeName = NewAccountObjectIdentifier(row.GranteeName[index+1:])
 		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
 	}
-	// TODO(SNOW-1058419): Add parser for function/procedure/external_function identifier representations returned by Snowflake (it's different from the standard identifier for those objects).
 
 	var grantedOn ObjectType
 	// true for current grants
@@ -264,8 +260,14 @@ func (row grantRow) convert() *Grant {
 		grantOn = ObjectTypeExternalVolume
 	}
 
-	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
-	name, err := ParseObjectIdentifier(row.Name)
+	var name ObjectIdentifier
+	var err error
+	// external function is represented as FUNCTION
+	if slices.Contains([]string{"FUNCTION", "PROCEDURE"}, row.GrantedOn) {
+		name, err = ParseSchemaObjectIdentifierWithArgumentsAndReturnType(row.Name)
+	} else {
+		name, err = ParseObjectIdentifierString(row.Name)
+	}
 	if err != nil {
 		log.Printf("Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
 		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)

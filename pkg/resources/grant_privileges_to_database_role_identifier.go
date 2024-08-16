@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -127,9 +128,20 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 			if len(parts) != 8 {
 				return databaseRoleId, sdk.NewError(`database role identifier should hold 8 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`)
 			}
+			objectType := sdk.ObjectType(parts[6])
+			var id sdk.ObjectIdentifier
+			if slices.Contains([]sdk.ObjectType{sdk.ObjectTypeFunction, sdk.ObjectTypeProcedure, sdk.ObjectTypeExternalFunction}, objectType) {
+				var err error
+				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(parts[7])
+				if err != nil {
+					return databaseRoleId, err
+				}
+			} else {
+				id = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7])
+			}
 			onSchemaObjectGrantData.Object = &sdk.Object{
-				ObjectType: sdk.ObjectType(parts[6]),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7]),
+				ObjectType: objectType,
+				Name:       id,
 			}
 		case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
 			bulkOperationGrantData := &BulkOperationGrantData{

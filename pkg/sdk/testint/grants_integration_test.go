@@ -842,10 +842,10 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
+	shareTest, shareCleanup := testClientHelper().Share.CreateShareWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".foo.bar"))
 	t.Cleanup(shareCleanup)
 
-	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
+	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege, grantedOn sdk.ObjectType, granteeName sdk.ObjectIdentifier) {
 		t.Helper()
 		var shareGrant *sdk.Grant
 		for i, grant := range grants {
@@ -855,8 +855,9 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			}
 		}
 		assert.NotNil(t, shareGrant)
-		assert.Equal(t, sdk.ObjectTypeTable, shareGrant.GrantedOn)
+		assert.Equal(t, grantedOn, shareGrant.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeShare, shareGrant.GrantedTo)
+		assert.Equal(t, granteeName.FullyQualifiedName(), shareGrant.GranteeName.FullyQualifiedName())
 		assert.Equal(t, onId.FullyQualifiedName(), shareGrant.Name.FullyQualifiedName())
 	}
 
@@ -892,7 +893,35 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect, sdk.ObjectTypeTable, shareTest.ID())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		function, functionCleanup := testClientHelper().Function.CreateFunction(t)
+		t.Cleanup(functionCleanup)
+
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
+			Function: function.ID(),
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeFunction,
+					Name:       function.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, function.ID(), sdk.ObjectPrivilegeUsage, sdk.ObjectTypeFunction, shareTest.ID())
 
 		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{

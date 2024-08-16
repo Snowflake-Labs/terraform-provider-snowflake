@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -115,8 +116,6 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 		},
 	})
 }
-
-// TODO(SNOW-1021686): Add on_function test
 
 func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -333,6 +332,102 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTag_NoGrant"),
 				ConfigVariables: configVariables(false),
 				Check:           acc.CheckSharePrivilegesRevoked(t),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunction(t *testing.T) {
+	acc.TestAccPreCheck(t)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+	function, functionCleanup := acc.TestClient().Function.CreateFunction(t)
+	t.Cleanup(functionCleanup)
+	configVariables := config.Variables{
+		"name":          config.StringVariable(share.ID().Name()),
+		"function_name": config.StringVariable(function.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"schema":        config.StringVariable(acc.TestSchemaName),
+		"argument_type": config.StringVariable(string(sdk.DataTypeFloat)),
+	}
+	resourceName := "snowflake_grant_privileges_to_share.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnFunction"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_function", function.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|USAGE|OnFunction|%s", share.ID().FullyQualifiedName(), function.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnFunction"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t *testing.T) {
+	acc.TestAccPreCheck(t)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+	function, functionCleanup := acc.TestClient().Function.CreateFunctionWithoutArguments(t)
+	t.Cleanup(functionCleanup)
+	configVariables := config.Variables{
+		"name":          config.StringVariable(share.ID().Name()),
+		"function_name": config.StringVariable(function.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"schema":        config.StringVariable(acc.TestSchemaName),
+		"argument_type": config.StringVariable(""),
+	}
+	resourceName := "snowflake_grant_privileges_to_share.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnFunction"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_function", function.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|USAGE|OnFunction|%s", share.ID().FullyQualifiedName(), function.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnFunction"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

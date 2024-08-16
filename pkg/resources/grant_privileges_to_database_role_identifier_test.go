@@ -115,6 +115,40 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant database role on function",
+			Identifier: `"database-name"."database-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"(FLOAT)`,
+			Expected: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				WithGrantOption:  false,
+				Privileges:       []string{"USAGE"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", sdk.DataTypeFloat),
+					},
+				},
+			},
+		},
+		{
+			Name:       "grant database role on function without arguments",
+			Identifier: `"database-name"."database-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"()`,
+			Expected: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				WithGrantOption:  false,
+				Privileges:       []string{"USAGE"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", []sdk.DataType{}...),
+					},
+				},
+			},
+		},
+		{
 			Name:       "grant database role on schema object with on all option",
 			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
 			Expected: GrantPrivilegesToDatabaseRoleId{

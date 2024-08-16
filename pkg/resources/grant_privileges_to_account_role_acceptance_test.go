@@ -445,6 +445,118 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 	})
 }
 
+func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunction(t *testing.T) {
+	acc.TestAccPreCheck(t)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleFullyQualifiedName := roleId.FullyQualifiedName()
+	function, functionCleanup := acc.TestClient().Function.CreateFunction(t)
+	t.Cleanup(functionCleanup)
+	configVariables := config.Variables{
+		"name":          config.StringVariable(roleFullyQualifiedName),
+		"function_name": config.StringVariable(function.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+		"argument_type":     config.StringVariable(string(sdk.DataTypeFloat)),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
+					t.Cleanup(roleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFunction"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeFunction)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", function.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", roleFullyQualifiedName, function.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFunction"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunctionWithoutArguments(t *testing.T) {
+	acc.TestAccPreCheck(t)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleFullyQualifiedName := roleId.FullyQualifiedName()
+	function, functionCleanup := acc.TestClient().Function.CreateFunctionWithoutArguments(t)
+	t.Cleanup(functionCleanup)
+	configVariables := config.Variables{
+		"name":          config.StringVariable(roleFullyQualifiedName),
+		"function_name": config.StringVariable(function.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+		"argument_type":     config.StringVariable(""),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
+					t.Cleanup(roleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFunction"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeFunction)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", function.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", roleFullyQualifiedName, function.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFunction"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	name := roleId.Name()
@@ -1588,8 +1700,8 @@ func createExternalVolume(t *testing.T, externalVolumeName string) func() {
 	ctx := context.Background()
 	_, err := client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
     (
-        name = 'test' 
-        storage_provider = 's3' 
+        name = 'test'
+        storage_provider = 's3'
         storage_base_url = 's3://my_example_bucket/'
         storage_aws_role_arn = 'arn:aws:iam::123456789012:role/myrole'
         encryption=(type='aws_sse_kms' kms_key_id='1234abcd-12ab-34cd-56ef-1234567890ab')
