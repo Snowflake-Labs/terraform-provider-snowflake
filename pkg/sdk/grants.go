@@ -231,11 +231,15 @@ func (row grantRow) convert() *Grant {
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
 	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
-		index := strings.IndexRune(row.GranteeName, '.')
-		if index == -1 {
+		// TODO(SNOW-1058419): Change this logic during identifiers rework
+		parts := strings.Split(row.GranteeName, ".")
+		switch {
+		case len(parts) == 1:
+			granteeName = NewAccountObjectIdentifier(parts[0])
+		case len(parts) == 2:
+			granteeName = NewAccountObjectIdentifier(parts[1])
+		default:
 			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
-		} else {
-			granteeName = NewAccountObjectIdentifier(row.GranteeName[index+1:])
 		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)

@@ -904,7 +904,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		function := testClientHelper().Function.Create(t)
+		function := testClientHelper().Function.CreateSecure(t)
 
 		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Function: function.ID(),
