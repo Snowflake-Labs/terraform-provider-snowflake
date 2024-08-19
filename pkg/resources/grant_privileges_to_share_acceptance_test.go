@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -337,12 +338,13 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 	})
 }
 
-func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunction(t *testing.T) {
+func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithArguments(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
-	function := acc.TestClient().Function.Create(t, sdk.DataTypeFloat)
+	function := acc.TestClient().Function.CreateSecure(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -385,11 +387,12 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunction(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
-	function := acc.TestClient().Function.Create(t)
+	function := acc.TestClient().Function.CreateSecure(t)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -644,6 +647,61 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 				ConfigVariables: configVariables,
 				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("An error occurred when granting privileges to share"),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".foo.bar")
+
+	configVariables := func(withGrant bool) config.Variables {
+		variables := config.Variables{
+			"to_share": config.StringVariable(shareId.Name()),
+			"database": config.StringVariable(databaseId.Name()),
+			"schema":   config.StringVariable(schemaId.Name()),
+			"on_table": config.StringVariable(tableId.Name()),
+		}
+		if withGrant {
+			variables["privileges"] = config.ListVariable(
+				config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
+			)
+		}
+		return variables
+	}
+	resourceName := "snowflake_grant_privileges_to_share.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
+				ConfigVariables: configVariables(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
+					resource.TestCheckResourceAttr(resourceName, "on_table", tableId.FullyQualifiedName()),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
+				ConfigVariables:   configVariables(true),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable_NoGrant"),
+				ConfigVariables: configVariables(false),
+				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
 	})

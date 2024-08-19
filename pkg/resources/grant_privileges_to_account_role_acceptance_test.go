@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -445,12 +446,13 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 	})
 }
 
-func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunction(t *testing.T) {
+func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunctionWithArguments(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	function := acc.TestClient().Function.Create(t, sdk.DataTypeFloat)
+	function := acc.TestClient().Function.CreateSecure(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(roleFullyQualifiedName),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -501,11 +503,12 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunction(t *testing.T
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFunctionWithoutArguments(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	function := acc.TestClient().Function.Create(t)
+	function := acc.TestClient().Function.CreateSecure(t)
 	configVariables := config.Variables{
 		"name":          config.StringVariable(roleFullyQualifiedName),
 		"function_name": config.StringVariable(function.ID().Name()),
