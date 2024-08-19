@@ -21,6 +21,7 @@ var grantApplicationRoleSchema = map[string]*schema.Schema{
 		Description:      "Specifies the identifier for the application role to grant.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"parent_account_role_name": {
 		Type:             schema.TypeString,
@@ -28,6 +29,7 @@ var grantApplicationRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the account role on which application role will be granted.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"parent_account_role_name",
 			"application_name",
@@ -39,6 +41,7 @@ var grantApplicationRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the application on which application role will be granted.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"parent_account_role_name",
 			"application_name",
@@ -54,7 +57,7 @@ func GrantApplicationRole() *schema.Resource {
 		Schema:        grantApplicationRoleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				parts := strings.Split(d.Id(), helpers.IDDelimiter)
+				parts := helpers.ParseResourceIdentifier(d.Id())
 				if len(parts) != 3 {
 					return nil, fmt.Errorf("invalid ID specified: %v, expected <application_role_name>|<object_type>|<target_identifier>", d.Id())
 				}
@@ -63,11 +66,19 @@ func GrantApplicationRole() *schema.Resource {
 				}
 				switch parts[1] {
 				case "ACCOUNT_ROLE":
-					if err := d.Set("parent_account_role_name", sdk.NewAccountObjectIdentifier(parts[2]).FullyQualifiedName()); err != nil {
+					accountRoleId, err := sdk.ParseAccountObjectIdentifier(parts[2])
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("parent_account_role_name", accountRoleId.FullyQualifiedName()); err != nil {
 						return nil, err
 					}
 				case "APPLICATION":
-					if err := d.Set("application_name", sdk.NewAccountObjectIdentifier(parts[2]).FullyQualifiedName()); err != nil {
+					applicationId, err := sdk.ParseAccountObjectIdentifier(parts[2])
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("application_name", applicationId.FullyQualifiedName()); err != nil {
 						return nil, err
 					}
 				default:
@@ -83,19 +94,28 @@ func GrantApplicationRole() *schema.Resource {
 func CreateContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("application_role_name").(string)
-	applicationRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(name)
+	applicationRoleIdentifier, err := sdk.ParseDatabaseObjectIdentifier(name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	// format of snowflakeResourceID is <application_role_identifier>|<object type>|<parent_account_role_name>
 	var snowflakeResourceID string
 	if parentRoleName, ok := d.GetOk("parent_account_role_name"); ok && parentRoleName.(string) != "" {
-		parentRoleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parentRoleName.(string))
-		snowflakeResourceID = strings.Join([]string{applicationRoleIdentifier.FullyQualifiedName(), "ACCOUNT_ROLE", parentRoleIdentifier.FullyQualifiedName()}, helpers.IDDelimiter)
+		parentRoleIdentifier, err := sdk.ParseAccountObjectIdentifier(parentRoleName.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		snowflakeResourceID = helpers.EncodeResourceIdentifier(applicationRoleIdentifier.FullyQualifiedName(), "ACCOUNT_ROLE", parentRoleIdentifier.FullyQualifiedName())
 		req := sdk.NewGrantApplicationRoleRequest(applicationRoleIdentifier).WithTo(*sdk.NewKindOfRoleRequest().WithRoleName(&parentRoleIdentifier))
 		if err := client.ApplicationRoles.Grant(ctx, req); err != nil {
 			return diag.FromErr(err)
 		}
 	} else if applicationName, ok := d.GetOk("application_name"); ok && applicationName.(string) != "" {
-		applicationIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(applicationName.(string))
-		snowflakeResourceID = strings.Join([]string{applicationRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeApplication.String(), applicationIdentifier.FullyQualifiedName()}, helpers.IDDelimiter)
+		applicationIdentifier, err := sdk.ParseAccountObjectIdentifier(applicationName.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		snowflakeResourceID = helpers.EncodeResourceIdentifier(applicationRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeApplication.String(), applicationIdentifier.FullyQualifiedName())
 		req := sdk.NewGrantApplicationRoleRequest(applicationRoleIdentifier).WithTo(*sdk.NewKindOfRoleRequest().WithApplicationName(&applicationIdentifier))
 		if err := client.ApplicationRoles.Grant(ctx, req); err != nil {
 			return diag.FromErr(err)
@@ -109,7 +129,10 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	applicationRoleName := parts[0]
-	applicationRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRoleName)
+	applicationRoleIdentifier, err := sdk.ParseDatabaseObjectIdentifier(applicationRoleName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	objectTypeString := parts[1]
 	if objectTypeString == "ACCOUNT_ROLE" {
 		objectTypeString = "ROLE"
@@ -120,20 +143,26 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 	objectType := sdk.ObjectType(objectTypeString)
 	switch objectType {
 	case sdk.ObjectTypeRole:
-		{
-			if _, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
-				d.SetId("")
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  "Failed to retrieve account role. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Id: %s", d.Id()),
-					},
-				}
+		roleId, err := sdk.ParseAccountObjectIdentifier(targetIdentifier)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if _, err := client.Roles.ShowByID(ctx, roleId); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve account role. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
 			}
 		}
 	case sdk.ObjectTypeApplication:
-		if _, err := client.Applications.ShowByID(ctx, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(targetIdentifier)); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
+		applicationId, err := sdk.ParseAccountObjectIdentifier(targetIdentifier)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if _, err := client.Applications.ShowByID(ctx, applicationId); err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
@@ -175,33 +204,11 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 					break
 				}
 			} else {
-				/*
-					note that grantee_name is not saved as a valid identifier in the
-					SHOW GRANTS OF APPLICATION ROLE <application_role_name> command
-					for example, "ABC"."test_parent_role" is saved as ABC."test_parent_role"
-					or "ABC"."test_parent_role" is saved as ABC.test_parent_role
-					and our internal mapper thereby fails to parse it correctly, returning "ABC."test_parent_role"
-					so this funny string replacement is needed to make it work
-				*/
-				s := grant.GranteeName.FullyQualifiedName()
-				if !strings.Contains(s, "\"") {
-					parts := strings.Split(s, ".")
-					s = sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]).FullyQualifiedName()
-				} else {
-					parts := strings.Split(s, "\".\"")
-					if len(parts) < 2 {
-						parts = strings.Split(s, "\".")
-						if len(parts) < 2 {
-							parts = strings.Split(s, ".\"")
-							if len(parts) < 2 {
-								s = strings.Trim(s, "\"")
-								parts = strings.Split(s, ".")
-							}
-						}
-					}
-					s = sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]).FullyQualifiedName()
+				databaseObjectId, err := sdk.ParseDatabaseObjectIdentifier(grant.GranteeName.Name())
+				if err != nil {
+					return diag.FromErr(err)
 				}
-				if s == targetIdentifier {
+				if databaseObjectId.FullyQualifiedName() == targetIdentifier {
 					found = true
 					break
 				}
@@ -225,20 +232,29 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 func DeleteContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	parts := strings.Split(d.Id(), "|")
-	id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[0])
+	parts := helpers.ParseResourceIdentifier(d.Id())
+	id, err := sdk.ParseDatabaseObjectIdentifier(parts[0])
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	objectType := parts[1]
 	granteeName := parts[2]
 	switch objectType {
 	case "ACCOUNT_ROLE":
-		applicationRoleName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(granteeName)
+		applicationRoleName, err := sdk.ParseAccountObjectIdentifier(granteeName)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		if err := client.ApplicationRoles.Revoke(ctx, sdk.NewRevokeApplicationRoleRequest(id).WithFrom(*sdk.NewKindOfRoleRequest().WithRoleName(&applicationRoleName))); err != nil {
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return diag.FromErr(err)
 			}
 		}
 	case "APPLICATION":
-		applicationName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(granteeName)
+		applicationName, err := sdk.ParseAccountObjectIdentifier(granteeName)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		if err := client.ApplicationRoles.Revoke(ctx, sdk.NewRevokeApplicationRoleRequest(id).WithFrom(*sdk.NewKindOfRoleRequest().WithApplicationName(&applicationName))); err != nil {
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return diag.FromErr(err)

@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -56,7 +57,7 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Name:       "account object identifier with dots",
 			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "\"database.name.with.dots\"",
-			Expected:   sdk.NewAccountObjectIdentifier("database.name.with.dots"),
+			Error:      "unexpected number of parts 4 in identifier database.name.with.dots, expected 1 in a form of \"<account_object_name>\"",
 		},
 		{
 			Name:       "validation - valid identifier",
@@ -399,6 +400,7 @@ func TestValidAccountRoleNameGetOwnershipGrantTo(t *testing.T) {
 		Name        string
 		AccountRole *string
 		Expected    sdk.OwnershipGrantTo
+		Error       string
 	}{
 		{
 			Name:        "account role name",
@@ -417,6 +419,11 @@ func TestValidAccountRoleNameGetOwnershipGrantTo(t *testing.T) {
 		{
 			Name:        "account role name - with dots",
 			AccountRole: sdk.String("account.role.with.dots"),
+			Error:       "unexpected number of parts 4 in identifier account.role.with.dots, expected 1 in a form of \"<account_object_name>\"",
+		},
+		{
+			Name:        "account role name - with dots quoted",
+			AccountRole: sdk.String("\"account.role.with.dots\""),
 			Expected: sdk.OwnershipGrantTo{
 				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier("account.role.with.dots")),
 			},
@@ -426,11 +433,15 @@ func TestValidAccountRoleNameGetOwnershipGrantTo(t *testing.T) {
 	for _, tt := range testCases {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
-			grantTo := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
+			grantTo, err := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
 				"account_role_name": *tt.AccountRole,
 			}))
-
-			assert.Equal(t, *tt.Expected.AccountRoleName, *grantTo.AccountRoleName)
+			if tt.Error != "" {
+				require.ErrorContains(t, err, tt.Error)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, *tt.Expected.AccountRoleName, *grantTo.AccountRoleName)
+			}
 		})
 	}
 }
@@ -460,9 +471,10 @@ func TestValidDatabaseRoleNameGetOwnershipGrantTo(t *testing.T) {
 	for _, tt := range testCases {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
-			grantTo := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
+			grantTo, err := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
 				"database_role_name": *tt.DatabaseRole,
 			}))
+			require.NoError(t, err)
 
 			assert.Equal(t, *tt.Expected.DatabaseRoleName, *grantTo.DatabaseRoleName)
 		})
@@ -474,9 +486,8 @@ func TestInvalidDatabaseRoleGetOwnershipGrantTo(t *testing.T) {
 		"database_role_name": "account_role_name",
 	})
 
-	assert.Panics(t, func() {
-		_ = getOwnershipGrantTo(d)
-	})
+	_, err := getOwnershipGrantTo(d)
+	require.Error(t, err)
 }
 
 func TestGetOwnershipGrantOpts(t *testing.T) {

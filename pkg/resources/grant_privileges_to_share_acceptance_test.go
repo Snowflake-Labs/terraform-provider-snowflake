@@ -706,3 +706,89 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 		},
 	})
 }
+
+func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: grantPrivilegesToShareBasicConfig(databaseId.Name(), shareId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantPrivilegesToShareBasicConfig(databaseId.Name(), shareId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+				),
+			},
+		},
+	})
+}
+
+func grantPrivilegesToShareBasicConfig(databaseName string, shareName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+  name = "%[1]s"
+}
+
+resource "snowflake_share" "test" {
+  depends_on = [snowflake_database.test]
+  name       = "%[2]s"
+}
+
+resource "snowflake_grant_privileges_to_share" "test" {
+  to_share    = snowflake_share.test.name
+  privileges  = ["USAGE"]
+  on_database = snowflake_database.test.name
+}
+`, databaseName, shareName)
+}
+
+func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedDatabaseId := fmt.Sprintf(`\"%s\"`, databaseId.Name())
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedShareId := fmt.Sprintf(`\"%s\"`, shareId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
+				Config:      grantPrivilegesToShareBasicConfig(quotedDatabaseId, quotedShareId),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantPrivilegesToShareBasicConfig(quotedDatabaseId, quotedShareId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "on_database", databaseId.Name()),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+				),
+			},
+		},
+	})
+}
