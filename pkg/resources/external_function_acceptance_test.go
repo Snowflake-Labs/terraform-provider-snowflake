@@ -152,7 +152,7 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_complete(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
