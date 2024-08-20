@@ -25,4 +25,6 @@ resource "snowflake_external_function" "external_function" {
   url_of_proxy_and_resource = var.url_of_proxy_and_resource
 }
 
-data "snowflake_external_functions" "external_functions" {}
+data "snowflake_external_functions" "external_functions" {
+  depends_on = [snowflake_external_function.external_function]
+}
