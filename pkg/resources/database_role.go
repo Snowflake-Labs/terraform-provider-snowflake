@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
 	"log"
+
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"

@@ -471,10 +471,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
-		grantOn, err := getAccountRoleGrantOn(d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
 
 		if !allPrivileges.(bool) {
 			logging.DebugLogger.Printf("[DEBUG] Revoking all privileges")
@@ -1104,9 +1100,9 @@ func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, err
 		case objectTypeOk && objectNameOk:
 			objectType := sdk.ObjectType(objectType)
 			var id sdk.ObjectIdentifier
+			var err error
 			// TODO(SNOW-1569535): use a mapper from object type to parsing function
 			if objectType.IsWithArguments() {
-				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
 				if err != nil {
 					return nil, err

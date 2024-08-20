@@ -400,11 +400,6 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		id.WithGrantOption = d.Get("with_grant_option").(bool)
 	}
 
-	grantOn, err := getDatabaseRoleGrantOn(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
@@ -948,9 +943,9 @@ func getDatabaseRoleGrantOn(d *schema.ResourceData) (*sdk.DatabaseRoleGrantOn, e
 		case objectTypeOk && objectNameOk:
 			objectType := sdk.ObjectType(objectType)
 			var id sdk.ObjectIdentifier
+			var err error
 			// TODO(SNOW-1569535): use a mapper from object type to parsing function
 			if objectType.IsWithArguments() {
-				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
 				if err != nil {
 					return nil, err
