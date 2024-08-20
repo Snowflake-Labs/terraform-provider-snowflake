@@ -978,4 +978,17 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(users))
 	})
+
+	// This test proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2817.
+	// sql: Scan error on column index 10, name "disabled": sql/driver: couldn't convert "null" into type bool
+	t.Run("issue #2817: handle show properly without OWNERSHIP and MANAGE GRANTS", func(t *testing.T) {
+		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
+		t.Cleanup(roleCleanup)
+
+		revertRole := testClientHelper().Role.UseRole(t, role.ID())
+		t.Cleanup(revertRole)
+
+		_, err := client.Users.ShowByID(ctx, user.ID())
+		require.NoError(t, err)
+	})
 }
