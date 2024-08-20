@@ -105,7 +105,7 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 // The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
 // inside database called "db", not a database called "db.name". In this case quotes should be used.
 func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
-	parts, err := ParseIdentifierString(identifier)
+	parts, err := sdk.ParseIdentifierString(identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error)
 // DecodeSnowflakeAccountIdentifier decodes account identifier (usually passed as one of the parameter in tf configuration) into sdk.AccountIdentifier.
 // Check more in https://docs.snowflake.com/en/sql-reference/sql/create-account#required-parameters.
 func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier, error) {
-	parts, err := ParseIdentifierString(identifier)
+	parts, err := sdk.ParseIdentifierString(identifier)
 	if err != nil {
 		return sdk.AccountIdentifier{}, err
 	}
@@ -166,7 +166,7 @@ func ConcatSlices[T any](slices ...[]T) []T {
 // TODO(SNOW-999049): address during identifiers rework
 func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, error) {
 	location = strings.TrimPrefix(location, "@")
-	parts, err := parseIdentifierStringWithOpts(location, func(r *csv.Reader) {
+	parts, err := sdk.ParseIdentifierStringWithOpts(location, func(r *csv.Reader) {
 		r.Comma = '.'
 		r.LazyQuotes = true
 	})
@@ -179,4 +179,34 @@ func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, err
 	parts[2] = strings.Join(parts[2:], ".")
 	lastParts := strings.Split(parts[2], "/")
 	return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], lastParts[0]), path.Join(lastParts[1:]...), nil
+}
+
+// ContainsIdentifierIgnoringQuotes takes ids (a slice of Snowflake identifiers represented as strings), and
+// id (a string representing Snowflake id). It checks if id is contained within ids ignoring quotes around identifier parts.
+//
+// The original quoting should be retrieved to avoid situations like "object" == "\"object\"" (true)
+// where that should not be a truthful comparison (different ids). Right now, we assume this case won't happen because the quoting difference would only appear
+// in cases where the identifier parts are upper-cased and returned without quotes by snowflake, e.g. "OBJECT" == "\"OBJECT\"" (true)
+// which is correct (the same ids).
+func ContainsIdentifierIgnoringQuotes(ids []string, id string) bool {
+	if len(ids) == 0 || len(id) == 0 {
+		return false
+	}
+
+	idToCompare, err := DecodeSnowflakeParameterID(id)
+	if err != nil {
+		return false
+	}
+
+	for _, stringId := range ids {
+		objectIdentifier, err := DecodeSnowflakeParameterID(stringId)
+		if err != nil {
+			return false
+		}
+		if idToCompare.FullyQualifiedName() == objectIdentifier.FullyQualifiedName() {
+			return true
+		}
+	}
+
+	return false
 }

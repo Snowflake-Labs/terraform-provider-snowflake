@@ -34,17 +34,26 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 				Identifier: sdk.NewDatabaseObjectIdentifier("on-database-name", "on-schema-name"),
 			},
 		},
-		// TODO(SNOW-1021686): This is wrong and should be fixed (function's last part of identifier cannot be enclosed with quotes like that)
-		//{
-		//	Name:       "grant privileges on function to share",
-		//	Identifier: `"share-name"|USAGE|OnFunction|"on-database-name"."on-schema-name".on-function-name(INT, VARCHAR)`,
-		//	Expected: GrantPrivilegesToShareId{
-		//		ShareName:  sdk.NewExternalObjectIdentifierFromFullyQualifiedName("share-name"),
-		//		Privileges: []string{"USAGE"},
-		//		Kind:       OnFunctionShareGrantKind,
-		//		Identifier: sdk.NewSchemaObjectIdentifier("on-database-name", "on-schema-name", "on-function-name(INT, VARCHAR)"),
-		//	},
-		// },
+		{
+			Name:       "grant privileges on function to share",
+			Identifier: `"share-name"|USAGE|OnFunction|"on-database-name"."on-schema-name".on-function-name(INT, VARCHAR)`,
+			Expected: GrantPrivilegesToShareId{
+				ShareName:  sdk.NewAccountObjectIdentifier("share-name"),
+				Privileges: []string{"USAGE"},
+				Kind:       OnFunctionShareGrantKind,
+				Identifier: sdk.NewSchemaObjectIdentifierWithArguments("on-database-name", "on-schema-name", "on-function-name", sdk.DataTypeInt, sdk.DataTypeVARCHAR),
+			},
+		},
+		{
+			Name:       "grant privileges on function without arguments to share",
+			Identifier: `"share-name"|READ|OnFunction|"on-database-name"."on-schema-name"."on-view-name"()`,
+			Expected: GrantPrivilegesToShareId{
+				ShareName:  sdk.NewAccountObjectIdentifier("share-name"),
+				Privileges: []string{"READ"},
+				Kind:       OnFunctionShareGrantKind,
+				Identifier: sdk.NewSchemaObjectIdentifierWithArguments("on-database-name", "on-schema-name", "on-view-name", []sdk.DataType{}...),
+			},
+		},
 		{
 			Name:       "grant privileges on table to share",
 			Identifier: `"share-name"|EVOLVE SCHEMA|OnTable|"on-database-name"."on-schema-name"."on-table-name"`,
@@ -103,22 +112,22 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 		{
 			Name:       "validation: invalid identifier",
 			Identifier: `"share-name"|SELECT|OnDatabase|one.two.three.four.five.six.seven.eight.nine.ten`,
-			Error:      `unable to classify identifier: one.two.three.four.five.six.seven.eight.nine.ten`,
+			Error:      `unexpected number of parts 10 in identifier one.two.three.four.five.six.seven.eight.nine.ten, expected 1 in a form of "<account_object_name>"`,
 		},
 		{
 			Name:       "validation: invalid account object identifier",
 			Identifier: `"share-name"|SELECT|OnDatabase|one.two`,
-			Error:      `invalid identifier, expected fully qualified name of account object: <name>, but instead got: <database_name>.<name>`,
+			Error:      `unexpected number of parts 2 in identifier one.two, expected 1 in a form of "<account_object_name>"`,
 		},
 		{
 			Name:       "validation: invalid database object identifier",
 			Identifier: `"share-name"|SELECT|OnSchema|one.two.three`,
-			Error:      `invalid identifier, expected fully qualified name of database object: <database_name>.<name>, but instead got: <database_name>.<schema_name>.<name>`,
+			Error:      `unexpected number of parts 3 in identifier one.two.three, expected 2 in a form of "<database_name>.<database_object_name>`,
 		},
 		{
 			Name:       "validation: invalid schema object identifier",
 			Identifier: `"share-name"|SELECT|OnTable|one`,
-			Error:      `invalid identifier, expected fully qualified name of schema object: <database_name>.<schema_name>.<name>, but instead got: <name>`,
+			Error:      `unexpected number of parts 1 in identifier one, expected 3 in a form of "<database_name>.<schema_name>.<schema_object_name>"`,
 		},
 	}
 
@@ -163,17 +172,6 @@ func TestGrantPrivilegesToShareIdString(t *testing.T) {
 			},
 			Expected: `"share-name"|USAGE|OnSchema|"database-name"."schema-name"`,
 		},
-		// TODO(SNOW-1021686): This is wrong and should be fixed (function's last part of identifier cannot be enclosed with quotes like that)
-		//{
-		//	Name: "grant privileges on function to share",
-		//	Identifier: GrantPrivilegesToShareId{
-		//		ShareName:  sdk.NewExternalObjectIdentifierFromFullyQualifiedName("share-name"),
-		//		Privileges: []string{"USAGE"},
-		//		Kind:       OnFunctionShareGrantKind,
-		//		Identifier: sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "function-name(INT, VARCHAR)"),
-		//	},
-		//	Expected: `"share-name"|USAGE|OnFunction|"database-name"."schema-name".\"function-name(INT, VARCHAR)\"`,
-		// },
 		{
 			Name: "grant privileges on table to share",
 			Identifier: GrantPrivilegesToShareId{

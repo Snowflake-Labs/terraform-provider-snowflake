@@ -108,6 +108,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 
 - `on_all_tables_in_schema` (String) The fully qualified identifier for the schema for which the specified privilege will be granted for all tables.
 - `on_database` (String) The fully qualified name of the database on which privileges will be granted.
+- `on_function` (String) The fully qualified name of the function on which privileges will be granted.
 - `on_schema` (String) The fully qualified name of the schema on which privileges will be granted.
 - `on_table` (String) The fully qualified name of the table on which privileges will be granted.
 - `on_tag` (String) The fully qualified name of the tag on which privileges will be granted.

@@ -38,7 +38,7 @@ func (v *views) Show(ctx context.Context, request *ShowViewRequest) ([]View, err
 }
 
 func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View, error) {
-	request := NewShowViewRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+	request := NewShowViewRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())})
 	views, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -72,64 +72,135 @@ func (r *CreateViewRequest) toOpts() *CreateViewOptions {
 		Tag: r.Tag,
 		sql: r.sql,
 	}
+
 	if r.Columns != nil {
 		s := make([]ViewColumn, len(r.Columns))
 		for i, v := range r.Columns {
-			s[i] = ViewColumn(v)
+			s[i] = ViewColumn{
+				Name:    v.Name,
+				Tag:     v.Tag,
+				Comment: v.Comment,
+			}
+			if v.ProjectionPolicy != nil {
+				s[i].ProjectionPolicy = &ViewColumnProjectionPolicy{
+					ProjectionPolicy: v.ProjectionPolicy.ProjectionPolicy,
+				}
+			}
+			if v.MaskingPolicy != nil {
+				s[i].MaskingPolicy = &ViewColumnMaskingPolicy{
+					MaskingPolicy: v.MaskingPolicy.MaskingPolicy,
+					Using:         v.MaskingPolicy.Using,
+				}
+			}
 		}
 		opts.Columns = s
 	}
-	if r.ColumnsMaskingPolicies != nil {
-		s := make([]ViewColumnMaskingPolicy, len(r.ColumnsMaskingPolicies))
-		for i, v := range r.ColumnsMaskingPolicies {
-			s[i] = ViewColumnMaskingPolicy(v)
-		}
-		opts.ColumnsMaskingPolicies = s
-	}
+
 	if r.RowAccessPolicy != nil {
 		opts.RowAccessPolicy = &ViewRowAccessPolicy{
 			RowAccessPolicy: r.RowAccessPolicy.RowAccessPolicy,
 			On:              r.RowAccessPolicy.On,
 		}
 	}
+
+	if r.AggregationPolicy != nil {
+		opts.AggregationPolicy = &ViewAggregationPolicy{
+			AggregationPolicy: r.AggregationPolicy.AggregationPolicy,
+			EntityKey:         r.AggregationPolicy.EntityKey,
+		}
+	}
+
 	return opts
 }
 
 func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 	opts := &AlterViewOptions{
-		IfExists:                 r.IfExists,
-		name:                     r.name,
-		RenameTo:                 r.RenameTo,
-		SetComment:               r.SetComment,
-		UnsetComment:             r.UnsetComment,
-		SetSecure:                r.SetSecure,
-		SetChangeTracking:        r.SetChangeTracking,
-		UnsetSecure:              r.UnsetSecure,
-		SetTags:                  r.SetTags,
-		UnsetTags:                r.UnsetTags,
+		IfExists:          r.IfExists,
+		name:              r.name,
+		RenameTo:          r.RenameTo,
+		SetComment:        r.SetComment,
+		UnsetComment:      r.UnsetComment,
+		SetSecure:         r.SetSecure,
+		SetChangeTracking: r.SetChangeTracking,
+		UnsetSecure:       r.UnsetSecure,
+		SetTags:           r.SetTags,
+		UnsetTags:         r.UnsetTags,
+
 		DropAllRowAccessPolicies: r.DropAllRowAccessPolicies,
 	}
+
+	if r.AddDataMetricFunction != nil {
+		opts.AddDataMetricFunction = &ViewAddDataMetricFunction{
+			DataMetricFunction: r.AddDataMetricFunction.DataMetricFunction,
+		}
+	}
+
+	if r.DropDataMetricFunction != nil {
+		opts.DropDataMetricFunction = &ViewDropDataMetricFunction{
+			DataMetricFunction: r.DropDataMetricFunction.DataMetricFunction,
+		}
+	}
+
+	if r.SetDataMetricSchedule != nil {
+		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
+			TriggerOnChanges: r.SetDataMetricSchedule.TriggerOnChanges,
+		}
+
+		if r.SetDataMetricSchedule.Minutes != nil {
+			opts.SetDataMetricSchedule.Minutes = &ViewMinute{
+				Minutes: r.SetDataMetricSchedule.Minutes.Minutes,
+			}
+		}
+
+		if r.SetDataMetricSchedule.UsingCron != nil {
+			opts.SetDataMetricSchedule.UsingCron = &ViewUsingCron{
+				Cron: r.SetDataMetricSchedule.UsingCron.Cron,
+			}
+		}
+	}
+
+	if r.UnsetDataMetricSchedule != nil {
+		opts.UnsetDataMetricSchedule = &ViewUnsetDataMetricSchedule{}
+	}
+
 	if r.AddRowAccessPolicy != nil {
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
 			RowAccessPolicy: r.AddRowAccessPolicy.RowAccessPolicy,
 			On:              r.AddRowAccessPolicy.On,
 		}
 	}
+
 	if r.DropRowAccessPolicy != nil {
 		opts.DropRowAccessPolicy = &ViewDropRowAccessPolicy{
 			RowAccessPolicy: r.DropRowAccessPolicy.RowAccessPolicy,
 		}
 	}
+
 	if r.DropAndAddRowAccessPolicy != nil {
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{}
+
 		opts.DropAndAddRowAccessPolicy.Drop = ViewDropRowAccessPolicy{
 			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
 		}
+
 		opts.DropAndAddRowAccessPolicy.Add = ViewAddRowAccessPolicy{
 			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
 			On:              r.DropAndAddRowAccessPolicy.Add.On,
 		}
 	}
+
+	if r.SetAggregationPolicy != nil {
+		opts.SetAggregationPolicy = &ViewSetAggregationPolicy{
+			AggregationPolicy: r.SetAggregationPolicy.AggregationPolicy,
+			EntityKey:         r.SetAggregationPolicy.EntityKey,
+			Force:             r.SetAggregationPolicy.Force,
+		}
+	}
+
+	if r.UnsetAggregationPolicy != nil {
+		opts.UnsetAggregationPolicy = &ViewUnsetAggregationPolicy{}
+	}
+
 	if r.SetMaskingPolicyOnColumn != nil {
 		opts.SetMaskingPolicyOnColumn = &ViewSetColumnMaskingPolicy{
 			Name:          r.SetMaskingPolicyOnColumn.Name,
@@ -138,23 +209,41 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 			Force:         r.SetMaskingPolicyOnColumn.Force,
 		}
 	}
+
 	if r.UnsetMaskingPolicyOnColumn != nil {
 		opts.UnsetMaskingPolicyOnColumn = &ViewUnsetColumnMaskingPolicy{
 			Name: r.UnsetMaskingPolicyOnColumn.Name,
 		}
 	}
+
+	if r.SetProjectionPolicyOnColumn != nil {
+		opts.SetProjectionPolicyOnColumn = &ViewSetProjectionPolicy{
+			Name:             r.SetProjectionPolicyOnColumn.Name,
+			ProjectionPolicy: r.SetProjectionPolicyOnColumn.ProjectionPolicy,
+			Force:            r.SetProjectionPolicyOnColumn.Force,
+		}
+	}
+
+	if r.UnsetProjectionPolicyOnColumn != nil {
+		opts.UnsetProjectionPolicyOnColumn = &ViewUnsetProjectionPolicy{
+			Name: r.UnsetProjectionPolicyOnColumn.Name,
+		}
+	}
+
 	if r.SetTagsOnColumn != nil {
 		opts.SetTagsOnColumn = &ViewSetColumnTags{
 			Name:    r.SetTagsOnColumn.Name,
 			SetTags: r.SetTagsOnColumn.SetTags,
 		}
 	}
+
 	if r.UnsetTagsOnColumn != nil {
 		opts.UnsetTagsOnColumn = &ViewUnsetColumnTags{
 			Name:      r.UnsetTagsOnColumn.Name,
 			UnsetTags: r.UnsetTagsOnColumn.UnsetTags,
 		}
 	}
+
 	return opts
 }
 
@@ -184,9 +273,6 @@ func (r viewDBRow) convert() *View {
 		DatabaseName: r.DatabaseName,
 		SchemaName:   r.SchemaName,
 	}
-	if r.Kind.Valid {
-		view.Kind = r.Kind.String
-	}
 	if r.Reserved.Valid {
 		view.Reserved = r.Reserved.String
 	}
@@ -198,6 +284,9 @@ func (r viewDBRow) convert() *View {
 	}
 	if r.Text.Valid {
 		view.Text = r.Text.String
+	}
+	if r.Kind.Valid {
+		view.Kind = r.Kind.String
 	}
 	if r.IsSecure.Valid {
 		view.IsSecure = r.IsSecure.Bool
@@ -226,9 +315,9 @@ func (r viewDetailsRow) convert() *ViewDetails {
 		Name:       r.Name,
 		Type:       r.Type,
 		Kind:       r.Kind,
-		IsNullable: r.IsNullable == "Y",
-		IsPrimary:  r.IsPrimary == "Y",
-		IsUnique:   r.IsUnique == "Y",
+		IsNullable: r.Null == "Y",
+		IsPrimary:  r.PrimaryKey == "Y",
+		IsUnique:   r.UniqueKey == "Y",
 	}
 	if r.Default.Valid {
 		details.Default = String(r.Default.String)

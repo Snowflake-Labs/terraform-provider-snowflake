@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -103,6 +104,7 @@ var alertSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies if an alert should be 'started' (enabled) after creation or should remain 'suspended' (default).",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // Alert returns a pointer to the resource representing an alert.
@@ -123,9 +125,9 @@ func Alert() *schema.Resource {
 // ReadAlert implements schema.ReadContextFunc.
 func ReadAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	alert, err := client.Alerts.ShowByID(ctx, objectIdentifier)
+	alert, err := client.Alerts.ShowByID(ctx, id)
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] alert (%s) not found", d.Id())
@@ -134,6 +136,10 @@ func ReadAlert(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 	}
 
 	if err := d.Set("enabled", alert.State == sdk.AlertStateStarted); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

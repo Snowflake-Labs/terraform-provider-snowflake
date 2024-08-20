@@ -11,7 +11,13 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
@@ -38,9 +44,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	t.Cleanup(resourceMonitorCleanup)
 	resourceMonitorId := resourceMonitor.ID()
 
-	model := config.NewWarehouseModel("w", name).WithComment(comment)
+	warehouseModel := model.Warehouse("w", name).WithComment(comment)
 	// alternatively we can add an extension func
-	_ = config.BasicWarehouseModel(name, comment)
+	_ = model.BasicWarehouseModel(name, comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -51,32 +57,32 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModel(t, warehouseModel),
 				Check: assert.AssertThat(t,
-					assert.WarehouseResource(t, "snowflake_warehouse.w").
-						HasName(name).
-						HasNoType().
-						HasNoSize().
+					resourceassert.WarehouseResource(t, "snowflake_warehouse.w").
+						HasNameString(name).
+						HasNoWarehouseType().
+						HasNoWarehouseSize().
 						HasNoMaxClusterCount().
 						HasNoMinClusterCount().
 						HasNoScalingPolicy().
-						HasAutoSuspend(r.IntDefaultString).
-						HasAutoResume(r.BooleanDefault).
+						HasAutoSuspendString(r.IntDefaultString).
+						HasAutoResumeString(r.BooleanDefault).
 						HasNoInitiallySuspended().
 						HasNoResourceMonitor().
-						HasComment(comment).
-						HasEnableQueryAcceleration(r.BooleanDefault).
-						HasQueryAccelerationMaxScaleFactor(r.IntDefaultString).
-						HasMaxConcurrencyLevel("8").
-						HasStatementQueuedTimeoutInSeconds("0").
-						HasStatementTimeoutInSeconds("172800").
+						HasCommentString(comment).
+						HasEnableQueryAccelerationString(r.BooleanDefault).
+						HasQueryAccelerationMaxScaleFactorString(r.IntDefaultString).
+						HasMaxConcurrencyLevelString("8").
+						HasStatementQueuedTimeoutInSecondsString("0").
+						HasStatementTimeoutInSecondsString("172800").
 						// alternatively extensions possible:
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds().
 						// alternatively extension possible
 						HasAllDefault(),
-					assert.WarehouseShowOutput(t, "snowflake_warehouse.w").
+					resourceshowoutputassert.WarehouseShowOutput(t, "snowflake_warehouse.w").
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
 						HasMaxClusterCount(1).
@@ -84,11 +90,11 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasScalingPolicy(sdk.ScalingPolicyStandard).
 						HasAutoSuspend(600).
 						HasAutoResume(true).
-						HasResourceMonitor("").
+						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
-					assert.WarehouseParameters(t, "snowflake_warehouse.w").
+					resourceparametersassert.WarehouseResourceParameters(t, "snowflake_warehouse.w").
 						HasMaxConcurrencyLevel(8).
 						HasStatementQueuedTimeoutInSeconds(0).
 						HasStatementTimeoutInSeconds(172800).
@@ -96,7 +102,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -110,8 +116,12 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 					// we can still use normal checks
 					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "fully_qualified_name", warehouseId.FullyQualifiedName())),
 				),
 			},
 			// IMPORT after empty config (in this method, most of the attributes will be filled with the defaults acquired from Snowflake)
@@ -120,31 +130,32 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
-					assert.ImportedWarehouseResource(t, warehouseId.Name()).
-						HasName(name).
-						HasType(string(sdk.WarehouseTypeStandard)).
-						HasSize(string(sdk.WarehouseSizeXSmall)).
-						HasMaxClusterCount("1").
-						HasMinClusterCount("1").
-						HasScalingPolicy(string(sdk.ScalingPolicyStandard)).
-						HasAutoSuspend("600").
-						HasAutoResume("true").
-						HasResourceMonitor("").
-						HasComment(comment).
-						HasEnableQueryAcceleration("false").
-						HasQueryAccelerationMaxScaleFactor("8").
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "fully_qualified_name", warehouseId.FullyQualifiedName())),
+					resourceassert.ImportedWarehouseResource(t, warehouseId.Name()).
+						HasNameString(name).
+						HasWarehouseTypeString(string(sdk.WarehouseTypeStandard)).
+						HasWarehouseSizeString(string(sdk.WarehouseSizeXSmall)).
+						HasMaxClusterCountString("1").
+						HasMinClusterCountString("1").
+						HasScalingPolicyString(string(sdk.ScalingPolicyStandard)).
+						HasAutoSuspendString("600").
+						HasAutoResumeString("true").
+						HasResourceMonitorString("").
+						HasCommentString(comment).
+						HasEnableQueryAccelerationString("false").
+						HasQueryAccelerationMaxScaleFactorString("8").
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					assert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
-					assert.ImportedWarehouseParameters(t, warehouseId.Name()).
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
+					resourceparametersassert.ImportedWarehouseResourceParameters(t, warehouseId.Name()).
 						HasMaxConcurrencyLevel(8).
 						HasMaxConcurrencyLevelLevel("").
 						HasStatementQueuedTimeoutInSeconds(0).
 						HasStatementQueuedTimeoutInSecondsLevel("").
 						HasStatementTimeoutInSeconds(172800).
 						HasStatementTimeoutInSecondsLevel(""),
-					assert.Warehouse(t, warehouseId).
+					objectassert.Warehouse(t, warehouseId).
 						HasName(warehouseId.Name()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
@@ -158,6 +169,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasComment(comment).
 						HasEnableQueryAcceleration(false).
 						HasQueryAccelerationMaxScaleFactor(8),
+					objectparametersassert.WarehouseParameters(t, warehouseId).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
 				),
 			},
 			// RENAME
@@ -170,6 +184,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", name2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "fully_qualified_name", warehouseId2.FullyQualifiedName()),
 				),
 			},
 			// Change config but use defaults for every attribute (but not the parameters) - expect no changes (because these are already SF values) except computed show_output (follow-up why suppress diff is not taken into account in has changes?)
@@ -653,12 +668,12 @@ func TestAcc_Warehouse_Validations(t *testing.T) {
 				ExpectError: regexp.MustCompile("invalid warehouse size: SMALLa"),
 			},
 			{
-				Config:      warehouseConfigWithMaxClusterCount(id.Name(), 100),
-				ExpectError: regexp.MustCompile(`expected max_cluster_count to be in the range \(1 - 10\), got 100`),
+				Config:      warehouseConfigWithMaxClusterCount(id.Name(), 0),
+				ExpectError: regexp.MustCompile(`expected max_cluster_count to be at least \(1\), got 0`),
 			},
 			{
-				Config:      warehouseConfigWithMinClusterCount(id.Name(), 100),
-				ExpectError: regexp.MustCompile(`expected min_cluster_count to be in the range \(1 - 10\), got 100`),
+				Config:      warehouseConfigWithMinClusterCount(id.Name(), 0),
+				ExpectError: regexp.MustCompile(`expected min_cluster_count to be at least \(1\), got 0`),
 			},
 			{
 				Config:      warehouseConfigWithScalingPolicy(id.Name(), "unknown"),

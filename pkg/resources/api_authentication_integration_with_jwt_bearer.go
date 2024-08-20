@@ -38,7 +38,9 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithJwtBearer(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithJwtBearer,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithJwtBearer,
-		Schema:        apiAuthJwtBearerSchema,
+		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
+		Schema: apiAuthJwtBearerSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
@@ -154,13 +156,13 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_assertion_issuer", "oauth_assertion_issuer", oauthAssertionIssuer.Value, oauthAssertionIssuer.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthJwtBearerSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_assertion_issuer",
 		}); err != nil {

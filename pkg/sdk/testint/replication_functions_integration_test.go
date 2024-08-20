@@ -55,7 +55,8 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 		require.NotEmpty(t, rdb.SnowflakeRegion)
 		require.NotEmpty(t, rdb.CreatedOn)
 		require.NotEmpty(t, rdb.AccountName)
-		require.NotEmpty(t, rdb.PrimaryDatabase)
+		require.NotNil(t, rdb.PrimaryDatabase)
+		require.NotEmpty(t, rdb.PrimaryDatabase.FullyQualifiedName())
 		if expectedIsPrimary {
 			require.NotEmpty(t, rdb.ReplicationAllowedToAccounts)
 			require.NotEmpty(t, rdb.FailoverAllowedToAccounts)

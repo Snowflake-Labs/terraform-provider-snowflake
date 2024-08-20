@@ -211,7 +211,7 @@ func (v *tableConstraintID) parse(s string) {
 func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
 	var objectIdentifier sdk.ObjectIdentifier
 	var err error
-	// TODO [SNOW-999049]: Fallback for old implementations using table.id instead of table.qualified_name - probably will be removed later.
+	// TODO [SNOW-999049]: Fallback for old implementations using table.id instead of table.fully_qualified_name - probably will be removed later.
 	if strings.Contains(s, "|") {
 		objectIdentifier = helpers.DecodeSnowflakeID(s)
 	} else {

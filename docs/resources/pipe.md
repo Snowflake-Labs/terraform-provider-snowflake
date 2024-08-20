@@ -50,6 +50,7 @@ resource "snowflake_pipe" "pipe" {
 
 ### Read-Only
 
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `notification_channel` (String) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
 - `owner` (String) Name of the role that owns the pipe.

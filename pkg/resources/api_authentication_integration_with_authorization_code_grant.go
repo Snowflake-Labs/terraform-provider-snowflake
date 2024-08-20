@@ -40,6 +40,8 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
+		Description:   "Resource used to manage api authentication security integration objects with authorization code grant. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
@@ -167,13 +169,13 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 			return diag.FromErr(err)
 		}
 
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthAuthorizationCodeGrantSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_allowed_scopes",
 			"oauth_client_auth_method",

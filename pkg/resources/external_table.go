@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -133,7 +134,8 @@ var externalTableSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Name of the role that owns the external table.",
 	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func ExternalTable() *schema.Resource {
@@ -253,6 +255,10 @@ func ReadExternalTable(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		log.Printf("[DEBUG] external table (%s) not found", d.Id())
 		d.SetId("")
+		return err
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 

@@ -4,9 +4,11 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -131,11 +133,7 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Adds a comment or overwrites an existing comment for the password policy.",
 	},
-	"qualified_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "The qualified name for the password policy.",
-	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func PasswordPolicy() *schema.Resource {
@@ -145,6 +143,10 @@ func PasswordPolicy() *schema.Resource {
 		Read:        ReadPasswordPolicy,
 		Update:      UpdatePasswordPolicy,
 		Delete:      DeletePasswordPolicy,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: passwordPolicySchema,
 		Importer: &schema.ResourceImporter{
@@ -194,14 +196,13 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	if err := d.Set("qualified_name", objectIdentifier.FullyQualifiedName()); err != nil {
+	passwordPolicy, err := client.PasswordPolicies.ShowByID(ctx, id)
+	if err != nil {
 		return err
 	}
-
-	passwordPolicy, err := client.PasswordPolicies.ShowByID(ctx, objectIdentifier)
-	if err != nil {
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 
@@ -217,7 +218,7 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("comment", passwordPolicy.Comment); err != nil {
 		return err
 	}
-	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, objectIdentifier)
+	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 	if err != nil {
 		return err
 	}

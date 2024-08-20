@@ -38,7 +38,7 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 }
 
 func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
-	networkPolicies, err := v.Show(ctx, NewShowNetworkPolicyRequest())
+	networkPolicies, err := v.Show(ctx, NewShowNetworkPolicyRequest().WithLike(Like{Pattern: String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	return collections.FindOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
 }
 
-func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error) {
+func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		name: id,
 	}
@@ -54,7 +54,7 @@ func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifi
 	if err != nil {
 		return nil, err
 	}
-	return convertRows[describeNetworkPolicyDBRow, NetworkPolicyDescription](rows), nil
+	return convertRows[describeNetworkPolicyDBRow, NetworkPolicyProperty](rows), nil
 }
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
@@ -158,7 +158,9 @@ func (r *DropNetworkPolicyRequest) toOpts() *DropNetworkPolicyOptions {
 }
 
 func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
-	opts := &ShowNetworkPolicyOptions{}
+	opts := &ShowNetworkPolicyOptions{
+		Like: r.Like,
+	}
 	return opts
 }
 
@@ -181,8 +183,8 @@ func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
 	return opts
 }
 
-func (r describeNetworkPolicyDBRow) convert() *NetworkPolicyDescription {
-	return &NetworkPolicyDescription{
+func (r describeNetworkPolicyDBRow) convert() *NetworkPolicyProperty {
+	return &NetworkPolicyProperty{
 		Name:  r.Name,
 		Value: r.Value,
 	}

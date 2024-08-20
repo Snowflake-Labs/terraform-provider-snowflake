@@ -77,6 +77,10 @@ func TestToDataType(t *testing.T) {
 		{input: "array", want: DataTypeArray},
 		{input: "geography", want: DataTypeGeography},
 		{input: "geometry", want: DataTypeGeometry},
+		{input: "VECTOR(INT, 10)", want: "VECTOR(INT, 10)"},
+		{input: "VECTOR(INT, 20)", want: "VECTOR(INT, 20)"},
+		{input: "VECTOR(FLOAT, 10)", want: "VECTOR(FLOAT, 10)"},
+		{input: "VECTOR(FLOAT, 20)", want: "VECTOR(FLOAT, 20)"},
 	}
 
 	for _, tc := range tests {

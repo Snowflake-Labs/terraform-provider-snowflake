@@ -143,26 +143,24 @@ type CreateForSQLFunctionRequest struct {
 }
 
 type AlterFunctionRequest struct {
-	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
-	RenameTo          *SchemaObjectIdentifier
-	SetComment        *string
-	SetLogLevel       *string
-	SetTraceLevel     *string
-	SetSecure         *bool
-	UnsetSecure       *bool
-	UnsetLogLevel     *bool
-	UnsetTraceLevel   *bool
-	UnsetComment      *bool
-	SetTags           []TagAssociation
-	UnsetTags         []ObjectIdentifier
+	IfExists        *bool
+	name            SchemaObjectIdentifierWithArguments // required
+	RenameTo        *SchemaObjectIdentifier
+	SetComment      *string
+	SetLogLevel     *string
+	SetTraceLevel   *string
+	SetSecure       *bool
+	UnsetSecure     *bool
+	UnsetLogLevel   *bool
+	UnsetTraceLevel *bool
+	UnsetComment    *bool
+	SetTags         []TagAssociation
+	UnsetTags       []ObjectIdentifier
 }
 
 type DropFunctionRequest struct {
-	IfExists          *bool
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	IfExists *bool
+	name     SchemaObjectIdentifierWithArguments // required
 }
 
 type ShowFunctionRequest struct {
@@ -171,6 +169,5 @@ type ShowFunctionRequest struct {
 }
 
 type DescribeFunctionRequest struct {
-	name              SchemaObjectIdentifier // required
-	ArgumentDataTypes []DataType             // required
+	name SchemaObjectIdentifierWithArguments // required
 }

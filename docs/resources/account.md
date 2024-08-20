@@ -60,6 +60,7 @@ resource "snowflake_account" "ac1" {
 
 ### Read-Only
 
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `is_org_admin` (Boolean) Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.
 

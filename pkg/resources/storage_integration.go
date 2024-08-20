@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -104,6 +105,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Date and time when the storage integration was created.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // StorageIntegration returns a pointer to the resource representing a storage integration.
@@ -149,6 +151,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 				Path: loc,
 			}
 		}
+		req.WithStorageBlockedLocations(storageBlockedLocations)
 	}
 
 	storageProvider := d.Get("storage_provider").(string)
@@ -198,6 +201,9 @@ func ReadStorageIntegration(d *schema.ResourceData, meta any) error {
 		log.Printf("[DEBUG] storage integration (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if s.Category != "STORAGE" {
@@ -319,7 +325,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 			}
 		} else {
 			runSetStatement = true
-			stringStorageBlockedLocations := expandStringList(d.Get("storage_allowed_locations").([]any))
+			stringStorageBlockedLocations := expandStringList(d.Get("storage_blocked_locations").([]any))
 			storageBlockedLocations := make([]sdk.StorageLocation, len(stringStorageBlockedLocations))
 			for i, loc := range stringStorageBlockedLocations {
 				storageBlockedLocations[i] = sdk.StorageLocation{

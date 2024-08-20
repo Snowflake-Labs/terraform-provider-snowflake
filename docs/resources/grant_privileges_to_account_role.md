@@ -22,6 +22,11 @@ resource "snowflake_database" "db" {
   name = "database"
 }
 
+resource "snowflake_schema" "my_schema" {
+  database = snowflake_database.db.name
+  name     = "my_schema"
+}
+
 resource "snowflake_account_role" "db_role" {
   name = "role_name"
 }
@@ -124,7 +129,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges        = ["MODIFY", "CREATE TABLE"]
   account_role_name = snowflake_account_role.db_role.name
   on_schema {
-    schema_name = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
+    schema_name = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
   }
 }
 
@@ -134,7 +139,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_account_role.db_role.name
   on_schema {
-    schema_name = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
+    schema_name = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
   }
   all_privileges    = true
   with_grant_option = true
@@ -174,7 +179,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_account_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_database.db.name}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
 }
 
@@ -185,7 +190,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_account_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_database.db.name}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
   all_privileges    = true
   with_grant_option = true
@@ -214,7 +219,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   on_schema_object {
     all {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
+      in_schema          = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
     }
   }
 }
@@ -242,7 +247,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   on_schema_object {
     future {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
+      in_schema          = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
     }
   }
 }
@@ -300,14 +305,14 @@ Optional:
 - `all` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--all))
 - `future` (Block List, Max: 1) Configures the privilege to be granted on future objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
 - `object_name` (String) The fully qualified name of the object on which privileges will be granted.
-- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | CORTEX SEARCH SERVICE | DATA METRIC FUNCTION | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | IMAGE REPOSITORY | ICEBERG TABLE | MASKING POLICY | MATERIALIZED VIEW | MODEL | NETWORK RULE | PACKAGES POLICY | PASSWORD POLICY | PIPE | PROCEDURE | PROJECTION POLICY | ROW ACCESS POLICY | SECRET | SERVICE | SESSION POLICY | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | VIEW | STREAMLIT
+- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | CORTEX SEARCH SERVICE | DATA METRIC FUNCTION | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | IMAGE REPOSITORY | ICEBERG TABLE | MASKING POLICY | MATERIALIZED VIEW | MODEL | NETWORK RULE | NOTEBOOK | PACKAGES POLICY | PASSWORD POLICY | PIPE | PROCEDURE | PROJECTION POLICY | ROW ACCESS POLICY | SECRET | SERVICE | SESSION POLICY | SEQUENCE | SNAPSHOT | STAGE | STREAM | TABLE | TAG | TASK | VIEW | STREAMLIT
 
 <a id="nestedblock--on_schema_object--all"></a>
 ### Nested Schema for `on_schema_object.all`
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | CORTEX SEARCH SERVICES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | IMAGE REPOSITORIES | ICEBERG TABLES | MASKING POLICIES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PACKAGES POLICIES | PASSWORD POLICIES | PIPES | PROCEDURES | PROJECTION POLICIES | ROW ACCESS POLICIES | SECRETS | SERVICES | SESSION POLICIES | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | VIEWS | STREAMLITS.
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | CORTEX SEARCH SERVICES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | IMAGE REPOSITORIES | ICEBERG TABLES | MASKING POLICIES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | NOTEBOOKS | PACKAGES POLICIES | PASSWORD POLICIES | PIPES | PROCEDURES | PROJECTION POLICIES | ROW ACCESS POLICIES | SECRETS | SERVICES | SESSION POLICIES | SEQUENCES | SNAPSHOTS | STAGES | STREAMS | TABLES | TAGS | TASKS | VIEWS | STREAMLITS.
 
 Optional:
 
@@ -320,7 +325,7 @@ Optional:
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PASSWORD POLICIES | PIPES | PROCEDURES | SECRETS | SERVICES | SEQUENCES | STAGES | STREAMS | TABLES | TASKS | VIEWS.
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | NOTEBOOKS | PASSWORD POLICIES | PIPES | PROCEDURES | SECRETS | SERVICES | SEQUENCES | SNAPSHOTS | STAGES | STREAMS | TABLES | TASKS | VIEWS.
 
 Optional:
 

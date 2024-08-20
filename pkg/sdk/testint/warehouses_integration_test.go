@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	objectAssert "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -116,7 +117,7 @@ func TestInt_Warehouses(t *testing.T) {
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
 		// we can use the same assertion builder in the SDK tests
-		objectAssert.AssertThatObject(t, objectAssert.Warehouse(t, id).
+		assertions.AssertThatObject(t, objectassert.Warehouse(t, id).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -148,7 +149,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		// we can also use the read object to initialize:
-		objectAssert.AssertThatObject(t, objectAssert.WarehouseFromObject(t, warehouse).
+		assertions.AssertThatObject(t, objectassert.WarehouseFromObject(t, warehouse).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -283,7 +284,8 @@ func TestInt_Warehouses(t *testing.T) {
 		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 		t.Cleanup(warehouseCleanup)
 
-		parameters := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parameters, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 
 		assert.Equal(t, "8", helpers.FindParameter(t, parameters, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "0", helpers.FindParameter(t, parameters, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
@@ -296,10 +298,11 @@ func TestInt_Warehouses(t *testing.T) {
 				StatementTimeoutInSeconds:       sdk.Int(86400),
 			},
 		}
-		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
+		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		parametersAfterSet := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parametersAfterSet, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 		assert.Equal(t, "4", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "2", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
 		assert.Equal(t, "86400", helpers.FindParameter(t, parametersAfterSet, sdk.AccountParameterStatementTimeoutInSeconds).Value)
@@ -314,7 +317,8 @@ func TestInt_Warehouses(t *testing.T) {
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
 
-		parametersAfterUnset := testClientHelper().Parameter.ShowWarehouseParameters(t, warehouse.ID())
+		parametersAfterUnset, err := client.Warehouses.ShowParameters(ctx, warehouse.ID())
+		require.NoError(t, err)
 		assert.Equal(t, "8", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterMaxConcurrencyLevel).Value)
 		assert.Equal(t, "0", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementQueuedTimeoutInSeconds).Value)
 		assert.Equal(t, "172800", helpers.FindParameter(t, parametersAfterUnset, sdk.AccountParameterStatementTimeoutInSeconds).Value)

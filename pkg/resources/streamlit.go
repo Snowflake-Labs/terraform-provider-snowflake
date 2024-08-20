@@ -96,6 +96,7 @@ var streamlitSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeStreamlitSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Streamlit() *schema.Resource {
@@ -113,6 +114,7 @@ func Streamlit() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "title", "comment", "query_warehouse"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name", "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
 		),
 	}
@@ -226,6 +228,9 @@ func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any)
 				},
 			}
 		}
+		return diag.FromErr(err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

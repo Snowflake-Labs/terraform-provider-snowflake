@@ -32,7 +32,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      fmt.Sprintf("Creates an OAuth interface between Snowflake and a partner application. Valid options are: %v", sdk.AllOauthSecurityIntegrationClients),
+		Description:      fmt.Sprintf("Creates an OAuth interface between Snowflake and a partner application. Valid options are: %v.", possibleValuesListed(sdk.AllOauthSecurityIntegrationClients)),
 		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationClientOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationClientOption),
 	},
@@ -68,7 +68,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	"oauth_use_secondary_roles": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v", sdk.AllOauthSecurityIntegrationUseSecondaryRoles),
+		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v.", possibleValuesListed(sdk.AllOauthSecurityIntegrationUseSecondaryRoles)),
 		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
 		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_use_secondary_roles")),
 	},
@@ -105,6 +105,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeOauthIntegrationForPartnerApplications,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func OauthIntegrationForPartnerApplications() *schema.Resource {
@@ -115,6 +116,7 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 		ReadContext:   ReadContextOauthIntegrationForPartnerApplications(true),
 		UpdateContext: UpdateContextOauthIntegrationForPartnerApplications,
 		DeleteContext: DeleteContextSecurityIntegration,
+		Description:   "Resource used to manage oauth security integration for partner applications objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
@@ -287,7 +289,9 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
 		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
 			return diag.FromErr(err)
 		}

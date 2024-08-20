@@ -35,7 +35,9 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithClientCredentials(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithClientCredentials,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithClientCredentials,
-		Schema:        apiAuthClientCredentialsSchema,
+		Description:   "Resource used to manage api authentication security integration objects with client credentials. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
+		Schema: apiAuthClientCredentialsSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
@@ -139,12 +141,12 @@ func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalCh
 			return diag.FromErr(err)
 		}
 
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthClientCredentialsSchema, []string{
 			"oauth_allowed_scopes",
 		}); err != nil {
 			return diag.FromErr(err)

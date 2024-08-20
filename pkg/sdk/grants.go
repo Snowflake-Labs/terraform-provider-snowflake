@@ -128,12 +128,12 @@ type grantPrivilegeToShareOptions struct {
 }
 
 type ShareGrantOn struct {
-	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
-	Table    *OnTable                 `ddl:"-"`
-	Tag      SchemaObjectIdentifier   `ddl:"identifier" sql:"TAG"`
-	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
+	Database AccountObjectIdentifier             `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier            `ddl:"identifier" sql:"SCHEMA"`
+	Function SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"FUNCTION"`
+	Table    *OnTable                            `ddl:"-"`
+	Tag      SchemaObjectIdentifier              `ddl:"identifier" sql:"TAG"`
+	View     SchemaObjectIdentifier              `ddl:"identifier" sql:"VIEW"`
 }
 
 type OnTable struct {
@@ -239,7 +239,9 @@ func (row grantRow) convert() *Grant {
 		case len(parts) == 2:
 			granteeName = NewAccountObjectIdentifier(parts[1])
 		default:
-			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
+			fallback := row.GranteeName[strings.IndexRune(row.GranteeName, '.')+1:]
+			log.Printf("unsupported case for share's grantee name: %s Falling back to account object identifier: %s", row.GranteeName, fallback)
+			granteeName = NewAccountObjectIdentifier(fallback)
 		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
@@ -263,8 +265,14 @@ func (row grantRow) convert() *Grant {
 		grantOn = ObjectTypeExternalVolume
 	}
 
-	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
-	name, err := ParseObjectIdentifier(row.Name)
+	var name ObjectIdentifier
+	var err error
+	// TODO(SNOW-1569535): use a mapper from object type to parsing function
+	if ObjectType(row.GrantedOn).IsWithArguments() {
+		name, err = ParseSchemaObjectIdentifierWithArgumentsAndReturnType(row.Name)
+	} else {
+		name, err = ParseObjectIdentifierString(row.Name)
+	}
 	if err != nil {
 		log.Printf("Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
 		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)

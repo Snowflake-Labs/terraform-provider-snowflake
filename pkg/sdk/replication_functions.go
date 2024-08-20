@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -83,7 +84,7 @@ type ReplicationDatabase struct {
 	Name                         string
 	Comment                      string
 	IsPrimary                    bool
-	PrimaryDatabase              string
+	PrimaryDatabase              *ExternalObjectIdentifier
 	ReplicationAllowedToAccounts string
 	FailoverAllowedToAccounts    string
 	OrganizationName             string
@@ -97,9 +98,16 @@ func (row replicationDatabaseRow) convert() *ReplicationDatabase {
 		AccountName:      row.AccountName,
 		Name:             row.Name,
 		IsPrimary:        row.IsPrimary,
-		PrimaryDatabase:  row.PrimaryDatabase,
 		OrganizationName: row.OrganizationName,
 		AccountLocator:   row.AccountLocator,
+	}
+	if row.PrimaryDatabase != "" {
+		primaryDatabaseId, err := ParseExternalObjectIdentifier(row.PrimaryDatabase)
+		if err != nil {
+			log.Printf("unable to parse primary database identifier: %v, err = %s", row.PrimaryDatabase, err)
+		} else {
+			db.PrimaryDatabase = &primaryDatabaseId
+		}
 	}
 	if row.RegionGroup.Valid {
 		db.RegionGroup = row.RegionGroup.String

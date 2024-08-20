@@ -9,7 +9,7 @@ variable "on" {
 }
 
 variable "attributes" {
-  type = list(string)
+  type = set(string)
 }
 
 variable "database" {

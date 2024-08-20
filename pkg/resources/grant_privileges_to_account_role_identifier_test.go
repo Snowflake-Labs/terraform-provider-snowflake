@@ -123,6 +123,40 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant account role on function",
+			Identifier: `"account-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"(FLOAT)`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
+				WithGrantOption: false,
+				Privileges:      []string{"USAGE"},
+				Kind:            OnSchemaObjectAccountRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", sdk.DataTypeFloat),
+					},
+				},
+			},
+		},
+		{
+			Name:       "grant account role on function without arguments",
+			Identifier: `"account-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"()`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
+				WithGrantOption: false,
+				Privileges:      []string{"USAGE"},
+				Kind:            OnSchemaObjectAccountRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", []sdk.DataType{}...),
+					},
+				},
+			},
+		},
+		{
 			Name:       "grant account role on schema object with on all option",
 			Identifier: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
 			Expected: GrantPrivilegesToAccountRoleId{

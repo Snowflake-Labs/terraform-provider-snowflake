@@ -16,7 +16,7 @@ resource "snowflake_stream" "stream" {
   schema   = "schema"
   name     = "stream"
 
-  on_table    = snowflake_table.table.qualified_name
+  on_table    = snowflake_table.table.fully_qualified_name
   append_only = false
   insert_only = false
 

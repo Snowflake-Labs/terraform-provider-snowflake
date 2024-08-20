@@ -35,7 +35,7 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
 	t.Cleanup(networkRuleCleanup)
 	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
@@ -264,7 +264,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 	// TODO(SNOW-1541938): use a default warehouse after fix on snowflake side
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
-	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.CreateNetworkRule(t)
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
 	t.Cleanup(networkRuleCleanup)
 	externalAccessIntegrationId, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegration(t, networkRule.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
@@ -308,6 +308,7 @@ func TestAcc_Streamlit_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "external_access_integrations.0", externalAccessIntegrationId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "title", "foo"),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "comment", "foo"),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "fully_qualified_name", id.FullyQualifiedName()),
 
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_streamlit.test", "show_output.0.created_on"),
@@ -378,6 +379,7 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "foo"),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
 			{
@@ -392,6 +394,7 @@ func TestAcc_Streamlit_Rename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "show_output.0.comment", "bar"),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "fully_qualified_name", newId.FullyQualifiedName()),
 				),
 			},
 		},

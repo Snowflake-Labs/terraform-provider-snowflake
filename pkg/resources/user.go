@@ -3,15 +3,17 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var userSchema = map[string]*schema.Schema{
@@ -126,23 +128,49 @@ var userSchema = map[string]*schema.Schema{
 	//    MINS_TO_BYPASS_MFA = <integer>
 	//    DISABLE_MFA = TRUE | FALSE
 	//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW USER` for the given user.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowUserSchema,
+		},
+	},
+	ParametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW PARAMETERS IN USER` for the given user.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowUserParametersSchema,
+		},
+	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func User() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateUser,
-		Read:   ReadUser,
-		Update: UpdateUser,
-		Delete: DeleteUser,
+		CreateContext: CreateUser,
+		UpdateContext: UpdateUser,
+		ReadContext:   GetReadUserFunc(true),
+		DeleteContext: DeleteUser,
 
-		Schema: userSchema,
+		Schema: helpers.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.All(
+			// TODO [SNOW-1348101]: fill after adding all the attributes
+			// ComputedIfAnyAttributeChanged(ShowOutputAttributeName),
+			// TODO [SNOW-1348101]: use list from user parameters definition instead listing all here
+			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.UserParameterAbortDetachedQuery)), strings.ToLower(string(sdk.UserParameterAutocommit)), strings.ToLower(string(sdk.UserParameterBinaryInputFormat)), strings.ToLower(string(sdk.UserParameterBinaryOutputFormat)), strings.ToLower(string(sdk.UserParameterClientMemoryLimit)), strings.ToLower(string(sdk.UserParameterClientMetadataRequestUseConnectionCtx)), strings.ToLower(string(sdk.UserParameterClientPrefetchThreads)), strings.ToLower(string(sdk.UserParameterClientResultChunkSize)), strings.ToLower(string(sdk.UserParameterClientResultColumnCaseInsensitive)), strings.ToLower(string(sdk.UserParameterClientSessionKeepAlive)), strings.ToLower(string(sdk.UserParameterClientSessionKeepAliveHeartbeatFrequency)), strings.ToLower(string(sdk.UserParameterClientTimestampTypeMapping)), strings.ToLower(string(sdk.UserParameterDateInputFormat)), strings.ToLower(string(sdk.UserParameterDateOutputFormat)), strings.ToLower(string(sdk.UserParameterEnableUnloadPhysicalTypeOptimization)), strings.ToLower(string(sdk.UserParameterErrorOnNondeterministicMerge)), strings.ToLower(string(sdk.UserParameterErrorOnNondeterministicUpdate)), strings.ToLower(string(sdk.UserParameterGeographyOutputFormat)), strings.ToLower(string(sdk.UserParameterGeometryOutputFormat)), strings.ToLower(string(sdk.UserParameterJdbcTreatDecimalAsInt)), strings.ToLower(string(sdk.UserParameterJdbcTreatTimestampNtzAsUtc)), strings.ToLower(string(sdk.UserParameterJdbcUseSessionTimezone)), strings.ToLower(string(sdk.UserParameterJsonIndent)), strings.ToLower(string(sdk.UserParameterLockTimeout)), strings.ToLower(string(sdk.UserParameterLogLevel)), strings.ToLower(string(sdk.UserParameterMultiStatementCount)), strings.ToLower(string(sdk.UserParameterNoorderSequenceAsDefault)), strings.ToLower(string(sdk.UserParameterOdbcTreatDecimalAsInt)), strings.ToLower(string(sdk.UserParameterQueryTag)), strings.ToLower(string(sdk.UserParameterQuotedIdentifiersIgnoreCase)), strings.ToLower(string(sdk.UserParameterRowsPerResultset)), strings.ToLower(string(sdk.UserParameterS3StageVpceDnsName)), strings.ToLower(string(sdk.UserParameterSearchPath)), strings.ToLower(string(sdk.UserParameterSimulatedDataSharingConsumer)), strings.ToLower(string(sdk.UserParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.UserParameterStatementTimeoutInSeconds)), strings.ToLower(string(sdk.UserParameterStrictJsonOutput)), strings.ToLower(string(sdk.UserParameterTimestampDayIsAlways24h)), strings.ToLower(string(sdk.UserParameterTimestampInputFormat)), strings.ToLower(string(sdk.UserParameterTimestampLtzOutputFormat)), strings.ToLower(string(sdk.UserParameterTimestampNtzOutputFormat)), strings.ToLower(string(sdk.UserParameterTimestampOutputFormat)), strings.ToLower(string(sdk.UserParameterTimestampTypeMapping)), strings.ToLower(string(sdk.UserParameterTimestampTzOutputFormat)), strings.ToLower(string(sdk.UserParameterTimezone)), strings.ToLower(string(sdk.UserParameterTimeInputFormat)), strings.ToLower(string(sdk.UserParameterTimeOutputFormat)), strings.ToLower(string(sdk.UserParameterTraceLevel)), strings.ToLower(string(sdk.UserParameterTransactionAbortOnError)), strings.ToLower(string(sdk.UserParameterTransactionDefaultIsolationLevel)), strings.ToLower(string(sdk.UserParameterTwoDigitCenturyStart)), strings.ToLower(string(sdk.UserParameterUnsupportedDdlAction)), strings.ToLower(string(sdk.UserParameterUseCachedResult)), strings.ToLower(string(sdk.UserParameterWeekOfYearPolicy)), strings.ToLower(string(sdk.UserParameterWeekStart)), strings.ToLower(string(sdk.UserParameterEnableUnredactedQuerySyntaxError)), strings.ToLower(string(sdk.UserParameterNetworkPolicy)), strings.ToLower(string(sdk.UserParameterPreventUnloadToInternalStages))),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			userParametersCustomDiff,
+		),
 	}
 }
 
-func CreateUser(d *schema.ResourceData, meta interface{}) error {
+func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	opts := &sdk.CreateUserOptions{
@@ -151,8 +179,11 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 		SessionParameters: &sdk.SessionParameters{},
 	}
 	name := d.Get("name").(string)
-	ctx := context.Background()
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+
+	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
+	}
 
 	if loginName, ok := d.GetOk("login_name"); ok {
 		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
@@ -174,7 +205,7 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
 		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(defaultNamespace.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
@@ -213,83 +244,122 @@ func CreateUser(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.Users.Create(ctx, objectIdentifier, opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
-	return ReadUser(d, meta)
+	return GetReadUserFunc(false)(ctx, d, meta)
 }
 
-func ReadUser(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
-	// requires the "MANAGE GRANTS" global privilege
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	ctx := context.Background()
-	user, err := client.Users.Describe(ctx, objectIdentifier)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
-			d.SetId("")
-			return nil
+func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
+		// requires the "MANAGE GRANTS" global privilege
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		user, err := client.Users.Describe(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query user. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
 		}
-		return err
-	}
 
-	if err := setStringProperty(d, "name", user.Name); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "comment", user.Comment); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
-		return err
-	}
-	if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
-		return err
-	}
-
-	var defaultSecondaryRoles []string
-	if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
-		defaultRoles, _ := strings.CutPrefix(user.DefaultSecondaryRoles.Value, "[\"")
-		defaultRoles, _ = strings.CutSuffix(defaultRoles, "\"]")
-		defaultSecondaryRoles = strings.Split(defaultRoles, ",")
-	}
-	if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
-		return err
-	}
-	if user.RsaPublicKeyFp != nil {
-		if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
-			return err
+		u, err := client.Users.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query user. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("User: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
 		}
+		userParameters, err := client.Users.ShowParameters(ctx, id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := setStringProperty(d, "name", user.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "comment", user.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
+			return diag.FromErr(err)
+		}
+
+		var defaultSecondaryRoles []string
+		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
+			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, true)
+		}
+		if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
+			return diag.FromErr(err)
+		}
+		if user.RsaPublicKeyFp != nil {
+			if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if err := setStringProperty(d, "email", user.Email); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := setStringProperty(d, "last_name", user.LastName); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if diags := handleUserParameterRead(d, userParameters); diags != nil {
+			return diags
+		}
+
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err = d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		return nil
 	}
-	if err := setStringProperty(d, "email", user.Email); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
-		return err
-	}
-	if err := setStringProperty(d, "last_name", user.LastName); err != nil {
-		return err
-	}
-	return nil
 }
 
-func UpdateUser(d *schema.ResourceData, meta interface{}) error {
+func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("name") {
@@ -299,7 +369,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 			NewName: newID,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newID))
@@ -344,7 +414,7 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		_, n := d.GetChange("default_namespace")
 		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(n.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
@@ -399,26 +469,71 @@ func UpdateUser(d *schema.ResourceData, meta interface{}) error {
 		_, n := d.GetChange("last_name")
 		alterOptions.Set.ObjectProperties.LastName = sdk.String(n.(string))
 	}
+
 	if runSet {
 		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadUser(d, meta)
+	set := &sdk.UserSet{
+		SessionParameters: &sdk.SessionParameters{},
+		ObjectParameters:  &sdk.UserObjectParameters{},
+	}
+	unset := &sdk.UserUnset{
+		SessionParameters: &sdk.SessionParametersUnset{},
+		ObjectParameters:  &sdk.UserObjectParametersUnset{},
+	}
+	if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
+		return updateParamDiags
+	}
+
+	if (*set.SessionParameters != sdk.SessionParameters{} || *set.ObjectParameters != sdk.UserObjectParameters{}) {
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Set: set,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	// unset is split into two because:
+	// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
+	// 2. current implementation of sdk.UserUnset makes distinction between user and session parameters,
+	// so adding a comma between them is not trivial in the current SQL builder implementation
+	if (*unset.SessionParameters != sdk.SessionParametersUnset{}) {
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				SessionParameters: unset.SessionParameters,
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectParameters: unset.ObjectParameters,
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return GetReadUserFunc(false)(ctx, d, meta)
 }
 
-func DeleteUser(d *schema.ResourceData, meta interface{}) error {
+func DeleteUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Users.Drop(ctx, objectIdentifier, &sdk.DropUserOptions{
+	err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

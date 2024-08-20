@@ -41,9 +41,14 @@ func (c *SchemaClient) CreateSchemaWithName(t *testing.T, name string) (*sdk.Sch
 
 func (c *SchemaClient) CreateSchemaWithIdentifier(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, func()) {
 	t.Helper()
+	return c.CreateSchemaWithOpts(t, id, nil)
+}
+
+func (c *SchemaClient) CreateSchemaWithOpts(t *testing.T, id sdk.DatabaseObjectIdentifier, opts *sdk.CreateSchemaOptions) (*sdk.Schema, func()) {
+	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().Create(ctx, id, nil)
+	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
 	schema, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
@@ -89,4 +94,13 @@ func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk
 	ctx := context.Background()
 
 	return c.client().ShowByID(ctx, id)
+}
+
+func (c *SchemaClient) ShowWithOptions(t *testing.T, opts *sdk.ShowSchemaOptions) []sdk.Schema {
+	t.Helper()
+	ctx := context.Background()
+
+	schemas, err := c.client().Show(ctx, opts)
+	require.NoError(t, err)
+	return schemas
 }

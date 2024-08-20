@@ -7,10 +7,12 @@ import (
 	"regexp"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -73,7 +75,8 @@ var viewSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The timestamp at which the view was created.",
 	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // View returns a pointer to the resource representing a view.
@@ -83,6 +86,10 @@ func View() *schema.Resource {
 		Read:   ReadView,
 		Update: UpdateView,
 		Delete: DeleteView,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
@@ -105,19 +112,19 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 	createRequest := sdk.NewCreateViewRequest(id, s)
 
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		createRequest.WithOrReplace(sdk.Bool(true))
+		createRequest.WithOrReplace(true)
 	}
 
 	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		createRequest.WithSecure(sdk.Bool(true))
+		createRequest.WithSecure(true)
 	}
 
 	if v, ok := d.GetOk("copy_grants"); ok && v.(bool) {
-		createRequest.WithCopyGrants(sdk.Bool(true))
+		createRequest.WithCopyGrants(true)
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		createRequest.WithComment(sdk.String(v.(string)))
+		createRequest.WithComment(v.(string))
 	}
 
 	err := client.Views.Create(ctx, createRequest)
@@ -150,6 +157,9 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err = d.Set("name", view.Name); err != nil {
@@ -206,13 +216,13 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		oldTags, _ := d.GetChange("tag")
 
 		createRequest := sdk.NewCreateViewRequest(id, d.Get("statement").(string)).
-			WithOrReplace(sdk.Bool(true)).
-			WithCopyGrants(sdk.Bool(true)).
-			WithComment(sdk.String(oldComment.(string))).
+			WithOrReplace(true).
+			WithCopyGrants(true).
+			WithComment(oldComment.(string)).
 			WithTag(getTagsFromList(oldTags.([]any)))
 
 		if oldIsSecure.(bool) {
-			createRequest.WithSecure(sdk.Bool(true))
+			createRequest.WithSecure(true)
 		}
 
 		err := client.Views.Create(ctx, createRequest)
@@ -224,7 +234,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		newId := sdk.NewSchemaObjectIdentifierInSchema(id.SchemaId(), d.Get("name").(string))
 
-		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(&newId))
+		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(newId))
 		if err != nil {
 			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
 		}
@@ -235,12 +245,12 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("comment") {
 		if comment := d.Get("comment").(string); comment == "" {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetComment(sdk.Bool(true)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetComment(true))
 			if err != nil {
 				return fmt.Errorf("error unsetting comment for view %v", d.Id())
 			}
 		} else {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetComment(sdk.String(comment)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetComment(comment))
 			if err != nil {
 				return fmt.Errorf("error updating comment for view %v", d.Id())
 			}
@@ -249,12 +259,12 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("is_secure") {
 		if d.Get("is_secure").(bool) {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(sdk.Bool(true)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(true))
 			if err != nil {
 				return fmt.Errorf("error setting secure for view %v", d.Id())
 			}
 		} else {
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(sdk.Bool(true)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(true))
 			if err != nil {
 				return fmt.Errorf("error unsetting secure for view %v", d.Id())
 			}

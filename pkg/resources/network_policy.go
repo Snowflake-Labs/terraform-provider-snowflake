@@ -2,13 +2,15 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,7 +22,6 @@ var networkPolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the network policy; must be unique for the account in which the network policy is created.",
-		ForceNew:    true,
 	},
 	"allowed_network_rule_list": {
 		Type: schema.TypeSet,
@@ -28,8 +29,9 @@ var networkPolicySchema = map[string]*schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional:    true,
-		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("allowed_network_rule_list"),
+		Optional:         true,
+		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
 	},
 	"blocked_network_rule_list": {
 		Type: schema.TypeSet,
@@ -37,8 +39,9 @@ var networkPolicySchema = map[string]*schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional:    true,
-		Description: "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("blocked_network_rule_list"),
+		Optional:         true,
+		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
 	},
 	"allowed_ip_list": {
 		Type:        schema.TypeSet,
@@ -46,30 +49,72 @@ var networkPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.",
 	},
-	// TODO: Add a ValidationFunc to ensure 0.0.0.0/0 is not in blocked_ip_list
-	// See: https://docs.snowflake.com/en/user-guide/network-policies.html#create-an-account-level-network-policy
 	"blocked_ip_list": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
+		Type: schema.TypeSet,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: isNotEqualTo("0.0.0.0/0", "**Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`."),
+		},
 		Optional:    true,
-		Description: "Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account<br><br>**Do not** add `0.0.0.0/0` to `blocked_ip_list`.",
+		Description: "Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account. **Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the network policy.",
 	},
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW NETWORK POLICIES` for the given network policy.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowNetworkPolicySchema,
+		},
+	},
+	DescribeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE NETWORK POLICY` for the given network policy.",
+		Elem: &schema.Resource{
+			Schema: schemas.DescribeNetworkPolicySchema,
+		},
+	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
-// NetworkPolicy returns a pointer to the resource representing a network policy.
 func NetworkPolicy() *schema.Resource {
 	return &schema.Resource{
+		Schema: networkPolicySchema,
+
 		CreateContext: CreateContextNetworkPolicy,
 		ReadContext:   ReadContextNetworkPolicy,
 		UpdateContext: UpdateContextNetworkPolicy,
 		DeleteContext: DeleteContextNetworkPolicy,
+		Description:   "Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.",
 
-		Schema: networkPolicySchema,
+		CustomizeDiff: customdiff.All(
+			// For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented.
+			// The main issue lays in the old Terraform SDK and how its handling DiffSuppression and CustomizeDiff
+			// for complex types like Sets, Lists, and Maps. When every element of the Set is suppressed in custom diff,
+			// it returns true for d.HasChange anyway (it returns false for suppressed changes on primitive types like Number, Bool, String, etc.).
+			ComputedIfAnyAttributeChanged(
+				ShowOutputAttributeName,
+				// "allowed_network_rule_list",
+				// "blocked_network_rule_list",
+				"allowed_ip_list",
+				"blocked_ip_list",
+				"comment",
+			),
+			ComputedIfAnyAttributeChanged(
+				DescribeOutputAttributeName,
+				// "allowed_network_rule_list",
+				// "blocked_network_rule_list",
+				"allowed_ip_list",
+				"blocked_ip_list",
+			),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -77,31 +122,27 @@ func NetworkPolicy() *schema.Resource {
 }
 
 func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	name := d.Get("name").(string)
-	req := sdk.NewCreateNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
+	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+	req := sdk.NewCreateNetworkPolicyRequest(id)
 
 	if v, ok := d.GetOk("comment"); ok {
-		req = req.WithComment(sdk.String(v.(string)))
+		req.WithComment(v.(string))
 	}
 
 	if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-		networkRuleIdentifiers := parseNetworkRulesList(v)
-		req = req.WithAllowedNetworkRuleList(networkRuleIdentifiers)
+		req.WithAllowedNetworkRuleList(parseNetworkRulesList(v))
 	}
 
 	if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-		networkRuleIdentifiers := parseNetworkRulesList(v)
-		req = req.WithBlockedNetworkRuleList(networkRuleIdentifiers)
+		req.WithBlockedNetworkRuleList(parseNetworkRulesList(v))
 	}
 
 	if v, ok := d.GetOk("allowed_ip_list"); ok {
-		ipRequests := parseIPList(v)
-		req = req.WithAllowedIpList(ipRequests)
+		req.WithAllowedIpList(parseIPList(v))
 	}
 
 	if v, ok := d.GetOk("blocked_ip_list"); ok {
-		ipRequests := parseIPList(v)
-		req = req.WithAllowedIpList(ipRequests)
+		req.WithBlockedIpList(parseIPList(v))
 	}
 
 	client := meta.(*provider.Context).Client
@@ -111,27 +152,22 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error creating network policy",
-				Detail:   fmt.Sprintf("error creating network policy %v err = %v", name, err),
+				Detail:   fmt.Sprintf("error creating network policy %v err = %v", id.Name(), err),
 			},
 		}
 	}
-	d.SetId(name)
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadContextNetworkPolicy(ctx, d, meta)
 }
 
-// NetworkRulesSnowflakeDTO is needed to unpack the applied network rules from the JSON response from Snowflake
-type NetworkRulesSnowflakeDTO struct {
-	FullyQualifiedRuleName string
-}
-
-func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, id)
-	if networkPolicy == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
@@ -150,8 +186,11 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 			},
 		}
 	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 
-	if err = d.Set("name", networkPolicy.Name); err != nil {
+	if err = d.Set("name", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -159,141 +198,150 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, id)
+	policyProperties, err := client.NetworkPolicies.Describe(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	for _, desc := range policyDescriptions {
-		switch desc.Name {
-		case "ALLOWED_IP_LIST":
-			if err = d.Set("allowed_ip_list", strings.Split(desc.Value, ",")); err != nil {
-				return diag.FromErr(err)
-			}
-		case "BLOCKED_IP_LIST":
-			if err = d.Set("blocked_ip_list", strings.Split(desc.Value, ",")); err != nil {
-				return diag.FromErr(err)
-			}
-		case "ALLOWED_NETWORK_RULE_LIST":
-			var networkRules []NetworkRulesSnowflakeDTO
-			err := json.Unmarshal([]byte(desc.Value), &networkRules)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			networkRulesFullyQualified := make([]string, len(networkRules))
-			for i, ele := range networkRules {
-				networkRulesFullyQualified[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(ele.FullyQualifiedRuleName).FullyQualifiedName()
-			}
 
-			if err = d.Set("allowed_network_rule_list", networkRulesFullyQualified); err != nil {
-				return diag.FromErr(err)
-			}
-		case "BLOCKED_NETWORK_RULE_LIST":
-			var networkRules []NetworkRulesSnowflakeDTO
-			err := json.Unmarshal([]byte(desc.Value), &networkRules)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			networkRulesFullyQualified := make([]string, len(networkRules))
-			for i, ele := range networkRules {
-				networkRulesFullyQualified[i] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(ele.FullyQualifiedRuleName).FullyQualifiedName()
-			}
-
-			if err = d.Set("blocked_network_rule_list", networkRulesFullyQualified); err != nil {
-				return diag.FromErr(err)
-			}
-		}
+	allowedIpList := make([]string, 0)
+	if allowedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
+		allowedIpList = append(allowedIpList, sdk.ParseCommaSeparatedStringArray(allowedIpListProperty.Value, false)...)
+	}
+	if err = d.Set("allowed_ip_list", allowedIpList); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return diags
+	blockedIpList := make([]string, 0)
+	if blockedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_IP_LIST" }); err == nil {
+		blockedIpList = append(blockedIpList, sdk.ParseCommaSeparatedStringArray(blockedIpListProperty.Value, false)...)
+	}
+	if err = d.Set("blocked_ip_list", blockedIpList); err != nil {
+		return diag.FromErr(err)
+	}
+
+	allowedNetworkRules := make([]string, 0)
+	if allowedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_NETWORK_RULE_LIST" }); err == nil {
+		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(allowedNetworkRuleList.Value)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		for _, networkRule := range networkRules {
+			allowedNetworkRules = append(allowedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
+		}
+	}
+	if err = d.Set("allowed_network_rule_list", allowedNetworkRules); err != nil {
+		return diag.FromErr(err)
+	}
+
+	blockedNetworkRules := make([]string, 0)
+	if blockedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_NETWORK_RULE_LIST" }); err == nil {
+		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(blockedNetworkRuleList.Value)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		for _, networkRule := range networkRules {
+			blockedNetworkRules = append(blockedNetworkRules, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(networkRule.FullyQualifiedRuleName).FullyQualifiedName())
+		}
+	}
+	if err = d.Set("blocked_network_rule_list", blockedNetworkRules); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.NetworkPolicyToSchema(networkPolicy)}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.NetworkPolicyPropertiesToSchema(policyProperties)}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	set, unset := sdk.NewNetworkPolicySetRequest(), sdk.NewNetworkPolicyUnsetRequest()
+
+	if d.HasChange("name") {
+		helpers.EncodeSnowflakeID()
+		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+
+		err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(id).WithRenameTo(newId))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
+	}
 
 	if d.HasChange("comment") {
-		comment := d.Get("comment").(string)
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
-
-		if comment == "" {
-			unsetReq := sdk.NewNetworkPolicyUnsetRequest().WithComment(sdk.Bool(true))
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnset(unsetReq))
-			if err != nil {
-				return getUpdateContextDiag("unsetting comment", id.Name(), err)
-			}
+		if v, ok := d.GetOk("comment"); ok {
+			set.WithComment(v.(string))
 		} else {
-			setReq := sdk.NewNetworkPolicySetRequest().WithComment(sdk.String(comment))
-			err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-			if err != nil {
-				return getUpdateContextDiag("updating comment", id.Name(), err)
-			}
+			unset.WithComment(true)
 		}
 	}
 
 	if d.HasChange("allowed_network_rule_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
-		networkRuleIdentifiers := parseNetworkRulesList(d.Get("allowed_network_rule_list"))
-		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList(sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(networkRuleIdentifiers))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		if err != nil {
-			return getUpdateContextDiag("updating ALLOWED_NETWORK_RULE_LIST", id.Name(), err)
+		if v, ok := d.GetOk("allowed_network_rule_list"); ok {
+			set.WithAllowedNetworkRuleList(*sdk.NewAllowedNetworkRuleListRequest().WithAllowedNetworkRuleList(parseNetworkRulesList(v)))
+		} else {
+			unset.WithAllowedNetworkRuleList(true)
 		}
 	}
 
 	if d.HasChange("blocked_network_rule_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
-		networkRuleIdentifiers := parseNetworkRulesList(d.Get("blocked_network_rule_list"))
-		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedNetworkRuleList(sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(networkRuleIdentifiers))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		if err != nil {
-			return getUpdateContextDiag("updating BLOCKED_NETWORK_RULE_LIST", id.Name(), err)
+		if v, ok := d.GetOk("blocked_network_rule_list"); ok {
+			set.WithBlockedNetworkRuleList(*sdk.NewBlockedNetworkRuleListRequest().WithBlockedNetworkRuleList(parseNetworkRulesList(v)))
+		} else {
+			unset.WithBlockedNetworkRuleList(true)
 		}
 	}
 
 	if d.HasChange("allowed_ip_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
-		ipRequests := parseIPList(d.Get("allowed_ip_list"))
-		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(sdk.NewAllowedIPListRequest().WithAllowedIPList(ipRequests))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		if err != nil {
-			return getUpdateContextDiag("updating ALLOWED_IP_LIST", id.Name(), err)
+		if v, ok := d.GetOk("allowed_ip_list"); ok {
+			set.WithAllowedIpList(*sdk.NewAllowedIPListRequest().WithAllowedIPList(parseIPList(v)))
+		} else {
+			unset.WithAllowedIpList(true)
 		}
 	}
 
 	if d.HasChange("blocked_ip_list") {
-		baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name()))
-		ipRequests := parseIPList(d.Get("blocked_ip_list"))
-		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(sdk.NewBlockedIPListRequest().WithBlockedIPList(ipRequests))
-		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
-		if err != nil {
-			return getUpdateContextDiag("updating BLOCKED_IP_LIST", id.Name(), err)
+		if v, ok := d.GetOk("blocked_ip_list"); ok {
+			set.WithBlockedIpList(*sdk.NewBlockedIPListRequest().WithBlockedIPList(parseIPList(v)))
+		} else {
+			unset.WithBlockedIpList(true)
+		}
+	}
+
+	if !reflect.DeepEqual(*set, *sdk.NewNetworkPolicySetRequest()) {
+		if err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if !reflect.DeepEqual(*unset, *sdk.NewNetworkPolicyUnsetRequest()) {
+		if err := client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(id).WithUnset(*unset)); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
 	return ReadContextNetworkPolicy(ctx, d, meta)
 }
 
-func getUpdateContextDiag(action string, name string, err error) diag.Diagnostics {
-	return diag.Diagnostics{
-		diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Error updating network policy",
-			Detail:   fmt.Sprintf("error %v for network policy %v err = %v", action, name, err),
-		},
-	}
-}
-
 func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
 
-	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(sdk.Bool(true)))
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error deleting network policy",
-				Detail:   fmt.Sprintf("error deleting network policy %v err = %v", id.Name(), err),
+				Detail:   fmt.Sprintf("Error deleting network policy %v, err = %v", id.Name(), err),
 			},
 		}
 	}

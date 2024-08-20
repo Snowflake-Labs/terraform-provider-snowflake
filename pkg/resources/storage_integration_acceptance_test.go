@@ -87,11 +87,11 @@ func TestAcc_StorageIntegration_AWSObjectACL_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	awsRoleArn := "arn:aws:iam::000000000001:/role/test"
 	configVariables := func(set bool) config.Variables {
 		variables := config.Variables{
-			"name":         config.StringVariable(name),
+			"name":         config.StringVariable(id.Name()),
 			"aws_role_arn": config.StringVariable(awsRoleArn),
 			"allowed_locations": config.SetVariable(
 				config.StringVariable("s3://foo/"),
@@ -124,7 +124,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(false),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
@@ -138,7 +139,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(true),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", "some comment"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
@@ -155,7 +157,8 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 				ConfigVariables: configVariables(false),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/AWS_Update/unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_aws_role_arn", awsRoleArn),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
@@ -257,18 +260,18 @@ func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
 		variables := config.Variables{
 			"name": config.StringVariable(name),
 			"allowed_locations": config.SetVariable(
-				config.StringVariable("gcs://foo/"),
+				config.StringVariable("gcs://allowed_foo/"),
 			),
 		}
 		if set {
 			variables["comment"] = config.StringVariable("some comment")
 			variables["allowed_locations"] = config.SetVariable(
-				config.StringVariable("gcs://foo/"),
-				config.StringVariable("gcs://bar/"),
+				config.StringVariable("gcs://allowed_foo/"),
+				config.StringVariable("gcs://allowed_bar/"),
 			)
 			variables["blocked_locations"] = config.SetVariable(
-				config.StringVariable("gcs://foo/"),
-				config.StringVariable("gcs://bar/"),
+				config.StringVariable("gcs://blocked_foo/"),
+				config.StringVariable("gcs://blocked_bar/"),
 			)
 		}
 		return variables
@@ -289,7 +292,7 @@ func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://foo/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://allowed_foo/"),
 					resource.TestCheckNoResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", ""),
 				),
@@ -302,11 +305,11 @@ func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", "some comment"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://bar/"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.1", "gcs://foo/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://allowed_bar/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.1", "gcs://allowed_foo/"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.0", "gcs://bar/"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.1", "gcs://foo/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.0", "gcs://blocked_bar/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.1", "gcs://blocked_foo/"),
 				),
 			},
 			{
@@ -316,9 +319,49 @@ func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://foo/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://allowed_foo/"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StorageIntegration_BlockedLocations_issue2985(t *testing.T) {
+	name := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"allowed_locations": config.SetVariable(
+			config.StringVariable("gcs://allowed_foo/"),
+		),
+		"comment": config.StringVariable("some comment"),
+		"blocked_locations": config.SetVariable(
+			config.StringVariable("gcs://blocked_foo/"),
+			config.StringVariable("gcs://blocked_bar/"),
+		),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StorageIntegration),
+		Steps: []resource.TestStep{
+			{
+				ConfigVariables: configVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StorageIntegration/GCP_Update/set"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "comment", "some comment"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_allowed_locations.0", "gcs://allowed_foo/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.0", "gcs://blocked_bar/"),
+					resource.TestCheckResourceAttr("snowflake_storage_integration.test", "storage_blocked_locations.1", "gcs://blocked_foo/"),
 				),
 			},
 		},

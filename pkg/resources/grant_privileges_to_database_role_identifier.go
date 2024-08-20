@@ -39,7 +39,7 @@ func (g *GrantPrivilegesToDatabaseRoleId) String() string {
 	}
 	parts = append(parts, string(g.Kind))
 	parts = append(parts, g.Data.String())
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type OnDatabaseGrantData struct {
@@ -53,7 +53,7 @@ func (d *OnDatabaseGrantData) String() string {
 func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseRoleId, error) {
 	var databaseRoleId GrantPrivilegesToDatabaseRoleId
 
-	parts := strings.Split(id, helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(id)
 	if len(parts) < 6 {
 		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
@@ -127,9 +127,21 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 			if len(parts) != 8 {
 				return databaseRoleId, sdk.NewError(`database role identifier should hold 8 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`)
 			}
+			objectType := sdk.ObjectType(parts[6])
+			var id sdk.ObjectIdentifier
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
+			if objectType.IsWithArguments() {
+				var err error
+				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(parts[7])
+				if err != nil {
+					return databaseRoleId, err
+				}
+			} else {
+				id = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7])
+			}
 			onSchemaObjectGrantData.Object = &sdk.Object{
-				ObjectType: sdk.ObjectType(parts[6]),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7]),
+				ObjectType: objectType,
+				Name:       id,
 			}
 		case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
 			bulkOperationGrantData := &BulkOperationGrantData{

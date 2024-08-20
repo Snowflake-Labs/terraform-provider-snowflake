@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/hashicorp/go-cty/cty"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -21,6 +26,12 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
+	},
+	"drop_public_schema_on_creation": {
+		Type:             schema.TypeBool,
+		Optional:         true,
+		Description:      "Specifies whether to drop public schema on creation or not. Modifying the parameter after database is already created won't have any effect.",
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
@@ -72,6 +83,7 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Database() *schema.Resource {
@@ -84,12 +96,15 @@ func Database() *schema.Resource {
 		DeleteContext: DeleteDatabase,
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
-		Schema: helpers.MergeMaps(databaseSchema, DatabaseParametersSchema),
+		Schema: helpers.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: DatabaseParametersCustomDiff,
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			databaseParametersCustomDiff,
+		),
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -107,47 +122,15 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	dataRetentionTimeInDays,
-		maxDataExtensionTimeInDays,
-		externalVolume,
-		catalog,
-		replaceInvalidCharacters,
-		defaultDDLCollation,
-		storageSerializationPolicy,
-		logLevel,
-		traceLevel,
-		suspendTaskAfterNumFailures,
-		taskAutoRetryAttempts,
-		userTaskManagedInitialWarehouseSize,
-		userTaskTimeoutMs,
-		userTaskMinimumTriggerIntervalInSeconds,
-		quotedIdentifiersIgnoreCase,
-		enableConsoleOutput,
-		err := GetAllDatabaseParameters(d)
-	if err != nil {
-		return diag.FromErr(err)
+	opts := &sdk.CreateDatabaseOptions{
+		Transient: GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
+		Comment:   GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
+	}
+	if parametersCreateDiags := handleDatabaseParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
 	}
 
-	err = client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{
-		Transient:                               GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
-		DataRetentionTimeInDays:                 dataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays:              maxDataExtensionTimeInDays,
-		ExternalVolume:                          externalVolume,
-		Catalog:                                 catalog,
-		ReplaceInvalidCharacters:                replaceInvalidCharacters,
-		DefaultDDLCollation:                     defaultDDLCollation,
-		StorageSerializationPolicy:              storageSerializationPolicy,
-		LogLevel:                                logLevel,
-		TraceLevel:                              traceLevel,
-		SuspendTaskAfterNumFailures:             suspendTaskAfterNumFailures,
-		TaskAutoRetryAttempts:                   taskAutoRetryAttempts,
-		UserTaskManagedInitialWarehouseSize:     userTaskManagedInitialWarehouseSize,
-		UserTaskTimeoutMs:                       userTaskTimeoutMs,
-		UserTaskMinimumTriggerIntervalInSeconds: userTaskMinimumTriggerIntervalInSeconds,
-		QuotedIdentifiersIgnoreCase:             quotedIdentifiersIgnoreCase,
-		EnableConsoleOutput:                     enableConsoleOutput,
-		Comment:                                 GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
-	})
+	err := client.Databases.Create(ctx, id, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -155,6 +138,24 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	var diags diag.Diagnostics
+
+	if d.Get("drop_public_schema_on_creation").(bool) {
+		var dropSchemaErrs []error
+		err := util.Retry(3, time.Second, func() (error, bool) {
+			if err := client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(id.Name(), "PUBLIC"), &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)}); err != nil {
+				dropSchemaErrs = append(dropSchemaErrs, err)
+				return nil, false
+			}
+			return nil, true
+		})
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to drop public schema on creation (failed after 3 attempts)",
+				Detail:   fmt.Sprintf("The '%s' database was created successfully, but the provider was not able to remove public schema on creation. Please drop the public schema manually. Original errors: %s", id.Name(), errors.Join(dropSchemaErrs...)),
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("replication"); ok {
 		replicationConfiguration := v.([]any)[0].(map[string]any)
@@ -235,7 +236,7 @@ func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	databaseSetRequest := new(sdk.DatabaseSet)
 	databaseUnsetRequest := new(sdk.DatabaseUnset)
 
-	if updateParamDiags := HandleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
+	if updateParamDiags := handleDatabaseParametersChanges(d, databaseSetRequest, databaseUnsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
 	}
 
@@ -364,6 +365,10 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("name", database.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -440,16 +445,12 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		}
 	}
 
-	databaseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Database: id,
-		},
-	})
+	databaseParameters, err := client.Databases.ShowParameters(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if diags := HandleDatabaseParameterRead(d, databaseParameters); diags != nil {
+	if diags := handleDatabaseParameterRead(d, databaseParameters); diags != nil {
 		return diags
 	}
 

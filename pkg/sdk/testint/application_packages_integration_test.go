@@ -213,8 +213,8 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
-		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
-		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "")
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "manifest.yml")
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "setup.sql")
 
 		version := "V001"
 		using := "@" + stage.ID().FullyQualifiedName()
@@ -253,8 +253,8 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
-		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
-		testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "")
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "manifest.yml")
+		testClientHelper().Stage.PutOnStage(t, stage.ID(), "setup.sql")
 
 		version := "V001"
 		using := "@" + stage.ID().FullyQualifiedName()

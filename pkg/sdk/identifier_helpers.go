@@ -3,6 +3,7 @@ package sdk
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -100,6 +101,10 @@ func NewExternalObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string
 	}
 }
 
+func (i ExternalObjectIdentifier) AccountIdentifier() AccountIdentifier {
+	return i.accountIdentifier
+}
+
 func (i ExternalObjectIdentifier) Name() string {
 	return i.objectIdentifier.Name()
 }
@@ -135,6 +140,14 @@ func NewAccountIdentifierFromFullyQualifiedName(fullyQualifiedName string) Accou
 	organizationName := strings.Trim(parts[0], `"`)
 	accountName := strings.Trim(parts[1], `"`)
 	return NewAccountIdentifier(organizationName, accountName)
+}
+
+func (i AccountIdentifier) OrganizationName() string {
+	return i.organizationName
+}
+
+func (i AccountIdentifier) AccountName() string {
+	return i.accountName
 }
 
 func (i AccountIdentifier) Name() string {
@@ -220,7 +233,8 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	arguments    []DataType
+	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
+	arguments []DataType
 }
 
 func NewSchemaObjectIdentifierInSchema(schemaId DatabaseObjectIdentifier, name string) SchemaObjectIdentifier {
@@ -235,7 +249,7 @@ func NewSchemaObjectIdentifier(databaseName, schemaName, name string) SchemaObje
 	}
 }
 
-func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, arguments []DataType) SchemaObjectIdentifier {
+func NewSchemaObjectIdentifierWithArgumentsOld(databaseName, schemaName, name string, arguments []DataType) SchemaObjectIdentifier {
 	return SchemaObjectIdentifier{
 		databaseName: strings.Trim(databaseName, `"`),
 		schemaName:   strings.Trim(schemaName, `"`),
@@ -319,6 +333,70 @@ func (i SchemaObjectIdentifier) ArgumentsSignature() string {
 		arguments[i] = string(item)
 	}
 	return fmt.Sprintf("%v(%v)", i.Name(), strings.Join(arguments, ","))
+}
+
+type SchemaObjectIdentifierWithArguments struct {
+	databaseName      string
+	schemaName        string
+	name              string
+	argumentDataTypes []DataType
+}
+
+func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	// Arguments have to be "normalized" with ToDataType, so the signature would match with the one returned by Snowflake.
+	normalizedArguments := make([]DataType, len(argumentDataTypes))
+	for i, argument := range argumentDataTypes {
+		normalizedArgument, err := ToDataType(string(argument))
+		if err != nil {
+			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
+		}
+		normalizedArguments[i] = normalizedArgument
+	}
+	return SchemaObjectIdentifierWithArguments{
+		databaseName:      strings.Trim(databaseName, `"`),
+		schemaName:        strings.Trim(schemaName, `"`),
+		name:              strings.Trim(name, `"`),
+		argumentDataTypes: normalizedArguments,
+	}
+}
+
+func NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId DatabaseObjectIdentifier, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), name, argumentDataTypes...)
+}
+
+func (i SchemaObjectIdentifierWithArguments) DatabaseName() string {
+	return i.databaseName
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaName() string {
+	return i.schemaName
+}
+
+func (i SchemaObjectIdentifierWithArguments) Name() string {
+	return i.name
+}
+
+func (i SchemaObjectIdentifierWithArguments) ArgumentDataTypes() []DataType {
+	return i.argumentDataTypes
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaObjectId() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.name)
+}
+
+func (i SchemaObjectIdentifierWithArguments) SchemaId() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
+}
+
+func (i SchemaObjectIdentifierWithArguments) DatabaseId() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.databaseName)
+}
+
+func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
+	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.argumentDataTypes) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ", "))
 }
 
 type TableColumnIdentifier struct {

@@ -58,8 +58,8 @@ resource "snowflake_masking_policy" "test" {
 
 ### Read-Only
 
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `qualified_name` (String) Specifies the qualified identifier for the masking policy.
 
 <a id="nestedblock--signature"></a>
 ### Nested Schema for `signature`

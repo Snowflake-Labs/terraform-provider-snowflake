@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/example"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
@@ -103,7 +104,9 @@ func runAllTemplatesAndSave(definition *generator.Interface, file string) {
 func runTemplateAndSave(def *generator.Interface, genFunc func(io.Writer, *generator.Interface), fileName string) {
 	buffer := bytes.Buffer{}
 	genFunc(&buffer, def)
-	generator.WriteCodeToFile(&buffer, fileName)
+	if err := genhelpers.WriteCodeToFile(&buffer, fileName); err != nil {
+		log.Panicln(err)
+	}
 }
 
 func filenameFor(prefix string, part string) string {

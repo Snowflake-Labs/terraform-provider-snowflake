@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -77,6 +78,7 @@ var pipeSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the name of the notification integration used for error notifications.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Pipe() *schema.Resource {
@@ -151,15 +153,19 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 // ReadPipe implements schema.ReadFunc.
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
-	pipe, err := client.Pipes.ShowByID(ctx, objectIdentifier)
+	pipe, err := client.Pipes.ShowByID(ctx, id)
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] pipe (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err := d.Set("name", pipe.Name); err != nil {

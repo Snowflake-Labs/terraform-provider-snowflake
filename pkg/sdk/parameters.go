@@ -587,6 +587,14 @@ const (
 	UserParameterWeekStart                                UserParameter = "WEEK_START"
 )
 
+type WarehouseParameter string
+
+const (
+	WarehouseParameterMaxConcurrencyLevel             WarehouseParameter = "MAX_CONCURRENCY_LEVEL"
+	WarehouseParameterStatementQueuedTimeoutInSeconds WarehouseParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	WarehouseParameterStatementTimeoutInSeconds       WarehouseParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+)
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
@@ -664,6 +672,23 @@ const (
 	GeographyOutputFormatEWKB    GeographyOutputFormat = "EWKB"
 )
 
+func ToGeographyOutputFormat(s string) (GeographyOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case strings.ToUpper(string(GeographyOutputFormatGeoJSON)):
+		return GeographyOutputFormatGeoJSON, nil
+	case string(GeographyOutputFormatWKT):
+		return GeographyOutputFormatWKT, nil
+	case string(GeographyOutputFormatWKB):
+		return GeographyOutputFormatWKB, nil
+	case string(GeographyOutputFormatEWKT):
+		return GeographyOutputFormatEWKT, nil
+	case string(GeographyOutputFormatEWKB):
+		return GeographyOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geography output format: %s", s)
+	}
+}
+
 type GeometryOutputFormat string
 
 const (
@@ -674,6 +699,23 @@ const (
 	GeometryOutputFormatEWKB    GeometryOutputFormat = "EWKB"
 )
 
+func ToGeometryOutputFormat(s string) (GeometryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case strings.ToUpper(string(GeometryOutputFormatGeoJSON)):
+		return GeometryOutputFormatGeoJSON, nil
+	case string(GeometryOutputFormatWKT):
+		return GeometryOutputFormatWKT, nil
+	case string(GeometryOutputFormatWKB):
+		return GeometryOutputFormatWKB, nil
+	case string(GeometryOutputFormatEWKT):
+		return GeometryOutputFormatEWKT, nil
+	case string(GeometryOutputFormatEWKB):
+		return GeometryOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geometry output format: %s", s)
+	}
+}
+
 type BinaryInputFormat string
 
 const (
@@ -682,6 +724,19 @@ const (
 	BinaryInputFormatUTF8   BinaryInputFormat = "UTF8"
 )
 
+func ToBinaryInputFormat(s string) (BinaryInputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryInputFormatHex):
+		return BinaryInputFormatHex, nil
+	case string(BinaryInputFormatBase64):
+		return BinaryInputFormatBase64, nil
+	case string(BinaryInputFormatUTF8):
+		return BinaryInputFormatUTF8, nil
+	default:
+		return "", fmt.Errorf("invalid binary input format: %s", s)
+	}
+}
+
 type BinaryOutputFormat string
 
 const (
@@ -689,12 +744,34 @@ const (
 	BinaryOutputFormatBase64 BinaryOutputFormat = "BASE64"
 )
 
+func ToBinaryOutputFormat(s string) (BinaryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryOutputFormatHex):
+		return BinaryOutputFormatHex, nil
+	case string(BinaryOutputFormatBase64):
+		return BinaryOutputFormatBase64, nil
+	default:
+		return "", fmt.Errorf("invalid binary output format: %s", s)
+	}
+}
+
 type ClientTimestampTypeMapping string
 
 const (
 	ClientTimestampTypeMappingLtz ClientTimestampTypeMapping = "TIMESTAMP_LTZ"
 	ClientTimestampTypeMappingNtz ClientTimestampTypeMapping = "TIMESTAMP_NTZ"
 )
+
+func ToClientTimestampTypeMapping(s string) (ClientTimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(ClientTimestampTypeMappingLtz):
+		return ClientTimestampTypeMappingLtz, nil
+	case string(ClientTimestampTypeMappingNtz):
+		return ClientTimestampTypeMappingNtz, nil
+	default:
+		return "", fmt.Errorf("invalid client timestamp type mapping: %s", s)
+	}
+}
 
 type TimestampTypeMapping string
 
@@ -704,11 +781,33 @@ const (
 	TimestampTypeMappingTz  TimestampTypeMapping = "TIMESTAMP_TZ"
 )
 
+func ToTimestampTypeMapping(s string) (TimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(TimestampTypeMappingLtz):
+		return TimestampTypeMappingLtz, nil
+	case string(TimestampTypeMappingNtz):
+		return TimestampTypeMappingNtz, nil
+	case string(TimestampTypeMappingTz):
+		return TimestampTypeMappingTz, nil
+	default:
+		return "", fmt.Errorf("invalid timestamp type mapping: %s", s)
+	}
+}
+
 type TransactionDefaultIsolationLevel string
 
 const (
 	TransactionDefaultIsolationLevelReadCommitted TransactionDefaultIsolationLevel = "READ COMMITTED"
 )
+
+func ToTransactionDefaultIsolationLevel(s string) (TransactionDefaultIsolationLevel, error) {
+	switch strings.ToUpper(s) {
+	case string(TransactionDefaultIsolationLevelReadCommitted):
+		return TransactionDefaultIsolationLevelReadCommitted, nil
+	default:
+		return "", fmt.Errorf("invalid transaction default isolation level: %s", s)
+	}
+}
 
 type UnsupportedDDLAction string
 
@@ -716,6 +815,17 @@ const (
 	UnsupportedDDLActionIgnore UnsupportedDDLAction = "IGNORE"
 	UnsupportedDDLActionFail   UnsupportedDDLAction = "FAIL"
 )
+
+func ToUnsupportedDDLAction(s string) (UnsupportedDDLAction, error) {
+	switch strings.ToUpper(s) {
+	case string(UnsupportedDDLActionIgnore):
+		return UnsupportedDDLActionIgnore, nil
+	case string(UnsupportedDDLActionFail):
+		return UnsupportedDDLActionFail, nil
+	default:
+		return "", fmt.Errorf("invalid ddl action: %s", s)
+	}
+}
 
 // SessionParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#session-parameters.
 type SessionParameters struct {
@@ -1012,12 +1122,14 @@ func (v *ParametersIn) validate() error {
 type ParameterType string
 
 const (
-	ParameterTypeAccount   ParameterType = "ACCOUNT"
-	ParameterTypeUser      ParameterType = "USER"
-	ParameterTypeSession   ParameterType = "SESSION"
-	ParameterTypeObject    ParameterType = "OBJECT"
-	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
-	ParameterTypeDatabase  ParameterType = "DATABASE"
+	ParameterTypeSnowflakeDefault ParameterType = ""
+	ParameterTypeAccount          ParameterType = "ACCOUNT"
+	ParameterTypeUser             ParameterType = "USER"
+	ParameterTypeSession          ParameterType = "SESSION"
+	ParameterTypeObject           ParameterType = "OBJECT"
+	ParameterTypeWarehouse        ParameterType = "WAREHOUSE"
+	ParameterTypeDatabase         ParameterType = "DATABASE"
+	ParameterTypeSchema           ParameterType = "SCHEMA"
 )
 
 type Parameter struct {

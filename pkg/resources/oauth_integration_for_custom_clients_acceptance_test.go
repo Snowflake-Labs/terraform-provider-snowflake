@@ -413,6 +413,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", "true"),
@@ -467,6 +468,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_redirect_uri", validUrl),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),

@@ -2,48 +2,31 @@
 page_title: "snowflake_network_policy Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to control network traffic. For more information, check an official guide https://docs.snowflake.com/en/user-guide/network-policies on controlling network traffic with network policies.
 ---
+
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
 # snowflake_network_policy (Resource)
 
-
+Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.
 
 ## Example Usage
 
 ```terraform
-##################################
-### using network rules
-##################################
-
-resource "snowflake_network_rule" "rule" {
-  name       = "rule"
-  database   = "EXAMPLE_DB"
-  schema     = "EXAMPLE_SCHEMA"
-  comment    = "A rule."
-  type       = "IPV4"
-  mode       = "INGRESS"
-  value_list = ["192.168.0.100/24", "29.254.123.20"]
+## Minimal
+resource "snowflake_network_policy" "basic" {
+  name = "network_policy_name"
 }
 
-resource "snowflake_network_policy" "policy" {
-  name    = "policy"
-  comment = "A policy."
-
-  allowed_network_rule_list = [snowflake_network_rule.rule.qualified_name]
-}
-
-
-##################################
-### using ip lists
-##################################
-
-resource "snowflake_network_policy" "policy" {
-  name    = "policy"
-  comment = "A policy."
-
-  allowed_ip_list = ["192.168.0.100/24"]
-  blocked_ip_list = ["192.168.0.101"]
+## Complete (with every optional set)
+resource "snowflake_network_policy" "basic" {
+  name                      = "network_policy_name"
+  allowed_network_rule_list = ["<fully qualified network rule id>"]
+  blocked_network_rule_list = ["<fully qualified network rule id>"]
+  allowed_ip_list           = ["192.168.1.0/24"]
+  blocked_ip_list           = ["192.168.1.99"]
+  comment                   = "my network policy"
 }
 ```
 
@@ -58,18 +41,45 @@ resource "snowflake_network_policy" "policy" {
 
 - `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.
 - `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.
-- `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account<br><br>**Do not** add `0.0.0.0/0` to `blocked_ip_list`.
+- `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account. **Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`.
 - `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.
 - `comment` (String) Specifies a comment for the network policy.
 
 ### Read-Only
 
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE NETWORK POLICY` for the given network policy. (see [below for nested schema](#nestedatt--describe_output))
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW NETWORK POLICIES` for the given network policy. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `allowed_ip_list` (String)
+- `allowed_network_rule_list` (String)
+- `blocked_ip_list` (String)
+- `blocked_network_rule_list` (String)
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `entries_in_allowed_ip_list` (Number)
+- `entries_in_allowed_network_rules` (Number)
+- `entries_in_blocked_ip_list` (Number)
+- `entries_in_blocked_network_rules` (Number)
+- `name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_network_policy.example policyname
+terraform import snowflake_network_policy.example "name"
 ```

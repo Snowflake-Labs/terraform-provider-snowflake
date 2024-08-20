@@ -24,10 +24,46 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 	}
 }
 
+// NormalizeAndCompareIdentifiersInSet is a diff suppression function that should be used at top-level TypeSet fields that
+// hold identifiers to avoid diffs like:
+// - "DATABASE"."SCHEMA"."OBJECT"
+// + DATABASE.SCHEMA.OBJECT
+// where both identifiers are pointing to the same object, but have different structure. When a diff occurs in the
+// list or set, we have to handle two suppressions (one that prevents adding and one that prevents the removal).
+// It's handled by the two statements with the help of helpers.ContainsIdentifierIgnoringQuotes and by getting
+// the current state of ids to compare against. The diff suppressions for lists and sets are running for each element one by one,
+// and the first diff is usually .# referring to the collection length (we skip those).
+func NormalizeAndCompareIdentifiersInSet(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(k, ".#") {
+			return false
+		}
+
+		if oldValue == "" && !d.GetRawState().IsNull() {
+			if helpers.ContainsIdentifierIgnoringQuotes(ctyValToSliceString(d.GetRawState().AsValueMap()[key].AsValueSet().Values()), newValue) {
+				return true
+			}
+		}
+
+		if newValue == "" {
+			if helpers.ContainsIdentifierIgnoringQuotes(expandStringList(d.Get(key).(*schema.Set).List()), oldValue) {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
 // IgnoreAfterCreation should be used to ignore changes to the given attribute post creation.
 func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 	// For new resources always show the diff and in every other case we do not want to use this attribute
 	return d.Id() != ""
+}
+
+// IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
+func IgnoreChangeToCurrentSnowflakeValueInShowWithMapping(keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
+	return IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(ShowOutputAttributeName, keyInOutput, mapping)
 }
 
 // IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
@@ -52,6 +88,27 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput stri
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)[keyInOutput]
 				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
+				if new == fmt.Sprintf("%v", result) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+}
+
+// IgnoreChangeToCurrentSnowflakePlainValueInOutput should be used to ignore changes to the given attribute when its value is equal to value in provided `attrName`.
+func IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(attrName, keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
+	return func(_, _, new string, d *schema.ResourceData) bool {
+		if d.Id() == "" {
+			return false
+		}
+
+		if queryOutput, ok := d.GetOk(attrName); ok {
+			queryOutputList := queryOutput.([]any)
+			if len(queryOutputList) == 1 {
+				result := mapping(queryOutputList[0].(map[string]any)[keyInOutput])
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
 				if new == fmt.Sprintf("%v", result) {
 					return true
 				}

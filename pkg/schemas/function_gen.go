@@ -42,6 +42,10 @@ var ShowFunctionSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"arguments": {
+		Type:     schema.TypeInvalid,
+		Computed: true,
+	},
+	"arguments_raw": {
 		Type:     schema.TypeString,
 		Computed: true,
 	},
@@ -92,6 +96,7 @@ func FunctionToSchema(function *sdk.Function) map[string]any {
 	functionSchema["min_num_arguments"] = function.MinNumArguments
 	functionSchema["max_num_arguments"] = function.MaxNumArguments
 	functionSchema["arguments"] = function.Arguments
+	functionSchema["arguments_raw"] = function.ArgumentsRaw
 	functionSchema["description"] = function.Description
 	functionSchema["catalog_name"] = function.CatalogName
 	functionSchema["is_table_function"] = function.IsTableFunction

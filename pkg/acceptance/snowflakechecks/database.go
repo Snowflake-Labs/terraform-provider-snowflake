@@ -3,6 +3,7 @@ package snowflakechecks
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -24,5 +25,25 @@ func CheckDatabaseDataRetentionTimeInDays(t *testing.T, databaseId sdk.AccountOb
 			errs = append(errs, fmt.Errorf("expected parameter value %s, got %s", expectedLevel, param.Level))
 		}
 		return errors.Join(errs...)
+	}
+}
+
+func DoesNotContainPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
+	t.Helper()
+	return func(state *terraform.State) error {
+		if slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
+			return fmt.Errorf("expected database %s to not contain public schema", id.FullyQualifiedName())
+		}
+		return nil
+	}
+}
+
+func ContainsPublicSchema(t *testing.T, id sdk.AccountObjectIdentifier) resource.TestCheckFunc {
+	t.Helper()
+	return func(state *terraform.State) error {
+		if !slices.ContainsFunc(acc.TestClient().Database.Describe(t, id).Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Name == "PUBLIC" && row.Kind == "SCHEMA" }) {
+			return fmt.Errorf("expected database %s to contain public schema", id.FullyQualifiedName())
+		}
+		return nil
 	}
 }

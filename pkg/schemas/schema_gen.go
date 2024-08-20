@@ -13,6 +13,10 @@ var ShowSchemaSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
+	"dropped_on": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 	"name": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -56,14 +60,13 @@ var _ = ShowSchemaSchema
 func SchemaToSchema(schema *sdk.Schema) map[string]any {
 	schemaSchema := make(map[string]any)
 	schemaSchema["created_on"] = schema.CreatedOn.String()
+	schemaSchema["dropped_on"] = schema.DroppedOn.String()
 	schemaSchema["name"] = schema.Name
 	schemaSchema["is_default"] = schema.IsDefault
 	schemaSchema["is_current"] = schema.IsCurrent
 	schemaSchema["database_name"] = schema.DatabaseName
 	schemaSchema["owner"] = schema.Owner
-	if schema.Comment != nil {
-		schemaSchema["comment"] = schema.Comment
-	}
+	schemaSchema["comment"] = schema.Comment
 	if schema.Options != nil {
 		schemaSchema["options"] = schema.Options
 	}

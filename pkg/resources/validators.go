@@ -51,7 +51,8 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			}
 		}
 
-		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): with sdk.AccountObjectIdentifier{} (or a new type of identifier) we should be able to validate individual part of the identifier field (e.g. "database" or "schema" field)
 		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
 			return nil
 		}
@@ -179,6 +180,28 @@ func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValida
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		return nil
+	}
+}
+
+func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaValidateDiagFunc {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		if value != nil {
+			if stringValue, ok := value.(string); ok {
+				if stringValue == notExpectedValue {
+					return diag.Diagnostics{
+						{
+							Severity: diag.Error,
+							Summary:  "Invalid value set",
+							Detail:   fmt.Sprintf("invalid value (%s) set for a field %v. %s", notExpectedValue, path, errorMessage),
+						},
+					}
+				}
+			} else {
+				return diag.Errorf("isNotEqualTo validator: expected string type, got %T", value)
+			}
+		}
+
 		return nil
 	}
 }
