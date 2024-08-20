@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"log"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -118,7 +119,7 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(objectIdentifier.FullyQualifiedName())
+	d.SetId(helpers.EncodeResourceIdentifier(objectIdentifier))
 
 	return ReadDatabaseRole(d, meta)
 }

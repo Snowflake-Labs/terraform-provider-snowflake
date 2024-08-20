@@ -651,5 +651,3 @@ func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
 		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
 	)
 }
-
-// TODO: Test
