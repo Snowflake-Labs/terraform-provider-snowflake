@@ -239,7 +239,9 @@ func (row grantRow) convert() *Grant {
 		case len(parts) == 2:
 			granteeName = NewAccountObjectIdentifier(parts[1])
 		default:
-			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
+			fallback := row.GranteeName[strings.IndexRune(row.GranteeName, '.')+1:]
+			log.Printf("unsupported case for share's grantee name: %s Falling back to account object identifier: %s", row.GranteeName, fallback)
+			granteeName = NewAccountObjectIdentifier(fallback)
 		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)

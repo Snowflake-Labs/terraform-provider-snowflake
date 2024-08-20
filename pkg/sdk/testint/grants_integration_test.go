@@ -953,6 +953,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
+
 	t.Run("with a name containing dots", func(t *testing.T) {
 		shareTest, shareCleanup := testClientHelper().Share.CreateShareWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".foo.bar"))
 		t.Cleanup(shareCleanup)
