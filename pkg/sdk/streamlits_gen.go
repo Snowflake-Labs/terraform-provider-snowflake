@@ -73,7 +73,6 @@ type ShowStreamlitOptions struct {
 	In         *In        `ddl:"keyword" sql:"IN"`
 	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
-
 type streamlitsRow struct {
 	CreatedOn      string         `db:"created_on"`
 	Name           string         `db:"name"`
@@ -86,16 +85,15 @@ type streamlitsRow struct {
 	UrlId          string         `db:"url_id"`
 	OwnerRoleType  string         `db:"owner_role_type"`
 }
-
 type Streamlit struct {
 	CreatedOn      string
 	Name           string
-	DatabaseName   AccountObjectIdentifier
+	DatabaseName   string
 	SchemaName     string
 	Title          string
 	Owner          string
 	Comment        string
-	QueryWarehouse AccountObjectIdentifier
+	QueryWarehouse string
 	UrlId          string
 	OwnerRoleType  string
 }
@@ -134,5 +132,5 @@ type StreamlitDetail struct {
 }
 
 func (s *Streamlit) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(s.DatabaseName.Name(), s.SchemaName, s.Name)
+	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
 }

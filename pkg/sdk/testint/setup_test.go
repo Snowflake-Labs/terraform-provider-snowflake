@@ -220,7 +220,7 @@ func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), e
 }
 
 func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.Schema, func(), error) {
-	id := sdk.NewDatabaseObjectIdentifier(db.Name.Name(), TestSchemaName)
+	id := sdk.NewDatabaseObjectIdentifier(db.Name, TestSchemaName)
 	cleanup := func() {
 		_ = client.Schemas.Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)})
 	}
@@ -228,7 +228,7 @@ func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.S
 	if err != nil {
 		return nil, cleanup, err
 	}
-	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name.Name(), TestSchemaName))
+	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name, TestSchemaName))
 	return schema, cleanup, err
 }
 

@@ -67,7 +67,7 @@ func TestInt_Warehouses(t *testing.T) {
 		warehouses, err := client.Warehouses.Show(ctx, showOptions)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(warehouses))
-		assert.Equal(t, precreatedWarehouseId.Name(), warehouses[0].Name.Name())
+		assert.Equal(t, precreatedWarehouseId.Name(), warehouses[0].Name)
 		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouses[0].Size)
 		assert.Equal(t, "ROLE", warehouses[0].OwnerRoleType)
 	})
@@ -134,7 +134,7 @@ func TestInt_Warehouses(t *testing.T) {
 
 		warehouse, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), warehouse.Name.Name())
+		assert.Equal(t, id.Name(), warehouse.Name)
 		assert.Equal(t, sdk.WarehouseTypeStandard, warehouse.Type)
 		assert.Equal(t, sdk.WarehouseSizeSmall, warehouse.Size)
 		assert.Equal(t, 8, warehouse.MaxClusterCount)
@@ -180,7 +180,7 @@ func TestInt_Warehouses(t *testing.T) {
 
 		result, err := client.Warehouses.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), result.Name.Name())
+		assert.Equal(t, id.Name(), result.Name)
 		assert.Equal(t, sdk.WarehouseTypeStandard, result.Type)
 		assert.Equal(t, sdk.WarehouseSizeXSmall, result.Size)
 		assert.Equal(t, 1, result.MaxClusterCount)

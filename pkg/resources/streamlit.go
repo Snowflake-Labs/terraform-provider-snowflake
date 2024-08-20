@@ -156,7 +156,7 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("name", streamlit.Name); err != nil {
 		return nil, err
 	}
-	if err = d.Set("database", streamlit.DatabaseName.Name()); err != nil {
+	if err = d.Set("database", streamlit.DatabaseName); err != nil {
 		return nil, err
 	}
 	if err = d.Set("schema", streamlit.SchemaName); err != nil {
@@ -175,7 +175,7 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	if err = d.Set("main_file", streamlitDetails.MainFile); err != nil {
 		return nil, err
 	}
-	if err = d.Set("query_warehouse", streamlit.QueryWarehouse.Name()); err != nil {
+	if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
 		return nil, err
 	}
 	if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {
@@ -240,7 +240,7 @@ func CreateContextStreamlit(ctx context.Context, d *schema.ResourceData, meta an
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.FullyQualifiedName())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextStreamlit(ctx, d, meta)
 }
@@ -277,7 +277,7 @@ func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("name", streamlit.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("database", streamlit.DatabaseName.Name()); err != nil {
+	if err := d.Set("database", streamlit.DatabaseName); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("schema", streamlit.SchemaName); err != nil {
@@ -296,7 +296,7 @@ func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("main_file", streamlitDetails.MainFile); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("query_warehouse", streamlit.QueryWarehouse.Name()); err != nil {
+	if err = d.Set("query_warehouse", streamlit.QueryWarehouse); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("external_access_integrations", streamlitDetails.ExternalAccessIntegrations); err != nil {

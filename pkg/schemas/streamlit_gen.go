@@ -57,12 +57,12 @@ func StreamlitToSchema(streamlit *sdk.Streamlit) map[string]any {
 	streamlitSchema := make(map[string]any)
 	streamlitSchema["created_on"] = streamlit.CreatedOn
 	streamlitSchema["name"] = streamlit.Name
-	streamlitSchema["database_name"] = streamlit.DatabaseName.Name()
+	streamlitSchema["database_name"] = streamlit.DatabaseName
 	streamlitSchema["schema_name"] = streamlit.SchemaName
 	streamlitSchema["title"] = streamlit.Title
 	streamlitSchema["owner"] = streamlit.Owner
 	streamlitSchema["comment"] = streamlit.Comment
-	streamlitSchema["query_warehouse"] = streamlit.QueryWarehouse.Name()
+	streamlitSchema["query_warehouse"] = streamlit.QueryWarehouse
 	streamlitSchema["url_id"] = streamlit.UrlId
 	streamlitSchema["owner_role_type"] = streamlit.OwnerRoleType
 	return streamlitSchema

@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -56,6 +59,16 @@ func AccountRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
+			},
+		},
 	}
 }
 
@@ -84,7 +97,7 @@ func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadAccountRole(ctx, d, meta)
 }
@@ -121,12 +134,12 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", accountRole.Name.Name()); err != nil {
+	if err := d.Set("name", accountRole.ID().FullyQualifiedName()); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to set account role name",
-				Detail:   fmt.Sprintf("Account role name: %s, err: %s", accountRole.Name.Name(), err),
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", accountRole.ID().FullyQualifiedName(), err),
 			},
 		}
 	}
@@ -136,7 +149,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to set account role comment",
-				Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", accountRole.Name.Name(), accountRole.Comment, err),
+				Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", accountRole.ID().FullyQualifiedName(), accountRole.Comment, err),
 			},
 		}
 	}
@@ -172,7 +185,7 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 
 		id = newId
-		d.SetId(newId.Name())
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
 	}
 
 	if d.HasChange("comment") {

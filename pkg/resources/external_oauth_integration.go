@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -152,8 +154,6 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
-
 		CreateContext: CreateContextExternalOauthIntegration,
 		ReadContext:   ReadContextExternalOauthIntegration(true),
 		UpdateContext: UpdateContextExternalOauthIntegration,
@@ -177,12 +177,19 @@ func ExternalOauthIntegration() *schema.Resource {
 			StateContext: ImportExternalOauthIntegration,
 		},
 
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v092ExternalOauthIntegrationStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -206,7 +213,7 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.Name.Name()); err != nil {
+	if err = d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
@@ -397,7 +404,7 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextExternalOauthIntegration(false)(ctx, d, meta)
 }
@@ -435,7 +442,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("name", integration.Name.Name()); err != nil {
+		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("comment", integration.Comment); err != nil {
@@ -730,7 +737,7 @@ func DeleteContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

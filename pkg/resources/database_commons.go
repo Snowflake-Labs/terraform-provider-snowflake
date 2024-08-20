@@ -75,12 +75,14 @@ func init() {
 			Type:         schema.TypeString,
 			Description:  "The database parameter that specifies the default catalog to use for Iceberg tables. For more information, see [CATALOG](https://docs.snowflake.com/en/sql-reference/parameters#catalog).",
 			ValidateDiag: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			DiffSuppress: suppressIdentifierQuoting,
 		},
 		{
 			Name:         sdk.ObjectParameterExternalVolume,
 			Type:         schema.TypeString,
 			Description:  "The database parameter that specifies the default external volume to use for Iceberg tables. For more information, see [EXTERNAL_VOLUME](https://docs.snowflake.com/en/sql-reference/parameters#external-volume).",
 			ValidateDiag: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			DiffSuppress: suppressIdentifierQuoting,
 		},
 		{
 			Name:         sdk.ObjectParameterLogLevel,
@@ -290,7 +292,15 @@ func handleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*s
 			}
 		case
 			string(sdk.ObjectParameterExternalVolume),
-			string(sdk.ObjectParameterCatalog),
+			string(sdk.ObjectParameterCatalog):
+			id, err := sdk.ParseAccountObjectIdentifier(parameter.Value)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set(strings.ToLower(parameter.Key), id.FullyQualifiedName()); err != nil {
+				return diag.FromErr(err)
+			}
+		case
 			string(sdk.ObjectParameterDefaultDDLCollation),
 			string(sdk.ObjectParameterStorageSerializationPolicy),
 			string(sdk.ObjectParameterLogLevel),

@@ -591,7 +591,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	}
 
 	// create a employees table
-	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, "employees")
+	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "employees")
 	createTableHandle(t, tid)
 
 	createProcedureForSQLHandle := func(t *testing.T, cleanup bool) *sdk.Procedure {
@@ -635,7 +635,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Java: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#omitting-return-column-names-and-types
 		name := "filter_by_role"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
 		import com.snowflake.snowpark_java.*;
@@ -670,7 +670,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Scala: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#omitting-return-column-names-and-types
 		name := "filter_by_role"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
 		import com.snowflake.snowpark.functions._
@@ -704,7 +704,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Javascript", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "stproc1"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
 		var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
@@ -734,7 +734,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Javascript: no arguments", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "sp_pi"
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `return 3.1415926;`
 		request := sdk.NewCreateForJavaScriptProcedureRequest(id, sdk.DataTypeFloat, definition).WithNotNull(sdk.Bool(true)).WithOrReplace(sdk.Bool(true))
@@ -748,7 +748,7 @@ func TestInt_CallProcedure(t *testing.T) {
 
 	t.Run("call procedure for Python: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#omitting-return-column-names-and-types
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, "filterByRole")
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "filterByRole")
 
 		definition := `
 from snowflake.snowpark.functions import col
@@ -768,7 +768,7 @@ def filter_by_role(session, name, role):
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR}))
 
-		id = sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, "filterByRole")
+		id = sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "filterByRole")
 		ca := []string{fmt.Sprintf(`'%s'`, tid.FullyQualifiedName()), "'dev'"}
 		err = client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(id).WithCallArguments(ca))
 		require.NoError(t, err)
@@ -794,7 +794,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 	}
 
 	// create a employees table
-	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name.Name(), schemaTest.Name, "employees")
+	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "employees")
 	createTableHandle(t, tid)
 
 	t.Run("create and call procedure for Java: returns table", func(t *testing.T) {

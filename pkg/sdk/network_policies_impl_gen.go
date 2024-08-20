@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -44,7 +43,7 @@ func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifi
 		return nil, err
 	}
 
-	return collections.FindOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name.Name() == id.Name() })
+	return collections.FindOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error) {
@@ -166,23 +165,15 @@ func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
 }
 
 func (r showNetworkPolicyDBRow) convert() *NetworkPolicy {
-	networkPolicy := &NetworkPolicy{
+	return &NetworkPolicy{
 		CreatedOn:                    r.CreatedOn,
+		Name:                         r.Name,
 		Comment:                      r.Comment,
 		EntriesInAllowedIpList:       r.EntriesInAllowedIpList,
 		EntriesInBlockedIpList:       r.EntriesInBlockedIpList,
 		EntriesInAllowedNetworkRules: r.EntriesInAllowedNetworkRules,
 		EntriesInBlockedNetworkRules: r.EntriesInBlockedNetworkRules,
 	}
-	if r.Name != "" {
-		networkPolicyName, err := ParseAccountObjectIdentifier(r.Name)
-		if err != nil {
-			// TODO(SNOW-1561641): Return error
-			log.Printf("[DEBUG] Error parsing network policy name: %v", err)
-		}
-		networkPolicy.Name = networkPolicyName
-	}
-	return networkPolicy
 }
 
 func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {

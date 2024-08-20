@@ -171,10 +171,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 				ResourceName:    "snowflake_schema.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "database", databaseId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "with_managed_access", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "is_transient", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "with_managed_access", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "is_transient", "false"),
 				),
 			},
 			// set other fields
@@ -532,7 +532,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 	// use a separate db because this test relies on schema history
 	db, cleanupDb := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDb)
-	schemaId := sdk.NewDatabaseObjectIdentifier(db.Name.Name(), name)
+	schemaId := sdk.NewDatabaseObjectIdentifier(db.ID().Name(), name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -549,15 +549,15 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      schemav093(name, db.Name.Name()),
+				Config:      schemav093(name, db.ID().Name()),
 				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   schemav094WithPipeExecutionPaused(name, db.Name.Name(), true),
+				Config:                   schemav094WithPipeExecutionPaused(name, db.ID().Name(), true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.Name.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "true"),
 				),
 			},
@@ -574,7 +574,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 					require.Len(t, schemas, 1)
 					require.Zero(t, schemas[0].DroppedOn)
 				},
-				Config: schemav094WithPipeExecutionPaused(name, db.Name.Name(), true),
+				Config: schemav094WithPipeExecutionPaused(name, db.ID().Name(), true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
@@ -582,7 +582,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.Name.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", db.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "pipe_execution_paused", "true"),
 				),
 			},
@@ -1118,6 +1118,14 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemaBasicConfig(quotedDatabaseName, quotedName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),

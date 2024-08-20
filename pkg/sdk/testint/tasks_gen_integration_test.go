@@ -21,7 +21,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testDb(t).Name.Name(), task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
@@ -46,7 +46,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testDb(t).Name.Name(), task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, comment, task.Comment)
@@ -75,7 +75,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, testDb(t).Name.Name(), task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
 
@@ -165,7 +165,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTaskWithOptions(t, task, id, "some comment", testWarehouse(t).Name.Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", testWarehouse(t).Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {

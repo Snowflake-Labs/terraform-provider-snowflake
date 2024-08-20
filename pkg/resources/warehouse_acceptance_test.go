@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -35,8 +37,8 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	warehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	warehouseId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	name := warehouseId.Name()
-	name2 := warehouseId2.Name()
+	name := warehouseId.FullyQualifiedName()
+	name2 := warehouseId2.FullyQualifiedName()
 	comment := random.Comment()
 	newComment := random.Comment()
 
@@ -103,7 +105,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
 					objectassert.Warehouse(t, warehouseId).
-						HasName(warehouseId.Name()).
+						HasName(warehouseId.FullyQualifiedName()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
@@ -120,7 +122,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
 					// we can still use normal checks
-					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.Name())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", warehouseId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_warehouse.w", "fully_qualified_name", warehouseId.FullyQualifiedName())),
 				),
 			},
@@ -129,9 +131,9 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "name", name)),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(warehouseId.Name(), "fully_qualified_name", warehouseId.FullyQualifiedName())),
-					resourceassert.ImportedWarehouseResource(t, warehouseId.Name()).
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(warehouseId), "name", name)),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(warehouseId), "fully_qualified_name", warehouseId.FullyQualifiedName())),
+					resourceassert.ImportedWarehouseResource(t, helpers.EncodeResourceIdentifier(warehouseId)).
 						HasNameString(name).
 						HasWarehouseTypeString(string(sdk.WarehouseTypeStandard)).
 						HasWarehouseSizeString(string(sdk.WarehouseSizeXSmall)).
@@ -147,8 +149,8 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
-					resourceshowoutputassert.ImportedWarehouseShowOutput(t, warehouseId.Name()),
-					resourceparametersassert.ImportedWarehouseResourceParameters(t, warehouseId.Name()).
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, helpers.EncodeResourceIdentifier(warehouseId)),
+					resourceparametersassert.ImportedWarehouseResourceParameters(t, helpers.EncodeResourceIdentifier(warehouseId)).
 						HasMaxConcurrencyLevel(8).
 						HasMaxConcurrencyLevelLevel("").
 						HasStatementQueuedTimeoutInSeconds(0).
@@ -156,7 +158,7 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 						HasStatementTimeoutInSeconds(172800).
 						HasStatementTimeoutInSecondsLevel(""),
 					objectassert.Warehouse(t, warehouseId).
-						HasName(warehouseId.Name()).
+						HasName(warehouseId.FullyQualifiedName()).
 						HasState(sdk.WarehouseStateStarted).
 						HasType(sdk.WarehouseTypeStandard).
 						HasSize(sdk.WarehouseSizeXSmall).
@@ -375,10 +377,10 @@ func TestAcc_Warehouse_WarehouseType(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.type", string(sdk.WarehouseTypeStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.type", string(sdk.WarehouseTypeStandard)),
 				),
 			},
 			// change type in config
@@ -485,10 +487,10 @@ func TestAcc_Warehouse_WarehouseType(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.type", string(sdk.WarehouseTypeStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.type", string(sdk.WarehouseTypeStandard)),
 				),
 			},
 		},
@@ -528,10 +530,10 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeSmall)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.size", string(sdk.WarehouseSizeSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "warehouse_size", string(sdk.WarehouseSizeSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.size", string(sdk.WarehouseSizeSmall)),
 				),
 			},
 			// change size in config
@@ -638,10 +640,10 @@ func TestAcc_Warehouse_WarehouseSizes(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.size", string(sdk.WarehouseSizeXSmall)),
 				),
 			},
 		},
@@ -780,10 +782,10 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.auto_resume", "true"),
 				),
 			},
 			// change value in config
@@ -850,10 +852,10 @@ func TestAcc_Warehouse_AutoResume(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_resume", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "auto_resume", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.auto_resume", "true"),
 				),
 			},
 		},
@@ -894,10 +896,10 @@ func TestAcc_Warehouse_AutoSuspend(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_suspend", "1200"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_suspend", "1200"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "auto_suspend", "1200"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.auto_suspend", "1200"),
 				),
 			},
 			// change value in config to Snowflake default
@@ -964,10 +966,10 @@ func TestAcc_Warehouse_AutoSuspend(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_suspend", "600"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_suspend", "600"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "auto_suspend", "600"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.auto_suspend", "600"),
 				),
 			},
 		},
@@ -1080,22 +1082,22 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
 
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "auto_suspend", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "query_acceleration_max_scale_factor", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_queued_timeout_in_seconds", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "auto_suspend", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "query_acceleration_max_scale_factor", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "statement_queued_timeout_in_seconds", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "statement_timeout_in_seconds", "0"),
 
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.auto_suspend", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.query_acceleration_max_scale_factor", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.auto_suspend", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "show_output.0.query_acceleration_max_scale_factor", "0"),
 
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "0"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_queued_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.value", "0"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 				),
 			},
 		},
@@ -1145,11 +1147,11 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "statement_timeout_in_seconds", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 				),
 			},
 			// change the param value in config
@@ -1271,11 +1273,11 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "172800"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", ""),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "statement_timeout_in_seconds", "172800"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.value", "172800"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.level", ""),
 				),
 			},
 			// change the param value in config to snowflake default (expecting action because of the different level)
@@ -1349,11 +1351,11 @@ func TestAcc_Warehouse_Parameter(t *testing.T) {
 				ResourceName: "snowflake_warehouse.w",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "statement_timeout_in_seconds", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "statement_timeout_in_seconds", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeAccount)),
 				),
 			},
 			// change param value on warehouse
@@ -1488,7 +1490,7 @@ func TestAcc_Warehouse_migrateFromVersion092_withWarehouseSize(t *testing.T) {
 				},
 				Config: warehouseFullMigrationConfigWithSize(id.Name(), "", sdk.WarehouseSizeX4Large),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeX4Large)),
 				),
 			},
@@ -1530,7 +1532,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "wait_for_provisioning"),
 					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
@@ -1547,7 +1549,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 				},
 				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
 				),
@@ -1593,7 +1595,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_bool
 				},
 				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
 				),
@@ -1637,7 +1639,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "8"),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
@@ -1683,7 +1685,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
@@ -1729,7 +1731,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_dif
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "10"),
 
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
@@ -1856,7 +1858,7 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -1895,7 +1897,7 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -1928,7 +1930,7 @@ func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -1963,9 +1965,17 @@ func TestAcc_Warehouse_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(quotedId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.FullyQualifiedName()),
 				),
 			},
 		},

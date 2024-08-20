@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -139,6 +142,16 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportOauthForPartnerApplicationIntegration,
 		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
+			},
+		},
 	}
 }
 
@@ -261,7 +274,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextOauthIntegrationForPartnerApplications(false)(ctx, d, meta)
 }
@@ -300,7 +313,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("name", integration.Name.Name()); err != nil {
+		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 

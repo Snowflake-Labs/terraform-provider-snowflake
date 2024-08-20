@@ -34,7 +34,7 @@ func TestInt_Views(t *testing.T) {
 			HasName(id.Name()).
 			HasKind("").
 			HasReserved("").
-			HasDatabaseName(testDb(t).Name.Name()).
+			HasDatabaseName(testDb(t).Name).
 			HasSchemaName(testSchema(t).Name).
 			HasOwner(snowflakeroles.Accountadmin.Name()).
 			HasComment(comment).
@@ -56,7 +56,7 @@ func TestInt_Views(t *testing.T) {
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasKind("VIEW").
-			HasDatabaseName(testDb(t).Name.Name()).
+			HasDatabaseName(testDb(t).Name).
 			HasSchemaName(testSchema(t).Name).
 			// all below are not contained in the terse response, that's why all of them we expect to be empty
 			HasReserved("").

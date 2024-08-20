@@ -30,7 +30,7 @@ func TestInt_Roles(t *testing.T) {
 		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
 
-		assert.Equal(t, roleID.Name(), role.Name.Name())
+		assert.Equal(t, roleID.Name(), role.Name)
 	})
 
 	t.Run("create if not exists", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestInt_Roles(t *testing.T) {
 
 		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
-		assert.Equal(t, roleID.Name(), role.Name.Name())
+		assert.Equal(t, roleID.Name(), role.Name)
 	})
 
 	t.Run("create complete", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestInt_Roles(t *testing.T) {
 
 		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
-		assert.Equal(t, roleID.Name(), role.Name.Name())
+		assert.Equal(t, roleID.Name(), role.Name)
 		assert.Equal(t, comment, role.Comment)
 
 		// verify tags
@@ -97,7 +97,7 @@ func TestInt_Roles(t *testing.T) {
 
 		r, err := client.Roles.ShowByID(ctx, newName)
 		require.NoError(t, err)
-		assert.Equal(t, newName.Name(), r.Name.Name())
+		assert.Equal(t, newName.Name(), r.Name)
 	})
 
 	t.Run("alter set tags", func(t *testing.T) {
@@ -206,10 +206,10 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
-		roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(role.Name.Name())))
+		roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(role.Name)))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(roles))
-		assert.Equal(t, role.Name.Name(), roles[0].Name.Name())
+		assert.Equal(t, role.Name, roles[0].Name)
 	})
 
 	t.Run("in class", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestInt_Roles(t *testing.T) {
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(roles))
-		assert.Equal(t, "USER", roles[0].Name.Name())
+		assert.Equal(t, "USER", roles[0].Name)
 	})
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
@@ -228,7 +228,7 @@ func TestInt_Roles(t *testing.T) {
 		r, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		require.NotNil(t, r)
-		assert.Equal(t, role.Name.Name(), r.Name.Name())
+		assert.Equal(t, role.Name, r.Name)
 	})
 
 	t.Run("grant and revoke role from user", func(t *testing.T) {

@@ -162,7 +162,7 @@ func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 		return nil, err
 	}
 
-	if err := d.Set("database", s.DatabaseName.Name()); err != nil {
+	if err := d.Set("database", s.DatabaseName); err != nil {
 		return nil, err
 	}
 
@@ -193,7 +193,7 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		} else if err == nil {
 			// there is already a PUBLIC schema, so we need to alter it instead
 			log.Printf("[DEBUG] found PUBLIC schema during creation, updating...")
-			d.SetId(id.FullyQualifiedName())
+			d.SetId(helpers.EncodeResourceIdentifier(id))
 			return UpdateContextSchema(ctx, d, meta)
 		}
 	}
@@ -229,7 +229,7 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	d.SetId(id.FullyQualifiedName())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSchema(false)(ctx, d, meta)
 }
@@ -275,7 +275,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("database", schema.DatabaseName.Name()); err != nil {
+		if err := d.Set("database", schema.DatabaseName); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -347,7 +347,7 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(newId.FullyQualifiedName())
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
 		id = newId
 	}
 

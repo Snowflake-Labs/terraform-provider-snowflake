@@ -113,11 +113,11 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				ResourceName:    "snowflake_streamlit.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "database", databaseId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "schema", schemaId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "stage", stage.ID().FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "main_file", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", schemaId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "stage", stage.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "main_file", "foo"),
 				),
 			},
 			// set optionals
@@ -167,17 +167,17 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				ResourceName:    "snowflake_streamlit.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "database", databaseId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "schema", schemaId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "stage", stage.ID().FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "directory_location", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "main_file", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "query_warehouse", warehouse.ID().Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "external_access_integrations.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "external_access_integrations.0", externalAccessIntegrationId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "title", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(id.FullyQualifiedName(), "comment", "foo")),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", schemaId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "stage", stage.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "directory_location", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "main_file", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "query_warehouse", warehouse.ID().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "external_access_integrations.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "external_access_integrations.0", externalAccessIntegrationId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "title", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", "foo")),
 			},
 			// change externally
 			{
@@ -518,6 +518,14 @@ func TestAcc_Streamlit_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   streamlitBasicConfigWithRawIdentifierValues(quotedDatabaseName, quotedSchemaName, quotedName, stage.ID().Name(), "main_file"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "schema", id.SchemaName()),

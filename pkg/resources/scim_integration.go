@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -95,8 +97,6 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 2,
-
 		CreateContext: CreateContextSCIMIntegration,
 		ReadContext:   ReadContextSCIMIntegration(true),
 		UpdateContext: UpdateContextSCIMIntegration,
@@ -113,6 +113,7 @@ func SCIMIntegration() *schema.Resource {
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
 		),
 
+		SchemaVersion: 3,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
@@ -122,6 +123,12 @@ func SCIMIntegration() *schema.Resource {
 			},
 			{
 				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v093ScimIntegrationStateUpgrader,
+			},
+			{
+				Version: 2,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v093ScimIntegrationStateUpgrader,
@@ -148,7 +155,7 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.Name.Name()); err != nil {
+	if err = d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
@@ -239,7 +246,7 @@ func CreateContextSCIMIntegration(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSCIMIntegration(false)(ctx, d, meta)
 }
@@ -289,7 +296,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
 		}
 
-		if err := d.Set("name", integration.Name.Name()); err != nil {
+		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 

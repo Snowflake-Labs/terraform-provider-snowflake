@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -52,8 +54,8 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.SetId(role.Name.Name())
-	if err := d.Set("name", role.Name.Name()); err != nil {
+	d.SetId(helpers.EncodeResourceIdentifier(role.ID()))
+	if err := d.Set("name", role.ID().FullyQualifiedName()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", role.Comment); err != nil {

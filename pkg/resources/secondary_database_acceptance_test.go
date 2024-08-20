@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -92,7 +94,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigVariables: configVariables(id, externalPrimaryId, comment),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
@@ -120,7 +122,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigVariables: configVariables(newId, externalPrimaryId, newComment),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
@@ -283,15 +285,15 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 				ConfigVariables: setConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
@@ -310,15 +312,15 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 				ConfigVariables: updatedConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
 
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "40"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "45"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", newExternalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", newCatalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", newExternalVolumeId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", newCatalogId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_GB"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
@@ -337,7 +339,7 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 				ConfigVariables: unsetConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", ""),
@@ -364,15 +366,15 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 				ConfigVariables: setConfigVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
@@ -556,7 +558,7 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -607,9 +609,17 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},

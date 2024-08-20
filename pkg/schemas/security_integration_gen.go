@@ -39,7 +39,7 @@ var _ = ShowSecurityIntegrationSchema
 
 func SecurityIntegrationToSchema(securityIntegration *sdk.SecurityIntegration) map[string]any {
 	securityIntegrationSchema := make(map[string]any)
-	securityIntegrationSchema["name"] = securityIntegration.Name.Name()
+	securityIntegrationSchema["name"] = securityIntegration.Name
 	securityIntegrationSchema["integration_type"] = securityIntegration.IntegrationType
 	securityIntegrationSchema["category"] = securityIntegration.Category
 	securityIntegrationSchema["enabled"] = securityIntegration.Enabled

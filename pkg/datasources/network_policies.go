@@ -81,7 +81,7 @@ func ReadNetworkPolicies(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		var networkPolicyDescribeOutput []map[string]any
 		if d.Get("with_describe").(bool) {
-			describeResult, err := client.NetworkPolicies.Describe(ctx, networkPolicy.Name)
+			describeResult, err := client.NetworkPolicies.Describe(ctx, networkPolicy.ID())
 			if err != nil {
 				return diag.FromErr(err)
 			}

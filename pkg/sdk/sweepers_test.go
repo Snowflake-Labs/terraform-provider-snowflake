@@ -128,7 +128,7 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 		log.Printf("[DEBUG] Found %d warehouses matching search criteria\n", len(whs))
 		for idx, wh := range whs {
 			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...\n", idx+1, len(whs), wh.ID().FullyQualifiedName())
-			if !slices.Contains(protectedWarehouses, wh.Name.Name()) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), &DropWarehouseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping warehouse %s, resulted in error %v\n", wh.ID().FullyQualifiedName(), err)
@@ -164,7 +164,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 		log.Printf("[DEBUG] Found %d databases matching search criteria\n", len(dbs))
 		for idx, db := range dbs {
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())
-			if !slices.Contains(protectedDatabases, db.Name.name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				log.Printf("[DEBUG] Dropping database %s, created at: %s\n", db.ID().FullyQualifiedName(), db.CreatedOn.String())
 				if err := client.Databases.Drop(ctx, db.ID(), &DropDatabaseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping database %s, resulted in error %v\n", db.ID().FullyQualifiedName(), err)

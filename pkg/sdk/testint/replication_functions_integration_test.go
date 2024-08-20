@@ -71,33 +71,33 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 		require.NoError(t, err)
 
 		rdb := getByName(replicationDatabases, db.ID())
-		assertReplicationDatabase(rdb, db.Name.Name(), true)
+		assertReplicationDatabase(rdb, db.Name, true)
 
 		rdb2 := getByName(replicationDatabases, db2.ID())
-		assertReplicationDatabase(rdb2, db2.Name.Name(), true)
+		assertReplicationDatabase(rdb2, db2.Name, true)
 
 		rdb3 := getByName(replicationDatabases, db3.ID())
-		assertReplicationDatabase(rdb3, db3.Name.Name(), false)
+		assertReplicationDatabase(rdb3, db3.Name, false)
 	})
 
 	t.Run("with like", func(t *testing.T) {
 		opts := &sdk.ShowReplicationDatabasesOptions{
-			Like: &sdk.Like{Pattern: sdk.Pointer(db.Name.Name())},
+			Like: &sdk.Like{Pattern: &db.Name},
 		}
 		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, opts)
 		require.NoError(t, err)
 
 		require.Len(t, replicationDatabases, 1)
-		require.Equal(t, db.Name.Name(), replicationDatabases[0].Name)
+		require.Equal(t, db.Name, replicationDatabases[0].Name)
 
 		opts = &sdk.ShowReplicationDatabasesOptions{
-			Like: &sdk.Like{Pattern: sdk.Pointer(db2.Name.Name())},
+			Like: &sdk.Like{Pattern: &db2.Name},
 		}
 		replicationDatabases, err = client.ReplicationFunctions.ShowReplicationDatabases(ctx, opts)
 		require.NoError(t, err)
 
 		require.Len(t, replicationDatabases, 1)
-		require.Equal(t, db2.Name.Name(), replicationDatabases[0].Name)
+		require.Equal(t, db2.Name, replicationDatabases[0].Name)
 	})
 
 	t.Run("with primary", func(t *testing.T) {
@@ -110,9 +110,9 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 		require.Len(t, replicationDatabases, 2)
 
 		primary := getByName(replicationDatabases, db.ID())
-		require.Equal(t, db.Name.Name(), primary.Name)
+		require.Equal(t, db.Name, primary.Name)
 		secondary := getByName(replicationDatabases, db3.ID())
-		require.Equal(t, db3.Name.Name(), secondary.Name)
+		require.Equal(t, db3.Name, secondary.Name)
 	})
 }
 

@@ -204,8 +204,9 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("resource_monitor")), "resource_monitor"),
 			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
 			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
@@ -240,7 +241,7 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 		return nil, err
 	}
 
-	if err = d.Set("name", w.Name.Name()); err != nil {
+	if err = d.Set("name", w.ID().FullyQualifiedName()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("warehouse_type", w.Type); err != nil {
@@ -358,7 +359,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
@@ -407,7 +408,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err = d.Set("name", w.Name.Name()); err != nil {
+		if err = d.Set("name", w.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("comment", w.Comment); err != nil {

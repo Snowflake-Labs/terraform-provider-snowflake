@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"slices"
 	"time"
 
@@ -44,7 +43,7 @@ type Schema struct {
 	Name          string
 	IsDefault     bool
 	IsCurrent     bool
-	DatabaseName  AccountObjectIdentifier
+	DatabaseName  string
 	Owner         string
 	Comment       string
 	Options       *string
@@ -67,7 +66,7 @@ func (s *Schema) IsManagedAccess() bool {
 }
 
 func (v *Schema) ID() DatabaseObjectIdentifier {
-	return NewDatabaseObjectIdentifier(v.DatabaseName.Name(), v.Name)
+	return NewDatabaseObjectIdentifier(v.DatabaseName, v.Name)
 }
 
 func (v *Schema) ObjectType() ObjectType {
@@ -94,17 +93,10 @@ func (row schemaDBRow) toSchema() Schema {
 		Name:          row.Name,
 		IsDefault:     row.IsDefault == "Y",
 		IsCurrent:     row.IsCurrent == "Y",
+		DatabaseName:  row.DatabaseName,
 		Owner:         row.Owner,
 		RetentionTime: row.RetentionTime,
 		OwnerRoleType: row.OwnerRoleType,
-	}
-	if row.DatabaseName != "" {
-		databaseId, err := ParseAccountObjectIdentifier(row.DatabaseName)
-		if err != nil {
-			// TODO(SNOW-1561641): Return error
-			log.Printf("[DEBUG] Error parsing database name: %v", err)
-		}
-		schema.DatabaseName = databaseId
 	}
 	if row.Comment.Valid {
 		schema.Comment = row.Comment.String

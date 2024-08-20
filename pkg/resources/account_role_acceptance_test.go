@@ -36,12 +36,12 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(id.Name(), ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -58,7 +58,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
 				),
 			},
@@ -71,12 +71,12 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -93,7 +93,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
 			},
@@ -106,12 +106,12 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -147,13 +147,13 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -169,7 +169,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
@@ -178,7 +178,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(newId.Name(), newComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", newComment),
 
@@ -236,7 +236,7 @@ func TestAcc_AccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -272,9 +272,17 @@ func TestAcc_AccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(quotedId, comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_account_role.role", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_account_role.role", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.FullyQualifiedName()),
 				),
 			},
 		},

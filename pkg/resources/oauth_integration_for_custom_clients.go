@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -110,6 +113,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_rsa_public_key": {
 		Type:             schema.TypeString,
@@ -184,6 +188,16 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportOauthForCustomClientsIntegration,
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
+			},
 		},
 	}
 }
@@ -344,7 +358,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextOauthIntegrationForCustomClients(false)(ctx, d, meta)
 }
@@ -383,7 +397,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("name", integration.Name.Name()); err != nil {
+		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -445,7 +459,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find network policy, err = %w", err))
 		}
-		if err := d.Set("network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Value).Name()); err != nil {
+		if err := d.Set("network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Value).FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 

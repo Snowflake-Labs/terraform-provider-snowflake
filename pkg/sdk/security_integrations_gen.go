@@ -516,7 +516,6 @@ type ShowSecurityIntegrationOptions struct {
 	securityIntegrations bool  `ddl:"static" sql:"SECURITY INTEGRATIONS"`
 	Like                 *Like `ddl:"keyword" sql:"LIKE"`
 }
-
 type securityIntegrationShowRow struct {
 	Name      string         `db:"name"`
 	Type      string         `db:"type"`
@@ -525,9 +524,8 @@ type securityIntegrationShowRow struct {
 	Comment   sql.NullString `db:"comment"`
 	CreatedOn time.Time      `db:"created_on"`
 }
-
 type SecurityIntegration struct {
-	Name            AccountObjectIdentifier
+	Name            string
 	IntegrationType string
 	Category        string
 	Enabled         bool
@@ -536,7 +534,7 @@ type SecurityIntegration struct {
 }
 
 func (s *SecurityIntegration) ID() AccountObjectIdentifier {
-	return s.Name
+	return NewAccountObjectIdentifier(s.Name)
 }
 
 func (s *SecurityIntegration) SubType() (string, error) {

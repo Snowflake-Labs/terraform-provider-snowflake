@@ -7,6 +7,9 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -177,6 +180,16 @@ func SAML2Integration() *schema.Resource {
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
 				"allowed_email_patterns"),
 		),
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
+			},
+		},
 	}
 }
 
@@ -198,7 +211,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	if err := d.Set("name", integration.Name.Name()); err != nil {
+	if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 		return nil, err
 	}
 	if err := d.Set("comment", integration.Comment); err != nil {
@@ -452,7 +465,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id.Name())
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
@@ -492,7 +505,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("name", integration.Name.Name()); err != nil {
+		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
