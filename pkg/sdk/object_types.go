@@ -81,6 +81,10 @@ func (o ObjectType) String() string {
 	return string(o)
 }
 
+func (o ObjectType) IsWithArguments() bool {
+	return slices.Contains([]ObjectType{ObjectTypeExternalFunction, ObjectTypeFunction, ObjectTypeProcedure}, o)
+}
+
 func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 	return map[ObjectType]PluralObjectType{
 		ObjectTypeAccount:              PluralObjectTypeAccounts,

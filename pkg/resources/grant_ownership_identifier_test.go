@@ -131,6 +131,34 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant ownership on function to account role",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnObject|FUNCTION|"database-name"."schema-name"."function-name"(FLOAT)`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeFunction,
+					ObjectName: sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", sdk.DataTypeFloat),
+				},
+			},
+		},
+		{
+			Name:       "grant ownership on function without arguments to database role",
+			Identifier: `ToDatabaseRole|"database-name"."database-role"|REVOKE|OnObject|FUNCTION|"database-name"."schema-name"."function-name"()`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(RevokeOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeFunction,
+					ObjectName: sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", []sdk.DataType{}...),
+				},
+			},
+		},
+		{
 			Name:       "validation: not enough parts",
 			Identifier: `ToDatabaseRole|"database-name"."role-name"|`,
 			Error:      "ownership identifier should hold at least 5 parts",

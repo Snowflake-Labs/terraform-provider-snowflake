@@ -31,18 +31,37 @@ func (c *FunctionClient) Create(t *testing.T, arguments ...sdk.DataType) *sdk.Fu
 
 func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *sdk.Function {
 	t.Helper()
+
+	return c.CreateWithRequest(t, id,
+		sdk.NewCreateForSQLFunctionRequest(
+			id.SchemaObjectId(),
+			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeInt)),
+			"SELECT 1",
+		),
+	)
+}
+
+func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *sdk.Function {
+	t.Helper()
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)
+
+	return c.CreateWithRequest(t, id,
+		sdk.NewCreateForSQLFunctionRequest(
+			id.SchemaObjectId(),
+			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeInt)),
+			"SELECT 1",
+		).WithSecure(true),
+	)
+}
+
+func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, req *sdk.CreateForSQLFunctionRequest) *sdk.Function {
+	t.Helper()
 	ctx := context.Background()
 	argumentRequests := make([]sdk.FunctionArgumentRequest, len(id.ArgumentDataTypes()))
 	for i, argumentDataType := range id.ArgumentDataTypes() {
 		argumentRequests[i] = *sdk.NewFunctionArgumentRequest(c.ids.Alpha(), argumentDataType)
 	}
-	err := c.client().CreateForSQL(ctx,
-		sdk.NewCreateForSQLFunctionRequest(
-			id.SchemaObjectId(),
-			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeInt)),
-			"SELECT 1",
-		).WithArguments(argumentRequests),
-	)
+	err := c.client().CreateForSQL(ctx, req.WithArguments(argumentRequests))
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

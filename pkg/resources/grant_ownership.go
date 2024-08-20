@@ -6,8 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -400,11 +398,6 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 // TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
 func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
-	identifier, err := helpers.DecodeSnowflakeParameterID(objectName)
-	if err != nil {
-		return nil, err
-	}
-
 	switch objectType {
 	case sdk.ObjectTypeComputePool,
 		sdk.ObjectTypeDatabase,
@@ -416,12 +409,10 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeRole,
 		sdk.ObjectTypeUser,
 		sdk.ObjectTypeWarehouse:
-		return sdk.NewAccountObjectIdentifier(objectName), nil
+		return sdk.ParseAccountObjectIdentifier(objectName)
 	case sdk.ObjectTypeDatabaseRole,
 		sdk.ObjectTypeSchema:
-		if _, ok := identifier.(sdk.DatabaseObjectIdentifier); !ok {
-			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected database object identifier", objectName))
-		}
+		return sdk.ParseDatabaseObjectIdentifier(objectName)
 	case sdk.ObjectTypeAggregationPolicy,
 		sdk.ObjectTypeAlert,
 		sdk.ObjectTypeAuthenticationPolicy,
@@ -430,7 +421,6 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeEventTable,
 		sdk.ObjectTypeExternalTable,
 		sdk.ObjectTypeFileFormat,
-		sdk.ObjectTypeFunction,
 		sdk.ObjectTypeGitRepository,
 		sdk.ObjectTypeHybridTable,
 		sdk.ObjectTypeIcebergTable,
@@ -439,7 +429,6 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeNetworkRule,
 		sdk.ObjectTypePackagesPolicy,
 		sdk.ObjectTypePipe,
-		sdk.ObjectTypeProcedure,
 		sdk.ObjectTypeMaskingPolicy,
 		sdk.ObjectTypePasswordPolicy,
 		sdk.ObjectTypeProjectionPolicy,
@@ -453,14 +442,14 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeTag,
 		sdk.ObjectTypeTask,
 		sdk.ObjectTypeView:
-		if _, ok := identifier.(sdk.SchemaObjectIdentifier); !ok {
-			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected schema object identifier", objectName))
-		}
+		return sdk.ParseSchemaObjectIdentifier(objectName)
+	case sdk.ObjectTypeFunction,
+		sdk.ObjectTypeProcedure,
+		sdk.ObjectTypeExternalFunction:
+		return sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
 	default:
 		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
 	}
-
-	return identifier, nil
 }
 
 func getOwnershipGrantOn(d *schema.ResourceData) (*sdk.OwnershipGrantOn, error) {

@@ -845,38 +845,39 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
+	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege, grantedOn sdk.ObjectType, granteeName sdk.ObjectIdentifier, shareName string) {
 		t.Helper()
-		var shareGrant *sdk.Grant
-		for i, grant := range grants {
-			if grant.GranteeName.Name() == shareTest.ID().Name() && grant.Privilege == string(privilege) {
-				shareGrant = &grants[i]
-				break
-			}
-		}
-		assert.NotNil(t, shareGrant)
-		assert.Equal(t, sdk.ObjectTypeTable, shareGrant.GrantedOn)
-		assert.Equal(t, sdk.ObjectTypeShare, shareGrant.GrantedTo)
-		assert.Equal(t, onId.FullyQualifiedName(), shareGrant.Name.FullyQualifiedName())
+		actualGrant, err := collections.FindOne(grants, func(grant sdk.Grant) bool {
+			return grant.GranteeName.Name() == shareName && grant.Privilege == string(privilege)
+		})
+		require.NoError(t, err)
+		assert.Equal(t, grantedOn, actualGrant.GrantedOn)
+		assert.Equal(t, sdk.ObjectTypeShare, actualGrant.GrantedTo)
+		assert.Equal(t, granteeName.FullyQualifiedName(), actualGrant.GranteeName.FullyQualifiedName())
+		assert.Equal(t, onId.FullyQualifiedName(), actualGrant.Name.FullyQualifiedName())
 	}
 
-	t.Run("with options", func(t *testing.T) {
+	grantShareOnDatabase := func(t *testing.T, share *sdk.Share) {
+		t.Helper()
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
-		}, shareTest.ID())
+		}, share.ID())
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
 			err := client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 				Database: testDb(t).ID(),
-			}, shareTest.ID())
+			}, share.ID())
 			assert.NoError(t, err)
 		})
+	}
 
+	t.Run("with options", func(t *testing.T) {
+		grantShareOnDatabase(t, shareTest)
 		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
 				AllInSchema: testSchema(t).ID(),
 			},
@@ -892,7 +893,34 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect, sdk.ObjectTypeTable, shareTest.ID(), shareTest.ID().Name())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		function := testClientHelper().Function.CreateSecure(t)
+
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
+			Function: function.ID(),
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeFunction,
+					Name:       function.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, function.ID(), sdk.ObjectPrivilegeUsage, sdk.ObjectTypeFunction, shareTest.ID(), shareTest.ID().Name())
 
 		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{
@@ -923,6 +951,41 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 				AllInSchema: testSchema(t).ID(),
 			},
 		}, shareTest.ID())
+		require.NoError(t, err)
+	})
+
+	t.Run("with a name containing dots", func(t *testing.T) {
+		shareTest, shareCleanup := testClientHelper().Share.CreateShareWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".foo.bar"))
+		t.Cleanup(shareCleanup)
+		grantShareOnDatabase(t, shareTest)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		t.Cleanup(tableCleanup)
+
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+			Table: &sdk.OnTable{
+				AllInSchema: testSchema(t).ID(),
+			},
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       table.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect, sdk.ObjectTypeTable, shareTest.ID(), shareTest.ID().Name())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
 		require.NoError(t, err)
 	})
 }

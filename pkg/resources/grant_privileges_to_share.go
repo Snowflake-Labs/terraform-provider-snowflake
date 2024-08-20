@@ -17,7 +17,7 @@ import (
 var grantPrivilegesToShareGrantExactlyOneOfValidation = []string{
 	"on_database",
 	"on_schema",
-	// TODO(SNOW-990811): "function_name",
+	"on_function",
 	"on_table",
 	"on_all_tables_in_schema",
 	"on_tag",
@@ -54,15 +54,6 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
-	//	TODO(SNOW-1021686): Because function identifier contains arguments which are not supported right now
-	// "function_name": {
-	//	Type:        schema.TypeString,
-	//	Optional:    true,
-	//	ForceNew:    true,
-	//	Description: "The fully qualified name of the function on which privileges will be granted.",
-	//	ValidateDiagFunc: IsValidIdentifier[sdk.FunctionIdentifier](),
-	//	ExactlyOneOf: grantPrivilegesToShareGrantExactlyOneOfValidation,
-	// },
 	"on_table": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -94,6 +85,13 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the view on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
+	},
+	"on_function": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  "The fully qualified name of the function on which privileges will be granted.",
+		ExactlyOneOf: grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
 }
 
@@ -133,10 +131,10 @@ func ImportGrantPrivilegesToShare() func(ctx context.Context, d *schema.Resource
 			if err := d.Set("on_schema", id.Identifier.FullyQualifiedName()); err != nil {
 				return nil, err
 			}
-		// TODO(SNOW-990811) case OnFunctionShareGrantKind:
-		//	if err := d.Set("function_name", id.Identifier.FullyQualifiedName()); err != nil {
-		//		return nil, err
-		//	}
+		case OnFunctionShareGrantKind:
+			if err := d.Set("on_function", id.Identifier.FullyQualifiedName()); err != nil {
+				return nil, err
+			}
 		case OnTableShareGrantKind:
 			if err := d.Set("on_table", id.Identifier.FullyQualifiedName()); err != nil {
 				return nil, err
@@ -161,10 +159,17 @@ func ImportGrantPrivilegesToShare() func(ctx context.Context, d *schema.Resource
 
 func CreateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := createGrantPrivilegesToShareIdFromSchema(d)
+	id, err := createGrantPrivilegesToShareIdFromSchema(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	log.Printf("[DEBUG] created identifier from schema: %s", id.String())
+	grantOn, err := getShareGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Grants.GrantPrivilegeToShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), id.ShareName)
+	err = client.Grants.GrantPrivilegeToShare(ctx, getObjectPrivilegesFromSchema(d), grantOn, id.ShareName)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -213,7 +218,10 @@ func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 			}
 		}
 
-		grantOn := getShareGrantOn(d)
+		grantOn, err := getShareGrantOn(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		if len(privilegesToAdd) > 0 {
 			err = client.Grants.GrantPrivilegeToShare(
@@ -271,8 +279,12 @@ func DeleteGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 			},
 		}
 	}
+	grantOn, err := getShareGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err = client.Grants.RevokePrivilegeFromShare(ctx, getObjectPrivilegesFromSchema(d), getShareGrantOn(d), id.ShareName)
+	err = client.Grants.RevokePrivilegeFromShare(ctx, getObjectPrivilegesFromSchema(d), grantOn, id.ShareName)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -375,14 +387,14 @@ func ReadGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToShareId {
+func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) (*GrantPrivilegesToShareId, error) {
 	id := new(GrantPrivilegesToShareId)
 	id.ShareName = sdk.NewAccountObjectIdentifier(d.Get("to_share").(string))
 	id.Privileges = expandStringList(d.Get("privileges").(*schema.Set).List())
 
 	databaseName, databaseNameOk := d.GetOk("on_database")
 	schemaName, schemaNameOk := d.GetOk("on_schema")
-	// TODO(SNOW-990811) functionName, functionNameOk := d.GetOk("function_name")
+	functionName, functionNameOk := d.GetOk("on_function")
 	tableName, tableNameOk := d.GetOk("on_table")
 	allTablesInSchema, allTablesInSchemaOk := d.GetOk("on_all_tables_in_schema")
 	tagName, tagNameOk := d.GetOk("on_tag")
@@ -395,9 +407,13 @@ func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPriv
 	case schemaNameOk:
 		id.Kind = OnSchemaShareGrantKind
 		id.Identifier = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName.(string))
-	// TODO(SNOW-990811) case functionNameOk:
-	//	id.Kind = OnFunctionShareGrantKind
-	//	id.Identifier = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(functionName.(string))
+	case functionNameOk:
+		id.Kind = OnFunctionShareGrantKind
+		parsed, err := sdk.ParseSchemaObjectIdentifierWithArguments(functionName.(string))
+		if err != nil {
+			return nil, err
+		}
+		id.Identifier = parsed
 	case tableNameOk:
 		id.Kind = OnTableShareGrantKind
 		id.Identifier = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(tableName.(string))
@@ -412,7 +428,7 @@ func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPriv
 		id.Identifier = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(viewName.(string))
 	}
 
-	return id
+	return id, nil
 }
 
 func getObjectPrivilegesFromSchema(d *schema.ResourceData) []sdk.ObjectPrivilege {
@@ -424,12 +440,12 @@ func getObjectPrivilegesFromSchema(d *schema.ResourceData) []sdk.ObjectPrivilege
 	return objectPrivileges
 }
 
-func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
+func getShareGrantOn(d *schema.ResourceData) (*sdk.ShareGrantOn, error) {
 	grantOn := new(sdk.ShareGrantOn)
 
 	databaseName, databaseNameOk := d.GetOk("on_database")
 	schemaName, schemaNameOk := d.GetOk("on_schema")
-	// TODO(SNOW-990811) functionName, functionNameOk := d.GetOk("on_function")
+	functionName, functionNameOk := d.GetOk("on_function")
 	tableName, tableNameOk := d.GetOk("on_table")
 	allTablesInSchema, allTablesInSchemaOk := d.GetOk("on_all_tables_in_schema")
 	tagName, tagNameOk := d.GetOk("on_tag")
@@ -440,8 +456,12 @@ func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
 		grantOn.Database = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(databaseName.(string))
 	case len(schemaName.(string)) > 0 && schemaNameOk:
 		grantOn.Schema = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName.(string))
-	// TODO(SNOW-990811) case len(functionName.(string)) > 0 && functionNameOk:
-	//	grantOn.Function = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(functionName.(string))
+	case len(functionName.(string)) > 0 && functionNameOk:
+		id, err := sdk.ParseSchemaObjectIdentifierWithArguments(functionName.(string))
+		if err != nil {
+			return nil, err
+		}
+		grantOn.Function = id
 	case len(tableName.(string)) > 0 && tableNameOk:
 		grantOn.Table = &sdk.OnTable{
 			Name: sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(tableName.(string)),
@@ -456,7 +476,7 @@ func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
 		grantOn.View = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(viewName.(string))
 	}
 
-	return grantOn
+	return grantOn, nil
 }
 
 func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
@@ -477,6 +497,8 @@ func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGra
 		objectType = sdk.ObjectTypeTag
 	case OnViewShareGrantKind:
 		objectType = sdk.ObjectTypeView
+	case OnFunctionShareGrantKind:
+		objectType = sdk.ObjectTypeFunction
 	}
 
 	opts.On = &sdk.ShowGrantsOn{
