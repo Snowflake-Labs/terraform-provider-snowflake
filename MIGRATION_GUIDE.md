@@ -142,6 +142,12 @@ The following set of [parameters](https://docs.snowflake.com/en/sql-reference/pa
  - [NETWORK_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#network-policy)
  - [PREVENT_UNLOAD_TO_INTERNAL_STAGES](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages)
 
+### *(breaking change)* Changes in sensitiveness of name and login_name
+
+According to https://docs.snowflake.com/en/sql-reference/functions/all_user_names#usage-notes, `NAME`s are not considered sensitive data and `LOGIN_NAME`s are. Previous versions of the provider had this the other way around. In this version, `name` attribute was unmarked as sensitive, whereas `login_name` was marked as sensitive. This may break your configuration if you were using `login_name`s before e.g. in a `for_each` loop.
+
+Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
