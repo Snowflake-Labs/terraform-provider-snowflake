@@ -151,6 +151,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 				Path: loc,
 			}
 		}
+		req.WithStorageBlockedLocations(storageBlockedLocations)
 	}
 
 	storageProvider := d.Get("storage_provider").(string)
@@ -324,7 +325,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 			}
 		} else {
 			runSetStatement = true
-			stringStorageBlockedLocations := expandStringList(d.Get("storage_allowed_locations").([]any))
+			stringStorageBlockedLocations := expandStringList(d.Get("storage_blocked_locations").([]any))
 			storageBlockedLocations := make([]sdk.StorageLocation, len(stringStorageBlockedLocations))
 			for i, loc := range stringStorageBlockedLocations {
 				storageBlockedLocations[i] = sdk.StorageLocation{

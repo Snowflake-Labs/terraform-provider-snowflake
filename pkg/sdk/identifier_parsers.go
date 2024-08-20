@@ -228,6 +228,7 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 			_, _ = stringBuffer.ReadString(' ')
 			peekDataType, _ = bytes.NewBufferString(stringBuffer.String()).ReadString(',')
 		}
+
 		switch {
 		// For now, only vectors need special parsing behavior
 		case strings.HasPrefix(peekDataType, "VECTOR"):
