@@ -266,7 +266,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, false, true)
 
 		id := f.ID()
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(nid.SchemaObjectId()))
 		if err != nil {
 			t.Cleanup(cleanupFunctionHandle(id))
@@ -497,6 +497,29 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		e2Id := e2.ID()
 		require.NoError(t, err)
 		require.Equal(t, id2, e2Id)
+	})
+
+	t.Run("show function by id - different name, same arguments", func(t *testing.T) {
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
+		testClientHelper().Function.CreateWithIdentifier(t, id2)
+
+		es, err := client.Functions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
+	})
+
+	t.Run("show function by id - same name, different arguments", func(t *testing.T) {
+		name := testClientHelper().Ids.Alpha()
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
+		testClientHelper().Function.CreateWithIdentifier(t, id2)
+
+		es, err := client.Functions.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, *e, *es)
 	})
 
 	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {

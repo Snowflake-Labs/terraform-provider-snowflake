@@ -164,7 +164,7 @@ var functionSchema = map[string]*schema.Schema{
 
 func Function() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 
 		CreateContext: CreateContextFunction,
 		ReadContext:   ReadContextFunction,
@@ -187,6 +187,12 @@ func Function() *schema.Resource {
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v085FunctionIdStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0941ResourceIdentifierWithArguments,
 			},
 		},
 	}
@@ -714,7 +720,7 @@ func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id)); err != nil {
+	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")

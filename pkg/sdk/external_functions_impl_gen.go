@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
@@ -33,35 +34,18 @@ func (v *externalFunctions) Show(ctx context.Context, request *ShowExternalFunct
 	return resultList, nil
 }
 
-func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error) {
-	arguments := id.Arguments()
-	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().
-		WithIn(&In{Schema: id.SchemaId()}).
-		WithLike(&Like{Pattern: String(id.Name())}))
+func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ExternalFunction, error) {
+	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(externalFunctions, func(r ExternalFunction) bool {
-		database := strings.Trim(r.CatalogName, `"`)
-		schema := strings.Trim(r.SchemaName, `"`)
-		if r.Name != id.Name() || database != id.DatabaseName() || schema != id.SchemaName() {
-			return false
-		}
-		var sb strings.Builder
-		sb.WriteString("(")
-		for i, argument := range arguments {
-			sb.WriteString(string(argument))
-			if i < len(arguments)-1 {
-				sb.WriteString(", ")
-			}
-		}
-		sb.WriteString(")")
-		return strings.Contains(r.Arguments, sb.String())
-	})
+	return collections.FindOne(externalFunctions, func(r ExternalFunction) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
-func (v *externalFunctions) Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error) {
-	opts := request.toOpts()
+func (v *externalFunctions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ExternalFunctionProperty, error) {
+	opts := &DescribeFunctionOptions{
+		name: id,
+	}
 	rows, err := validateAndQuery[externalFunctionPropertyRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
@@ -112,9 +96,8 @@ func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions 
 
 func (r *AlterExternalFunctionRequest) toOpts() *AlterExternalFunctionOptions {
 	opts := &AlterExternalFunctionOptions{
-		IfExists:          r.IfExists,
-		name:              r.name.WithoutArguments(),
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	if r.Set != nil {
 		opts.Set = &ExternalFunctionSet{
@@ -172,18 +155,26 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 		IsAnsi:             r.IsAnsi == "Y",
 		MinNumArguments:    r.MinNumArguments,
 		MaxNumArguments:    r.MaxNumArguments,
-		Arguments:          r.Arguments,
+		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
 		IsExternalFunction: r.IsExternalFunction == "Y",
 		Language:           r.Language,
 	}
+	arguments := strings.TrimLeft(r.Arguments, r.Name)
+	returnIndex := strings.Index(arguments, ") RETURN ")
+	dataTypes, err := ParseFunctionArgumentsFromString(arguments[:returnIndex+1])
+	if err != nil {
+		log.Printf("[DEBUG] failed to parse external function arguments, err = %s", err)
+	} else {
+		e.Arguments = dataTypes
+	}
 	if r.SchemaName.Valid {
-		e.SchemaName = r.SchemaName.String
+		e.SchemaName = strings.Trim(r.SchemaName.String, `"`)
 	}
 	if r.CatalogName.Valid {
-		e.CatalogName = r.CatalogName.String
+		e.CatalogName = strings.Trim(r.CatalogName.String, `"`)
 	}
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
@@ -199,8 +190,7 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 
 func (r *DescribeExternalFunctionRequest) toOpts() *DescribeExternalFunctionOptions {
 	opts := &DescribeExternalFunctionOptions{
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
+		name: r.name,
 	}
 	return opts
 }

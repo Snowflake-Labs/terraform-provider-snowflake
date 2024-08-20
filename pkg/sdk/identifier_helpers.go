@@ -3,6 +3,7 @@ package sdk
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -342,11 +343,20 @@ type SchemaObjectIdentifierWithArguments struct {
 }
 
 func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name string, argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {
+	// Arguments have to be "normalized" with ToDataType, so the signature would match with the one returned by Snowflake.
+	normalizedArguments := make([]DataType, len(argumentDataTypes))
+	for i, argument := range argumentDataTypes {
+		normalizedArgument, err := ToDataType(string(argument))
+		if err != nil {
+			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
+		}
+		normalizedArguments[i] = normalizedArgument
+	}
 	return SchemaObjectIdentifierWithArguments{
 		databaseName:      strings.Trim(databaseName, `"`),
 		schemaName:        strings.Trim(schemaName, `"`),
 		name:              strings.Trim(name, `"`),
-		argumentDataTypes: argumentDataTypes,
+		argumentDataTypes: normalizedArguments,
 	}
 }
 
@@ -386,7 +396,7 @@ func (i SchemaObjectIdentifierWithArguments) FullyQualifiedName() string {
 	if i.schemaName == "" && i.databaseName == "" && i.name == "" && len(i.argumentDataTypes) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ","))
+	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(AsStringList(i.argumentDataTypes), ", "))
 }
 
 type TableColumnIdentifier struct {

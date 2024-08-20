@@ -281,6 +281,8 @@ func Test_ParseFunctionArgumentsFromString(t *testing.T) {
 		{Arguments: `()`, Expected: []DataType{}},
 		{Arguments: `(FLOAT, NUMBER, TIME)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
 		{Arguments: `FLOAT, NUMBER, TIME`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `(DEFAULT FLOAT, DEFAULT NUMBER, DEFAULT TIME)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `DEFAULT FLOAT, DEFAULT NUMBER, DEFAULT TIME`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
 		{Arguments: `(FLOAT, NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
 		{Arguments: `FLOAT, NUMBER, VECTOR(FLOAT, 20)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
 		{Arguments: `(VECTOR(FLOAT, 10), NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataType("VECTOR(FLOAT, 10)"), DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
