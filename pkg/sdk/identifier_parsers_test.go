@@ -384,6 +384,7 @@ func TestNewSchemaObjectIdentifierWithArgumentsAndReturnTypeFromFullyQualifiedNa
 		{RawInput: `abc.def.ghi():FLOAT`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`)},
 		{RawInput: `abc.def."ghi(FLOAT, VECTOR(INT, 20)):NUMBER(10,2)"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)")},
 		{RawInput: `abc.def."ghi(FLOAT, VECTOR(INT, 20)):NUMBER"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)")},
+		{RawInput: `abc.def."ghi(ab FLOAT, VECTOR VECTOR(INT, 20), FLOAT):NUMBER"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)", DataTypeFloat)},
 	}
 
 	for _, testCase := range testCases {

@@ -1076,6 +1076,7 @@ func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, err
 		case objectTypeOk && objectNameOk:
 			objectType := sdk.ObjectType(objectType)
 			var id sdk.ObjectIdentifier
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
 			if objectType.IsWithArguments() {
 				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)

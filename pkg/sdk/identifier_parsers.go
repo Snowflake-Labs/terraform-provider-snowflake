@@ -222,7 +222,12 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 
 		// We use another buffer to peek into next data type (needed for vector parsing)
 		peekDataType, _ := bytes.NewBufferString(stringBuffer.String()).ReadString(',')
-
+		// Skip argument name, if present
+		if strings.ContainsRune(peekDataType, ' ') && !strings.HasPrefix(peekDataType, "VECTOR(") {
+			// Ignore err, because stringBuffer always contains ' ' here
+			_, _ = stringBuffer.ReadString(' ')
+			peekDataType, _ = bytes.NewBufferString(stringBuffer.String()).ReadString(',')
+		}
 		switch {
 		// For now, only vectors need special parsing behavior
 		case strings.HasPrefix(peekDataType, "VECTOR"):
@@ -273,8 +278,7 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 			if err == nil {
 				argument = argument[:len(argument)-1]
 			}
-			dataType := argument[strings.IndexRune(argument, ' ')+1:]
-			dataTypes = append(dataTypes, DataType(dataType))
+			dataTypes = append(dataTypes, DataType(argument))
 		}
 	}
 

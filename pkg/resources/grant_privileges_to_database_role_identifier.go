@@ -129,6 +129,7 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 			}
 			objectType := sdk.ObjectType(parts[6])
 			var id sdk.ObjectIdentifier
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
 			if objectType.IsWithArguments() {
 				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(parts[7])

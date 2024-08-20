@@ -265,6 +265,7 @@ func (row grantRow) convert() *Grant {
 
 	var name ObjectIdentifier
 	var err error
+	// TODO(SNOW-1569535): use a mapper from object type to parsing function
 	if ObjectType(row.GrantedOn).IsWithArguments() {
 		name, err = ParseSchemaObjectIdentifierWithArgumentsAndReturnType(row.Name)
 	} else {
