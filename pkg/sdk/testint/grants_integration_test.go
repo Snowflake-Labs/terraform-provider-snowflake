@@ -931,6 +931,31 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
+			Function: function.ID(),
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeFunction,
+					Name:       function.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, function.ID(), sdk.ObjectPrivilegeUsage, sdk.ObjectTypeFunction, shareTest.ID(), shareTest.ID().Name())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+
 		applicationPackage, cleanupAppPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
 		t.Cleanup(cleanupAppPackage)
 		// TODO [SNOW-1284382]: alter the test when the syntax starts working

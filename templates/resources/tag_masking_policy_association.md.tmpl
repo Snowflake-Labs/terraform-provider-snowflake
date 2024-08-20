@@ -13,10 +13,6 @@ description: |-
 
 {{ .Description | trimspace }}
 
-Only one masking policy may be applied per table column, hence only one `{{.Name}}` resources may be present per table column.
-Using two or more `{{.Name}}` resources for the same table column will result in the last one overriding any previously applied masking policies and unresolvable diffs in Terraform plan.
-
-When using this resource to manage a table column's masking policy make sure to ignore changes to the column's masking policy in the table definition, otherwise the two resources would conflict. See example below.
 
 ## Example Usage
 
@@ -25,3 +21,12 @@ When using this resource to manage a table column's masking policy make sure to 
 -> **Note** If you don't manage referenced objects in Terraform, you can construct the proper id yourself, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources)
 
 {{ .SchemaMarkdown | trimspace }}
+
+{{- if .HasImport }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" (printf "examples/resources/%s/import.sh" .Name)}}
+{{- end }}

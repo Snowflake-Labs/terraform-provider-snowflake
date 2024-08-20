@@ -208,6 +208,8 @@ resource "snowflake_schema" "test" {
 }
 ```
 
+-> **Note** If you don't manage database role in Terraform, you can construct the proper id yourself, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources)
+
 ## Granting ownership on pipes
 To transfer ownership of a pipe, there must be additional conditions met. Otherwise, additional manual work
 will be needed afterward or in some cases, the ownership won't be transferred (resulting in error).

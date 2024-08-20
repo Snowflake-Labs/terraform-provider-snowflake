@@ -154,7 +154,7 @@ func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	var found bool
 	for _, grant := range grants {
 		if grant.GrantedTo == sdk.ObjectType(objectType) {
-			if grant.GrantedTo == sdk.ObjectTypeRole || grant.GrantedTo == sdk.ObjectTypeShare {
+			if true {
 				if grant.GranteeName.FullyQualifiedName() == targetIdentifier {
 					found = true
 					break

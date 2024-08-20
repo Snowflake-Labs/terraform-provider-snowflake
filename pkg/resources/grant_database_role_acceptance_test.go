@@ -167,3 +167,45 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_GrantDatabaseRole_shareWithDots(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
+
+	configVariables := func() config.Variables {
+		return config.Variables{
+			"database":           config.StringVariable(databaseId.Name()),
+			"database_role_name": config.StringVariable(databaseRoleId.Name()),
+			"share_name":         config.StringVariable(shareId.Name()),
+		}
+	}
+	resourceName := "snowflake_grant_database_role.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
+				ConfigVariables: configVariables(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId.FullyQualifiedName(), "SHARE", shareId.FullyQualifiedName())),
+				),
+			},
+			// test import
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
+				ConfigVariables:   configVariables(),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
