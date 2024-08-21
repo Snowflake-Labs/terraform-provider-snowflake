@@ -279,9 +279,6 @@ func handleApiAuthRead(d *schema.ResourceData,
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
-	if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
-		return err
-	}
 	if err := d.Set("comment", integration.Comment); err != nil {
 		return err
 	}

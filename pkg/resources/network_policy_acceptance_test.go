@@ -41,7 +41,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 			{
 				Config: networkPolicyConfigBasic(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "0"),
@@ -70,7 +70,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list"),
@@ -100,7 +100,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
@@ -136,7 +136,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list.#", "2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list.#", "2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list.#", "2"),
@@ -170,7 +170,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
@@ -202,7 +202,7 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "0"),
@@ -262,7 +262,7 @@ func TestAcc_NetworkPolicy_Complete(t *testing.T) {
 					comment,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_ip_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
@@ -297,7 +297,7 @@ func TestAcc_NetworkPolicy_Complete(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list.#", "2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list.#", "2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list.#", "2"),
@@ -324,9 +324,9 @@ func TestAcc_NetworkPolicy_Rename(t *testing.T) {
 			{
 				Config: networkPolicyConfigBasic(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.name", id.Name()),
 				),
 			},
@@ -338,9 +338,9 @@ func TestAcc_NetworkPolicy_Rename(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", newId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", newId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.name", newId.Name()),
 				),
 			},
@@ -515,7 +515,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 					},
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "allowed_network_rule_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "blocked_network_rule_list.#", "2"),
 
@@ -569,14 +569,14 @@ func TestAcc_NetworkPolicy_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   networkPolicyConfigBasic(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_NetworkPolicy_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_NetworkPolicy_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -613,8 +613,8 @@ func TestAcc_NetworkPolicy_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
 				),
 			},
 		},

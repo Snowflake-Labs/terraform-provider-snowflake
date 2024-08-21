@@ -89,7 +89,7 @@ func TestAcc_Database_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "0"),
@@ -116,7 +116,7 @@ func TestAcc_Database_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(newId, newComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", newComment),
 
@@ -243,7 +243,7 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
@@ -269,14 +269,14 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "20"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "30"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
 					resource.TestCheckResourceAttr("snowflake_database.test", "log_level", string(sdk.LogLevelInfo)),
@@ -294,7 +294,7 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
@@ -369,15 +369,15 @@ func TestAcc_Database_Complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "20"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "30"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
@@ -469,7 +469,7 @@ func TestAcc_Database_Update(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: basicConfigVariables(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
@@ -477,15 +477,15 @@ func TestAcc_Database_Update(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", newComment),
 
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "20"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "max_data_extension_time_in_days", "30"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
@@ -596,7 +596,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "0"),
 				),
 			},
@@ -604,7 +604,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/replication"),
 				ConfigVariables: configVariables(id, true, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
@@ -616,7 +616,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/replication"),
 				ConfigVariables: configVariables(id, true, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
@@ -628,7 +628,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: configVariables(id, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "0"),
 				),
 			},
@@ -636,7 +636,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/replication"),
 				ConfigVariables: configVariables(id, true, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.ignore_edition_check", "true"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "replication.0.enable_to_account.#", "1"),
@@ -938,8 +938,8 @@ func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *te
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/catalog"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 				),
 			},
 			{
@@ -951,15 +951,15 @@ func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *te
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "catalog"),
-						planchecks.ExpectChange("snowflake_database.test", "catalog", tfjson.ActionUpdate, sdk.String(catalogId.FullyQualifiedName()), nil),
+						planchecks.ExpectChange("snowflake_database.test", "catalog", tfjson.ActionUpdate, sdk.String(catalogId.Name()), nil),
 						planchecks.ExpectComputed("snowflake_database.test", "catalog", true),
 					},
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/catalog"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
 				),
 			},
 		},
@@ -1195,7 +1195,7 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 			{
 				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					snowflakechecks.DoesNotContainPublicSchema(t, id),
 				),
 			},
@@ -1208,7 +1208,7 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 				},
 				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					snowflakechecks.DoesNotContainPublicSchema(t, id),
 				),
 			},
@@ -1230,7 +1230,7 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 			{
 				Config: databaseWithDropPublicSchemaConfig(id, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					snowflakechecks.ContainsPublicSchema(t, id),
 				),
 			},
@@ -1243,7 +1243,7 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 				},
 				Config: databaseWithDropPublicSchemaConfig(id, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 					snowflakechecks.ContainsPublicSchema(t, id),
 				),
 			},
@@ -1286,7 +1286,7 @@ func TestAcc_Database_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *t
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   databaseConfigBasic(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 				),
 			},
 		},
@@ -1346,10 +1346,10 @@ func TestAcc_Database_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 				),
 			},
 		},

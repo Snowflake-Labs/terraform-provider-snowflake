@@ -88,8 +88,6 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 2,
-
 		CreateContext: CreateContextSchema,
 		ReadContext:   ReadContextSchema(true),
 		UpdateContext: UpdateContextSchema,
@@ -129,18 +127,13 @@ func Schema() *schema.Resource {
 			StateContext: ImportSchema,
 		},
 
+		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v093SchemaStateUpgrader,
-			},
-			{
-				Version: 1,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -257,7 +250,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		schema, err := client.Schemas.ShowByID(ctx, id)
 		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) || errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -269,14 +262,8 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}
 			return diag.FromErr(err)
 		}
-		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("name", schema.Name); err != nil {
-			return diag.FromErr(err)
-		}
 
-		if err := d.Set("database", schema.DatabaseName); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 

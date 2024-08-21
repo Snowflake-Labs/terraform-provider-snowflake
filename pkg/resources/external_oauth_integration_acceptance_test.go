@@ -72,7 +72,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -102,7 +102,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 				ResourceName:    "snowflake_external_oauth_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_issuer", issuer),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -133,7 +133,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -163,7 +163,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 				ResourceName:    "snowflake_external_oauth_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_issuer", issuer),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
@@ -214,7 +214,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -259,7 +259,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -305,7 +305,7 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -381,7 +381,7 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
@@ -471,7 +471,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -519,7 +519,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_token_user_mapping_claim.#", "1"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_token_user_mapping_claim.0", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 				),
 			},
@@ -578,7 +578,7 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_snowflake_user_mapping_attribute", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_token_user_mapping_claim.0", "foo"),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 
 					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "show_output.#", "1"),
@@ -802,7 +802,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAnd
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   externalOauthIntegrationWithRsaPublicKeysAndBlockedRolesListv093(id.Name(), issuer, rsaKey, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_issuer", issuer),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_token_user_mapping_claim.#", "1"),
@@ -918,7 +918,7 @@ func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAll
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   externalOauthIntegrationWithJwsKeysUrlAndAllowedRolesListv093(id.Name(), issuer, role.Name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_type", string(sdk.ExternalOauthSecurityIntegrationTypeCustom)),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_issuer", issuer),
 					resource.TestCheckResourceAttr(resourceName, "external_oauth_token_user_mapping_claim.#", "1"),
@@ -1003,14 +1003,14 @@ func TestAcc_ExternalOauthIntegration_migrateFromV0941_ensureSmoothUpgradeWithNe
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   externalOauthIntegrationBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_ExternalOauthIntegration_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_ExternalOauthIntegration_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -1047,8 +1047,8 @@ func TestAcc_ExternalOauthIntegration_IdentifierQuotingDiffSuppression(t *testin
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_external_oauth_integration.test", "id", id.Name()),
 				),
 			},
 		},

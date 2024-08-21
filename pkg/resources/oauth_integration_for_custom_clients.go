@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/hashicorp/go-cty/cty"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -188,16 +186,6 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportOauthForCustomClientsIntegration,
-		},
-
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Version: 0,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
-			},
 		},
 	}
 }
@@ -397,9 +385,6 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
 
 		if err := d.Set("comment", integration.Comment); err != nil {
 			return diag.FromErr(err)
@@ -459,7 +444,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find network policy, err = %w", err))
 		}
-		if err := d.Set("network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Value).FullyQualifiedName()); err != nil {
+		if err := d.Set("network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Value).Name()); err != nil {
 			return diag.FromErr(err)
 		}
 

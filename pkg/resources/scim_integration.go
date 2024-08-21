@@ -113,7 +113,7 @@ func SCIMIntegration() *schema.Resource {
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
 		),
 
-		SchemaVersion: 3,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
@@ -123,12 +123,6 @@ func SCIMIntegration() *schema.Resource {
 			},
 			{
 				Version: 1,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: v093ScimIntegrationStateUpgrader,
-			},
-			{
-				Version: 2,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v093ScimIntegrationStateUpgrader,
@@ -155,7 +149,7 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
+	if err = d.Set("name", integration.ID().Name()); err != nil {
 		return nil, err
 	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
@@ -294,10 +288,6 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a SECURITY integration, got %v", id, c))
-		}
-
-		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
 		}
 
 		if err := d.Set("enabled", integration.Enabled); err != nil {

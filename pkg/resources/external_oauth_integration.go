@@ -177,19 +177,13 @@ func ExternalOauthIntegration() *schema.Resource {
 			StateContext: ImportExternalOauthIntegration,
 		},
 
-		SchemaVersion: 2,
+		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v092ExternalOauthIntegrationStateUpgrader,
-			},
-			{
-				Version: 1,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -440,9 +434,6 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("comment", integration.Comment); err != nil {

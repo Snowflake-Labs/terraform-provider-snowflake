@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/hashicorp/go-cty/cty"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -49,16 +47,6 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 		),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportApiAuthenticationWithClientCredentials,
-		},
-
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Version: 0,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
-			},
 		},
 	}
 }

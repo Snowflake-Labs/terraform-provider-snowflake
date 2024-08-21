@@ -83,7 +83,7 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 				ConfigVariables: configVariables(id, shareExternalId, comment),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
@@ -113,7 +113,7 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", newComment),
@@ -208,13 +208,13 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 				ConfigVariables: configVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", externalShareId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "external_volume", externalVolumeId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "catalog", catalogId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "replace_invalid_characters", "true"),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "default_ddl_collation", "en_US"),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
@@ -367,7 +367,7 @@ func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceI
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
 				),
 			},
 		},
@@ -439,8 +439,8 @@ func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
 				),
 			},
 		},

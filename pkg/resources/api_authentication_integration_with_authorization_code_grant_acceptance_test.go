@@ -51,7 +51,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 				ConfigVariables: m(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_id", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_secret", "foo"),
 
@@ -84,7 +84,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 				ResourceName:    "snowflake_api_authentication_integration_with_authorization_code_grant.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_id", "foo"),
 
@@ -115,7 +115,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_auth_method", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
@@ -163,7 +163,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_basic(t *tes
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_access_token_validity", "-1"),
 					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint"),
 					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_auth_method"),
@@ -208,7 +208,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_complete(t *
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint", "https://example.com"),
@@ -293,7 +293,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_migrateFromV
 	})
 }
 
-func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -330,8 +330,8 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_IdentifierQu
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
 				),
 			},
 		},

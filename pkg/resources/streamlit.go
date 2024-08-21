@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/hashicorp/go-cty/cty"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -123,16 +121,6 @@ func Streamlit() *schema.Resource {
 			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
 		),
-
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Version: 0,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
-			},
-		},
 	}
 }
 
@@ -272,15 +260,6 @@ func ReadContextStreamlit(ctx context.Context, d *schema.ResourceData, meta any)
 
 	streamlitDetails, err := client.Streamlits.Describe(ctx, id)
 	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", streamlit.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("database", streamlit.DatabaseName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("schema", streamlit.SchemaName); err != nil {
 		return diag.FromErr(err)
 	}
 	stageId, location, err := helpers.ParseRootLocation(streamlitDetails.RootLocation)

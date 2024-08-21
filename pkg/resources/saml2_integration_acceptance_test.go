@@ -81,7 +81,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/basic"),
 				ConfigVariables: m(issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
@@ -136,7 +136,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sso_url", validUrl),
@@ -160,7 +160,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/complete"),
 				ConfigVariables: m(issuer2, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl2, cert2, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer2),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl2),
@@ -217,7 +217,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer2),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sso_url", validUrl2),
@@ -264,7 +264,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer2),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl2),
@@ -319,7 +319,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/recreates"),
 				ConfigVariables: m(issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sso_url", validUrl),
@@ -593,7 +593,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/complete"),
 				ConfigVariables: m(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_issuer", issuer),
@@ -650,7 +650,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer),
@@ -788,7 +788,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/recreates"),
 				ConfigVariables: commonValues,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "label"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
@@ -808,7 +808,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", ""),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
@@ -834,7 +834,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "label"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", ""),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
@@ -860,7 +860,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "label"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", ""),
@@ -886,7 +886,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "label"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
@@ -911,7 +911,7 @@ func TestAcc_Saml2Integration_ForceNewIfEmpty(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_sp_initiated_login_page_label", "label"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_issuer_url", issuerURL),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_snowflake_acs_url", acsURL),
@@ -1035,7 +1035,7 @@ func TestAcc_Saml2Integration_DefaultValues(t *testing.T) {
 				ImportState:     true,
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_post_logout_redirect_url", ""),
@@ -1077,7 +1077,7 @@ func TestAcc_Saml2Integration_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   saml2IntegrationBasicConfig(id.Name(), cert),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
 				),
 			},
 		},
@@ -1122,8 +1122,8 @@ func TestAcc_Saml2Integration_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
 				),
 			},
 		},

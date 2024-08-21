@@ -291,21 +291,13 @@ func handleDatabaseParameterRead(d *schema.ResourceData, databaseParameters []*s
 				return diag.FromErr(err)
 			}
 		case
-			string(sdk.ObjectParameterExternalVolume),
-			string(sdk.ObjectParameterCatalog):
-			id, err := sdk.ParseAccountObjectIdentifier(parameter.Value)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set(strings.ToLower(parameter.Key), id.FullyQualifiedName()); err != nil {
-				return diag.FromErr(err)
-			}
-		case
 			string(sdk.ObjectParameterDefaultDDLCollation),
 			string(sdk.ObjectParameterStorageSerializationPolicy),
 			string(sdk.ObjectParameterLogLevel),
 			string(sdk.ObjectParameterTraceLevel),
-			string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize):
+			string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize),
+			string(sdk.ObjectParameterExternalVolume),
+			string(sdk.ObjectParameterCatalog):
 			if err := d.Set(strings.ToLower(parameter.Key), parameter.Value); err != nil {
 				return diag.FromErr(err)
 			}

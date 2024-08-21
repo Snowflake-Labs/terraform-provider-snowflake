@@ -50,7 +50,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.
 				ConfigVariables: m(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_id", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_secret", "foo"),
 
@@ -82,7 +82,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.
 				ResourceName:    "snowflake_api_authentication_integration_with_client_credentials.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_id", "foo"),
 
@@ -113,7 +113,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_auth_method", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_id", "foo"),
@@ -159,7 +159,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_access_token_validity", "-1"),
 					resource.TestCheckNoResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_auth_method"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_id", "foo"),
@@ -202,7 +202,7 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_complete(t *testi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "oauth_client_auth_method", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),
@@ -279,14 +279,14 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_migrateFromV0941_
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   apiAuthenticationIntegrationWithClientCredentialsBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -323,8 +323,8 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_IdentifierQuoting
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_client_credentials.test", "id", id.Name()),
 				),
 			},
 		},

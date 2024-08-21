@@ -105,19 +105,13 @@ func Database() *schema.Resource {
 			databaseParametersCustomDiff,
 		),
 
-		SchemaVersion: 2,
+		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v092DatabaseStateUpgrader,
-			},
-			{
-				Version: 1,
-				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
-				Type:    cty.EmptyObject,
-				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -386,10 +380,6 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("name", database.ID().FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

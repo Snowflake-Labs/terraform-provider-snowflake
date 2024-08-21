@@ -60,9 +60,9 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 		},
 		{
 			Name:       "validation - valid identifier",
-			ObjectType: sdk.ObjectTypeDatabase,
+			ObjectType: sdk.ObjectTypeSchema,
 			ObjectName: "to.many.parts.in.this.identifier",
-			Error:      "unexpected number of parts 6 in identifier to.many.parts.in.this.identifier, expected 1 in a form of \"<account_object_name>\"",
+			Error:      "unexpected number of parts 6 in identifier to.many.parts.in.this.identifier, expected 2 in a form of \"<database_name>.<database_object_name>\"",
 		},
 		{
 			Name:       "validation - unsupported type",

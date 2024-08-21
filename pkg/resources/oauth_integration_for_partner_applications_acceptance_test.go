@@ -58,7 +58,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic"),
 				ConfigVariables: configVariables(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
@@ -99,7 +99,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "true"),
@@ -119,7 +119,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
@@ -160,7 +160,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "false"),
@@ -206,7 +206,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
@@ -217,7 +217,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
@@ -250,7 +250,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
@@ -261,7 +261,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "false"),
@@ -325,7 +325,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic_tableau"),
 				ConfigVariables: configVariables(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
@@ -366,7 +366,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "true"),
@@ -386,7 +386,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
@@ -427,7 +427,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "false"),
@@ -473,7 +473,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
@@ -517,7 +517,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
@@ -581,7 +581,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
@@ -623,7 +623,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
@@ -702,14 +702,14 @@ func TestAcc_OauthIntegrationForPartnerApplications_migrateFromV0941_ensureSmoot
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   oauthIntegrationForPartnerApplicationsBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_OauthIntegrationForPartnerApplications_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_OauthIntegrationForPartnerApplications_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -746,8 +746,8 @@ func TestAcc_OauthIntegrationForPartnerApplications_IdentifierQuotingDiffSuppres
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
 				),
 			},
 		},

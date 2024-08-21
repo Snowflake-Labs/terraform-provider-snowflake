@@ -38,7 +38,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(id.Name(), ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
@@ -60,7 +60,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
@@ -95,7 +95,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
@@ -108,7 +108,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
@@ -149,7 +149,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", comment),
 
@@ -171,7 +171,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
@@ -180,7 +180,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 			{
 				Config: accountRoleBasicConfig(newId.Name(), newComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", newComment),
 
@@ -238,14 +238,14 @@ func TestAcc_AccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_AccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_AccountRole_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 	comment := random.Comment()
@@ -283,8 +283,8 @@ func TestAcc_AccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.Name()),
 				),
 			},
 		},

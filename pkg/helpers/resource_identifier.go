@@ -19,7 +19,9 @@ func EncodeResourceIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObject
 	result := make([]string, len(parts))
 	for i, part := range parts {
 		switch typedPart := any(part).(type) {
-		case sdk.AccountObjectIdentifier, sdk.DatabaseObjectIdentifier, sdk.SchemaObjectIdentifier, sdk.SchemaObjectIdentifierWithArguments, sdk.TableColumnIdentifier, sdk.ExternalObjectIdentifier, sdk.AccountIdentifier:
+		case sdk.AccountObjectIdentifier:
+			result[i] = typedPart.Name()
+		case sdk.DatabaseObjectIdentifier, sdk.SchemaObjectIdentifier, sdk.SchemaObjectIdentifierWithArguments, sdk.TableColumnIdentifier, sdk.ExternalObjectIdentifier, sdk.AccountIdentifier:
 			result[i] = typedPart.(sdk.ObjectIdentifier).FullyQualifiedName()
 		case string:
 			result[i] = typedPart

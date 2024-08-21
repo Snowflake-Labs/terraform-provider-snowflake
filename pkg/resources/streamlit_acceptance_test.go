@@ -464,7 +464,7 @@ func TestAcc_Streamlit_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   streamlitBasicConfig(id, stage.ID(), "main_file"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.Name()),
 				),
 			},
 		},
@@ -530,7 +530,7 @@ func TestAcc_Streamlit_IdentifierQuotingDiffSuppression(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "schema", id.SchemaName()),
 					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.Name()),
 				),
 			},
 		},

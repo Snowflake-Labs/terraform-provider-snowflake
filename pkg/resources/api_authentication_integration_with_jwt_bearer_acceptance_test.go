@@ -63,7 +63,7 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_basic(t *testing.T) {
 				ResourceName:    "snowflake_api_authentication_integration_with_jwt_bearer.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_id", "foo"),
 
@@ -121,7 +121,7 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "created_on", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_authorization_endpoint", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_client_auth_method", "foo"),
@@ -168,7 +168,7 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "created_on", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "oauth_authorization_endpoint", "foo"),
@@ -247,7 +247,7 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_migrateFromV0941_ensureSm
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   apiAuthenticationIntegrationWithJwtBearerBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
 				),
 			},
 		},
@@ -293,8 +293,8 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_IdentifierQuotingDiffSupp
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
 				),
 			},
 		},

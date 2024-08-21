@@ -408,9 +408,6 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err = d.Set("name", w.ID().FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
 		if err = d.Set("comment", w.Comment); err != nil {
 			return diag.FromErr(err)
 		}

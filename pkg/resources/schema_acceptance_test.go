@@ -1072,7 +1072,7 @@ func TestAcc_Schema_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *tes
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemaBasicConfig(id.DatabaseName(), id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.Name()),
 				),
 			},
 		},
@@ -1129,7 +1129,7 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.Name()),
 				),
 			},
 		},

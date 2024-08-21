@@ -77,7 +77,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/basic"),
 				ConfigVariables: m(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", resources.BooleanDefault),
@@ -130,7 +130,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_custom_clients.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_redirect_uri", validUrl),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
@@ -156,7 +156,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", "true"),
@@ -168,7 +168,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -211,7 +211,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_custom_clients.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_redirect_uri", validUrl),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
@@ -222,7 +222,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_roles_list.#", "3"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_refresh_token_validity", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", networkPolicy.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", networkPolicy.ID().Name()),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_rsa_public_key"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", comment),
@@ -247,20 +247,20 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_custom_clients.test", plancheck.ResourceActionUpdate),
 
 						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "enabled", sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "network_policy", sdk.String(networkPolicy.ID().FullyQualifiedName()), sdk.String("")),
+						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "network_policy", sdk.String(networkPolicy.ID().Name()), sdk.String("")),
 						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "oauth_use_secondary_roles", sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone))),
 						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", sdk.String(key), sdk.String(key)),
 						planchecks.ExpectDrift("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", sdk.String(key), sdk.String(key)),
 
 						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "enabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "network_policy", tfjson.ActionUpdate, sdk.String(""), sdk.String(networkPolicy.ID().FullyQualifiedName())),
+						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "network_policy", tfjson.ActionUpdate, sdk.String(""), sdk.String(networkPolicy.ID().Name())),
 						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "oauth_use_secondary_roles", tfjson.ActionUpdate, sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))),
 						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", tfjson.ActionUpdate, sdk.String(key), sdk.String(key)),
 						planchecks.ExpectChange("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", tfjson.ActionUpdate, sdk.String(key), sdk.String(key)),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", "true"),
@@ -272,7 +272,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -297,7 +297,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					// resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_fp.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_2_fp.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.comment.0.value", comment),
@@ -318,7 +318,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", resources.BooleanDefault),
@@ -416,7 +416,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/complete"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
@@ -429,7 +429,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -454,7 +454,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					// resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_fp.0.value"),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_2_fp.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.comment.0.value", comment),
@@ -471,7 +471,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 				ResourceName:    "snowflake_oauth_integration_for_custom_clients.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_redirect_uri", validUrl),
@@ -483,7 +483,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_roles_list.#", "3"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_refresh_token_validity", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", networkPolicy.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", networkPolicy.ID().Name()),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_rsa_public_key"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", comment),
@@ -531,7 +531,7 @@ func TestAcc_OauthIntegrationForCustomClients_DefaultValues(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/default_values"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", "false"),
@@ -581,7 +581,7 @@ func TestAcc_OauthIntegrationForCustomClients_DefaultValues(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForCustomClients/basic"),
 				ConfigVariables: configVariables(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_type", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_redirect_uri", validUrl),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "enabled", resources.BooleanDefault),
@@ -697,14 +697,14 @@ func TestAcc_OauthIntegrationForCustomClients_migrateFromV0941_ensureSmoothUpgra
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   oauthIntegrationForCustomClientsBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_OauthIntegrationForCustomClients_IdentifierQuotingDiffSuppression(t *testing.T) {
+func TestAcc_OauthIntegrationForCustomClients_WithQuotedName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
@@ -741,8 +741,8 @@ func TestAcc_OauthIntegrationForCustomClients_IdentifierQuotingDiffSuppression(t
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "id", id.Name()),
 				),
 			},
 		},
