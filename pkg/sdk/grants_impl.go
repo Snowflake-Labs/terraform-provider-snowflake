@@ -270,7 +270,6 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 			if grant.GrantedTo == ObjectTypeShare {
 				oldId := grant.GranteeName.Name()
 				skipAccount := oldId[strings.IndexRune(oldId, '.')+1:]
-				log.Printf("unsupported case for share's grantee name: %s Falling back to account object identifier: %s", grant.GranteeName, skipAccount)
 				resultList[i].GranteeName = NewAccountObjectIdentifier(skipAccount)
 			}
 		} else {
