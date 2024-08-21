@@ -11,6 +11,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -567,6 +568,33 @@ func TestAcc_User_AllParameters(t *testing.T) {
 						HasAllDefaultsExplicit(),
 					// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
 					// resourceparametersassert.UserResourceParameters(t, "u").Has(),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_issue2836(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	defaultRole := "SOME ROLE WITH SPACE case sensitive"
+	defaultRoleQuoted := fmt.Sprintf(`"%s"`, defaultRole)
+
+	userModel := model.User("u", userId.Name()).
+		WithDefaultRole(defaultRoleQuoted)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					objectassert.User(t, userId).
+						HasDefaultRole(defaultRole),
 				),
 			},
 		},

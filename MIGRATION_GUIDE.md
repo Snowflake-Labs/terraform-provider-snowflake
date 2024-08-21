@@ -148,6 +148,12 @@ According to https://docs.snowflake.com/en/sql-reference/functions/all_user_name
 
 Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
 
+### *(bugfix)* Properly suppressing diffs for quoted `default_warehouse`, `default_namespace`, and `default_role`
+
+During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (TODO link to doc?). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`.
+
+Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836)
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 

@@ -50,21 +50,22 @@ var userSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"default_warehouse": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
+		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
 	},
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
 	"default_role": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Computed:         true,
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the role that is active by default for the user’s session upon login.",
 	},
 	"default_secondary_roles": {
