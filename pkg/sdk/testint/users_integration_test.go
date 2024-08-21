@@ -999,4 +999,24 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, fetchedDisabledUser.Disabled)
 	})
+
+	t.Run("issue #2817: check the describe behavior", func(t *testing.T) {
+		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
+		t.Cleanup(disabledUserCleanup)
+
+		fetchedDisabledUserDetails, err := client.Users.Describe(ctx, disabledUser.ID())
+		require.NoError(t, err)
+		require.NotNil(t, fetchedDisabledUserDetails.Disabled)
+		require.True(t, fetchedDisabledUserDetails.Disabled.Value)
+
+		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
+		t.Cleanup(roleCleanup)
+
+		revertRole := testClientHelper().Role.UseRole(t, role.ID())
+		t.Cleanup(revertRole)
+
+		fetchedDisabledUserDetails, err = client.Users.Describe(ctx, disabledUser.ID())
+		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
+		require.Nil(t, fetchedDisabledUserDetails)
+	})
 }
