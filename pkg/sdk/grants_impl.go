@@ -267,7 +267,7 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 		// - it returns no account name, so for other SHOW GRANTS types it needs to be skipped
 		// - it returns fully qualified name for database objects
 		granteeNameRaw := dbRows[i].GranteeName
-		if !(valueSet(opts.Of) && valueSet(opts.Of.DatabaseRole)) {
+		if !(valueSet(opts.Of) && valueSet(opts.Of.DatabaseRole)) { //nolint:gocritic
 			granteeName := granteeNameRaw
 			if grant.GrantedTo == ObjectTypeShare {
 				granteeName = granteeName[strings.IndexRune(granteeName, '.')+1:]
