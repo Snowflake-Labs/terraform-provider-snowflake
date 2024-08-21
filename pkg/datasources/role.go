@@ -55,7 +55,7 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(role.ID()))
-	if err := d.Set("name", role.ID().FullyQualifiedName()); err != nil {
+	if err := d.Set("name", role.Name); err != nil {
 		return err
 	}
 	if err := d.Set("comment", role.Comment); err != nil {

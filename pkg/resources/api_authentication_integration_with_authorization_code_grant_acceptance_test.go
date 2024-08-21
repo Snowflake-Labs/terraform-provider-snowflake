@@ -286,7 +286,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_migrateFromV
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   apiAuthenticationIntegrationWithAuthorizationCodeGrantBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "id", id.Name()),
 				),
 			},
 		},

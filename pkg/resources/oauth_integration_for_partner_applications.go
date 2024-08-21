@@ -151,6 +151,10 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		return nil, err
 	}
 
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err

@@ -558,7 +558,7 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
 				),
 			},
 		},
@@ -618,8 +618,8 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
 				),
 			},
 		},

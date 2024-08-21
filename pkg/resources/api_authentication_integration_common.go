@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -211,9 +212,10 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 ) error {
-	if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
+	if _, err := ImportName(context.Background(), d, nil); err != nil {
 		return err
 	}
+
 	if err := d.Set("enabled", integration.Enabled); err != nil {
 		return err
 	}

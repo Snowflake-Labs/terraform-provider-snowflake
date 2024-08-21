@@ -206,9 +206,9 @@ func Warehouse() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("resource_monitor")), "resource_monitor"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name", "resource_monitor"),
 			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
+
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
@@ -236,14 +236,15 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+
 	w, err := client.Warehouses.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = d.Set("name", w.ID().FullyQualifiedName()); err != nil {
-		return nil, err
-	}
 	if err = d.Set("warehouse_type", w.Type); err != nil {
 		return nil, err
 	}

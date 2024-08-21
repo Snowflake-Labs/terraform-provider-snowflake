@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -44,4 +46,17 @@ func ctyValToSliceString(valueElems []cty.Value) []string {
 		elems[i] = v.AsString()
 	}
 	return elems
+}
+
+func ImportName(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

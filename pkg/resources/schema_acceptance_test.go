@@ -1072,7 +1072,7 @@ func TestAcc_Schema_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *tes
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemaBasicConfig(id.DatabaseName(), id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},

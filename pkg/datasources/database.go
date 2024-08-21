@@ -70,7 +70,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.SetId(helpers.EncodeResourceIdentifier(database.ID()))
-	if err := d.Set("name", database.ID().FullyQualifiedName()); err != nil {
+	if err := d.Set("name", database.Name); err != nil {
 		return err
 	}
 	if err := d.Set("comment", database.Comment); err != nil {

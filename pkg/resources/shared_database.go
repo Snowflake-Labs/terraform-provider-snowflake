@@ -58,7 +58,7 @@ func SharedDatabase() *schema.Resource {
 
 		Schema: helpers.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName,
 		},
 	}
 }

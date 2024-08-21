@@ -189,6 +189,10 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -199,9 +203,6 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	if err := d.Set("name", integration.ID().FullyQualifiedName()); err != nil {
-		return nil, err
-	}
 	if err := d.Set("comment", integration.Comment); err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
-	scimIntName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	scimIntName := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -21,9 +21,9 @@ func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: generateAccessTokenConfig(scimIntName.Name()),
+				Config: generateAccessTokenConfig(scimIntName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_system_generate_scim_access_token.p", "integration_name", scimIntName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("data.snowflake_system_generate_scim_access_token.p", "integration_name", scimIntName),
 					resource.TestCheckResourceAttrSet("data.snowflake_system_generate_scim_access_token.p", "access_token"),
 				),
 			},

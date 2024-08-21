@@ -55,7 +55,7 @@ func AccountRole() *schema.Resource {
 		),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName,
 		},
 	}
 }

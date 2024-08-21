@@ -127,13 +127,19 @@ func Schema() *schema.Resource {
 			StateContext: ImportSchema,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v093SchemaStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -147,15 +153,16 @@ func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 		return nil, err
 	}
 
-	s, err := client.Schemas.ShowByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if err := d.Set("name", s.Name); err != nil {
+	if err := d.Set("name", id.Name()); err != nil {
 		return nil, err
 	}
 
-	if err := d.Set("database", s.DatabaseName); err != nil {
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return nil, err
+	}
+
+	s, err := client.Schemas.ShowByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 
