@@ -142,17 +142,19 @@ The following set of [parameters](https://docs.snowflake.com/en/sql-reference/pa
  - [NETWORK_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#network-policy)
  - [PREVENT_UNLOAD_TO_INTERNAL_STAGES](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages)
 
+Connected issues: [#2938](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2938)
+
 ### *(breaking change)* Changes in sensitiveness of name and login_name
 
 According to https://docs.snowflake.com/en/sql-reference/functions/all_user_names#usage-notes, `NAME`s are not considered sensitive data and `LOGIN_NAME`s are. Previous versions of the provider had this the other way around. In this version, `name` attribute was unmarked as sensitive, whereas `login_name` was marked as sensitive. This may break your configuration if you were using `login_name`s before e.g. in a `for_each` loop.
 
 Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
 
-### *(bugfix)* Properly suppressing diffs for quoted `default_warehouse`, `default_namespace`, and `default_role`
+### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
 
-During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (TODO link to doc?). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`.
+During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (TODO link to doc?). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
 
-Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836)
+Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
 
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
