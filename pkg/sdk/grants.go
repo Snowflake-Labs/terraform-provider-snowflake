@@ -229,7 +229,6 @@ func (v *Grant) ID() ObjectIdentifier {
 func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	granteeName := NewAccountObjectIdentifier(row.GranteeName)
 	var grantedOn ObjectType
 	// true for current grants
 	if row.GrantedOn != "" {
@@ -262,14 +261,14 @@ func (row grantRow) convert() *Grant {
 	}
 
 	return &Grant{
-		CreatedOn:   row.CreatedOn,
-		Privilege:   row.Privilege,
-		GrantedOn:   grantedOn,
-		GrantOn:     grantOn,
-		GrantedTo:   grantedTo,
-		GrantTo:     grantTo,
-		Name:        name,
-		GranteeName: granteeName,
+		CreatedOn: row.CreatedOn,
+		Privilege: row.Privilege,
+		GrantedOn: grantedOn,
+		GrantOn:   grantOn,
+		GrantedTo: grantedTo,
+		GrantTo:   grantTo,
+		Name:      name,
+		// GranteeName is computed in Show operation. Its format is depending on the grant request options.
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}

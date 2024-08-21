@@ -266,20 +266,21 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 		// SHOW GRANTS of DATABASE ROLE requires a special handling:
 		// - it returns no account name, so for other SHOW GRANTS types it needs to be skipped
 		// - it returns fully qualified name for database objects
+		granteeNameRaw := dbRows[i].GranteeName
 		if !(valueSet(opts.Of) && valueSet(opts.Of.DatabaseRole)) {
+			granteeName := granteeNameRaw
 			if grant.GrantedTo == ObjectTypeShare {
-				oldId := grant.GranteeName.Name()
-				skipAccount := oldId[strings.IndexRune(oldId, '.')+1:]
-				resultList[i].GranteeName = NewAccountObjectIdentifier(skipAccount)
+				granteeName = granteeName[strings.IndexRune(granteeName, '.')+1:]
 			}
+			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeName)
+		} else if !slices.Contains([]ObjectType{ObjectTypeRole, ObjectTypeShare}, grant.GrantedTo) {
+			id, err := ParseDatabaseObjectIdentifier(granteeNameRaw)
+			if err != nil {
+				return nil, err
+			}
+			resultList[i].GranteeName = id
 		} else {
-			if grant.GrantedTo != ObjectTypeRole && grant.GrantedTo != ObjectTypeShare {
-				id, err := ParseDatabaseObjectIdentifier(grant.GranteeName.FullyQualifiedName())
-				if err != nil {
-					return nil, err
-				}
-				resultList[i].GranteeName = id
-			}
+			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeNameRaw)
 		}
 	}
 	logging.DebugLogger.Printf("[DEBUG] Show grants: rows converted")
