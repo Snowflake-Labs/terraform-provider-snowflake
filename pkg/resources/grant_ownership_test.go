@@ -58,7 +58,7 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Name:       "account object identifier with dots",
 			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "\"database.name.with.dots\"",
-			Error:      "unexpected number of parts 4 in identifier database.name.with.dots, expected 1 in a form of \"<account_object_name>\"",
+			Expected:   sdk.NewAccountObjectIdentifier("database.name.with.dots"),
 		},
 		{
 			Name:       "validation - valid identifier",

@@ -267,42 +267,42 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnAccountObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnAccountObject`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnAccountObject`,
 			Error:      `account role identifier should hold at least 7 parts "<role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccountObject|<object_type>|<object_name>"`,
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchema kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
 			Error:      "account role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
 			Error:      "account role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
 			Error:      "account role identifier should hold 8 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject.InDatabase kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
 			Error:      "account role identifier should hold 9 parts",
 		},
 		{
 			Name:       "validation: grant account role invalid AccountRoleGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
 			Error:      "invalid AccountRoleGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant account role invalid OnSchemaGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
 			Error:      "invalid OnSchemaGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant account role invalid OnSchemaObjectGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
 			Error:      "invalid OnSchemaObjectGrantKind: some-kind",
 		},
 		{
@@ -323,7 +323,7 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 		{
 			Name:       "validation: grant account role empty role name",
 			Identifier: `|false|false|ALL PRIVILEGES|OnAccount`,
-			Error:      "invalid (empty) AccountRoleName value: , should be a fully qualified name of account object <name>",
+			Error:      "incompatible identifier: ",
 		},
 		{
 			Name:       "validation: account role empty type",

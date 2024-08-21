@@ -660,7 +660,7 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
+			"to_share": config.StringVariable(shareId.FullyQualifiedName()),
 			"database": config.StringVariable(databaseId.Name()),
 			"schema":   config.StringVariable(schemaId.Name()),
 			"on_table": config.StringVariable(tableId.Name()),
@@ -685,7 +685,7 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_table", tableId.FullyQualifiedName()),

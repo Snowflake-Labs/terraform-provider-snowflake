@@ -97,9 +97,10 @@ func Schema() *schema.Resource {
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(DescribeOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -196,11 +197,33 @@ func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 					break
 				}
 			} else {
-				databaseObjectIdentifier, err := sdk.ParseDatabaseObjectIdentifier(grant.GranteeName.Name())
-				if err != nil {
-					return err
+				/*
+					note that grantee_name is not saved as a valid identifier in the
+					SHOW GRANTS OF DATABASE ROLE <database_role_name> command
+					for example, "ABC"."test_parent_role" is saved as ABC."test_parent_role"
+					or "ABC"."test_parent_role" is saved as ABC.test_parent_role
+					and our internal mapper thereby fails to parse it correctly, returning "ABC."test_parent_role"
+					so this funny string replacement is needed to make it work
+				*/
+				s := grant.GranteeName.FullyQualifiedName()
+				if !strings.Contains(s, "\"") {
+					parts := strings.Split(s, ".")
+					s = sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]).FullyQualifiedName()
+				} else {
+					parts := strings.Split(s, "\".\"")
+					if len(parts) < 2 {
+						parts = strings.Split(s, "\".")
+						if len(parts) < 2 {
+							parts = strings.Split(s, ".\"")
+							if len(parts) < 2 {
+								s = strings.Trim(s, "\"")
+								parts = strings.Split(s, ".")
+							}
+						}
+					}
+					s = sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]).FullyQualifiedName()
 				}
-				if databaseObjectIdentifier.FullyQualifiedName() == targetIdentifier {
+				if s == targetIdentifier {
 					found = true
 					break
 				}

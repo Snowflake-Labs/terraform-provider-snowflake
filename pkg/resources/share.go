@@ -165,7 +165,7 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading share (%v) err = %w", d.Id(), err)
 	}
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+	if err := d.Set(FullyQualifiedNameAttributeName, share.ID().FullyQualifiedName()); err != nil {
 		return err
 	}
 	if err := d.Set("name", share.Name.Name()); err != nil {
