@@ -1124,13 +1124,8 @@ func TestAcc_Database_WithReplication(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderWithReplicationNew(id, secondaryAccountIdentifier),
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseStateUpgraderWithReplicationNew(id, secondaryAccountIdentifier),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "replication"),

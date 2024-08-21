@@ -9,5 +9,5 @@ resource "snowflake_database" "test" {
 
 resource "snowflake_schema" "test_2" {
   name     = var.name
-  database = snowflake_database.test.fully_qualified_name
+  database = snowflake_database.test.name
 }

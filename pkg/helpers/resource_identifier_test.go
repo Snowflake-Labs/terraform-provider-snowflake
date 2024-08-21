@@ -40,18 +40,18 @@ func Test_Encoding_And_Parsing_Of_ResourceIdentifier_String(t *testing.T) {
 
 func Test_Encoding_And_Parsing_Of_ResourceIdentifier_Identifier(t *testing.T) {
 	testCases := []struct {
-		Input                 []sdk.ObjectIdentifier
+		Input                 any
 		Expected              string
 		ExpectedAfterDecoding []string
 	}{
-		{Input: []sdk.ObjectIdentifier{sdk.NewAccountObjectIdentifier("a"), sdk.NewAccountObjectIdentifier("b")}, Expected: `"a"|"b"`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewDatabaseObjectIdentifier("a", "b"), sdk.NewDatabaseObjectIdentifier("b", "c")}, Expected: `"a"."b"|"b"."c"`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewSchemaObjectIdentifier("a", "b", "c"), sdk.NewSchemaObjectIdentifier("c", "b", "a")}, Expected: `"a"."b"."c"|"c"."b"."a"`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewSchemaObjectIdentifierWithArguments("a", "b", "c", sdk.DataTypeFloat), sdk.NewSchemaObjectIdentifierWithArguments("c", "b", "a", sdk.DataTypeInt)}, Expected: `"a"."b"."c"(FLOAT)|"c"."b"."a"(INT)`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewTableColumnIdentifier("a", "b", "c", "d"), sdk.NewTableColumnIdentifier("c", "b", "a", "f")}, Expected: `"a"."b"."c"."d"|"c"."b"."a"."f"`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier("o", "a"), sdk.NewAccountObjectIdentifier("ob")), sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier("o2", "a2"), sdk.NewAccountObjectIdentifier("ob2"))}, Expected: `"o"."a"."ob"|"o2"."a2"."ob2"`},
-		{Input: []sdk.ObjectIdentifier{sdk.NewAccountIdentifier("a", "b"), sdk.NewAccountIdentifier("b", "c")}, Expected: `"a"."b"|"b"."c"`},
-		{Input: []sdk.ObjectIdentifier{}, Expected: ``},
+		{Input: []sdk.AccountObjectIdentifier{sdk.NewAccountObjectIdentifier("a"), sdk.NewAccountObjectIdentifier("b")}, Expected: `a|b`},
+		{Input: []sdk.DatabaseObjectIdentifier{sdk.NewDatabaseObjectIdentifier("a", "b"), sdk.NewDatabaseObjectIdentifier("b", "c")}, Expected: `"a"."b"|"b"."c"`},
+		{Input: []sdk.SchemaObjectIdentifier{sdk.NewSchemaObjectIdentifier("a", "b", "c"), sdk.NewSchemaObjectIdentifier("c", "b", "a")}, Expected: `"a"."b"."c"|"c"."b"."a"`},
+		{Input: []sdk.SchemaObjectIdentifierWithArguments{sdk.NewSchemaObjectIdentifierWithArguments("a", "b", "c", sdk.DataTypeFloat), sdk.NewSchemaObjectIdentifierWithArguments("c", "b", "a", sdk.DataTypeInt)}, Expected: `"a"."b"."c"(FLOAT)|"c"."b"."a"(NUMBER)`},
+		{Input: []sdk.SchemaObjectIdentifierWithArguments{sdk.NewSchemaObjectIdentifierWithArguments("a", "b", "c"), sdk.NewSchemaObjectIdentifierWithArguments("c", "b", "a")}, Expected: `"a"."b"."c"()|"c"."b"."a"()`},
+		{Input: []sdk.TableColumnIdentifier{sdk.NewTableColumnIdentifier("a", "b", "c", "d"), sdk.NewTableColumnIdentifier("c", "b", "a", "f")}, Expected: `"a"."b"."c"."d"|"c"."b"."a"."f"`},
+		{Input: []sdk.ExternalObjectIdentifier{sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier("o", "a"), sdk.NewAccountObjectIdentifier("ob")), sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier("o2", "a2"), sdk.NewAccountObjectIdentifier("ob2"))}, Expected: `"o"."a"."ob"|"o2"."a2"."ob2"`},
+		{Input: []sdk.AccountIdentifier{sdk.NewAccountIdentifier("a", "b"), sdk.NewAccountIdentifier("b", "c")}, Expected: `"a"."b"|"b"."c"`},
 	}
 
 	for _, testCase := range testCases {
@@ -78,6 +78,8 @@ func Test_Encoding_And_Parsing_Of_ResourceIdentifier_Identifier(t *testing.T) {
 			case []sdk.AccountIdentifier:
 				encodedIdentifier := EncodeResourceIdentifier(typedInput...)
 				assert.Equal(t, testCase.Expected, encodedIdentifier)
+			default:
+				t.Errorf("Unexpected type %T", typedInput)
 			}
 		})
 	}

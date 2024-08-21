@@ -1129,7 +1129,7 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},

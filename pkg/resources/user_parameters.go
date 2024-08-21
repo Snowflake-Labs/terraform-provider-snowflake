@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -167,9 +165,7 @@ func init() {
 }
 
 func userParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	return parametersProvider(ctx, d, meta.(*provider.Context), userParametersProviderFunc, func(s string) (sdk.AccountObjectIdentifier, error) {
-		return helpers.DecodeSnowflakeID(s).(sdk.AccountObjectIdentifier), nil
-	})
+	return parametersProvider(ctx, d, meta.(*provider.Context), userParametersProviderFunc, sdk.ParseAccountObjectIdentifier)
 }
 
 func userParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
