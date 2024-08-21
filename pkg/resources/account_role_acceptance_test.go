@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/require"
@@ -41,7 +43,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -58,8 +60,8 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
 			// set optionals
@@ -76,7 +78,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -93,8 +95,8 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
 			// unset
@@ -111,7 +113,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -153,7 +155,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
 					resource.TestCheckResourceAttrSet("snowflake_account_role.role", "show_output.0.created_on"),
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_default", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_current", "false"),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.0.is_inherited", "false"),
@@ -169,9 +171,9 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				ResourceName: "snowflake_account_role.role",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
 			// rename + comment change

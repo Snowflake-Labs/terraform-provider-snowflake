@@ -24,9 +24,9 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"as_replica_of": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
 		Description: "A fully qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
 		// TODO(SNOW-1495079): Add validation when ExternalObjectIdentifier will be available in IsValidIdentifierDescription:      "A fully qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
 		DiffSuppressFunc: suppressIdentifierQuoting,

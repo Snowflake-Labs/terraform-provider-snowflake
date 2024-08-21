@@ -94,7 +94,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "false"),
@@ -174,7 +174,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "true"),
@@ -278,7 +278,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "true"),
@@ -335,7 +335,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "false"),
@@ -435,7 +435,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "true"),
@@ -548,7 +548,7 @@ func TestAcc_OauthIntegrationForCustomClients_DefaultValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "false"),
@@ -598,7 +598,7 @@ func TestAcc_OauthIntegrationForCustomClients_DefaultValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.integration_type", "OAUTH - CUSTOM"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "show_output.0.enabled", "false"),

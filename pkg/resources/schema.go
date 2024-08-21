@@ -242,6 +242,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
+		_, err = client.Databases.ShowByID(ctx, id.DatabaseId())
 		if err != nil {
 			log.Printf("[DEBUG] database %s for schema %s not found", id.DatabaseId().Name(), id.Name())
 			d.SetId("")
@@ -256,7 +257,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		schema, err := client.Schemas.ShowByID(ctx, id)
 		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) {
+			if errors.Is(err, sdk.ErrObjectNotFound) || errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				d.SetId("")
 				return diag.Diagnostics{
 					diag.Diagnostic{

@@ -121,7 +121,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.comment.0.value", ""),
 
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.integration_type", "SAML2"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "false"),
@@ -202,7 +202,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.comment.0.value", "foo"),
 
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.integration_type", "SAML2"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "true"),
@@ -306,7 +306,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.comment.0.value", "foo"),
 
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.integration_type", "SAML2"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "true"),
@@ -361,7 +361,7 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.comment.0.value", ""),
 
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.integration_type", "SAML2"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "false"),
@@ -636,7 +636,7 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.comment.0.value", "foo"),
 
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.integration_type", "SAML2"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.category", "SECURITY"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "true"),
