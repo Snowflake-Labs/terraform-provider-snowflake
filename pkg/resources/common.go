@@ -28,7 +28,6 @@ func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))
 }
 
-// TODO [SNOW-999049]: address during identifiers rework
 func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {
 		return false

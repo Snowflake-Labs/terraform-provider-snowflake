@@ -12,6 +12,8 @@
   * [What are the current/future plans for the provider?](#what-are-the-currentfuture-plans-for-the-provider)
   * [How can I contribute?](#how-can-i-contribute)
   * [How can I debug the issue myself?](#how-can-i-debug-the-issue-myself)
+  * [How can I import already existing Snowflake infrastructure into Terraform?](#how-can-i-import-already-existing-snowflake-infrastructure-into-terraform)
+  * [What identifiers are valid inside the provider and how to reference one resource inside the other one?](#what-identifiers-are-valid-inside-the-provider-and-how-to-reference-one-resource-inside-the-other-one)
 * [Commonly known issues](#commonly-known-issues)
   * [Old Terraform CLI version](#old-terraform-cli-version)
   * [Errors with connection to Snowflake](#errors-with-connection-to-snowflake)
@@ -95,6 +97,11 @@ Please refer to [this document](https://github.com/Snowflake-Labs/terraform-prov
 as it describes different approaches of importing the existing Snowflake infrastructure into Terrafrom as configuration. 
 One thing worth noting is that some approaches can be automated by scripts interacting with Snowflake and generating needed configuration blocks, 
 which is highly recommended for large-scale migrations.
+
+### What identifiers are valid inside the provider and how to reference one resource inside the other one?
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)
+- For the recommended identifier format, take a look at the "Known limitations and identifier recommendations" section.
+- For a new way of referencing object identifiers in resources, take a look at the "New computed fully qualified name field in resources" section.
 
 ## Commonly known issues
 ### Old Terraform CLI version
