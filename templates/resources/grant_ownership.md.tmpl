@@ -22,8 +22,6 @@ description: |-
 ## Example Usage
 
 {{ tffile (printf "examples/resources/%s/resource.tf" .Name)}}
-
--> **Note** If you don't manage database role in Terraform, you can construct the proper id yourself, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources)
 {{- end }}
 
 ## Granting ownership on pipes

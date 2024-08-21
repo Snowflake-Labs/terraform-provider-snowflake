@@ -16,6 +16,8 @@ writing
 
 ```object_name = snowflake_table.fully_qualified_name```
 
+See more details in [identifiers guide](./docs/guides/identifiers.md#new-computed-fully-qualified-name-field-in-resources).
+
 See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
 
 Some of the resources are excluded from this change:

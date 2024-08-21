@@ -274,7 +274,11 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 			}
 		} else {
 			if grant.GrantedTo != ObjectTypeRole && grant.GrantedTo != ObjectTypeShare {
-				resultList[i].GranteeName = NewDatabaseObjectIdentifierFromFullyQualifiedName(grant.GranteeName.FullyQualifiedName())
+				id, err := ParseDatabaseObjectIdentifier(grant.GranteeName.FullyQualifiedName())
+				if err != nil {
+					return nil, err
+				}
+				resultList[i].GranteeName = id
 			}
 		}
 	}

@@ -12,7 +12,7 @@ resource "snowflake_external_oauth_integration" "test" {
   comment                                         = "comment"
   enabled                                         = true
   external_oauth_allowed_roles_list               = ["user1"]
-  external_oauth_any_role_mode                    = "ENABLED"
+  external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
   external_oauth_issuer                           = "issuer"
   external_oauth_jws_keys_url                     = ["https://example.com"]
@@ -27,7 +27,7 @@ resource "snowflake_external_oauth_integration" "test" {
 resource "snowflake_external_oauth_integration" "test" {
   comment                                         = "comment"
   enabled                                         = true
-  external_oauth_any_role_mode                    = "ENABLED"
+  external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
   external_oauth_blocked_roles_list               = ["user1"]
   external_oauth_issuer                           = "issuer"

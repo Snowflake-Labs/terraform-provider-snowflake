@@ -22,6 +22,4 @@ When using this resource to manage a table column's masking policy make sure to 
 
 {{ tffile (printf "examples/resources/%s/resource.tf" .Name)}}
 
--> **Note** If you don't manage referenced objects in Terraform, you can construct the proper id yourself, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources)
-
 {{ .SchemaMarkdown | trimspace }}
