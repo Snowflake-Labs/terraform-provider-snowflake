@@ -24,9 +24,11 @@ type TestClient struct {
 	DataMetricFunctionReferences *DataMetricFunctionReferencesClient
 	DynamicTable                 *DynamicTableClient
 	ExternalAccessIntegration    *ExternalAccessIntegrationClient
+	ExternalFunction             *ExternalFunctionClient
 	ExternalVolume               *ExternalVolumeClient
 	FailoverGroup                *FailoverGroupClient
 	FileFormat                   *FileFormatClient
+	Function                     *FunctionClient
 	Grant                        *GrantClient
 	MaskingPolicy                *MaskingPolicyClient
 	MaterializedView             *MaterializedViewClient
@@ -35,6 +37,7 @@ type TestClient struct {
 	Parameter                    *ParameterClient
 	PasswordPolicy               *PasswordPolicyClient
 	Pipe                         *PipeClient
+	Procedure                    *ProcedureClient
 	ProjectionPolicy             *ProjectionPolicyClient
 	PolicyReferences             *PolicyReferencesClient
 	ResourceMonitor              *ResourceMonitorClient
@@ -83,9 +86,11 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DataMetricFunctionReferences: NewDataMetricFunctionReferencesClient(context),
 		DynamicTable:                 NewDynamicTableClient(context, idsGenerator),
 		ExternalAccessIntegration:    NewExternalAccessIntegrationClient(context, idsGenerator),
+		ExternalFunction:             NewExternalFunctionClient(context, idsGenerator),
 		ExternalVolume:               NewExternalVolumeClient(context, idsGenerator),
 		FailoverGroup:                NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:                   NewFileFormatClient(context, idsGenerator),
+		Function:                     NewFunctionClient(context, idsGenerator),
 		Grant:                        NewGrantClient(context, idsGenerator),
 		MaskingPolicy:                NewMaskingPolicyClient(context, idsGenerator),
 		MaterializedView:             NewMaterializedViewClient(context, idsGenerator),
@@ -94,6 +99,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Parameter:                    NewParameterClient(context),
 		PasswordPolicy:               NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                         NewPipeClient(context, idsGenerator),
+		Procedure:                    NewProcedureClient(context, idsGenerator),
 		ProjectionPolicy:             NewProjectionPolicyClient(context, idsGenerator),
 		PolicyReferences:             NewPolicyReferencesClient(context),
 		ResourceMonitor:              NewResourceMonitorClient(context, idsGenerator),

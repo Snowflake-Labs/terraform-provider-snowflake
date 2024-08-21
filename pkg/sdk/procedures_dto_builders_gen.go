@@ -20,13 +20,13 @@ func NewCreateForJavaProcedureRequest(
 	return &s
 }
 
-func (s *CreateForJavaProcedureRequest) WithOrReplace(OrReplace *bool) *CreateForJavaProcedureRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForJavaProcedureRequest) WithOrReplace(OrReplace bool) *CreateForJavaProcedureRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithSecure(Secure *bool) *CreateForJavaProcedureRequest {
-	s.Secure = Secure
+func (s *CreateForJavaProcedureRequest) WithSecure(Secure bool) *CreateForJavaProcedureRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -35,8 +35,8 @@ func (s *CreateForJavaProcedureRequest) WithArguments(Arguments []ProcedureArgum
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavaProcedureRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForJavaProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForJavaProcedureRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
@@ -55,28 +55,28 @@ func (s *CreateForJavaProcedureRequest) WithSecrets(Secrets []Secret) *CreateFor
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithTargetPath(TargetPath *string) *CreateForJavaProcedureRequest {
-	s.TargetPath = TargetPath
+func (s *CreateForJavaProcedureRequest) WithTargetPath(TargetPath string) *CreateForJavaProcedureRequest {
+	s.TargetPath = &TargetPath
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavaProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForJavaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithComment(Comment *string) *CreateForJavaProcedureRequest {
-	s.Comment = Comment
+func (s *CreateForJavaProcedureRequest) WithComment(Comment string) *CreateForJavaProcedureRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *CreateForJavaProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateForJavaProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *CreateForJavaProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateForJavaProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateForJavaProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
@@ -90,8 +90,8 @@ func NewProcedureArgumentRequest(
 	return &s
 }
 
-func (s *ProcedureArgumentRequest) WithDefaultValue(DefaultValue *string) *ProcedureArgumentRequest {
-	s.DefaultValue = DefaultValue
+func (s *ProcedureArgumentRequest) WithDefaultValue(DefaultValue string) *ProcedureArgumentRequest {
+	s.DefaultValue = &DefaultValue
 	return s
 }
 
@@ -99,13 +99,13 @@ func NewProcedureReturnsRequest() *ProcedureReturnsRequest {
 	return &ProcedureReturnsRequest{}
 }
 
-func (s *ProcedureReturnsRequest) WithResultDataType(ResultDataType *ProcedureReturnsResultDataTypeRequest) *ProcedureReturnsRequest {
-	s.ResultDataType = ResultDataType
+func (s *ProcedureReturnsRequest) WithResultDataType(ResultDataType ProcedureReturnsResultDataTypeRequest) *ProcedureReturnsRequest {
+	s.ResultDataType = &ResultDataType
 	return s
 }
 
-func (s *ProcedureReturnsRequest) WithTable(Table *ProcedureReturnsTableRequest) *ProcedureReturnsRequest {
-	s.Table = Table
+func (s *ProcedureReturnsRequest) WithTable(Table ProcedureReturnsTableRequest) *ProcedureReturnsRequest {
+	s.Table = &Table
 	return s
 }
 
@@ -117,13 +117,13 @@ func NewProcedureReturnsResultDataTypeRequest(
 	return &s
 }
 
-func (s *ProcedureReturnsResultDataTypeRequest) WithNull(Null *bool) *ProcedureReturnsResultDataTypeRequest {
-	s.Null = Null
+func (s *ProcedureReturnsResultDataTypeRequest) WithNull(Null bool) *ProcedureReturnsResultDataTypeRequest {
+	s.Null = &Null
 	return s
 }
 
-func (s *ProcedureReturnsResultDataTypeRequest) WithNotNull(NotNull *bool) *ProcedureReturnsResultDataTypeRequest {
-	s.NotNull = NotNull
+func (s *ProcedureReturnsResultDataTypeRequest) WithNotNull(NotNull bool) *ProcedureReturnsResultDataTypeRequest {
+	s.NotNull = &NotNull
 	return s
 }
 
@@ -174,13 +174,13 @@ func NewCreateForJavaScriptProcedureRequest(
 	return &s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithOrReplace(OrReplace *bool) *CreateForJavaScriptProcedureRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForJavaScriptProcedureRequest) WithOrReplace(OrReplace bool) *CreateForJavaScriptProcedureRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithSecure(Secure *bool) *CreateForJavaScriptProcedureRequest {
-	s.Secure = Secure
+func (s *CreateForJavaScriptProcedureRequest) WithSecure(Secure bool) *CreateForJavaScriptProcedureRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -189,28 +189,28 @@ func (s *CreateForJavaScriptProcedureRequest) WithArguments(Arguments []Procedur
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavaScriptProcedureRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForJavaScriptProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForJavaScriptProcedureRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithNotNull(NotNull *bool) *CreateForJavaScriptProcedureRequest {
-	s.NotNull = NotNull
+func (s *CreateForJavaScriptProcedureRequest) WithNotNull(NotNull bool) *CreateForJavaScriptProcedureRequest {
+	s.NotNull = &NotNull
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavaScriptProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForJavaScriptProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithComment(Comment *string) *CreateForJavaScriptProcedureRequest {
-	s.Comment = Comment
+func (s *CreateForJavaScriptProcedureRequest) WithComment(Comment string) *CreateForJavaScriptProcedureRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateForJavaScriptProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *CreateForJavaScriptProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateForJavaScriptProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *CreateForJavaScriptProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
@@ -230,13 +230,13 @@ func NewCreateForPythonProcedureRequest(
 	return &s
 }
 
-func (s *CreateForPythonProcedureRequest) WithOrReplace(OrReplace *bool) *CreateForPythonProcedureRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForPythonProcedureRequest) WithOrReplace(OrReplace bool) *CreateForPythonProcedureRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithSecure(Secure *bool) *CreateForPythonProcedureRequest {
-	s.Secure = Secure
+func (s *CreateForPythonProcedureRequest) WithSecure(Secure bool) *CreateForPythonProcedureRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -245,8 +245,8 @@ func (s *CreateForPythonProcedureRequest) WithArguments(Arguments []ProcedureArg
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithCopyGrants(CopyGrants *bool) *CreateForPythonProcedureRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForPythonProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForPythonProcedureRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
@@ -265,23 +265,23 @@ func (s *CreateForPythonProcedureRequest) WithSecrets(Secrets []Secret) *CreateF
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForPythonProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForPythonProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithComment(Comment *string) *CreateForPythonProcedureRequest {
-	s.Comment = Comment
+func (s *CreateForPythonProcedureRequest) WithComment(Comment string) *CreateForPythonProcedureRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *CreateForPythonProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateForPythonProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *CreateForPythonProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateForPythonProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateForPythonProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateForPythonProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
@@ -301,13 +301,13 @@ func NewCreateForScalaProcedureRequest(
 	return &s
 }
 
-func (s *CreateForScalaProcedureRequest) WithOrReplace(OrReplace *bool) *CreateForScalaProcedureRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForScalaProcedureRequest) WithOrReplace(OrReplace bool) *CreateForScalaProcedureRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithSecure(Secure *bool) *CreateForScalaProcedureRequest {
-	s.Secure = Secure
+func (s *CreateForScalaProcedureRequest) WithSecure(Secure bool) *CreateForScalaProcedureRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -316,8 +316,8 @@ func (s *CreateForScalaProcedureRequest) WithArguments(Arguments []ProcedureArgu
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithCopyGrants(CopyGrants *bool) *CreateForScalaProcedureRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForScalaProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForScalaProcedureRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
@@ -326,28 +326,28 @@ func (s *CreateForScalaProcedureRequest) WithImports(Imports []ProcedureImportRe
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithTargetPath(TargetPath *string) *CreateForScalaProcedureRequest {
-	s.TargetPath = TargetPath
+func (s *CreateForScalaProcedureRequest) WithTargetPath(TargetPath string) *CreateForScalaProcedureRequest {
+	s.TargetPath = &TargetPath
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForScalaProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForScalaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithComment(Comment *string) *CreateForScalaProcedureRequest {
-	s.Comment = Comment
+func (s *CreateForScalaProcedureRequest) WithComment(Comment string) *CreateForScalaProcedureRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *CreateForScalaProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateForScalaProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *CreateForScalaProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateForScalaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateForScalaProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateForScalaProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateForScalaProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
@@ -363,13 +363,13 @@ func NewCreateForSQLProcedureRequest(
 	return &s
 }
 
-func (s *CreateForSQLProcedureRequest) WithOrReplace(OrReplace *bool) *CreateForSQLProcedureRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForSQLProcedureRequest) WithOrReplace(OrReplace bool) *CreateForSQLProcedureRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForSQLProcedureRequest) WithSecure(Secure *bool) *CreateForSQLProcedureRequest {
-	s.Secure = Secure
+func (s *CreateForSQLProcedureRequest) WithSecure(Secure bool) *CreateForSQLProcedureRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -378,23 +378,23 @@ func (s *CreateForSQLProcedureRequest) WithArguments(Arguments []ProcedureArgume
 	return s
 }
 
-func (s *CreateForSQLProcedureRequest) WithCopyGrants(CopyGrants *bool) *CreateForSQLProcedureRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForSQLProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForSQLProcedureRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForSQLProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForSQLProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForSQLProcedureRequest) WithComment(Comment *string) *CreateForSQLProcedureRequest {
-	s.Comment = Comment
+func (s *CreateForSQLProcedureRequest) WithComment(Comment string) *CreateForSQLProcedureRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateForSQLProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *CreateForSQLProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateForSQLProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *CreateForSQLProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
@@ -402,58 +402,56 @@ func NewProcedureSQLReturnsRequest() *ProcedureSQLReturnsRequest {
 	return &ProcedureSQLReturnsRequest{}
 }
 
-func (s *ProcedureSQLReturnsRequest) WithResultDataType(ResultDataType *ProcedureReturnsResultDataTypeRequest) *ProcedureSQLReturnsRequest {
-	s.ResultDataType = ResultDataType
+func (s *ProcedureSQLReturnsRequest) WithResultDataType(ResultDataType ProcedureReturnsResultDataTypeRequest) *ProcedureSQLReturnsRequest {
+	s.ResultDataType = &ResultDataType
 	return s
 }
 
-func (s *ProcedureSQLReturnsRequest) WithTable(Table *ProcedureReturnsTableRequest) *ProcedureSQLReturnsRequest {
-	s.Table = Table
+func (s *ProcedureSQLReturnsRequest) WithTable(Table ProcedureReturnsTableRequest) *ProcedureSQLReturnsRequest {
+	s.Table = &Table
 	return s
 }
 
-func (s *ProcedureSQLReturnsRequest) WithNotNull(NotNull *bool) *ProcedureSQLReturnsRequest {
-	s.NotNull = NotNull
+func (s *ProcedureSQLReturnsRequest) WithNotNull(NotNull bool) *ProcedureSQLReturnsRequest {
+	s.NotNull = &NotNull
 	return s
 }
 
 func NewAlterProcedureRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *AlterProcedureRequest {
 	s := AlterProcedureRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
-func (s *AlterProcedureRequest) WithIfExists(IfExists *bool) *AlterProcedureRequest {
-	s.IfExists = IfExists
+func (s *AlterProcedureRequest) WithIfExists(IfExists bool) *AlterProcedureRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterProcedureRequest) WithRenameTo(RenameTo *SchemaObjectIdentifier) *AlterProcedureRequest {
-	s.RenameTo = RenameTo
+func (s *AlterProcedureRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *AlterProcedureRequest {
+	s.RenameTo = &RenameTo
 	return s
 }
 
-func (s *AlterProcedureRequest) WithSetComment(SetComment *string) *AlterProcedureRequest {
-	s.SetComment = SetComment
+func (s *AlterProcedureRequest) WithSetComment(SetComment string) *AlterProcedureRequest {
+	s.SetComment = &SetComment
 	return s
 }
 
-func (s *AlterProcedureRequest) WithSetLogLevel(SetLogLevel *string) *AlterProcedureRequest {
-	s.SetLogLevel = SetLogLevel
+func (s *AlterProcedureRequest) WithSetLogLevel(SetLogLevel string) *AlterProcedureRequest {
+	s.SetLogLevel = &SetLogLevel
 	return s
 }
 
-func (s *AlterProcedureRequest) WithSetTraceLevel(SetTraceLevel *string) *AlterProcedureRequest {
-	s.SetTraceLevel = SetTraceLevel
+func (s *AlterProcedureRequest) WithSetTraceLevel(SetTraceLevel string) *AlterProcedureRequest {
+	s.SetTraceLevel = &SetTraceLevel
 	return s
 }
 
-func (s *AlterProcedureRequest) WithUnsetComment(UnsetComment *bool) *AlterProcedureRequest {
-	s.UnsetComment = UnsetComment
+func (s *AlterProcedureRequest) WithUnsetComment(UnsetComment bool) *AlterProcedureRequest {
+	s.UnsetComment = &UnsetComment
 	return s
 }
 
@@ -467,23 +465,21 @@ func (s *AlterProcedureRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *Alt
 	return s
 }
 
-func (s *AlterProcedureRequest) WithExecuteAs(ExecuteAs *ExecuteAs) *AlterProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *AlterProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *AlterProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
 func NewDropProcedureRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *DropProcedureRequest {
 	s := DropProcedureRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
-func (s *DropProcedureRequest) WithIfExists(IfExists *bool) *DropProcedureRequest {
-	s.IfExists = IfExists
+func (s *DropProcedureRequest) WithIfExists(IfExists bool) *DropProcedureRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -491,23 +487,21 @@ func NewShowProcedureRequest() *ShowProcedureRequest {
 	return &ShowProcedureRequest{}
 }
 
-func (s *ShowProcedureRequest) WithLike(Like *Like) *ShowProcedureRequest {
-	s.Like = Like
+func (s *ShowProcedureRequest) WithLike(Like Like) *ShowProcedureRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowProcedureRequest) WithIn(In *In) *ShowProcedureRequest {
-	s.In = In
+func (s *ShowProcedureRequest) WithIn(In In) *ShowProcedureRequest {
+	s.In = &In
 	return s
 }
 
 func NewDescribeProcedureRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *DescribeProcedureRequest {
 	s := DescribeProcedureRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
@@ -524,8 +518,8 @@ func (s *CallProcedureRequest) WithCallArguments(CallArguments []string) *CallPr
 	return s
 }
 
-func (s *CallProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CallProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CallProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CallProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }
 
@@ -557,18 +551,18 @@ func (s *CreateAndCallForJavaProcedureRequest) WithImports(Imports []ProcedureIm
 	return s
 }
 
-func (s *CreateAndCallForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateAndCallForJavaProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateAndCallForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateAndCallForJavaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateAndCallForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateAndCallForJavaProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateAndCallForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateAndCallForJavaProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
-func (s *CreateAndCallForJavaProcedureRequest) WithWithClause(WithClause *ProcedureWithClauseRequest) *CreateAndCallForJavaProcedureRequest {
-	s.WithClause = WithClause
+func (s *CreateAndCallForJavaProcedureRequest) WithWithClause(WithClause ProcedureWithClauseRequest) *CreateAndCallForJavaProcedureRequest {
+	s.WithClause = &WithClause
 	return s
 }
 
@@ -577,8 +571,8 @@ func (s *CreateAndCallForJavaProcedureRequest) WithCallArguments(CallArguments [
 	return s
 }
 
-func (s *CreateAndCallForJavaProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CreateAndCallForJavaProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CreateAndCallForJavaProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CreateAndCallForJavaProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }
 
@@ -625,13 +619,13 @@ func (s *CreateAndCallForScalaProcedureRequest) WithImports(Imports []ProcedureI
 	return s
 }
 
-func (s *CreateAndCallForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateAndCallForScalaProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateAndCallForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateAndCallForScalaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateAndCallForScalaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateAndCallForScalaProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateAndCallForScalaProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateAndCallForScalaProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
@@ -645,8 +639,8 @@ func (s *CreateAndCallForScalaProcedureRequest) WithCallArguments(CallArguments 
 	return s
 }
 
-func (s *CreateAndCallForScalaProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CreateAndCallForScalaProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CreateAndCallForScalaProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CreateAndCallForScalaProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }
 
@@ -669,13 +663,13 @@ func (s *CreateAndCallForJavaScriptProcedureRequest) WithArguments(Arguments []P
 	return s
 }
 
-func (s *CreateAndCallForJavaScriptProcedureRequest) WithNotNull(NotNull *bool) *CreateAndCallForJavaScriptProcedureRequest {
-	s.NotNull = NotNull
+func (s *CreateAndCallForJavaScriptProcedureRequest) WithNotNull(NotNull bool) *CreateAndCallForJavaScriptProcedureRequest {
+	s.NotNull = &NotNull
 	return s
 }
 
-func (s *CreateAndCallForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateAndCallForJavaScriptProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateAndCallForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateAndCallForJavaScriptProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -689,8 +683,8 @@ func (s *CreateAndCallForJavaScriptProcedureRequest) WithCallArguments(CallArgum
 	return s
 }
 
-func (s *CreateAndCallForJavaScriptProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CreateAndCallForJavaScriptProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CreateAndCallForJavaScriptProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CreateAndCallForJavaScriptProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }
 
@@ -722,13 +716,13 @@ func (s *CreateAndCallForPythonProcedureRequest) WithImports(Imports []Procedure
 	return s
 }
 
-func (s *CreateAndCallForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateAndCallForPythonProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateAndCallForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateAndCallForPythonProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateAndCallForPythonProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateAndCallForPythonProcedureRequest {
-	s.ProcedureDefinition = ProcedureDefinition
+func (s *CreateAndCallForPythonProcedureRequest) WithProcedureDefinition(ProcedureDefinition string) *CreateAndCallForPythonProcedureRequest {
+	s.ProcedureDefinition = &ProcedureDefinition
 	return s
 }
 
@@ -742,8 +736,8 @@ func (s *CreateAndCallForPythonProcedureRequest) WithCallArguments(CallArguments
 	return s
 }
 
-func (s *CreateAndCallForPythonProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CreateAndCallForPythonProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CreateAndCallForPythonProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CreateAndCallForPythonProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }
 
@@ -766,8 +760,8 @@ func (s *CreateAndCallForSQLProcedureRequest) WithArguments(Arguments []Procedur
 	return s
 }
 
-func (s *CreateAndCallForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateAndCallForSQLProcedureRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateAndCallForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateAndCallForSQLProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -781,7 +775,7 @@ func (s *CreateAndCallForSQLProcedureRequest) WithCallArguments(CallArguments []
 	return s
 }
 
-func (s *CreateAndCallForSQLProcedureRequest) WithScriptingVariable(ScriptingVariable *string) *CreateAndCallForSQLProcedureRequest {
-	s.ScriptingVariable = ScriptingVariable
+func (s *CreateAndCallForSQLProcedureRequest) WithScriptingVariable(ScriptingVariable string) *CreateAndCallForSQLProcedureRequest {
+	s.ScriptingVariable = &ScriptingVariable
 	return s
 }

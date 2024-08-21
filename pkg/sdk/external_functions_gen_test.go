@@ -94,13 +94,13 @@ func TestExternalFunctions_Create(t *testing.T) {
 }
 
 func TestExternalFunctions_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *AlterExternalFunctionOptions {
 		return &AlterExternalFunctionOptions{
-			name:              id,
-			IfExists:          Bool(true),
-			ArgumentDataTypes: []DataType{DataTypeVARCHAR, DataTypeNumber},
+			name:     id,
+			IfExists: Bool(true),
 		}
 	}
 
@@ -111,7 +111,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
+		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -156,7 +156,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		opts.Set = &ExternalFunctionSet{
 			ApiIntegration: &integration,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET API_INTEGRATION = "api_integration"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET API_INTEGRATION = "api_integration"`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set headers", func(t *testing.T) {
@@ -173,7 +173,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET HEADERS = ('header1' = 'value1', 'header2' = 'value2')`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET HEADERS = ('header1' = 'value1', 'header2' = 'value2')`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set max batch rows", func(t *testing.T) {
@@ -181,7 +181,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		opts.Set = &ExternalFunctionSet{
 			MaxBatchRows: Int(100),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET MAX_BATCH_ROWS = 100`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET MAX_BATCH_ROWS = 100`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set compression", func(t *testing.T) {
@@ -189,7 +189,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		opts.Set = &ExternalFunctionSet{
 			Compression: String("GZIP"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET COMPRESSION = GZIP`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET COMPRESSION = GZIP`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set context headers", func(t *testing.T) {
@@ -204,7 +204,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET CONTEXT_HEADERS = (CURRENT_ACCOUNT, CURRENT_USER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET CONTEXT_HEADERS = (CURRENT_ACCOUNT, CURRENT_USER)`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set request translator", func(t *testing.T) {
@@ -213,7 +213,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		opts.Set = &ExternalFunctionSet{
 			RequestTranslator: &rt,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET REQUEST_TRANSLATOR = %s`, id.FullyQualifiedName(), rt.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET REQUEST_TRANSLATOR = %s`, id.FullyQualifiedName(), rt.FullyQualifiedName())
 	})
 
 	t.Run("alter: set response translator", func(t *testing.T) {
@@ -222,12 +222,11 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		opts.Set = &ExternalFunctionSet{
 			ResponseTranslator: &st,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET RESPONSE_TRANSLATOR = %s`, id.FullyQualifiedName(), st.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET RESPONSE_TRANSLATOR = %s`, id.FullyQualifiedName(), st.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
 		opts.Unset = &ExternalFunctionUnset{
 			Comment:            Bool(true),
 			Headers:            Bool(true),
@@ -238,12 +237,12 @@ func TestExternalFunctions_Alter(t *testing.T) {
 			RequestTranslator:  Bool(true),
 			ResponseTranslator: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) UNSET COMMENT, HEADERS, CONTEXT_HEADERS, MAX_BATCH_ROWS, COMPRESSION, SECURE, REQUEST_TRANSLATOR, RESPONSE_TRANSLATOR`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET COMMENT, HEADERS, CONTEXT_HEADERS, MAX_BATCH_ROWS, COMPRESSION, SECURE, REQUEST_TRANSLATOR, RESPONSE_TRANSLATOR`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset with no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = nil
+		opts.name = noArgsId
 		opts.Unset = &ExternalFunctionUnset{
 			Comment:            Bool(true),
 			Headers:            Bool(true),
@@ -254,7 +253,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 			RequestTranslator:  Bool(true),
 			ResponseTranslator: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s () UNSET COMMENT, HEADERS, CONTEXT_HEADERS, MAX_BATCH_ROWS, COMPRESSION, SECURE, REQUEST_TRANSLATOR, RESPONSE_TRANSLATOR`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s UNSET COMMENT, HEADERS, CONTEXT_HEADERS, MAX_BATCH_ROWS, COMPRESSION, SECURE, REQUEST_TRANSLATOR, RESPONSE_TRANSLATOR`, noArgsId.FullyQualifiedName())
 	})
 }
 
@@ -292,7 +291,8 @@ func TestExternalFunctions_Show(t *testing.T) {
 }
 
 func TestExternalFunctions_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier()
+	noArgsId := randomSchemaObjectIdentifierWithArguments()
+	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *DescribeExternalFunctionOptions {
 		return &DescribeExternalFunctionOptions{
@@ -307,18 +307,18 @@ func TestExternalFunctions_Describe(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
+		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s ()`, id.FullyQualifiedName())
+		opts.name = noArgsId
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, id.FullyQualifiedName())
 	})
 }

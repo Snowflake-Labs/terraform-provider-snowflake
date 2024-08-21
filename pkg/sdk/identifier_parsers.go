@@ -169,11 +169,41 @@ func ParseSchemaObjectIdentifierWithArguments(fullyQualifiedName string) (Schema
 	), nil
 }
 
+// ParseSchemaObjectIdentifierWithArgumentsAndReturnType parses names in the following format: <database>.<schema>."<function>(<argname> <argtype>...):<returntype>"
+// Return type is not part of an identifier.
+// TODO(SNOW-1625030): Remove and use ParseSchemaObjectIdentifierWithArguments instead
+func ParseSchemaObjectIdentifierWithArgumentsAndReturnType(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
+	parts, err := ParseIdentifierStringWithOpts(fullyQualifiedName, func(r *csv.Reader) {
+		r.Comma = IdDelimiter
+	})
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	functionHeader := parts[2]
+	leftParenthesisIndex := strings.IndexRune(functionHeader, '(')
+	functionName := functionHeader[:leftParenthesisIndex]
+	argsRaw := functionHeader[leftParenthesisIndex:]
+	returnTypeIndex := strings.LastIndex(argsRaw, ":")
+	if returnTypeIndex != -1 {
+		argsRaw = argsRaw[:returnTypeIndex]
+	}
+	dataTypes, err := ParseFunctionArgumentsFromString(argsRaw)
+	if err != nil {
+		return SchemaObjectIdentifierWithArguments{}, err
+	}
+	return NewSchemaObjectIdentifierWithArguments(
+		parts[0],
+		parts[1],
+		functionName,
+		dataTypes...,
+	), nil
+}
+
 // ParseFunctionArgumentsFromString parses function argument from arguments string with optional argument names.
-// Varying types are not supported (e.g. VARCHAR(200)), because Snowflake outputs them in shortened version
-// (VARCHAR in this case). The only exception is newly added type VECTOR which has the following structure
+// Varying types are not supported (e.g. VARCHAR(200)), because Snowflake outputs them in a shortened version
+// (VARCHAR in this case). The only exception is newly added type VECTOR that has the following structure
 // VECTOR(<type>, n) where <type> right now can be either INT or FLOAT and n is the number of elements in the VECTOR.
-// Snowflake returns vectors with their exact type and this function supports it.
+// Snowflake returns vectors with their exact type, and this function supports it.
 func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 	dataTypes := make([]DataType, 0)
 
@@ -183,9 +213,24 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 	stringBuffer := bytes.NewBufferString(arguments)
 
 	for stringBuffer.Len() > 0 {
+		stringBuffer = bytes.NewBufferString(strings.TrimSpace(stringBuffer.String()))
+
+		// When a function is created with a default value for an argument, in the SHOW output ("arguments" column)
+		// the argument's data type is prefixed with "DEFAULT ", e.g. "(DEFAULT INT, DEFAULT VARCHAR)".
+		if strings.HasPrefix(stringBuffer.String(), "DEFAULT") {
+			if _, err := stringBuffer.ReadString(' '); err != nil {
+				return nil, fmt.Errorf("failed to skip default keyword, err = %w", err)
+			}
+		}
+
 		// We use another buffer to peek into next data type (needed for vector parsing)
 		peekDataType, _ := bytes.NewBufferString(stringBuffer.String()).ReadString(',')
-		peekDataType = strings.TrimSpace(peekDataType)
+		// Skip argument name, if present
+		if strings.ContainsRune(peekDataType, ' ') && !strings.HasPrefix(peekDataType, "VECTOR(") {
+			// Ignore err, because stringBuffer always contains ' ' here
+			_, _ = stringBuffer.ReadString(' ')
+			peekDataType, _ = bytes.NewBufferString(stringBuffer.String()).ReadString(',')
+		}
 
 		switch {
 		// For now, only vectors need special parsing behavior
@@ -233,12 +278,11 @@ func ParseFunctionArgumentsFromString(arguments string) ([]DataType, error) {
 			}
 			dataTypes = append(dataTypes, DataType(vectorDataType))
 		default:
-			dataType, err := stringBuffer.ReadString(',')
+			argument, err := stringBuffer.ReadString(',')
 			if err == nil {
-				dataType = dataType[:len(dataType)-1]
+				argument = argument[:len(argument)-1]
 			}
-			dataType = strings.TrimSpace(dataType)
-			dataTypes = append(dataTypes, DataType(dataType))
+			dataTypes = append(dataTypes, DataType(argument))
 		}
 	}
 

@@ -91,9 +91,10 @@ var tableSchema = map[string]*schema.Schema{
 								// ConflictsWith: []string{".constant", ".sequence"}, - can't use, nor ExactlyOneOf due to column type being TypeList
 							},
 							"sequence": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "The default sequence to use for the column",
+								Type:             schema.TypeString,
+								Optional:         true,
+								Description:      "The default sequence to use for the column",
+								DiffSuppressFunc: suppressIdentifierQuoting,
 								// ConflictsWith: []string{".constant", ".expression"}, - can't use, nor ExactlyOneOf due to column type being TypeList
 							},
 						},

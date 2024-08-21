@@ -26,7 +26,6 @@ func (c *ShareClient) client() sdk.Shares {
 
 func (c *ShareClient) CreateShare(t *testing.T) (*sdk.Share, func()) {
 	t.Helper()
-	// TODO(SNOW-1058419): Try with identifier containing dot during identifiers rework
 	return c.CreateShareWithIdentifier(t, c.ids.RandomAccountObjectIdentifier())
 }
 

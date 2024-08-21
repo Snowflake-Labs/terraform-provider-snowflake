@@ -220,7 +220,6 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 				},
 				"all": {
 					Type:        schema.TypeList,
@@ -405,13 +404,20 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to account role")
 	client := meta.(*provider.Context).Client
 
-	id := createGrantPrivilegesToAccountRoleIdFromSchema(d)
+	id, err := createGrantPrivilegesToAccountRoleIdFromSchema(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
-	err := client.Grants.GrantPrivilegesToAccountRole(
+	grantOn, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = client.Grants.GrantPrivilegesToAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
-		getAccountRoleGrantOn(d),
+		grantOn,
 		sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string)),
 		&sdk.GrantPrivilegesToAccountRoleOptions{
 			WithGrantOption: sdk.Bool(d.Get("with_grant_option").(bool)),
@@ -456,17 +462,20 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
+		grantOn, err := getAccountRoleGrantOn(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		if !allPrivileges.(bool) {
 			logging.DebugLogger.Printf("[DEBUG] Revoking all privileges")
 			err = client.Grants.RevokePrivilegesFromAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getAccountRoleGrantOn(d),
+				grantOn,
 				id.RoleName,
 				new(sdk.RevokePrivilegesFromAccountRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -513,7 +522,10 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				}
 			}
 
-			grantOn := getAccountRoleGrantOn(d)
+			grantOn, err := getAccountRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
 			if len(privilegesToAdd) > 0 {
 				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
@@ -589,14 +601,17 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 		if allPrivileges.(bool) {
 			logging.DebugLogger.Printf("[DEBUG] Granting all privileges")
+			grantOn, err := getAccountRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			err = client.Grants.GrantPrivilegesToAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getAccountRoleGrantOn(d),
+				grantOn,
 				id.RoleName,
 				new(sdk.GrantPrivilegesToAccountRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -617,10 +632,14 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 	if id.AlwaysApply {
 		logging.DebugLogger.Printf("[DEBUG] Performing always_apply re-grant")
-		err := client.Grants.GrantPrivilegesToAccountRole(
+		grantOn, err := getAccountRoleGrantOn(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			getAccountRolePrivilegesFromSchema(d),
-			getAccountRoleGrantOn(d),
+			grantOn,
 			id.RoleName,
 			&sdk.GrantPrivilegesToAccountRoleOptions{
 				WithGrantOption: &id.WithGrantOption,
@@ -659,10 +678,15 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
+	grantOn, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	err = client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
-		getAccountRoleGrantOn(d),
+		grantOn,
 		id.RoleName,
 		&sdk.RevokePrivilegesFromAccountRoleOptions{},
 	)
@@ -966,7 +990,7 @@ func getAccountRolePrivileges(allPrivileges bool, privileges []string, onAccount
 	return accountRoleGrantPrivileges
 }
 
-func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
+func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, error) {
 	_, onAccountOk := d.GetOk("on_account")
 	onAccountObjectBlock, onAccountObjectOk := d.GetOk("on_account_object")
 	onSchemaBlock, onSchemaOk := d.GetOk("on_schema")
@@ -1050,9 +1074,21 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 		switch {
 		case objectTypeOk && objectNameOk:
+			objectType := sdk.ObjectType(objectType)
+			var id sdk.ObjectIdentifier
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
+			if objectType.IsWithArguments() {
+				var err error
+				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				id = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName)
+			}
 			grantOnSchemaObject.SchemaObject = &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName),
+				ObjectType: objectType,
+				Name:       id,
 			}
 		case allOk:
 			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(all[0].(map[string]any))
@@ -1063,10 +1099,10 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 		on.SchemaObject = grantOnSchemaObject
 	}
 
-	return on
+	return on, nil
 }
 
-func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToAccountRoleId {
+func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) (*GrantPrivilegesToAccountRoleId, error) {
 	id := new(GrantPrivilegesToAccountRoleId)
 	id.RoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string))
 	id.AllPrivileges = d.Get("all_privileges").(bool)
@@ -1076,7 +1112,10 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
 	id.AlwaysApply = d.Get("always_apply").(bool)
 
-	on := getAccountRoleGrantOn(d)
+	on, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return nil, err
+	}
 	switch {
 	case on.Account != nil:
 		id.Kind = OnAccountAccountRoleGrantKind
@@ -1149,5 +1188,5 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 		id.Data = onSchemaObjectGrantData
 	}
 
-	return id
+	return id, nil
 }
