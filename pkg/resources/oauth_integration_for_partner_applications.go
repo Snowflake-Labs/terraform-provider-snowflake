@@ -23,10 +23,11 @@ import (
 
 var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client": {
 		Type:             schema.TypeString,
@@ -121,7 +122,6 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
 				ShowOutputAttributeName,
-				"name",
 				"enabled",
 				"comment",
 			),
@@ -146,7 +146,14 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting oauth integration for partner applications import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -199,8 +206,11 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 
 func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	oauthClient, err := sdk.ToOauthSecurityIntegrationClientOption(d.Get("oauth_client").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -256,7 +266,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextOauthIntegrationForPartnerApplications(false)(ctx, d, meta)
 }
@@ -264,7 +274,10 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -290,9 +303,6 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -386,7 +396,11 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 
 func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewOauthForPartnerApplicationsIntegrationSetRequest(), sdk.NewOauthForPartnerApplicationsIntegrationUnsetRequest()
 
 	if d.HasChange("blocked_roles_list") {
@@ -472,10 +486,13 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 }
 
 func DeleteContextSecurityIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

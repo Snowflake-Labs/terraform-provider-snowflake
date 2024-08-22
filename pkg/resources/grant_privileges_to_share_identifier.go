@@ -56,7 +56,7 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 	case OnDatabaseShareGrantKind:
 		id, err := sdk.ParseAccountObjectIdentifier(parts[3])
 		if err != nil {
-			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("invalid identifier, expected fully qualified name of account object%s: ", parts[3]), err)
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("invalid identifier, expected fully qualified name of account object %s: ", parts[3]), err)
 		}
 		grantPrivilegesToShareId.Identifier = id
 	case OnSchemaShareGrantKind, OnAllTablesInSchemaShareGrantKind:

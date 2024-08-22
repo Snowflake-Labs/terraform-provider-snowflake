@@ -279,7 +279,7 @@ func TestAcc_SecurityIntegrations_ExternalOauth(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_issuer.0.value", issuer),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_jws_keys_url.0.value", "https://example.com"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_any_role_mode.0.value", string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable)),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_allowed_roles_list.0.value", role.Name),
+					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_allowed_roles_list.0.value", role.ID().Name()),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_audience_list.0.value", "foo"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_token_user_mapping_claim.0.value", "['foo']"),
 					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.external_oauth_snowflake_user_mapping_attribute.0.value", string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeEmailAddress)),
@@ -330,7 +330,7 @@ func TestAcc_SecurityIntegrations_OauthForCustomClients(t *testing.T) {
 			"blocked_roles_list":                    config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"), config.StringVariable(blockedRole.ID().Name())),
 			"comment":                               config.StringVariable(comment),
 			"enabled":                               config.BoolVariable(true),
-			"network_policy":                        config.StringVariable(networkPolicy.Name),
+			"network_policy":                        config.StringVariable(networkPolicy.ID().Name()),
 			"oauth_allow_non_tls_redirect_uri":      config.BoolVariable(true),
 			"oauth_allowed_authorization_endpoints": config.SetVariable(config.StringVariable("http://allowed.com")),
 			"oauth_allowed_token_endpoints":         config.SetVariable(config.StringVariable("http://allowed.com")),
@@ -588,7 +588,7 @@ func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
 	configVariables := config.Variables{
 		"name":           config.StringVariable(id.Name()),
 		"comment":        config.StringVariable(comment),
-		"network_policy": config.StringVariable(networkPolicy.Name),
+		"network_policy": config.StringVariable(networkPolicy.ID().Name()),
 	}
 
 	resource.Test(t, resource.TestCase{

@@ -229,24 +229,6 @@ func (v *Grant) ID() ObjectIdentifier {
 func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	var granteeName AccountObjectIdentifier
-	if grantedTo == ObjectTypeShare {
-		// TODO(SNOW-1058419): Change this logic during identifiers rework
-		parts := strings.Split(row.GranteeName, ".")
-		switch {
-		case len(parts) == 1:
-			granteeName = NewAccountObjectIdentifier(parts[0])
-		case len(parts) == 2:
-			granteeName = NewAccountObjectIdentifier(parts[1])
-		default:
-			fallback := row.GranteeName[strings.IndexRune(row.GranteeName, '.')+1:]
-			log.Printf("unsupported case for share's grantee name: %s Falling back to account object identifier: %s", row.GranteeName, fallback)
-			granteeName = NewAccountObjectIdentifier(fallback)
-		}
-	} else {
-		granteeName = NewAccountObjectIdentifier(row.GranteeName)
-	}
-
 	var grantedOn ObjectType
 	// true for current grants
 	if row.GrantedOn != "" {
@@ -279,14 +261,14 @@ func (row grantRow) convert() *Grant {
 	}
 
 	return &Grant{
-		CreatedOn:   row.CreatedOn,
-		Privilege:   row.Privilege,
-		GrantedOn:   grantedOn,
-		GrantOn:     grantOn,
-		GrantedTo:   grantedTo,
-		GrantTo:     grantTo,
-		Name:        name,
-		GranteeName: granteeName,
+		CreatedOn: row.CreatedOn,
+		Privilege: row.Privilege,
+		GrantedOn: grantedOn,
+		GrantOn:   grantOn,
+		GrantedTo: grantedTo,
+		GrantTo:   grantTo,
+		Name:      name,
+		// GranteeName is computed in Show operation. Its format is depending on the grant request options.
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}

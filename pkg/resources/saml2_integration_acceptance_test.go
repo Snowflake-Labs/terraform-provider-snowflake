@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -134,23 +136,23 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_issuer", issuer),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sso_url", validUrl),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_x509_cert", cert),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sp_initiated_login_page_label", ""),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_enable_sp_initiated", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sign_request", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_requested_nameid_format", ""),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_post_logout_redirect_url", ""),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "false"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_issuer_url"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_acs_url"),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "allowed_user_domains"),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "allowed_email_patterns"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sso_url", validUrl),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_x509_cert", cert),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sp_initiated_login_page_label", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_enable_sp_initiated", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sign_request", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_requested_nameid_format", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_post_logout_redirect_url", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "false"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_issuer_url"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_acs_url"),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_user_domains"),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_email_patterns"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
 			// set optionals
@@ -215,25 +217,25 @@ func TestAcc_Saml2Integration_basic(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_issuer", issuer2),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sso_url", validUrl2),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_x509_cert", cert2),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sp_initiated_login_page_label", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_enable_sp_initiated", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sign_request", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_post_logout_redirect_url", validUrl),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "true"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_issuer_url"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_acs_url"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_user_domains.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_user_domains.0", "example.com"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_email_patterns.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_email_patterns.0", "^(.+dev)@example.com$"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer2),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sso_url", validUrl2),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_x509_cert", cert2),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sp_initiated_login_page_label", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_enable_sp_initiated", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sign_request", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_post_logout_redirect_url", validUrl),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "true"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_issuer_url"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_acs_url"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_user_domains.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_user_domains.0", "example.com"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_email_patterns.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_email_patterns.0", "^(.+dev)@example.com$"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", "foo"),
 				),
 			},
 			// change values externally
@@ -435,9 +437,9 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 				ResourceName: "snowflake_saml2_integration.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_force_authn.0.value", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.0.saml2_force_authn.0.value", "true"),
 				),
 			},
 			// change type in config
@@ -539,9 +541,9 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 				ResourceName: "snowflake_saml2_integration.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_force_authn.0.value", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
 		},
@@ -648,26 +650,26 @@ func TestAcc_Saml2Integration_complete(t *testing.T) {
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_issuer", issuer),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sso_url", validUrl),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_x509_cert", cert),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sp_initiated_login_page_label", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_enable_sp_initiated", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_sign_request", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_post_logout_redirect_url", validUrl),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "true"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_issuer_url"),
-					importchecks.TestCheckResourceAttrInstanceStateSet(id.Name(), "saml2_snowflake_acs_url"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_user_domains.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_user_domains.0", "example.com"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_email_patterns.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_email_patterns.0", "^(.+dev)@example.com$"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_issuer", issuer),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sso_url", validUrl),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_provider", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_x509_cert", cert),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sp_initiated_login_page_label", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_enable_sp_initiated", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_sign_request", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_requested_nameid_format", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_post_logout_redirect_url", validUrl),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "true"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_issuer_url"),
+					importchecks.TestCheckResourceAttrInstanceStateSet(resourcehelpers.EncodeResourceIdentifier(id), "saml2_snowflake_acs_url"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_user_domains.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_user_domains.0", "example.com"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_email_patterns.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_email_patterns.0", "^(.+dev)@example.com$"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", "foo"),
 				),
 			},
 		},
@@ -1033,20 +1035,111 @@ func TestAcc_Saml2Integration_DefaultValues(t *testing.T) {
 				ImportState:     true,
 				ResourceName:    "snowflake_saml2_integration.test",
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_force_authn", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "saml2_post_logout_redirect_url", ""),
-
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "show_output.0.enabled", "false"),
-
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_force_authn.0.value", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "describe_output.0.saml2_post_logout_redirect_url.0.value", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_force_authn", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "saml2_post_logout_redirect_url", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "show_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "show_output.0.enabled", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.0.saml2_force_authn.0.value", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.0.saml2_post_logout_redirect_url.0.value", ""),
 				),
 			},
 		},
 	})
+}
+
+func TestAcc_Saml2Integration_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	cert := random.GenerateX509(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: saml2IntegrationBasicConfig(id.Name(), cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   saml2IntegrationBasicConfig(id.Name(), cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Saml2Integration_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	cert := random.GenerateX509(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             saml2IntegrationBasicConfig(quotedId, cert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   saml2IntegrationBasicConfig(quotedId, cert),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_saml2_integration.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_saml2_integration.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func saml2IntegrationBasicConfig(name string, cert string) string {
+	return fmt.Sprintf(`
+resource "snowflake_saml2_integration" "test" {
+  name            = "%s"
+  saml2_issuer    = "http://example.com"
+  saml2_sso_url   = "http://example.com"
+  saml2_provider  = "CUSTOM"
+  saml2_x509_cert = <<EOT
+%s
+EOT
+}
+`, name, cert)
 }

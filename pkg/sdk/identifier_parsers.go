@@ -61,6 +61,9 @@ func parseIdentifier[T ObjectIdentifier](identifier string, expectedParts int, e
 }
 
 func ParseAccountObjectIdentifier(identifier string) (AccountObjectIdentifier, error) {
+	if !(strings.HasPrefix(identifier, `"`) && strings.HasSuffix(identifier, `"`)) {
+		identifier = fmt.Sprintf(`"%s"`, identifier)
+	}
 	return parseIdentifier[AccountObjectIdentifier](
 		identifier, 1, "<account_object_name>",
 		func(parts []string) AccountObjectIdentifier {

@@ -7,9 +7,9 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -22,10 +22,11 @@ import (
 
 var saml2IntegrationSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {
 		Type:             schema.TypeString,
@@ -171,7 +172,7 @@ func SAML2Integration() *schema.Resource {
 			ForceNewIfChangeToEmptyString("saml2_snowflake_issuer_url"),
 			ForceNewIfChangeToEmptyString("saml2_snowflake_acs_url"),
 			ForceNewIfChangeToEmptyString("saml2_sp_initiated_login_page_label"),
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "saml2_issuer", "saml2_sso_url", "saml2_provider", "saml2_x509_cert",
 				"saml2_sp_initiated_login_page_label", "saml2_enable_sp_initiated", "saml2_sign_request", "saml2_requtedted_nameid_format",
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
@@ -183,7 +184,14 @@ func SAML2Integration() *schema.Resource {
 func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting saml2 integration import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -195,9 +203,6 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
-		return nil, err
-	}
 	if err := d.Set("comment", integration.Comment); err != nil {
 		return nil, err
 	}
@@ -345,8 +350,11 @@ func getOptionalListField(props []sdk.SecurityIntegrationProperty, propName stri
 
 func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	samlProvider, err := sdk.ToSaml2SecurityIntegrationSaml2ProviderOption(d.Get("saml2_provider").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -446,7 +454,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
@@ -454,7 +462,10 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -480,10 +491,6 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -641,7 +648,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 
 func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewSaml2IntegrationSetRequest(), sdk.NewSaml2IntegrationUnsetRequest()
 
 	if d.HasChange("enabled") {
@@ -799,10 +810,13 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 }
 
 func DeleteContextSAM2LIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

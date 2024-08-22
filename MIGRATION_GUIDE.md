@@ -6,6 +6,37 @@ across different versions.
 
 ## v0.94.x ➞ v0.95.0
 
+### Identifier changes
+
+#### *(breaking change)* resource identifiers for schema and streamlit
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). 
+Exception to that rule will be identifiers that consist of multiple parts (like in the case of [grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)'s resource id).
+The change was applied to already refactored resources (only in the case of `snowflake_schema` and `snowflake_streamlit` this will be a breaking change, because the rest of the objects are single part identifiers in the format of `<name>`):
+- `snowflake_api_authentication_integration_with_authorization_code_grant`
+- `snowflake_api_authentication_integration_with_client_credentials`
+- `snowflake_api_authentication_integration_with_jwt_bearer`
+- `snowflake_oauth_integration_for_custom_clients`
+- `snowflake_oauth_integration_for_partner_applications`
+- `snowflake_external_oauth_integration`
+- `snowflake_saml2_integration`
+- `snowflake_scim_integration`
+- `snowflake_database`
+- `snowflake_shared_database`
+- `snowflake_secondary_database`
+- `snowflake_account_role`
+- `snowflake_network_policy`
+- `snowflake_warehouse`
+
+No change is required, the state will be migrated automatically. 
+The rest of the objects will be changed when working on them during [v1 object preparations](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
+
+#### *(breaking change)* diff suppress for identifier quoting
+(The same set of resources listed above was adjusted)
+To prevent issues like [this one](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982), we added diff suppress function that prevents Terraform from showing differences,
+when only quoting is different. In some cases, Snowflake output (mostly from SHOW commands) was dictating which field should be additionally quoted and which shouldn't, but that should no longer be the case.
+Like in the change above, the rest of the objects will be changed when working on them during [v1 object preparations](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
+
 ### New `fully_qualified_name` field in the resources.
 We added a new `fully_qualified_name` to snowflake resources. This should help with referencing other resources in fields that expect a fully qualified name. For example, instead of
 writing
@@ -15,6 +46,8 @@ writing
  now we can write
 
 ```object_name = snowflake_table.fully_qualified_name```
+
+See more details in [identifiers guide](./docs/guides/identifiers.md#new-computed-fully-qualified-name-field-in-resources).
 
 See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
 

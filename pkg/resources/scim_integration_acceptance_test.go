@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -38,7 +40,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 		}
 		if complete {
 			c["sync_password"] = config.BoolVariable(false)
-			c["network_policy_name"] = config.StringVariable(networkPolicy.Name)
+			c["network_policy_name"] = config.StringVariable(networkPolicy.ID().Name())
 			c["comment"] = config.StringVariable("foo")
 		}
 		return c
@@ -88,13 +90,13 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				ResourceName:    "snowflake_scim_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "GENERIC"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", ""),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "sync_password", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "scim_client", "GENERIC"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "run_as_role", role.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "sync_password", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
 			// set optionals
@@ -133,14 +135,14 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 				ResourceName:    "snowflake_scim_integration.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "OKTA"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role2.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", networkPolicy.ID().Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "sync_password", "false"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "enabled", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "scim_client", "OKTA"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "run_as_role", role2.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", networkPolicy.ID().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "sync_password", "false"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", "foo"),
 				),
 			},
 			// unset
@@ -172,7 +174,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 			"enabled":             config.BoolVariable(false),
 			"scim_client":         config.StringVariable(string(sdk.ScimSecurityIntegrationScimClientGeneric)),
 			"sync_password":       config.BoolVariable(false),
-			"network_policy_name": config.StringVariable(networkPolicy.Name),
+			"network_policy_name": config.StringVariable(networkPolicy.ID().Name()),
 			"run_as_role":         config.StringVariable(role.Name()),
 			"comment":             config.StringVariable("foo"),
 		}
@@ -580,4 +582,94 @@ resource "snowflake_scim_integration" "test" {
 }
 `
 	return fmt.Sprintf(s, name, enabled, scimClient, roleName)
+}
+
+func TestAcc_ScimIntegration_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: scimIntegrationBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   scimIntegrationBasicConfig(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ScimIntegration_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             scimIntegrationBasicConfig(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   scimIntegrationBasicConfig(quotedId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_scim_integration.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_scim_integration.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func scimIntegrationBasicConfig(name string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_scim_integration" "test" {
+	 name        = "%s"
+	 scim_client = "GENERIC"
+	 run_as_role = "%s"
+	 enabled     = true
+	}
+	`, name, snowflakeroles.GenericScimProvisioner.Name())
 }
