@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 
@@ -261,6 +262,27 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	}
 	logging.DebugLogger.Printf("[DEBUG] Show grants: converting rows")
 	resultList := convertRows[grantRow, Grant](dbRows)
+	for i, grant := range resultList {
+		// SHOW GRANTS of DATABASE ROLE requires a special handling:
+		// - it returns no account name, so for other SHOW GRANTS types it needs to be skipped
+		// - it returns fully qualified name for database objects
+		granteeNameRaw := dbRows[i].GranteeName
+		if !(valueSet(opts.Of) && valueSet(opts.Of.DatabaseRole)) { //nolint:gocritic
+			granteeName := granteeNameRaw
+			if grant.GrantedTo == ObjectTypeShare {
+				granteeName = granteeName[strings.IndexRune(granteeName, '.')+1:]
+			}
+			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeName)
+		} else if !slices.Contains([]ObjectType{ObjectTypeRole, ObjectTypeShare}, grant.GrantedTo) {
+			id, err := ParseDatabaseObjectIdentifier(granteeNameRaw)
+			if err != nil {
+				return nil, err
+			}
+			resultList[i].GranteeName = id
+		} else {
+			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeNameRaw)
+		}
+	}
 	logging.DebugLogger.Printf("[DEBUG] Show grants: rows converted")
 	return resultList, nil
 }
