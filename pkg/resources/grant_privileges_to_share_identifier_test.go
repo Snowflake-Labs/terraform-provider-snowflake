@@ -121,8 +121,8 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 		},
 		{
 			Name:       "validation: invalid account object identifier",
-			Identifier: `"share-name"|SELECT|OnDatabase|"one"."two"`,
-			Error:      `unexpected number of parts 2 in identifier "one"."two", expected 1 in a form of "<account_object_name>"`,
+			Identifier: `"share-name"|SELECT|OnTable|"one"."two"`,
+			Error:      `unexpected number of parts 2 in identifier "one"."two", expected 3 in a form of "<database_name>.<schema_name>.<schema_object_name>"`,
 		},
 		{
 			Name:       "validation: invalid database object identifier",

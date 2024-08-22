@@ -191,15 +191,15 @@ func IgnoreValuesFromSetIfParamSet(key, param string, values []string) schema.Sc
 func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {
 		return false
-	} else {
-		oldId, err := sdk.ParseIdentifierString(oldValue)
-		if err != nil {
-			return false
-		}
-		newId, err := sdk.ParseIdentifierString(newValue)
-		if err != nil {
-			return false
-		}
-		return slices.Equal(oldId, newId)
 	}
+
+	oldId, err := sdk.ParseIdentifierString(oldValue)
+	if err != nil {
+		return false
+	}
+	newId, err := sdk.ParseIdentifierString(newValue)
+	if err != nil {
+		return false
+	}
+	return slices.Equal(oldId, newId)
 }

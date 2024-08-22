@@ -17,11 +17,11 @@ import (
 
 var accountRoleSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type:             schema.TypeString,
+		Required:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		// TODO(SNOW-999049): Uncomment once better identifier validation will be implemented
 		// ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -126,7 +126,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to set account role comment",
-				Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", accountRole.Name, accountRole.Comment, err),
+				Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", accountRole.ID().FullyQualifiedName(), accountRole.Comment, err),
 			},
 		}
 	}

@@ -47,7 +47,7 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"parent_account_role_name": config.StringVariable(parentRole.Name),
+			"parent_account_role_name": config.StringVariable(parentRole.ID().Name()),
 			"application_name":         config.StringVariable(app.Name),
 			"application_role_name":    config.StringVariable(applicationRoleName),
 		}
@@ -64,8 +64,8 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 				ConfigVariables:          m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", fmt.Sprintf("\"%s\"", parentRole.Name)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|ACCOUNT_ROLE|"%v"`, app.Name, applicationRoleName, parentRole.Name)),
+					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", parentRole.ID().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|ACCOUNT_ROLE|"%v"`, app.Name, applicationRoleName, parentRole.ID().Name())),
 				),
 			},
 			// test import

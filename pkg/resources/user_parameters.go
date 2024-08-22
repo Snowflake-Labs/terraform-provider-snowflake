@@ -165,7 +165,7 @@ func init() {
 }
 
 func userParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	return parametersProvider(ctx, d, meta.(*provider.Context), userParametersProviderFunc)
+	return parametersProvider(ctx, d, meta.(*provider.Context), userParametersProviderFunc, sdk.ParseAccountObjectIdentifier)
 }
 
 func userParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {

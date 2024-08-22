@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -36,7 +38,7 @@ func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{})
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 
-	integrationName := d.Get("integration_name").(string)
+	integrationName := sdk.NewAccountObjectIdentifier(d.Get("integration_name").(string)).Name()
 
 	sel := snowflake.NewSystemGenerateSCIMAccessTokenBuilder(integrationName).Select()
 	row := snowflake.QueryRow(db, sel)

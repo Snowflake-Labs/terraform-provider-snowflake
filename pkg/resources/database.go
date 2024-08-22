@@ -89,8 +89,6 @@ var databaseSchema = map[string]*schema.Schema{
 
 func Database() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
-
 		CreateContext: CreateDatabase,
 		UpdateContext: UpdateDatabase,
 		ReadContext:   ReadDatabase,
@@ -99,7 +97,7 @@ func Database() *schema.Resource {
 
 		Schema: helpers.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName,
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -107,6 +105,7 @@ func Database() *schema.Resource {
 			databaseParametersCustomDiff,
 		),
 
+		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
@@ -121,7 +120,10 @@ func Database() *schema.Resource {
 func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	opts := &sdk.CreateDatabaseOptions{
 		Transient: GetConfigPropertyAsPointerAllowingZeroValue[bool](d, "is_transient"),
@@ -131,12 +133,12 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		return parametersCreateDiags
 	}
 
-	err := client.Databases.Create(ctx, id, opts)
+	err = client.Databases.Create(ctx, id, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	var diags diag.Diagnostics
 
@@ -220,17 +222,25 @@ func CreateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("name") {
-		newId := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+		newId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
 			NewName: &newId,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
 		id = newId
 	}
 
@@ -349,7 +359,10 @@ func UpdateDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
@@ -367,10 +380,6 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("name", database.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -460,9 +469,12 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 
 func DeleteDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
+	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
