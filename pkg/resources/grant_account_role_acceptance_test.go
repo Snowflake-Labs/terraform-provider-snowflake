@@ -172,18 +172,13 @@ func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 				},
 				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
 				Config:      grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "role_name", roleId.Name()),
-					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "parent_role_name", parentRoleId.Name()),
-					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "id", fmt.Sprintf(`%v|ROLE|%v`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
-				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_grant_account_role.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_grant_account_role.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_account_role.test", plancheck.ResourceActionNoop),

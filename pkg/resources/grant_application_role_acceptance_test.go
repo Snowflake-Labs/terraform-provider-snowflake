@@ -214,7 +214,7 @@ func TestAcc_GrantApplicationRole_IdentifierQuotingDiffSuppression(t *testing.T)
 				Config:                   grantApplicationRoleBasicConfig(unquotedApplicationRoleId, quotedParentRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
