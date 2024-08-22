@@ -26,6 +26,17 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant account role on account - empty role name",
+			Identifier: `|false|false|CREATE DATABASE,CREATE USER|OnAccount`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier(""),
+				WithGrantOption: false,
+				Privileges:      []string{"CREATE DATABASE", "CREATE USER"},
+				Kind:            OnAccountAccountRoleGrantKind,
+				Data:            new(OnAccountGrantData),
+			},
+		},
+		{
 			Name:       "grant account role on account - always apply with grant option",
 			Identifier: `"account-role"|true|true|CREATE DATABASE,CREATE USER|OnAccount`,
 			Expected: GrantPrivilegesToAccountRoleId{
@@ -319,11 +330,6 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			Name:       "validation: grant account role empty always apply",
 			Identifier: `"account-role"|false||ALL PRIVILEGES|OnAccount`,
 			Error:      `invalid AlwaysApply value: , should be either "true" or "false"`,
-		},
-		{
-			Name:       "validation: grant account role empty role name",
-			Identifier: `|false|false|ALL PRIVILEGES|OnAccount`,
-			Error:      "incompatible identifier: ",
 		},
 		{
 			Name:       "validation: account role empty type",

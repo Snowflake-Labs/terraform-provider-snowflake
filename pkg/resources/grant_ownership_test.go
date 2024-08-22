@@ -64,7 +64,7 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Name:       "validation - valid identifier",
 			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "to.many.parts.in.this.identifier",
-			Error:      "unexpected number of parts 6 in identifier to.many.parts.in.this.identifier, expected 1 in a form of \"<account_object_name>\"",
+			Expected:   sdk.NewAccountObjectIdentifier("to.many.parts.in.this.identifier"),
 		},
 		{
 			Name:       "validation - unsupported type",
@@ -420,7 +420,9 @@ func TestValidAccountRoleNameGetOwnershipGrantTo(t *testing.T) {
 		{
 			Name:        "account role name - with dots",
 			AccountRole: sdk.String("account.role.with.dots"),
-			Error:       "unexpected number of parts 4 in identifier account.role.with.dots, expected 1 in a form of \"<account_object_name>\"",
+			Expected: sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier("account.role.with.dots")),
+			},
 		},
 		{
 			Name:        "account role name - with dots quoted",

@@ -155,19 +155,15 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on_account_object.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_name", databaseName),
-					// TODO (SNOW-999049): Even if the identifier is passed as a non-escaped value it will be escaped in the identifier and later on in the CRUD operations (right now, it's "only" read, which can cause behavior similar to always_apply)
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE DATABASE ROLE,CREATE SCHEMA|OnAccountObject|DATABASE|\"%s\"", roleFullyQualifiedName, acc.TestDatabaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE DATABASE ROLE,CREATE SCHEMA|OnAccountObject|DATABASE|%s", roleFullyQualifiedName, acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
-				// TODO (SNOW-999049): this fails, because after import object_name identifier is escaped (was unescaped)
-				// 	Make grant_privileges_to_account_role and grant_privileges_to_account_role identifiers accept
-				//  quoted and unquoted identifiers.
-				// ConfigPlanChecks: resource.ConfigPlanChecks{
-				//	PostApplyPostRefresh: []plancheck.PlanCheck{
-				//		plancheck.ExpectEmptyPlan(),
-				//	},
-				// },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
