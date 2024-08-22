@@ -273,7 +273,7 @@ func View() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateView,
+		CreateContext: CreateView(false),
 		ReadContext:   ReadView(true),
 		UpdateContext: UpdateView,
 		DeleteContext: DeleteView,
@@ -327,95 +327,88 @@ func ImportView(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 	return []*schema.ResourceData{d}, nil
 }
 
-func CreateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
+func CreateView(orReplace bool) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		databaseName := d.Get("database").(string)
+		schemaName := d.Get("schema").(string)
+		name := d.Get("name").(string)
+		id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	req, err := prepareCreateRequest(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	id := req.GetName()
+		statement := d.Get("statement").(string)
+		req := sdk.NewCreateViewRequest(id, statement)
 
-	err = client.Views.Create(ctx, req)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating view %v err = %w", id.Name(), err))
-	}
+		// TODO(next pr): remove or_replace field
+		if v := d.Get("or_replace"); v.(bool) || orReplace {
+			req.WithOrReplace(true)
+		}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+		if v := d.Get("copy_grants"); v.(bool) {
+			req.WithCopyGrants(true)
+		}
 
-	if v := d.Get("change_tracking").(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
+		if v := d.Get("is_secure").(string); v != BooleanDefault {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			req.WithSecure(parsed)
+		}
+
+		if v := d.Get("is_temporary").(string); v != BooleanDefault {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			req.WithTemporary(parsed)
+		}
+
+		if v := d.Get("is_recursive").(string); v != BooleanDefault {
+			parsed, err := strconv.ParseBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			req.WithRecursive(parsed)
+		}
+
+		if v := d.Get("comment").(string); len(v) > 0 {
+			req.WithComment(v)
+		}
+
+		if v := d.Get("row_access_policy"); len(v.([]any)) > 0 {
+			req.WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(extractPolicyWithColumns(v, "on")))
+		}
+
+		if v := d.Get("aggregation_policy"); len(v.([]any)) > 0 {
+			id, columns := extractPolicyWithColumns(v, "entity_key")
+			aggregationPolicyReq := sdk.NewViewAggregationPolicyRequest(id)
+			if len(columns) > 0 {
+				aggregationPolicyReq.WithEntityKey(columns)
+			}
+			req.WithAggregationPolicy(*aggregationPolicyReq)
+		}
+
+		err := client.Views.Create(ctx, req)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("error creating view %v err = %w", id.Name(), err))
 		}
 
-		err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
+		d.SetId(helpers.EncodeSnowflakeID(id))
+
+		if v := d.Get("change_tracking").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
+			}
 		}
+
+		return ReadView(false)(ctx, d, meta)
 	}
-
-	return ReadView(false)(ctx, d, meta)
-}
-
-func prepareCreateRequest(d *schema.ResourceData) (*sdk.CreateViewRequest, error) {
-	databaseName := d.Get("database").(string)
-	schemaName := d.Get("schema").(string)
-	name := d.Get("name").(string)
-	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-
-	statement := d.Get("statement").(string)
-	req := sdk.NewCreateViewRequest(id, statement)
-
-	if v := d.Get("or_replace"); v.(bool) {
-		req.WithOrReplace(true)
-	}
-
-	if v := d.Get("copy_grants"); v.(bool) {
-		req.WithCopyGrants(true)
-	}
-
-	if v := d.Get("is_secure").(string); v != BooleanDefault {
-		parsed, err := strconv.ParseBool(v)
-		if err != nil {
-			return nil, err
-		}
-		req.WithSecure(parsed)
-	}
-
-	if v := d.Get("is_temporary").(string); v != BooleanDefault {
-		parsed, err := strconv.ParseBool(v)
-		if err != nil {
-			return nil, err
-		}
-		req.WithTemporary(parsed)
-	}
-
-	if v := d.Get("is_recursive").(string); v != BooleanDefault {
-		parsed, err := strconv.ParseBool(v)
-		if err != nil {
-			return nil, err
-		}
-		req.WithRecursive(parsed)
-	}
-
-	if v := d.Get("comment").(string); len(v) > 0 {
-		req.WithComment(v)
-	}
-
-	if v := d.Get("row_access_policy"); len(v.([]any)) > 0 {
-		req.WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(extractPolicyWithColumns(v, "on")))
-	}
-
-	if v := d.Get("aggregation_policy"); len(v.([]any)) > 0 {
-		id, columns := extractPolicyWithColumns(v, "entity_key")
-		aggregationPolicyReq := sdk.NewViewAggregationPolicyRequest(id)
-		if len(columns) > 0 {
-			aggregationPolicyReq.WithEntityKey(columns)
-		}
-		req.WithAggregationPolicy(*aggregationPolicyReq)
-	}
-	return req, nil
 }
 
 func extractPolicyWithColumns(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column) {
@@ -569,27 +562,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
 	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") {
-		req, err := prepareCreateRequest(d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		err = client.Views.Create(ctx, req.WithOrReplace(true))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error when changing property on %v and performing create or replace to update view statements, err = %w", d.Id(), err))
-		}
-		if v := d.Get("change_tracking").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(parsed))
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
-			}
-		}
-		return ReadView(false)(ctx, d, meta)
+		return CreateView(true)(ctx, d, meta)
 	}
 
 	if d.HasChange("name") {
@@ -656,22 +629,15 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if d.HasChange("row_access_policy") {
 		var addReq *sdk.ViewAddRowAccessPolicyRequest
 		var dropReq *sdk.ViewDropRowAccessPolicyRequest
-		if v, ok := d.GetOk("row_access_policy"); ok {
-			rowAccessPolicyConfig := v.([]any)[0].(map[string]any)
 
-			columnsRaw := expandStringList(rowAccessPolicyConfig["on"].(*schema.Set).List())
-			columns := make([]sdk.Column, len(columnsRaw))
-			for i := range columnsRaw {
-				columns[i] = sdk.Column{Value: columnsRaw[i]}
-			}
-			addReq = sdk.NewViewAddRowAccessPolicyRequest(
-				sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rowAccessPolicyConfig["policy_name"].(string)),
-				columns)
+		oldRaw, newRaw := d.GetChange("row_access_policy")
+		if len(oldRaw.([]any)) > 0 {
+			oldId, _ := extractPolicyWithColumns(oldRaw, "on")
+			dropReq = sdk.NewViewDropRowAccessPolicyRequest(oldId)
 		}
-		old, _ := d.GetChange("row_access_policy")
-		if len(old.([]any)) > 0 {
-			oldPolicy := old.([]any)[0].(map[string]any)
-			dropReq = sdk.NewViewDropRowAccessPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(oldPolicy["policy_name"].(string)))
+		if len(newRaw.([]any)) > 0 {
+			newId, newColumns := extractPolicyWithColumns(newRaw, "on")
+			addReq = sdk.NewViewAddRowAccessPolicyRequest(newId, newColumns)
 		}
 		req := sdk.NewAlterViewRequest(id)
 		if addReq != nil && dropReq != nil { // nolint
@@ -688,18 +654,12 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 	if d.HasChange("aggregation_policy") {
 		if v, ok := d.GetOk("aggregation_policy"); ok {
-			rowAccessPolicyConfig := v.([]any)[0].(map[string]any)
-			columnsRaw := expandStringList(rowAccessPolicyConfig["entity_key"].(*schema.Set).List())
-			columns := make([]sdk.Column, len(columnsRaw))
-			for i := range columnsRaw {
-				columns[i] = sdk.Column{Value: columnsRaw[i]}
+			newId, newColumns := extractPolicyWithColumns(v, "entity_key")
+			aggregationPolicyReq := sdk.NewViewSetAggregationPolicyRequest(newId)
+			if len(newColumns) > 0 {
+				aggregationPolicyReq.WithEntityKey(newColumns)
 			}
-			aggregationPolicyReq := sdk.NewViewSetAggregationPolicyRequest(
-				sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rowAccessPolicyConfig["policy_name"].(string))).WithForce(true)
-			if len(columns) > 0 {
-				aggregationPolicyReq.WithEntityKey(columns)
-			}
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*aggregationPolicyReq))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*aggregationPolicyReq.WithForce(true)))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error setting aggregation policy for view %v: %w", d.Id(), err))
 			}
