@@ -178,7 +178,7 @@ func ImportGrantOwnership() schema.StateContextFunc {
 
 		switch id.GrantOwnershipTargetRoleKind {
 		case ToAccountGrantOwnershipTargetRoleKind:
-			if err := d.Set("account_role_name", id.AccountRoleName.FullyQualifiedName()); err != nil {
+			if err := d.Set("account_role_name", id.AccountRoleName.Name()); err != nil {
 				return nil, err
 			}
 		case ToDatabaseGrantOwnershipTargetRoleKind:
@@ -199,7 +199,11 @@ func ImportGrantOwnership() schema.StateContextFunc {
 
 			onObject := make(map[string]any)
 			onObject["object_type"] = data.ObjectType.String()
-			onObject["object_name"] = data.ObjectName.FullyQualifiedName()
+			if objectName, ok := any(data.ObjectName).(sdk.AccountObjectIdentifier); ok {
+				onObject["object_name"] = objectName.Name()
+			} else {
+				onObject["object_name"] = data.ObjectName.FullyQualifiedName()
+			}
 
 			if err := d.Set("on", []any{onObject}); err != nil {
 				return nil, err
@@ -212,7 +216,7 @@ func ImportGrantOwnership() schema.StateContextFunc {
 			onAllOrFuture["object_type_plural"] = data.ObjectNamePlural.String()
 			switch data.Kind {
 			case InDatabaseBulkOperationGrantKind:
-				onAllOrFuture["in_database"] = data.Database.FullyQualifiedName()
+				onAllOrFuture["in_database"] = data.Database.Name()
 			case InSchemaBulkOperationGrantKind:
 				onAllOrFuture["in_schema"] = data.Schema.FullyQualifiedName()
 			}
@@ -502,7 +506,7 @@ func getOwnershipGrantTo(d *schema.ResourceData) (sdk.OwnershipGrantTo, error) {
 		if err != nil {
 			return ownershipGrantTo, err
 		}
-		ownershipGrantTo.AccountRoleName = sdk.Pointer(accountRoleId)
+		ownershipGrantTo.AccountRoleName = &accountRoleId
 	}
 
 	if databaseRoleName, ok := d.GetOk("database_role_name"); ok {

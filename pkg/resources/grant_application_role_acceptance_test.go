@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
@@ -152,6 +154,14 @@ func TestAcc_GrantApplicationRole_migrateFromV0941_ensureSmoothUpgradeWithNewRes
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantApplicationRoleBasicConfig(fmt.Sprintf(`\"%s\".\"%s\"`, appRoleId.DatabaseName(), appRoleId.Name()), parentRoleId.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_application_role.test", "id", fmt.Sprintf(`%s|ACCOUNT_ROLE|%s`, appRoleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
 				),
@@ -162,19 +172,15 @@ func TestAcc_GrantApplicationRole_migrateFromV0941_ensureSmoothUpgradeWithNewRes
 
 func grantApplicationRoleBasicConfig(applicationRoleName string, parentRoleName string) string {
 	return fmt.Sprintf(`
-locals {
-  application_role_identifier = "%s"
-}
-
 resource "snowflake_account_role" "test" {
   name = "%s"
 }
 
 resource "snowflake_grant_application_role" "test" {
-  application_role_name    = local.application_role_identifier
-  parent_account_role_name = "${snowflake_account_role.test.name}"
+  application_role_name    = "%s"
+  parent_account_role_name = snowflake_account_role.test.name
 }
-`, applicationRoleName, parentRoleName)
+`, parentRoleName, applicationRoleName)
 }
 
 func TestAcc_GrantApplicationRole_IdentifierQuotingDiffSuppression(t *testing.T) {
@@ -206,6 +212,14 @@ func TestAcc_GrantApplicationRole_IdentifierQuotingDiffSuppression(t *testing.T)
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantApplicationRoleBasicConfig(unquotedApplicationRoleId, quotedParentRoleId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_application_role.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_application_role.test", "application_role_name", unquotedApplicationRoleId),
 					resource.TestCheckResourceAttr("snowflake_grant_application_role.test", "parent_account_role_name", parentRoleId.Name()),

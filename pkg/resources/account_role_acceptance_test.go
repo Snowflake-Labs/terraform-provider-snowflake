@@ -3,8 +3,9 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -235,8 +236,16 @@ func TestAcc_AccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(id.Name(), comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_account_role.role", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_account_role.role", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "id", id.Name()),
 				),
 			},
 		},

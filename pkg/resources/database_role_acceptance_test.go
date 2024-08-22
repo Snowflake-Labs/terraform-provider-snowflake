@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -84,6 +86,14 @@ func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   databaseRoleConfig(id.Name(), id.DatabaseName(), comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "id", id.FullyQualifiedName()),
 				),
@@ -121,6 +131,14 @@ func TestAcc_DatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   databaseRoleConfig(quotedDatabaseRoleId, id.DatabaseName(), comment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "name", id.Name()),

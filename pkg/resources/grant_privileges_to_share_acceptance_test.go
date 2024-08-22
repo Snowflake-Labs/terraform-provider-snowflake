@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
@@ -660,7 +662,7 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.FullyQualifiedName()),
+			"to_share": config.StringVariable(shareId.Name()),
 			"database": config.StringVariable(databaseId.Name()),
 			"schema":   config.StringVariable(schemaId.Name()),
 			"on_table": config.StringVariable(tableId.Name()),
@@ -685,7 +687,7 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_table", tableId.FullyQualifiedName()),
@@ -731,6 +733,14 @@ func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewR
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToShareBasicConfig(databaseId.Name(), shareId.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
 				),
@@ -783,6 +793,14 @@ func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToShareBasicConfig(quotedDatabaseId, quotedShareId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "to_share", shareId.Name()),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "on_database", databaseId.Name()),

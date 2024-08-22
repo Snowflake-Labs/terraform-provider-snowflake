@@ -69,11 +69,11 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 
 func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
-	databaseName := databaseId.FullyQualifiedName()
+	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
-	accountRoleName := accountRoleId.FullyQualifiedName()
+	accountRoleName := accountRoleId.Name()
 	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
 
 	configVariables := config.Variables{
@@ -1396,6 +1396,14 @@ func TestAcc_GrantOwnership_migrateFromV0941_ensureSmoothUpgradeWithNewResourceI
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantOwnershipOnTableBasicConfig(acc.TestDatabaseName, acc.TestSchemaName, tableId.Name(), accountRoleId.Name(), escapedFullyQualifiedName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|TABLE|%s", accountRoleId.FullyQualifiedName(), tableId.FullyQualifiedName())),
 				),
@@ -1463,6 +1471,14 @@ func TestAcc_GrantOwnership_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantOwnershipOnTableBasicConfigWithManagedDatabaseAndSchema(databaseId.Name(), schemaId.Name(), tableId.Name(), accountRoleId.Name(), unescapedFullyQualifiedName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", unescapedFullyQualifiedName),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|TABLE|%s", accountRoleId.FullyQualifiedName(), tableId.FullyQualifiedName())),

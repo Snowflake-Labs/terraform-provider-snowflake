@@ -3,9 +3,9 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -48,7 +48,7 @@ func DatabaseRole() *schema.Resource {
 
 		Schema: databaseRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName[sdk.DatabaseObjectIdentifier],
 		},
 
 		SchemaVersion: 1,
@@ -82,14 +82,6 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-
-	if err := d.Set("name", databaseRole.Name); err != nil {
-		return err
-	}
-
-	if err := d.Set("database", id.DatabaseName()); err != nil {
 		return err
 	}
 

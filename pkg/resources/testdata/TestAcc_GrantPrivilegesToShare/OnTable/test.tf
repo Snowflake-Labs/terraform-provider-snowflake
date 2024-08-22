@@ -23,13 +23,13 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {
-  to_share    = snowflake_share.test.fully_qualified_name
+  to_share    = snowflake_share.test.name
   privileges  = ["USAGE"]
   on_database = snowflake_database.test.name
 }
 
 resource "snowflake_grant_privileges_to_share" "test" {
-  to_share   = snowflake_share.test.fully_qualified_name
+  to_share   = snowflake_share.test.name
   privileges = var.privileges
   on_table   = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
   depends_on = [snowflake_grant_privileges_to_share.test_setup]

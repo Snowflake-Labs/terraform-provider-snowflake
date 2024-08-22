@@ -1427,6 +1427,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeW
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), quotedDatabaseRoleId, quotedSchemaId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "id", fmt.Sprintf("%s|false|false|USAGE|OnSchema|OnSchema|%s", databaseRoleId.FullyQualifiedName(), schemaId.FullyQualifiedName())),
 				),
@@ -1484,6 +1492,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), unquotedDatabaseRoleId, unquotedSchemaId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "database_role_name", unquotedDatabaseRoleId),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "on_schema.0.schema_name", unquotedSchemaId),
