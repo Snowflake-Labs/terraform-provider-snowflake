@@ -175,6 +175,7 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 					break
 				}
 			} else {
+				// TODO(SNOW-1569535): fix when we'll have data types associated with the correct identifier parser
 				/*
 					note that grantee_name is not saved as a valid identifier in the
 					SHOW GRANTS OF APPLICATION ROLE <application_role_name> command
