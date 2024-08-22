@@ -164,7 +164,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -189,7 +189,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					// resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_fp.0.value"),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_2_fp.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.comment.0.value", comment),
@@ -218,7 +218,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_roles_list.#", "3"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_refresh_token_validity", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", networkPolicy.ID().Name()),
 					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "oauth_client_rsa_public_key"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
@@ -268,7 +268,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -293,7 +293,7 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					// resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_fp.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_2_fp.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.comment.0.value", comment),
@@ -425,7 +425,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_client_rsa_public_key_2", key),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "comment", comment),
@@ -450,7 +450,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					// resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.blocked_roles_list.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_fp.0.value"),
 					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.oauth_client_rsa_public_key_2_fp.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "describe_output.0.comment.0.value", comment),
@@ -479,7 +479,7 @@ func TestAcc_OauthIntegrationForCustomClients_Complete(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_roles_list.#", "3"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_issue_refresh_tokens", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "oauth_refresh_token_validity", "86400"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", networkPolicy.ID().Name()),
 					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "oauth_client_rsa_public_key"),
 					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "oauth_client_rsa_public_key_2"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),

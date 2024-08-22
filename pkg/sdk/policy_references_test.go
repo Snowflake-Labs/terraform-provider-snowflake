@@ -116,7 +116,7 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-999049]: check during the identifiers rework
+// TODO [SNOW-1569516]: make nicer during the identifiers rework follow up
 func temporaryReplace(id SchemaObjectIdentifier) string {
 	return strings.ReplaceAll(id.FullyQualifiedName(), `"`, `\"`)
 }

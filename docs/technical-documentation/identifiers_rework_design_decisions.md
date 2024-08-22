@@ -8,6 +8,7 @@ But before we dive into results and design decisions, here’s the list of reaso
 - Inconsistencies in quotes causing differences in Terraform plans.
 - The inconvenience of specifying fully qualified names in certain resource fields (e.g. object name in privilege-granting resources).
 - Mixed usage of account identifier formats across resources.
+
 Now, knowing the issues we wanted to solve, we would like to present the changes and design decisions we made.
 
 ## Topics
@@ -45,12 +46,22 @@ This will be a small shift in the identifier representation for resources. The g
 - If a resource can only be described with the Snowflake identifier, the fully qualified name will be put into the resource identifier. Previously, it was almost the same, except it was separated by pipes, and it was not a valid identifier.
 - If a resource cannot be described only by a single Snowflake identifier, then the resource identifier will be a pipe-separated text of all parts needed to identify a given resource ([example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)). Mind that this approach is not compliant with identifiers containing pipes, but this approach is a middle ground between an easy-to-specify separator and a character that shouldn’t be that common in the identifier (it was previously used for all identifiers).
 
-Known limitations and identifier recommendations
+### Known limitations and identifier recommendations
 The main limitations around identifiers are strictly connected to what characters are used. Here’s a list of recommendations on which characters should be generally avoided when specifying identifiers:
-Avoid dots ‘.’ inside identifiers. It’s the main separator between identifier parts and although we are handling dots inside identifiers, there may be cases where it’s impossible to parse the identifier correctly.
-Avoid pipes ‘|’ inside identifiers. It’s the separator for our more complex resource identifiers that could make our parser split the resource identifier into the wrong parts.
-Avoid parentheses ‘(’ and ‘)’ when specifying identifiers for functions, procedures, external functions. Parentheses as part of their identifiers could potentially make our parser split the identifier into wrong parts causing issues.
-As a general recommendation, please lean toward simple names without any special characters, and if word separation is needed, use underscores. This also applies to other “identifiers” like column names in tables or argument names in functions. If you are currently using complex identifiers, we recommend considering migration to simpler identifiers for a more straightforward and less error-prone experience.
+- Avoid dots ‘.’ inside identifiers. It’s the main separator between identifier parts and although we are handling dots inside identifiers, there may be cases where it’s impossible to parse the identifier correctly.
+- Avoid pipes ‘|’ inside identifiers. It’s the separator for our more complex resource identifiers that could make our parser split the resource identifier into the wrong parts.
+- Avoid parentheses ‘(’ and ‘)’ when specifying identifiers for functions, procedures, external functions. Parentheses as part of their identifiers could potentially make our parser split the identifier into wrong parts causing issues.
+
+As a general recommendation, please lean toward simple names without any special characters, and if word separation is needed, use underscores. 
+This also applies to other “identifiers” like column names in tables or argument names in functions. 
+If you are currently using complex identifiers, we recommend considering migration to simpler identifiers for a more straightforward and less error-prone experience.
+Also, we want to make it clear that every field specifying identifier (or its part, e.g. `name`, `database`, `schema`) are always case-sensitive. By specifying
+identifiers with lowercase characters in Terraform, you also have to refer to them with lowercase names in quotes in Snowflake. 
+For example, by specifying an account role with `name = "test"` to check privileges granted to the role in Snowflake, you have to call:
+```sql
+show grants to role "test";
+show grants to role test; -- this won't work, because unquoted identifiers are converted to uppercase according to https://docs.snowflake.com/en/sql-reference/identifiers-syntax#label-identifier-casing
+```
 
 ### New identifier conventions
 Although, we are closing the identifiers rework, some resources won’t have the mentioned improvements. 

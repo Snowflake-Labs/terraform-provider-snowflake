@@ -106,7 +106,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "OKTA"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role2.Name()),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
 
@@ -120,7 +120,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.network_policy.0.value", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.network_policy.0.value", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.run_as_role.0.value", role2.Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.sync_password.0.value", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.comment.0.value", "foo"),
@@ -138,7 +138,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "enabled", "true"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "scim_client", "OKTA"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "run_as_role", role2.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "network_policy", networkPolicy.ID().Name()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "sync_password", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", "foo"),
 				),
@@ -194,7 +194,7 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", "GENERIC"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
 				),
@@ -241,7 +241,7 @@ func TestAcc_ScimIntegration_completeAzure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "scim_client", string(sdk.ScimSecurityIntegrationScimClientAzure)),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "run_as_role", role.Name()),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", sdk.NewAccountObjectIdentifier(networkPolicy.Name).Name()), // TODO(SNOW-999049): Fix during identifiers rework
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "network_policy", networkPolicy.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "sync_password", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "comment", "foo"),
 				),

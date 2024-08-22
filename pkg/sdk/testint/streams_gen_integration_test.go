@@ -46,7 +46,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "Table", "DEFAULT")
 	})
@@ -77,7 +77,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, externalTableId.FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "External Table", "INSERT_ONLY")
 	})
@@ -148,7 +148,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 
 		assertStream(t, s, cloneId, "Table", "DEFAULT")
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 	})
 
@@ -414,7 +414,7 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, "some comment", *s.Comment)
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assert.Equal(t, "Table", *s.SourceType)
 		assert.Equal(t, "DEFAULT", *s.Mode)

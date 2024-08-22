@@ -69,7 +69,6 @@ func ParseAccountObjectIdentifier(identifier string) (AccountObjectIdentifier, e
 	)
 }
 
-// TODO(SNOW-1495053): Replace ParseObjectIdentifier
 // ParseObjectIdentifierString tries to guess the identifier by the number of parts it contains.
 // Because of the overlapping, in some cases, the output ObjectIdentifier can be one of the following implementations:
 // - AccountObjectIdentifier for one part
