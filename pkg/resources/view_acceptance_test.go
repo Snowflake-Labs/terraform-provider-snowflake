@@ -43,6 +43,7 @@ func TestAcc_View_basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	otherStatement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
+	comment := "Terraform test resource'"
 
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 
@@ -57,7 +58,7 @@ func TestAcc_View_basic(t *testing.T) {
 			"row_access_policy_on":          config.ListVariable(config.StringVariable("ROLE_NAME")),
 			"aggregation_policy":            config.StringVariable(ap.FullyQualifiedName()),
 			"aggregation_policy_entity_key": config.ListVariable(config.StringVariable("ROLE_NAME")),
-			"comment":                       config.StringVariable("Terraform test resource"),
+			"comment":                       config.StringVariable(comment),
 		}
 	}
 
@@ -119,7 +120,7 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString("Terraform test resource"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -139,7 +140,7 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString("Terraform test resource"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -159,7 +160,7 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString("Terraform test resource"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -182,7 +183,7 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString("Terraform test resource"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -206,7 +207,7 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString("Terraform test resource"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -230,7 +231,7 @@ func TestAcc_View_basic(t *testing.T) {
 						HasStatementString(otherStatement).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
-						HasCommentString("Terraform test resource").
+						HasCommentString(comment).
 						HasIsSecureString("false").
 						HasIsTemporaryString("false").
 						HasChangeTrackingString("false"),

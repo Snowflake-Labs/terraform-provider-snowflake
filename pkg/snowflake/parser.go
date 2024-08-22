@@ -248,7 +248,8 @@ func (e *ViewSelectStatementExtractor) consumeQuotedParameter(param string) {
 
 		if escaped { //nolint:gocritic // todo: please fix this to pass gocritic
 			escaped = false
-		} else if e.input[e.pos+found] == '\\' {
+			// There are two possible escape sequences: \' and ''
+		} else if e.input[e.pos+found] == '\\' || e.pos+found+1 < len(e.input) && string(e.input[e.pos+found:e.pos+found+2]) == "''" {
 			escaped = true
 		} else if e.input[e.pos+found] == '\'' {
 			break

@@ -10,6 +10,7 @@ import (
 func TestViewSelectStatementExtractor_Extract(t *testing.T) {
 	basic := "create view foo as select * from bar;"
 	caps := "CREATE VIEW FOO AS SELECT * FROM BAR;"
+	commentWithSingleQuotes := "CREATE VIEW FOO COMMENT = 'test''' AS SELECT * FROM BAR;"
 	parens := "create view foo as (select * from bar);"
 	multiline := `
 create view foo as
@@ -47,6 +48,7 @@ from bar;`
 	}{
 		{"basic", args{basic}, "select * from bar;", false},
 		{"caps", args{caps}, "SELECT * FROM BAR;", false},
+		{"comment with single quotes", args{commentWithSingleQuotes}, "SELECT * FROM BAR;", false},
 		{"parens", args{parens}, "(select * from bar);", false},
 		{"multiline", args{multiline}, "select *\nfrom bar;", false},
 		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
