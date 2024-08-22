@@ -54,7 +54,10 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 func ImportApiAuthenticationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with client credentials import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -84,7 +87,12 @@ func CreateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
+
+	id, err := sdk.ParseAccountObjectIdentifier(commonCreate.name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, commonCreate.enabled, commonCreate.oauthClientId, commonCreate.oauthClientSecret)
 	req.WithOauthGrantClientCredentials(true)
 	req.Comment = commonCreate.comment
@@ -106,14 +114,18 @@ func CreateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 	return ReadContextApiAuthenticationIntegrationWithClientCredentials(false)(ctx, d, meta)
 }
 
 func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
@@ -158,7 +170,10 @@ func ReadContextApiAuthenticationIntegrationWithClientCredentials(withExternalCh
 
 func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	commonSet, commonUnset, err := handleApiAuthUpdate(d)
 	if err != nil {
@@ -202,10 +217,13 @@ func UpdateContextApiAuthenticationIntegrationWithClientCredentials(ctx context.
 }
 
 func DeleteContextApiAuthenticationIntegrationWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

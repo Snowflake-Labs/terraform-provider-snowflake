@@ -98,6 +98,22 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	})
 }
 
+// TODO(SNOW-1629468): Adjust the function to make it more flexible
+func ComputedIfAnyAttributeChangedWithSuppressDiff(key string, suppressDiffFunc schema.SchemaDiffSuppressFunc, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		for _, changedKey := range changedAttributeKeys {
+			if diff.HasChange(changedKey) {
+				oldValue, newValue := diff.GetChange(changedKey)
+				if !suppressDiffFunc(key, oldValue.(string), newValue.(string), nil) {
+					log.Printf("[DEBUG] ComputedIfAnyAttributeChangedWithSuppressDiff: changed key: %s", changedKey)
+					return true
+				}
+			}
+		}
+		return false
+	})
+}
+
 type parameter[T ~string] struct {
 	parameterName T
 	valueType     valueType

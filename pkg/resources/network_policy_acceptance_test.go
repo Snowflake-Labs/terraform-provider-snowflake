@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"testing"
 
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -68,12 +70,12 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "allowed_ip_list"),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "blocked_ip_list"),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "allowed_network_rule_list"),
-					importchecks.TestCheckResourceAttrNotInInstanceState(id.Name(), "blocked_network_rule_list"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", ""),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list"),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list"),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list"),
+					importchecks.TestCheckResourceAttrNotInInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_network_rule_list"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
 			// set optionals
@@ -134,12 +136,12 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_ip_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_ip_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_network_rule_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_network_rule_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_network_rule_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
 			// change externally
@@ -295,12 +297,12 @@ func TestAcc_NetworkPolicy_Complete(t *testing.T) {
 				ResourceName: "snowflake_network_policy.test",
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_ip_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_ip_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "allowed_network_rule_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "blocked_network_rule_list.#", "2"),
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_ip_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_ip_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "allowed_network_rule_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "blocked_network_rule_list.#", "2"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
 		},
@@ -539,4 +541,82 @@ func networkPolicyConfigWithNetworkRules(name string, allowedNetworkRules []stri
 		allowed_network_rule_list = %[2]s
 		blocked_network_rule_list = %[3]s
 	}`, name, string(allowedRuleListBytes), string(blockedRuleListBytes))
+}
+
+func TestAcc_NetworkPolicy_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: networkPolicyConfigBasic(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   networkPolicyConfigBasic(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_NetworkPolicy_WithQuotedName(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             networkPolicyConfigBasic(quotedId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   networkPolicyConfigBasic(quotedId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_network_policy.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_network_policy.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
+				),
+			},
+		},
+	})
 }

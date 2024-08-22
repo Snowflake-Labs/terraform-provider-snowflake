@@ -62,7 +62,7 @@ func init() {
 }
 
 func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	return parametersProvider(ctx, d, meta.(*provider.Context), schemaParametersProviderFunc)
+	return parametersProvider(ctx, d, meta.(*provider.Context), schemaParametersProviderFunc, sdk.ParseDatabaseObjectIdentifier)
 }
 
 func schemaParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.DatabaseObjectIdentifier] {

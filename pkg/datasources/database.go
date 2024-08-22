@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -67,7 +69,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(database.Name)
+	d.SetId(helpers.EncodeResourceIdentifier(database.ID()))
 	if err := d.Set("name", database.Name); err != nil {
 		return err
 	}
