@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -14,6 +15,46 @@ import (
 func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 	databaseRoleName := acc.TestClient().Ids.Alpha()
 	parentDatabaseRoleName := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_grant_database_role.g"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":                  config.StringVariable(acc.TestDatabaseName),
+			"database_role_name":        config.StringVariable(databaseRoleName),
+			"parent_database_role_name": config.StringVariable(parentDatabaseRoleName),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/database_role"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", fmt.Sprintf(`"%v"."%v"`, acc.TestDatabaseName, databaseRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "parent_database_role_name", fmt.Sprintf(`"%v"."%v"`, acc.TestDatabaseName, parentDatabaseRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|DATABASE ROLE|"%v"."%v"`, acc.TestDatabaseName, databaseRoleName, acc.TestDatabaseName, parentDatabaseRoleName)),
+				),
+			},
+			// test import
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/database_role"),
+				ConfigVariables:   m(),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantDatabaseRole_databaseRoleMixedQuoting(t *testing.T) {
+	databaseRoleName := acc.TestClient().Ids.Alpha()
+	parentDatabaseRoleName := strings.ToUpper(acc.TestClient().Ids.Alpha())
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -130,6 +171,48 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	configVariables := func() config.Variables {
+		return config.Variables{
+			"database":           config.StringVariable(databaseId.Name()),
+			"database_role_name": config.StringVariable(databaseRoleId.Name()),
+			"share_name":         config.StringVariable(shareId.Name()),
+		}
+	}
+	resourceName := "snowflake_grant_database_role.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
+				ConfigVariables: configVariables(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId.FullyQualifiedName(), "SHARE", shareId.FullyQualifiedName())),
+				),
+			},
+			// test import
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
+				ConfigVariables:   configVariables(),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantDatabaseRole_shareWithDots(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
 
 	configVariables := func() config.Variables {
 		return config.Variables{
