@@ -324,6 +324,7 @@ func TestAcc_NetworkPolicy_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.name", id.Name()),
 				),
 			},
@@ -337,6 +338,7 @@ func TestAcc_NetworkPolicy_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "id", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_network_policy.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_network_policy.test", "show_output.0.name", newId.Name()),
 				),
 			},

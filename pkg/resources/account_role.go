@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,6 +34,7 @@ var accountRoleSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowRoleSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func AccountRole() *schema.Resource {
@@ -45,7 +47,10 @@ func AccountRole() *schema.Resource {
 		UpdateContext: UpdateAccountRole,
 		Description:   "The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the [official documentation](https://docs.snowflake.com/en/user-guide/security-access-control-overview).",
 
-		CustomizeDiff: ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment"),
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -102,6 +107,10 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 				Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.Name(), err),
 			},
 		}
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", sdk.NewAccountObjectIdentifier(accountRole.Name).Name()); err != nil {

@@ -450,8 +450,8 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 }
 
 func TestAcc_FileFormat_Rename(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	comment := random.Comment()
 	newComment := random.Comment()
 	resourceName := "snowflake_file_format.test"
@@ -465,16 +465,18 @@ func TestAcc_FileFormat_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigWithComment(name, acc.TestDatabaseName, acc.TestSchemaName, comment),
+				Config: fileFormatConfigWithComment(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", oldId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
-				Config: fileFormatConfigWithComment(newName, acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				Config: fileFormatConfigWithComment(newId.Name(), acc.TestDatabaseName, acc.TestSchemaName, newComment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "name", newId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "comment", newComment),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

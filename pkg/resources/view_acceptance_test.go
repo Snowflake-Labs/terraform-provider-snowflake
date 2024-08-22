@@ -462,6 +462,7 @@ func TestAcc_View_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
 			// rename with one param changed
@@ -475,6 +476,7 @@ func TestAcc_View_Rename(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", newId.FullyQualifiedName()),
 				),
 			},
 		},

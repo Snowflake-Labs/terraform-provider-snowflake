@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -50,6 +51,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the row access policy.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // RowAccessPolicy returns a pointer to the resource representing a row access policy.
@@ -114,6 +116,9 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] row access policy (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err := d.Set("name", rowAccessPolicy.Name); err != nil {

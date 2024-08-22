@@ -21,6 +21,39 @@ Removed fields:
 - `tag`
 The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
 
+### New `fully_qualified_name` field in the resources.
+We added a new `fully_qualified_name` to snowflake resources. This should help with referencing other resources in fields that expect a fully qualified name. For example, instead of
+writing
+
+```object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””```
+
+ now we can write
+
+```object_name = snowflake_table.fully_qualified_name```
+
+See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
+
+Some of the resources are excluded from this change:
+- deprecated resources
+  - `snowflake_database_old`
+  - `snowflake_oauth_integration`
+  - `snowflake_saml_integration`
+- resources for which fully qualified name is not appropriate
+  - `snowflake_account_parameter`
+  - `snowflake_account_password_policy_attachment`
+  - `snowflake_network_policy_attachment`
+  - `snowflake_session_parameter`
+  - `snowflake_table_constraint`
+  - `snowflake_table_column_masking_policy_application`
+  - `snowflake_tag_masking_policy_association`
+  - `snowflake_tag_association`
+  - `snowflake_user_password_policy_attachment`
+  - `snowflake_user_public_keys`
+  - grant resources
+
+#### *(breaking change)* removed `qualified_name` from `snowflake_masking_policy`, `snowflake_network_rule`, `snowflake_password_policy` and `snowflake_table`
+Because of introducing a new `fully_qualified_name` field for all of the resources, `qualified_name` was removed from `snowflake_masking_policy`, `snowflake_network_rule`,  `snowflake_password_policy` and `snowflake_table`. Please adjust your configurations. State is automatically migrated.
+
 ### snowflake_user resource changes
 
 #### *(breaking change)* user parameters added to snowflake_user resource

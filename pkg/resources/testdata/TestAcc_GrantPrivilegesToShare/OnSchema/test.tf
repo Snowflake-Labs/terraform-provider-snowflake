@@ -21,6 +21,6 @@ resource "snowflake_grant_privileges_to_share" "test_setup" {
 resource "snowflake_grant_privileges_to_share" "test" {
   to_share   = snowflake_share.test.name
   privileges = var.privileges
-  on_schema  = "\"${snowflake_schema.test.database}\".\"${snowflake_schema.test.name}\""
+  on_schema  = snowflake_schema.test.fully_qualified_name
   depends_on = [snowflake_grant_privileges_to_share.test_setup]
 }

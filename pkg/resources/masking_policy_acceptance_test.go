@@ -14,8 +14,8 @@ import (
 )
 
 func TestAcc_MaskingPolicy(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	accName2 := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	comment := "Terraform acceptance test"
 	comment2 := "Terraform acceptance test 2"
 	resource.Test(t, resource.TestCase{
@@ -27,9 +27,10 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.MaskingPolicy),
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyConfig(accName, accName, comment, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfig(oldId.Name(), comment, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", oldId.Name()),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", comment),
@@ -43,20 +44,21 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 			},
 			// rename + change comment
 			{
-				Config: maskingPolicyConfig(accName, accName2, comment2, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfig(newId.Name(), comment2, acc.TestDatabaseName, acc.TestSchemaName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_masking_policy.test", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName2),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", comment2),
 				),
 			},
 			// change body and unset comment
 			{
-				Config: maskingPolicyConfigMultiline(accName, accName2, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfigMultiline(newId.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case\n\twhen current_role() in ('ROLE_A') then\n\t\tval\n\twhen is_role_in_session( 'ROLE_B' ) then\n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", ""),
@@ -72,7 +74,7 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 	})
 }
 
-func maskingPolicyConfig(n string, name string, comment string, databaseName string, schemaName string) string {
+func maskingPolicyConfig(name string, comment string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
 	name = "%s"
@@ -91,7 +93,7 @@ resource "snowflake_masking_policy" "test" {
 `, name, databaseName, schemaName, comment)
 }
 
-func maskingPolicyConfigMultiline(n string, name string, databaseName string, schemaName string) string {
+func maskingPolicyConfigMultiline(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_masking_policy" "test" {
 		name = "%s"
@@ -175,4 +177,42 @@ resource "snowflake_masking_policy" "test" {
 	return_data_type = "VARCHAR"
 }
 `, name, databaseName, schemaName)
+}
+
+func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_masking_policy.test"
+	comment := "foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: maskingPolicyConfig(id.Name(), comment, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   maskingPolicyConfig(id.Name(), comment, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckNoResourceAttr(resourceName, "qualified_name"),
+				),
+			},
+		},
+	})
 }

@@ -82,6 +82,7 @@ var schemaSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowSchemaParametersSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // Schema returns a pointer to the resource representing a schema.
@@ -98,6 +99,7 @@ func Schema() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
@@ -252,6 +254,9 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 					},
 				}
 			}
+			return diag.FromErr(err)
+		}
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("name", schema.Name); err != nil {

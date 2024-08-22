@@ -11,10 +11,9 @@ import (
 type ShareGrantKind string
 
 const (
-	OnDatabaseShareGrantKind ShareGrantKind = "OnDatabase"
-	OnSchemaShareGrantKind   ShareGrantKind = "OnSchema"
-	//	TODO(SNOW-1021686): Because function identifier contains arguments which are not supported right now
-	// OnFunctionShareGrantKind          ShareGrantKind = "OnFunction"
+	OnDatabaseShareGrantKind          ShareGrantKind = "OnDatabase"
+	OnSchemaShareGrantKind            ShareGrantKind = "OnSchema"
+	OnFunctionShareGrantKind          ShareGrantKind = "OnFunction"
 	OnTableShareGrantKind             ShareGrantKind = "OnTable"
 	OnAllTablesInSchemaShareGrantKind ShareGrantKind = "OnAllTablesInSchema"
 	OnTagShareGrantKind               ShareGrantKind = "OnTag"
@@ -53,42 +52,31 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 	grantPrivilegesToShareId.Privileges = privileges
 	grantPrivilegesToShareId.Kind = ShareGrantKind(parts[2])
 
-	id, err := helpers.DecodeSnowflakeParameterID(parts[3])
-	if err != nil {
-		return grantPrivilegesToShareId, err
-	}
-
 	switch grantPrivilegesToShareId.Kind {
 	case OnDatabaseShareGrantKind:
-		if typedIdentifier, ok := id.(sdk.AccountObjectIdentifier); ok {
-			grantPrivilegesToShareId.Identifier = typedIdentifier
-		} else {
-			return grantPrivilegesToShareId, fmt.Errorf(
-				"invalid identifier, expected fully qualified name of account object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.AccountObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
-			)
+		id, err := sdk.ParseAccountObjectIdentifier(parts[3])
+		if err != nil {
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("invalid identifier, expected fully qualified name of account object%s: ", parts[3]), err)
 		}
+		grantPrivilegesToShareId.Identifier = id
 	case OnSchemaShareGrantKind, OnAllTablesInSchemaShareGrantKind:
-		if typedIdentifier, ok := id.(sdk.DatabaseObjectIdentifier); ok {
-			grantPrivilegesToShareId.Identifier = typedIdentifier
-		} else {
-			return grantPrivilegesToShareId, fmt.Errorf(
-				"invalid identifier, expected fully qualified name of database object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.DatabaseObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
-			)
+		id, err := sdk.ParseDatabaseObjectIdentifier(parts[3])
+		if err != nil {
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("could not parse database object identifier %s: ", parts[3]), err)
 		}
-	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind: // TODO(SNOW-1021686) , OnFunctionShareGrantKind:
-		if typedIdentifier, ok := id.(sdk.SchemaObjectIdentifier); ok {
-			grantPrivilegesToShareId.Identifier = typedIdentifier
-		} else {
-			return grantPrivilegesToShareId, fmt.Errorf(
-				"invalid identifier, expected fully qualified name of schema object: %s, but instead got: %s",
-				getExpectedIdentifierRepresentationFromGeneric[sdk.SchemaObjectIdentifier](),
-				getExpectedIdentifierRepresentationFromParam(id),
-			)
+		grantPrivilegesToShareId.Identifier = id
+	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind:
+		id, err := sdk.ParseSchemaObjectIdentifier(parts[3])
+		if err != nil {
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("could not parse schema object identifier %s: ", parts[3]), err)
 		}
+		grantPrivilegesToShareId.Identifier = id
+	case OnFunctionShareGrantKind:
+		id, err := sdk.ParseSchemaObjectIdentifierWithArguments(parts[3])
+		if err != nil {
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("could not parse schema object identifier with arguments %s: ", parts[3]), err)
+		}
+		grantPrivilegesToShareId.Identifier = id
 	default:
 		return grantPrivilegesToShareId, fmt.Errorf("unexpected share grant kind: %v", grantPrivilegesToShareId.Kind)
 	}

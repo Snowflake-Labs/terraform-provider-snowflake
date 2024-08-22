@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/hashicorp/go-cty/cty"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -81,6 +83,7 @@ var databaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Database() *schema.Resource {
@@ -98,7 +101,10 @@ func Database() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: databaseParametersCustomDiff,
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			databaseParametersCustomDiff,
+		),
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -356,6 +362,10 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 				},
 			}
 		}
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

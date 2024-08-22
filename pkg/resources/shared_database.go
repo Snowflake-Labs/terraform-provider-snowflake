@@ -7,8 +7,10 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +21,10 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
 	"from_share": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// TODO(SNOW-1495079): Add validation when ExternalObjectIdentifier will be available in IsValidIdentifier
 		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
 	},
 	"comment": {
@@ -36,6 +39,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 	//	ForceNew:    true,
 	//	Description: "Specifies the database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.",
 	// },
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func SharedDatabase() *schema.Resource {
@@ -45,6 +49,10 @@ func SharedDatabase() *schema.Resource {
 		ReadContext:   ReadSharedDatabase,
 		DeleteContext: DeleteSharedDatabase,
 		Description:   "A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: helpers.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
@@ -136,6 +144,9 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 				},
 			}
 		}
+		return diag.FromErr(err)
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)
 	}
 

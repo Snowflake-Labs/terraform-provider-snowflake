@@ -205,6 +205,7 @@ func TestAcc_ApiAuthenticationIntegrationWithAuthorizationCodeGrant_complete(t *
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_access_token_validity", "42"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_authorization_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_authorization_code_grant.test", "oauth_client_auth_method", string(sdk.ApiAuthenticationSecurityIntegrationOauthClientAuthMethodClientSecretPost)),

@@ -148,6 +148,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				Config: accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", comment),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),
@@ -169,6 +170,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "fully_qualified_name", id.FullyQualifiedName()),
 					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "comment", comment),
 				),
 			},
@@ -177,6 +179,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 				Config: accountRoleBasicConfig(newId.Name(), newComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_account_role.role", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "comment", newComment),
 
 					resource.TestCheckResourceAttr("snowflake_account_role.role", "show_output.#", "1"),

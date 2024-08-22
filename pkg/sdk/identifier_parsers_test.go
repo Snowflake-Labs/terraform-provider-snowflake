@@ -281,6 +281,8 @@ func Test_ParseFunctionArgumentsFromString(t *testing.T) {
 		{Arguments: `()`, Expected: []DataType{}},
 		{Arguments: `(FLOAT, NUMBER, TIME)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
 		{Arguments: `FLOAT, NUMBER, TIME`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `(DEFAULT FLOAT, DEFAULT NUMBER, DEFAULT TIME)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
+		{Arguments: `DEFAULT FLOAT, DEFAULT NUMBER, DEFAULT TIME`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataTypeTime}},
 		{Arguments: `(FLOAT, NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
 		{Arguments: `FLOAT, NUMBER, VECTOR(FLOAT, 20)`, Expected: []DataType{DataTypeFloat, DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
 		{Arguments: `(VECTOR(FLOAT, 10), NUMBER, VECTOR(FLOAT, 20))`, Expected: []DataType{DataType("VECTOR(FLOAT, 10)"), DataTypeNumber, DataType("VECTOR(FLOAT, 20)")}},
@@ -299,6 +301,7 @@ func Test_ParseFunctionArgumentsFromString(t *testing.T) {
 		{Arguments: `(FLOAT, NUMBER(10, 2), TIME)`, Expected: []DataType{DataTypeFloat, DataType("NUMBER(10"), DataType("2)"), DataTypeTime}},
 		{Arguments: `(FLOAT, NUMBER(10, 2))`, Expected: []DataType{DataTypeFloat, DataType("NUMBER(10"), DataType("2)")}},
 		{Arguments: `(NUMBER(10, 2), FLOAT)`, Expected: []DataType{DataType("NUMBER(10"), DataType("2)"), DataTypeFloat}},
+		{Arguments: `(ab NUMBER(10, 2), x FLOAT, FLOAT)`, Expected: []DataType{DataType("NUMBER(10"), DataType("2)"), DataTypeFloat, DataTypeFloat}},
 	}
 
 	for _, testCase := range testCases {
@@ -359,6 +362,34 @@ func TestNewSchemaObjectIdentifierWithArgumentsFromFullyQualifiedName_WithRawInp
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("processing %s", testCase.ExpectedIdentifierStructure.FullyQualifiedName()), func(t *testing.T) {
 			id, err := ParseSchemaObjectIdentifierWithArguments(testCase.RawInput)
+
+			if testCase.Error != "" {
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.ExpectedIdentifierStructure.FullyQualifiedName(), id.FullyQualifiedName())
+			}
+		})
+	}
+}
+
+func TestNewSchemaObjectIdentifierWithArgumentsAndReturnTypeFromFullyQualifiedName_WithRawInput(t *testing.T) {
+	testCases := []struct {
+		RawInput                    string
+		ExpectedIdentifierStructure SchemaObjectIdentifierWithArguments
+		Error                       string
+	}{
+		{RawInput: `abc.def.ghi()`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`)},
+		{RawInput: `abc.def.ghi(FLOAT, VECTOR(INT, 20))`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)")},
+		{RawInput: `abc.def.ghi():FLOAT`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`)},
+		{RawInput: `abc.def."ghi(FLOAT, VECTOR(INT, 20)):NUMBER(10,2)"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)")},
+		{RawInput: `abc.def."ghi(FLOAT, VECTOR(INT, 20)):NUMBER"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)")},
+		{RawInput: `abc.def."ghi(ab FLOAT, VECTOR VECTOR(INT, 20), FLOAT):NUMBER"`, ExpectedIdentifierStructure: NewSchemaObjectIdentifierWithArguments(`abc`, `def`, `ghi`, DataTypeFloat, "VECTOR(INT, 20)", DataTypeFloat)},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("processing %s", testCase.ExpectedIdentifierStructure.FullyQualifiedName()), func(t *testing.T) {
+			id, err := ParseSchemaObjectIdentifierWithArgumentsAndReturnType(testCase.RawInput)
 
 			if testCase.Error != "" {
 				assert.ErrorContains(t, err, testCase.Error)

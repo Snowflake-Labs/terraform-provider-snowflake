@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -157,16 +159,22 @@ var functionSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The target path for the Java / Python functions. For Java, it is the path of compiled jar files and for the Python it is the path of the Python files.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Function() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 
 		CreateContext: CreateContextFunction,
 		ReadContext:   ReadContextFunction,
 		UpdateContext: UpdateContextFunction,
 		DeleteContext: DeleteContextFunction,
+
+		CustomizeDiff: customdiff.All(
+			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: functionSchema,
 		Importer: &schema.ResourceImporter{
@@ -179,6 +187,12 @@ func Function() *schema.Resource {
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v085FunctionIdStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0941ResourceIdentifierWithArguments,
 			},
 		},
 	}
@@ -521,6 +535,9 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", id.Name()); err != nil {
 		return diag.FromErr(err)
 	}
@@ -703,7 +720,7 @@ func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id)); err != nil {
+	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")

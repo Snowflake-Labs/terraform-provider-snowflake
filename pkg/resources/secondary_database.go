@@ -7,8 +7,10 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +21,10 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		Description: "Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database.",
 	},
 	"as_replica_of": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// TODO(SNOW-1495079): Add validation when ExternalObjectIdentifier will be available in IsValidIdentifier
 		Description: "A fully qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<database_name>\"`.",
 	},
 	"is_transient": {
@@ -35,6 +38,7 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func SecondaryDatabase() *schema.Resource {
@@ -45,8 +49,11 @@ func SecondaryDatabase() *schema.Resource {
 		DeleteContext: DeleteSecondaryDatabase,
 		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
-		CustomizeDiff: databaseParametersCustomDiff,
-		Schema:        helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
+		CustomizeDiff: customdiff.All(
+			databaseParametersCustomDiff,
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
+		Schema: helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -169,6 +176,9 @@ func ReadSecondaryDatabase(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	if replicationPrimaryDatabase == nil {
 		return diag.FromErr(fmt.Errorf("could not find replication database for %s", secondaryDatabaseId.Name()))
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, secondaryDatabaseId.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", secondaryDatabase.Name); err != nil {

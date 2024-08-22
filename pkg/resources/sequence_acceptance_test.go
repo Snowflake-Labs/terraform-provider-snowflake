@@ -12,8 +12,8 @@ import (
 )
 
 func TestAcc_Sequence(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	accRename := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -25,34 +25,34 @@ func TestAcc_Sequence(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				Config: sequenceConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfig(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", oldId.Name()),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "ORDER"),
 				),
 			},
 			// Set comment and rename
 			{
-				Config: sequenceConfigWithComment(accRename, "look at me I am a comment", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfigWithComment(newId.Name(), "look at me I am a comment", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accRename),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", newId.Name()),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", "look at me I am a comment"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accRename)),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", newId.FullyQualifiedName()),
 				),
 			},
 			// Unset comment and set increment
 			{
-				Config: sequenceConfigWithIncrement(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfigWithIncrement(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", oldId.Name()),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "increment", "32"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "NOORDER"),
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", oldId.FullyQualifiedName()),
 				),
 			},
 			// IMPORT

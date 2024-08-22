@@ -266,6 +266,7 @@ var viewSchema = map[string]*schema.Schema{
 			Schema: schemas.ViewDescribeSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // View returns a pointer to the resource representing a view.
@@ -281,6 +282,7 @@ func View() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "change_tracking", "is_secure", "is_temporary", "is_recursive", "statement"),
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: viewSchema,
@@ -442,6 +444,9 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if err = d.Set("name", view.Name); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("database", view.DatabaseName); err != nil {

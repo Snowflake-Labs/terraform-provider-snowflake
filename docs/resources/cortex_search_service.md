@@ -71,11 +71,21 @@ resource "snowflake_cortex_search_service" "test" {
 
 - `attributes` (Set of String) Specifies the list of columns in the base table to enable filtering on when issuing queries to the service.
 - `comment` (String) Specifies a comment for the Cortex search service.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_on` (String) Creation date for the given Cortex search service.
+- `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `update` (String)
 
 ## Import
 

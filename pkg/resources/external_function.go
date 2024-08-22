@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -177,12 +178,12 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Date and time when the external function was created.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
-// ExternalFunction returns a pointer to the resource representing an external function.
 func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 
 		CreateContext: CreateContextExternalFunction,
 		ReadContext:   ReadContextExternalFunction,
@@ -194,12 +195,21 @@ func ExternalFunction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		// TODO(SNOW-1348352): add `name` and `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
+		// This can't be done now because this function compares values without diff suppress.
+
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v085ExternalFunctionStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0941ResourceIdentifierWithArguments,
 			},
 		},
 	}
@@ -210,18 +220,6 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	database := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schemaName, name)
-
-	returnType := d.Get("return_type").(string)
-	resultDataType, err := sdk.ToDataType(returnType)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
-	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
-	req := sdk.NewCreateExternalFunctionRequest(id, resultDataType, &apiIntegration, urlOfProxyAndResource)
-
-	// Set optionals
 	args := make([]sdk.ExternalFunctionArgumentRequest, 0)
 	if v, ok := d.GetOk("arg"); ok {
 		for _, arg := range v.([]interface{}) {
@@ -234,39 +232,55 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
 		}
 	}
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	id := sdk.NewSchemaObjectIdentifierWithArguments(database, schemaName, name, argTypes...)
+
+	returnType := d.Get("return_type").(string)
+	resultDataType, err := sdk.ToDataType(returnType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
+	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
+	req := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), resultDataType, &apiIntegration, urlOfProxyAndResource)
+
+	// Set optionals
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
 
 	if v, ok := d.GetOk("return_null_allowed"); ok {
 		if v.(bool) {
-			req.WithReturnNullValues(&sdk.ReturnNullValuesNull)
+			req.WithReturnNullValues(sdk.ReturnNullValuesNull)
 		} else {
-			req.WithReturnNullValues(&sdk.ReturnNullValuesNotNull)
+			req.WithReturnNullValues(sdk.ReturnNullValuesNotNull)
 		}
 	}
 
 	if v, ok := d.GetOk("return_behavior"); ok {
 		if v.(string) == "VOLATILE" {
-			req.WithReturnResultsBehavior(&sdk.ReturnResultsBehaviorVolatile)
+			req.WithReturnResultsBehavior(sdk.ReturnResultsBehaviorVolatile)
 		} else {
-			req.WithReturnResultsBehavior(&sdk.ReturnResultsBehaviorImmutable)
+			req.WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable)
 		}
 	}
 
 	if v, ok := d.GetOk("null_input_behavior"); ok {
 		switch {
 		case v.(string) == "CALLED ON NULL INPUT":
-			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorCalledOnNullInput))
+			req.WithNullInputBehavior(sdk.NullInputBehaviorCalledOnNullInput)
 		case v.(string) == "RETURNS NULL ON NULL INPUT":
-			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorReturnNullInput))
+			req.WithNullInputBehavior(sdk.NullInputBehaviorReturnNullInput)
 		default:
-			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorStrict))
+			req.WithNullInputBehavior(sdk.NullInputBehaviorStrict)
 		}
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(sdk.String(v.(string)))
+		req.WithComment(v.(string))
 	}
 
 	if _, ok := d.GetOk("header"); ok {
@@ -295,37 +309,38 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("max_batch_rows"); ok {
-		req.WithMaxBatchRows(sdk.Int(v.(int)))
+		req.WithMaxBatchRows(v.(int))
 	}
 
 	if v, ok := d.GetOk("compression"); ok {
-		req.WithCompression(sdk.String(v.(string)))
+		req.WithCompression(v.(string))
 	}
 
 	if v, ok := d.GetOk("request_translator"); ok {
-		req.WithRequestTranslator(sdk.Pointer(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string))))
+		req.WithRequestTranslator(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string)))
 	}
 
 	if v, ok := d.GetOk("response_translator"); ok {
-		req.WithResponseTranslator(sdk.Pointer(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string))))
+		req.WithResponseTranslator(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string)))
 	}
 
 	if err := client.ExternalFunctions.Create(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]sdk.DataType, 0, len(args))
-	for _, item := range args {
-		argTypes = append(argTypes, item.ArgDataType)
-	}
-	sid := sdk.NewSchemaObjectIdentifierWithArgumentsOld(database, schemaName, name, argTypes)
-	d.SetId(sid.FullyQualifiedName())
+
+	d.SetId(id.FullyQualifiedName())
+
 	return ReadContextExternalFunction(ctx, d, meta)
 }
 
 func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id)
 	if err != nil {
 		d.SetId("")
@@ -333,6 +348,9 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Some properties can come from the SHOW EXTERNAL FUNCTION call
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", externalFunction.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -354,7 +372,7 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Some properties come from the DESCRIBE FUNCTION call
-	externalFunctionPropertyRows, err := client.ExternalFunctions.Describe(ctx, sdk.NewDescribeExternalFunctionRequest(id.WithoutArguments(), id.Arguments()))
+	externalFunctionPropertyRows, err := client.ExternalFunctions.Describe(ctx, id)
 	if err != nil {
 		d.SetId("")
 		return nil
@@ -474,8 +492,12 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	req := sdk.NewAlterFunctionRequest(sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), id.Arguments()...))
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	req := sdk.NewAlterFunctionRequest(id)
 	if d.HasChange("comment") {
 		_, new := d.GetChange("comment")
 		if new == "" {
@@ -494,8 +516,12 @@ func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 func DeleteContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
-	req := sdk.NewDropFunctionRequest(sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), id.Arguments()...))
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	req := sdk.NewDropFunctionRequest(id).WithIfExists(true)
 	if err := client.Functions.Drop(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}

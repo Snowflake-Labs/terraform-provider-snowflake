@@ -9,7 +9,9 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -202,6 +204,7 @@ var accountSchema = map[string]*schema.Schema{
 		Default:     3,
 		Description: "Specifies the number of days to wait before dropping the account. The default is 3 days.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Account() *schema.Resource {
@@ -211,6 +214,10 @@ func Account() *schema.Resource {
 		Read:        ReadAccount,
 		Update:      UpdateAccount,
 		Delete:      DeleteAccount,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
@@ -321,6 +328,10 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 		return nil, true
 	})
 	if err != nil {
+		return err
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 

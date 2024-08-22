@@ -55,14 +55,14 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 		{
 			Name:       "account object identifier with dots",
 			ObjectType: sdk.ObjectTypeDatabase,
-			ObjectName: "database.name.with.dots",
+			ObjectName: "\"database.name.with.dots\"",
 			Expected:   sdk.NewAccountObjectIdentifier("database.name.with.dots"),
 		},
 		{
 			Name:       "validation - valid identifier",
 			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "to.many.parts.in.this.identifier",
-			Error:      "unable to classify identifier",
+			Error:      "unexpected number of parts 6 in identifier to.many.parts.in.this.identifier, expected 1 in a form of \"<account_object_name>\"",
 		},
 		{
 			Name:       "validation - unsupported type",
@@ -74,13 +74,13 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Name:       "validation - invalid database object identifier",
 			ObjectType: sdk.ObjectTypeSchema,
 			ObjectName: "test_database.test_schema.test_table",
-			Error:      "invalid object_name test_database.test_schema.test_table, expected database object identifier",
+			Error:      "unexpected number of parts 3 in identifier test_database.test_schema.test_table, expected 2 in a form of \"<database_name>.<database_object_name>\"",
 		},
 		{
 			Name:       "validation - invalid schema object identifier",
 			ObjectType: sdk.ObjectTypeTable,
 			ObjectName: "test_database.test_schema.test_table.column_name",
-			Error:      "invalid object_name test_database.test_schema.test_table.column_name, expected schema object identifier",
+			Error:      "unexpected number of parts 4 in identifier test_database.test_schema.test_table.column_name, expected 3 in a form of \"<database_name>.<schema_name>.<schema_object_name>\"",
 		},
 	}
 
@@ -248,7 +248,7 @@ func TestGetOwnershipGrantOn(t *testing.T) {
 				"object_type": "SCHEMA",
 				"object_name": "test_database.test_schema.test_table",
 			},
-			Error: "invalid object_name test_database.test_schema.test_table, expected database object identifier",
+			Error: "unexpected number of parts 3 in identifier test_database.test_schema.test_table, expected 2 in a form of \"<database_name>.<database_object_name>\"",
 		},
 	}
 

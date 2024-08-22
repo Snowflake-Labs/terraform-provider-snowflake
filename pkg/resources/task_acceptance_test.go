@@ -41,7 +41,9 @@ type (
 
 var (
 	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
+	rootId    = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, rootname)
 	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
+	childId   = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, childname)
 	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
 
 	initialState = &AccTaskTestSettings{ //nolint
@@ -204,7 +206,9 @@ func TestAcc_Task(t *testing.T) {
 					checkBool("snowflake_task.root_task", "enabled", true),
 					checkBool("snowflake_task.child_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -228,7 +232,9 @@ func TestAcc_Task(t *testing.T) {
 					checkBool("snowflake_task.root_task", "enabled", true),
 					checkBool("snowflake_task.child_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -251,7 +257,9 @@ func TestAcc_Task(t *testing.T) {
 					checkBool("snowflake_task.root_task", "enabled", true),
 					checkBool("snowflake_task.child_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -274,7 +282,9 @@ func TestAcc_Task(t *testing.T) {
 					checkBool("snowflake_task.root_task", "enabled", false),
 					checkBool("snowflake_task.child_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -297,7 +307,9 @@ func TestAcc_Task(t *testing.T) {
 					checkBool("snowflake_task.root_task", "enabled", true),
 					checkBool("snowflake_task.child_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),

@@ -9,8 +9,8 @@ type ExternalFunctions interface {
 	Create(ctx context.Context, request *CreateExternalFunctionRequest) error
 	Alter(ctx context.Context, request *AlterExternalFunctionRequest) error
 	Show(ctx context.Context, request *ShowExternalFunctionRequest) ([]ExternalFunction, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error)
-	Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ExternalFunction, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ExternalFunctionProperty, error)
 }
 
 // CreateExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-external-function.
@@ -52,13 +52,12 @@ type ExternalFunctionContextHeader struct {
 
 // AlterExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
 type AlterExternalFunctionOptions struct {
-	alter             bool                   `ddl:"static" sql:"ALTER"`
-	function          bool                   `ddl:"static" sql:"FUNCTION"`
-	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
-	Set               *ExternalFunctionSet   `ddl:"keyword" sql:"SET"`
-	Unset             *ExternalFunctionUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	alter    bool                                `ddl:"static" sql:"ALTER"`
+	function bool                                `ddl:"static" sql:"FUNCTION"`
+	IfExists *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifierWithArguments `ddl:"identifier"`
+	Set      *ExternalFunctionSet                `ddl:"keyword" sql:"SET"`
+	Unset    *ExternalFunctionUnset              `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type ExternalFunctionSet struct {
@@ -120,7 +119,8 @@ type ExternalFunction struct {
 	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
-	Arguments          string
+	Arguments          []DataType
+	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
 	IsTableFunction    bool
@@ -132,16 +132,15 @@ type ExternalFunction struct {
 	IsDataMetric       bool
 }
 
-func (v *ExternalFunction) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
+func (v *ExternalFunction) ID() SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
 }
 
 // DescribeExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
 type DescribeExternalFunctionOptions struct {
-	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
-	function          bool                   `ddl:"static" sql:"FUNCTION"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+	describe bool                                `ddl:"static" sql:"DESCRIBE"`
+	function bool                                `ddl:"static" sql:"FUNCTION"`
+	name     SchemaObjectIdentifierWithArguments `ddl:"identifier"`
 }
 
 type externalFunctionPropertyRow struct {
