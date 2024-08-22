@@ -11,6 +11,8 @@ New fields:
   - `row_access_policy`
   - `aggregation_policy`
   - `change_tracking`
+  - `is_recursive`
+  - `is_temporary`
 - added `show_output` field that holds the response from SHOW VIEWS.
 - added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
 
@@ -474,7 +476,7 @@ resource "snowflake_database" "test" {
 }
 ```
 
-If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove 
+If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove
 the database from state to later import it in the newer version of the provider.
 Otherwise, it may cause issues when migrating to v0.93.0.
 For now, we're dropping the possibility to create a clone database from other databases.

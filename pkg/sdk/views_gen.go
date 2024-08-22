@@ -244,11 +244,11 @@ func (v *View) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+// TODO(SNOW-1636212): remove
 func (v *View) HasCopyGrants() bool {
 	return strings.Contains(v.Text, " COPY GRANTS ")
 }
 
-// TODO: proper extraction
 func (v *View) IsTemporary() bool {
 	return strings.Contains(v.Text, "TEMPORARY")
 }

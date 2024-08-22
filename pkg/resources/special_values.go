@@ -45,3 +45,7 @@ func externalChangesNotDetectedFieldDescription(description string) string {
 func withPrivilegedRolesDescription(description, paramName string) string {
 	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE. `, description, paramName)
 }
+
+func blacklistedCharactersFieldDescription(description string, blacklistedCharacters []rune) string {
+	return fmt.Sprintf(`%s Due to technical limitations, don't use the following characters: %s`, description, characterList(blacklistedCharacters))
+}

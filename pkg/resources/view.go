@@ -24,20 +24,20 @@ var viewSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.",
+		Description:      blacklistedCharactersFieldDescription("Specifies the identifier for the view; must be unique for the schema in which the view is created.", []rune{'|'}),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The database in which to create the view. Don't use the | character.",
+		Description:      blacklistedCharactersFieldDescription("The database in which to create the view.", []rune{'|'}),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The schema in which to create the view. Don't use the | character.",
+		Description:      blacklistedCharactersFieldDescription("The schema in which to create the view.", []rune{'|'}),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -72,7 +72,7 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		Description:      booleanStringFieldDescription("Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session."),
+		Description:      booleanStringFieldDescription("Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. In context of this provider, it means that it's dropped after a Terraform operation. This results in a permanent plan with object creation."),
 	},
 	"is_recursive": {
 		Type:             schema.TypeString,
@@ -90,7 +90,6 @@ var viewSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("change_tracking", func(x any) any {
 			return x.(string) == "ON"
 		}),
-		// DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("change_tracking"),
 		Description: booleanStringFieldDescription("Specifies to enable or disable change tracking on the table."),
 	},
 	// TODO(next pr): support remaining fields
@@ -183,6 +182,11 @@ var viewSchema = map[string]*schema.Schema{
 	// 				DiffSuppressFunc: DiffSuppressStatement,
 	// 				Description:      "Specifies the projection policy to set on a column.",
 	// 			},
+	// "comment": {
+	// 	Type:        schema.TypeString,
+	// 	Optional:    true,
+	// 	Description: "Specifies a comment for the column.",
+	// },
 	// 		},
 	// 	},
 	// 	Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
@@ -194,6 +198,7 @@ var viewSchema = map[string]*schema.Schema{
 	},
 	"row_access_policy": {
 		Type:     schema.TypeList,
+		MaxItems: 1,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -275,7 +280,7 @@ func View() *schema.Resource {
 		Description:   "Resource used to manage view objects. For more information, check [view documentation](https://docs.snowflake.com/en/sql-reference/sql/create-view).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "change_tracking", "is_secure", "statement"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "change_tracking", "is_secure", "is_temporary", "is_recursive", "statement"),
 		),
 
 		Schema: viewSchema,
@@ -288,7 +293,7 @@ func View() *schema.Resource {
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
-				Upgrade: v094ViewStateUpgrader,
+				Upgrade: v0_94_1_ViewStateUpgrader,
 			},
 		},
 	}
@@ -353,11 +358,7 @@ func CreateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	return ReadView(false)(ctx, d, meta)
 }
 
-type resourceDataGetter interface {
-	Get(string) any
-}
-
-func prepareCreateRequest(d resourceDataGetter) (*sdk.CreateViewRequest, error) {
+func prepareCreateRequest(d *schema.ResourceData) (*sdk.CreateViewRequest, error) {
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
@@ -522,17 +523,12 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 }
 
 func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
-	// ensure a warehouse is selected for the session to get policy references
-	cleanupWarehouse, err := ensureWarehouse(ctx, client)
-	if err != nil {
-		return err
-	}
-	defer cleanupWarehouse()
-
 	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
 	if err != nil {
 		return err
 	}
+	var aggregationPolicies []map[string]any
+	var rowAccessPolicies []map[string]any
 	for _, p := range policyRefs {
 		policyName := sdk.NewSchemaObjectIdentifier(*p.PolicyDb, *p.PolicySchema, p.PolicyName)
 		switch p.PolicyKind {
@@ -541,50 +537,39 @@ func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.Sche
 			if p.RefArgColumnNames != nil {
 				entityKey = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
 			}
-			if err = d.Set("aggregation_policy", []map[string]any{{
+			aggregationPolicies = append(aggregationPolicies, map[string]any{
 				"policy_name": policyName.FullyQualifiedName(),
 				"entity_key":  entityKey,
-			}}); err != nil {
-				return err
-			}
+			})
 		case string(sdk.PolicyKindRowAccessPolicy):
 			var on []string
 			if p.RefArgColumnNames != nil {
 				on = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
 			}
-			if err = d.Set("row_access_policy", []map[string]any{{
+			rowAccessPolicies = append(rowAccessPolicies, map[string]any{
 				"policy_name": policyName.FullyQualifiedName(),
 				"on":          on,
-			}}); err != nil {
-				return err
-			}
+			})
 		default:
 			log.Printf("[WARN] unexpected policy kind %v in policy references returned from Snowflake", p.PolicyKind)
 		}
 	}
-	return err
-}
-
-type viewWithReplaceDataResourceGetter struct {
-	d *schema.ResourceData
-}
-
-func (g *viewWithReplaceDataResourceGetter) Get(name string) any {
-	old, new := g.d.GetChange(name)
-	if name == "statement" {
-		return new
+	if err = d.Set("aggregation_policy", aggregationPolicies); err != nil {
+		return err
 	}
-	return old
+	if err = d.Set("row_access_policy", rowAccessPolicies); err != nil {
+		return err
+	}
+	return err
 }
 
 func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	// change on this field can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
-	if d.HasChange("statement") {
-		// TODO: extract this common code with CreateView
-		req, err := prepareCreateRequest(&viewWithReplaceDataResourceGetter{d})
+	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
+	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") {
+		req, err := prepareCreateRequest(d)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -604,6 +589,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(fmt.Errorf("error setting change_tracking in view %v err = %w", id.Name(), err))
 			}
 		}
+		return ReadView(false)(ctx, d, meta)
 	}
 
 	if d.HasChange("name") {
@@ -638,11 +624,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if parsed {
-				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(parsed))
-			} else {
-				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(parsed))
-			}
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(parsed))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error setting is_secure for view %v: %w", d.Id(), err))
 			}
@@ -676,6 +658,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		var dropReq *sdk.ViewDropRowAccessPolicyRequest
 		if v, ok := d.GetOk("row_access_policy"); ok {
 			rowAccessPolicyConfig := v.([]any)[0].(map[string]any)
+
 			columnsRaw := expandStringList(rowAccessPolicyConfig["on"].(*schema.Set).List())
 			columns := make([]sdk.Column, len(columnsRaw))
 			for i := range columnsRaw {

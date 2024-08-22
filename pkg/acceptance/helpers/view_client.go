@@ -52,6 +52,14 @@ func (c *ViewClient) RecreateView(t *testing.T, id sdk.SchemaObjectIdentifier, q
 	return view
 }
 
+func (c *ViewClient) Alter(t *testing.T, req *sdk.AlterViewRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
+
 func (c *ViewClient) DropViewFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func v094ViewStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+func v0_94_1_ViewStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return rawState, nil
 	}

@@ -63,7 +63,6 @@ func TestAcc_View_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -89,6 +88,22 @@ func TestAcc_View_basic(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasStatementString(statement)),
+			},
+			// set policies externally
+			{
+				PreConfig: func() {
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "ROLE_NAME"}})))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy)))
+				},
+				Config: accconfig.FromModel(t, viewModel),
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+					HasNameString(id.Name()).
+					HasStatementString(statement).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "0")),
+				),
 			},
 			// set other fields
 			{
@@ -178,6 +193,31 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
 				),
 			},
+			// unset policies externally
+			{
+				PreConfig: func() {
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, otherStatement),
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+					HasNameString(id.Name()).
+					HasStatementString(otherStatement).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasCommentString("Terraform test resource"),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+				),
+			},
+
 			// import - with optionals
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
@@ -221,11 +261,6 @@ func TestAcc_View_basic(t *testing.T) {
 			// recreate - change is_recursive
 			{
 				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionDestroyBeforeCreate),
-					},
-				},
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -244,6 +279,7 @@ func TestAcc_View_basic(t *testing.T) {
 }
 
 func TestAcc_View_recursive(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
@@ -275,6 +311,38 @@ func TestAcc_View_recursive(t *testing.T) {
 						HasSchemaString(id.SchemaName()).
 						HasStatementString(statement).
 						HasIsRecursiveString("true")),
+			},
+		},
+	})
+}
+
+func TestAcc_View_temporary(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			{
+				Config:             accconfig.FromModel(t, viewModel.WithIsTemporary("true")),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionCreate),
+					},
+				},
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+					HasNameString(id.Name()).
+					HasStatementString(statement).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasIsTemporaryString("true")),
 			},
 		},
 	})
@@ -623,7 +691,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 	})
 }
 
-func TestAcc_view_migrateFromVersion094(t *testing.T) {
+func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -635,7 +703,6 @@ func TestAcc_view_migrateFromVersion094(t *testing.T) {
 	t.Cleanup(tagCleanup)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -644,11 +711,11 @@ func TestAcc_view_migrateFromVersion094(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.94.0",
+						VersionConstraint: "=0.94.1",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: viewv094WithTags(id, tag.SchemaName, tag.Name, "foo", statement),
+				Config: viewv_0_94_1_WithTags(id, tag.SchemaName, tag.Name, "foo", statement),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
@@ -668,7 +735,7 @@ func TestAcc_view_migrateFromVersion094(t *testing.T) {
 	})
 }
 
-func viewv094WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, tagValue, statement string) string {
+func viewv_0_94_1_WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, tagValue, statement string) string {
 	s := `
 resource "snowflake_view" "test" {
 	name					= "%[1]s"

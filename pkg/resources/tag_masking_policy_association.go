@@ -132,11 +132,26 @@ func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Resou
 	}
 
 	// create temp warehouse to query the tag, and make sure to clean it up
-	cleanupWarehouse, err := ensureWarehouse(ctx, client)
+	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	defer cleanupWarehouse()
+	if warehouse == "" {
+		log.Printf("[DEBUG] no current warehouse set, creating a temporary warehouse")
+		randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
+		wid := sdk.NewAccountObjectIdentifier(randomWarehouseName)
+		if err := client.Warehouses.Create(ctx, wid, nil); err != nil {
+			return diag.FromErr(err)
+		}
+		defer func() {
+			if err := client.Warehouses.Drop(ctx, wid, nil); err != nil {
+				log.Printf("[WARN] error cleaning up temp warehouse %v", err)
+			}
+		}()
+		if err := client.Sessions.UseWarehouse(ctx, wid); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	// show attached masking policy
 	tid := sdk.NewSchemaObjectIdentifier(aid.TagDatabaseName, aid.TagSchemaName, aid.TagName)
 	mid := sdk.NewSchemaObjectIdentifier(aid.MaskingPolicyDatabaseName, aid.MaskingPolicySchemaName, aid.MaskingPolicyName)

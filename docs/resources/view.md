@@ -7,6 +7,10 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
 
+!> **Note about copy_grants** Fields like `is_recursive`, `is_temporary`, `copy_grants` and `statement` can not be altered, and a change means recreation of the resource. ForceNew can not be used because it does not preserve grants from `copy_grants`. Beware that even though a change is marked as update, the resource is recreated.
+
+~> **Required warehouse** For this resource, the provider uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the configuration.
+
 # snowflake_view (Resource)
 
 Resource used to manage view objects. For more information, check [view documentation](https://docs.snowflake.com/en/sql-reference/sql/create-view).
@@ -62,9 +66,9 @@ SQL
 
 ### Required
 
-- `database` (String) The database in which to create the view. Don't use the | character.
-- `name` (String) Specifies the identifier for the view; must be unique for the schema in which the view is created. Don't use the | character.
-- `schema` (String) The schema in which to create the view. Don't use the | character.
+- `database` (String) The database in which to create the view. Due to technical limitations, don't use the following characters: `|`
+- `name` (String) Specifies the identifier for the view; must be unique for the schema in which the view is created. Due to technical limitations, don't use the following characters: `|`
+- `schema` (String) The schema in which to create the view. Due to technical limitations, don't use the following characters: `|`
 - `statement` (String) Specifies the query used to create the view.
 
 ### Optional
@@ -75,9 +79,9 @@ SQL
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.
 - `is_recursive` (String) Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `is_secure` (String) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `is_temporary` (String) Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
+- `is_temporary` (String) Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. In context of this provider, it means that it's dropped after a Terraform operation. This results in a permanent plan with object creation. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `or_replace` (Boolean) Overwrites the View if it exists.
-- `row_access_policy` (Block List) Specifies the row access policy to set on a view. (see [below for nested schema](#nestedblock--row_access_policy))
+- `row_access_policy` (Block List, Max: 1) Specifies the row access policy to set on a view. (see [below for nested schema](#nestedblock--row_access_policy))
 
 ### Read-Only
 
