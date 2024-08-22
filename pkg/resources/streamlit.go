@@ -143,6 +143,16 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 		return nil, err
 	}
 
+	if err = d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+	if err = d.Set("database", id.DatabaseName()); err != nil {
+		return nil, err
+	}
+	if err = d.Set("schema", id.SchemaName()); err != nil {
+		return nil, err
+	}
+
 	streamlit, err := client.Streamlits.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -150,15 +160,6 @@ func ImportStreamlit(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 
 	streamlitDetails, err := client.Streamlits.Describe(ctx, id)
 	if err != nil {
-		return nil, err
-	}
-	if err = d.Set("name", streamlit.Name); err != nil {
-		return nil, err
-	}
-	if err = d.Set("database", streamlit.DatabaseName); err != nil {
-		return nil, err
-	}
-	if err = d.Set("schema", streamlit.SchemaName); err != nil {
 		return nil, err
 	}
 	stageId, location, err := helpers.ParseRootLocation(streamlitDetails.RootLocation)
