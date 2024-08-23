@@ -14,66 +14,128 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-1348101]: handle external type change properly (force new)
 var userSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
-	},
-	"login_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Sensitive:   true,
-		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
-		// login_name is case-insensitive
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
-	},
-	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// TODO validation
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"password": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Sensitive:   true,
-		Description: "**WARNING:** this will put the password in the terraform state file. Use carefully.",
-		// TODO validation https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#optional-parameters
+		Description: "Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully.",
+	},
+	"login_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
+		// login_name is case-insensitive
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
+	},
+	// TODO [SNOW-1348101]: do we need special handling of empty values for the string attributes like display name and others
+	"display_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Name displayed for the user in the Snowflake web interface.",
+	},
+	"first_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "First name of the user.",
+	},
+	"middle_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "Middle name of the user.",
+	},
+	"last_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "Last name of the user.",
+	},
+	// TODO [SNOW-1348101]: check case sensitivity
+	"email": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Sensitive:   true,
+		Description: "Email address for the user.",
+	},
+	// TODO [SNOW-1348101]: handle this properly
+	"must_change_password": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validateBooleanString,
+		Description:      booleanStringFieldDescription("Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system."),
+		Default:          BooleanDefault,
 	},
 	"disabled": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validateBooleanString,
+		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
+		Default:          BooleanDefault,
+	},
+	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
+	// TODO [SNOW-1348101]: check if this can be set to negative value by hand on Snowflake side
+	"days_to_expiry": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Default:      IntDefault,
+		Description:  "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
+	},
+	// TODO [SNOW-1348101]: handle properly (0 and NULL)
+	"mins_to_unlock": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Default:      IntDefault,
+		Description:  "Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter.",
 	},
 	"default_warehouse": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
+		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the warehouse exists.",
 	},
 	// TODO [SNOW-1348101 - next PR]: check the exact behavior of default_namespace and default_role because it looks like it is handled in a case-insensitive manner on Snowflake side
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
+		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the namespace exists.",
 	},
 	"default_role": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Computed:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      "Specifies the role that is active by default for the user’s session upon login.",
+		Description:      "Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.",
 	},
+	// TODO [SNOW-1348101]: validate? change? change inside the SDK?
 	"default_secondary_roles": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)",
+		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
+	// TODO [SNOW-1348101]: check manually setting zero or negative; test unset
+	"mins_to_bypass_mfa": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(1),
+		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available.",
+	},
+	// TODO [SNOW-1348101]: do we allow specifying fp for rsa and rsa2?
 	"rsa_public_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -84,52 +146,22 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
+	// TODO [SNOW-1348101]: do we need this? do we need to alter the logic?
 	"has_rsa_public_key": {
 		Type:        schema.TypeBool,
 		Computed:    true,
 		Description: "Will be true if user as an RSA key set.",
 	},
-	"must_change_password": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system.",
-	},
-	"email": {
+	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Sensitive:   true,
-		Description: "Email address for the user.",
+		Description: "Specifies a comment for the user.",
 	},
-	"display_name": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "Name displayed for the user in the Snowflake web interface.",
-	},
-	"first_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "First name of the user.",
-	},
-	"last_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "Last name of the user.",
-	},
-	//    MIDDLE_NAME = <string>
-	//    SNOWFLAKE_LOCK = TRUE | FALSE
-	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
-	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
-	//    DAYS_TO_EXPIRY = <integer>
-	//    MINS_TO_UNLOCK = <integer>
+	// TODO [SNOW-1348101]: support disable MFA in the SDK; add disable SDK to schema and handle it properly
+	//    DISABLE_MFA = TRUE | FALSE
+	// readonly:
 	//    EXT_AUTHN_DUO = TRUE | FALSE
 	//    EXT_AUTHN_UID = <string>
-	//    MINS_TO_BYPASS_MFA = <integer>
-	//    DISABLE_MFA = TRUE | FALSE
-	//    MINS_TO_BYPASS_NETWORK POLICY = <integer>
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
