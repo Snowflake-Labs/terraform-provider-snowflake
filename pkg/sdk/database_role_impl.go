@@ -36,11 +36,15 @@ func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleReque
 
 	resultList := convertRows[databaseRoleDBRow, DatabaseRole](dbRows)
 
+	for i := range resultList {
+		resultList[i].DatabaseName = request.database.name
+	}
+
 	return resultList, nil
 }
 
 func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
-	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(id.Name())
+	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(Like{Pointer(id.Name())})
 	databaseRoles, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -84,13 +88,19 @@ func (s *AlterDatabaseRoleRequest) toOpts() *alterDatabaseRoleOptions {
 		name:     s.name,
 	}
 	if s.rename != nil {
-		opts.Rename = &DatabaseRoleRename{s.rename.name}
+		opts.Rename = s.rename
 	}
 	if s.set != nil {
 		opts.Set = &DatabaseRoleSet{s.set.comment}
 	}
 	if s.unset != nil {
 		opts.Unset = &DatabaseRoleUnset{true}
+	}
+	if s.setTags != nil {
+		opts.SetTags = s.setTags
+	}
+	if s.unsetTags != nil {
+		opts.UnsetTags = s.unsetTags
 	}
 	return &opts
 }
@@ -106,6 +116,7 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 	return &showDatabaseRoleOptions{
 		Like:     s.like,
 		Database: s.database,
+		Limit:    s.limit,
 	}
 }
 

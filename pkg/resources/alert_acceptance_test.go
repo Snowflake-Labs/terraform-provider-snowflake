@@ -32,10 +32,10 @@ type (
 	}
 )
 
-var (
-	id = acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+func TestAcc_Alert(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	alertInitialState = &AccAlertTestSettings{ //nolint
+	alertInitialState := &AccAlertTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
@@ -50,7 +50,7 @@ var (
 	}
 
 	// Changes: condition, action, comment, schedule.
-	alertStepOne = &AccAlertTestSettings{ //nolint
+	alertStepOne := &AccAlertTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
@@ -65,7 +65,7 @@ var (
 	}
 
 	// Changes: condition, action, comment, schedule.
-	alertStepTwo = &AccAlertTestSettings{ //nolint
+	alertStepTwo := &AccAlertTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
@@ -80,7 +80,7 @@ var (
 	}
 
 	// Changes: condition, action, comment, schedule.
-	alertStepThree = &AccAlertTestSettings{ //nolint
+	alertStepThree := &AccAlertTestSettings{ //nolint
 		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
@@ -92,9 +92,7 @@ var (
 			Schedule:  5,
 		},
 	}
-)
 
-func TestAcc_Alert(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },

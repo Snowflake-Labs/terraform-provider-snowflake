@@ -52,6 +52,11 @@ func (w *WarehouseResourceAssert) HasEnableQueryAccelerationString(expected stri
 	return w
 }
 
+func (w *WarehouseResourceAssert) HasFullyQualifiedNameString(expected string) *WarehouseResourceAssert {
+	w.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
+	return w
+}
+
 func (w *WarehouseResourceAssert) HasInitiallySuspendedString(expected string) *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("initially_suspended", expected))
 	return w
@@ -133,6 +138,11 @@ func (w *WarehouseResourceAssert) HasNoComment() *WarehouseResourceAssert {
 
 func (w *WarehouseResourceAssert) HasNoEnableQueryAcceleration() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueNotSet("enable_query_acceleration"))
+	return w
+}
+
+func (w *WarehouseResourceAssert) HasNoFullyQualifiedName() *WarehouseResourceAssert {
+	w.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
 	return w
 }
 

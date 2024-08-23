@@ -70,3 +70,8 @@ func (c *DatabaseRoleClient) CleanupDatabaseRoleFunc(t *testing.T, id sdk.Databa
 		require.NoError(t, err)
 	}
 }
+
+func (c *DatabaseRoleClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.DatabaseRole, error) {
+	t.Helper()
+	return c.client().ShowByID(context.Background(), id)
+}

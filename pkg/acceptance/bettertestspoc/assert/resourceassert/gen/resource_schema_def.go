@@ -29,4 +29,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "User",
 		schema: resources.User().Schema,
 	},
+	{
+		name:   "DatabaseRole",
+		schema: resources.DatabaseRole().Schema,
+	},
 }

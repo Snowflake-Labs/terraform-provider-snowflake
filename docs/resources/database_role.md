@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release.
+
 # snowflake_database_role (Resource)
 
 
@@ -12,13 +14,16 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_database_role" "db_role" {
-  database = "database"
-  name     = "role_1"
-  comment  = "my db role"
+resource "snowflake_database" "test_database" {
+  name = "database_name"
+}
+
+resource "snowflake_database_role" "test_database_role" {
+  database = snowflake_database.test_database.fully_qualified_name
+  name     = "database_role_name"
+  comment  = "my database role"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -38,11 +43,29 @@ resource "snowflake_database_role" "db_role" {
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW DATABASE ROLES` for the given database role. Note that this value will be only recomputed whenever comment field changes. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `granted_database_roles` (Number)
+- `granted_to_database_roles` (Number)
+- `granted_to_roles` (Number)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `is_inherited` (Boolean)
+- `name` (String)
+- `owner` (String)
+- `owner_role_type` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_database_role.example 'dbName|roleName'
+terraform import snowflake_database_role.example '"<database_name>"."<database_role_name>"'
 ```
