@@ -212,7 +212,7 @@ type UserObjectProperties struct {
 	DefaultWarehouse      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace      *ObjectIdentifier        `ddl:"identifier,equals" sql:"DEFAULT_NAMESPACE"`
 	DefaultRole           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_ROLE"`
-	DefaultSecondaryRoles *SecondaryRoles          `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
+	DefaultSecondaryRoles *SecondaryRoles          `ddl:"parameter,equals" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA       *int                     `ddl:"parameter,no_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey          *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKeyFp        *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_FP"`
@@ -227,10 +227,7 @@ type UserAlterObjectProperties struct {
 }
 
 type SecondaryRoles struct {
-	equals     bool            `ddl:"static" sql:"="`
-	leftParen  bool            `ddl:"static" sql:"("`
-	Roles      []SecondaryRole `ddl:"list,no_parentheses"`
-	rightParen bool            `ddl:"static" sql:")"`
+	all bool `ddl:"static" sql:"('ALL')"`
 }
 
 type SecondaryRole struct {
@@ -382,7 +379,7 @@ type UserUnset struct {
 }
 
 func (opts *UserUnset) validate() error {
-	// TODO [next PR]: change validations with policies
+	// TODO [SNOW-1348101]: change validations with policies
 	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}

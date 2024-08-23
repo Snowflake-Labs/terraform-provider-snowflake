@@ -15,6 +15,13 @@ func TestUserCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("with only required attributes", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s`, id.FullyQualifiedName())
+	})
+
 	t.Run("with complete options", func(t *testing.T) {
 		tagId := randomSchemaObjectIdentifier()
 		tags := []TagAssociation{
@@ -143,7 +150,7 @@ func TestUserAlter(t *testing.T) {
 		objectProperties := UserAlterObjectProperties{
 			UserObjectProperties: UserObjectProperties{
 				Password:              &password,
-				DefaultSecondaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
+				DefaultSecondaryRoles: &SecondaryRoles{},
 			},
 		}
 		opts := &AlterUserOptions{
@@ -152,7 +159,7 @@ func TestUserAlter(t *testing.T) {
 				ObjectProperties: &objectProperties,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ( 'ALL' )", id.FullyQualifiedName(), password)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ('ALL')", id.FullyQualifiedName(), password)
 
 		objectParameters := UserObjectParameters{
 			EnableUnredactedQuerySyntaxError: Bool(true),

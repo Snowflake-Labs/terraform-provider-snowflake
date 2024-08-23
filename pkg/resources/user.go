@@ -121,10 +121,15 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.",
 	},
-	// TODO [SNOW-1348101]: validate? change? change inside the SDK?
+	// TODO [SNOW-1348101]: test (no elems, more elems, duplicated elems, proper setting, update - both ways and external one)
 	"default_secondary_roles": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
+		Type: schema.TypeSet,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: isValidSecondaryRole(),
+		},
+		MaxItems:    1,
+		MinItems:    1,
 		Optional:    true,
 		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
@@ -245,13 +250,10 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if defaultRole, ok := d.GetOk("default_role"); ok {
 		opts.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultRole.(string)))
 	}
-	if v, ok := d.GetOk("default_secondary_roles"); ok {
-		roles := expandStringList(v.(*schema.Set).List())
-		secondaryRoles := []sdk.SecondaryRole{}
-		for _, role := range roles {
-			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
-		}
-		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
+	// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
+	// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
+	if _, ok := d.GetOk("default_secondary_roles"); ok {
+		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
 	}
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
@@ -341,6 +343,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
+		// TODO [SNOW-1348101]: do we need to read them (probably yes, to handle external changes properly)? Do we need diff suppression for lowercase inside the config?
 		var defaultSecondaryRoles []string
 		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
 			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, true)
@@ -465,13 +468,25 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 	if d.HasChange("default_secondary_roles") {
 		runSet = true
-		_, n := d.GetChange("default_secondary_roles")
-		roles := expandStringList(n.(*schema.Set).List())
-		secondaryRoles := []sdk.SecondaryRole{}
-		for _, role := range roles {
-			secondaryRoles = append(secondaryRoles, sdk.SecondaryRole{Value: role})
+		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
+		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
+		if _, ok := d.GetOk("default_secondary_roles"); ok {
+			alterOptions.Set.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
+		} else {
+			// TODO [SNOW-1348101]: adjust unset logic
+			unsetOptions := &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					ObjectProperties: &sdk.UserObjectPropertiesUnset{
+						DefaultSecondaryRoles: sdk.Bool(true),
+					},
+				},
+			}
+			err := client.Users.Alter(ctx, id, unsetOptions)
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
 		}
-		alterOptions.Set.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{Roles: secondaryRoles}
 	}
 	if d.HasChange("rsa_public_key") {
 		runSet = true

@@ -252,6 +252,9 @@ Type changes:
 - `must_change_password`: bool -> string
 - `disabled`: bool -> string
 
+Validation changes:
+- `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
