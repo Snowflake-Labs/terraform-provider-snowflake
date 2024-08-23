@@ -96,7 +96,7 @@ func DatabaseOld() *schema.Resource {
 
 		Schema: databaseOldSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName,
+			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 	}
 }

@@ -136,12 +136,12 @@ func Test_IdentifierParsers(t *testing.T) {
 		Expected       ObjectIdentifier
 		Error          string
 	}{
-		{IdentifierType: "AccountObjectIdentifier", Input: `a"b`, Error: "unable to read identifier: \"a\"b\", err = parse error on line 1, column 3: extraneous or missing \" in quoted-field"},
+		{IdentifierType: "AccountObjectIdentifier", Input: ``, Expected: NewAccountObjectIdentifier("")},
+		{IdentifierType: "AccountObjectIdentifier", Input: "a\nb", Expected: NewAccountObjectIdentifier("a\nb")},
+		{IdentifierType: "AccountObjectIdentifier", Input: `a"b`, Error: `unable to read identifier: "a"b", err = parse error on line 1, column 3: extraneous or missing " in quoted-field`},
+		{IdentifierType: "AccountObjectIdentifier", Input: `abc.cde`, Expected: NewAccountObjectIdentifier("abc.cde")},
 		{IdentifierType: "AccountObjectIdentifier", Input: `""""`, Error: `unable to parse identifier: """", currently identifiers containing double quotes are not supported in the provider`},
 		{IdentifierType: "AccountObjectIdentifier", Input: `"a""bc"`, Error: `unable to parse identifier: "a""bc", currently identifiers containing double quotes are not supported in the provider`},
-		{IdentifierType: "AccountObjectIdentifier", Input: ``, Expected: NewAccountObjectIdentifier(``)},
-		{IdentifierType: "AccountObjectIdentifier", Input: "a\nb", Expected: NewAccountObjectIdentifier("a\nb")},
-		{IdentifierType: "AccountObjectIdentifier", Input: `abc.cde`, Expected: NewAccountObjectIdentifier(`abc.cde`)},
 		{IdentifierType: "AccountObjectIdentifier", Input: `""`, Expected: NewAccountObjectIdentifier(``)},
 		{IdentifierType: "AccountObjectIdentifier", Input: `abc`, Expected: NewAccountObjectIdentifier(`abc`)},
 		{IdentifierType: "AccountObjectIdentifier", Input: `"abc"`, Expected: NewAccountObjectIdentifier(`abc`)},

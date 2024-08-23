@@ -315,7 +315,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		{
 			Name:       "validation: grant database role empty database role name",
 			Identifier: `|false|false|ALL PRIVILEGES|OnDatabase|"on-database-name"`,
-			Error:      "invalid DatabaseRoleName value: , should be a fully qualified name of database object <database_name>.<name>",
+			Error:      "incompatible identifier: ",
 		},
 		{
 			Name:       "validation: grant database role empty type",

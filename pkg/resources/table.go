@@ -22,9 +22,10 @@ import (
 // TODO [SNOW-1031688]: move data manipulation logic to the SDK - SQL generation or builders part (e.g. different default types/identity)
 var tableSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the table; must be unique for the database and schema in which the table is created.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the table; must be unique for the database and schema in which the table is created.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:        schema.TypeString,

@@ -97,7 +97,7 @@ func Database() *schema.Resource {
 
 		Schema: helpers.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName,
+			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 
 		CustomizeDiff: customdiff.All(

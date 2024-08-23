@@ -105,18 +105,26 @@ func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGran
 	return bulkOperationGrantData
 }
 
-func getGrantOnSchemaObjectIn(allOrFuture map[string]any) *sdk.GrantOnSchemaObjectIn {
+func getGrantOnSchemaObjectIn(allOrFuture map[string]any) (*sdk.GrantOnSchemaObjectIn, error) {
 	grantOnSchemaObjectIn := &sdk.GrantOnSchemaObjectIn{
 		PluralObjectType: sdk.PluralObjectType(strings.ToUpper(allOrFuture["object_type_plural"].(string))),
 	}
 
 	if inDatabase, ok := allOrFuture["in_database"].(string); ok && len(inDatabase) > 0 {
-		grantOnSchemaObjectIn.InDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(inDatabase))
+		databaseId, err := sdk.ParseAccountObjectIdentifier(inDatabase)
+		if err != nil {
+			return nil, err
+		}
+		grantOnSchemaObjectIn.InDatabase = sdk.Pointer(databaseId)
 	}
 
 	if inSchema, ok := allOrFuture["in_schema"].(string); ok && len(inSchema) > 0 {
-		grantOnSchemaObjectIn.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(inSchema))
+		schemaId, err := sdk.ParseDatabaseObjectIdentifier(inSchema)
+		if err != nil {
+			return nil, err
+		}
+		grantOnSchemaObjectIn.InSchema = sdk.Pointer(schemaId)
 	}
 
-	return grantOnSchemaObjectIn
+	return grantOnSchemaObjectIn, nil
 }
