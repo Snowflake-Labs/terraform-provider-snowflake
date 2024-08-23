@@ -36,15 +36,16 @@ func (id *GrantPrivilegesToShareId) String() string {
 	)
 }
 
-func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, error) {
-	var grantPrivilegesToShareId GrantPrivilegesToShareId
-
+func ParseGrantPrivilegesToShareId(idString string) (grantPrivilegesToShareId GrantPrivilegesToShareId, err error) {
 	parts := helpers.ParseResourceIdentifier(idString)
 	if len(parts) != 4 {
 		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
 	}
-
-	grantPrivilegesToShareId.ShareName = sdk.NewAccountObjectIdentifier(parts[0])
+	shareId, err := sdk.ParseAccountObjectIdentifier(parts[0])
+	if err != nil {
+		return grantPrivilegesToShareId, err
+	}
+	grantPrivilegesToShareId.ShareName = shareId
 	privileges := strings.Split(parts[1], ",")
 	if len(privileges) == 0 || (len(privileges) == 1 && privileges[0] == "") {
 		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be comma separated list of privileges`, privileges))
@@ -56,7 +57,7 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 	case OnDatabaseShareGrantKind:
 		id, err := sdk.ParseAccountObjectIdentifier(parts[3])
 		if err != nil {
-			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("invalid identifier, expected fully qualified name of account object%s: ", parts[3]), err)
+			return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf("invalid identifier, expected fully qualified name of account object %s: ", parts[3]), err)
 		}
 		grantPrivilegesToShareId.Identifier = id
 	case OnSchemaShareGrantKind, OnAllTablesInSchemaShareGrantKind:

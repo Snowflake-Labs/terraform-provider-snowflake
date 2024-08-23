@@ -88,8 +88,6 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
-
 		CreateContext: CreateContextSchema,
 		ReadContext:   ReadContextSchema(true),
 		UpdateContext: UpdateContextSchema,
@@ -97,9 +95,10 @@ func Schema() *schema.Resource {
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "name"),
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(DescribeOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
 			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
 			ComputedIfAnyAttributeChanged(ParametersAttributeName,
 				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
@@ -128,12 +127,19 @@ func Schema() *schema.Resource {
 			StateContext: ImportSchema,
 		},
 
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
 				Upgrade: v093SchemaStateUpgrader,
+			},
+			{
+				Version: 1,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -142,17 +148,21 @@ func Schema() *schema.Resource {
 func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] Starting schema import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-
-	s, err := client.Schemas.ShowByID(ctx, id)
+	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("name", s.Name); err != nil {
+
+	if err := d.Set("name", id.Name()); err != nil {
 		return nil, err
 	}
 
-	if err := d.Set("database", s.DatabaseName); err != nil {
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return nil, err
+	}
+
+	s, err := client.Schemas.ShowByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 
@@ -183,7 +193,7 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		} else if err == nil {
 			// there is already a PUBLIC schema, so we need to alter it instead
 			log.Printf("[DEBUG] found PUBLIC schema during creation, updating...")
-			d.SetId(helpers.EncodeSnowflakeID(database, name))
+			d.SetId(helpers.EncodeResourceIdentifier(id))
 			return UpdateContextSchema(ctx, d, meta)
 		}
 	}
@@ -219,7 +229,7 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(database, name))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSchema(false)(ctx, d, meta)
 }
@@ -227,9 +237,12 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+		id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-		_, err := client.Databases.ShowByID(ctx, id.DatabaseId())
+		_, err = client.Databases.ShowByID(ctx, id.DatabaseId())
 		if err != nil {
 			log.Printf("[DEBUG] database %s for schema %s not found", id.DatabaseId().Name(), id.Name())
 			d.SetId("")
@@ -256,14 +269,8 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}
 			return diag.FromErr(err)
 		}
-		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("name", schema.Name); err != nil {
-			return diag.FromErr(err)
-		}
 
-		if err := d.Set("database", schema.DatabaseName); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -321,8 +328,11 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 }
 
 func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("name") && !d.GetRawState().IsNull() {
 		newId := sdk.NewDatabaseObjectIdentifier(d.Get("database").(string), d.Get("name").(string))
@@ -332,7 +342,7 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
 		id = newId
 	}
 
@@ -402,10 +412,13 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func DeleteContextSchema(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.Schemas.Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Pointer(true)})
+	err = client.Schemas.Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Pointer(true)})
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

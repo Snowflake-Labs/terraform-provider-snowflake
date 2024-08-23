@@ -22,10 +22,11 @@ import (
 
 var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_type": {
 		Type:             schema.TypeString,
@@ -110,6 +111,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_rsa_public_key": {
 		Type:             schema.TypeString,
@@ -160,7 +162,6 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
 				ShowOutputAttributeName,
-				"name",
 				"enabled",
 				"comment",
 			),
@@ -192,7 +193,14 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting oauth integration for custom clients import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -249,8 +257,11 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 
 func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	oauthClientType, err := sdk.ToOauthSecurityIntegrationClientTypeOption(d.Get("oauth_client_type").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -339,7 +350,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextOauthIntegrationForCustomClients(false)(ctx, d, meta)
 }
@@ -347,7 +358,10 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -373,9 +387,6 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set("name", integration.Name); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -519,7 +530,11 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 
 func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewOauthForCustomClientsIntegrationSetRequest(), sdk.NewOauthForCustomClientsIntegrationUnsetRequest()
 
 	if d.HasChange("oauth_redirect_uri") {
@@ -660,10 +675,13 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 }
 
 func DeleteContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

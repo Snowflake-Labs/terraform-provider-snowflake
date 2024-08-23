@@ -16,10 +16,11 @@ import (
 
 var shareSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the share; must be unique for the account in which the share is created.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the share; must be unique for the account in which the share is created.",
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -51,7 +52,7 @@ func Share() *schema.Resource {
 
 		Schema: shareSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 	}
 }
@@ -165,9 +166,6 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading share (%v) err = %w", d.Id(), err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-	if err := d.Set("name", share.Name.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", share.Comment); err != nil {

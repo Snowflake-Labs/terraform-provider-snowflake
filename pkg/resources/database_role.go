@@ -5,26 +5,30 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/hashicorp/go-cty/cty"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var databaseRoleSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the database role.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the database role.",
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the database role.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "The database in which to create the database role.",
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -44,7 +48,17 @@ func DatabaseRole() *schema.Resource {
 
 		Schema: databaseRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName[sdk.DatabaseObjectIdentifier],
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
+			},
 		},
 	}
 }
@@ -53,7 +67,10 @@ func DatabaseRole() *schema.Resource {
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
@@ -65,14 +82,6 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-
-	if err := d.Set("name", databaseRole.Name); err != nil {
-		return err
-	}
-
-	if err := d.Set("database", id.DatabaseName()); err != nil {
 		return err
 	}
 
@@ -102,7 +111,7 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+	d.SetId(helpers.EncodeResourceIdentifier(objectIdentifier))
 
 	return ReadDatabaseRole(d, meta)
 }
@@ -111,7 +120,10 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	objectIdentifier, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+	if err != nil {
+		return err
+	}
 
 	if d.HasChange("comment") {
 		_, newVal := d.GetChange("comment")
@@ -131,11 +143,14 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 func DeleteDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+	objectIdentifier, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	dropRequest := sdk.NewDropDatabaseRoleRequest(objectIdentifier)
-	err := client.DatabaseRoles.Drop(ctx, dropRequest)
+	err = client.DatabaseRoles.Drop(ctx, dropRequest)
 	if err != nil {
 		return err
 	}

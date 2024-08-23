@@ -396,35 +396,59 @@ func buildOptsForGrantsTo(grantsTo map[string]any) (*sdk.ShowGrantOptions, error
 	opts := new(sdk.ShowGrantOptions)
 
 	if application := grantsTo["application"].(string); application != "" {
+		applicationId, err := sdk.ParseAccountObjectIdentifier(application)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			Application: sdk.NewAccountObjectIdentifier(application),
+			Application: applicationId,
 		}
 	}
 	if applicationRole := grantsTo["application_role"].(string); applicationRole != "" {
+		applicationRoleId, err := sdk.ParseDatabaseObjectIdentifier(applicationRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRole),
+			ApplicationRole: applicationRoleId,
 		}
 	}
 	if accountRole := grantsTo["account_role"].(string); accountRole != "" {
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(accountRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			Role: sdk.NewAccountObjectIdentifier(accountRole),
+			Role: accountRoleId,
 		}
 	}
 	if databaseRole := grantsTo["database_role"].(string); databaseRole != "" {
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(databaseRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
+			DatabaseRole: databaseRoleId,
 		}
 	}
 	if user := grantsTo["user"].(string); user != "" {
+		userId, err := sdk.ParseAccountObjectIdentifier(user)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			User: sdk.NewAccountObjectIdentifier(user),
+			User: userId,
 		}
 	}
 	if share := grantsTo["share"]; share != nil && len(share.([]any)) > 0 {
 		shareMap := share.([]any)[0].(map[string]any)
+		sharedId, err := sdk.ParseAccountObjectIdentifier(shareMap["share_name"].(string))
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
 			Share: &sdk.ShowGrantsToShare{
-				Name: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
+				Name: sharedId,
 			},
 		}
 		// TODO [SNOW-1284382]: Uncomment after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
@@ -439,23 +463,39 @@ func buildOptsForGrantsOf(grantsOf map[string]any) (*sdk.ShowGrantOptions, error
 	opts := new(sdk.ShowGrantOptions)
 
 	if accountRole := grantsOf["account_role"].(string); accountRole != "" {
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(accountRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.Of = &sdk.ShowGrantsOf{
-			Role: sdk.NewAccountObjectIdentifier(accountRole),
+			Role: accountRoleId,
 		}
 	}
 	if databaseRole := grantsOf["database_role"].(string); databaseRole != "" {
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(databaseRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.Of = &sdk.ShowGrantsOf{
-			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
+			DatabaseRole: databaseRoleId,
 		}
 	}
 	if applicationRole := grantsOf["application_role"].(string); applicationRole != "" {
+		applicationRoleId, err := sdk.ParseDatabaseObjectIdentifier(applicationRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.Of = &sdk.ShowGrantsOf{
-			ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRole),
+			ApplicationRole: applicationRoleId,
 		}
 	}
 	if share := grantsOf["share"].(string); share != "" {
+		shareId, err := sdk.ParseAccountObjectIdentifier(share)
+		if err != nil {
+			return nil, err
+		}
 		opts.Of = &sdk.ShowGrantsOf{
-			Share: sdk.NewAccountObjectIdentifier(share),
+			Share: shareId,
 		}
 	}
 	return opts, nil
@@ -466,13 +506,21 @@ func buildOptsForFutureGrantsIn(futureGrantsIn map[string]any) (*sdk.ShowGrantOp
 	opts.Future = sdk.Bool(true)
 
 	if db := futureGrantsIn["database"].(string); db != "" {
+		databaseId, err := sdk.ParseAccountObjectIdentifier(db)
+		if err != nil {
+			return nil, err
+		}
 		opts.In = &sdk.ShowGrantsIn{
-			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(db)),
+			Database: sdk.Pointer(databaseId),
 		}
 	}
 	if sc := futureGrantsIn["schema"].(string); sc != "" {
+		schemaId, err := sdk.ParseDatabaseObjectIdentifier(sc)
+		if err != nil {
+			return nil, err
+		}
 		opts.In = &sdk.ShowGrantsIn{
-			Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(sc)),
+			Schema: sdk.Pointer(schemaId),
 		}
 	}
 	return opts, nil
@@ -483,13 +531,21 @@ func buildOptsForFutureGrantsTo(futureGrantsTo map[string]any) (*sdk.ShowGrantOp
 	opts.Future = sdk.Bool(true)
 
 	if accountRole := futureGrantsTo["account_role"].(string); accountRole != "" {
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(accountRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			Role: sdk.NewAccountObjectIdentifier(accountRole),
+			Role: accountRoleId,
 		}
 	}
 	if databaseRole := futureGrantsTo["database_role"].(string); databaseRole != "" {
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(databaseRole)
+		if err != nil {
+			return nil, err
+		}
 		opts.To = &sdk.ShowGrantsTo{
-			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
+			DatabaseRole: databaseRoleId,
 		}
 	}
 	return opts, nil

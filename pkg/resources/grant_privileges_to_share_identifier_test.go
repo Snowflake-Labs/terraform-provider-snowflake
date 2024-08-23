@@ -25,6 +25,16 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant privileges on database to share - database identifier with dots",
+			Identifier: `"share-name"|SELECT|OnDatabase|"one.two.three.four.five.six.seven.eight.nine.ten"`,
+			Expected: GrantPrivilegesToShareId{
+				ShareName:  sdk.NewAccountObjectIdentifier("share-name"),
+				Privileges: []string{"SELECT"},
+				Kind:       OnDatabaseShareGrantKind,
+				Identifier: sdk.NewAccountObjectIdentifier("one.two.three.four.five.six.seven.eight.nine.ten"),
+			},
+		},
+		{
 			Name:       "grant privileges on schema to share",
 			Identifier: `"share-name"|USAGE|OnSchema|"on-database-name"."on-schema-name"`,
 			Expected: GrantPrivilegesToShareId{
@@ -110,14 +120,9 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 			Error:      `unexpected share grant kind: OnSomething`,
 		},
 		{
-			Name:       "validation: invalid identifier",
-			Identifier: `"share-name"|SELECT|OnDatabase|one.two.three.four.five.six.seven.eight.nine.ten`,
-			Error:      `unexpected number of parts 10 in identifier one.two.three.four.five.six.seven.eight.nine.ten, expected 1 in a form of "<account_object_name>"`,
-		},
-		{
 			Name:       "validation: invalid account object identifier",
-			Identifier: `"share-name"|SELECT|OnDatabase|one.two`,
-			Error:      `unexpected number of parts 2 in identifier one.two, expected 1 in a form of "<account_object_name>"`,
+			Identifier: `"share-name"|SELECT|OnTable|"one"."two"`,
+			Error:      `unexpected number of parts 2 in identifier "one"."two", expected 3 in a form of "<database_name>.<schema_name>.<schema_object_name>"`,
 		},
 		{
 			Name:       "validation: invalid database object identifier",

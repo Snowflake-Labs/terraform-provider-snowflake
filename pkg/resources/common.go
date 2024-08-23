@@ -1,10 +1,12 @@
 package resources
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,23 +33,6 @@ func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))
 }
 
-// TODO [SNOW-999049]: address during identifiers rework
-func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
-	if oldValue == "" || newValue == "" {
-		return false
-	} else {
-		oldId, err := helpers.DecodeSnowflakeParameterID(oldValue)
-		if err != nil {
-			return false
-		}
-		newId, err := helpers.DecodeSnowflakeParameterID(newValue)
-		if err != nil {
-			return false
-		}
-		return oldId.FullyQualifiedName() == newId.FullyQualifiedName()
-	}
-}
-
 // TODO [SNOW-1325214]: address during stage resource rework
 func suppressQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {
@@ -65,4 +50,50 @@ func ctyValToSliceString(valueElems []cty.Value) []string {
 		elems[i] = v.AsString()
 	}
 	return elems
+}
+
+func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier](ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	switch any(new(T)).(type) {
+	case *sdk.AccountObjectIdentifier:
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+	case *sdk.DatabaseObjectIdentifier:
+		id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("database", id.DatabaseName()); err != nil {
+			return nil, err
+		}
+	case *sdk.SchemaObjectIdentifier:
+		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("database", id.DatabaseName()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("schema", id.SchemaName()); err != nil {
+			return nil, err
+		}
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -94,9 +94,17 @@ func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
 	grantOwnershipId.GrantOwnershipTargetRoleKind = GrantOwnershipTargetRoleKind(parts[0])
 	switch grantOwnershipId.GrantOwnershipTargetRoleKind {
 	case ToAccountGrantOwnershipTargetRoleKind:
-		grantOwnershipId.AccountRoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[1])
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(parts[1])
+		if err != nil {
+			return nil, err
+		}
+		grantOwnershipId.AccountRoleName = accountRoleId
 	case ToDatabaseGrantOwnershipTargetRoleKind:
-		grantOwnershipId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[1])
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(parts[1])
+		if err != nil {
+			return nil, err
+		}
+		grantOwnershipId.DatabaseRoleName = databaseRoleId
 	default:
 		return grantOwnershipId, sdk.NewError(fmt.Sprintf("unknown GrantOwnershipTargetRoleKind: %v, valid options are %v | %v", grantOwnershipId.GrantOwnershipTargetRoleKind, ToAccountGrantOwnershipTargetRoleKind, ToDatabaseGrantOwnershipTargetRoleKind))
 	}
@@ -135,9 +143,17 @@ func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
 		bulkOperationGrantData.Kind = BulkOperationGrantKind(parts[5])
 		switch bulkOperationGrantData.Kind {
 		case InDatabaseBulkOperationGrantKind:
-			bulkOperationGrantData.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[6]))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(parts[6])
+			if err != nil {
+				return nil, err
+			}
+			bulkOperationGrantData.Database = sdk.Pointer(databaseId)
 		case InSchemaBulkOperationGrantKind:
-			bulkOperationGrantData.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[6]))
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(parts[6])
+			if err != nil {
+				return nil, err
+			}
+			bulkOperationGrantData.Schema = sdk.Pointer(schemaId)
 		default:
 			return grantOwnershipId, sdk.NewError(fmt.Sprintf("invalid BulkOperationGrantKind: %s, valid options are %v | %v", bulkOperationGrantData.Kind, InDatabaseBulkOperationGrantKind, InSchemaBulkOperationGrantKind))
 		}

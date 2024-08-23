@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -112,11 +113,11 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				ResourceName:    "snowflake_streamlit.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "database", databaseId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "schema", schemaId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "stage", stage.ID().FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "main_file", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", schemaId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "stage", stage.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "main_file", "foo"),
 				),
 			},
 			// set optionals
@@ -166,17 +167,17 @@ func TestAcc_Streamlit_basic(t *testing.T) {
 				ResourceName:    "snowflake_streamlit.test",
 				ImportState:     true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "database", databaseId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "schema", schemaId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "stage", stage.ID().FullyQualifiedName()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "directory_location", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "main_file", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "query_warehouse", warehouse.ID().Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "external_access_integrations.#", "1"),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "external_access_integrations.0", externalAccessIntegrationId.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "title", "foo"),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "comment", "foo")),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", databaseId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", schemaId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "stage", stage.ID().FullyQualifiedName()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "directory_location", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "main_file", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "query_warehouse", warehouse.ID().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "external_access_integrations.#", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "external_access_integrations.0", externalAccessIntegrationId.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "title", "foo"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", "foo")),
 			},
 			// change externally
 			{
@@ -432,4 +433,120 @@ func TestAcc_Streamlit_InvalidStage(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Streamlit_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
+	t.Cleanup(stageCleanup)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Streamlit),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: streamlitBasicConfig(id, stage.ID(), "main_file"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", helpers.EncodeSnowflakeID(id)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   streamlitBasicConfig(id, stage.ID(), "main_file"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func streamlitBasicConfig(id sdk.SchemaObjectIdentifier, stageId sdk.SchemaObjectIdentifier, mainFile string) string {
+	return fmt.Sprintf(`
+resource "snowflake_streamlit" "test" {
+	database  = "%s"
+	schema    = "%s"
+	name      = "%s"
+	stage     = %s
+	main_file = "%s"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), strconv.Quote(stageId.FullyQualifiedName()), mainFile)
+}
+
+func TestAcc_Streamlit_IdentifierQuotingDiffSuppression(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	quotedDatabaseName := fmt.Sprintf(`\"%s\"`, id.DatabaseName())
+	quotedSchemaName := fmt.Sprintf(`\"%s\"`, id.SchemaName())
+	quotedName := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
+	t.Cleanup(stageCleanup)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Streamlit),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             streamlitBasicConfigWithRawIdentifierValues(quotedDatabaseName, quotedSchemaName, quotedName, stage.ID().Name(), "main_file"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "database", fmt.Sprintf("\"%s\"", id.DatabaseName())),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "schema", id.SchemaName()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", helpers.EncodeSnowflakeID(id)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   streamlitBasicConfigWithRawIdentifierValues(quotedDatabaseName, quotedSchemaName, quotedName, stage.ID().Name(), "main_file"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_streamlit.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "database", fmt.Sprintf("\"%s\"", id.DatabaseName())),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "schema", id.SchemaName()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_streamlit.test", "id", id.FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func streamlitBasicConfigWithRawIdentifierValues(databaseName, schemaName, name, stageName, mainFile string) string {
+	stageId := fmt.Sprintf("%s.%s.%s", databaseName, schemaName, stageName)
+	return fmt.Sprintf(`
+resource "snowflake_streamlit" "test" {
+	database  = "%s"
+	schema    = "%s"
+	name      = "%s"
+	stage     = "%s"
+	main_file = "%s"
+}
+`, databaseName, schemaName, name, stageId, mainFile)
 }
