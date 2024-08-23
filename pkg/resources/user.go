@@ -122,6 +122,7 @@ var userSchema = map[string]*schema.Schema{
 	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
+	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
 	//    DAYS_TO_EXPIRY = <integer>
 	//    MINS_TO_UNLOCK = <integer>
 	//    EXT_AUTHN_DUO = TRUE | FALSE
