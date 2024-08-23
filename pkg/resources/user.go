@@ -157,8 +157,14 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the user.",
 	},
-	// TODO [SNOW-1348101]: add disable SDK to schema and handle it properly
-	//    DISABLE_MFA = TRUE | FALSE
+	// TODO [SNOW-1348101]: handle properly
+	"disable_mfa": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validateBooleanString,
+		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa)."),
+		Default:          BooleanDefault,
+	},
 	// readonly:
 	//    EXT_AUTHN_DUO = TRUE | FALSE
 	//    EXT_AUTHN_UID = <string>

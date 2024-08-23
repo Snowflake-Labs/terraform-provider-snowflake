@@ -239,6 +239,7 @@ New fields:
 - `days_to_expiry`
 - `mins_to_unlock`
 - `mins_to_bypass_mfa`
+- `disable_mfa`
 
 Default changes:
 - `must_change_password`
