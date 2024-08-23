@@ -165,9 +165,6 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa)."),
 		Default:          BooleanDefault,
 	},
-	// readonly:
-	//    EXT_AUTHN_DUO = TRUE | FALSE
-	//    EXT_AUTHN_UID = <string>
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
