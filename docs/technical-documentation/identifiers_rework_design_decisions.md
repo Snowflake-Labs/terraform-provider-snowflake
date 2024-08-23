@@ -1,6 +1,23 @@
 
 # Identifiers rework
 
+## Table of contents
+<!-- TOC -->
+* [Identifiers rework](#identifiers-rework)
+  * [Table of contents](#table-of-contents)
+  * [Topics](#topics)
+    * [New identifier parser](#new-identifier-parser)
+    * [Using the recommended format for account identifiers](#using-the-recommended-format-for-account-identifiers)
+    * [Better handling for identifiers with arguments](#better-handling-for-identifiers-with-arguments)
+    * [Quoting differences](#quoting-differences)
+    * [New computed fully qualified name field in resources](#new-computed-fully-qualified-name-field-in-resources)
+    * [New resource identifier format](#new-resource-identifier-format)
+    * [Known limitations and identifier recommendations](#known-limitations-and-identifier-recommendations)
+    * [New identifier conventions](#new-identifier-conventions)
+  * [Next steps](#next-steps)
+  * [Conclusions](#conclusions)
+<!-- TOC -->
+
 This document summarises work done in the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) and future plans for further identifier improvements. 
 But before we dive into results and design decisions, here’s the list of reasons why we decided to rework the identifiers in the first place:
 - Common issues with identifiers with arguments (identifiers for functions, procedures, and external functions).

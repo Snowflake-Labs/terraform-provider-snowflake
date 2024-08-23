@@ -100,8 +100,8 @@ which is highly recommended for large-scale migrations.
 
 ### What identifiers are valid inside the provider and how to reference one resource inside the other one?
 Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)
-- For the recommended identifier format, take a look at the "Known limitations and identifier recommendations" section.
-- For a new way of referencing object identifiers in resources, take a look at the "New computed fully qualified name field in resources" section.
+- For the recommended identifier format, take a look at the ["Known limitations and identifier recommendations"](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations) section.
+- For a new way of referencing object identifiers in resources, take a look at the ["New computed fully qualified name field in resources" ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#new-computed-fully-qualified-name-field-in-resources) section.
 
 ## Commonly known issues
 ### Old Terraform CLI version
