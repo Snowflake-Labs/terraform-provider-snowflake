@@ -128,7 +128,7 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
-	// TODO [SNOW-1348101]: check manually setting zero or negative; test unset
+	// TODO [SNOW-1348101]: note that external changes are not handled
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,

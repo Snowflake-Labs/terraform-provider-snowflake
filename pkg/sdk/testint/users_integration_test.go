@@ -306,6 +306,54 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	t.Run("create: set mins to bypass mfa to negative manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(-100),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("create: set mins to bypass mfa to zero manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(0),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("create: set mins to bypass mfa to one manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(1),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *userDetails.MinsToBypassMfa.Value)
+	})
+
 	// TODO [SNOW-1348101]: consult this with appropriate team when we have all the problems listed
 	t.Run("create and alter: problems with public key fingerprints", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
