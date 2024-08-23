@@ -65,3 +65,7 @@ Because of that, we would like to shelve the idea of introducing cloning to the 
 object cloning is one of the topics we would like to take a closer look at. Right now, the cloning can be done manually
 and imported into normal resources, but in case there is any divergence between the normal and cloned object, the resources
 may act in an unexpected way. An alternative solution is to use plain SQL with [unsafe execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/unsafe_execute) for now.
+
+## Identifier design decisions
+The summary of design decisions taken during the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework)
+was put into a separate document ([here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)).

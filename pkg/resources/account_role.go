@@ -20,7 +20,7 @@ var accountRoleSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		// TODO(SNOW-999049): Uncomment once better identifier validation will be implemented
+		// TODO(SNOW-1495079): Uncomment once better identifier validation will be implemented
 		// ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Description: blocklistedCharactersFieldDescription("Identifier for the role; must be unique for your account."),
 	},

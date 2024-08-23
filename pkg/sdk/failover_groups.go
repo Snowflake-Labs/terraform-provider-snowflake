@@ -602,7 +602,7 @@ func (v *failoverGroups) ShowShares(ctx context.Context, id AccountObjectIdentif
 	}
 	resultList := make([]AccountObjectIdentifier, len(dest))
 	for i, r := range dest {
-		// TODO [SNOW-999049]: this was not working correctly with identifiers containing `.` character
+		// TODO [SNOW-1348343]: change during failover groups rework; this was not working correctly with identifiers containing `.` character
 		resultList[i] = NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)).objectIdentifier.(AccountObjectIdentifier)
 	}
 	return resultList, nil

@@ -163,7 +163,7 @@ func ConcatSlices[T any](slices ...[]T) []T {
 	return tmp
 }
 
-// TODO(SNOW-999049): address during identifiers rework
+// TODO(SNOW-1569530): address during identifiers rework follow-up
 func ParseRootLocation(location string) (sdk.SchemaObjectIdentifier, string, error) {
 	location = strings.TrimPrefix(location, "@")
 	parts, err := sdk.ParseIdentifierStringWithOpts(location, func(r *csv.Reader) {
