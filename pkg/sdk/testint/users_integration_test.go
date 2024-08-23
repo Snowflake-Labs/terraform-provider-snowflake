@@ -330,9 +330,11 @@ func TestInt_Users(t *testing.T) {
 		t.Cleanup(userCleanup)
 
 		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				RSAPublicKey:   sdk.String(key),
-				RSAPublicKeyFp: sdk.String(hash),
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					RSAPublicKey:   sdk.String(key),
+					RSAPublicKeyFp: sdk.String(hash),
+				},
 			},
 		}}
 
@@ -340,9 +342,11 @@ func TestInt_Users(t *testing.T) {
 		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_FP' for 'USER'")
 
 		alterOpts = &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				RSAPublicKey2:   sdk.String(key2),
-				RSAPublicKey2Fp: sdk.String(hash2),
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					RSAPublicKey2:   sdk.String(key2),
+					RSAPublicKey2Fp: sdk.String(hash2),
+				},
 			},
 		}}
 
@@ -579,28 +583,31 @@ func TestInt_Users(t *testing.T) {
 		)
 
 		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				Password:           sdk.String(password),
-				LoginName:          sdk.String(newValue),
-				DisplayName:        sdk.String(newValue),
-				FirstName:          sdk.String(newValue),
-				MiddleName:         sdk.String(newValue),
-				LastName:           sdk.String(newValue),
-				Email:              sdk.String(email),
-				MustChangePassword: sdk.Bool(true),
-				Disable:            sdk.Bool(true),
-				DaysToExpiry:       sdk.Int(5),
-				MinsToUnlock:       sdk.Int(15),
-				DefaultWarehouse:   sdk.Pointer(warehouseId),
-				DefaultNamespace:   sdk.Pointer(schemaIdObjectIdentifier),
-				DefaultRole:        sdk.Pointer(roleId),
-				DefaultSecondaryRoles: &sdk.SecondaryRoles{
-					Roles: []sdk.SecondaryRole{{Value: "ALL"}},
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Password:           sdk.String(password),
+					LoginName:          sdk.String(newValue),
+					DisplayName:        sdk.String(newValue),
+					FirstName:          sdk.String(newValue),
+					MiddleName:         sdk.String(newValue),
+					LastName:           sdk.String(newValue),
+					Email:              sdk.String(email),
+					MustChangePassword: sdk.Bool(true),
+					Disable:            sdk.Bool(true),
+					DaysToExpiry:       sdk.Int(5),
+					MinsToUnlock:       sdk.Int(15),
+					DefaultWarehouse:   sdk.Pointer(warehouseId),
+					DefaultNamespace:   sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:        sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{
+						Roles: []sdk.SecondaryRole{{Value: "ALL"}},
+					},
+					MinsToBypassMFA: sdk.Int(30),
+					RSAPublicKey:    sdk.String(key),
+					RSAPublicKey2:   sdk.String(key2),
+					Comment:         sdk.String("some comment"),
 				},
-				MinsToBypassMFA: sdk.Int(30),
-				RSAPublicKey:    sdk.String(key),
-				RSAPublicKey2:   sdk.String(key2),
-				Comment:         sdk.String("some comment"),
+				DisableMfa: sdk.Bool(true),
 			},
 		}}
 
@@ -655,6 +662,7 @@ func TestInt_Users(t *testing.T) {
 				DefaultRole:           sdk.Bool(true),
 				DefaultSecondaryRoles: sdk.Bool(true),
 				MinsToBypassMFA:       sdk.Bool(true),
+				DisableMfa:            sdk.Bool(true),
 				RSAPublicKey:          sdk.Bool(true),
 				RSAPublicKey2:         sdk.Bool(true),
 				Comment:               sdk.Bool(true),

@@ -140,9 +140,11 @@ func TestUserAlter(t *testing.T) {
 
 	t.Run("with setting properties and parameters", func(t *testing.T) {
 		password := random.Password()
-		objectProperties := UserObjectProperties{
-			Password:              &password,
-			DefaultSecondaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
+		objectProperties := UserAlterObjectProperties{
+			UserObjectProperties: UserObjectProperties{
+				Password:              &password,
+				DefaultSecondaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
+			},
 		}
 		opts := &AlterUserOptions{
 			name: id,
@@ -174,6 +176,35 @@ func TestUserAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET AUTOCOMMIT = true", id.FullyQualifiedName())
+	})
+
+	t.Run("alter: set object properties", func(t *testing.T) {
+		objectProperties := UserAlterObjectProperties{
+			UserObjectProperties: UserObjectProperties{
+				FirstName: String("name"),
+			},
+			DisableMfa: Bool(true),
+		}
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &objectProperties,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET FIRST_NAME = '%s' DISABLE_MFA = true", id.FullyQualifiedName(), "name")
+	})
+
+	t.Run("alter: set disable mfa only", func(t *testing.T) {
+		objectProperties := UserAlterObjectProperties{
+			DisableMfa: Bool(true),
+		}
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &objectProperties,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET DISABLE_MFA = true", id.FullyQualifiedName())
 	})
 
 	t.Run("reset password", func(t *testing.T) {

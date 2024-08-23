@@ -221,6 +221,11 @@ type UserObjectProperties struct {
 	Comment               *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
+type UserAlterObjectProperties struct {
+	UserObjectProperties
+	DisableMfa *bool `ddl:"parameter,no_quotes" sql:"DISABLE_MFA"`
+}
+
 type SecondaryRoles struct {
 	equals     bool            `ddl:"static" sql:"="`
 	leftParen  bool            `ddl:"static" sql:"("`
@@ -248,6 +253,7 @@ type UserObjectPropertiesUnset struct {
 	DefaultRole           *bool `ddl:"keyword" sql:"DEFAULT_ROLE"`
 	DefaultSecondaryRoles *bool `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA       *bool `ddl:"keyword" sql:"MINS_TO_BYPASS_MFA"`
+	DisableMfa            *bool `ddl:"keyword" sql:"DISABLE_MFA"`
 	RSAPublicKey          *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKey2         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
 	Comment               *bool `ddl:"keyword" sql:"COMMENT"`
@@ -353,11 +359,11 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 }
 
 type UserSet struct {
-	PasswordPolicy    *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
-	SessionPolicy     *string                 `ddl:"parameter" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`
-	ObjectParameters  *UserObjectParameters   `ddl:"keyword"`
-	SessionParameters *SessionParameters      `ddl:"keyword"`
+	PasswordPolicy    *SchemaObjectIdentifier    `ddl:"identifier" sql:"PASSWORD POLICY"`
+	SessionPolicy     *string                    `ddl:"parameter" sql:"SESSION POLICY"`
+	ObjectProperties  *UserAlterObjectProperties `ddl:"keyword"`
+	ObjectParameters  *UserObjectParameters      `ddl:"keyword"`
+	SessionParameters *SessionParameters         `ddl:"keyword"`
 }
 
 func (opts *UserSet) validate() error {

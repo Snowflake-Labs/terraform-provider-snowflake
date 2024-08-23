@@ -157,7 +157,7 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the user.",
 	},
-	// TODO [SNOW-1348101]: support disable MFA in the SDK; add disable SDK to schema and handle it properly
+	// TODO [SNOW-1348101]: add disable SDK to schema and handle it properly
 	//    DISABLE_MFA = TRUE | FALSE
 	// readonly:
 	//    EXT_AUTHN_DUO = TRUE | FALSE
@@ -413,7 +413,7 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	runSet := false
 	alterOptions := &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{},
+			ObjectProperties: &sdk.UserAlterObjectProperties{},
 		},
 	}
 	if d.HasChange("login_name") {
