@@ -670,3 +670,45 @@ func TestAcc_User_issue2970(t *testing.T) {
 		},
 	})
 }
+
+// TODO: will be fixed with addition of show_output, its logic, and changing disabled to non-computed attribute
+func TestAcc_User_issue1572(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.UserWithDefaultMeta(userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasDisabled(false),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().User.Disable(t, userId)
+					objectassert.User(t, userId).HasDisabled(true)
+				},
+				Config: config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectDrift(userModel.ResourceReference(), "disabled", sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectChange(userModel.ResourceReference(), "disabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasDisabled(false),
+				),
+			},
+		},
+	})
+}
