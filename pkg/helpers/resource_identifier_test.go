@@ -56,7 +56,7 @@ func Test_Encoding_And_Parsing_Of_ResourceIdentifier_Identifier(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf(`Encoding and parsing %s resource identifier`, testCase.Input), func(t *testing.T) {
-			switch typedInput := any(testCase.Input).(type) {
+			switch typedInput := testCase.Input.(type) {
 			case []sdk.AccountObjectIdentifier:
 				encodedIdentifier := EncodeResourceIdentifier(typedInput...)
 				assert.Equal(t, testCase.Expected, encodedIdentifier)

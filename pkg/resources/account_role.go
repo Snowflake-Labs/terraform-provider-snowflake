@@ -55,7 +55,7 @@ func AccountRole() *schema.Resource {
 		),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName,
+			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 	}
 }
@@ -67,7 +67,6 @@ func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	req := sdk.NewCreateRoleRequest(id)
 
 	if v, ok := d.GetOk("comment"); ok {

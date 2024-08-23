@@ -58,19 +58,11 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
 
-	// TODO: Identifier parsing should be replaced with better version introduced in SNOW-999049.
-	// Right now, it's same as sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName, but with error handling.
-	databaseRoleNameParts := strings.Split(parts[0], ".")
-	if len(databaseRoleNameParts) == 0 ||
-		(len(databaseRoleNameParts) == 1 && strings.Trim(databaseRoleNameParts[0], `"`) == "") ||
-		(len(databaseRoleNameParts) == 2 && strings.Trim(databaseRoleNameParts[1], `"`) == "") ||
-		len(databaseRoleNameParts) > 2 {
-		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid DatabaseRoleName value: %s, should be a fully qualified name of database object <database_name>.<name>`, parts[0]))
+	roleId, err := sdk.ParseDatabaseObjectIdentifier(parts[0])
+	if err != nil {
+		return databaseRoleId, err
 	}
-	databaseRoleId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifier(
-		strings.Trim(databaseRoleNameParts[0], `"`),
-		strings.Trim(databaseRoleNameParts[1], `"`),
-	)
+	databaseRoleId.DatabaseRoleName = roleId
 
 	if parts[1] != "false" && parts[1] != "true" {
 		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid WithGrantOption value: %s, should be either "true" or "false"`, parts[1]))
@@ -96,8 +88,12 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 
 	switch databaseRoleId.Kind {
 	case OnDatabaseDatabaseRoleGrantKind:
+		databaseId, err := sdk.ParseAccountObjectIdentifier(parts[5])
+		if err != nil {
+			return databaseRoleId, err
+		}
 		databaseRoleId.Data = &OnDatabaseGrantData{
-			DatabaseName: sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[5]),
+			DatabaseName: databaseId,
 		}
 	case OnSchemaDatabaseRoleGrantKind:
 		if len(parts) < 7 {
@@ -108,9 +104,17 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 		}
 		switch onSchemaGrantData.Kind {
 		case OnSchemaSchemaGrantKind:
-			onSchemaGrantData.SchemaName = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[6]))
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(parts[6])
+			if err != nil {
+				return databaseRoleId, err
+			}
+			onSchemaGrantData.SchemaName = sdk.Pointer(schemaId)
 		case OnAllSchemasInDatabaseSchemaGrantKind, OnFutureSchemasInDatabaseSchemaGrantKind:
-			onSchemaGrantData.DatabaseName = sdk.Pointer(sdk.NewAccountObjectIdentifier(parts[6]))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(parts[6])
+			if err != nil {
+				return databaseRoleId, err
+			}
+			onSchemaGrantData.DatabaseName = sdk.Pointer(databaseId)
 		default:
 			return databaseRoleId, sdk.NewError(fmt.Sprintf("invalid OnSchemaGrantKind: %s", onSchemaGrantData.Kind))
 		}
@@ -131,13 +135,15 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 			var id sdk.ObjectIdentifier
 			// TODO(SNOW-1569535): use a mapper from object type to parsing function
 			if objectType.IsWithArguments() {
-				var err error
 				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(parts[7])
 				if err != nil {
 					return databaseRoleId, err
 				}
 			} else {
-				id = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7])
+				id, err = sdk.ParseSchemaObjectIdentifier(parts[7])
+				if err != nil {
+					return databaseRoleId, err
+				}
 			}
 			onSchemaObjectGrantData.Object = &sdk.Object{
 				ObjectType: objectType,
@@ -154,9 +160,17 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 				bulkOperationGrantData.Kind = BulkOperationGrantKind(parts[7])
 				switch bulkOperationGrantData.Kind {
 				case InDatabaseBulkOperationGrantKind:
-					bulkOperationGrantData.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[8]))
+					databaseId, err := sdk.ParseAccountObjectIdentifier(parts[8])
+					if err != nil {
+						return databaseRoleId, err
+					}
+					bulkOperationGrantData.Database = sdk.Pointer(databaseId)
 				case InSchemaBulkOperationGrantKind:
-					bulkOperationGrantData.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[8]))
+					schemaId, err := sdk.ParseDatabaseObjectIdentifier(parts[8])
+					if err != nil {
+						return databaseRoleId, err
+					}
+					bulkOperationGrantData.Schema = sdk.Pointer(schemaId)
 				default:
 					return databaseRoleId, sdk.NewError(fmt.Sprintf("invalid BulkOperationGrantKind: %s", bulkOperationGrantData.Kind))
 				}

@@ -212,7 +212,7 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 ) error {
-	if _, err := ImportName(context.Background(), d, nil); err != nil {
+	if _, err := ImportName[sdk.AccountObjectIdentifier](context.Background(), d, nil); err != nil {
 		return err
 	}
 

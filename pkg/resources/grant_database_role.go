@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -20,6 +19,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the database role which will be granted to share or parent role.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"parent_role_name": {
 		Type:             schema.TypeString,
@@ -27,6 +27,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the parent account role which will create a parent-child relationship between the roles.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"parent_role_name",
 			"parent_database_role_name",
@@ -39,6 +40,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the parent database role which will create a parent-child relationship between the roles.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"parent_role_name",
 			"parent_database_role_name",
@@ -51,6 +53,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the share on which privileges will be granted.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"parent_role_name",
 			"parent_database_role_name",
@@ -67,24 +70,42 @@ func GrantDatabaseRole() *schema.Resource {
 		Schema: grantDatabaseRoleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				parts := strings.Split(d.Id(), helpers.IDDelimiter)
+				parts := helpers.ParseResourceIdentifier(d.Id())
 				if len(parts) != 3 {
 					return nil, fmt.Errorf("invalid ID specified: %v, expected <database_role_name>|<object_type>|<target_identifier>", d.Id())
 				}
-				if err := d.Set("database_role_name", parts[0]); err != nil {
+
+				databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(parts[0])
+				if err != nil {
 					return nil, err
 				}
+				if err := d.Set("database_role_name", databaseRoleId.FullyQualifiedName()); err != nil {
+					return nil, err
+				}
+
 				switch parts[1] {
 				case "ROLE":
-					if err := d.Set("parent_role_name", strings.Trim(parts[2], "\"")); err != nil {
+					accountRoleId, err := sdk.ParseAccountObjectIdentifier(parts[2])
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("parent_role_name", accountRoleId.Name()); err != nil {
 						return nil, err
 					}
 				case "DATABASE ROLE":
-					if err := d.Set("parent_database_role_name", parts[2]); err != nil {
+					parentDatabaseId, err := sdk.ParseDatabaseObjectIdentifier(parts[2])
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("parent_database_role_name", parentDatabaseId.FullyQualifiedName()); err != nil {
 						return nil, err
 					}
 				case "SHARE":
-					if err := d.Set("share_name", strings.Trim(parts[2], "\"")); err != nil {
+					shareId, err := sdk.ParseAccountObjectIdentifier(parts[2])
+					if err != nil {
+						return nil, err
+					}
+					if err := d.Set("share_name", shareId.Name()); err != nil {
 						return nil, err
 					}
 				default:
@@ -102,26 +123,38 @@ func CreateGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	databaseRoleName := d.Get("database_role_name").(string)
-	databaseRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName)
+	databaseRoleIdentifier, err := sdk.ParseDatabaseObjectIdentifier(databaseRoleName)
+	if err != nil {
+		return err
+	}
 	// format of snowflakeResourceID is <database_role_identifier>|<object type>|<parent_role_name>
 	var snowflakeResourceID string
 	if parentRoleName, ok := d.GetOk("parent_role_name"); ok && parentRoleName.(string) != "" {
-		parentRoleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parentRoleName.(string))
-		snowflakeResourceID = helpers.EncodeSnowflakeID(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeRole.String(), parentRoleIdentifier.FullyQualifiedName())
+		parentRoleIdentifier, err := sdk.ParseAccountObjectIdentifier(parentRoleName.(string))
+		if err != nil {
+			return err
+		}
+		snowflakeResourceID = helpers.EncodeResourceIdentifier(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeRole.String(), parentRoleIdentifier.FullyQualifiedName())
 		req := sdk.NewGrantDatabaseRoleRequest(databaseRoleIdentifier).WithAccountRole(parentRoleIdentifier)
 		if err := client.DatabaseRoles.Grant(ctx, req); err != nil {
 			return err
 		}
 	} else if parentDatabaseRoleName, ok := d.GetOk("parent_database_role_name"); ok && parentDatabaseRoleName.(string) != "" {
-		parentRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parentDatabaseRoleName.(string))
-		snowflakeResourceID = helpers.EncodeSnowflakeID(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeDatabaseRole.String(), parentRoleIdentifier.FullyQualifiedName())
+		parentRoleIdentifier, err := sdk.ParseDatabaseObjectIdentifier(parentDatabaseRoleName.(string))
+		if err != nil {
+			return err
+		}
+		snowflakeResourceID = helpers.EncodeResourceIdentifier(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeDatabaseRole.String(), parentRoleIdentifier.FullyQualifiedName())
 		req := sdk.NewGrantDatabaseRoleRequest(databaseRoleIdentifier).WithDatabaseRole(parentRoleIdentifier)
 		if err := client.DatabaseRoles.Grant(ctx, req); err != nil {
 			return err
 		}
 	} else if shareName, ok := d.GetOk("share_name"); ok && shareName.(string) != "" {
-		shareIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(shareName.(string))
-		snowflakeResourceID = helpers.EncodeSnowflakeID(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeShare.String(), shareIdentifier.FullyQualifiedName())
+		shareIdentifier, err := sdk.ParseAccountObjectIdentifier(shareName.(string))
+		if err != nil {
+			return err
+		}
+		snowflakeResourceID = helpers.EncodeResourceIdentifier(databaseRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeShare.String(), shareIdentifier.FullyQualifiedName())
 		req := sdk.NewGrantDatabaseRoleToShareRequest(databaseRoleIdentifier, shareIdentifier)
 		if err := client.DatabaseRoles.GrantToShare(ctx, req); err != nil {
 			return err
@@ -134,9 +167,12 @@ func CreateGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 // ReadGrantDatabaseRole implements schema.ReadFunc.
 func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	parts := strings.Split(d.Id(), helpers.IDDelimiter)
+	parts := helpers.ParseResourceIdentifier(d.Id())
 	databaseRoleName := parts[0]
-	databaseRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName)
+	databaseRoleIdentifier, err := sdk.ParseDatabaseObjectIdentifier(databaseRoleName)
+	if err != nil {
+		return err
+	}
 	objectType := parts[1]
 	targetIdentifier := parts[2]
 	ctx := context.Background()
@@ -171,22 +207,37 @@ func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 func DeleteGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
-	parts := strings.Split(d.Id(), "|")
-	id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[0])
+	parts := helpers.ParseResourceIdentifier(d.Id())
+	id, err := sdk.ParseDatabaseObjectIdentifier(parts[0])
+	if err != nil {
+		return err
+	}
 	objectType := parts[1]
 	granteeName := parts[2]
 	ctx := context.Background()
 	switch objectType {
 	case "ROLE":
-		if err := client.DatabaseRoles.Revoke(ctx, sdk.NewRevokeDatabaseRoleRequest(id).WithAccountRole(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(granteeName))); err != nil {
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(granteeName)
+		if err != nil {
+			return err
+		}
+		if err := client.DatabaseRoles.Revoke(ctx, sdk.NewRevokeDatabaseRoleRequest(id).WithAccountRole(accountRoleId)); err != nil {
 			return err
 		}
 	case "DATABASE ROLE":
-		if err := client.DatabaseRoles.Revoke(ctx, sdk.NewRevokeDatabaseRoleRequest(id).WithDatabaseRole(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(granteeName))); err != nil {
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(granteeName)
+		if err != nil {
+			return err
+		}
+		if err := client.DatabaseRoles.Revoke(ctx, sdk.NewRevokeDatabaseRoleRequest(id).WithDatabaseRole(databaseRoleId)); err != nil {
 			return err
 		}
 	case "SHARE":
-		if err := client.DatabaseRoles.RevokeFromShare(ctx, sdk.NewRevokeDatabaseRoleFromShareRequest(id, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(granteeName))); err != nil {
+		sharedId, err := sdk.ParseAccountObjectIdentifier(granteeName)
+		if err != nil {
+			return err
+		}
+		if err := client.DatabaseRoles.RevokeFromShare(ctx, sdk.NewRevokeDatabaseRoleFromShareRequest(id, sharedId)); err != nil {
 			return err
 		}
 	}

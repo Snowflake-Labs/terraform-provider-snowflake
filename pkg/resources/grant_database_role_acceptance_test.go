@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -246,6 +248,140 @@ func TestAcc_GrantDatabaseRole_shareWithDots(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantDatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	parentRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: grantDatabaseRoleBasicConfigQuoted(databaseId.Name(), roleId.Name(), parentRoleId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "id", fmt.Sprintf(`%s|DATABASE ROLE|%s`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantDatabaseRoleBasicConfigQuoted(databaseId.Name(), roleId.Name(), parentRoleId.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_database_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_database_role.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "id", fmt.Sprintf(`%s|DATABASE ROLE|%s`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
+				),
+			},
+		},
+	})
+}
+
+func grantDatabaseRoleBasicConfigQuoted(databaseName string, roleName string, parentRoleName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+  name = "%[1]s"
+}
+
+resource "snowflake_database_role" "role" {
+  database = snowflake_database.test.name
+  name = "%[2]s"
+}
+
+resource "snowflake_database_role" "parent_role" {
+  database = snowflake_database.test.name
+  name = "%[3]s"
+}
+
+resource "snowflake_grant_database_role" "test" {
+  database_role_name        = "\"${snowflake_database.test.name}\".\"${snowflake_database_role.role.name}\""
+  parent_database_role_name = "\"${snowflake_database.test.name}\".\"${snowflake_database_role.parent_role.name}\""
+}
+`, databaseName, roleName, parentRoleName)
+}
+
+func grantDatabaseRoleBasicConfigUnquoted(databaseName string, roleName string, parentRoleName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test" {
+  name = "%[1]s"
+}
+
+resource "snowflake_database_role" "role" {
+  database = snowflake_database.test.name
+  name = "%[2]s"
+}
+
+resource "snowflake_database_role" "parent_role" {
+  database = snowflake_database.test.name
+  name = "%[3]s"
+}
+
+resource "snowflake_grant_database_role" "test" {
+  database_role_name        = "${snowflake_database.test.name}.${snowflake_database_role.role.name}"
+  parent_database_role_name = "${snowflake_database.test.name}.${snowflake_database_role.parent_role.name}"
+}
+`, databaseName, roleName, parentRoleName)
+}
+
+func TestAcc_GrantDatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	parentRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: grantDatabaseRoleBasicConfigUnquoted(databaseId.Name(), roleId.Name(), parentRoleId.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "database_role_name", fmt.Sprintf("%s.%s", roleId.DatabaseName(), roleId.Name())),
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "parent_database_role_name", fmt.Sprintf("%s.%s", roleId.DatabaseName(), parentRoleId.Name())),
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "id", fmt.Sprintf(`%s|DATABASE ROLE|%s`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantDatabaseRoleBasicConfigUnquoted(databaseId.Name(), roleId.Name(), parentRoleId.Name()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_database_role.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_database_role.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "database_role_name", fmt.Sprintf("%s.%s", roleId.DatabaseName(), roleId.Name())),
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "parent_database_role_name", fmt.Sprintf("%s.%s", roleId.DatabaseName(), parentRoleId.Name())),
+					resource.TestCheckResourceAttr("snowflake_grant_database_role.test", "id", fmt.Sprintf(`%s|DATABASE ROLE|%s`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
+				),
 			},
 		},
 	})

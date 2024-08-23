@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,14 +49,47 @@ func ctyValToSliceString(valueElems []cty.Value) []string {
 	return elems
 }
 
-func ImportName(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return nil, err
-	}
+func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier](ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	switch any(new(T)).(type) {
+	case *sdk.AccountObjectIdentifier:
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
 
-	if err := d.Set("name", id.Name()); err != nil {
-		return nil, err
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+	case *sdk.DatabaseObjectIdentifier:
+		id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("database", id.DatabaseName()); err != nil {
+			return nil, err
+		}
+	case *sdk.SchemaObjectIdentifier:
+		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.Name()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("database", id.DatabaseName()); err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("schema", id.SchemaName()); err != nil {
+			return nil, err
+		}
 	}
 
 	return []*schema.ResourceData{d}, nil
