@@ -394,9 +394,24 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		alterOptions.Set.ObjectProperties.Comment = sdk.String(n.(string))
 	}
 	if d.HasChange("password") {
-		runSet = true
-		_, n := d.GetChange("password")
-		alterOptions.Set.ObjectProperties.Password = sdk.String(n.(string))
+		if v, ok := d.GetOk("password"); ok {
+			runSet = true
+			alterOptions.Set.ObjectProperties.Password = sdk.String(v.(string))
+		} else {
+			// TODO [SNOW-1348101 - next PR]: this is temporary, update logic will be changed with the resource rework
+			unsetOptions := &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					ObjectProperties: &sdk.UserObjectPropertiesUnset{
+						Password: sdk.Bool(true),
+					},
+				},
+			}
+			err := client.Users.Alter(ctx, id, unsetOptions)
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	if d.HasChange("disabled") {

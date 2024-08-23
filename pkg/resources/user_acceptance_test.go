@@ -671,7 +671,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 	})
 }
 
-// TODO: will be fixed with addition of show_output, its logic, and changing disabled to non-computed attribute
+// TODO [SNOW-1348101 - next PR]: will be fixed with addition of show_output, its logic, and changing disabled to non-computed attribute
 func TestAcc_User_issue1572(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -707,6 +707,87 @@ func TestAcc_User_issue1572(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasDisabled(false),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	pass := random.Password()
+
+	userModel := model.UserWithDefaultMeta(userId.Name()).
+		WithPassword(pass)
+
+	userWithNullPasswordModel := model.UserWithDefaultMeta(userId.Name()).
+		WithNullPassword()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasPasswordString(pass),
+				),
+			},
+			{
+				Config: config.FromModel(t, userWithNullPasswordModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userWithNullPasswordModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), nil),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userWithNullPasswordModel.ResourceReference()).
+						HasEmptyPassword(),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	pass := random.Password()
+
+	userModel := model.UserWithDefaultMeta(userId.Name()).
+		WithPassword(pass)
+
+	userWithoutPasswordModel := model.UserWithDefaultMeta(userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasPasswordString(pass),
+				),
+			},
+			{
+				Config: config.FromModel(t, userWithoutPasswordModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userWithoutPasswordModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), nil),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userWithoutPasswordModel.ResourceReference()).
+						HasEmptyPassword(),
 				),
 			},
 		},
