@@ -1,14 +1,10 @@
 package resources
 
 import (
-	"context"
-	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -69,30 +65,4 @@ func ctyValToSliceString(valueElems []cty.Value) []string {
 		elems[i] = v.AsString()
 	}
 	return elems
-}
-
-func ensureWarehouse(ctx context.Context, client *sdk.Client) (func(), error) {
-	warehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if len(warehouse) > 0 {
-		// everything is fine, return a no-op function to avoid checking by callers
-		return func() {}, nil
-	}
-	randomWarehouseName := fmt.Sprintf("terraform-provider-snowflake-%v", helpers.RandomString())
-	log.Printf("[DEBUG] no current warehouse set, creating a temporary warehouse %s", randomWarehouseName)
-	wid := sdk.NewAccountObjectIdentifier(randomWarehouseName)
-	if err := client.Warehouses.Create(ctx, wid, nil); err != nil {
-		return nil, err
-	}
-	cleanup := func() {
-		if err := client.Warehouses.Drop(ctx, wid, nil); err != nil {
-			log.Printf("[WARN] error cleaning up temp warehouse %v", err)
-		}
-	}
-	if err := client.Sessions.UseWarehouse(ctx, wid); err != nil {
-		return cleanup, err
-	}
-	return cleanup, nil
 }

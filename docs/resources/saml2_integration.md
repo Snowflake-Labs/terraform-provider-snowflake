@@ -51,7 +51,7 @@ resource "snowflake_saml2_integration" "test" {
 
 ### Required
 
-- `name` (String) Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.
+- `name` (String) Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `saml2_issuer` (String) The string containing the IdP EntityID / Issuer.
 - `saml2_provider` (String) The string describing the IdP. Valid options are: `OKTA` | `ADFS` | `CUSTOM`.
 - `saml2_sso_url` (String) The string containing the IdP SSO URL, where the user should be redirected by Snowflake (the Service Provider) with a SAML AuthnRequest message.

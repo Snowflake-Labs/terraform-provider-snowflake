@@ -23,7 +23,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Identifier for the virtual warehouse; must be unique for your account.",
+		Description: blocklistedCharactersFieldDescription("Identifier for the virtual warehouse; must be unique for your account."),
 	},
 	"warehouse_type": {
 		Type:             schema.TypeString,

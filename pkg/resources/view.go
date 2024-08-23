@@ -24,20 +24,20 @@ var viewSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      blacklistedCharactersFieldDescription("Specifies the identifier for the view; must be unique for the schema in which the view is created.", []rune{'|'}),
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the view; must be unique for the schema in which the view is created."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      blacklistedCharactersFieldDescription("The database in which to create the view.", []rune{'|'}),
+		Description:      "The database in which to create the view.",
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      blacklistedCharactersFieldDescription("The schema in which to create the view.", []rune{'|'}),
+		Description:      "The schema in which to create the view.",
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},

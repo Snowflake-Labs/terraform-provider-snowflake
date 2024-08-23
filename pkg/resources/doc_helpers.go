@@ -33,6 +33,6 @@ func withPrivilegedRolesDescription(description, paramName string) string {
 	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE. `, description, paramName)
 }
 
-func blacklistedCharactersFieldDescription(description string, blacklistedCharacters []rune) string {
-	return fmt.Sprintf(`%s Due to technical limitations, don't use the following characters: %s`, description, characterList(blacklistedCharacters))
+func blocklistedCharactersFieldDescription(description string) string {
+	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s`, description, characterList([]rune{'|', '.', '(', ')', '"'}))
 }

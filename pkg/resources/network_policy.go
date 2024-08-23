@@ -21,7 +21,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier for the network policy; must be unique for the account in which the network policy is created.",
+		Description: blocklistedCharactersFieldDescription("Specifies the identifier for the network policy; must be unique for the account in which the network policy is created."),
 	},
 	"allowed_network_rule_list": {
 		Type: schema.TypeSet,
