@@ -146,12 +146,6 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the user’s second RSA public key; used to rotate the public and private keys for key-pair authentication based on an expiration schedule set by your organization. Must be on 1 line without header and trailer.",
 	},
-	// TODO [SNOW-1348101]: do we need this? do we need to alter the logic?
-	"has_rsa_public_key": {
-		Type:        schema.TypeBool,
-		Computed:    true,
-		Description: "Will be true if user as an RSA key set.",
-	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -360,11 +354,6 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 		if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
 			return diag.FromErr(err)
-		}
-		if user.RsaPublicKeyFp != nil {
-			if err = d.Set("has_rsa_public_key", user.RsaPublicKeyFp.Value != ""); err != nil {
-				return diag.FromErr(err)
-			}
 		}
 		if err := setStringProperty(d, "email", user.Email); err != nil {
 			return diag.FromErr(err)

@@ -241,6 +241,9 @@ New fields:
 - `mins_to_bypass_mfa`
 - `disable_mfa`
 
+Removed fields:
+- `has_rsa_public_key`
+
 Default changes:
 - `must_change_password`
 - `disabled`
