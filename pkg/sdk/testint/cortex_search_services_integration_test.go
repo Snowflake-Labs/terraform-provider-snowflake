@@ -79,8 +79,8 @@ func TestInt_CortexSearchServices(t *testing.T) {
 		assert.NotEmpty(t, cortexSearchServiceDetails.CreatedOn)
 		assert.Equal(t, cortexSearchService.Name, cortexSearchServiceDetails.Name)
 		// Yes, the names are exchanged on purpose, because now it works like this
-		assert.Equal(t, cortexSearchService.DatabaseName, cortexSearchServiceDetails.SchemaName)
-		assert.Equal(t, cortexSearchService.SchemaName, cortexSearchServiceDetails.DatabaseName)
+		assert.Equal(t, cortexSearchService.DatabaseName, cortexSearchServiceDetails.DatabaseName)
+		assert.Equal(t, cortexSearchService.SchemaName, cortexSearchServiceDetails.SchemaName)
 		assert.Equal(t, targetLag, cortexSearchServiceDetails.TargetLag)
 		assert.NotEmpty(t, cortexSearchServiceDetails.Warehouse)
 		assert.Equal(t, strings.ToUpper(on), *cortexSearchServiceDetails.SearchColumn)
