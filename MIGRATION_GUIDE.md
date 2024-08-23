@@ -6,6 +6,23 @@ across different versions.
 
 ## v0.94.x ➞ v0.95.0
 
+### *(breaking change)* database roles data source; field rename, schema structure changes, and adding missing filtering options
+
+- `database` renamed to `in_database`
+- Added `like` and `limit` filtering options
+- `SHOW DATABASE ROLES` output is now put inside `database_roles.*.show_output`. Here's the list of currently available fields:
+  - `created_on`
+  - `name`
+  - `is_default`
+  - `is_current`
+  - `is_inherited`
+  - `granted_to_roles`
+  - `granted_to_database_roles`
+  - `granted_database_roles`
+  - `owner`
+  - `comment`
+  - `owner_role_type`
+
 ### Identifier changes
 
 #### *(breaking change)* resource identifiers for schema and streamlit

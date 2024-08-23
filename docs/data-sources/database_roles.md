@@ -22,18 +22,50 @@ data "snowflake_database_roles" "db_roles" {
 
 ### Required
 
-- `database` (String) The database from which to return the database roles from.
+- `in_database` (String) The database from which to return the database roles from.
+
+### Optional
+
+- `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
+- `limit` (Block List, Max: 1) Limits the number of rows returned. If the `limit.from` is set, then the limit wll start from the first element matched by the expression. The expression is only used to match with the first element, later on the elements are not matched by the prefix, but you can enforce a certain pattern with `starts_with` or `like`. (see [below for nested schema](#nestedblock--limit))
 
 ### Read-Only
 
-- `database_roles` (List of Object) Lists all the database roles in a specified database. (see [below for nested schema](#nestedatt--database_roles))
+- `database_roles` (List of Object) Holds the aggregated output of all database role details queries. (see [below for nested schema](#nestedatt--database_roles))
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--limit"></a>
+### Nested Schema for `limit`
+
+Required:
+
+- `rows` (Number) The maximum number of rows to return.
+
+Optional:
+
+- `from` (String) Specifies a **case-sensitive** pattern that is used to match object name. After the first match, the limit on the number of rows will be applied.
+
 
 <a id="nestedatt--database_roles"></a>
 ### Nested Schema for `database_roles`
 
 Read-Only:
 
+- `show_output` (List of Object) (see [below for nested schema](#nestedobjatt--database_roles--show_output))
+
+<a id="nestedobjatt--database_roles--show_output"></a>
+### Nested Schema for `database_roles.show_output`
+
+Read-Only:
+
 - `comment` (String)
+- `created_on` (String)
+- `granted_database_roles` (Number)
+- `granted_to_database_roles` (Number)
+- `granted_to_roles` (Number)
+- `is_current` (Boolean)
+- `is_default` (Boolean)
+- `is_inherited` (Boolean)
 - `name` (String)
 - `owner` (String)
+- `owner_role_type` (String)
