@@ -55,6 +55,7 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
 	},
+	// TODO [SNOW-1348101 - next PR]: check the exact behavior of default_namespace and default_role because it looks like it is handled in a case-insensitive manner on Snowflake side
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
