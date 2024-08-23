@@ -135,7 +135,6 @@ var userSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IntAtLeast(1),
 		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available.",
 	},
-	// TODO [SNOW-1348101]: do we allow specifying fp for rsa and rsa2?
 	"rsa_public_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
