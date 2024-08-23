@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -124,4 +126,12 @@ func (w *UserAssert) HasDaysToExpiryNotEmpty() *UserAssert {
 		return nil
 	})
 	return w
+}
+
+// TODO [SNOW-1501905]: the current User func assumes acceptance test client helper, we should paramterize it and change this in the generators
+func UserForIntegrationTests(t *testing.T, id sdk.AccountObjectIdentifier, testHelper *helpers.TestClient) *UserAssert {
+	t.Helper()
+	return &UserAssert{
+		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeUser, id, testHelper.User.Show),
+	}
 }

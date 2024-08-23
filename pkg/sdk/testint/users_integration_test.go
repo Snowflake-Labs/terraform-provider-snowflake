@@ -985,9 +985,9 @@ func TestInt_Users(t *testing.T) {
 		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
 		t.Cleanup(disabledUserCleanup)
 
-		fetchedDisabledUser, err := client.Users.ShowByID(ctx, disabledUser.ID())
-		require.NoError(t, err)
-		require.True(t, fetchedDisabledUser.Disabled)
+		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+			HasDisabled(true),
+		)
 
 		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
 		t.Cleanup(roleCleanup)
@@ -995,9 +995,9 @@ func TestInt_Users(t *testing.T) {
 		revertRole := testClientHelper().Role.UseRole(t, role.ID())
 		t.Cleanup(revertRole)
 
-		fetchedDisabledUser, err = client.Users.ShowByID(ctx, disabledUser.ID())
-		require.NoError(t, err)
-		require.False(t, fetchedDisabledUser.Disabled)
+		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+			HasDisabled(false),
+		)
 	})
 
 	t.Run("issue #2817: check the describe behavior", func(t *testing.T) {
