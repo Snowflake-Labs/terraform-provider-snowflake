@@ -20,6 +20,7 @@ type ResourceModel interface {
 	Resource() resources.Resource
 	ResourceName() string
 	SetResourceName(name string)
+	ResourceReference() string
 }
 
 type ResourceModelMeta struct {
@@ -37,6 +38,10 @@ func (m *ResourceModelMeta) ResourceName() string {
 
 func (m *ResourceModelMeta) SetResourceName(name string) {
 	m.name = name
+}
+
+func (m *ResourceModelMeta) ResourceReference() string {
+	return fmt.Sprintf(`%s.%s`, m.resource, m.name)
 }
 
 // DefaultResourceName is exported to allow assertions against the resources using the default name.

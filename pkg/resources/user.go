@@ -474,6 +474,7 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if runSet {
 		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 	}

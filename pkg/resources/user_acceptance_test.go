@@ -4,19 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -595,6 +599,72 @@ func TestAcc_User_issue2836(t *testing.T) {
 				Check: assert.AssertThat(t,
 					objectassert.User(t, userId).
 						HasDefaultRole(defaultRole),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_issue2970(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	pass := random.Password()
+	key, _ := random.GenerateRSAPublicKey(t)
+	resourceName := "u"
+
+	newPass := random.Password()
+	newKey, _ := random.GenerateRSAPublicKey(t)
+	incorrectlyFormattedNewKey := fmt.Sprintf("-----BEGIN PUBLIC KEY-----\n%s-----END PUBLIC KEY-----\n", newKey)
+
+	userModel := model.User(resourceName, userId.Name()).
+		WithPassword(pass).
+		WithRsaPublicKey(key)
+
+	newUserModelIncorrectNewKey := model.User(resourceName, userId.Name()).
+		WithPassword(newPass).
+		WithRsaPublicKey(incorrectlyFormattedNewKey)
+
+	newUserModel := model.User(resourceName, userId.Name()).
+		WithPassword(newPass).
+		WithRsaPublicKey(newKey)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasPasswordString(pass).
+						HasRsaPublicKeyString(key),
+				),
+			},
+			{
+				Config: config.FromModel(t, newUserModelIncorrectNewKey),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(newUserModelIncorrectNewKey.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), sdk.String(newPass)),
+						planchecks.ExpectChange(newUserModelIncorrectNewKey.ResourceReference(), "rsa_public_key", tfjson.ActionUpdate, sdk.String(key), sdk.String(incorrectlyFormattedNewKey)),
+					},
+				},
+				ExpectError: regexp.MustCompile("New public key rejected by current policy"),
+			},
+			{
+				Config: config.FromModel(t, newUserModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(newUserModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), sdk.String(newPass)),
+						planchecks.ExpectChange(newUserModel.ResourceReference(), "rsa_public_key", tfjson.ActionUpdate, sdk.String(key), sdk.String(newKey)),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, newUserModel.ResourceReference()).
+						HasPasswordString(newPass).
+						HasRsaPublicKeyString(newKey),
 				),
 			},
 		},

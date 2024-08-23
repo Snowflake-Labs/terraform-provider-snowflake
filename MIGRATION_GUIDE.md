@@ -156,6 +156,12 @@ During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-prov
 
 Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
 
+### *(bugfix)* Correctly handle failed update
+
+Not every attribute can be updated in the state during read (like `password` in the `snowflake_user` resource). In situations where update fails, we may end up with an incorrect state (read more in https://github.com/hashicorp/terraform-plugin-sdk/issues/476). There is a deprecated option to fallback to the previous state in such cases which fixed this kind of situations for `snowflake_user` resource.
+
+Connected issues: [#2970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2970)
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
