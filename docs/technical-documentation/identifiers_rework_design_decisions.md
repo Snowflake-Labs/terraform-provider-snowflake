@@ -68,12 +68,13 @@ The main limitations around identifiers are strictly connected to what character
 - Avoid dots ‘.’ inside identifiers. It’s the main separator between identifier parts and although we are handling dots inside identifiers, there may be cases where it’s impossible to parse the identifier correctly.
 - Avoid pipes ‘|’ inside identifiers. It’s the separator for our more complex resource identifiers that could make our parser split the resource identifier into the wrong parts.
 - Avoid parentheses ‘(’ and ‘)’ when specifying identifiers for functions, procedures, external functions. Parentheses as part of their identifiers could potentially make our parser split the identifier into wrong parts causing issues.
+- Do not use double quotes as part of identifiers (in Snowflake you can have double quotes inside identifiers by escaping them with the second double quote, e.g. `create database “test””identifier”` will create a database with name `test"identifier`).
 
 As a general recommendation, please lean toward simple names without any special characters, and if word separation is needed, use underscores. 
 This also applies to other “identifiers” like column names in tables or argument names in functions. 
 If you are currently using complex identifiers, we recommend considering migration to simpler identifiers for a more straightforward and less error-prone experience.
-Also, we want to make it clear that every field specifying identifier (or its part, e.g. `name`, `database`, `schema`) are always case-sensitive. By specifying
-identifiers with lowercase characters in Terraform, you also have to refer to them with lowercase names in quotes in Snowflake. 
+Also, we want to make it clear that every field specifying an identifier (or its part, e.g. `name`, `database`, `schema`) is always case-sensitive. By specifying
+an identifier with lowercase characters in Terraform, you also have to refer to them with lowercase names in quotes in Snowflake. 
 For example, by specifying an account role with `name = "test"` to check privileges granted to the role in Snowflake, you have to call:
 ```sql
 show grants to role "test";
