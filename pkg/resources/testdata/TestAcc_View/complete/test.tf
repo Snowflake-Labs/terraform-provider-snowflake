@@ -17,5 +17,11 @@ resource "snowflake_view" "test" {
     policy_name = var.aggregation_policy
     entity_key  = var.aggregation_policy_entity_key
   }
-  statement = var.statement
+  statement  = var.statement
+  depends_on = [snowflake_unsafe_execute.use_warehouse]
+}
+
+resource "snowflake_unsafe_execute" "use_warehouse" {
+  execute = "USE WAREHOUSE \"${var.warehouse}\""
+  revert  = "SELECT 1"
 }

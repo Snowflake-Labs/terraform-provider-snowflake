@@ -523,7 +523,7 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
 	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
 	if err != nil {
-		return err
+		return fmt.Errorf("getting policy references for view: %v", err)
 	}
 	var aggregationPolicies []map[string]any
 	var rowAccessPolicies []map[string]any

@@ -53,3 +53,7 @@ variable "aggregation_policy_entity_key" {
 variable "statement" {
   type = string
 }
+
+variable "warehouse" {
+  type = string
+}

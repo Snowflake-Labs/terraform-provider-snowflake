@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO(SNOW-1423486): Fix using warehouse in all tests.
 func TestAcc_View_basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -46,6 +47,7 @@ func TestAcc_View_basic(t *testing.T) {
 	comment := "Terraform test resource'"
 
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewModelWithDependency := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 
 	// generators currently don't handle lists, so use the old way
 	basicUpdate := func(rap, ap sdk.SchemaObjectIdentifier, statement string) config.Variables {
@@ -71,7 +73,7 @@ func TestAcc_View_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModel(t, viewModelWithDependency) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -284,7 +286,8 @@ func TestAcc_View_recursive(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -293,7 +296,7 @@ func TestAcc_View_recursive(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
+				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -302,7 +305,7 @@ func TestAcc_View_recursive(t *testing.T) {
 					HasIsRecursiveString("true")),
 			},
 			{
-				Config:       accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
+				Config:       accconfig.FromModel(t, viewModel.WithIsRecursive("true")) + useWarehouseConfig(acc.TestWarehouseName),
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
@@ -319,10 +322,12 @@ func TestAcc_View_recursive(t *testing.T) {
 
 func TestAcc_View_temporary(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	// we use one configured client, so a temporary view should be visible after creation
+	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -331,13 +336,7 @@ func TestAcc_View_temporary(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config:             accconfig.FromModel(t, viewModel.WithIsTemporary("true")),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionCreate),
-					},
-				},
+				Config: accconfig.FromModel(t, viewModel.WithIsTemporary("true")) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -379,6 +378,7 @@ func TestAcc_View_complete(t *testing.T) {
 			"aggregation_policy":            config.StringVariable(aggregationPolicy.FullyQualifiedName()),
 			"aggregation_policy_entity_key": config.ListVariable(config.StringVariable("ID")),
 			"statement":                     config.StringVariable(statement),
+			"warehouse":                     config.StringVariable(acc.TestWarehouseName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -449,7 +449,9 @@ func TestAcc_View_Rename(t *testing.T) {
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithComment("foo")
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithComment("foo").WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	newViewModel := model.View("test", newId.DatabaseName(), newId.Name(), newId.SchemaName(), statement).WithComment("foo")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -459,7 +461,7 @@ func TestAcc_View_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
@@ -468,7 +470,7 @@ func TestAcc_View_Rename(t *testing.T) {
 			},
 			// rename with one param changed
 			{
-				Config: accconfig.FromModel(t, model.View("test", newId.DatabaseName(), newId.Name(), newId.SchemaName(), statement).WithComment("foo")),
+				Config: accconfig.FromModel(t, newViewModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
@@ -488,7 +490,8 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(false).WithCopyGrants(false)
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(false).WithCopyGrants(false).
+		WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 
 	var createdOn string
 
@@ -501,7 +504,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", id.DatabaseName()),
@@ -516,7 +519,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 			},
 			// Checks that copy_grants changes don't trigger a drop
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true).WithOrReplace(true)),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -536,7 +539,8 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(true).WithCopyGrants(true)
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(true).WithCopyGrants(true).
+		WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 
 	var createdOn string
 
@@ -549,7 +553,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
@@ -561,7 +565,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 				),
 			},
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false)),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false)) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -578,8 +582,9 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
-	tableName := acc.TestClient().Ids.Alpha()
-	viewName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -590,7 +595,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, `\"name\"`),
+				Config: viewConfigWithGrants(viewId, tableId, `\"name\"`) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -598,7 +603,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, "*"),
+				Config: viewConfigWithGrants(viewId, tableId, "*") + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
@@ -609,9 +614,9 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 }
 
 func TestAcc_View_copyGrants(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -621,19 +626,19 @@ func TestAcc_View_copyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config:      viewConfigWithCopyGrants(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
+				Config:      accconfig.FromModel(t, viewModel.WithCopyGrants(true)) + useWarehouseConfig(acc.TestWarehouseName),
 				ExpectError: regexp.MustCompile("all of `copy_grants,or_replace` must be specified"),
 			},
 			{
-				Config: viewConfigWithCopyGrantsAndOrReplace(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true, true),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 				),
 			},
 			{
-				Config: viewConfigWithOrReplace(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 				),
 			},
 		},
@@ -656,7 +661,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, id.Name(), part1, part2),
+				Config: viewConfigWithMultilineUnionStatement(id, part1, part2) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "statement", statement),
@@ -700,7 +705,7 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_view.test"
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
 
 	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
@@ -728,7 +733,7 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   accconfig.FromModel(t, viewModel),
+				Config:                   accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
@@ -736,6 +741,15 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 			},
 		},
 	})
+}
+
+func useWarehouseConfig(name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_unsafe_execute" "use_warehouse" {
+	execute			= "USE WAREHOUSE \"%s\""
+	revert			= "SELECT 1"
+}
+`, name)
 }
 
 func viewv_0_94_1_WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, tagValue, statement string) string {
@@ -756,7 +770,7 @@ resource "snowflake_view" "test" {
 	return fmt.Sprintf(s, id.Name(), id.DatabaseName(), tagSchema, tagName, tagValue, id.SchemaName(), statement)
 }
 
-func viewConfigWithGrants(databaseName string, schemaName string, tableName string, viewName string, selectStatement string) string {
+func viewConfigWithGrants(viewId, tableId sdk.SchemaObjectIdentifier, selectStatement string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "table" {
   database = "%[1]s"
@@ -770,7 +784,6 @@ resource "snowflake_table" "table" {
 }
 
 resource "snowflake_view" "test" {
-  depends_on = [snowflake_table.table]
   name = "%[4]s"
   comment = "created by terraform"
   database = "%[1]s"
@@ -779,6 +792,7 @@ resource "snowflake_view" "test" {
   or_replace = true
   copy_grants = true
   is_secure = true
+  depends_on = [snowflake_unsafe_execute.use_warehouse, snowflake_table.table]
 }
 
 resource "snowflake_account_role" "test" {
@@ -795,53 +809,16 @@ resource "snowflake_grant_privileges_to_account_role" "grant" {
 }
 
 data "snowflake_grants" "grants" {
-  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test]
+  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test, snowflake_unsafe_execute.use_warehouse]
   grants_on {
     object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
   }
 }
-	`, databaseName, schemaName, tableName, viewName, selectStatement)
+	`, viewId.DatabaseName(), viewId.SchemaName(), tableId.Name(), viewId.Name(), selectStatement)
 }
 
-func viewConfigWithCopyGrants(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool) string {
-	return fmt.Sprintf(`
-resource "snowflake_view" "test" {
-  name = "%[3]s"
-  database = "%[1]s"
-  schema = "%[2]s"
-  statement = "%[4]s"
-  copy_grants = %[5]t
-}
-	`, databaseName, schemaName, name, selectStatement, copyGrants)
-}
-
-func viewConfigWithCopyGrantsAndOrReplace(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool, orReplace bool) string {
-	return fmt.Sprintf(`
-resource "snowflake_view" "test" {
-  name = "%[3]s"
-  database = "%[1]s"
-  schema = "%[2]s"
-  statement = "%[4]s"
-  copy_grants = %[5]t
-  or_replace = %[6]t
-}
-	`, databaseName, schemaName, name, selectStatement, copyGrants, orReplace)
-}
-
-func viewConfigWithOrReplace(databaseName string, schemaName string, name string, selectStatement string, orReplace bool) string {
-	return fmt.Sprintf(`
-resource "snowflake_view" "test" {
-  name = "%[3]s"
-  database = "%[1]s"
-  schema = "%[2]s"
-  statement = "%[4]s"
-  or_replace = %[5]t
-}
-	`, databaseName, schemaName, name, selectStatement, orReplace)
-}
-
-func viewConfigWithMultilineUnionStatement(databaseName string, schemaName string, name string, part1 string, part2 string) string {
+func viewConfigWithMultilineUnionStatement(id sdk.SchemaObjectIdentifier, part1 string, part2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_view" "test" {
   name = "%[3]s"
@@ -853,6 +830,7 @@ resource "snowflake_view" "test" {
 %[5]s
 SQL
   is_secure = true
+  depends_on = [snowflake_unsafe_execute.use_warehouse]
 }
-	`, databaseName, schemaName, name, part1, part2)
+	`, id.DatabaseName(), id.SchemaName(), id.Name(), part1, part2)
 }
