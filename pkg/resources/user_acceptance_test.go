@@ -673,6 +673,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 
 // TODO [SNOW-1348101 - next PR]: will be fixed with addition of show_output, its logic, and changing disabled to non-computed attribute
 func TestAcc_User_issue1572(t *testing.T) {
+	t.Skipf("Fix with user rework in SNOW-1348101")
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
