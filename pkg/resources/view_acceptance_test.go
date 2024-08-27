@@ -24,8 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO(SNOW-1423486): Fix using warehouse in all tests.
+// TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce
+// TODO(next pr): cleanup setting warehouse with unsafe_execute
 func TestAcc_View_basic(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -282,6 +284,7 @@ func TestAcc_View_basic(t *testing.T) {
 }
 
 func TestAcc_View_recursive(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -321,6 +324,7 @@ func TestAcc_View_recursive(t *testing.T) {
 }
 
 func TestAcc_View_temporary(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	// we use one configured client, so a temporary view should be visible after creation
 	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
@@ -349,6 +353,7 @@ func TestAcc_View_temporary(t *testing.T) {
 }
 
 func TestAcc_View_complete(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -446,6 +451,7 @@ func TestAcc_View_complete(t *testing.T) {
 }
 
 func TestAcc_View_Rename(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -487,6 +493,7 @@ func TestAcc_View_Rename(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
@@ -536,6 +543,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
@@ -582,6 +590,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -614,6 +623,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 }
 
 func TestAcc_View_copyGrants(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
@@ -646,6 +656,7 @@ func TestAcc_View_copyGrants(t *testing.T) {
 }
 
 func TestAcc_View_Issue2640(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
@@ -700,6 +711,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 }
 
 func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()

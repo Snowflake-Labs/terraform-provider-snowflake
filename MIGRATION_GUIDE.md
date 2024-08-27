@@ -21,6 +21,9 @@ Removed fields:
 - `tag`
 The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
 
+#### *(breaking change)* Required warehouse
+For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+
 ### Identifier changes
 
 #### *(breaking change)* resource identifiers for schema and streamlit

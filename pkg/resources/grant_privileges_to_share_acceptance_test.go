@@ -229,6 +229,8 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
