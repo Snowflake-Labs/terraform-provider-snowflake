@@ -30,14 +30,14 @@ var viewSchema = map[string]*schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The database in which to create the view.",
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the view."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The schema in which to create the view.",
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the view."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -523,7 +523,7 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
 	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
 	if err != nil {
-		return fmt.Errorf("getting policy references for view: %v", err)
+		return fmt.Errorf("getting policy references for view: %w", err)
 	}
 	var aggregationPolicies []map[string]any
 	var rowAccessPolicies []map[string]any
