@@ -41,7 +41,7 @@ func (c *AggregationPolicyClient) DropAggregationPolicyFunc(t *testing.T, id sdk
 	ctx := context.Background()
 
 	return func() {
-		_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`DROP AGGREGATION POLICY IF EXISTS %s`, id.Name()))
+		_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`DROP AGGREGATION POLICY IF EXISTS %s`, id.FullyQualifiedName()))
 		require.NoError(t, err)
 	}
 }
