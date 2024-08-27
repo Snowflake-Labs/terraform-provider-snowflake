@@ -84,23 +84,17 @@ func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
 
 func (s *AlterDatabaseRoleRequest) toOpts() *alterDatabaseRoleOptions {
 	opts := alterDatabaseRoleOptions{
-		IfExists: Bool(s.ifExists),
-		name:     s.name,
-	}
-	if s.rename != nil {
-		opts.Rename = s.rename
+		IfExists:  Bool(s.ifExists),
+		name:      s.name,
+		Rename:    s.rename,
+		SetTags:   s.setTags,
+		UnsetTags: s.unsetTags,
 	}
 	if s.set != nil {
 		opts.Set = &DatabaseRoleSet{s.set.comment}
 	}
 	if s.unset != nil {
 		opts.Unset = &DatabaseRoleUnset{true}
-	}
-	if s.setTags != nil {
-		opts.SetTags = s.setTags
-	}
-	if s.unsetTags != nil {
-		opts.UnsetTags = s.unsetTags
 	}
 	return &opts
 }

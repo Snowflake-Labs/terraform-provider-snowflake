@@ -24,6 +24,7 @@ import (
 
 func TestAcc_DatabaseRole(t *testing.T) {
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := random.Comment()
 	databaseRoleModel := model.DatabaseRole("test", id.DatabaseName(), id.Name())
 	databaseRoleModelWithComment := model.DatabaseRole("test", id.DatabaseName(), id.Name()).WithComment(comment)
@@ -119,6 +120,28 @@ func TestAcc_DatabaseRole(t *testing.T) {
 						HasCommentString(""),
 					resourceshowoutputassert.ImportedWarehouseShowOutput(t, helpers.EncodeResourceIdentifier(id)).
 						HasName(id.Name()).
+						HasComment(""),
+				),
+			},
+			// rename
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, databaseRoleModel.WithName(newId.Name())),
+				Check: assert.AssertThat(t,
+					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
+						HasNameString(newId.Name()).
+						HasDatabaseString(newId.DatabaseName()).
+						HasCommentString("").
+						HasFullyQualifiedNameString(newId.FullyQualifiedName()),
+					resourceshowoutputassert.DatabaseRoleShowOutput(t, "snowflake_database_role.test").
+						HasName(newId.Name()).
+						HasComment(""),
+					objectassert.DatabaseRole(t, newId).
+						HasName(newId.Name()).
 						HasComment(""),
 				),
 			},

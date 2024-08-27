@@ -134,7 +134,6 @@ func generateAndSaveForAllObjects[T ObjectNameProvider, M GenerationModel](objec
 		}
 		filename := filenameProvider(s, model)
 		if err := WriteCodeToFile(&buffer, filename); err != nil {
-			log.Println("Failed to save: ", buffer.String())
 			errs = append(errs, fmt.Errorf("saving output for object %s to file %s failed with err: %w", s.ObjectName(), filename, err))
 			continue
 		}

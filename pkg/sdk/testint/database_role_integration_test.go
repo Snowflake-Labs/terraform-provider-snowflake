@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add tests for new show filtering option and set/unset tags
-
 func TestInt_DatabaseRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

@@ -340,3 +340,4 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - handle attribute types in resource assertions (currently strings only; TODO left in `assert/resourceassert/gen/model.go`)
 - distinguish between different enum types (TODO left in `assert/resourceshowoutputassert/gen/templates.go`)
 - support the rest of attribute types in config model builders (TODO left in `config/model/gen/model.go`)
+- Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them

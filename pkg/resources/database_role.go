@@ -21,7 +21,6 @@ var databaseRoleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ForceNew:         true,
 		Description:      "Specifies the identifier for the database role.",
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -99,15 +98,18 @@ func ReadDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
-	if err != nil && errors.Is(err, sdk.ErrObjectNotFound) {
-		d.SetId("")
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Database role not found; marking it as removed",
-				Detail:   fmt.Sprintf("Database role name: %s, err: %s", id.FullyQualifiedName(), err),
-			},
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Database role not found; marking it as removed",
+					Detail:   fmt.Sprintf("Database role name: %s, err: %s", id.FullyQualifiedName(), err),
+				},
+			}
 		}
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", databaseRole.Comment); err != nil {
@@ -153,6 +155,18 @@ func UpdateDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) d
 	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if d.HasChange("name") {
+		newId := sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), d.Get("name").(string))
+
+		err = client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(id).WithRename(newId))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {
