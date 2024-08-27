@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -32,16 +34,18 @@ type resourceMonitors struct {
 
 type ResourceMonitor struct {
 	Name               string
-	CreditQuota        float64
+	CreditQuota        *float64
 	UsedCredits        float64
 	RemainingCredits   float64
+	Level              *ResourceMonitorLevel
 	Frequency          Frequency
 	StartTime          string
-	EndTime            string
+	EndTime            *string
+	NotifyAt           []int
 	SuspendAt          *int
 	SuspendImmediateAt *int
-	NotifyTriggers     []int
-	Level              ResourceMonitorLevel
+	CreatedOn          time.Time
+	Owner              string
 	Comment            string
 	NotifyUsers        []string
 }
@@ -58,22 +62,26 @@ type resourceMonitorRow struct {
 	NotifyAt           sql.NullString `db:"notify_at"`
 	SuspendAt          sql.NullString `db:"suspend_at"`
 	SuspendImmediateAt sql.NullString `db:"suspend_immediately_at"`
-	Owner              sql.NullString `db:"owner"`
+	CreatedOn          time.Time      `db:"created_on"`
+	Owner              string         `db:"owner"`
 	Comment            sql.NullString `db:"comment"`
 	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
 func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	resourceMonitor := &ResourceMonitor{
-		Name: row.Name,
+		Name:      row.Name,
+		CreatedOn: row.CreatedOn,
+		Owner:     row.Owner,
 	}
 	if row.CreditQuota.Valid {
 		creditQuota, err := strconv.ParseFloat(row.CreditQuota.String, 64)
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitor.CreditQuota = creditQuota
+		resourceMonitor.CreditQuota = &creditQuota
 	}
+
 	if row.UsedCredits.Valid {
 		usedCredits, err := strconv.ParseFloat(row.UsedCredits.String, 64)
 		if err != nil {
@@ -81,6 +89,7 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		}
 		resourceMonitor.UsedCredits = usedCredits
 	}
+
 	if row.RemainingCredits.Valid {
 		remainingCredits, err := strconv.ParseFloat(row.RemainingCredits.String, 64)
 		if err != nil {
@@ -89,13 +98,23 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		resourceMonitor.RemainingCredits = remainingCredits
 	}
 
+	if row.Level.Valid {
+		switch row.Level.String {
+		case "ACCOUNT":
+			resourceMonitor.Level = Pointer(ResourceMonitorLevelAccount)
+		case "WAREHOUSE":
+			resourceMonitor.Level = Pointer(ResourceMonitorLevelWarehouse)
+		}
+	}
+
 	if row.Frequency.Valid {
-		frequency, err := FrequencyFromString(row.Frequency.String)
+		frequency, err := ToResourceMonitorFrequency(row.Frequency.String)
 		if err != nil {
 			return nil, err
 		}
 		resourceMonitor.Frequency = *frequency
 	}
+
 	if row.StartTime.Valid {
 		convertedStartTime, err := ParseTimestampWithOffset(row.StartTime.String, "2006-01-02 15:04")
 		if err != nil {
@@ -109,8 +128,15 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitor.EndTime = convertedEndTime
+		resourceMonitor.EndTime = &convertedEndTime
 	}
+
+	notifyTriggers, err := extractTriggerInts(row.NotifyAt)
+	if err != nil {
+		return nil, err
+	}
+	resourceMonitor.NotifyAt = notifyTriggers
+
 	suspendTriggers, err := extractTriggerInts(row.SuspendAt)
 	if err != nil {
 		return nil, err
@@ -118,6 +144,7 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	if len(suspendTriggers) > 0 {
 		resourceMonitor.SuspendAt = &suspendTriggers[0]
 	}
+
 	suspendImmediateTriggers, err := extractTriggerInts(row.SuspendImmediateAt)
 	if err != nil {
 		return nil, err
@@ -125,34 +152,19 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	if len(suspendImmediateTriggers) > 0 {
 		resourceMonitor.SuspendImmediateAt = &suspendImmediateTriggers[0]
 	}
-	notifyTriggers, err := extractTriggerInts(row.NotifyAt)
-	if err != nil {
-		return nil, err
-	}
-	resourceMonitor.NotifyTriggers = notifyTriggers
+
 	if row.Comment.Valid {
 		resourceMonitor.Comment = row.Comment.String
 	}
-	resourceMonitor.NotifyUsers = extractUsers(row.NotifyUsers)
 
-	if row.Level.Valid {
-		switch row.Level.String {
-		case "ACCOUNT":
-			resourceMonitor.Level = ResourceMonitorLevelAccount
-		case "WAREHOUSE":
-			resourceMonitor.Level = ResourceMonitorLevelWarehouse
-		default:
-			resourceMonitor.Level = ResourceMonitorLevelNull
-		}
-	} else {
-		resourceMonitor.Level = ResourceMonitorLevelNull
+	if row.NotifyUsers.Valid && row.NotifyUsers.String != "" {
+		resourceMonitor.NotifyUsers = strings.Split(row.NotifyUsers.String, ", ")
 	}
 
 	return resourceMonitor, nil
 }
 
-// extractTriggerInts converts the triggers in the DB (stored as a comma
-// separated string with trailing %s) into a slice of ints.
+// extractTriggerInts converts the triggers in the DB (stored as a comma separated string with trailing `%` signs) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
 	if !s.Valid {
@@ -170,14 +182,6 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	return out, nil
 }
 
-func extractUsers(s sql.NullString) []string {
-	if s.Valid && s.String != "" {
-		return strings.Split(s.String, ", ")
-	} else {
-		return []string{}
-	}
-}
-
 func (v *ResourceMonitor) ID() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(v.Name)
 }
@@ -191,6 +195,7 @@ type CreateResourceMonitorOptions struct {
 	create          bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
+	IfNotExists     *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	With            *ResourceMonitorWith    `ddl:"keyword" sql:"WITH"`
 }
@@ -208,35 +213,30 @@ func (opts *CreateResourceMonitorOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.Join(ErrInvalidObjectIdentifier)
+	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateResourceMonitorOptions", "OrReplace", "IfNotExists"))
 	}
-	return nil
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, errors.Join(ErrInvalidObjectIdentifier))
+	}
+	return errors.Join(errs...)
 }
 
 func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error {
 	if opts == nil {
 		opts = &CreateResourceMonitorOptions{}
 	}
-
+	// TODO: Check conventions for SDK
 	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
+	return validateAndExec(v.client, ctx, opts)
 }
 
-type ResourceMonitorLevel int
+type ResourceMonitorLevel string
 
 const (
-	ResourceMonitorLevelAccount = iota
-	ResourceMonitorLevelWarehouse
-	ResourceMonitorLevelNull
+	ResourceMonitorLevelAccount   ResourceMonitorLevel = "ACCOUNT"
+	ResourceMonitorLevelWarehouse ResourceMonitorLevel = "WAREHOUSE"
 )
 
 type TriggerDefinition struct {
@@ -252,22 +252,35 @@ const (
 	TriggerActionNotify           TriggerAction = "NOTIFY"
 )
 
+func ToResourceMonitorTriggerAction(s string) (*TriggerAction, error) {
+	switch action := TriggerAction(strings.ToUpper(s)); action {
+	case TriggerActionSuspend,
+		TriggerActionSuspendImmediate,
+		TriggerActionNotify:
+		return &action, nil
+	default:
+		return nil, fmt.Errorf("invalid trigger action type: %s", s)
+	}
+}
+
 type NotifyUsers struct {
 	Users []NotifiedUser `ddl:"list,parentheses,comma"`
 }
 
 type NotifiedUser struct {
-	Name string `ddl:"keyword,double_quotes"`
+	Name AccountObjectIdentifier `ddl:"identifier"`
 }
 
 type Frequency string
 
-func FrequencyFromString(s string) (*Frequency, error) {
-	s = strings.ToUpper(s)
-	f := Frequency(s)
-	switch f {
-	case FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly, FrequencyNever:
-		return &f, nil
+func ToResourceMonitorFrequency(s string) (*Frequency, error) {
+	switch frequency := Frequency(strings.ToUpper(s)); frequency {
+	case FrequencyDaily,
+		FrequencyWeekly,
+		FrequencyMonthly,
+		FrequencyYearly,
+		FrequencyNever:
+		return &frequency, nil
 	default:
 		return nil, fmt.Errorf("invalid frequency type: %s", s)
 	}
@@ -288,6 +301,7 @@ type AlterResourceMonitorOptions struct {
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
+	Unset           *ResourceMonitorUnset   `ddl:"keyword" sql:"SET"`
 	Triggers        []TriggerDefinition     `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 
@@ -299,8 +313,8 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if everyValueNil(opts.Set, opts.Triggers) {
-		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Triggers"))
+	if everyValueNil(opts.Set, opts.Unset, opts.Triggers) {
+		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Unset", "Triggers"))
 	}
 	if set := opts.Set; valueSet(set) {
 		if everyValueNil(set.CreditQuota, set.Frequency, set.StartTimestamp, set.EndTimestamp, set.NotifyUsers) {
@@ -318,16 +332,7 @@ func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier
 		opts = &AlterResourceMonitorOptions{}
 	}
 	opts.name = id
-
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
+	return validateAndExec(v.client, ctx, opts)
 }
 
 type ResourceMonitorSet struct {
@@ -337,6 +342,11 @@ type ResourceMonitorSet struct {
 	StartTimestamp *string      `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
 	EndTimestamp   *string      `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 	NotifyUsers    *NotifyUsers `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
+}
+
+type ResourceMonitorUnset struct {
+	CreditQuota  *bool `ddl:"keyword" sql:"CREDIT_QUOTA = null"`
+	EndTimestamp *bool `ddl:"keyword" sql:"END_TIMESTAMP = null"`
 }
 
 // DropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
@@ -360,15 +370,7 @@ func (opts *DropResourceMonitorOptions) validate() error {
 func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error {
 	opts = createIfNil(opts)
 	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
+	return validateAndExec(v.client, ctx, opts)
 }
 
 // ShowResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors.
@@ -387,27 +389,19 @@ func (opts *ShowResourceMonitorOptions) validate() error {
 
 func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error) {
 	opts = createIfNil(opts)
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[resourceMonitorRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []*resourceMonitorRow
-	err = v.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-	resourceMonitors := make([]ResourceMonitor, 0, len(rows))
-	for _, row := range rows {
+	resultList := make([]ResourceMonitor, len(dbRows))
+	for i, row := range dbRows {
 		resourceMonitor, err := row.convert()
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitors = append(resourceMonitors, *resourceMonitor)
+		resultList[i] = *resourceMonitor
 	}
-	return resourceMonitors, nil
+	return resultList, nil
 }
 
 func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error) {
@@ -419,10 +413,5 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 	if err != nil {
 		return nil, err
 	}
-	for _, resourceMonitor := range resourceMonitors {
-		if resourceMonitor.Name == id.Name() {
-			return &resourceMonitor, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindOne(resourceMonitors, func(r ResourceMonitor) bool { return r.ID().Name() == id.Name() })
 }

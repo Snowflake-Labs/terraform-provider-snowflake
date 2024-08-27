@@ -25,6 +25,10 @@ var ShowResourceMonitorSchema = map[string]*schema.Schema{
 		Type:     schema.TypeFloat,
 		Computed: true,
 	},
+	"level": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 	"frequency": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -37,6 +41,10 @@ var ShowResourceMonitorSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
+	//"notify_at": {
+	//	Type:     schema.TypeInvalid,
+	//	Computed: true,
+	//},
 	"suspend_at": {
 		Type:     schema.TypeInt,
 		Computed: true,
@@ -45,22 +53,22 @@ var ShowResourceMonitorSchema = map[string]*schema.Schema{
 		Type:     schema.TypeInt,
 		Computed: true,
 	},
-	"notify_triggers": {
-		Type:     schema.TypeInvalid,
+	"created_on": {
+		Type:     schema.TypeString,
 		Computed: true,
 	},
-	"level": {
-		Type:     schema.TypeInt,
+	"owner": {
+		Type:     schema.TypeString,
 		Computed: true,
 	},
 	"comment": {
 		Type:     schema.TypeString,
 		Computed: true,
 	},
-	"notify_users": {
-		Type:     schema.TypeInvalid,
-		Computed: true,
-	},
+	//"notify_users": {
+	//	Type:     schema.TypeInvalid,
+	//	Computed: true,
+	//},
 }
 
 var _ = ShowResourceMonitorSchema
@@ -68,22 +76,30 @@ var _ = ShowResourceMonitorSchema
 func ResourceMonitorToSchema(resourceMonitor *sdk.ResourceMonitor) map[string]any {
 	resourceMonitorSchema := make(map[string]any)
 	resourceMonitorSchema["name"] = resourceMonitor.Name
-	resourceMonitorSchema["credit_quota"] = resourceMonitor.CreditQuota
+	if resourceMonitor.CreditQuota != nil {
+		resourceMonitorSchema["credit_quota"] = resourceMonitor.CreditQuota
+	}
 	resourceMonitorSchema["used_credits"] = resourceMonitor.UsedCredits
 	resourceMonitorSchema["remaining_credits"] = resourceMonitor.RemainingCredits
+	if resourceMonitor.Level != nil {
+		resourceMonitorSchema["level"] = string(*resourceMonitor.Level)
+	}
 	resourceMonitorSchema["frequency"] = string(resourceMonitor.Frequency)
 	resourceMonitorSchema["start_time"] = resourceMonitor.StartTime
-	resourceMonitorSchema["end_time"] = resourceMonitor.EndTime
+	if resourceMonitor.EndTime != nil {
+		resourceMonitorSchema["end_time"] = resourceMonitor.EndTime
+	}
+	//resourceMonitorSchema["notify_at"] = resourceMonitor.NotifyAt
 	if resourceMonitor.SuspendAt != nil {
 		resourceMonitorSchema["suspend_at"] = resourceMonitor.SuspendAt
 	}
 	if resourceMonitor.SuspendImmediateAt != nil {
 		resourceMonitorSchema["suspend_immediate_at"] = resourceMonitor.SuspendImmediateAt
 	}
-	resourceMonitorSchema["notify_triggers"] = resourceMonitor.NotifyTriggers
-	resourceMonitorSchema["level"] = int(resourceMonitor.Level)
+	resourceMonitorSchema["created_on"] = resourceMonitor.CreatedOn.String()
+	resourceMonitorSchema["owner"] = resourceMonitor.Owner
 	resourceMonitorSchema["comment"] = resourceMonitor.Comment
-	resourceMonitorSchema["notify_users"] = resourceMonitor.NotifyUsers
+	//resourceMonitorSchema["notify_users"] = resourceMonitor.NotifyUsers
 	return resourceMonitorSchema
 }
 

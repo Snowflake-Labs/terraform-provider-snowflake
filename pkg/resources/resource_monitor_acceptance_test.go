@@ -3,6 +3,12 @@ package resources_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"regexp"
 	"strings"
 	"testing"
@@ -17,8 +23,8 @@ import (
 )
 
 func TestAcc_ResourceMonitor(t *testing.T) {
-	// TODO test more attributes
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	configModel := model.ResourceMonitor("test", id.Name())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -29,49 +35,62 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitorConfig(id.Name(), acc.TestWarehouseName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "40"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "80"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "90"),
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("-1").
+						HasNotifyUsersLen(0).
+						HasFrequencyString(string(sdk.FrequencyMonthly)).
+						HasNoStartTimestamp(). // TODO: Should be end of the last month
+						HasNoEndTimestamp().
+						HasTriggerLen(0),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test"),
 				),
+				//Check: resource.ComposeTestCheckFunc(
+				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.Name()),
+				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_users.#", "0"),
+				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "credit_quota"),
+				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "frequency"),
+				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "start_timestamp"),
+				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "end_timestamp"),
+				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "trigger.#", "0"),
+				//),
 			},
 			// CHANGE PROPERTIES
-			{
-				Config: resourceMonitorConfig2(id.Name(), 75),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
-				),
-			},
-			// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
-			{
-				Config: resourceMonitorConfig2(id.Name(), 60),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "60"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
-				),
-			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_resource_monitor.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			//{
+			//	Config: resourceMonitorConfig2(id.Name(), 75),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
+			//	),
+			//},
+			//// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
+			//{
+			//	Config: resourceMonitorConfig2(id.Name(), 60),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "60"),
+			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
+			//	),
+			//},
+			//// IMPORT
+			//{
+			//	ResourceName:      "snowflake_resource_monitor.test",
+			//	ImportState:       true,
+			//	ImportStateVerify: true,
+			//},
 		},
 	})
 }

@@ -71,3 +71,8 @@ func (c *ResourceMonitorClient) DropResourceMonitorFunc(t *testing.T, id sdk.Acc
 		require.NoError(t, err)
 	}
 }
+
+func (c *ResourceMonitorClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.ResourceMonitor, error) {
+	t.Helper()
+	return c.client().ShowByID(context.Background(), id)
+}

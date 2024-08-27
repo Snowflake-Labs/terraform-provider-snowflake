@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"testing"
 	"time"
 
@@ -38,6 +39,18 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(resourceMonitors))
 	})
+
+	t.Run("show by id", func(t *testing.T) {
+		resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, resourceMonitorTest.ID())
+		require.NoError(t, err)
+		assert.Equal(t, *resourceMonitor, *resourceMonitorTest)
+	})
+
+	t.Run("show by id when searching a non-existent resource monitor", func(t *testing.T) {
+		resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, NonExistingAccountObjectIdentifier)
+		require.Error(t, err, collections.ErrObjectNotFound)
+		assert.Nil(t, resourceMonitor)
+	})
 }
 
 func TestInt_ResourceMonitorCreate(t *testing.T) {
@@ -47,12 +60,10 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 	t.Run("test complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		name := id.Name()
-		frequency, err := sdk.FrequencyFromString("Monthly")
-		require.NoError(t, err)
+		frequency := sdk.FrequencyMonthly
 		startTimeStamp := "IMMEDIATELY"
 		creditQuota := 100
 		endTimeStamp := time.Now().Add(24 * 10 * time.Hour).Format("2006-01-02 15:04")
-
 		triggers := []sdk.TriggerDefinition{
 			{
 				Threshold:     30,
@@ -67,10 +78,11 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 				TriggerAction: sdk.TriggerActionNotify,
 			},
 		}
-		err = client.ResourceMonitors.Create(ctx, id, &sdk.CreateResourceMonitorOptions{
+
+		err := client.ResourceMonitors.Create(ctx, id, &sdk.CreateResourceMonitorOptions{
 			OrReplace: sdk.Bool(true),
 			With: &sdk.ResourceMonitorWith{
-				Frequency:      frequency,
+				Frequency:      &frequency,
 				CreditQuota:    &creditQuota,
 				StartTimestamp: &startTimeStamp,
 				EndTimestamp:   &endTimeStamp,
@@ -79,34 +91,76 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 				Triggers:    triggers,
 			},
 		})
-
 		require.NoError(t, err)
+
+		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
+
 		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(name),
 			},
 		})
+		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor := resourceMonitors[0]
 		require.NoError(t, err)
 		assert.Equal(t, name, resourceMonitor.Name)
-		assert.Equal(t, *frequency, resourceMonitor.Frequency)
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+		assert.NotEmpty(t, resourceMonitor.CreatedOn)
+		assert.Equal(t, frequency, resourceMonitor.Frequency)
+		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.NotEmpty(t, resourceMonitor.EndTime)
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
 		var allThresholds []int
 		allThresholds = append(allThresholds, *resourceMonitor.SuspendAt)
 		allThresholds = append(allThresholds, *resourceMonitor.SuspendImmediateAt)
-		allThresholds = append(allThresholds, resourceMonitor.NotifyTriggers...)
+		allThresholds = append(allThresholds, resourceMonitor.NotifyAt...)
 		var thresholds []int
 		for _, trigger := range triggers {
 			thresholds = append(thresholds, trigger.Threshold)
 		}
 		assert.Equal(t, thresholds, allThresholds)
+	})
 
-		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
+	t.Run("validate: only one suspend trigger", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.ResourceMonitors.Create(ctx, id, &sdk.CreateResourceMonitorOptions{
+			With: &sdk.ResourceMonitorWith{
+				CreditQuota: sdk.Int(100),
+				Triggers: []sdk.TriggerDefinition{
+					{
+						Threshold:     30,
+						TriggerAction: sdk.TriggerActionSuspend,
+					},
+					{
+						Threshold:     50,
+						TriggerAction: sdk.TriggerActionSuspend,
+					},
+				},
+			},
+		})
+		require.ErrorContains(t, err, "A resource monitor can have at most one suspend trigger.")
+	})
+
+	t.Run("validate: only one suspend immediate trigger", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.ResourceMonitors.Create(ctx, id, &sdk.CreateResourceMonitorOptions{
+			With: &sdk.ResourceMonitorWith{
+				CreditQuota: sdk.Int(100),
+				Triggers: []sdk.TriggerDefinition{
+					{
+						Threshold:     30,
+						TriggerAction: sdk.TriggerActionSuspendImmediate,
+					},
+					{
+						Threshold:     50,
+						TriggerAction: sdk.TriggerActionSuspendImmediate,
+					},
+				},
+			},
+		})
+		require.ErrorContains(t, err, "A resource monitor can have at most one suspend_immediate trigger.")
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -114,6 +168,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		name := id.Name()
 
 		err := client.ResourceMonitors.Create(ctx, id, nil)
+		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 
 		require.NoError(t, err)
 		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
@@ -131,11 +186,9 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.Empty(t, resourceMonitor.CreditQuota)
 		assert.Equal(t, sdk.FrequencyMonthly, resourceMonitor.Frequency)
 		assert.Empty(t, resourceMonitor.NotifyUsers)
-		assert.Empty(t, resourceMonitor.NotifyTriggers)
+		assert.Empty(t, resourceMonitor.NotifyAt)
 		assert.Empty(t, resourceMonitor.SuspendAt)
 		assert.Empty(t, resourceMonitor.SuspendImmediateAt)
-
-		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 	})
 }
 
@@ -148,118 +201,117 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		t.Cleanup(resourceMonitorCleanup)
 
 		var oldNotifyTriggers []sdk.TriggerDefinition
-		for _, threshold := range resourceMonitor.NotifyTriggers {
+		for _, threshold := range resourceMonitor.NotifyAt {
 			oldNotifyTriggers = append(oldNotifyTriggers, sdk.TriggerDefinition{Threshold: threshold, TriggerAction: sdk.TriggerActionNotify})
 		}
 
-		var oldTriggers []sdk.TriggerDefinition
-		oldTriggers = append(oldTriggers, oldNotifyTriggers...)
-		oldTriggers = append(oldTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendAt, TriggerAction: sdk.TriggerActionSuspend})
-		oldTriggers = append(oldTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendImmediateAt, TriggerAction: sdk.TriggerActionSuspendImmediate})
-		newTriggers := oldTriggers
+		newTriggers := oldNotifyTriggers
+		newTriggers = append(newTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendAt, TriggerAction: sdk.TriggerActionSuspend})
+		newTriggers = append(newTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendImmediateAt, TriggerAction: sdk.TriggerActionSuspendImmediate})
 		newTriggers = append(newTriggers, sdk.TriggerDefinition{Threshold: 30, TriggerAction: sdk.TriggerActionNotify})
 		alterOptions := &sdk.AlterResourceMonitorOptions{
 			Triggers: newTriggers,
 		}
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
 		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(resourceMonitor.Name),
-			},
-		})
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = &resourceMonitors[0]
+
 		var newNotifyTriggers []sdk.TriggerDefinition
-		for _, threshold := range resourceMonitor.NotifyTriggers {
+		for _, threshold := range resourceMonitor.NotifyAt {
 			newNotifyTriggers = append(newNotifyTriggers, sdk.TriggerDefinition{Threshold: threshold, TriggerAction: sdk.TriggerActionNotify})
 		}
+
 		var allTriggers []sdk.TriggerDefinition
 		allTriggers = append(allTriggers, newNotifyTriggers...)
 		allTriggers = append(allTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendAt, TriggerAction: sdk.TriggerActionSuspend})
 		allTriggers = append(allTriggers, sdk.TriggerDefinition{Threshold: *resourceMonitor.SuspendImmediateAt, TriggerAction: sdk.TriggerActionSuspendImmediate})
+
 		assert.ElementsMatch(t, newTriggers, allTriggers)
 	})
 
-	t.Run("when setting credit quota", func(t *testing.T) {
+	t.Run("when setting and unsetting credit quota", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
+
 		creditQuota := 100
-		alterOptions := &sdk.AlterResourceMonitorOptions{
+
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				CreditQuota: &creditQuota,
 			},
-		}
-		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		})
 		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(resourceMonitor.Name),
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+
+		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
+			Unset: &sdk.ResourceMonitorUnset{
+				CreditQuota: sdk.Bool(true),
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = &resourceMonitors[0]
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		assert.Nil(t, resourceMonitor.CreditQuota)
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
-		alterOptions := &sdk.AlterResourceMonitorOptions{
+
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				NotifyUsers: &sdk.NotifyUsers{
-					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("TERRAFORM_SVC_ACCOUNT")}},
 				},
-			},
-		}
-		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
-		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(resourceMonitor.Name),
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = &resourceMonitors[0]
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
 		assert.Len(t, resourceMonitor.NotifyUsers, 1)
-		assert.Equal(t, "ARTUR_SAWICKI", resourceMonitor.NotifyUsers[0])
+		assert.Equal(t, "TERRAFORM_SVC_ACCOUNT", resourceMonitor.NotifyUsers[0])
 	})
 
 	t.Run("when changing scheduling info", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
-		frequency, err := sdk.FrequencyFromString("NEVER")
-		require.NoError(t, err)
+
+		frequency := sdk.FrequencyNever
 		startTimeStamp := "2025-01-01 12:34"
 		endTimeStamp := "2026-01-01 12:34"
 
-		alterOptions := &sdk.AlterResourceMonitorOptions{
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
-				Frequency:      frequency,
+				Frequency:      &frequency,
 				StartTimestamp: &startTimeStamp,
 				EndTimestamp:   &endTimeStamp,
 			},
-		}
-		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		})
 		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(resourceMonitor.Name),
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, frequency, resourceMonitor.Frequency)
+		assert.Equal(t, startTimeStamp, resourceMonitor.StartTime)
+		assert.Equal(t, endTimeStamp, resourceMonitor.EndTime)
+
+		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
+			Unset: &sdk.ResourceMonitorUnset{
+				EndTimestamp: sdk.Bool(true),
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = &resourceMonitors[0]
-		assert.Equal(t, *frequency, resourceMonitor.Frequency)
-		startTime := resourceMonitor.StartTime
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
-		endTime := resourceMonitor.EndTime
-		require.NoError(t, err)
-		assert.Equal(t, startTimeStamp, startTime)
-		assert.Equal(t, endTimeStamp, endTime)
+
+		assert.Nil(t, resourceMonitor.EndTime)
 	})
 
 	t.Run("all options together", func(t *testing.T) {
@@ -270,30 +322,25 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		newTriggers = append(newTriggers, sdk.TriggerDefinition{Threshold: 30, TriggerAction: sdk.TriggerActionNotify})
 
 		creditQuota := 100
-		alterOptions := &sdk.AlterResourceMonitorOptions{
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				CreditQuota: &creditQuota,
 				NotifyUsers: &sdk.NotifyUsers{
-					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("TERRAFORM_SVC_ACCOUNT")}},
 				},
 			},
 			Triggers: newTriggers,
-		}
-		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
-		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(resourceMonitor.Name),
-			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = &resourceMonitors[0]
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
+		assert.NotNil(t, resourceMonitor.CreditQuota)
+		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
 		assert.Len(t, resourceMonitor.NotifyUsers, 1)
-		assert.Equal(t, "ARTUR_SAWICKI", resourceMonitor.NotifyUsers[0])
-		assert.Len(t, resourceMonitor.NotifyTriggers, 1)
-		assert.Equal(t, 30, resourceMonitor.NotifyTriggers[0])
+		assert.Equal(t, "TERRAFORM_SVC_ACCOUNT", resourceMonitor.NotifyUsers[0])
+		assert.Len(t, resourceMonitor.NotifyAt, 1)
+		assert.Equal(t, 30, resourceMonitor.NotifyAt[0])
 	})
 }
 
@@ -304,16 +351,16 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 	t.Run("when resource monitor exists", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
-		id := resourceMonitor.ID()
-		err := client.ResourceMonitors.Drop(ctx, id, nil)
+
+		err := client.ResourceMonitors.Drop(ctx, resourceMonitor.ID(), nil)
 		require.NoError(t, err)
-		_, err = client.ResourceMonitors.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+
+		_, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	t.Run("when resource monitor does not exist", func(t *testing.T) {
-		id := NonExistingAccountObjectIdentifier
-		err := client.ResourceMonitors.Drop(ctx, id, nil)
+		err := client.ResourceMonitors.Drop(ctx, NonExistingAccountObjectIdentifier, nil)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

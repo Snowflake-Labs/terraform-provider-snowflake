@@ -508,7 +508,7 @@ func (r *ResourceMonitorResource) create(ctx context.Context, data *resourceMoni
 	}
 	if !data.Frequency.IsNull() && data.Frequency.ValueString() != "" {
 		setWith = true
-		frequency, err := sdk.FrequencyFromString(data.Frequency.ValueString())
+		frequency, err := sdk.ToResourceMonitorFrequency(data.Frequency.ValueString())
 		if err != nil {
 			diags.AddError("Client Error", fmt.Sprintf("Unable to create resource monitor, got error: %s", err))
 		}
@@ -637,11 +637,11 @@ func (r *ResourceMonitorResource) read(ctx context.Context, data *resourceMonito
 		"threshold":      types.Int64Type,
 		"trigger_action": types.StringType,
 	})
-	if len(resourceMonitor.NotifyTriggers) == 0 && resourceMonitor.SuspendAt == nil && resourceMonitor.SuspendImmediateAt == nil {
+	if len(resourceMonitor.NotifyAt) == 0 && resourceMonitor.SuspendAt == nil && resourceMonitor.SuspendImmediateAt == nil {
 		data.Triggers = types.SetNull(triggersObjectType)
 	} else {
 		var triggers []resourceMonitorTriggerModel
-		for _, e := range resourceMonitor.NotifyTriggers {
+		for _, e := range resourceMonitor.NotifyAt {
 			triggers = append(triggers, resourceMonitorTriggerModel{
 				Threshold:     types.Int64Value(int64(e)),
 				TriggerAction: types.StringValue(string(sdk.TriggerActionNotify)),
@@ -700,7 +700,7 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *resourceMoni
 		if opts.Set == nil {
 			opts.Set = &sdk.ResourceMonitorSet{}
 		}
-		frequency, err := sdk.FrequencyFromString(plan.Frequency.ValueString())
+		frequency, err := sdk.ToResourceMonitorFrequency(plan.Frequency.ValueString())
 		if err != nil {
 			diags.AddError("Client Error", fmt.Sprintf("Unable to update resource monitor, got error: %s", err))
 			return plan, nil, diags
@@ -713,7 +713,7 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *resourceMoni
 		if opts.Set == nil {
 			opts.Set = &sdk.ResourceMonitorSet{}
 		}
-		frequency, err := sdk.FrequencyFromString(plan.Frequency.ValueString())
+		frequency, err := sdk.ToResourceMonitorFrequency(plan.Frequency.ValueString())
 		if err != nil {
 			diags.AddError("Client Error", fmt.Sprintf("Unable to update resource monitor, got error: %s", err))
 			return plan, nil, diags
