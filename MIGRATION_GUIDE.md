@@ -13,13 +13,16 @@ New fields:
   - `change_tracking`
   - `is_recursive`
   - `is_temporary`
+  - `data_metric_schedule`
+  - `data_metric_functions`
 - added `show_output` field that holds the response from SHOW VIEWS.
 - added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
 
 #### *(breaking change)* Removed fields from snowflake_view resource
 Removed fields:
-- `tag`
-The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+- `or_replace` - `OR REPLACE` is added by the provider automatically when `copy_grants` is set to `"true"`
+- `tag` - Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+The value of these field will be removed from the state automatically.
 
 #### *(breaking change)* Required warehouse
 For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.

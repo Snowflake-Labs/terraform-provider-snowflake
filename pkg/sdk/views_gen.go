@@ -73,6 +73,7 @@ type AlterViewOptions struct {
 	UnsetTags                     []ObjectIdentifier             `ddl:"keyword" sql:"UNSET TAG"`
 	AddDataMetricFunction         *ViewAddDataMetricFunction     `ddl:"keyword"`
 	DropDataMetricFunction        *ViewDropDataMetricFunction    `ddl:"keyword"`
+	ModifyDataMetricFunction      *ViewModifyDataMetricFunctions `ddl:"keyword"`
 	SetDataMetricSchedule         *ViewSetDataMetricSchedule     `ddl:"keyword"`
 	UnsetDataMetricSchedule       *ViewUnsetDataMetricSchedule   `ddl:"keyword"`
 	AddRowAccessPolicy            *ViewAddRowAccessPolicy        `ddl:"keyword"`
@@ -95,6 +96,11 @@ type ViewDataMetricFunction struct {
 	DataMetricFunction SchemaObjectIdentifier `ddl:"identifier"`
 	On                 []Column               `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
+type ViewModifyDataMetricFunction struct {
+	DataMetricFunction                          SchemaObjectIdentifier `ddl:"identifier"`
+	On                                          []Column               `ddl:"parameter,parentheses,no_equals" sql:"ON"`
+	ViewDataMetricScheduleStatusOperationOption `ddl:"parameter,no_quotes,no_equals"`
+}
 type ViewAddDataMetricFunction struct {
 	add                bool                     `ddl:"static" sql:"ADD"`
 	DataMetricFunction []ViewDataMetricFunction `ddl:"parameter,no_equals" sql:"DATA METRIC FUNCTION"`
@@ -103,24 +109,13 @@ type ViewDropDataMetricFunction struct {
 	drop               bool                     `ddl:"static" sql:"DROP"`
 	DataMetricFunction []ViewDataMetricFunction `ddl:"parameter,no_equals" sql:"DATA METRIC FUNCTION"`
 }
+type ViewModifyDataMetricFunctions struct {
+	modify             bool                           `ddl:"static" sql:"MODIFY"`
+	DataMetricFunction []ViewModifyDataMetricFunction `ddl:"parameter,no_equals" sql:"DATA METRIC FUNCTION"`
+}
 type ViewSetDataMetricSchedule struct {
-	setDataMetricSchedule bool           `ddl:"static" sql:"SET DATA_METRIC_SCHEDULE ="`
-	Minutes               *ViewMinute    `ddl:"keyword"`
-	UsingCron             *ViewUsingCron `ddl:"keyword"`
-	TriggerOnChanges      *bool          `ddl:"keyword,single_quotes" sql:"TRIGGER_ON_CHANGES"`
-}
-type ViewMinute struct {
-	prefix  bool `ddl:"static" sql:"'"`
-	Minutes int  `ddl:"keyword"`
-	suffix  bool `ddl:"static" sql:"MINUTE'"`
-}
-type ViewUsingCron struct {
-	prefix bool   `ddl:"static" sql:"'USING CRON"`
-	Cron   string `ddl:"keyword"`
-	suffix bool   `ddl:"static" sql:"'"`
-}
-type ViewTriggerOnChanges struct {
-	triggerOnChanges bool `ddl:"static" sql:"TRIGGER_ON_CHANGES"`
+	set                bool   `ddl:"static" sql:"SET"`
+	DataMetricSchedule string `ddl:"parameter,single_quotes" sql:"DATA_METRIC_SCHEDULE"`
 }
 type ViewUnsetDataMetricSchedule struct {
 	unsetDataMetricSchedule bool `ddl:"static" sql:"UNSET DATA_METRIC_SCHEDULE"`

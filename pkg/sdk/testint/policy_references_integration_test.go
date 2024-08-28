@@ -35,7 +35,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(policyReferences))
 		require.Equal(t, passwordPolicyId.Name(), policyReferences[0].PolicyName)
-		require.Equal(t, "PASSWORD_POLICY", policyReferences[0].PolicyKind)
+		require.Equal(t, sdk.PolicyKindPasswordPolicy, policyReferences[0].PolicyKind)
 	})
 
 	t.Run("tag domain", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestInt_PolicyReferences(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(policyReferences))
 		require.Equal(t, maskingPolicy.ID().Name(), policyReferences[0].PolicyName)
-		require.Equal(t, "MASKING_POLICY", policyReferences[0].PolicyKind)
+		require.Equal(t, sdk.PolicyKindMaskingPolicy, policyReferences[0].PolicyKind)
 
 		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(tag.ID()).WithUnset(
 			sdk.NewTagUnsetRequest().WithMaskingPolicies([]sdk.SchemaObjectIdentifier{maskingPolicy.ID()}),

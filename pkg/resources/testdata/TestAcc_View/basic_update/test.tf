@@ -11,6 +11,13 @@ resource "snowflake_view" "test" {
     policy_name = var.aggregation_policy
     entity_key  = var.aggregation_policy_entity_key
   }
+  data_metric_functions {
+    function_name = var.data_metric_function
+    on            = var.data_metric_function_on
+  }
+  data_metric_schedule {
+    using_cron = var.data_metric_schedule_using_cron
+  }
   statement = var.statement
   comment   = var.comment
 }

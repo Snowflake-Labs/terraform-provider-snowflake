@@ -21,3 +21,19 @@ func Test_PossibleValuesListed_empty(t *testing.T) {
 
 	assert.Empty(t, result)
 }
+
+func Test_PossibleValuesListedInt(t *testing.T) {
+	values := []int{42, 21}
+
+	result := possibleValuesListedInt(values)
+
+	assert.Equal(t, "`42` | `21`", result)
+}
+
+func Test_PossibleValuesListedInt_empty(t *testing.T) {
+	var values []int
+
+	result := possibleValuesListedInt(values)
+
+	assert.Empty(t, result)
+}

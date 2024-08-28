@@ -18,7 +18,7 @@ resource "snowflake_view" "view" {
     select * from foo;
 SQL
 }
-# resource with attached policies
+# resource with attached policies and data metric functions
 resource "snowflake_view" "test" {
   database        = "database"
   schema          = "schema"
@@ -35,7 +35,14 @@ resource "snowflake_view" "test" {
     policy_name = "aggregation_policy"
     entity_key  = ["id"]
   }
+  data_metric_functions {
+    function_name = "data_metric_function"
+    on            = ["id"]
+  }
+  data_metric_schedule {
+    using_cron = "15 * * * * UTC"
+  }
   statement = <<-SQL
-    select id from foo;
+    SELECT id FROM TABLE;
 SQL
 }

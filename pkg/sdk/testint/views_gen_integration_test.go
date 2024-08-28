@@ -106,7 +106,7 @@ func TestInt_Views(t *testing.T) {
 		}
 	}
 
-	assertDataMetricFunctionReference := func(t *testing.T, dataMetricFunctionReference helpers.DataMetricFunctionReference,
+	assertDataMetricFunctionReference := func(t *testing.T, dataMetricFunctionReference sdk.DataMetricFunctionReference,
 		viewId sdk.SchemaObjectIdentifier,
 		schedule string,
 	) {
@@ -405,12 +405,11 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredViewDetails, err := client.Views.Describe(ctx, id)
+		policyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
+		require.Len(t, policyReferences, 1)
 
-		assert.Equal(t, 1, len(alteredViewDetails))
-		// TODO [SNOW-1348118]: make nicer during the view rework
-		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*alteredViewDetails[0].PolicyName).FullyQualifiedName())
+		assertPolicyReference(t, policyReferences[0], maskingPolicy.ID(), "MASKING_POLICY", view.ID(), sdk.Pointer("ID"))
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
 			*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID"),
@@ -418,11 +417,8 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredViewDetails, err = client.Views.Describe(ctx, id)
-		require.NoError(t, err)
-
-		assert.Equal(t, 1, len(alteredViewDetails))
-		assert.Empty(t, alteredViewDetails[0].PolicyName)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.ObjectTypeView)
+		require.Error(t, err, "no rows in result set")
 	})
 
 	t.Run("alter view: set and unset projection policy on column", func(t *testing.T) {
@@ -562,7 +558,7 @@ func TestInt_Views(t *testing.T) {
 
 		// set cron schedule
 		cron := "5 * * * * UTC"
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest().WithUsingCron(sdk.ViewUsingCronRequest{Cron: cron}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest(cron))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -576,8 +572,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences, err := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
-		require.NoError(t, err)
+		dataMetricFunctionReferences := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
 		require.Len(t, dataMetricFunctionReferences, 1)
 
 		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
@@ -592,7 +587,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences, err = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
 		require.NoError(t, err)
 		require.Len(t, dataMetricFunctionReferences, 0)
 
@@ -610,8 +605,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences, err = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.ObjectTypeView)
-		require.NoError(t, err)
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
 		require.Len(t, dataMetricFunctionReferences, 2)
 
 		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)

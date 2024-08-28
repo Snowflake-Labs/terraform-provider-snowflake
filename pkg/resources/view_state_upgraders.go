@@ -15,6 +15,7 @@ func v0_94_1_ViewStateUpgrader(ctx context.Context, rawState map[string]any, met
 	}
 
 	delete(rawState, "tag")
+	delete(rawState, "or_replace")
 
-	return rawState, nil
+	return migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName(ctx, rawState, meta)
 }

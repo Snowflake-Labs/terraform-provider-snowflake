@@ -41,22 +41,14 @@ var viewSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
-	"or_replace": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Overwrites the View if it exists.",
-	},
-	// TODO [SNOW-1348118: this is used only during or_replace, we would like to change the behavior before v1
 	"copy_grants": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.",
+		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return oldValue != "" && oldValue != newValue
 		},
-		RequiredWith: []string{"or_replace"},
 	},
 	"is_secure": {
 		Type:             schema.TypeString,
@@ -69,7 +61,6 @@ var viewSchema = map[string]*schema.Schema{
 	"is_temporary": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ForceNew:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
 		Description:      booleanStringFieldDescription("Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. In context of this provider, it means that it's dropped after a Terraform operation. This results in a permanent plan with object creation."),
@@ -77,7 +68,6 @@ var viewSchema = map[string]*schema.Schema{
 	"is_recursive": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ForceNew:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
 		Description:      booleanStringFieldDescription("Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression)."),
@@ -92,59 +82,69 @@ var viewSchema = map[string]*schema.Schema{
 		}),
 		Description: booleanStringFieldDescription("Specifies to enable or disable change tracking on the table."),
 	},
-	// TODO(next pr): support remaining fields
-	// "data_metric_functions": {
-	// 	Type:     schema.TypeSet,
-	// 	Optional: true,
-	// 	Elem: &schema.Resource{
-	// 		Schema: map[string]*schema.Schema{
-	// 			"metric_name": {
-	// 				Type:        schema.TypeString,
-	// 				Optional:    true,
-	// 				Description: "Identifier of the data metric function to add to the table or view or drop from the table or view.",
-	// 			},
-	// 			"column_name": {
-	// 				Type:        schema.TypeString,
-	// 				Optional:    true,
-	// 				Description: "The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.",
-	// 			},
-	// 		},
-	// 	},
-	// 	Description: "Data metric functions used for the view.",
-	// },
-	// "data_metric_schedule": {
-	// 	Type:     schema.TypeList,
-	// 	Optional: true,
-	// 	MaxItems: 1,
-	// 	Elem: &schema.Resource{
-	// 		Schema: map[string]*schema.Schema{
-	// 			"minutes": {
-	// 				Type:        schema.TypeInt,
-	// 				Optional:    true,
-	// 				Description: "Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron` and `trigger_on_changes`.",
-	// 				// TODO: move to sdk
-	// 				ValidateFunc:  validation.IntInSlice([]int{5, 15, 30, 60, 720, 1440}),
-	// 				ConflictsWith: []string{"data_metric_schedule.using_cron", "data_metric_schedule.trigger_on_changes"},
-	// 			},
-	// 			"using_cron": {
-	// 				Type:        schema.TypeString,
-	// 				Optional:    true,
-	// 				Description: "Specifies a cron expression and time zone for periodically running the data metric function. Supports a subset of standard cron utility syntax. Conflicts with `minutes` and `trigger_on_changes`.",
-	// 				// TODO: validate?
-	// 				ConflictsWith: []string{"data_metric_schedule.minutes", "data_metric_schedule.trigger_on_changes"},
-	// 			},
-	// 			"trigger_on_changes": {
-	// 				Type:          schema.TypeString,
-	// 				Optional:      true,
-	// 				Default:       BooleanDefault,
-	// 				Description:   booleanStringFieldDescription("Specifies that the DMF runs when a DML operation modifies the table, such as inserting a new row or deleting a row. Conflicts with `minutes` and `using_cron`."),
-	// 				ConflictsWith: []string{"data_metric_schedule.minutes", "data_metric_schedule.using_cron"},
-	// 			},
-	// 		},
-	// 	},
-	// 	Description: "Specifies the schedule to run the data metric function periodically.",
-	// },
-	// "columns": {
+	"data_metric_functions": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"function_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Identifier of the data metric function to add to the table or view or drop from the table or view. This function identifier must be provided without arguments in parenthesis.",
+					DiffSuppressFunc: suppressIdentifierQuoting,
+				},
+				"on": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.",
+				},
+				// TODO (next pr)
+				// "schedule_status": {
+				// 	Type:             schema.TypeString,
+				// 	Optional:         true,
+				// 	ValidateDiagFunc: sdkValidation(sdk.ToAllowedDataMetricScheduleStatusOption),
+				// 	Description:      fmt.Sprintf("The status of the metrics association. Valid values are: %v. When status of a data metric function is changed, it is being reassigned with `DROP DATA METRIC FUNCTION` and `ADD DATA METRIC FUNCTION`, and then its status is changed by `MODIFY DATA METRIC FUNCTION` ", possibleValuesListed(sdk.AllAllowedDataMetricScheduleStatusOptions)),
+				// 	DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToAllowedDataMetricScheduleStatusOption), func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+				// 		if newValue == "" {
+				// 			return true
+				// 		}
+				// 		return false
+				// 	}),
+				// },
+			},
+		},
+		Description:  "Data metric functions used for the view.",
+		RequiredWith: []string{"data_metric_schedule"},
+	},
+	"data_metric_schedule": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"minutes": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Description:      fmt.Sprintf("Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: %s. Due to Snowflake limitations, changes in this field is not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.", possibleValuesListedInt(sdk.AllViewDataMetricScheduleMinutes)),
+					ValidateDiagFunc: IntInSlice(sdk.AllViewDataMetricScheduleMinutes),
+					ConflictsWith:    []string{"data_metric_schedule.using_cron"},
+				},
+				"using_cron": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "Specifies a cron expression and time zone for periodically running the data metric function. Supports a subset of standard cron utility syntax. Conflicts with `minutes`.",
+					ConflictsWith: []string{"data_metric_schedule.minutes"},
+				},
+			},
+		},
+		Description:  "Specifies the schedule to run the data metric functions periodically.",
+		RequiredWith: []string{"data_metric_functions"},
+	},
+	// TODO (next pr): add columns
+	// "column": {
 	// 	Type:     schema.TypeList,
 	// 	Optional: true,
 	// 	Elem: &schema.Resource{
@@ -159,7 +159,6 @@ var viewSchema = map[string]*schema.Schema{
 	// 				Optional: true,
 	// 				Elem: &schema.Resource{
 	// 					Schema: map[string]*schema.Schema{
-	// 						// TODO: change to `name`? in other policies as well
 	// 						"policy_name": {
 	// 							Type:        schema.TypeString,
 	// 							Required:    true,
@@ -182,11 +181,11 @@ var viewSchema = map[string]*schema.Schema{
 	// 				DiffSuppressFunc: DiffSuppressStatement,
 	// 				Description:      "Specifies the projection policy to set on a column.",
 	// 			},
-	// "comment": {
-	// 	Type:        schema.TypeString,
-	// 	Optional:    true,
-	// 	Description: "Specifies a comment for the column.",
-	// },
+	// 			"comment": {
+	// 				Type:        schema.TypeString,
+	// 				Optional:    true,
+	// 				Description: "Specifies a comment for the column.",
+	// 			},
 	// 		},
 	// 	},
 	// 	Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
@@ -304,16 +303,24 @@ func View() *schema.Resource {
 func ImportView(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] Starting view import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	v, err := client.Views.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("name", v.Name); err != nil {
+	if err := d.Set("name", id.Name()); err != nil {
 		return nil, err
 	}
-
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("schema", id.SchemaName()); err != nil {
+		return nil, err
+	}
 	if err := d.Set("change_tracking", booleanStringFromBool(v.IsChangeTracking())); err != nil {
 		return nil, err
 	}
@@ -340,13 +347,12 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 		statement := d.Get("statement").(string)
 		req := sdk.NewCreateViewRequest(id, statement)
 
-		// TODO(next pr): remove or_replace field
-		if v := d.Get("or_replace"); v.(bool) || orReplace {
+		if orReplace {
 			req.WithOrReplace(true)
 		}
 
 		if v := d.Get("copy_grants"); v.(bool) {
-			req.WithCopyGrants(true)
+			req.WithCopyGrants(true).WithOrReplace(true)
 		}
 
 		if v := d.Get("is_secure").(string); v != BooleanDefault {
@@ -378,11 +384,18 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 		}
 
 		if v := d.Get("row_access_policy"); len(v.([]any)) > 0 {
-			req.WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(extractPolicyWithColumns(v, "on")))
+			id, columns, err := extractPolicyWithColumns(v, "on")
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			req.WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(id, columns))
 		}
 
 		if v := d.Get("aggregation_policy"); len(v.([]any)) > 0 {
-			id, columns := extractPolicyWithColumns(v, "entity_key")
+			id, columns, err := extractPolicyWithColumns(v, "entity_key")
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			aggregationPolicyReq := sdk.NewViewAggregationPolicyRequest(id)
 			if len(columns) > 0 {
 				aggregationPolicyReq.WithEntityKey(columns)
@@ -395,7 +408,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			return diag.FromErr(fmt.Errorf("error creating view %v err = %w", id.Name(), err))
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(id))
+		d.SetId(helpers.EncodeResourceIdentifier(id))
 
 		if v := d.Get("change_tracking").(string); v != BooleanDefault {
 			parsed, err := booleanStringToBool(v)
@@ -409,24 +422,92 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			}
 		}
 
+		if v := d.Get("data_metric_schedule"); len(v.([]any)) > 0 {
+			var req *sdk.ViewSetDataMetricScheduleRequest
+			dmsConfig := v.([]any)[0].(map[string]any)
+			if v, ok := dmsConfig["minutes"]; ok && v.(int) > 0 {
+				req = sdk.NewViewSetDataMetricScheduleRequest(fmt.Sprintf("%d MINUTE", v.(int)))
+			} else if v, ok := dmsConfig["using_cron"]; ok {
+				req = sdk.NewViewSetDataMetricScheduleRequest(fmt.Sprintf("USING CRON %s", v.(string)))
+			}
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*req))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting data matric schedule in view %v err = %w", id.Name(), err))
+			}
+		}
+
+		if v, ok := d.GetOk("data_metric_functions"); ok {
+			addedRaw, err := extractDataMetricFunctions(v.(*schema.Set).List())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			added := make([]sdk.ViewDataMetricFunction, len(addedRaw))
+			for i := range addedRaw {
+				added[i] = sdk.ViewDataMetricFunction{
+					DataMetricFunction: addedRaw[i].DataMetricFunction,
+					On:                 addedRaw[i].On,
+				}
+			}
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added)))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+			}
+			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
+			for i := range addedRaw {
+				if addedRaw[i].ScheduleStatus != "" {
+					expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(addedRaw[i].ScheduleStatus)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
+					switch expectedStatus {
+					case sdk.DataMetricScheduleStatusStarted:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
+					case sdk.DataMetricScheduleStatusSuspended:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
+					default:
+						return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
+					}
+					changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
+						DataMetricFunction: addedRaw[i].DataMetricFunction,
+						On:                 addedRaw[i].On,
+						ViewDataMetricScheduleStatusOperationOption: statusCmd,
+					})
+				}
+			}
+			if len(changeSchedule) > 0 {
+				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
+				if err != nil {
+					return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				}
+			}
+		}
+
 		return ReadView(false)(ctx, d, meta)
 	}
 }
 
-func extractPolicyWithColumns(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column) {
+func extractPolicyWithColumns(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column, error) {
 	policyConfig := v.([]any)[0].(map[string]any)
+	id, err := sdk.ParseSchemaObjectIdentifier(policyConfig["policy_name"].(string))
+	if err != nil {
+		return sdk.SchemaObjectIdentifier{}, nil, err
+	}
 	columnsRaw := expandStringList(policyConfig[columnsKey].(*schema.Set).List())
 	columns := make([]sdk.Column, len(columnsRaw))
 	for i := range columnsRaw {
 		columns[i] = sdk.Column{Value: columnsRaw[i]}
 	}
-	return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(policyConfig["policy_name"].(string)), columns
+	return id, columns, nil
 }
 
 func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		view, err := client.Views.ShowByID(ctx, id)
 		if err != nil {
@@ -490,6 +571,10 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		err = handleDataMetricFunctions(ctx, client, id, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		if view.Text != "" {
 			// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
 			extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
@@ -530,7 +615,7 @@ func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.Sche
 	for _, p := range policyRefs {
 		policyName := sdk.NewSchemaObjectIdentifier(*p.PolicyDb, *p.PolicySchema, p.PolicyName)
 		switch p.PolicyKind {
-		case string(sdk.PolicyKindAggregationPolicy):
+		case sdk.PolicyKindAggregationPolicy:
 			var entityKey []string
 			if p.RefArgColumnNames != nil {
 				entityKey = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
@@ -539,7 +624,7 @@ func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.Sche
 				"policy_name": policyName.FullyQualifiedName(),
 				"entity_key":  entityKey,
 			})
-		case string(sdk.PolicyKindRowAccessPolicy):
+		case sdk.PolicyKindRowAccessPolicy:
 			var on []string
 			if p.RefArgColumnNames != nil {
 				on = sdk.ParseCommaSeparatedStringArray(*p.RefArgColumnNames, true)
@@ -561,12 +646,100 @@ func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.Sche
 	return err
 }
 
+func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
+	dataMetricFunctionReferences, err := client.DataMetricFunctionReferences.GetForEntity(ctx, sdk.NewGetForEntityDataMetricFunctionReferenceRequest(id, sdk.DataMetricFuncionRefEntityDomainView))
+	if err != nil {
+		return err
+	}
+	if len(dataMetricFunctionReferences) == 0 {
+		return d.Set("data_metric_schedule", nil)
+	}
+	dataMetricFunctions := make([]map[string]any, len(dataMetricFunctionReferences))
+	var schedule string
+	for i, dmfRef := range dataMetricFunctionReferences {
+		dmfName := sdk.NewSchemaObjectIdentifier(dmfRef.MetricDatabaseName, dmfRef.MetricSchemaName, dmfRef.MetricName)
+		var columns []string
+		for _, v := range dmfRef.RefArguments {
+			columns = append(columns, v.Name)
+		}
+		// TODO (next pr)
+		// var scheduleStatus sdk.DataMetricScheduleStatusOption
+		// status, err := sdk.ToDataMetricScheduleStatusOption(dmfRef.ScheduleStatus)
+		// if err != nil {
+		// 	return err
+		// }
+		// if slices.Contains(sdk.AllDataMetricScheduleStatusStartedOptions, status) {
+		// 	scheduleStatus = sdk.DataMetricScheduleStatusStarted
+		// }
+		// if slices.Contains(sdk.AllDataMetricScheduleStatusSuspendedOptions, status) {
+		// 	scheduleStatus = sdk.DataMetricScheduleStatusSuspended
+		// }
+		dataMetricFunctions[i] = map[string]any{
+			"function_name": dmfName.FullyQualifiedName(),
+			"on":            columns,
+			// "schedule_status": string(scheduleStatus),
+		}
+		schedule = dmfRef.Schedule
+	}
+	if err = d.Set("data_metric_functions", dataMetricFunctions); err != nil {
+		return err
+	}
+
+	return d.Set("data_metric_schedule", []map[string]any{
+		{
+			"using_cron": schedule,
+		},
+	})
+}
+
+type ViewDataMetricFunctionDDL struct {
+	DataMetricFunction sdk.SchemaObjectIdentifier
+	On                 []sdk.Column
+	ScheduleStatus     string
+}
+
+func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionDDL, err error) {
+	for _, v := range v.([]any) {
+		config := v.(map[string]any)
+		columnsRaw := expandStringList(config["on"].(*schema.Set).List())
+		columns := make([]sdk.Column, len(columnsRaw))
+		for i := range columnsRaw {
+			columns[i] = sdk.Column{Value: columnsRaw[i]}
+		}
+		id, err := sdk.ParseSchemaObjectIdentifier(config["function_name"].(string))
+		if err != nil {
+			return nil, err
+		}
+		dmfs = append(dmfs, ViewDataMetricFunctionDDL{
+			DataMetricFunction: id,
+			On:                 columns,
+			// TODO (next pr)
+			// ScheduleStatus:     config["schedule_status"].(string),
+		})
+	}
+	return
+}
+
+func changedKeys(d *schema.ResourceData, keys []string) []string {
+	changed := make([]string, 0, len(keys))
+	for _, key := range keys {
+		if d.HasChange(key) {
+			changed = append(changed, key)
+		}
+	}
+	return changed
+}
+
 func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
 	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") {
+		log.Printf("[DEBUG] Detected change on %q, recreating...", changedKeys(d, []string{"statement", "is_temporary", "is_recursive", "copy_grant"}))
 		return CreateView(true)(ctx, d, meta)
 	}
 
@@ -578,7 +751,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			return diag.FromErr(fmt.Errorf("error renaming view %v err = %w", d.Id(), err))
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
 		id = newId
 	}
 
@@ -631,17 +804,83 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}
 
+	if d.HasChange("data_metric_schedule") {
+		if v := d.Get("data_metric_schedule"); len(v.([]any)) > 0 {
+			var req *sdk.ViewSetDataMetricScheduleRequest
+			dmsConfig := v.([]any)[0].(map[string]any)
+			if v := dmsConfig["minutes"]; v.(int) > 0 {
+				req = sdk.NewViewSetDataMetricScheduleRequest(fmt.Sprintf("%d MINUTE", v.(int)))
+			} else if v, ok := dmsConfig["using_cron"]; ok {
+				req = sdk.NewViewSetDataMetricScheduleRequest(fmt.Sprintf("USING CRON %s", v.(string)))
+			}
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*req))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting data matric schedule in view %v err = %w", id.Name(), err))
+			}
+		} else {
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetDataMetricSchedule(*sdk.NewViewUnsetDataMetricScheduleRequest()))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error unsetting data matric schedule in view %v err = %w", id.Name(), err))
+			}
+		}
+	}
+
+	if d.HasChange("data_metric_functions") {
+		old, new := d.GetChange("data_metric_functions")
+		removedRaw, addedRaw := old.(*schema.Set).List(), new.(*schema.Set).List()
+		added, err := extractDataMetricFunctions(addedRaw)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		removed, err := extractDataMetricFunctions(removedRaw)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if len(removed) > 0 {
+			removed2 := make([]sdk.ViewDataMetricFunction, len(removed))
+			for i := range removed {
+				removed2[i] = sdk.ViewDataMetricFunction{
+					DataMetricFunction: removed[i].DataMetricFunction,
+					On:                 removed[i].On,
+				}
+			}
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest(removed2)))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+			}
+		}
+		if len(added) > 0 {
+			added2 := make([]sdk.ViewDataMetricFunction, len(added))
+			for i := range added {
+				added2[i] = sdk.ViewDataMetricFunction{
+					DataMetricFunction: added[i].DataMetricFunction,
+					On:                 added[i].On,
+				}
+			}
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added2)))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+			}
+		}
+	}
+
 	if d.HasChange("row_access_policy") {
 		var addReq *sdk.ViewAddRowAccessPolicyRequest
 		var dropReq *sdk.ViewDropRowAccessPolicyRequest
 
 		oldRaw, newRaw := d.GetChange("row_access_policy")
 		if len(oldRaw.([]any)) > 0 {
-			oldId, _ := extractPolicyWithColumns(oldRaw, "on")
+			oldId, _, err := extractPolicyWithColumns(oldRaw, "on")
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			dropReq = sdk.NewViewDropRowAccessPolicyRequest(oldId)
 		}
 		if len(newRaw.([]any)) > 0 {
-			newId, newColumns := extractPolicyWithColumns(newRaw, "on")
+			newId, newColumns, err := extractPolicyWithColumns(newRaw, "on")
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			addReq = sdk.NewViewAddRowAccessPolicyRequest(newId, newColumns)
 		}
 		req := sdk.NewAlterViewRequest(id)
@@ -659,12 +898,15 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 	if d.HasChange("aggregation_policy") {
 		if v, ok := d.GetOk("aggregation_policy"); ok {
-			newId, newColumns := extractPolicyWithColumns(v, "entity_key")
+			newId, newColumns, err := extractPolicyWithColumns(v, "entity_key")
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			aggregationPolicyReq := sdk.NewViewSetAggregationPolicyRequest(newId)
 			if len(newColumns) > 0 {
 				aggregationPolicyReq.WithEntityKey(newColumns)
 			}
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*aggregationPolicyReq.WithForce(true)))
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*aggregationPolicyReq.WithForce(true)))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error setting aggregation policy for view %v: %w", d.Id(), err))
 			}
@@ -680,10 +922,14 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 }
 
 func DeleteView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	client := meta.(*provider.Context).Client
 
-	err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id).WithIfExists(true))
+	err = client.Views.Drop(ctx, sdk.NewDropViewRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

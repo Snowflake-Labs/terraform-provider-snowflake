@@ -1,7 +1,5 @@
 package sdk
 
-import "fmt"
-
 var (
 	_ validatable = new(CreateViewOptions)
 	_ validatable = new(AlterViewOptions)
@@ -31,21 +29,7 @@ func (opts *CreateViewOptions) validate() error {
 	}
 	if valueSet(opts.AggregationPolicy) {
 		if !ValidObjectIdentifier(opts.AggregationPolicy.AggregationPolicy) {
-			errs = append(errs, errInvalidIdentifier("CreateViewOptions", "AggregationPolicy"))
-		}
-	}
-	if valueSet(opts.Columns) {
-		for i, columnOption := range opts.Columns {
-			if valueSet(columnOption.MaskingPolicy) {
-				if !ValidObjectIdentifier(columnOption.MaskingPolicy.MaskingPolicy) {
-					errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateViewOptions.Columns[%d]", i), "MaskingPolicy"))
-				}
-			}
-			if valueSet(columnOption.ProjectionPolicy) {
-				if !ValidObjectIdentifier(columnOption.ProjectionPolicy.ProjectionPolicy) {
-					errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateViewOptions.Columns[%d]", i), "ProjectionPolicy"))
-				}
-			}
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 	return JoinErrors(errs...)
@@ -59,19 +43,14 @@ func (opts *AlterViewOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetSecure, opts.SetChangeTracking, opts.UnsetSecure, opts.SetTags, opts.UnsetTags, opts.AddDataMetricFunction, opts.DropDataMetricFunction, opts.SetDataMetricSchedule, opts.UnsetDataMetricSchedule, opts.AddRowAccessPolicy, opts.DropRowAccessPolicy, opts.DropAndAddRowAccessPolicy, opts.DropAllRowAccessPolicies, opts.SetAggregationPolicy, opts.UnsetAggregationPolicy, opts.SetMaskingPolicyOnColumn, opts.UnsetMaskingPolicyOnColumn, opts.SetProjectionPolicyOnColumn, opts.UnsetProjectionPolicyOnColumn, opts.SetTagsOnColumn, opts.UnsetTagsOnColumn) {
-		errs = append(errs, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
+	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetSecure, opts.SetChangeTracking, opts.UnsetSecure, opts.SetTags, opts.UnsetTags, opts.AddDataMetricFunction, opts.DropDataMetricFunction, opts.ModifyDataMetricFunction, opts.SetDataMetricSchedule, opts.UnsetDataMetricSchedule, opts.AddRowAccessPolicy, opts.DropRowAccessPolicy, opts.DropAndAddRowAccessPolicy, opts.DropAllRowAccessPolicies, opts.SetAggregationPolicy, opts.UnsetAggregationPolicy, opts.SetMaskingPolicyOnColumn, opts.UnsetMaskingPolicyOnColumn, opts.SetProjectionPolicyOnColumn, opts.UnsetProjectionPolicyOnColumn, opts.SetTagsOnColumn, opts.UnsetTagsOnColumn) {
+		errs = append(errs, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "ModifyDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
 	}
 	if everyValueSet(opts.IfExists, opts.SetSecure) {
 		errs = append(errs, errOneOf("AlterViewOptions", "IfExists", "SetSecure"))
 	}
 	if everyValueSet(opts.IfExists, opts.UnsetSecure) {
 		errs = append(errs, errOneOf("AlterViewOptions", "IfExists", "UnsetSecure"))
-	}
-	if valueSet(opts.SetDataMetricSchedule) {
-		if !exactlyOneValueSet(opts.SetDataMetricSchedule.Minutes, opts.SetDataMetricSchedule.UsingCron, opts.SetDataMetricSchedule.TriggerOnChanges) {
-			errs = append(errs, errExactlyOneOf("AlterViewOptions.SetDataMetricSchedule", "Minutes", "UsingCron", "TriggerOnChanges"))
-		}
 	}
 	if valueSet(opts.AddRowAccessPolicy) {
 		if !ValidObjectIdentifier(opts.AddRowAccessPolicy.RowAccessPolicy) {
