@@ -75,6 +75,7 @@ const (
 	PolicyKindRowAccessPolicy   PolicyKind = "ROW_ACCESS_POLICY"
 	PolicyKindPasswordPolicy    PolicyKind = "PASSWORD_POLICY"
 	PolicyKindMaskingPolicy     PolicyKind = "MASKING_POLICY"
+	PolicyKindProjectionPolicy  PolicyKind = "PROJECTION_POLICY"
 )
 
 type PolicyReference struct {

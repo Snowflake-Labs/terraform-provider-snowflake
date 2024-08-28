@@ -18,7 +18,7 @@ resource "snowflake_view" "view" {
     select * from foo;
 SQL
 }
-# resource with attached policies and data metric functions
+# resource with attached policies, columns and data metric functions
 resource "snowflake_view" "test" {
   database        = "database"
   schema          = "schema"
@@ -27,6 +27,23 @@ resource "snowflake_view" "test" {
   is_secure       = "true"
   change_tracking = "true"
   is_temporary    = "true"
+  column {
+    column_name = "id"
+    comment     = "column comment"
+
+  }
+  column {
+    column_name = "address"
+    projection_policy {
+      policy_name = "projection_policy"
+    }
+
+    masking_policy {
+      policy_name = "masking_policy"
+      using       = ["address"]
+    }
+
+  }
   row_access_policy {
     policy_name = "row_access_policy"
     on          = ["id"]
@@ -43,6 +60,6 @@ resource "snowflake_view" "test" {
     using_cron = "15 * * * * UTC"
   }
   statement = <<-SQL
-    SELECT id FROM TABLE;
+    SELECT id, address FROM TABLE;
 SQL
 }

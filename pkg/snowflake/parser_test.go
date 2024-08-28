@@ -37,6 +37,7 @@ from bar;`
 	issue2640 := `CREATE OR REPLACE SECURE VIEW "CLASSIFICATION" comment = 'Classification View of the union of classification tables' AS select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION`
 	withRowAccessAndAggregationPolicy := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap   AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	withRowAccessAndAggregationPolicyWithEntityKey := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	allFields := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id MASKING POLICY mp USING ("col1", "cond1") PROJECTION POLICY pp COMMENT = 'asdf', foo MASKING POLICY mp USING ("col1", "cond1")) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	type args struct {
 		input string
 	}
@@ -64,6 +65,7 @@ from bar;`
 		{"issue2640", args{issue2640}, "select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION", false},
 		{"with row access policy and aggregation policy", args{withRowAccessAndAggregationPolicy}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 		{"with row access policy and aggregation policy with entity key", args{withRowAccessAndAggregationPolicyWithEntityKey}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+		{"all fields", args{allFields}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
 	}
 	for _, tt := range tests {
 		tt := tt
