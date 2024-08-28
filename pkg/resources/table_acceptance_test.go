@@ -2099,6 +2099,8 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_table.test_table"
 
+	defaultVarchar := fmt.Sprintf("VARCHAR(%d)", sdk.DefaultVarcharLength)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2122,8 +2124,43 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "VARCHAR(256)"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("VARCHAR(256)"), sdk.String("VARCHAR")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultVarchar),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, defaultVarchar),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultVarchar),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "text"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultVarchar),
 				),
 			},
 		},
@@ -2136,6 +2173,8 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 	schemaName := acc.TestClient().Ids.Alpha()
 	name := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_table.test_table"
+
+	defaultNumber := fmt.Sprintf("NUMBER(%d,%d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -2162,6 +2201,42 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "NUMBER(11,0)"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("NUMBER(11,0)"), sdk.String("NUMBER")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultNumber),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, defaultNumber),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultNumber),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "decimal"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", defaultNumber),
 				),
 			},
 		},
