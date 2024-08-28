@@ -32,8 +32,8 @@ resource "snowflake_database_role" "test_database_role" {
 
 ### Required
 
-- `database` (String) The database in which to create the database role.
-- `name` (String) Specifies the identifier for the database role.
+- `database` (String) The database in which to create the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `name` (String) Specifies the identifier for the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 

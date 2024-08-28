@@ -21,14 +21,14 @@ var databaseRoleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the identifier for the database role.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the database role."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "The database in which to create the database role.",
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the database role."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
