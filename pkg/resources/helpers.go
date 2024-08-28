@@ -328,31 +328,3 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 
 	return added, removed
 }
-
-// ListDiff Compares two lists (before and after), then compares and returns two lists that include
-// added and removed items between those lists.
-// type X = map[string]any
-
-// func ListDiffMap(beforeList []any, afterList []any) (added []any, removed []any) {
-// 	type key struct {
-// 		name    string
-// 		columns []string
-// 	}
-// 	added = make([]any, 0)
-// 	removed = make([]any, 0)
-
-// 	for _, privilegeBeforeChange := range beforeList {
-// 		m := privilegeBeforeChange.(map[string]any)
-// 		if !slices.Contains(afterList, privilegeBeforeChange) {
-// 			removed = append(removed, privilegeBeforeChange)
-// 		}
-// 	}
-
-// 	for _, privilegeAfterChange := range afterList {
-// 		if !slices.Contains(beforeList, privilegeAfterChange) {
-// 			added = append(added, privilegeAfterChange)
-// 		}
-// 	}
-
-// 	return added, removed
-// }

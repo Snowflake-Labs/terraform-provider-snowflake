@@ -452,35 +452,36 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
-			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
-			for i := range addedRaw {
-				if addedRaw[i].ScheduleStatus != "" {
-					expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(addedRaw[i].ScheduleStatus)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-					var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
-					switch expectedStatus {
-					case sdk.DataMetricScheduleStatusStarted:
-						statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
-					case sdk.DataMetricScheduleStatusSuspended:
-						statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
-					default:
-						return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
-					}
-					changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
-						DataMetricFunction: addedRaw[i].DataMetricFunction,
-						On:                 addedRaw[i].On,
-						ViewDataMetricScheduleStatusOperationOption: statusCmd,
-					})
-				}
-			}
-			if len(changeSchedule) > 0 {
-				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
-				}
-			}
+			// TODO (next pr)
+			// changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
+			// for i := range addedRaw {
+			// 	if addedRaw[i].ScheduleStatus != "" {
+			// 		expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(addedRaw[i].ScheduleStatus)
+			// 		if err != nil {
+			// 			return diag.FromErr(err)
+			// 		}
+			// 		var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
+			// 		switch expectedStatus {
+			// 		case sdk.DataMetricScheduleStatusStarted:
+			// 			statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
+			// 		case sdk.DataMetricScheduleStatusSuspended:
+			// 			statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
+			// 		default:
+			// 			return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
+			// 		}
+			// 		changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
+			// 			DataMetricFunction: addedRaw[i].DataMetricFunction,
+			// 			On:                 addedRaw[i].On,
+			// 			ViewDataMetricScheduleStatusOperationOption: statusCmd,
+			// 		})
+			// 	}
+			// }
+			// if len(changeSchedule) > 0 {
+			// 	err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
+			// 	if err != nil {
+			// 		return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+			// 	}
+			// }
 		}
 
 		return ReadView(false)(ctx, d, meta)
@@ -692,13 +693,13 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 	})
 }
 
-type ViewDataMetricFunctionDDL struct {
+type ViewDataMetricFunctionConfig struct {
 	DataMetricFunction sdk.SchemaObjectIdentifier
 	On                 []sdk.Column
 	ScheduleStatus     string
 }
 
-func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionDDL, err error) {
+func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionConfig, err error) {
 	for _, v := range v.([]any) {
 		config := v.(map[string]any)
 		columnsRaw := expandStringList(config["on"].(*schema.Set).List())
@@ -710,7 +711,7 @@ func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionDDL, err er
 		if err != nil {
 			return nil, err
 		}
-		dmfs = append(dmfs, ViewDataMetricFunctionDDL{
+		dmfs = append(dmfs, ViewDataMetricFunctionConfig{
 			DataMetricFunction: id,
 			On:                 columns,
 			// TODO (next pr)
@@ -828,36 +829,36 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if d.HasChange("data_metric_functions") {
 		old, new := d.GetChange("data_metric_functions")
 		removedRaw, addedRaw := old.(*schema.Set).List(), new.(*schema.Set).List()
-		added, err := extractDataMetricFunctions(addedRaw)
+		addedConfig, err := extractDataMetricFunctions(addedRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		removed, err := extractDataMetricFunctions(removedRaw)
+		removedConfig, err := extractDataMetricFunctions(removedRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if len(removed) > 0 {
-			removed2 := make([]sdk.ViewDataMetricFunction, len(removed))
-			for i := range removed {
-				removed2[i] = sdk.ViewDataMetricFunction{
-					DataMetricFunction: removed[i].DataMetricFunction,
-					On:                 removed[i].On,
+		if len(removedConfig) > 0 {
+			removed := make([]sdk.ViewDataMetricFunction, len(removedConfig))
+			for i := range removedConfig {
+				removed[i] = sdk.ViewDataMetricFunction{
+					DataMetricFunction: removedConfig[i].DataMetricFunction,
+					On:                 removedConfig[i].On,
 				}
 			}
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest(removed2)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest(removed)))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
 		}
-		if len(added) > 0 {
-			added2 := make([]sdk.ViewDataMetricFunction, len(added))
-			for i := range added {
-				added2[i] = sdk.ViewDataMetricFunction{
-					DataMetricFunction: added[i].DataMetricFunction,
-					On:                 added[i].On,
+		if len(addedConfig) > 0 {
+			added := make([]sdk.ViewDataMetricFunction, len(addedConfig))
+			for i := range addedConfig {
+				added[i] = sdk.ViewDataMetricFunction{
+					DataMetricFunction: addedConfig[i].DataMetricFunction,
+					On:                 addedConfig[i].On,
 				}
 			}
-			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added2)))
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added)))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
