@@ -53,17 +53,17 @@ func DataTypeIssue3007DiffSuppressFunc(_, old, new string, _ *schema.ResourceDat
 	}
 	switch v := oldDataType; v {
 	case sdk.DataTypeNumber:
-		logging.DebugLogger.Printf("[DEBUG] Handling number data type diff suppression")
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling number data type diff suppression")
 		oldPrecision, oldScale := sdk.ParseNumberDataTypeRaw(old)
 		newPrecision, newScale := sdk.ParseNumberDataTypeRaw(new)
 		return oldPrecision == newPrecision && oldScale == newScale
 	case sdk.DataTypeVARCHAR:
-		logging.DebugLogger.Printf("[DEBUG] Handling text data type diff suppression")
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling text data type diff suppression")
 		oldLength := sdk.ParseVarcharDataTypeRaw(old)
 		newLength := sdk.ParseVarcharDataTypeRaw(new)
 		return oldLength == newLength
 	default:
-		logging.DebugLogger.Printf("[DEBUG] Diff suppression for %s can't be currently handled", v)
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Diff suppression for %s can't be currently handled", v)
 	}
 	return true
 }

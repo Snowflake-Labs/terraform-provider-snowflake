@@ -2094,9 +2094,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func TestAcc_Table_issue3007_textColumn(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_table.test_table"
 
 	defaultVarchar := fmt.Sprintf("VARCHAR(%d)", sdk.DefaultVarcharLength)
@@ -2109,7 +2107,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR(3)"),
+				Config:                   tableConfigIssue3007(tableId, "VARCHAR(3)"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "VARCHAR(3)"),
@@ -2117,7 +2115,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR(256)"),
+				Config:                   tableConfigIssue3007(tableId, "VARCHAR(256)"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("VARCHAR(3)"), sdk.String("VARCHAR(256)")),
@@ -2129,7 +2127,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR"),
+				Config:                   tableConfigIssue3007(tableId, "VARCHAR"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("VARCHAR(256)"), sdk.String("VARCHAR")),
@@ -2141,7 +2139,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, defaultVarchar),
+				Config:                   tableConfigIssue3007(tableId, defaultVarchar),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -2153,7 +2151,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "text"),
+				Config:                   tableConfigIssue3007(tableId, "text"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -2169,9 +2167,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 
 // TODO [SNOW-1348114]: visit with table rework (e.g. changing scale is not supported: err 040052 (22000): SQL compilation error: cannot change column SOME_COLUMN from type NUMBER(38,0) to NUMBER(11,2) because changing the scale of a number is not supported.)
 func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_table.test_table"
 
 	defaultNumber := fmt.Sprintf("NUMBER(%d,%d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale)
@@ -2184,7 +2180,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER"),
+				Config:                   tableConfigIssue3007(tableId, "NUMBER"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "NUMBER(38,0)"),
@@ -2192,7 +2188,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER(11)"),
+				Config:                   tableConfigIssue3007(tableId, "NUMBER(11)"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("NUMBER(38,0)"), sdk.String("NUMBER(11)")),
@@ -2205,7 +2201,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER"),
+				Config:                   tableConfigIssue3007(tableId, "NUMBER"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("NUMBER(11,0)"), sdk.String("NUMBER")),
@@ -2217,7 +2213,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, defaultNumber),
+				Config:                   tableConfigIssue3007(tableId, defaultNumber),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -2229,7 +2225,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "decimal"),
+				Config:                   tableConfigIssue3007(tableId, "decimal"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -2243,20 +2239,9 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 	})
 }
 
-func tableConfigIssue3007(name string, databaseName string, schemaName string, dataType string) string {
+func tableConfigIssue3007(tableId sdk.SchemaObjectIdentifier, dataType string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test_database" {
-    name = "%[2]s"
-}
-
-resource "snowflake_schema" "test_schema" {
-    depends_on = [snowflake_database.test_database]
-    name = "%[3]s"
-    database = "%[2]s"
-}
-
 resource "snowflake_table" "test_table" {
-    depends_on = [snowflake_schema.test_schema]
     name     = "%[1]s"
     database = "%[2]s"
     schema   = "%[3]s"
@@ -2272,5 +2257,5 @@ resource "snowflake_table" "test_table" {
         type = "%[4]s"
     }
 }
-`, name, databaseName, schemaName, dataType)
+`, tableId.Name(), tableId.DatabaseName(), tableId.SchemaName(), dataType)
 }
