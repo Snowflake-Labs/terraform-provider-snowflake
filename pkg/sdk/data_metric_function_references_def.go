@@ -29,7 +29,6 @@ const (
 	DataMetricScheduleStatusSuspendedByUserAction                                     DataMetricScheduleStatusOption = "SUSPENDED_BY_USER_ACTION"
 )
 
-// TODO: make is a separate type?
 var AllAllowedDataMetricScheduleStatusOptions = []DataMetricScheduleStatusOption{
 	DataMetricScheduleStatusStarted,
 	DataMetricScheduleStatusSuspended,
