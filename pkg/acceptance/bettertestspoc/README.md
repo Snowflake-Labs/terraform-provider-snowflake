@@ -1,4 +1,19 @@
 # Better tests poc
+
+<!-- TOC -->
+* [Better tests poc](#better-tests-poc)
+  * [How it works](#how-it-works)
+    * [Adding new resource assertions](#adding-new-resource-assertions)
+    * [Adding new resource show output assertions](#adding-new-resource-show-output-assertions)
+    * [Adding new resource parameters assertions](#adding-new-resource-parameters-assertions)
+    * [Adding new Snowflake object assertions](#adding-new-snowflake-object-assertions)
+    * [Adding new Snowflake object parameters assertions](#adding-new-snowflake-object-parameters-assertions)
+    * [Adding new resource config model builders](#adding-new-resource-config-model-builders)
+    * [Running the generators](#running-the-generators)
+    * [Example usage in practice](#example-usage-in-practice)
+  * [Known limitations/planned improvements](#known-limitationsplanned-improvements)
+<!-- TOC -->
+
 This package contains a quick implementation of helpers that should allow us a quicker, more pleasant, and more readable implementation of tests, mainly the acceptance ones.
 It contains the following packages:
 - `assert` - all the assertions reside here. Also, the utilities to build assertions for new objects. All the current assertions are generated. The currently supported assertions are:
@@ -326,3 +341,4 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - distinguish between different enum types (TODO left in `assert/resourceshowoutputassert/gen/templates.go`)
 - support the rest of attribute types in config model builders (TODO left in `config/model/gen/model.go`)
 - parametrize test client helper used - integration versus acceptance tests - this has to be changed in the generator too (TODO left in `assert/objectassert/user_snowflake_ext.go`)
+- Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them

@@ -62,7 +62,7 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 		},
 		{
 			Name:       "validation - valid identifier",
-			ObjectType: sdk.ObjectTypeSchema,
+			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "to.many.parts.in.this.identifier",
 			Expected:   sdk.NewAccountObjectIdentifier("to.many.parts.in.this.identifier"),
 		},

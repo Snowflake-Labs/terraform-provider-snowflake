@@ -167,6 +167,11 @@ func (u *UserResourceAssert) HasFirstNameString(expected string) *UserResourceAs
 	return u
 }
 
+func (u *UserResourceAssert) HasFullyQualifiedNameString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
+	return u
+}
+
 func (u *UserResourceAssert) HasGeographyOutputFormatString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("geography_output_format", expected))
 	return u
@@ -543,6 +548,11 @@ func (u *UserResourceAssert) HasNoErrorOnNondeterministicUpdate() *UserResourceA
 
 func (u *UserResourceAssert) HasNoFirstName() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("first_name"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoFullyQualifiedName() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
 	return u
 }
 

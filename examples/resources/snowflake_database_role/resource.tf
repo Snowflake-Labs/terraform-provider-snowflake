@@ -1,5 +1,9 @@
-resource "snowflake_database_role" "db_role" {
-  database = "database"
-  name     = "role_1"
-  comment  = "my db role"
+resource "snowflake_database" "test_database" {
+  name = "database_name"
+}
+
+resource "snowflake_database_role" "test_database_role" {
+  database = snowflake_database.test_database.fully_qualified_name
+  name     = "database_role_name"
+  comment  = "my database role"
 }
