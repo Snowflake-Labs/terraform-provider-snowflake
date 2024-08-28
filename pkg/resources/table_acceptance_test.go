@@ -9,7 +9,9 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -2089,4 +2091,111 @@ resource "snowflake_table" "test_table" {
 	}
 }
 `, name, databaseName, schemaName)
+}
+
+func TestAcc_Table_issue3007_textColumn(t *testing.T) {
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_table.test_table"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR(3)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", "VARCHAR(3)"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "VARCHAR(256)"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("VARCHAR(3)"), sdk.String("VARCHAR(256)")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", "VARCHAR(256)"),
+				),
+			},
+		},
+	})
+}
+
+// TODO [SNOW-1348114]: visit with table rework (e.g. changing scale is not supported: err 040052 (22000): SQL compilation error: cannot change column SOME_COLUMN from type NUMBER(38,0) to NUMBER(11,2) because changing the scale of a number is not supported.)
+func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
+	databaseName := acc.TestClient().Ids.Alpha()
+	schemaName := acc.TestClient().Ids.Alpha()
+	name := acc.TestClient().Ids.Alpha()
+	resourceName := "snowflake_table.test_table"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", "NUMBER(38,0)"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfigIssue3007(name, databaseName, schemaName, "NUMBER(11)"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(resourceName, "column.1.type", tfjson.ActionUpdate, sdk.String("NUMBER(38,0)"), sdk.String("NUMBER(11)")),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "column.0.type", "NUMBER(11,2)"),
+					resource.TestCheckResourceAttr(resourceName, "column.1.type", "NUMBER(11,0)"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigIssue3007(name string, databaseName string, schemaName string, dataType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database" "test_database" {
+    name = "%[2]s"
+}
+
+resource "snowflake_schema" "test_schema" {
+    depends_on = [snowflake_database.test_database]
+    name = "%[3]s"
+    database = "%[2]s"
+}
+
+resource "snowflake_table" "test_table" {
+    depends_on = [snowflake_schema.test_schema]
+    name     = "%[1]s"
+    database = "%[2]s"
+    schema   = "%[3]s"
+    comment  = "Issue 3007 confirmation"
+
+    column {
+        name = "ID"
+        type = "NUMBER(11,2)"
+    }
+    
+    column {
+        name = "SOME_COLUMN"
+        type = "%[4]s"
+    }
+}
+`, name, databaseName, schemaName, dataType)
 }
