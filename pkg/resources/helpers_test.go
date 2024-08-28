@@ -3,7 +3,6 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"slices"
 	"testing"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_GetPropertyAsPointer(t *testing.T) {

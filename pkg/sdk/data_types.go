@@ -39,20 +39,24 @@ const (
 	DataTypeGeometry     DataType = "GEOMETRY"
 )
 
-var DataTypeNumberSynonyms = []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
-var DataTypeFloatSynonyms = []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
-var DataTypeVarcharSynonyms = []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
-var DataTypeBinarySynonyms = []string{"BINARY", "VARBINARY"}
-var DataTypeBooleanSynonyms = []string{"BOOLEAN", "BOOL"}
-var DataTypeTimestampLTZSynonyms = []string{"TIMESTAMP_LTZ"}
-var DataTypeTimestampTZSynonyms = []string{"TIMESTAMP_TZ"}
-var DataTypeTimestampNTZSynonyms = []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
-var DataTypeTimeSynonyms = []string{"TIME"}
-var DataTypeVectorSynonyms = []string{"VECTOR"}
+var (
+	DataTypeNumberSynonyms       = []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
+	DataTypeFloatSynonyms        = []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
+	DataTypeVarcharSynonyms      = []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
+	DataTypeBinarySynonyms       = []string{"BINARY", "VARBINARY"}
+	DataTypeBooleanSynonyms      = []string{"BOOLEAN", "BOOL"}
+	DataTypeTimestampLTZSynonyms = []string{"TIMESTAMP_LTZ"}
+	DataTypeTimestampTZSynonyms  = []string{"TIMESTAMP_TZ"}
+	DataTypeTimestampNTZSynonyms = []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
+	DataTypeTimeSynonyms         = []string{"TIME"}
+	DataTypeVectorSynonyms       = []string{"VECTOR"}
+)
 
-const DefaultNumberPrecision = 38
-const DefaultNumberScale = 0
-const DefaultVarcharLength = 16777216
+const (
+	DefaultNumberPrecision = 38
+	DefaultNumberScale     = 0
+	DefaultVarcharLength   = 16777216
+)
 
 func ToDataType(s string) (DataType, error) {
 	dType := strings.ToUpper(s)
