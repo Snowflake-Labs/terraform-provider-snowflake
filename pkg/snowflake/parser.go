@@ -66,10 +66,8 @@ func (e *ViewSelectStatementExtractor) consumeColumns() {
 	if !ok {
 		return
 	}
-	fmt.Printf("%d: %s\n", e.pos, string(e.input[e.pos:]))
 	for {
 		isLast := e.consumeColumn()
-		fmt.Printf("%d: %s\n", e.pos, string(e.input[e.pos:]))
 		if isLast {
 			break
 		}
@@ -99,7 +97,6 @@ func (e *ViewSelectStatementExtractor) consumeColumn() (isLast bool) {
 		e.consumeSpace()
 		e.consumeToken("using")
 		e.consumeSpace()
-		fmt.Printf("%d: %s\n", e.pos, string(e.input[e.pos:]))
 		e.consumeIdentifierList()
 		if string(e.input[e.pos-2:e.pos]) == "))" {
 			isLast = true
