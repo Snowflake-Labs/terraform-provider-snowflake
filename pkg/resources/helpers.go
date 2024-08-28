@@ -35,6 +35,10 @@ func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return oldDT == newDT
 }
 
+// DataTypeIssue3007DiffSuppressFunc is a temporary solution to handle data type suppression problems.
+// Currently, it handles only number and text data types.
+// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
 func DataTypeIssue3007DiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	oldDataType, err := sdk.ToDataType(old)
 	if err != nil {

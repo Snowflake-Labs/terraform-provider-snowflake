@@ -115,6 +115,9 @@ func IsStringType(_type string) bool {
 		strings.HasPrefix(t, "NCHAR")
 }
 
+// ParseNumberDataTypeRaw extracts precision and scale from the raw number data type input.
+// It returns defaults if it can't parse arguments, data type is different, or no arguments were provided.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
 func ParseNumberDataTypeRaw(rawDataType string) (int, int) {
 	r := util.TrimAllPrefixes(strings.TrimSpace(strings.ToUpper(rawDataType)), DataTypeNumberSynonyms...)
 	r = strings.TrimSpace(r)
@@ -144,6 +147,9 @@ func ParseNumberDataTypeRaw(rawDataType string) (int, int) {
 	return DefaultNumberPrecision, DefaultNumberScale
 }
 
+// ParseVarcharDataTypeRaw extracts length from the raw text data type input.
+// It returns default if it can't parse arguments, data type is different, or no length argument was provided.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
 func ParseVarcharDataTypeRaw(rawDataType string) int {
 	r := util.TrimAllPrefixes(strings.TrimSpace(strings.ToUpper(rawDataType)), DataTypeVarcharSynonyms...)
 	r = strings.TrimSpace(r)
