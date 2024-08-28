@@ -43,9 +43,9 @@ func users(userName string) string {
 		email = "fake@email.com"
 		disabled = false
 		default_warehouse="foo"
-		default_role="foo"
+		default_role="FOO"
 		default_secondary_roles = ["ALL"]
-		default_namespace="foo"
+		default_namespace="FOO"
 	}
 
 	data snowflake_users "u" {

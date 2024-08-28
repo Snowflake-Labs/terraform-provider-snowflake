@@ -3,6 +3,7 @@ package model
 import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -59,4 +60,8 @@ func (u *UserModel) WithUnsupportedDdlActionEnum(unsupportedDdlAction sdk.Unsupp
 func (u *UserModel) WithNetworkPolicyId(networkPolicy sdk.AccountObjectIdentifier) *UserModel {
 	u.NetworkPolicy = tfconfig.StringVariable(networkPolicy.Name())
 	return u
+}
+
+func (u *UserModel) WithNullPassword() *UserModel {
+	return u.WithPasswordValue(config.NullVariable())
 }

@@ -20,6 +20,7 @@ type ResourceModel interface {
 	Resource() resources.Resource
 	ResourceName() string
 	SetResourceName(name string)
+	ResourceReference() string
 	DependsOn() []string
 	SetDependsOn(values []string)
 }
@@ -40,6 +41,10 @@ func (m *ResourceModelMeta) ResourceName() string {
 
 func (m *ResourceModelMeta) SetResourceName(name string) {
 	m.name = name
+}
+
+func (m *ResourceModelMeta) ResourceReference() string {
+	return fmt.Sprintf(`%s.%s`, m.resource, m.name)
 }
 
 func (m *ResourceModelMeta) DependsOn() []string {
@@ -89,4 +94,16 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	s := sb.String()
 	t.Logf("Generated config:\n%s", s)
 	return s
+}
+
+type nullVariable struct{}
+
+// MarshalJSON returns the JSON encoding of nullVariable.
+func (v nullVariable) MarshalJSON() ([]byte, error) {
+	return json.Marshal(nil)
+}
+
+// NullVariable returns nullVariable which implements Variable.
+func NullVariable() nullVariable {
+	return nullVariable{}
 }

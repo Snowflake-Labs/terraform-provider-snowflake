@@ -72,14 +72,14 @@ type userDBRow struct {
 	MinsToUnlock          sql.NullString `db:"mins_to_unlock"`
 	DaysToExpiry          sql.NullString `db:"days_to_expiry"`
 	Comment               sql.NullString `db:"comment"`
-	Disabled              bool           `db:"disabled"`
-	MustChangePassword    bool           `db:"must_change_password"`
-	SnowflakeLock         bool           `db:"snowflake_lock"`
+	Disabled              sql.NullString `db:"disabled"`
+	MustChangePassword    sql.NullString `db:"must_change_password"`
+	SnowflakeLock         sql.NullString `db:"snowflake_lock"`
 	DefaultWarehouse      sql.NullString `db:"default_warehouse"`
 	DefaultNamespace      string         `db:"default_namespace"`
 	DefaultRole           string         `db:"default_role"`
 	DefaultSecondaryRoles string         `db:"default_secondary_roles"`
-	ExtAuthnDuo           bool           `db:"ext_authn_duo"`
+	ExtAuthnDuo           sql.NullString `db:"ext_authn_duo"`
 	ExtAuthnUid           string         `db:"ext_authn_uid"`
 	MinsToBypassMfa       string         `db:"mins_to_bypass_mfa"`
 	Owner                 string         `db:"owner"`
@@ -95,13 +95,9 @@ func (row userDBRow) convert() *User {
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
 		LoginName:             row.LoginName,
-		Disabled:              row.Disabled,
-		MustChangePassword:    row.MustChangePassword,
-		SnowflakeLock:         row.SnowflakeLock,
 		DefaultNamespace:      row.DefaultNamespace,
 		DefaultRole:           row.DefaultRole,
 		DefaultSecondaryRoles: row.DefaultSecondaryRoles,
-		ExtAuthnDuo:           row.ExtAuthnDuo,
 		ExtAuthnUid:           row.ExtAuthnUid,
 		MinsToBypassMfa:       row.MinsToBypassMfa,
 		Owner:                 row.Owner,
@@ -129,6 +125,10 @@ func (row userDBRow) convert() *User {
 	if row.Comment.Valid {
 		user.Comment = row.Comment.String
 	}
+	handleNullableBoolString(row.Disabled, &user.Disabled)
+	handleNullableBoolString(row.MustChangePassword, &user.MustChangePassword)
+	handleNullableBoolString(row.SnowflakeLock, &user.SnowflakeLock)
+	handleNullableBoolString(row.ExtAuthnDuo, &user.ExtAuthnDuo)
 	if row.DefaultWarehouse.Valid {
 		user.DefaultWarehouse = row.DefaultWarehouse.String
 	}

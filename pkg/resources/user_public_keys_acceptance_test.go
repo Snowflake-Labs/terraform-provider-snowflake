@@ -73,8 +73,8 @@ resource "snowflake_user" "w" {
 	email = "fake@email.com"
 	disabled = false
 	default_warehouse="foo"
-	default_role="foo"
-	default_namespace="foo"
+	default_role="FOO"
+	default_namespace="FOO"
 }
 
 resource "snowflake_user_public_keys" "foobar" {
