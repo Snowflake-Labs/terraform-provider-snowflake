@@ -25,7 +25,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_type": {

@@ -47,7 +47,7 @@ func TestViews_Create(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &ViewRowAccessPolicy{
 			RowAccessPolicy: randomSchemaObjectIdentifier(),
-			On:              []DoubleQuotedString{},
+			On:              []Column{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateViewOptions.RowAccessPolicy", "On"))
 	})
@@ -101,7 +101,7 @@ func TestViews_Create(t *testing.T) {
 				*NewViewColumnRequest("column_with_comment").WithComment("column 2 comment"),
 				*NewViewColumnRequest("column").WithMaskingPolicy(
 					*NewViewColumnMaskingPolicyRequest(maskingPolicy1Id).
-						WithUsing([]DoubleQuotedString{{"a"}, {"b"}}),
+						WithUsing([]Column{{"a"}, {"b"}}),
 				).WithTag([]TagAssociation{{Name: tag1Id, Value: "v1"}}),
 				*NewViewColumnRequest("column 2").WithProjectionPolicy(
 					*NewViewColumnProjectionPolicyRequest(maskingPolicy2Id),
@@ -109,8 +109,8 @@ func TestViews_Create(t *testing.T) {
 			}).
 			WithCopyGrants(true).
 			WithComment("comment").
-			WithRowAccessPolicy(*NewViewRowAccessPolicyRequest(rowAccessPolicyId, []DoubleQuotedString{{"c"}, {"d"}})).
-			WithAggregationPolicy(*NewViewAggregationPolicyRequest(aggregationPolicyId).WithEntityKey([]DoubleQuotedString{{"column_with_comment"}})).
+			WithRowAccessPolicy(*NewViewRowAccessPolicyRequest(rowAccessPolicyId, []Column{{"c"}, {"d"}})).
+			WithAggregationPolicy(*NewViewAggregationPolicyRequest(aggregationPolicyId).WithEntityKey([]Column{{"column_with_comment"}})).
 			WithTag([]TagAssociation{{
 				Name:  tag2Id,
 				Value: "v2",
@@ -201,7 +201,7 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
 			RowAccessPolicy: randomSchemaObjectIdentifier(),
-			On:              []DoubleQuotedString{},
+			On:              []Column{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterViewOptions.AddRowAccessPolicy", "On"))
 	})
@@ -240,7 +240,7 @@ func TestViews_Alter(t *testing.T) {
 			},
 			Add: ViewAddRowAccessPolicy{
 				RowAccessPolicy: randomSchemaObjectIdentifier(),
-				On:              []DoubleQuotedString{},
+				On:              []Column{},
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterViewOptions.DropAndAddRowAccessPolicy.Add", "On"))
@@ -295,7 +295,7 @@ func TestViews_Alter(t *testing.T) {
 
 		opts := defaultOpts()
 		opts.AddDataMetricFunction = &ViewAddDataMetricFunction{
-			DataMetricFunction: []ViewDataMetricFunction{{DataMetricFunction: dmfId, On: []DoubleQuotedString{{"foo"}}}},
+			DataMetricFunction: []ViewDataMetricFunction{{DataMetricFunction: dmfId, On: []Column{{"foo"}}}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ADD DATA METRIC FUNCTION %s ON (\"foo\")", id.FullyQualifiedName(), dmfId.FullyQualifiedName())
 	})
@@ -305,7 +305,7 @@ func TestViews_Alter(t *testing.T) {
 
 		opts := defaultOpts()
 		opts.DropDataMetricFunction = &ViewDropDataMetricFunction{
-			DataMetricFunction: []ViewDataMetricFunction{{DataMetricFunction: dmfId, On: []DoubleQuotedString{{"foo"}}}},
+			DataMetricFunction: []ViewDataMetricFunction{{DataMetricFunction: dmfId, On: []Column{{"foo"}}}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP DATA METRIC FUNCTION %s ON (\"foo\")", id.FullyQualifiedName(), dmfId.FullyQualifiedName())
 	})
@@ -370,7 +370,7 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
 			RowAccessPolicy: rowAccessPolicyId,
-			On:              []DoubleQuotedString{{"a"}, {"b"}},
+			On:              []Column{{"a"}, {"b"}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ADD ROW ACCESS POLICY %s ON (\"a\", \"b\")", id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
@@ -396,7 +396,7 @@ func TestViews_Alter(t *testing.T) {
 			},
 			Add: ViewAddRowAccessPolicy{
 				RowAccessPolicy: rowAccessPolicy2Id,
-				On:              []DoubleQuotedString{{"a"}, {"b"}},
+				On:              []Column{{"a"}, {"b"}},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP ROW ACCESS POLICY %s, ADD ROW ACCESS POLICY %s ON (\"a\", \"b\")", id.FullyQualifiedName(), rowAccessPolicy1Id.FullyQualifiedName(), rowAccessPolicy2Id.FullyQualifiedName())
@@ -414,7 +414,7 @@ func TestViews_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetAggregationPolicy = &ViewSetAggregationPolicy{
 			AggregationPolicy: aggregationPolicyId,
-			EntityKey:         []DoubleQuotedString{{"a"}, {"b"}},
+			EntityKey:         []Column{{"a"}, {"b"}},
 			Force:             Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET AGGREGATION POLICY %s ENTITY KEY (\"a\", \"b\") FORCE", id.FullyQualifiedName(), aggregationPolicyId.FullyQualifiedName())
@@ -433,7 +433,7 @@ func TestViews_Alter(t *testing.T) {
 		opts.SetMaskingPolicyOnColumn = &ViewSetColumnMaskingPolicy{
 			Name:          "column",
 			MaskingPolicy: maskingPolicyId,
-			Using:         []DoubleQuotedString{{"a"}, {"b"}},
+			Using:         []Column{{"a"}, {"b"}},
 			Force:         Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN \"column\" SET MASKING POLICY %s USING (\"a\", \"b\") FORCE", id.FullyQualifiedName(), maskingPolicyId.FullyQualifiedName())

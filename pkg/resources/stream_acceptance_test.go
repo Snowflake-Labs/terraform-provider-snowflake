@@ -107,6 +107,9 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
 func TestAcc_Stream_OnView(t *testing.T) {
+	// TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	tableName := acc.TestClient().Ids.Alpha()
 	viewName := acc.TestClient().Ids.Alpha()
 	name := acc.TestClient().Ids.Alpha()
@@ -289,6 +292,7 @@ resource "snowflake_view" "test" {
 	database = "%[1]s"
 	schema   = "%[2]s"
 	name     = "%[4]s"
+	change_tracking = true
 
 	statement = "select * from \"${snowflake_table.test.name}\""
 }

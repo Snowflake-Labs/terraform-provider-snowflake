@@ -11,7 +11,7 @@ import (
 )
 
 // TODO [SNOW-1501905]: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
-// TODO [SNOW-1501905]: add possibility to have depends_on to other resources (in meta?)
+// TODO [SNOW-1501905]: generate With/SetDependsOn for the resources to preserve builder pattern
 // TODO [SNOW-1501905]: add a convenience method to use multiple configs from multiple models
 
 // ResourceModel is the base interface all of our config models will implement.
@@ -21,11 +21,14 @@ type ResourceModel interface {
 	ResourceName() string
 	SetResourceName(name string)
 	ResourceReference() string
+	DependsOn() []string
+	SetDependsOn(values []string)
 }
 
 type ResourceModelMeta struct {
-	name     string
-	resource resources.Resource
+	name      string
+	resource  resources.Resource
+	dependsOn []string
 }
 
 func (m *ResourceModelMeta) Resource() resources.Resource {
@@ -42,6 +45,14 @@ func (m *ResourceModelMeta) SetResourceName(name string) {
 
 func (m *ResourceModelMeta) ResourceReference() string {
 	return fmt.Sprintf(`%s.%s`, m.resource, m.name)
+}
+
+func (m *ResourceModelMeta) DependsOn() []string {
+	return m.dependsOn
+}
+
+func (m *ResourceModelMeta) SetDependsOn(values []string) {
+	m.dependsOn = values
 }
 
 // DefaultResourceName is exported to allow assertions against the resources using the default name.
@@ -74,6 +85,9 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	sb.WriteRune('\n')
 	for k, v := range objMap {
 		sb.WriteString(fmt.Sprintf("\t%s = %s\n", k, v))
+	}
+	if len(model.DependsOn()) > 0 {
+		sb.WriteString(fmt.Sprintf("\tdepends_on = [%s]\n", strings.Join(model.DependsOn(), ", ")))
 	}
 	sb.WriteString(`}`)
 	sb.WriteRune('\n')

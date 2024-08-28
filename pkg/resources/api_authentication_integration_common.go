@@ -17,7 +17,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier (i.e. name) for the integration. This value must be unique in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {

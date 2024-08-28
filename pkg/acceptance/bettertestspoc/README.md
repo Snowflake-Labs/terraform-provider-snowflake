@@ -300,7 +300,7 @@ it will result in:
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
 - Support additional methods for references in models (TODO left in `config/config.go`).
-- Support depends_on in models (TODO left in `config/config.go`).
+- Support depends_on in models so that it can be chained like other resource fields (TODO left in `config/config.go`).
 - Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
 - Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.

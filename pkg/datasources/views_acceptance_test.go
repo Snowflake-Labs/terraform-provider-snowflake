@@ -5,15 +5,18 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce.
 func TestAcc_Views(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	viewName := acc.TestClient().Ids.Alpha()
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -23,36 +26,32 @@ func TestAcc_Views(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: views(databaseName, schemaName, viewName),
+				Config: views(viewId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_views.v", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_views.v", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_views.v", "database", viewId.DatabaseName()),
+					resource.TestCheckResourceAttr("data.snowflake_views.v", "schema", viewId.SchemaName()),
 					resource.TestCheckResourceAttrSet("data.snowflake_views.v", "views.#"),
 					resource.TestCheckResourceAttr("data.snowflake_views.v", "views.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_views.v", "views.0.name", viewName),
+					resource.TestCheckResourceAttr("data.snowflake_views.v", "views.0.name", viewId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func views(databaseName string, schemaName string, viewName string) string {
+func views(viewId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
+	resource "snowflake_unsafe_execute" "use_warehouse" {
+		execute = "USE WAREHOUSE \"%v\""
+		revert  = "SELECT 1"
 	}
 
 	resource snowflake_view "v"{
 		name 	 = "%v"
-		database = snowflake_schema.s.database
-		schema 	 = snowflake_schema.s.name
+		schema 	 = "%v"
+		database = "%v"
 		statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
+		depends_on = [snowflake_unsafe_execute.use_warehouse]
 	}
 
 	data snowflake_views "v" {
@@ -60,5 +59,5 @@ func views(databaseName string, schemaName string, viewName string) string {
 		schema = snowflake_view.v.schema
 		depends_on = [snowflake_view.v]
 	}
-	`, databaseName, schemaName, viewName)
+	`, acc.TestWarehouseName, viewId.Name(), viewId.SchemaName(), viewId.DatabaseName())
 }
