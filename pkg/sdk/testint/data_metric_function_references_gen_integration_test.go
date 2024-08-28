@@ -17,6 +17,7 @@ func TestInt_DataMetricFunctionReferences(t *testing.T) {
 		view, viewCleanup := testClientHelper().View.CreateView(t, statement)
 		t.Cleanup(viewCleanup)
 
+		// when we specify schedule by a number of minutes, a cron is returned from Snowflake - see SNOW-1640024
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(view.ID()).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest("5 MINUTE")))
 		require.NoError(t, err)
 		err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(view.ID()).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{{

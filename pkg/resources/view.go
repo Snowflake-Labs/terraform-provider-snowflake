@@ -82,7 +82,7 @@ var viewSchema = map[string]*schema.Schema{
 		}),
 		Description: booleanStringFieldDescription("Specifies to enable or disable change tracking on the table."),
 	},
-	"data_metric_functions": {
+	"data_metric_function": {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
@@ -101,7 +101,7 @@ var viewSchema = map[string]*schema.Schema{
 					},
 					Description: "The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.",
 				},
-				// TODO (next pr)
+				// TODO (SNOW-1348118 - next pr)
 				// "schedule_status": {
 				// 	Type:             schema.TypeString,
 				// 	Optional:         true,
@@ -128,7 +128,7 @@ var viewSchema = map[string]*schema.Schema{
 				"minutes": {
 					Type:             schema.TypeInt,
 					Optional:         true,
-					Description:      fmt.Sprintf("Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: %s. Due to Snowflake limitations, changes in this field is not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.", possibleValuesListedInt(sdk.AllViewDataMetricScheduleMinutes)),
+					Description:      fmt.Sprintf("Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: %s. Due to Snowflake limitations, changes in this field is not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.", possibleValuesListed(sdk.AllViewDataMetricScheduleMinutes)),
 					ValidateDiagFunc: IntInSlice(sdk.AllViewDataMetricScheduleMinutes),
 					ConflictsWith:    []string{"data_metric_schedule.using_cron"},
 				},
@@ -141,9 +141,9 @@ var viewSchema = map[string]*schema.Schema{
 			},
 		},
 		Description:  "Specifies the schedule to run the data metric functions periodically.",
-		RequiredWith: []string{"data_metric_functions"},
+		RequiredWith: []string{"data_metric_function"},
 	},
-	// TODO (next pr): add columns
+	// TODO (SNOW-1348118 - next pr): add columns
 	// "column": {
 	// 	Type:     schema.TypeList,
 	// 	Optional: true,
@@ -436,7 +436,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			}
 		}
 
-		if v, ok := d.GetOk("data_metric_functions"); ok {
+		if v, ok := d.GetOk("data_metric_function"); ok {
 			addedRaw, err := extractDataMetricFunctions(v.(*schema.Set).List())
 			if err != nil {
 				return diag.FromErr(err)
@@ -452,7 +452,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
-			// TODO (next pr)
+			// TODO (SNOW-1348118 - next pr)
 			// changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
 			// for i := range addedRaw {
 			// 	if addedRaw[i].ScheduleStatus != "" {
@@ -663,7 +663,7 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 		for _, v := range dmfRef.RefArguments {
 			columns = append(columns, v.Name)
 		}
-		// TODO (next pr)
+		// TODO (SNOW-1348118 - next pr)
 		// var scheduleStatus sdk.DataMetricScheduleStatusOption
 		// status, err := sdk.ToDataMetricScheduleStatusOption(dmfRef.ScheduleStatus)
 		// if err != nil {
@@ -682,7 +682,7 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 		}
 		schedule = dmfRef.Schedule
 	}
-	if err = d.Set("data_metric_functions", dataMetricFunctions); err != nil {
+	if err = d.Set("data_metric_function", dataMetricFunctions); err != nil {
 		return err
 	}
 
@@ -714,7 +714,7 @@ func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionConfig, err
 		dmfs = append(dmfs, ViewDataMetricFunctionConfig{
 			DataMetricFunction: id,
 			On:                 columns,
-			// TODO (next pr)
+			// TODO (SNOW-1348118 - next pr)
 			// ScheduleStatus:     config["schedule_status"].(string),
 		})
 	}
@@ -826,8 +826,8 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}
 
-	if d.HasChange("data_metric_functions") {
-		old, new := d.GetChange("data_metric_functions")
+	if d.HasChange("data_metric_function") {
+		old, new := d.GetChange("data_metric_function")
 		removedRaw, addedRaw := old.(*schema.Set).List(), new.(*schema.Set).List()
 		addedConfig, err := extractDataMetricFunctions(addedRaw)
 		if err != nil {

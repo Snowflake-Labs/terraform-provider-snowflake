@@ -11,7 +11,7 @@ resource "snowflake_view" "test" {
     policy_name = var.aggregation_policy
     entity_key  = var.aggregation_policy_entity_key
   }
-  data_metric_functions {
+  data_metric_function {
     function_name = var.data_metric_function
     on            = var.data_metric_function_on
   }

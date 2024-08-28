@@ -55,7 +55,7 @@ resource "snowflake_view" "test" {
     policy_name = "aggregation_policy"
     entity_key  = ["id"]
   }
-  data_metric_functions {
+  data_metric_function {
     function_name = "data_metric_function"
     on            = ["id"]
   }
@@ -86,7 +86,7 @@ SQL
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
-- `data_metric_functions` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_functions))
+- `data_metric_function` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_function))
 - `data_metric_schedule` (Block List, Max: 1) Specifies the schedule to run the data metric functions periodically. (see [below for nested schema](#nestedblock--data_metric_schedule))
 - `is_recursive` (String) Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `is_secure` (String) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
@@ -112,8 +112,8 @@ Optional:
 - `entity_key` (Set of String) Defines which columns uniquely identify an entity within the view.
 
 
-<a id="nestedblock--data_metric_functions"></a>
-### Nested Schema for `data_metric_functions`
+<a id="nestedblock--data_metric_function"></a>
+### Nested Schema for `data_metric_function`
 
 Required:
 

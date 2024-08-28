@@ -1,5 +1,7 @@
 package sdk
 
+import "fmt"
+
 var (
 	_ validatable = new(CreateViewOptions)
 	_ validatable = new(AlterViewOptions)
@@ -29,7 +31,21 @@ func (opts *CreateViewOptions) validate() error {
 	}
 	if valueSet(opts.AggregationPolicy) {
 		if !ValidObjectIdentifier(opts.AggregationPolicy.AggregationPolicy) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, errInvalidIdentifier("CreateViewOptions", "AggregationPolicy"))
+		}
+	}
+	if valueSet(opts.Columns) {
+		for i, columnOption := range opts.Columns {
+			if valueSet(columnOption.MaskingPolicy) {
+				if !ValidObjectIdentifier(columnOption.MaskingPolicy.MaskingPolicy) {
+					errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateViewOptions.Columns[%d]", i), "MaskingPolicy"))
+				}
+			}
+			if valueSet(columnOption.ProjectionPolicy) {
+				if !ValidObjectIdentifier(columnOption.ProjectionPolicy.ProjectionPolicy) {
+					errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateViewOptions.Columns[%d]", i), "ProjectionPolicy"))
+				}
+			}
 		}
 	}
 	return JoinErrors(errs...)

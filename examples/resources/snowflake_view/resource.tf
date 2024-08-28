@@ -35,7 +35,7 @@ resource "snowflake_view" "test" {
     policy_name = "aggregation_policy"
     entity_key  = ["id"]
   }
-  data_metric_functions {
+  data_metric_function {
     function_name = "data_metric_function"
     on            = ["id"]
   }

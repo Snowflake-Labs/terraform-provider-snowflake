@@ -14,7 +14,7 @@ New fields:
   - `is_recursive`
   - `is_temporary`
   - `data_metric_schedule`
-  - `data_metric_functions`
+  - `data_metric_function`
 - added `show_output` field that holds the response from SHOW VIEWS.
 - added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
 

@@ -7,7 +7,7 @@ resource "snowflake_view" "test" {
   copy_grants     = var.copy_grants
   change_tracking = var.change_tracking
   is_temporary    = var.is_temporary
-  data_metric_functions {
+  data_metric_function {
     function_name = var.data_metric_function
     on            = var.data_metric_function_on
   }

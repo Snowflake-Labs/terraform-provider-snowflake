@@ -3,6 +3,11 @@ package sdk
 import "testing"
 
 func TestDataMetricFunctionReferences_GetForEntity(t *testing.T) {
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *GetForEntityDataMetricFunctionReferenceOptions
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
 	t.Run("validation: missing parameters", func(t *testing.T) {
 		opts := &GetForEntityDataMetricFunctionReferenceOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("GetForEntityDataMetricFunctionReferenceOptions", "parameters"))
