@@ -5,10 +5,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,6 +33,35 @@ func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 		return false
 	}
 	return oldDT == newDT
+}
+
+func DataTypeIssue3007DiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	oldDataType, err := sdk.ToDataType(old)
+	if err != nil {
+		return false
+	}
+	newDataType, err := sdk.ToDataType(new)
+	if err != nil {
+		return false
+	}
+	if oldDataType != newDataType {
+		return false
+	}
+	switch v := oldDataType; v {
+	case sdk.DataTypeNumber:
+		logging.DebugLogger.Printf("[DEBUG] Handling number data type diff suppression")
+		oldPrecision, oldScale := sdk.ParseNumberDataTypeRaw(old)
+		newPrecision, newScale := sdk.ParseNumberDataTypeRaw(new)
+		return oldPrecision == newPrecision && oldScale == newScale
+	case sdk.DataTypeVARCHAR:
+		logging.DebugLogger.Printf("[DEBUG] Handling text data type diff suppression")
+		oldLength := sdk.ParseVarcharDataTypeRaw(old)
+		newLength := sdk.ParseVarcharDataTypeRaw(new)
+		return oldLength == newLength
+	default:
+		logging.DebugLogger.Printf("[DEBUG] Diff suppression for %s can't be currently handled", v)
+	}
+	return true
 }
 
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {

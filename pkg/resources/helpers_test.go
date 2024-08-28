@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"slices"
 	"testing"
 
@@ -255,6 +256,150 @@ func TestListDiff(t *testing.T) {
 			added, removed := resources.ListDiff(tc.Before, tc.After)
 			assert.Equal(t, tc.Added, added)
 			assert.Equal(t, tc.Removed, removed)
+		})
+	}
+}
+
+func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
+	testCases := []struct {
+		name     string
+		old      string
+		new      string
+		expected bool
+	}{
+		{
+			name:     "different data type",
+			old:      string(sdk.DataTypeVARCHAR),
+			new:      string(sdk.DataTypeNumber),
+			expected: false,
+		},
+		{
+			name:     "same number data type without arguments",
+			old:      string(sdk.DataTypeNumber),
+			new:      string(sdk.DataTypeNumber),
+			expected: true,
+		},
+		{
+			name:     "same number data type different casing",
+			old:      string(sdk.DataTypeNumber),
+			new:      "number",
+			expected: true,
+		},
+		{
+			name:     "same text data type without arguments",
+			old:      string(sdk.DataTypeVARCHAR),
+			new:      string(sdk.DataTypeVARCHAR),
+			expected: true,
+		},
+		{
+			name:     "same other data type",
+			old:      string(sdk.DataTypeFloat),
+			new:      string(sdk.DataTypeFloat),
+			expected: true,
+		},
+		{
+			name:     "synonym number data type without arguments",
+			old:      string(sdk.DataTypeNumber),
+			new:      "DECIMAL",
+			expected: true,
+		},
+		{
+			name:     "synonym text data type without arguments",
+			old:      string(sdk.DataTypeVARCHAR),
+			new:      "TEXT",
+			expected: true,
+		},
+		{
+			name:     "synonym other data type without arguments",
+			old:      string(sdk.DataTypeFloat),
+			new:      "DOUBLE",
+			expected: true,
+		},
+		{
+			name:     "synonym number data type same precision, no scale",
+			old:      "NUMBER(30)",
+			new:      "DECIMAL(30)",
+			expected: true,
+		},
+		{
+			name:     "synonym number data type precision implicit and same",
+			old:      "NUMBER",
+			new:      fmt.Sprintf("DECIMAL(%d)", sdk.DefaultNumberPrecision),
+			expected: true,
+		},
+		{
+			name:     "synonym number data type precision implicit and different",
+			old:      "NUMBER",
+			new:      "DECIMAL(30)",
+			expected: false,
+		},
+		{
+			name:     "number data type different precisions, no scale",
+			old:      "NUMBER(35)",
+			new:      "NUMBER(30)",
+			expected: false,
+		},
+		{
+			name:     "synonym number data type same precision, different scale",
+			old:      "NUMBER(30, 2)",
+			new:      "DECIMAL(30, 1)",
+			expected: false,
+		},
+		{
+			name:     "synonym number data type default scale implicit and explicit",
+			old:      "NUMBER(30)",
+			new:      fmt.Sprintf("DECIMAL(30, %d)", sdk.DefaultNumberScale),
+			expected: true,
+		},
+		{
+			name:     "synonym number data type default scale implicit and different",
+			old:      "NUMBER(30)",
+			new:      "DECIMAL(30, 3)",
+			expected: false,
+		},
+		{
+			name:     "synonym number data type both precision and scale implicit and explicit",
+			old:      "NUMBER",
+			new:      fmt.Sprintf("DECIMAL(%d, %d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale),
+			expected: true,
+		},
+		{
+			name:     "synonym number data type both precision and scale implicit and scale different",
+			old:      "NUMBER",
+			new:      fmt.Sprintf("DECIMAL(%d, 2)", sdk.DefaultNumberPrecision),
+			expected: false,
+		},
+		{
+			name:     "synonym text data type same length",
+			old:      "VARCHAR(30)",
+			new:      "TEXT(30)",
+			expected: true,
+		},
+		{
+			name:     "synonym text data type different length",
+			old:      "VARCHAR(30)",
+			new:      "TEXT(40)",
+			expected: false,
+		},
+		{
+			name:     "synonym text data type length implicit and same",
+			old:      "VARCHAR",
+			new:      fmt.Sprintf("TEXT(%d)", sdk.DefaultVarcharLength),
+			expected: true,
+		},
+		{
+			name:     "synonym text data type length implicit and different",
+			old:      "VARCHAR",
+			new:      "TEXT(40)",
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			result := resources.DataTypeIssue3007DiffSuppressFunc("", tc.old, tc.new, nil)
+			require.Equal(t, tc.expected, result)
 		})
 	}
 }
