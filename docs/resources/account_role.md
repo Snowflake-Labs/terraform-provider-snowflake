@@ -33,7 +33,7 @@ resource "snowflake_account_role" "complete" {
 
 ### Required
 
-- `name` (String)
+- `name` (String) Identifier for the role; must be unique for your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 

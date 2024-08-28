@@ -78,7 +78,7 @@ resource "snowflake_shared_database" "test" {
 ### Required
 
 - `from_share` (String) A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `"<organization_name>"."<account_name>"."<share_name>"`.
-- `name` (String) Specifies the identifier for the database; must be unique for your account.
+- `name` (String) Specifies the identifier for the database; must be unique for your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 

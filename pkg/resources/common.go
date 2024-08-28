@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -25,6 +26,8 @@ const FullyQualifiedNameAttributeName = "fully_qualified_name"
 func DiffSuppressStatement(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.EqualFold(normalizeQuery(old), normalizeQuery(new))
 }
+
+var space = regexp.MustCompile(`\s+`)
 
 func normalizeQuery(str string) string {
 	return strings.TrimSpace(space.ReplaceAllString(str, " "))

@@ -25,7 +25,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "String that specifies the identifier (i.e. name) for the integration; must be unique in your account.",
+		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the integration; must be unique in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {

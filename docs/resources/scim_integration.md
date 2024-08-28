@@ -41,7 +41,7 @@ resource "snowflake_scim_integration" "test" {
 ### Required
 
 - `enabled` (Boolean) Specify whether the security integration is enabled.
-- `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account.
+- `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Provider assumes that the specified role is already provided. Valid options are: `OKTA_PROVISIONER` | `AAD_PROVISIONER` | `GENERIC_SCIM_PROVISIONER`.
 - `scim_client` (String) Specifies the client type for the scim integration. Valid options are: `OKTA` | `AZURE` | `GENERIC`.
 

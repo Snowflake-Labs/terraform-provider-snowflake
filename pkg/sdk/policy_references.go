@@ -68,6 +68,14 @@ type policyReferenceFunctionArguments struct {
 	refEntityDomain *PolicyEntityDomain `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
 }
 
+// TODO: use PolicyKind in PolicyReference
+type PolicyKind string
+
+const (
+	PolicyKindAggregationPolicy PolicyKind = "AGGREGATION_POLICY"
+	PolicyKindRowAccessPolicy   PolicyKind = "ROW_ACCESS_POLICY"
+)
+
 type PolicyReference struct {
 	PolicyDb          *string
 	PolicySchema      *string
