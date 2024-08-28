@@ -204,3 +204,54 @@ resource "snowflake_stage" "test" {
 }
 `, name, siNameSuffix, url, databaseName, schemaName)
 }
+
+func TestAcc_Stage_Issue2972(t *testing.T) {
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(stageId.SchemaId())
+	resourceName := "snowflake_stage.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
+		Steps: []resource.TestStep{
+			{
+				Config: stageIssue2972Config(stageId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", stageId.DatabaseName()),
+					resource.TestCheckResourceAttr(resourceName, "schema", stageId.SchemaName()),
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Stage.Rename(t, stageId, newId)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: stageIssue2972Config(stageId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", stageId.DatabaseName()),
+					resource.TestCheckResourceAttr(resourceName, "schema", stageId.SchemaName()),
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+				),
+			},
+		},
+	})
+}
+
+func stageIssue2972Config(stageId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_stage" "test" {
+	name = "%[1]s"
+	database = "%[2]s"
+	schema = "%[3]s"
+}
+`, stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
+}
