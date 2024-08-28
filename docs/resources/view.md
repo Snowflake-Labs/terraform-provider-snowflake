@@ -84,7 +84,6 @@ SQL
 
 - `aggregation_policy` (Block List, Max: 1) Specifies the aggregation policy to set on a view. (see [below for nested schema](#nestedblock--aggregation_policy))
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `column` (Block List) If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.) (see [below for nested schema](#nestedblock--column))
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
 - `data_metric_functions` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_functions))
@@ -111,32 +110,6 @@ Required:
 Optional:
 
 - `entity_key` (Set of String) Defines which columns uniquely identify an entity within the view.
-
-
-<a id="nestedblock--column"></a>
-### Nested Schema for `column`
-
-Required:
-
-- `column_name` (String) Specifies affected column name.
-
-Optional:
-
-- `comment` (String) Specifies a comment for the column.
-- `masking_policy` (Block List) (see [below for nested schema](#nestedblock--column--masking_policy))
-- `projection_policy` (String) Specifies the projection policy to set on a column.
-
-<a id="nestedblock--column--masking_policy"></a>
-### Nested Schema for `column.masking_policy`
-
-Required:
-
-- `policy_name` (String) Specifies the masking policy to set on a column.
-
-Optional:
-
-- `using` (List of String) Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.
-
 
 
 <a id="nestedblock--data_metric_functions"></a>
