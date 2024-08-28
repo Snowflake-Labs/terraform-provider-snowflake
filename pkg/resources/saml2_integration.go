@@ -25,7 +25,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {

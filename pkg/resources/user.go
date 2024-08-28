@@ -20,14 +20,13 @@ var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Sensitive:   true,
 		Description: "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
 	},
 	"login_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Sensitive:   false,
+		Sensitive:   true,
 		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
 		// login_name is case-insensitive
 		DiffSuppressFunc: ignoreCaseSuppressFunc,
@@ -50,21 +49,23 @@ var userSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"default_warehouse": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
+		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login.",
 	},
+	// TODO [SNOW-1348101 - next PR]: check the exact behavior of default_namespace and default_role because it looks like it is handled in a case-insensitive manner on Snowflake side
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
 	"default_role": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Computed:         true,
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the role that is active by default for the user’s session upon login.",
 	},
 	"default_secondary_roles": {
@@ -121,6 +122,7 @@ var userSchema = map[string]*schema.Schema{
 	//    MIDDLE_NAME = <string>
 	//    SNOWFLAKE_LOCK = TRUE | FALSE
 	//    SNOWFLAKE_SUPPORT = TRUE | FALSE
+	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
 	//    DAYS_TO_EXPIRY = <integer>
 	//    MINS_TO_UNLOCK = <integer>
 	//    EXT_AUTHN_DUO = TRUE | FALSE
@@ -393,9 +395,24 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		alterOptions.Set.ObjectProperties.Comment = sdk.String(n.(string))
 	}
 	if d.HasChange("password") {
-		runSet = true
-		_, n := d.GetChange("password")
-		alterOptions.Set.ObjectProperties.Password = sdk.String(n.(string))
+		if v, ok := d.GetOk("password"); ok {
+			runSet = true
+			alterOptions.Set.ObjectProperties.Password = sdk.String(v.(string))
+		} else {
+			// TODO [SNOW-1348101 - next PR]: this is temporary, update logic will be changed with the resource rework
+			unsetOptions := &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					ObjectProperties: &sdk.UserObjectPropertiesUnset{
+						Password: sdk.Bool(true),
+					},
+				},
+			}
+			err := client.Users.Alter(ctx, id, unsetOptions)
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	if d.HasChange("disabled") {
@@ -473,6 +490,7 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if runSet {
 		err := client.Users.Alter(ctx, id, alterOptions)
 		if err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 	}

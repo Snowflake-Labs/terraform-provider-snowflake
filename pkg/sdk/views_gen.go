@@ -46,15 +46,15 @@ type ViewColumnProjectionPolicy struct {
 }
 type ViewColumnMaskingPolicy struct {
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"USING"`
+	Using         []Column               `ddl:"parameter,parentheses,no_equals" sql:"USING"`
 }
 type ViewRowAccessPolicy struct {
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
+	On              []Column               `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
 type ViewAggregationPolicy struct {
 	AggregationPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"AGGREGATION POLICY"`
-	EntityKey         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
+	EntityKey         []Column               `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
 }
 
 // AlterViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-view.
@@ -88,12 +88,12 @@ type AlterViewOptions struct {
 	SetTagsOnColumn               *ViewSetColumnTags             `ddl:"keyword"`
 	UnsetTagsOnColumn             *ViewUnsetColumnTags           `ddl:"keyword"`
 }
-type DoubleQuotedString struct {
+type Column struct {
 	Value string `ddl:"keyword,double_quotes"`
 }
 type ViewDataMetricFunction struct {
 	DataMetricFunction SchemaObjectIdentifier `ddl:"identifier"`
-	On                 []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
+	On                 []Column               `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
 type ViewAddDataMetricFunction struct {
 	add                bool                     `ddl:"static" sql:"ADD"`
@@ -128,7 +128,7 @@ type ViewUnsetDataMetricSchedule struct {
 type ViewAddRowAccessPolicy struct {
 	add             bool                   `ddl:"static" sql:"ADD"`
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ON"`
+	On              []Column               `ddl:"parameter,parentheses,no_equals" sql:"ON"`
 }
 type ViewDropRowAccessPolicy struct {
 	drop            bool                   `ddl:"static" sql:"DROP"`
@@ -141,7 +141,7 @@ type ViewDropAndAddRowAccessPolicy struct {
 type ViewSetAggregationPolicy struct {
 	set               bool                   `ddl:"static" sql:"SET"`
 	AggregationPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"AGGREGATION POLICY"`
-	EntityKey         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
+	EntityKey         []Column               `ddl:"parameter,parentheses,no_equals" sql:"ENTITY KEY"`
 	Force             *bool                  `ddl:"keyword" sql:"FORCE"`
 }
 type ViewUnsetAggregationPolicy struct {
@@ -153,7 +153,7 @@ type ViewSetColumnMaskingPolicy struct {
 	Name          string                 `ddl:"keyword,double_quotes"`
 	set           bool                   `ddl:"static" sql:"SET"`
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []DoubleQuotedString   `ddl:"parameter,parentheses,no_equals" sql:"USING"`
+	Using         []Column               `ddl:"parameter,parentheses,no_equals" sql:"USING"`
 	Force         *bool                  `ddl:"keyword" sql:"FORCE"`
 }
 type ViewUnsetColumnMaskingPolicy struct {
@@ -244,8 +244,21 @@ func (v *View) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+// TODO(SNOW-1636212): remove
 func (v *View) HasCopyGrants() bool {
 	return strings.Contains(v.Text, " COPY GRANTS ")
+}
+
+func (v *View) IsTemporary() bool {
+	return strings.Contains(v.Text, "TEMPORARY")
+}
+
+func (v *View) IsRecursive() bool {
+	return strings.Contains(v.Text, "RECURSIVE")
+}
+
+func (v *View) IsChangeTracking() bool {
+	return v.ChangeTracking == "ON"
 }
 
 // DescribeViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-view.

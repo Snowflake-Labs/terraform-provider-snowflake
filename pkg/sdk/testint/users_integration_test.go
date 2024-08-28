@@ -978,4 +978,45 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(users))
 	})
+
+	// This test proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2817.
+	// sql: Scan error on column index 10, name "disabled": sql/driver: couldn't convert "null" into type bool
+	t.Run("issue #2817: handle show properly without OWNERSHIP and MANAGE GRANTS", func(t *testing.T) {
+		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
+		t.Cleanup(disabledUserCleanup)
+
+		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+			HasDisabled(true),
+		)
+
+		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
+		t.Cleanup(roleCleanup)
+
+		revertRole := testClientHelper().Role.UseRole(t, role.ID())
+		t.Cleanup(revertRole)
+
+		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+			HasDisabled(false),
+		)
+	})
+
+	t.Run("issue #2817: check the describe behavior", func(t *testing.T) {
+		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
+		t.Cleanup(disabledUserCleanup)
+
+		fetchedDisabledUserDetails, err := client.Users.Describe(ctx, disabledUser.ID())
+		require.NoError(t, err)
+		require.NotNil(t, fetchedDisabledUserDetails.Disabled)
+		require.True(t, fetchedDisabledUserDetails.Disabled.Value)
+
+		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
+		t.Cleanup(roleCleanup)
+
+		revertRole := testClientHelper().Role.UseRole(t, role.ID())
+		t.Cleanup(revertRole)
+
+		fetchedDisabledUserDetails, err = client.Users.Describe(ctx, disabledUser.ID())
+		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
+		require.Nil(t, fetchedDisabledUserDetails)
+	})
 }

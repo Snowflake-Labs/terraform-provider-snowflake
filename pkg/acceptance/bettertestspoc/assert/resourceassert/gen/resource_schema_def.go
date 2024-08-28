@@ -30,6 +30,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.User().Schema,
 	},
 	{
+		name:   "View",
+		schema: resources.View().Schema,
+	},
+	{
 		name:   "DatabaseRole",
 		schema: resources.DatabaseRole().Schema,
 	},

@@ -315,7 +315,7 @@ it will result in:
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
 - Support additional methods for references in models (TODO left in `config/config.go`).
-- Support depends_on in models (TODO left in `config/config.go`).
+- Support depends_on in models so that it can be chained like other resource fields (TODO left in `config/config.go`).
 - Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
 - Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.
@@ -340,4 +340,5 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - handle attribute types in resource assertions (currently strings only; TODO left in `assert/resourceassert/gen/model.go`)
 - distinguish between different enum types (TODO left in `assert/resourceshowoutputassert/gen/templates.go`)
 - support the rest of attribute types in config model builders (TODO left in `config/model/gen/model.go`)
+- parametrize test client helper used - integration versus acceptance tests - this has to be changed in the generator too (TODO left in `assert/objectassert/user_snowflake_ext.go`)
 - Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them

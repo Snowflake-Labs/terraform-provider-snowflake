@@ -27,7 +27,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"external_oauth_type": {

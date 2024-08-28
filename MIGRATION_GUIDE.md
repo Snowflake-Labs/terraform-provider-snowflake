@@ -11,23 +11,41 @@ across different versions.
 - `database` renamed to `in_database`
 - Added `like` and `limit` filtering options
 - `SHOW DATABASE ROLES` output is now put inside `database_roles.*.show_output`. Here's the list of currently available fields:
-  - `created_on`
-  - `name`
-  - `is_default`
-  - `is_current`
-  - `is_inherited`
-  - `granted_to_roles`
-  - `granted_to_database_roles`
-  - `granted_database_roles`
-  - `owner`
-  - `comment`
-  - `owner_role_type`
+    - `created_on`
+    - `name`
+    - `is_default`
+    - `is_current`
+    - `is_inherited`
+    - `granted_to_roles`
+    - `granted_to_database_roles`
+    - `granted_database_roles`
+    - `owner`
+    - `comment`
+    - `owner_role_type`
+
+### snowflake_view resource changes
+New fields:
+  - `row_access_policy`
+  - `aggregation_policy`
+  - `change_tracking`
+  - `is_recursive`
+  - `is_temporary`
+- added `show_output` field that holds the response from SHOW VIEWS.
+- added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
+
+#### *(breaking change)* Removed fields from snowflake_view resource
+Removed fields:
+- `tag`
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+
+#### *(breaking change)* Required warehouse
+For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
 
 ### Identifier changes
 
 #### *(breaking change)* resource identifiers for schema and streamlit
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
-migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). 
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`).
 Exception to that rule will be identifiers that consist of multiple parts (like in the case of [grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)'s resource id).
 The change was applied to already refactored resources (only in the case of `snowflake_schema` and `snowflake_streamlit` this will be a breaking change, because the rest of the objects are single part identifiers in the format of `<name>`):
 - `snowflake_api_authentication_integration_with_authorization_code_grant`
@@ -45,7 +63,7 @@ The change was applied to already refactored resources (only in the case of `sno
 - `snowflake_network_policy`
 - `snowflake_warehouse`
 
-No change is required, the state will be migrated automatically. 
+No change is required, the state will be migrated automatically.
 The rest of the objects will be changed when working on them during [v1 object preparations](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
 
 #### *(breaking change)* diff suppress for identifier quoting
@@ -158,6 +176,26 @@ The following set of [parameters](https://docs.snowflake.com/en/sql-reference/pa
  - [ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR](https://docs.snowflake.com/en/sql-reference/parameters#enable-unredacted-query-syntax-error)
  - [NETWORK_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#network-policy)
  - [PREVENT_UNLOAD_TO_INTERNAL_STAGES](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages)
+
+Connected issues: [#2938](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2938)
+
+### *(breaking change)* Changes in sensitiveness of name and login_name
+
+According to https://docs.snowflake.com/en/sql-reference/functions/all_user_names#usage-notes, `NAME`s are not considered sensitive data and `LOGIN_NAME`s are. Previous versions of the provider had this the other way around. In this version, `name` attribute was unmarked as sensitive, whereas `login_name` was marked as sensitive. This may break your configuration if you were using `login_name`s before e.g. in a `for_each` loop.
+
+Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
+
+### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
+
+During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (read more in [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
+
+Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
+
+### *(bugfix)* Correctly handle failed update
+
+Not every attribute can be updated in the state during read (like `password` in the `snowflake_user` resource). In situations where update fails, we may end up with an incorrect state (read more in https://github.com/hashicorp/terraform-plugin-sdk/issues/476). We use a deprecated method from the plugin SDK, and now, for partially failed updates, we preserve the resource's previous state. It fixed this kind of situations for `snowflake_user` resource.
+
+Connected issues: [#2970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2970)
 
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema

@@ -18,7 +18,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the identifier for the database; must be unique for your account.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the database; must be unique for your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"from_share": {

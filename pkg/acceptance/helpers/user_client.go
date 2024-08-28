@@ -60,3 +60,11 @@ func (c *UserClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Us
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *UserClient) Disable(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}}})
+	require.NoError(t, err)
+}
