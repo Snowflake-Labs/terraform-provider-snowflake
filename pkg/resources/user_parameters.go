@@ -76,7 +76,7 @@ var (
 	)
 )
 
-// TODO [SNOW-1348101]: uncomment DiffSuppress and ValidateDiag
+// TODO [SNOW-1348101 - this PR]: uncomment DiffSuppress and ValidateDiag
 type parameterDef[T ~string] struct {
 	Name        T
 	Type        schema.ValueType
@@ -86,7 +86,7 @@ type parameterDef[T ~string] struct {
 }
 
 func init() {
-	// TODO [SNOW-1348101][next PR]: move to the SDK
+	// TODO [SNOW-1645342]: move to the SDK
 	userParameterFields := []parameterDef[sdk.UserParameter]{
 		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption)."},
@@ -149,7 +149,7 @@ func init() {
 		{Name: sdk.UserParameterPreventUnloadToInternalStages, Type: schema.TypeBool, Description: "Specifies whether to prevent data unload operations to internal (Snowflake) stages using [COPY INTO <location>](https://docs.snowflake.com/en/sql-reference/sql/copy-into-location) statements."},
 	}
 
-	// TODO [SNOW-1348101][next PR]: extract this method after moving to SDK
+	// TODO [SNOW-1645342]: extract this method after moving to SDK
 	for _, field := range userParameterFields {
 		fieldName := strings.ToLower(string(field.Name))
 
@@ -158,7 +158,7 @@ func init() {
 			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
 			Computed:    true,
 			Optional:    true,
-			// TODO [SNOW-1348101][next PR]: uncomment and fill out
+			// TODO [SNOW-1348101 - this PR]: uncomment and fill out
 			// ValidateDiagFunc: field.ValidateDiag,
 			// DiffSuppressFunc: field.DiffSuppress,
 		}
@@ -173,7 +173,7 @@ func userParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObj
 	return c.Users.ShowParameters
 }
 
-// TODO [SNOW-1348101][next PR]: make generic based on type definition
+// TODO [SNOW-1645342]: make generic based on type definition
 func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) error {
 	for _, p := range warehouseParameters {
 		switch p.Key {
@@ -265,7 +265,7 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 // (because currently setParam already is able to set the right parameter based on the string value input,
 // but GetConfigPropertyAsPointerAllowingZeroValue receives typed value,
 // so this would be unnecessary running in circles)
-// TODO [SNOW-1348101]: include mappers in the param definition (after moving it to the SDK: identity versus concrete)
+// TODO [SNOW-1645342]: include mappers in the param definition (after moving it to the SDK: identity versus concrete)
 func handleUserParametersCreate(d *schema.ResourceData, createOpts *sdk.CreateUserOptions) diag.Diagnostics {
 	return JoinDiags(
 		handleParameterCreate(d, sdk.UserParameterAbortDetachedQuery, &createOpts.SessionParameters.AbortDetachedQuery),

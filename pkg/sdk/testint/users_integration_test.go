@@ -16,7 +16,7 @@ import (
 )
 
 // TODO [SNOW-1348101 - next PR]: test setting/unsetting policies
-// TODO [SNOW-1348101 - next PR]: add type and other 8.26 additions
+// TODO [SNOW-1645348]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

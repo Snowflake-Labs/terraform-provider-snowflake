@@ -379,7 +379,7 @@ type UserUnset struct {
 }
 
 func (opts *UserUnset) validate() error {
-	// TODO [SNOW-1348101]: change validations with policies
+	// TODO [SNOW-1348101 - next PR]: change validations with policies
 	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}

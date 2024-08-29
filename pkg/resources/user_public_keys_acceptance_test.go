@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO [SNOW-1348101]: change description of user public keys resource (should be used only if user is not managed by terraform)
+// TODO [SNOW-1348101 - this PR]: change description of user public keys resource (should be used only if user is not managed by terraform)
 func TestAcc_UserPublicKeys(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	key1, _ := random.GenerateRSAPublicKey(t)

@@ -51,7 +51,7 @@ func databaseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.Accoun
 }
 
 func init() {
-	// TODO [SNOW-1348101]: use parameterDef
+	// TODO [SNOW-1645342]: use parameterDef
 	databaseParameterFields := []struct {
 		Name         sdk.ObjectParameter
 		Type         schema.ValueType
