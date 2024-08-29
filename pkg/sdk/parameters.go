@@ -656,6 +656,26 @@ const (
 	WarehouseParameterStatementTimeoutInSeconds       WarehouseParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 )
 
+var AllSchemaParameters = []ObjectParameter{
+	ObjectParameterDataRetentionTimeInDays,
+	ObjectParameterMaxDataExtensionTimeInDays,
+	ObjectParameterExternalVolume,
+	ObjectParameterCatalog,
+	ObjectParameterReplaceInvalidCharacters,
+	ObjectParameterDefaultDDLCollation,
+	ObjectParameterStorageSerializationPolicy,
+	ObjectParameterLogLevel,
+	ObjectParameterTraceLevel,
+	ObjectParameterSuspendTaskAfterNumFailures,
+	ObjectParameterTaskAutoRetryAttempts,
+	ObjectParameterUserTaskManagedInitialWarehouseSize,
+	ObjectParameterUserTaskTimeoutMs,
+	ObjectParameterUserTaskMinimumTriggerIntervalInSeconds,
+	ObjectParameterQuotedIdentifiersIgnoreCase,
+	ObjectParameterEnableConsoleOutput,
+	ObjectParameterPipeExecutionPaused,
+}
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
