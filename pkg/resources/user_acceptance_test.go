@@ -359,17 +359,18 @@ func TestAcc_User_AllParameters(t *testing.T) {
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
-					// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
-					// resourceparametersassert.UserResourceParameters(t, "u").Has(),
+					resourceparametersassert.UserResourceParameters(t, userModel.ResourceReference()).
+						HasAllDefaults(),
 				),
 			},
 			// import when no parameter set
 			{
-				ResourceName:      "snowflake_user.u",
-				ImportState:       true,
-				ImportStateVerify: true,
-				// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
-				// ImportStateCheck:  assert.AssertThatImport(t),
+				ResourceName: userModel.ResourceReference(),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
+						HasAllDefaults(),
+				),
 			},
 			// set all parameters
 			{
@@ -497,9 +498,8 @@ func TestAcc_User_AllParameters(t *testing.T) {
 			},
 			// import when all parameters set
 			{
-				ResourceName:      "snowflake_user.u",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName: userModelWithAllParametersSet.ResourceReference(),
+				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
 						HasAbortDetachedQuery(true).
@@ -569,8 +569,8 @@ func TestAcc_User_AllParameters(t *testing.T) {
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
-					// TODO [SNOW-1348101][next PR]: check setting parameters on resource level (such assertions not generated yet)
-					// resourceparametersassert.UserResourceParameters(t, "u").Has(),
+					resourceparametersassert.UserResourceParameters(t, userModel.ResourceReference()).
+						HasAllDefaults(),
 				),
 			},
 		},
