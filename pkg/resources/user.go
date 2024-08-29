@@ -424,74 +424,40 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		id = newID
 	}
 
-	runSet := false
-	alterOptions := &sdk.AlterUserOptions{
-		Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserAlterObjectProperties{},
-		},
-	}
-	if d.HasChange("login_name") {
-		runSet = true
-		_, n := d.GetChange("login_name")
-		alterOptions.Set.ObjectProperties.LoginName = sdk.String(n.(string))
-	}
-	if d.HasChange("comment") {
-		runSet = true
-		_, n := d.GetChange("comment")
-		alterOptions.Set.ObjectProperties.Comment = sdk.String(n.(string))
-	}
-	if d.HasChange("password") {
-		if v, ok := d.GetOk("password"); ok {
-			runSet = true
-			alterOptions.Set.ObjectProperties.Password = sdk.String(v.(string))
-		} else {
-			// TODO [SNOW-1348101 - next PR]: this is temporary, update logic will be changed with the resource rework
-			unsetOptions := &sdk.AlterUserOptions{
-				Unset: &sdk.UserUnset{
-					ObjectProperties: &sdk.UserObjectPropertiesUnset{
-						Password: sdk.Bool(true),
-					},
-				},
-			}
-			err := client.Users.Alter(ctx, id, unsetOptions)
-			if err != nil {
-				d.Partial(true)
-				return diag.FromErr(err)
-			}
-		}
+	setObjectProperties := sdk.UserAlterObjectProperties{}
+	unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
+
+	errs := errors.Join(
+		stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
+		stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
+		stringAttributeUpdate(d, "display_name", &setObjectProperties.DisplayName, &unsetObjectProperties.DisplayName),
+		stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
+		stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
+		stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
+		stringAttributeUpdate(d, "email", &setObjectProperties.Email, &unsetObjectProperties.Email),
+		booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
+		booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
+		intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
+		intAttributeUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
+		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
+		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
+		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
+		// TODO: default_secondary_roles
+		intAttributeUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
+		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
+		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
+		stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
+		// TODO: handle disable_mfa
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
 	}
 
-	if d.HasChange("disabled") {
-		runSet = true
-		_, n := d.GetChange("disabled")
-		disabled := n.(bool)
-		alterOptions.Set.ObjectProperties.Disable = &disabled
-	}
-	if d.HasChange("default_warehouse") {
-		runSet = true
-		_, n := d.GetChange("default_warehouse")
-		alterOptions.Set.ObjectProperties.DefaultWarehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(n.(string)))
-	}
-	if d.HasChange("default_namespace") {
-		runSet = true
-		_, n := d.GetChange("default_namespace")
-		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(n.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		alterOptions.Set.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
-	}
-	if d.HasChange("default_role") {
-		runSet = true
-		_, n := d.GetChange("default_role")
-		alterOptions.Set.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(n.(string)))
-	}
 	if d.HasChange("default_secondary_roles") {
-		runSet = true
 		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 		if _, ok := d.GetOk("default_secondary_roles"); ok {
-			alterOptions.Set.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
+			setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
 		} else {
 			// TODO [SNOW-1348101]: adjust unset logic
 			unsetOptions := &sdk.AlterUserOptions{
@@ -508,45 +474,16 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 		}
 	}
-	if d.HasChange("rsa_public_key") {
-		runSet = true
-		_, n := d.GetChange("rsa_public_key")
-		alterOptions.Set.ObjectProperties.RSAPublicKey = sdk.String(n.(string))
-	}
-	if d.HasChange("rsa_public_key_2") {
-		runSet = true
-		_, n := d.GetChange("rsa_public_key_2")
-		alterOptions.Set.ObjectProperties.RSAPublicKey2 = sdk.String(n.(string))
-	}
-	if d.HasChange("must_change_password") {
-		runSet = true
-		_, n := d.GetChange("must_change_password")
-		mustChangePassword := n.(bool)
-		alterOptions.Set.ObjectProperties.MustChangePassword = &mustChangePassword
-	}
-	if d.HasChange("email") {
-		runSet = true
-		_, n := d.GetChange("email")
-		alterOptions.Set.ObjectProperties.Email = sdk.String(n.(string))
-	}
-	if d.HasChange("display_name") {
-		runSet = true
-		_, n := d.GetChange("display_name")
-		alterOptions.Set.ObjectProperties.DisplayName = sdk.String(n.(string))
-	}
-	if d.HasChange("first_name") {
-		runSet = true
-		_, n := d.GetChange("first_name")
-		alterOptions.Set.ObjectProperties.FirstName = sdk.String(n.(string))
-	}
-	if d.HasChange("last_name") {
-		runSet = true
-		_, n := d.GetChange("last_name")
-		alterOptions.Set.ObjectProperties.LastName = sdk.String(n.(string))
-	}
 
-	if runSet {
-		err := client.Users.Alter(ctx, id, alterOptions)
+	if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setObjectProperties}})
+		if err != nil {
+			d.Partial(true)
+			return diag.FromErr(err)
+		}
+	}
+	if (unsetObjectProperties != sdk.UserObjectPropertiesUnset{}) {
+		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetObjectProperties}})
 		if err != nil {
 			d.Partial(true)
 			return diag.FromErr(err)
