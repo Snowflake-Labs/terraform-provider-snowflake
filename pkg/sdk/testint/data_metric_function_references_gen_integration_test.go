@@ -1,7 +1,10 @@
 package testint
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
@@ -12,7 +15,7 @@ func TestInt_DataMetricFunctionReferences(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("view domain", func(t *testing.T) {
-		functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
+		functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "BLANK_COUNT")
 		statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 		view, viewCleanup := testClientHelper().View.CreateView(t, statement)
 		t.Cleanup(viewCleanup)
@@ -30,13 +33,18 @@ func TestInt_DataMetricFunctionReferences(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(dmfs))
 		dmf := dmfs[0]
-		require.Equal(t, string(sdk.DataMetricFuncionRefEntityDomainView), dmf.RefEntityDomain)
-		require.Equal(t, functionId.DatabaseName(), dmf.MetricDatabaseName)
-		require.Equal(t, functionId.SchemaName(), dmf.MetricSchemaName)
-		require.Equal(t, functionId.Name(), dmf.MetricName)
-		require.Equal(t, view.ID().DatabaseName(), dmf.RefEntityDatabaseName)
-		require.Equal(t, view.ID().SchemaName(), dmf.RefEntitySchemaName)
-		require.Equal(t, view.ID().Name(), dmf.RefEntityName)
-		require.Equal(t, "*/5 * * * * UTC", dmf.Schedule)
+		assert.Equal(t, string(sdk.DataMetricFuncionRefEntityDomainView), strings.ToUpper(dmf.RefEntityDomain))
+		assert.Equal(t, functionId.DatabaseName(), dmf.MetricDatabaseName)
+		assert.Equal(t, functionId.SchemaName(), dmf.MetricSchemaName)
+		assert.Equal(t, functionId.Name(), dmf.MetricName)
+		assert.Equal(t, view.ID().DatabaseName(), dmf.RefEntityDatabaseName)
+		assert.Equal(t, view.ID().SchemaName(), dmf.RefEntitySchemaName)
+		assert.Equal(t, view.ID().Name(), dmf.RefEntityName)
+		assert.Equal(t, "TABLE(VARCHAR)", dmf.ArgumentSignature)
+		assert.Equal(t, "NUMBER(38,0)", dmf.DataType)
+		assert.NotEmpty(t, dmf.RefArguments)
+		assert.NotEmpty(t, dmf.RefId)
+		assert.Equal(t, "*/5 * * * * UTC", dmf.Schedule)
+		assert.Equal(t, string(sdk.DataMetricScheduleStatusStarted), dmf.ScheduleStatus)
 	})
 }

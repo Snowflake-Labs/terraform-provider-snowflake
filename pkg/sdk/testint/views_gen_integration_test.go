@@ -557,8 +557,8 @@ func TestInt_Views(t *testing.T) {
 		t.Cleanup(dataMetricFunction2Cleanup)
 
 		// set cron schedule
-		cron := "5 * * * * UTC"
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest(cron))
+		cron := "*/5 * * * * UTC"
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest("USING CRON " + cron))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 

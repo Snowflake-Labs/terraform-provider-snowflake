@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 )
 
 type DataMetricFunctionReferences interface {
@@ -28,10 +29,10 @@ type dataMetricFunctionReferencesRow struct {
 	MetricDatabaseName string `db:"METRIC_DATABASE_NAME"`
 	MetricSchemaName   string `db:"METRIC_SCHEMA_NAME"`
 	MetricName         string `db:"METRIC_NAME"`
-	ArgumentSignature  string `db:"ARGUMENT_SIGNATURE"`
-	DataType           string `db:"DATA_TYPE"`
-	RefDatabaseName    string `db:"REF_DATABASE_NAME"`
-	RefSchemaName      string `db:"REF_SCHEMA_NAME"`
+	ArgumentSignature  string `db:"METRIC_SIGNATURE"`
+	DataType           string `db:"METRIC_DATA_TYPE"`
+	RefDatabaseName    string `db:"REF_ENTITY_DATABASE_NAME"`
+	RefSchemaName      string `db:"REF_ENTITY_SCHEMA_NAME"`
 	RefEntityName      string `db:"REF_ENTITY_NAME"`
 	RefEntityDomain    string `db:"REF_ENTITY_DOMAIN"`
 	RefArguments       string `db:"REF_ARGUMENTS"`
@@ -63,14 +64,14 @@ type DataMetricFunctionReference struct {
 
 func (row dataMetricFunctionReferencesRow) convert() *DataMetricFunctionReference {
 	x := &DataMetricFunctionReference{
-		MetricDatabaseName:    row.MetricDatabaseName,
-		MetricSchemaName:      row.MetricSchemaName,
-		MetricName:            row.MetricName,
+		MetricDatabaseName:    strings.Trim(row.MetricDatabaseName, `"`),
+		MetricSchemaName:      strings.Trim(row.MetricSchemaName, `"`),
+		MetricName:            strings.Trim(row.MetricName, `"`),
 		ArgumentSignature:     row.ArgumentSignature,
 		DataType:              row.DataType,
-		RefEntityDatabaseName: row.RefDatabaseName,
-		RefEntitySchemaName:   row.RefSchemaName,
-		RefEntityName:         row.RefEntityName,
+		RefEntityDatabaseName: strings.Trim(row.RefDatabaseName, `"`),
+		RefEntitySchemaName:   strings.Trim(row.RefSchemaName, `"`),
+		RefEntityName:         strings.Trim(row.RefEntityName, `"`),
 		RefEntityDomain:       row.RefEntityDomain,
 		RefId:                 row.RefId,
 		Schedule:              row.Schedule,

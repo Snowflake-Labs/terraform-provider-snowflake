@@ -525,16 +525,7 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if err = d.Set("name", view.Name); err != nil {
-			return diag.FromErr(err)
-		}
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("database", view.DatabaseName); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("schema", view.SchemaName); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
