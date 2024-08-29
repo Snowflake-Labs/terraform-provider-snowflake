@@ -1342,4 +1342,14 @@ func TestInt_Users(t *testing.T) {
 		// mins to unlock is null
 		assert.Nil(t, userDetails.MinsToUnlock.Value)
 	})
+
+	t.Run("try to set disable mfa on create", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE USER %s DISABLE_MFA = TRUE`, id.FullyQualifiedName()))
+		if err == nil {
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+		}
+		require.ErrorContains(t, err, "invalid property 'DISABLE_MFA' for 'USER'")
+	})
 }

@@ -70,7 +70,6 @@ var userSchema = map[string]*schema.Schema{
 		Sensitive:   true,
 		Description: "Email address for the user.",
 	},
-	// TODO [SNOW-1348101]: handle this properly
 	"must_change_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -132,7 +131,7 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
-	// TODO [SNOW-1348101]: note that external changes are not handled
+	// TODO [SNOW-1348101]: note that external changes are not handled (and with other params that this is true)
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,
@@ -154,7 +153,6 @@ var userSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the user.",
 	},
-	// TODO [SNOW-1348101]: handle properly
 	"disable_mfa": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -281,7 +279,7 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
 		stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
 		stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment),
-		// TODO: handle disable_mfa (not settable in create - check)
+		// disable mfa cannot be set in create, alter is run after creation
 	)
 	if errs != nil {
 		return diag.FromErr(errs)
@@ -296,7 +294,28 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeResourceIdentifier(id))
-	return GetReadUserFunc(false)(ctx, d, meta)
+
+	// disable mfa cannot be set in create, we need to alter if set in config
+	var diags diag.Diagnostics
+	if disableMfa := d.Get("disable_mfa").(string); disableMfa != BooleanDefault {
+		parsed, err := booleanStringToBool(disableMfa)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
+			})
+		}
+		alterDisableMfa := sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(parsed)}}}
+		err = client.Users.Alter(ctx, id, &alterDisableMfa)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
+			})
+		}
+	}
+
+	return append(diags, GetReadUserFunc(false)(ctx, d, meta)...)
 }
 
 func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
