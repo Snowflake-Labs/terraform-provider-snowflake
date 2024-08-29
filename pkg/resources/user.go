@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -22,7 +23,7 @@ var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Name of the user. Note that if you do not supply login_name this will be used as login_name. [doc](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)",
+		Description:      blocklistedCharactersFieldDescription("Name of the user. Note that if you do not supply login_name this will be used as login_name. Check the [docs](https://docs.snowflake.net/manuals/sql-reference/sql/create-user.html#required-parameters)."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"password": {
@@ -186,10 +187,11 @@ func User() *schema.Resource {
 		UpdateContext: UpdateUser,
 		ReadContext:   GetReadUserFunc(true),
 		DeleteContext: DeleteUser,
+		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
 
 		Schema: helpers.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportUser,
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -203,6 +205,49 @@ func User() *schema.Resource {
 	}
 }
 
+func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting user import")
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	userDetails, err := client.Users.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = errors.Join(
+		d.Set("name", id.Name()),
+		// password can't be set
+		setStringProperty(d, "login_name", userDetails.LoginName),
+		setStringProperty(d, "display_name", userDetails.DisplayName),
+		setStringProperty(d, "first_name", userDetails.FirstName),
+		setStringProperty(d, "middle_name", userDetails.MiddleName),
+		setStringProperty(d, "last_name", userDetails.LastName),
+		setStringProperty(d, "email", userDetails.Email),
+		// TODO: must_change_password
+		// TODO: disabled
+		// TODO: days_to_expiry
+		// TODO: mins_to_unlock
+		// TODO: default_warehouse
+		// TODO: default_namespace
+		// TODO: default_role
+		// TODO: default_secondary_roles
+		// TODO: mins_to_bypass_mfa
+		// TODO: rsa_public_key
+		// TODO: rsa_public_key_2
+		setStringProperty(d, "comment", userDetails.Comment),
+		// TODO: disable_mfa
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
@@ -212,25 +257,40 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		SessionParameters: &sdk.SessionParameters{},
 	}
 	name := d.Get("name").(string)
-	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(name)
 
-	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
-		return parametersCreateDiags
-	}
-
-	if loginName, ok := d.GetOk("login_name"); ok {
-		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
-	}
-
-	if comment, ok := d.GetOk("comment"); ok {
-		opts.ObjectProperties.Comment = sdk.String(comment.(string))
-	}
 	if password, ok := d.GetOk("password"); ok {
 		opts.ObjectProperties.Password = sdk.String(password.(string))
 	}
-	if v, ok := d.GetOk("disabled"); ok {
-		disabled := v.(bool)
-		opts.ObjectProperties.Disable = &disabled
+	if loginName, ok := d.GetOk("login_name"); ok {
+		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
+	}
+	if displayName, ok := d.GetOk("display_name"); ok {
+		opts.ObjectProperties.DisplayName = sdk.String(displayName.(string))
+	}
+	if firstName, ok := d.GetOk("first_name"); ok {
+		opts.ObjectProperties.FirstName = sdk.String(firstName.(string))
+	}
+	if middleName, ok := d.GetOk("middle_name"); ok {
+		opts.ObjectProperties.FirstName = sdk.String(middleName.(string))
+	}
+	if lastName, ok := d.GetOk("last_name"); ok {
+		opts.ObjectProperties.LastName = sdk.String(lastName.(string))
+	}
+	if email, ok := d.GetOk("email"); ok {
+		opts.ObjectProperties.Email = sdk.String(email.(string))
+	}
+	if mustChangePassword, ok := d.GetOk("must_change_password"); ok {
+		opts.ObjectProperties.MustChangePassword = sdk.Bool(mustChangePassword.(bool))
+	}
+	if disabled, ok := d.GetOk("disabled"); ok {
+		opts.ObjectProperties.Disable = sdk.Bool(disabled.(bool))
+	}
+	if daysToExpiry, ok := d.GetOk("days_to_expiry"); ok {
+		opts.ObjectProperties.DaysToExpiry = sdk.Int(daysToExpiry.(int))
+	}
+	if minsToUnlock, ok := d.GetOk("mins_to_unlock"); ok {
+		opts.ObjectProperties.MinsToUnlock = sdk.Int(minsToUnlock.(int))
 	}
 	if defaultWarehouse, ok := d.GetOk("default_warehouse"); ok {
 		opts.ObjectProperties.DefaultWarehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultWarehouse.(string)))
@@ -242,9 +302,6 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
-	if displayName, ok := d.GetOk("display_name"); ok {
-		opts.ObjectProperties.DisplayName = sdk.String(displayName.(string))
-	}
 	if defaultRole, ok := d.GetOk("default_role"); ok {
 		opts.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultRole.(string)))
 	}
@@ -253,30 +310,29 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if _, ok := d.GetOk("default_secondary_roles"); ok {
 		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
 	}
+	if minsToBypassMfa, ok := d.GetOk("mins_to_bypass_mfa"); ok {
+		opts.ObjectProperties.MinsToBypassMFA = sdk.Int(minsToBypassMfa.(int))
+	}
 	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
 		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
 	}
 	if rsaPublicKey2, ok := d.GetOk("rsa_public_key_2"); ok {
 		opts.ObjectProperties.RSAPublicKey2 = sdk.String(rsaPublicKey2.(string))
 	}
-	if v, ok := d.GetOk("must_change_password"); ok {
-		mustChangePassword := v.(bool)
-		opts.ObjectProperties.MustChangePassword = &mustChangePassword
+	if comment, ok := d.GetOk("comment"); ok {
+		opts.ObjectProperties.Comment = sdk.String(comment.(string))
 	}
-	if email, ok := d.GetOk("email"); ok {
-		opts.ObjectProperties.Email = sdk.String(email.(string))
+	// TODO: handle disable_mfa (not settable in create - check)
+
+	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
 	}
-	if firstName, ok := d.GetOk("first_name"); ok {
-		opts.ObjectProperties.FirstName = sdk.String(firstName.(string))
-	}
-	if lastName, ok := d.GetOk("last_name"); ok {
-		opts.ObjectProperties.LastName = sdk.String(lastName.(string))
-	}
-	err := client.Users.Create(ctx, objectIdentifier, opts)
+
+	err := client.Users.Create(ctx, id, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 	return GetReadUserFunc(false)(ctx, d, meta)
 }
 
