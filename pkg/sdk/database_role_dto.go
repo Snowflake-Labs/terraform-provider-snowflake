@@ -21,13 +21,11 @@ type AlterDatabaseRoleRequest struct {
 	name     DatabaseObjectIdentifier // required
 
 	// One of
-	rename *DatabaseRoleRenameRequest
-	set    *DatabaseRoleSetRequest
-	unset  *DatabaseRoleUnsetRequest
-}
-
-type DatabaseRoleRenameRequest struct {
-	name DatabaseObjectIdentifier // required
+	rename    *DatabaseObjectIdentifier
+	set       *DatabaseRoleSetRequest
+	unset     *DatabaseRoleUnsetRequest
+	setTags   []TagAssociation
+	unsetTags []ObjectIdentifier
 }
 
 type DatabaseRoleSetRequest struct {
@@ -44,6 +42,7 @@ type DropDatabaseRoleRequest struct {
 type ShowDatabaseRoleRequest struct {
 	like     *Like
 	database AccountObjectIdentifier // required
+	limit    *LimitFrom
 }
 
 type GrantDatabaseRoleRequest struct {

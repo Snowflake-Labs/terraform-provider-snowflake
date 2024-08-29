@@ -13,6 +13,11 @@ type SdkObjectDef struct {
 
 var allStructs = []SdkObjectDef{
 	{
+		IdType:       "sdk.DatabaseObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeDatabaseRole,
+		ObjectStruct: sdk.DatabaseRole{},
+	},
+	{
 		IdType:       "sdk.AccountObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeUser,
 		ObjectStruct: sdk.User{},

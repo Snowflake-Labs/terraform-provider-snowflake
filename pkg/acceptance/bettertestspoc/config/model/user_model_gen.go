@@ -37,6 +37,7 @@ type UserModel struct {
 	ErrorOnNondeterministicMerge             tfconfig.Variable `json:"error_on_nondeterministic_merge,omitempty"`
 	ErrorOnNondeterministicUpdate            tfconfig.Variable `json:"error_on_nondeterministic_update,omitempty"`
 	FirstName                                tfconfig.Variable `json:"first_name,omitempty"`
+	FullyQualifiedName                       tfconfig.Variable `json:"fully_qualified_name,omitempty"`
 	GeographyOutputFormat                    tfconfig.Variable `json:"geography_output_format,omitempty"`
 	GeometryOutputFormat                     tfconfig.Variable `json:"geometry_output_format,omitempty"`
 	HasRsaPublicKey                          tfconfig.Variable `json:"has_rsa_public_key,omitempty"`
@@ -243,6 +244,11 @@ func (u *UserModel) WithErrorOnNondeterministicUpdate(errorOnNondeterministicUpd
 
 func (u *UserModel) WithFirstName(firstName string) *UserModel {
 	u.FirstName = tfconfig.StringVariable(firstName)
+	return u
+}
+
+func (u *UserModel) WithFullyQualifiedName(fullyQualifiedName string) *UserModel {
+	u.FullyQualifiedName = tfconfig.StringVariable(fullyQualifiedName)
 	return u
 }
 
@@ -622,6 +628,11 @@ func (u *UserModel) WithErrorOnNondeterministicUpdateValue(value tfconfig.Variab
 
 func (u *UserModel) WithFirstNameValue(value tfconfig.Variable) *UserModel {
 	u.FirstName = value
+	return u
+}
+
+func (u *UserModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *UserModel {
+	u.FullyQualifiedName = value
 	return u
 }
 

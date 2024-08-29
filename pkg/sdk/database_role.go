@@ -40,9 +40,11 @@ type alterDatabaseRoleOptions struct {
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	Rename *DatabaseRoleRename `ddl:"list,no_parentheses" sql:"RENAME TO"`
-	Set    *DatabaseRoleSet    `ddl:"list,no_parentheses" sql:"SET"`
-	Unset  *DatabaseRoleUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
+	Rename    *DatabaseObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set       *DatabaseRoleSet          `ddl:"list,no_parentheses" sql:"SET"`
+	Unset     *DatabaseRoleUnset        `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTags   []TagAssociation          `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags []ObjectIdentifier        `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type DatabaseRoleRename struct {
@@ -73,6 +75,7 @@ type showDatabaseRoleOptions struct {
 	Like          *Like                   `ddl:"keyword" sql:"LIKE"`
 	in            bool                    `ddl:"static" sql:"IN DATABASE"`
 	Database      AccountObjectIdentifier `ddl:"identifier"`
+	Limit         *LimitFrom              `ddl:"keyword" sql:"LIMIT"`
 }
 
 // databaseRoleDBRow is used to decode the result of a SHOW DATABASE ROLES query.
@@ -95,6 +98,7 @@ type databaseRoleDBRow struct {
 type DatabaseRole struct {
 	CreatedOn              string
 	Name                   string
+	DatabaseName           string // value not returned by SHOW, filled in the convert function
 	IsDefault              bool
 	IsCurrent              bool
 	IsInherited            bool
@@ -104,6 +108,10 @@ type DatabaseRole struct {
 	Owner                  string
 	Comment                string
 	OwnerRoleType          string
+}
+
+func (v DatabaseRole) ID() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(v.DatabaseName, v.Name)
 }
 
 func (row databaseRoleDBRow) convert() *DatabaseRole {

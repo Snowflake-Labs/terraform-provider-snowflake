@@ -128,3 +128,11 @@ func (c *StageClient) CopyIntoTableFromFile(t *testing.T, table, stage sdk.Schem
 	MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE`, table.FullyQualifiedName(), stage.FullyQualifiedName(), filename))
 	require.NoError(t, err)
 }
+
+func (c *StageClient) Rename(t *testing.T, id sdk.SchemaObjectIdentifier, newId sdk.SchemaObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, sdk.NewAlterStageRequest(id).WithRenameTo(&newId))
+	require.NoError(t, err)
+}

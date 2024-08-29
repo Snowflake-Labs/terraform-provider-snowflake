@@ -4,6 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -15,10 +23,11 @@ import (
 )
 
 func TestAcc_DatabaseRole(t *testing.T) {
-	resourceName := "snowflake_database_role.test_db_role"
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := random.Comment()
-	comment2 := random.Comment()
+	databaseRoleModel := model.DatabaseRole("test", id.DatabaseName(), id.Name())
+	databaseRoleModelWithComment := model.DatabaseRole("test", id.DatabaseName(), id.Name()).WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -29,41 +38,121 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.DatabaseRole),
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRoleConfig(id.Name(), acc.TestDatabaseName, comment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+				Config: config.FromModel(t, databaseRoleModel),
+				Check: assert.AssertThat(t,
+					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
+						HasNameString(id.Name()).
+						HasDatabaseString(id.DatabaseName()).
+						HasCommentString("").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.DatabaseRoleShowOutput(t, "snowflake_database_role.test").
+						HasName(id.Name()).
+						HasComment(""),
+					objectassert.DatabaseRole(t, id).
+						HasName(id.Name()).
+						HasComment(""),
 				),
 			},
 			{
-				Config: databaseRoleConfig(id.Name(), acc.TestDatabaseName, comment2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
+				ResourceName: "snowflake_database_role.test",
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasCommentString(""),
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, helpers.EncodeResourceIdentifier(id)).
+						HasName(id.Name()).
+						HasComment(""),
+				),
+			},
+			// set comment
+			{
+				Config: config.FromModel(t, databaseRoleModelWithComment),
+				Check: assert.AssertThat(t,
+					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
+						HasNameString(id.Name()).
+						HasDatabaseString(id.DatabaseName()).
+						HasCommentString(comment).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.DatabaseRoleShowOutput(t, "snowflake_database_role.test").
+						HasName(id.Name()).
+						HasComment(comment),
+					objectassert.DatabaseRole(t, id).
+						HasName(id.Name()).
+						HasComment(comment),
+				),
+			},
+			{
+				ResourceName: "snowflake_database_role.test",
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasCommentString(comment),
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, helpers.EncodeResourceIdentifier(id)).
+						HasName(id.Name()).
+						HasComment(comment),
+				),
+			},
+			// unset comment
+			{
+				Config: config.FromModel(t, databaseRoleModel),
+				Check: assert.AssertThat(t,
+					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
+						HasNameString(id.Name()).
+						HasDatabaseString(id.DatabaseName()).
+						HasCommentString("").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.DatabaseRoleShowOutput(t, "snowflake_database_role.test").
+						HasName(id.Name()).
+						HasComment(""),
+					objectassert.DatabaseRole(t, id).
+						HasName(id.Name()).
+						HasComment(""),
+				),
+			},
+			{
+				ResourceName: "snowflake_database_role.test",
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasCommentString(""),
+					resourceshowoutputassert.ImportedWarehouseShowOutput(t, helpers.EncodeResourceIdentifier(id)).
+						HasName(id.Name()).
+						HasComment(""),
+				),
+			},
+			// rename
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, databaseRoleModel.WithName(newId.Name())),
+				Check: assert.AssertThat(t,
+					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
+						HasNameString(newId.Name()).
+						HasDatabaseString(newId.DatabaseName()).
+						HasCommentString("").
+						HasFullyQualifiedNameString(newId.FullyQualifiedName()),
+					resourceshowoutputassert.DatabaseRoleShowOutput(t, "snowflake_database_role.test").
+						HasName(newId.Name()).
+						HasComment(""),
+					objectassert.DatabaseRole(t, newId).
+						HasName(newId.Name()).
+						HasComment(""),
 				),
 			},
 		},
 	})
 }
 
-func databaseRoleConfig(dbRoleName string, databaseName string, comment string) string {
-	s := `
-resource "snowflake_database_role" "test_db_role" {
-	name     	  = "%s"
-	database  	  = "%s"
-	comment       = "%s"
-}
-	`
-	return fmt.Sprintf(s, dbRoleName, databaseName, comment)
-}
-
 func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := random.Comment()
+	databaseRoleModelWithComment := model.DatabaseRole("test", id.DatabaseName(), id.Name()).WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -78,24 +167,24 @@ func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseRoleConfig(id.Name(), id.DatabaseName(), comment),
+				Config: config.FromModel(t, databaseRoleModelWithComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "id", fmt.Sprintf(`%s|%s`, id.DatabaseName(), id.Name())),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "id", fmt.Sprintf(`%s|%s`, id.DatabaseName(), id.Name())),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseRoleConfig(id.Name(), id.DatabaseName(), comment),
+				Config:                   config.FromModel(t, databaseRoleModelWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},
@@ -104,8 +193,9 @@ func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(
 
 func TestAcc_DatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	quotedDatabaseRoleId := fmt.Sprintf(`\"%s\"`, id.Name())
+	quotedDatabaseRoleId := fmt.Sprintf(`"%s"`, id.Name())
 	comment := random.Comment()
+	databaseRoleModelWithComment := model.DatabaseRole("test", id.DatabaseName(), quotedDatabaseRoleId).WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -121,28 +211,28 @@ func TestAcc_DatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Config:             databaseRoleConfig(quotedDatabaseRoleId, id.DatabaseName(), comment),
+				Config:             config.FromModel(t, databaseRoleModelWithComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "database", id.DatabaseName()),
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "id", fmt.Sprintf(`%s|%s`, id.DatabaseName(), id.Name())),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "database", id.DatabaseName()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "id", fmt.Sprintf(`%s|%s`, id.DatabaseName(), id.Name())),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseRoleConfig(quotedDatabaseRoleId, id.DatabaseName(), comment),
+				Config:                   config.FromModel(t, databaseRoleModelWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database_role.test_db_role", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "database", id.DatabaseName()),
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database_role.test_db_role", "id", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "database", id.DatabaseName()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database_role.test", "id", id.FullyQualifiedName()),
 				),
 			},
 		},
