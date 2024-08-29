@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -24,29 +23,22 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 // TODO [SNOW-1348101]: handle 1-part default namespace
 func TestAcc_User(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
-	prefix2 := acc.TestClient().Ids.Alpha()
-	id := sdk.NewAccountObjectIdentifier(prefix)
-	id2 := sdk.NewAccountObjectIdentifier(prefix2)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	comment := random.Comment()
 	newComment := random.Comment()
 
-	sshkey1, err := testhelpers.Fixture("userkey1")
-	require.NoError(t, err)
-
-	sshkey2, err := testhelpers.Fixture("userkey2")
-	require.NoError(t, err)
+	key1, _ := random.GenerateRSAPublicKey(t)
+	key2, _ := random.GenerateRSAPublicKey(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -57,11 +49,11 @@ func TestAcc_User(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2, comment),
+				Config: uConfig(id.Name(), key1, key2, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id.Name())),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
@@ -77,16 +69,16 @@ func TestAcc_User(t *testing.T) {
 			},
 			// RENAME
 			{
-				Config: uConfig(prefix2, sshkey1, sshkey2, newComment),
+				Config: uConfig(id2.Name(), key1, key2, newComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", id2.Name()),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", newComment),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id2.Name())),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
@@ -101,12 +93,12 @@ func TestAcc_User(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: uConfig2(prefix2),
+				Config: uConfig2(id2.Name()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", id2.Name()),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
+					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id2.Name())),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "New Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Benoit"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Dageville"),
@@ -121,10 +113,11 @@ func TestAcc_User(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_user.w",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password"},
+				ResourceName:      "snowflake_user.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// TODO [SNOW-1348101]: which fields should be really ignored?
+				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password", "disable_mfa", "display_name", "login_name", "mins_to_bypass_mfa", "mins_to_unlock"},
 			},
 		},
 	})
@@ -132,12 +125,12 @@ func TestAcc_User(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
-	userName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	c := fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
 }
-`, userName.Name())
+`, userId.Name())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -155,7 +148,7 @@ resource "snowflake_user" "test" {
 				},
 			},
 			{
-				PreConfig: acc.TestClient().User.DropUserFunc(t, userName),
+				PreConfig: acc.TestClient().User.DropUserFunc(t, userId),
 				Config:    c,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -221,7 +214,6 @@ resource "snowflake_user" "w" {
 	disabled = true
 	default_warehouse="bar"
 	default_role="bar"
-	default_secondary_roles=[]
 	default_namespace="bar.baz"
 }
 `
@@ -235,10 +227,9 @@ resource "snowflake_user" "w" {
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
 	prefix := acc.TestClient().Ids.AlphaContaining(".")
-	sshkey1, err := testhelpers.Fixture("userkey1")
-	require.NoError(t, err)
-	sshkey2, err := testhelpers.Fixture("userkey2")
-	require.NoError(t, err)
+
+	key1, _ := random.GenerateRSAPublicKey(t)
+	key2, _ := random.GenerateRSAPublicKey(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -249,7 +240,7 @@ func TestAcc_User_issue2058(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2, "test_comment"),
+				Config: uConfig(prefix, key1, key2, "test_comment"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 				),

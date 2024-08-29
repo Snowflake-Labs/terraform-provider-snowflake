@@ -385,8 +385,8 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			setStringProperty(d, "default_role", userDetails.DefaultRole),
 			d.Set("default_secondary_roles", defaultSecondaryRoles),
 			// not reading mins_to_bypass_mfa on purpose (they always change)
-			setStringProperty(d, "rsa_public_key", userDetails.Comment),
-			setStringProperty(d, "rsa_public_key_2", userDetails.Comment),
+			setStringProperty(d, "rsa_public_key", userDetails.RsaPublicKey),
+			setStringProperty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
 			setStringProperty(d, "comment", userDetails.Comment),
 			// can't read disable_mfa
 
