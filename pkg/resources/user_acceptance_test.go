@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -32,21 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
-
-func checkBool(path, attr string, value bool) func(*terraform.State) error {
-	return func(state *terraform.State) error {
-		is := state.RootModule().Resources[path].Primary
-		d := is.Attributes[attr]
-		b, err := strconv.ParseBool(d)
-		if err != nil {
-			return err
-		}
-		if b != value {
-			return fmt.Errorf("at %s expected %t but got %t", path, value, b)
-		}
-		return nil
-	}
-}
 
 // TODO [SNOW-1348101]: handle 1-part default namespace
 func TestAcc_User(t *testing.T) {
