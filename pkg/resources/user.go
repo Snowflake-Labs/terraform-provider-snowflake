@@ -405,7 +405,10 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("name") {
 		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
@@ -417,7 +420,7 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(newID))
+		d.SetId(helpers.EncodeResourceIdentifier(newID))
 		id = newID
 	}
 
