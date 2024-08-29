@@ -93,7 +93,6 @@ var userSchema = map[string]*schema.Schema{
 		Default:      IntDefault,
 		Description:  "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
 	},
-	// TODO [SNOW-1348101]: handle properly (0 and NULL)
 	"mins_to_unlock": {
 		Type:         schema.TypeInt,
 		Optional:     true,

@@ -1213,7 +1213,7 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, strings.ToLower(email), userShowOutput.Email)
 	})
 
-	t.Run("days to expiry setting by hand", func(t *testing.T) {
+	t.Run("days to expiry setting by hand to a negative value", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		err := client.Users.Create(ctx, id, nil)
@@ -1236,7 +1236,7 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		// days to expiry is returned
 		assert.NotNil(t, userDetails.DaysToExpiry.Value)
-		assert.GreaterOrEqual(t, *userDetails.DaysToExpiry.Value, float64(-1))
+		assert.LessOrEqual(t, *userDetails.DaysToExpiry.Value, float64(-1))
 	})
 
 	t.Run("days to expiry set by hand to float value", func(t *testing.T) {
@@ -1249,5 +1249,97 @@ func TestInt_Users(t *testing.T) {
 		// try to set days to expiry manually to the float value
 		_, err = client.ExecForTests(ctx, fmt.Sprintf(`ALTER USER %s SET DAYS_TO_EXPIRY = 1.5`, id.FullyQualifiedName()))
 		require.ErrorContains(t, err, "invalid value [1.5] for parameter 'DAYS_TO_EXPIRY'")
+	})
+
+	t.Run("days to expiry setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DaysToExpiry: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// days to expiry is null
+		assert.Nil(t, userDetails.DaysToExpiry.Value)
+	})
+
+	t.Run("mins to unlock setting by hand to a negative value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is null by default
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToUnlock: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is returned but not negative but null
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
+	})
+
+	t.Run("mins to unlock set by hand to float value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set mins to unlock manually to the float value
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`ALTER USER %s SET MINS_TO_UNLOCK = 1.5`, id.FullyQualifiedName()))
+		require.ErrorContains(t, err, "invalid value [1.5] for parameter 'MINS_TO_UNLOCK'")
+	})
+
+	t.Run("mins to unlock setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToUnlock: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is null
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
 	})
 }
