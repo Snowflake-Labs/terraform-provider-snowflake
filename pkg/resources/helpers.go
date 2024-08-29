@@ -76,33 +76,6 @@ func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceDa
 	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
 }
 
-func setIntProperty(d *schema.ResourceData, key string, property *sdk.IntProperty) error {
-	if property != nil && property.Value != nil {
-		if err := d.Set(key, *property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func setStringProperty(d *schema.ResourceData, key string, property *sdk.StringProperty) error {
-	if property != nil {
-		if err := d.Set(key, property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func setBoolProperty(d *schema.ResourceData, key string, property *sdk.BoolProperty) error {
-	if property != nil {
-		if err := d.Set(key, property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
 	if _, ok := v["database"]; ok {
 		if _, ok := v["schema"]; ok {

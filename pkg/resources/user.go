@@ -86,6 +86,7 @@ var userSchema = map[string]*schema.Schema{
 	},
 	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
 	// TODO [SNOW-1348101]: negative values can be set by hand so IntDefault should probably not be used here
+	// TODO [SNOW-1348101]: consider handling external change to 0 or from 0
 	"days_to_expiry": {
 		Type:         schema.TypeInt,
 		Optional:     true,
@@ -120,6 +121,7 @@ var userSchema = map[string]*schema.Schema{
 		Description:      "Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.",
 	},
 	// TODO [SNOW-1348101]: test (no elems, more elems, duplicated elems, proper setting, update - both ways and external one)
+	// TODO [SNOW-1348101]: Do we need diff suppression for lowercase inside the config? Or any other diff suppression?
 	"default_secondary_roles": {
 		Type: schema.TypeSet,
 		Elem: &schema.Schema{
@@ -225,19 +227,19 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 		setStringProperty(d, "middle_name", userDetails.MiddleName),
 		setStringProperty(d, "last_name", userDetails.LastName),
 		setStringProperty(d, "email", userDetails.Email),
-		// TODO: must_change_password
-		// TODO: disabled
-		// TODO: days_to_expiry
-		// TODO: mins_to_unlock
+		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
+		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
+		// not setting days_to_expiry on purpose
+		// not setting mins_to_unlock on purpose
 		// TODO: default_warehouse
 		// TODO: default_namespace
 		// TODO: default_role
 		// TODO: default_secondary_roles
-		// TODO: mins_to_bypass_mfa
+		// not setting mins_to_bypass_mfa on purpose
 		// TODO: rsa_public_key
 		// TODO: rsa_public_key_2
 		setStringProperty(d, "comment", userDetails.Comment),
-		// TODO: disable_mfa
+		// disable mfa can't be read, so not setting it
 	)
 	if err != nil {
 		return nil, err
@@ -321,10 +323,12 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		// We use User.Describe instead of User.Show because the "SHOW USERS ..." command
-		// requires the "MANAGE GRANTS" global privilege
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-		user, err := client.Users.Describe(ctx, id)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		userDetails, err := client.Users.Describe(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
@@ -359,62 +363,39 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := setStringProperty(d, "name", user.Name); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "comment", user.Comment); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "login_name", user.LoginName); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setBoolProperty(d, "disabled", user.Disabled); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "default_role", user.DefaultRole); err != nil {
-			return diag.FromErr(err)
-		}
-
-		// TODO [SNOW-1348101]: do we need to read them (probably yes, to handle external changes properly)? Do we need diff suppression for lowercase inside the config?
 		var defaultSecondaryRoles []string
-		if user.DefaultSecondaryRoles != nil && len(user.DefaultSecondaryRoles.Value) > 0 {
-			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(user.DefaultSecondaryRoles.Value, true)
+		if userDetails.DefaultSecondaryRoles != nil && len(userDetails.DefaultSecondaryRoles.Value) > 0 {
+			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(userDetails.DefaultSecondaryRoles.Value, true)
 		}
-		if err = d.Set("default_secondary_roles", defaultSecondaryRoles); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "default_namespace", user.DefaultNamespace); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "default_warehouse", user.DefaultWarehouse); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "email", user.Email); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "display_name", user.DisplayName); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "first_name", user.FirstName); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := setStringProperty(d, "last_name", user.LastName); err != nil {
-			return diag.FromErr(err)
-		}
+		errs := errors.Join(
+			// not reading name on purpose
+			// can't read password
+			// not reading login_name on purpose
+			// not reading display_name on purpose
+			setStringProperty(d, "first_name", userDetails.FirstName),
+			setStringProperty(d, "middle_name", userDetails.MiddleName),
+			setStringProperty(d, "last_name", userDetails.LastName),
+			setStringProperty(d, "email", userDetails.Email),
+			// not reading must_change_password on purpose (handled as external change to show output)
+			// not reading disabled on purpose (handled as external change to show output)
+			// not reading days_to_expiry on purpose (they always change)
+			// not reading mins_to_unlock on purpose (they always change)
+			setStringProperty(d, "default_warehouse", userDetails.DefaultWarehouse),
+			setStringProperty(d, "default_namespace", userDetails.DefaultNamespace),
+			setStringProperty(d, "default_role", userDetails.DefaultRole),
+			d.Set("default_secondary_roles", defaultSecondaryRoles),
+			// not reading mins_to_bypass_mfa on purpose (they always change)
+			setStringProperty(d, "rsa_public_key", userDetails.Comment),
+			setStringProperty(d, "rsa_public_key_2", userDetails.Comment),
+			setStringProperty(d, "comment", userDetails.Comment),
+			// can't read disable_mfa
 
-		if diags := handleUserParameterRead(d, userParameters); diags != nil {
-			return diags
-		}
-
-		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}); err != nil {
+			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+			handleUserParameterRead(d, userParameters),
+			d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}),
+			d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(userParameters)}),
+		)
+		if errs != nil {
 			return diag.FromErr(err)
 		}
 

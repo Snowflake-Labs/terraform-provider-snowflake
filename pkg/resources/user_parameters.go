@@ -173,7 +173,7 @@ func userParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObj
 }
 
 // TODO [SNOW-1348101][next PR]: make generic based on type definition
-func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) diag.Diagnostics {
+func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) error {
 	for _, p := range warehouseParameters {
 		switch p.Key {
 		case
@@ -192,10 +192,10 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 			string(sdk.UserParameterWeekStart):
 			value, err := strconv.Atoi(p.Value)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			if err := d.Set(strings.ToLower(p.Key), value); err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 		case
 			string(sdk.UserParameterBinaryInputFormat),
@@ -224,7 +224,7 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 			string(sdk.UserParameterUnsupportedDdlAction),
 			string(sdk.UserParameterNetworkPolicy):
 			if err := d.Set(strings.ToLower(p.Key), p.Value); err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 		case
 			string(sdk.UserParameterAbortDetachedQuery),
@@ -249,10 +249,10 @@ func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.
 			string(sdk.UserParameterPreventUnloadToInternalStages):
 			value, err := strconv.ParseBool(p.Value)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			if err := d.Set(strings.ToLower(p.Key), value); err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 		}
 	}
