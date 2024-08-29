@@ -1175,4 +1175,40 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, newId.Name(), userDetails.LoginName.Value)
 		assert.Equal(t, "", userDetails.DisplayName.Value)
 	})
+
+	t.Run("email casing is preserved in Snowflake", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Email: sdk.String(strings.ToUpper(email))}})
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		userShowOutput, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		// email is returned as uppercase both in describe and in show
+		assert.Equal(t, strings.ToUpper(email), userDetails.Email.Value)
+		assert.Equal(t, strings.ToUpper(email), userShowOutput.Email)
+
+		// we change it to lowercase
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						Email: sdk.String(strings.ToLower(email)),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		userShowOutput, err = client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		// email is returned as lowercase both in describe and in show
+		assert.Equal(t, strings.ToLower(email), userDetails.Email.Value)
+		assert.Equal(t, strings.ToLower(email), userShowOutput.Email)
+	})
 }

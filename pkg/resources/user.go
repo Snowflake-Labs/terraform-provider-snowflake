@@ -63,7 +63,6 @@ var userSchema = map[string]*schema.Schema{
 		Sensitive:   true,
 		Description: "Last name of the user.",
 	},
-	// TODO [SNOW-1348101]: check case sensitivity
 	"email": {
 		Type:        schema.TypeString,
 		Optional:    true,
