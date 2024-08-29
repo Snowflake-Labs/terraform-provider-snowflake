@@ -50,7 +50,6 @@ func checkBool(path, attr string, value bool) func(*terraform.State) error {
 
 // TODO [SNOW-1348101]: handle 1-part default namespace
 func TestAcc_User(t *testing.T) {
-	r := require.New(t)
 	prefix := acc.TestClient().Ids.Alpha()
 	prefix2 := acc.TestClient().Ids.Alpha()
 	id := sdk.NewAccountObjectIdentifier(prefix)
@@ -60,10 +59,10 @@ func TestAcc_User(t *testing.T) {
 	newComment := random.Comment()
 
 	sshkey1, err := testhelpers.Fixture("userkey1")
-	r.NoError(err)
+	require.NoError(t, err)
 
 	sshkey2, err := testhelpers.Fixture("userkey2")
-	r.NoError(err)
+	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -150,7 +149,7 @@ func TestAcc_User(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 	userName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	config := fmt.Sprintf(`
+	c := fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
 }
@@ -164,7 +163,7 @@ resource "snowflake_user" "test" {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: c,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -173,7 +172,7 @@ resource "snowflake_user" "test" {
 			},
 			{
 				PreConfig: acc.TestClient().User.DropUserFunc(t, userName),
-				Config:    config,
+				Config:    c,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -251,12 +250,11 @@ resource "snowflake_user" "w" {
 // The problem was with a dot in user identifier.
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
-	r := require.New(t)
 	prefix := acc.TestClient().Ids.AlphaContaining(".")
 	sshkey1, err := testhelpers.Fixture("userkey1")
-	r.NoError(err)
+	require.NoError(t, err)
 	sshkey2, err := testhelpers.Fixture("userkey2")
-	r.NoError(err)
+	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
