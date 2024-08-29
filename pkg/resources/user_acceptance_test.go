@@ -792,3 +792,102 @@ func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModelWithoutDaysToExpiry := model.UserWithDefaultMeta(userId.Name())
+	userModelDaysToExpiry10 := model.UserWithDefaultMeta(userId.Name()).WithDaysToExpiry(10)
+	userModelDaysToExpiry5 := model.UserWithDefaultMeta(userId.Name()).WithDaysToExpiry(5)
+	userModelDaysToExpiry0 := model.UserWithDefaultMeta(userId.Name()).WithDaysToExpiry(0)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			// 1. create without days_to_expiry
+			{
+				Config: config.FromModel(t, userModelWithoutDaysToExpiry),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithoutDaysToExpiry.ResourceReference()).HasNoDaysToExpiry(),
+					objectassert.User(t, userId).HasDaysToExpiryEmpty(),
+				),
+			},
+			// 2. change to 10 (no plan after)
+			{
+				Config: config.FromModel(t, userModelDaysToExpiry10),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelDaysToExpiry10.ResourceReference()).HasDaysToExpiryString("10"),
+					objectassert.User(t, userId).HasDaysToExpiryNotEmpty(),
+				),
+			},
+			// 3. change externally to 2 (no changes)
+			{
+				PreConfig: func() {
+					acc.TestClient().User.SetDaysToExpiry(t, userId, 2)
+				},
+				Config: config.FromModel(t, userModelDaysToExpiry10),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// 4. change externally to 0 (no changes)
+			{
+				PreConfig: func() {
+					acc.TestClient().User.SetDaysToExpiry(t, userId, 0)
+				},
+				Config: config.FromModel(t, userModelDaysToExpiry10),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// 5. change in config to 5 (change)
+			{
+				Config: config.FromModel(t, userModelDaysToExpiry5),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userModelDaysToExpiry5.ResourceReference(), "days_to_expiry", tfjson.ActionUpdate, sdk.String("10"), sdk.String("5")),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelDaysToExpiry10.ResourceReference()).HasDaysToExpiryString("5"),
+					objectassert.User(t, userId).HasDaysToExpiryNotEmpty(),
+				),
+			},
+			// 6. change in config to 0 (change)
+			{
+				Config: config.FromModel(t, userModelDaysToExpiry0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userModelDaysToExpiry0.ResourceReference(), "days_to_expiry", tfjson.ActionUpdate, sdk.String("5"), sdk.String("0")),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelDaysToExpiry10.ResourceReference()).HasDaysToExpiryString("0"),
+					objectassert.User(t, userId).HasDaysToExpiryEmpty(),
+				),
+			},
+			// 7. remove from config (no change)
+			{
+				Config: config.FromModel(t, userModelWithoutDaysToExpiry),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithoutDaysToExpiry.ResourceReference()).HasDaysToExpiryString("0"),
+					objectassert.User(t, userId).HasDaysToExpiryEmpty(),
+				),
+			},
+		},
+	})
+}

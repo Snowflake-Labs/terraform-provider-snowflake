@@ -1352,4 +1352,59 @@ func TestInt_Users(t *testing.T) {
 		}
 		require.ErrorContains(t, err, "invalid property 'DISABLE_MFA' for 'USER'")
 	})
+
+	t.Run("mins to bypass mfa setting by hand to a negative value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to bypass mfa is null by default
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToBypassMFA: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is returned but not negative but null
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("mins to bypass mfa setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToBypassMFA: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to bypass mfa is nil
+		require.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
 }

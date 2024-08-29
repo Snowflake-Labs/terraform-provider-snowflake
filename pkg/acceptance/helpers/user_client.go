@@ -76,3 +76,19 @@ func (c *UserClient) Disable(t *testing.T, id sdk.AccountObjectIdentifier) {
 	})
 	require.NoError(t, err)
 }
+
+func (c *UserClient) SetDaysToExpiry(t *testing.T, id sdk.AccountObjectIdentifier, value int) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					DaysToExpiry: sdk.Int(value),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}

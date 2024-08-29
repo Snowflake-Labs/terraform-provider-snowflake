@@ -18,6 +18,7 @@ type ViewModel struct {
 	DataMetricFunctions tfconfig.Variable `json:"data_metric_function,omitempty"`
 	DataMetricSchedule  tfconfig.Variable `json:"data_metric_schedule,omitempty"`
 	Database            tfconfig.Variable `json:"database,omitempty"`
+	FullyQualifiedName  tfconfig.Variable `json:"fully_qualified_name,omitempty"`
 	IsRecursive         tfconfig.Variable `json:"is_recursive,omitempty"`
 	IsSecure            tfconfig.Variable `json:"is_secure,omitempty"`
 	IsTemporary         tfconfig.Variable `json:"is_temporary,omitempty"`
@@ -36,7 +37,10 @@ type ViewModel struct {
 
 func View(
 	resourceName string,
-	database string, name string, schema string, statement string,
+	database string,
+	name string,
+	schema string,
+	statement string,
 ) *ViewModel {
 	v := &ViewModel{ResourceModelMeta: config.Meta(resourceName, resources.View)}
 	v.WithDatabase(database)
@@ -47,7 +51,10 @@ func View(
 }
 
 func ViewWithDefaultMeta(
-	database string, name string, schema string, statement string,
+	database string,
+	name string,
+	schema string,
+	statement string,
 ) *ViewModel {
 	v := &ViewModel{ResourceModelMeta: config.DefaultMeta(resources.View)}
 	v.WithDatabase(database)
@@ -68,8 +75,6 @@ func (v *ViewModel) WithChangeTracking(changeTracking string) *ViewModel {
 	return v
 }
 
-// columns attribute type is not yet supported, so WithColumns can't be generated
-
 func (v *ViewModel) WithComment(comment string) *ViewModel {
 	v.Comment = tfconfig.StringVariable(comment)
 	return v
@@ -86,6 +91,11 @@ func (v *ViewModel) WithCopyGrants(copyGrants bool) *ViewModel {
 
 func (v *ViewModel) WithDatabase(database string) *ViewModel {
 	v.Database = tfconfig.StringVariable(database)
+	return v
+}
+
+func (v *ViewModel) WithFullyQualifiedName(fullyQualifiedName string) *ViewModel {
+	v.FullyQualifiedName = tfconfig.StringVariable(fullyQualifiedName)
 	return v
 }
 
@@ -140,11 +150,6 @@ func (v *ViewModel) WithChangeTrackingValue(value tfconfig.Variable) *ViewModel 
 	return v
 }
 
-func (v *ViewModel) WithColumnsValue(value tfconfig.Variable) *ViewModel {
-	v.Columns = value
-	return v
-}
-
 func (v *ViewModel) WithCommentValue(value tfconfig.Variable) *ViewModel {
 	v.Comment = value
 	return v
@@ -155,18 +160,13 @@ func (v *ViewModel) WithCopyGrantsValue(value tfconfig.Variable) *ViewModel {
 	return v
 }
 
-func (v *ViewModel) WithDataMetricFunctionsValue(value tfconfig.Variable) *ViewModel {
-	v.DataMetricFunctions = value
-	return v
-}
-
-func (v *ViewModel) WithDataMetricScheduleValue(value tfconfig.Variable) *ViewModel {
-	v.DataMetricSchedule = value
-	return v
-}
-
 func (v *ViewModel) WithDatabaseValue(value tfconfig.Variable) *ViewModel {
 	v.Database = value
+	return v
+}
+
+func (v *ViewModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *ViewModel {
+	v.FullyQualifiedName = value
 	return v
 }
 

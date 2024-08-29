@@ -107,6 +107,11 @@ func (u *UserResourceAssert) HasDateOutputFormatString(expected string) *UserRes
 	return u
 }
 
+func (u *UserResourceAssert) HasDaysToExpiryString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("days_to_expiry", expected))
+	return u
+}
+
 func (u *UserResourceAssert) HasDefaultNamespaceString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("default_namespace", expected))
 	return u
@@ -124,6 +129,11 @@ func (u *UserResourceAssert) HasDefaultSecondaryRolesString(expected string) *Us
 
 func (u *UserResourceAssert) HasDefaultWarehouseString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("default_warehouse", expected))
+	return u
+}
+
+func (u *UserResourceAssert) HasDisableMfaString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("disable_mfa", expected))
 	return u
 }
 
@@ -182,11 +192,6 @@ func (u *UserResourceAssert) HasGeometryOutputFormatString(expected string) *Use
 	return u
 }
 
-func (u *UserResourceAssert) HasHasRsaPublicKeyString(expected string) *UserResourceAssert {
-	u.AddAssertion(assert.ValueSet("has_rsa_public_key", expected))
-	return u
-}
-
 func (u *UserResourceAssert) HasJdbcTreatDecimalAsIntString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("jdbc_treat_decimal_as_int", expected))
 	return u
@@ -224,6 +229,21 @@ func (u *UserResourceAssert) HasLogLevelString(expected string) *UserResourceAss
 
 func (u *UserResourceAssert) HasLoginNameString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("login_name", expected))
+	return u
+}
+
+func (u *UserResourceAssert) HasMiddleNameString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("middle_name", expected))
+	return u
+}
+
+func (u *UserResourceAssert) HasMinsToBypassMfaString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("mins_to_bypass_mfa", expected))
+	return u
+}
+
+func (u *UserResourceAssert) HasMinsToUnlockString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("mins_to_unlock", expected))
 	return u
 }
 
@@ -491,6 +511,11 @@ func (u *UserResourceAssert) HasNoDateOutputFormat() *UserResourceAssert {
 	return u
 }
 
+func (u *UserResourceAssert) HasNoDaysToExpiry() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("days_to_expiry"))
+	return u
+}
+
 func (u *UserResourceAssert) HasNoDefaultNamespace() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("default_namespace"))
 	return u
@@ -508,6 +533,11 @@ func (u *UserResourceAssert) HasNoDefaultSecondaryRoles() *UserResourceAssert {
 
 func (u *UserResourceAssert) HasNoDefaultWarehouse() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("default_warehouse"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoDisableMfa() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("disable_mfa"))
 	return u
 }
 
@@ -566,11 +596,6 @@ func (u *UserResourceAssert) HasNoGeometryOutputFormat() *UserResourceAssert {
 	return u
 }
 
-func (u *UserResourceAssert) HasNoHasRsaPublicKey() *UserResourceAssert {
-	u.AddAssertion(assert.ValueNotSet("has_rsa_public_key"))
-	return u
-}
-
 func (u *UserResourceAssert) HasNoJdbcTreatDecimalAsInt() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("jdbc_treat_decimal_as_int"))
 	return u
@@ -608,6 +633,21 @@ func (u *UserResourceAssert) HasNoLogLevel() *UserResourceAssert {
 
 func (u *UserResourceAssert) HasNoLoginName() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("login_name"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoMiddleName() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("middle_name"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoMinsToBypassMfa() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("mins_to_bypass_mfa"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoMinsToUnlock() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("mins_to_unlock"))
 	return u
 }
 

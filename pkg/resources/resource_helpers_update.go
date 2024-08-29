@@ -6,6 +6,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func stringAttributeUpdate(d *schema.ResourceData, key string, setField **string, unsetField **bool) error {
+	if d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			*setField = sdk.String(v.(string))
+		} else {
+			*unsetField = sdk.Bool(true)
+		}
+	}
+	return nil
+}
+
 func intAttributeUpdate(d *schema.ResourceData, key string, setField **int, unsetField **bool) error {
 	if d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
@@ -17,10 +28,10 @@ func intAttributeUpdate(d *schema.ResourceData, key string, setField **int, unse
 	return nil
 }
 
-func stringAttributeUpdate(d *schema.ResourceData, key string, setField **string, unsetField **bool) error {
+func intAttributeWithSpecialDefaultUpdate(d *schema.ResourceData, key string, setField **int, unsetField **bool) error {
 	if d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok {
-			*setField = sdk.String(v.(string))
+		if v := d.Get(key).(int); v != IntDefault {
+			*setField = sdk.Int(v)
 		} else {
 			*unsetField = sdk.Bool(true)
 		}

@@ -84,15 +84,11 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
-	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
-	// TODO [SNOW-1348101]: negative values can be set by hand so IntDefault should probably not be used here
 	// TODO [SNOW-1348101]: consider handling external change to 0 or from 0
 	"days_to_expiry": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		ValidateFunc: validation.IntAtLeast(0),
-		Default:      IntDefault,
-		Description:  "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Description: "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
 	},
 	"mins_to_unlock": {
 		Type:         schema.TypeInt,
@@ -137,7 +133,8 @@ var userSchema = map[string]*schema.Schema{
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		ValidateFunc: validation.IntAtLeast(1),
+		ValidateFunc: validation.IntAtLeast(0),
+		Default:      IntDefault,
 		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available.",
 	},
 	"rsa_public_key": {
@@ -220,26 +217,9 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 
 	err = errors.Join(
 		d.Set("name", id.Name()),
-		// password can't be set
-		setStringProperty(d, "login_name", userDetails.LoginName),
-		setStringProperty(d, "display_name", userDetails.DisplayName),
-		setStringProperty(d, "first_name", userDetails.FirstName),
-		setStringProperty(d, "middle_name", userDetails.MiddleName),
-		setStringProperty(d, "last_name", userDetails.LastName),
-		setStringProperty(d, "email", userDetails.Email),
 		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
 		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
-		// not setting days_to_expiry on purpose
-		// not setting mins_to_unlock on purpose
-		// TODO: default_warehouse
-		// TODO: default_namespace
-		// TODO: default_role
-		// TODO: default_secondary_roles
-		// not setting mins_to_bypass_mfa on purpose
-		// TODO: rsa_public_key
-		// TODO: rsa_public_key_2
-		setStringProperty(d, "comment", userDetails.Comment),
-		// disable mfa can't be read, so not setting it
+		// all others are set in read
 	)
 	if err != nil {
 		return nil, err
@@ -270,14 +250,14 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
 		booleanStringAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable),
 		intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry),
-		intAttributeCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock),
+		intAttributeWithSpecialDefaultCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock),
 		accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
 		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 		attributeDirectValueCreate(d, "default_secondary_roles", &opts.ObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}),
-		intAttributeCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
+		intAttributeWithSpecialDefaultCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
 		stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
 		stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
 		stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment),
@@ -457,14 +437,14 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
 		booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
 		intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
-		intAttributeUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
+		intAttributeWithSpecialDefaultUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
 		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
 		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 		attributeDirectValueUpdate(d, "default_secondary_roles", &setObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}, &unsetObjectProperties.DefaultSecondaryRoles),
-		intAttributeUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
+		intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
 		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
 		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
 		stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),

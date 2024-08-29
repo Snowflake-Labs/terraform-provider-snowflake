@@ -13,16 +13,27 @@ func stringAttributeCreate(d *schema.ResourceData, key string, createField **str
 	return nil
 }
 
-func boolAttributeCreate(d *schema.ResourceData, key string, createField **bool) error {
+func intAttributeCreate(d *schema.ResourceData, key string, createField **int) error {
 	if v, ok := d.GetOk(key); ok {
-		*createField = sdk.Bool(v.(bool))
+		*createField = sdk.Int(v.(int))
 	}
 	return nil
 }
 
-func intAttributeCreate(d *schema.ResourceData, key string, createField **int) error {
-	if v, ok := d.GetOk(key); ok {
-		*createField = sdk.Int(v.(int))
+func intAttributeWithSpecialDefaultCreate(d *schema.ResourceData, key string, createField **int) error {
+	if v := d.Get(key).(int); v != IntDefault {
+		*createField = sdk.Int(v)
+	}
+	return nil
+}
+
+func booleanStringAttributeCreate(d *schema.ResourceData, key string, createField **bool) error {
+	if v := d.Get(key).(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
+		if err != nil {
+			return err
+		}
+		*createField = sdk.Bool(parsed)
 	}
 	return nil
 }
@@ -43,17 +54,6 @@ func objectIdentifierAttributeCreate(d *schema.ResourceData, key string, createF
 			return err
 		}
 		*createField = sdk.Pointer(objectIdentifier)
-	}
-	return nil
-}
-
-func booleanStringAttributeCreate(d *schema.ResourceData, key string, createField **bool) error {
-	if v := d.Get(key).(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
-		if err != nil {
-			return err
-		}
-		*createField = sdk.Bool(parsed)
 	}
 	return nil
 }

@@ -42,11 +42,6 @@ func (v *ViewResourceAssert) HasChangeTrackingString(expected string) *ViewResou
 	return v
 }
 
-func (v *ViewResourceAssert) HasColumnsString(expected string) *ViewResourceAssert {
-	v.AddAssertion(assert.ValueSet("columns", expected))
-	return v
-}
-
 func (v *ViewResourceAssert) HasCommentString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("comment", expected))
 	return v
@@ -69,6 +64,11 @@ func (v *ViewResourceAssert) HasDataMetricScheduleString(expected string) *ViewR
 
 func (v *ViewResourceAssert) HasDatabaseString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("database", expected))
+	return v
+}
+
+func (v *ViewResourceAssert) HasFullyQualifiedNameString(expected string) *ViewResourceAssert {
+	v.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
 	return v
 }
 
@@ -126,11 +126,6 @@ func (v *ViewResourceAssert) HasNoChangeTracking() *ViewResourceAssert {
 	return v
 }
 
-func (v *ViewResourceAssert) HasNoColumns() *ViewResourceAssert {
-	v.AddAssertion(assert.ValueNotSet("columns"))
-	return v
-}
-
 func (v *ViewResourceAssert) HasNoComment() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("comment"))
 	return v
@@ -153,6 +148,11 @@ func (v *ViewResourceAssert) HasNoDataMetricSchedule() *ViewResourceAssert {
 
 func (v *ViewResourceAssert) HasNoDatabase() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("database"))
+	return v
+}
+
+func (v *ViewResourceAssert) HasNoFullyQualifiedName() *ViewResourceAssert {
+	v.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
 	return v
 }
 
