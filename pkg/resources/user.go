@@ -363,15 +363,35 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObjectInShow(d,
+				showMapping{"login_name", "login_name", u.LoginName, u.LoginName, nil},
+				showMapping{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
+				showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil},
+				showMapping{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if err = setStateToValuesFromConfig(d, userSchema, []string{
+			"login_name",
+			"display_name",
+			"must_change_password",
+			"disabled",
+		}); err != nil {
+			return diag.FromErr(err)
+		}
+
 		var defaultSecondaryRoles []string
 		if userDetails.DefaultSecondaryRoles != nil && len(userDetails.DefaultSecondaryRoles.Value) > 0 {
 			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(userDetails.DefaultSecondaryRoles.Value, true)
 		}
 		errs := errors.Join(
-			// not reading name on purpose
+			// not reading name on purpose (we never update the name externally)
 			// can't read password
-			// not reading login_name on purpose
-			// not reading display_name on purpose
+			// not reading login_name on purpose (handled as external change to show output)
+			// not reading display_name on purpose (handled as external change to show output)
 			setStringProperty(d, "first_name", userDetails.FirstName),
 			setStringProperty(d, "middle_name", userDetails.MiddleName),
 			setStringProperty(d, "last_name", userDetails.LastName),
