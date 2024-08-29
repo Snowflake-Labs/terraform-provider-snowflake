@@ -58,6 +58,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
+					// TODO [SNOW-1348101]: remove checkBool checks
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
