@@ -85,3 +85,14 @@ func objectIdentifierAttributeUpdate(d *schema.ResourceData, key string, setFiel
 	}
 	return nil
 }
+
+func attributeDirectValueUpdate[T any](d *schema.ResourceData, key string, setField **T, value *T, unsetField **bool) error {
+	if d.HasChange(key) {
+		if _, ok := d.GetOk(key); ok {
+			*setField = value
+		} else {
+			*unsetField = sdk.Bool(true)
+		}
+	}
+	return nil
+}

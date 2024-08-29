@@ -426,7 +426,6 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	setObjectProperties := sdk.UserAlterObjectProperties{}
 	unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
-
 	errs := errors.Join(
 		stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
 		stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
@@ -442,37 +441,17 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
-		// TODO: default_secondary_roles
+		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
+		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
+		attributeDirectValueUpdate(d, "default_secondary_roles", &setObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}, &unsetObjectProperties.DefaultSecondaryRoles),
 		intAttributeUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
 		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
 		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
 		stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
-		// TODO: handle disable_mfa
+		booleanStringAttributeUpdate(d, "disable_mfa", &setObjectProperties.DisableMfa, &unsetObjectProperties.DisableMfa),
 	)
 	if errs != nil {
 		return diag.FromErr(errs)
-	}
-
-	if d.HasChange("default_secondary_roles") {
-		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
-		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
-		if _, ok := d.GetOk("default_secondary_roles"); ok {
-			setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
-		} else {
-			// TODO [SNOW-1348101]: adjust unset logic
-			unsetOptions := &sdk.AlterUserOptions{
-				Unset: &sdk.UserUnset{
-					ObjectProperties: &sdk.UserObjectPropertiesUnset{
-						DefaultSecondaryRoles: sdk.Bool(true),
-					},
-				},
-			}
-			err := client.Users.Alter(ctx, id, unsetOptions)
-			if err != nil {
-				d.Partial(true)
-				return diag.FromErr(err)
-			}
-		}
 	}
 
 	if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
