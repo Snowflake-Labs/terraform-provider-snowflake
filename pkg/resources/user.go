@@ -259,37 +259,33 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 
-	stringAttributeCreate(d, "password", &opts.ObjectProperties.Password)
-	stringAttributeCreate(d, "login_name", &opts.ObjectProperties.LoginName)
-	stringAttributeCreate(d, "display_name", &opts.ObjectProperties.DisplayName)
-	stringAttributeCreate(d, "first_name", &opts.ObjectProperties.FirstName)
-	stringAttributeCreate(d, "middle_name", &opts.ObjectProperties.MiddleName)
-	stringAttributeCreate(d, "last_name", &opts.ObjectProperties.LastName)
-	stringAttributeCreate(d, "email", &opts.ObjectProperties.Email)
-	boolAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword)
-	boolAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable)
-	intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry)
-	intAttributeCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock)
-	accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse)
-	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
-		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(defaultNamespace.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
+	errs := errors.Join(
+		stringAttributeCreate(d, "password", &opts.ObjectProperties.Password),
+		stringAttributeCreate(d, "login_name", &opts.ObjectProperties.LoginName),
+		stringAttributeCreate(d, "display_name", &opts.ObjectProperties.DisplayName),
+		stringAttributeCreate(d, "first_name", &opts.ObjectProperties.FirstName),
+		stringAttributeCreate(d, "middle_name", &opts.ObjectProperties.MiddleName),
+		stringAttributeCreate(d, "last_name", &opts.ObjectProperties.LastName),
+		stringAttributeCreate(d, "email", &opts.ObjectProperties.Email),
+		booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
+		booleanStringAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable),
+		intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry),
+		intAttributeCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock),
+		accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
+		objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
+		accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
+		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
+		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
+		attributeDirectValueCreate(d, "default_secondary_roles", &opts.ObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}),
+		intAttributeCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
+		stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
+		stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
+		stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment),
+		// TODO: handle disable_mfa (not settable in create - check)
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
 	}
-	accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole)
-	// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
-	// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
-	if _, ok := d.GetOk("default_secondary_roles"); ok {
-		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
-	}
-	intAttributeCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA)
-
-	stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey)
-	stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2)
-	stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment)
-	// TODO: handle disable_mfa (not settable in create - check)
 
 	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
 		return parametersCreateDiags
