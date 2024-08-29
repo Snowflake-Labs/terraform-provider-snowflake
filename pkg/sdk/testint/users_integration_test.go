@@ -1034,6 +1034,7 @@ func TestInt_Users(t *testing.T) {
 
 	// This test proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2817.
 	// sql: Scan error on column index 10, name "disabled": sql/driver: couldn't convert "null" into type bool
+	// TODO [SNOW-1348101 - next PR]: test what is visible if everything is set if there is no ownership on the active role
 	t.Run("issue #2817: handle show properly without OWNERSHIP and MANAGE GRANTS", func(t *testing.T) {
 		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
 		t.Cleanup(disabledUserCleanup)

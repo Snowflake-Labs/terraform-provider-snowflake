@@ -42,6 +42,10 @@ var ShowProcedureSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"arguments": {
+		Type:     schema.TypeInvalid,
+		Computed: true,
+	},
+	"arguments_raw": {
 		Type:     schema.TypeString,
 		Computed: true,
 	},
@@ -80,6 +84,7 @@ func ProcedureToSchema(procedure *sdk.Procedure) map[string]any {
 	procedureSchema["min_num_arguments"] = procedure.MinNumArguments
 	procedureSchema["max_num_arguments"] = procedure.MaxNumArguments
 	procedureSchema["arguments"] = procedure.Arguments
+	procedureSchema["arguments_raw"] = procedure.ArgumentsRaw
 	procedureSchema["description"] = procedure.Description
 	procedureSchema["catalog_name"] = procedure.CatalogName
 	procedureSchema["is_table_function"] = procedure.IsTableFunction

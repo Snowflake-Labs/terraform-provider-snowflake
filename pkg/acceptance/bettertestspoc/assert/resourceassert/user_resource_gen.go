@@ -422,6 +422,11 @@ func (u *UserResourceAssert) HasUseCachedResultString(expected string) *UserReso
 	return u
 }
 
+func (u *UserResourceAssert) HasUserTypeString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("user_type", expected))
+	return u
+}
+
 func (u *UserResourceAssert) HasWeekOfYearPolicyString(expected string) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("week_of_year_policy", expected))
 	return u
@@ -823,6 +828,11 @@ func (u *UserResourceAssert) HasNoUnsupportedDdlAction() *UserResourceAssert {
 
 func (u *UserResourceAssert) HasNoUseCachedResult() *UserResourceAssert {
 	u.AddAssertion(assert.ValueNotSet("use_cached_result"))
+	return u
+}
+
+func (u *UserResourceAssert) HasNoUserType() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("user_type"))
 	return u
 }
 

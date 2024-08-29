@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348101]: handle external type change properly (force new)
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
@@ -160,6 +160,11 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa)."),
 		Default:          BooleanDefault,
 	},
+	"user_type": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Specifies a type for the user.",
+	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
@@ -193,11 +198,21 @@ func User() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			// TODO [SNOW-SNOW-1629468 - next pr]: handle diff suppression correctly
+			// TODO [SNOW-1629468 - next pr]: handle diff suppression correctly
 			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
+			// TODO [SNOW-1645348]: revisit with service user work
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if n := diff.Get("user_type"); n != nil {
+					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
+					if !slices.Contains([]string{"", "PERSON"}, strings.ToUpper(n.(string))) {
+						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
+					}
+				}
+				return nil
+			},
 		),
 	}
 }
@@ -389,6 +404,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			setStringProperty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
 			setStringProperty(d, "comment", userDetails.Comment),
 			// can't read disable_mfa
+			d.Set("user_type", u.Type),
 
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			handleUserParameterRead(d, userParameters),

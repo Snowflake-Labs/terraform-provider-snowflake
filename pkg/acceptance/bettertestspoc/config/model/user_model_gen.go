@@ -88,6 +88,7 @@ type UserModel struct {
 	TwoDigitCenturyStart                     tfconfig.Variable `json:"two_digit_century_start,omitempty"`
 	UnsupportedDdlAction                     tfconfig.Variable `json:"unsupported_ddl_action,omitempty"`
 	UseCachedResult                          tfconfig.Variable `json:"use_cached_result,omitempty"`
+	UserType                                 tfconfig.Variable `json:"user_type,omitempty"`
 	WeekOfYearPolicy                         tfconfig.Variable `json:"week_of_year_policy,omitempty"`
 	WeekStart                                tfconfig.Variable `json:"week_start,omitempty"`
 
@@ -506,6 +507,11 @@ func (u *UserModel) WithUseCachedResult(useCachedResult bool) *UserModel {
 	return u
 }
 
+func (u *UserModel) WithUserType(userType string) *UserModel {
+	u.UserType = tfconfig.StringVariable(userType)
+	return u
+}
+
 func (u *UserModel) WithWeekOfYearPolicy(weekOfYearPolicy int) *UserModel {
 	u.WeekOfYearPolicy = tfconfig.IntegerVariable(weekOfYearPolicy)
 	return u
@@ -907,6 +913,11 @@ func (u *UserModel) WithUnsupportedDdlActionValue(value tfconfig.Variable) *User
 
 func (u *UserModel) WithUseCachedResultValue(value tfconfig.Variable) *UserModel {
 	u.UseCachedResult = value
+	return u
+}
+
+func (u *UserModel) WithUserTypeValue(value tfconfig.Variable) *UserModel {
+	u.UserType = value
 	return u
 }
 

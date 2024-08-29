@@ -316,3 +316,25 @@ func (u *UserAssert) HasHasRsaPublicKey(expected bool) *UserAssert {
 	})
 	return u
 }
+
+func (u *UserAssert) HasType(expected string) *UserAssert {
+	u.AddAssertion(func(t *testing.T, o *sdk.User) error {
+		t.Helper()
+		if o.Type != expected {
+			return fmt.Errorf("expected type: %v; got: %v", expected, o.Type)
+		}
+		return nil
+	})
+	return u
+}
+
+func (u *UserAssert) HasHasMfa(expected bool) *UserAssert {
+	u.AddAssertion(func(t *testing.T, o *sdk.User) error {
+		t.Helper()
+		if o.HasMfa != expected {
+			return fmt.Errorf("expected has mfa: %v; got: %v", expected, o.HasMfa)
+		}
+		return nil
+	})
+	return u
+}

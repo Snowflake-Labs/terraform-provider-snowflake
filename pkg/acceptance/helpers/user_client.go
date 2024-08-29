@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -90,5 +91,14 @@ func (c *UserClient) SetDaysToExpiry(t *testing.T, id sdk.AccountObjectIdentifie
 			},
 		},
 	})
+	require.NoError(t, err)
+}
+
+func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value string) {
+	t.Helper()
+	ctx := context.Background()
+
+	// TODO [SNOW-1645348]: use type from SDK
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), value))
 	require.NoError(t, err)
 }
