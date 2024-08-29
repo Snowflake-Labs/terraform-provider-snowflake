@@ -12,10 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func isOk(_ interface{}, ok bool) bool {
-	return ok
-}
-
 func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []error) {
 	if ok := sdk.IsValidDataType(val.(string)); !ok {
 		errs = append(errs, fmt.Errorf("%v is not a valid data type", val))

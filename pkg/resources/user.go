@@ -259,42 +259,18 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 
-	if password, ok := d.GetOk("password"); ok {
-		opts.ObjectProperties.Password = sdk.String(password.(string))
-	}
-	if loginName, ok := d.GetOk("login_name"); ok {
-		opts.ObjectProperties.LoginName = sdk.String(loginName.(string))
-	}
-	if displayName, ok := d.GetOk("display_name"); ok {
-		opts.ObjectProperties.DisplayName = sdk.String(displayName.(string))
-	}
-	if firstName, ok := d.GetOk("first_name"); ok {
-		opts.ObjectProperties.FirstName = sdk.String(firstName.(string))
-	}
-	if middleName, ok := d.GetOk("middle_name"); ok {
-		opts.ObjectProperties.FirstName = sdk.String(middleName.(string))
-	}
-	if lastName, ok := d.GetOk("last_name"); ok {
-		opts.ObjectProperties.LastName = sdk.String(lastName.(string))
-	}
-	if email, ok := d.GetOk("email"); ok {
-		opts.ObjectProperties.Email = sdk.String(email.(string))
-	}
-	if mustChangePassword, ok := d.GetOk("must_change_password"); ok {
-		opts.ObjectProperties.MustChangePassword = sdk.Bool(mustChangePassword.(bool))
-	}
-	if disabled, ok := d.GetOk("disabled"); ok {
-		opts.ObjectProperties.Disable = sdk.Bool(disabled.(bool))
-	}
-	if daysToExpiry, ok := d.GetOk("days_to_expiry"); ok {
-		opts.ObjectProperties.DaysToExpiry = sdk.Int(daysToExpiry.(int))
-	}
-	if minsToUnlock, ok := d.GetOk("mins_to_unlock"); ok {
-		opts.ObjectProperties.MinsToUnlock = sdk.Int(minsToUnlock.(int))
-	}
-	if defaultWarehouse, ok := d.GetOk("default_warehouse"); ok {
-		opts.ObjectProperties.DefaultWarehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultWarehouse.(string)))
-	}
+	stringAttributeCreate(d, "password", &opts.ObjectProperties.Password)
+	stringAttributeCreate(d, "login_name", &opts.ObjectProperties.LoginName)
+	stringAttributeCreate(d, "display_name", &opts.ObjectProperties.DisplayName)
+	stringAttributeCreate(d, "first_name", &opts.ObjectProperties.FirstName)
+	stringAttributeCreate(d, "middle_name", &opts.ObjectProperties.MiddleName)
+	stringAttributeCreate(d, "last_name", &opts.ObjectProperties.LastName)
+	stringAttributeCreate(d, "email", &opts.ObjectProperties.Email)
+	boolAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword)
+	boolAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable)
+	intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry)
+	intAttributeCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock)
+	accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse)
 	if defaultNamespace, ok := d.GetOk("default_namespace"); ok {
 		defaultNamespaceId, err := helpers.DecodeSnowflakeParameterID(defaultNamespace.(string))
 		if err != nil {
@@ -302,26 +278,17 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 		opts.ObjectProperties.DefaultNamespace = sdk.Pointer(defaultNamespaceId)
 	}
-	if defaultRole, ok := d.GetOk("default_role"); ok {
-		opts.ObjectProperties.DefaultRole = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(defaultRole.(string)))
-	}
+	accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole)
 	// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 	// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 	if _, ok := d.GetOk("default_secondary_roles"); ok {
 		opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{}
 	}
-	if minsToBypassMfa, ok := d.GetOk("mins_to_bypass_mfa"); ok {
-		opts.ObjectProperties.MinsToBypassMFA = sdk.Int(minsToBypassMfa.(int))
-	}
-	if rsaPublicKey, ok := d.GetOk("rsa_public_key"); ok {
-		opts.ObjectProperties.RSAPublicKey = sdk.String(rsaPublicKey.(string))
-	}
-	if rsaPublicKey2, ok := d.GetOk("rsa_public_key_2"); ok {
-		opts.ObjectProperties.RSAPublicKey2 = sdk.String(rsaPublicKey2.(string))
-	}
-	if comment, ok := d.GetOk("comment"); ok {
-		opts.ObjectProperties.Comment = sdk.String(comment.(string))
-	}
+	intAttributeCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA)
+
+	stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey)
+	stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2)
+	stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment)
 	// TODO: handle disable_mfa (not settable in create - check)
 
 	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
