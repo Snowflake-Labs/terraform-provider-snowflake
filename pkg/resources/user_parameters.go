@@ -76,17 +76,18 @@ var (
 	)
 )
 
+// TODO [SNOW-1348101]: uncomment DiffSuppress and ValidateDiag
+type parameterDef[T ~string] struct {
+	Name        T
+	Type        schema.ValueType
+	Description string
+	// DiffSuppress schema.SchemaDiffSuppressFunc
+	// ValidateDiag schema.SchemaValidateDiagFunc
+}
+
 func init() {
-	// TODO [SNOW-1348101][next PR]: reuse this struct
-	type parameterDef struct {
-		Name        sdk.UserParameter
-		Type        schema.ValueType
-		Description string
-		// DiffSuppress schema.SchemaDiffSuppressFunc
-		// ValidateDiag schema.SchemaValidateDiagFunc
-	}
 	// TODO [SNOW-1348101][next PR]: move to the SDK
-	userParameterFields := []parameterDef{
+	userParameterFields := []parameterDef[sdk.UserParameter]{
 		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption)."},
 		{Name: sdk.UserParameterAutocommit, Type: schema.TypeBool, Description: "Specifies whether autocommit is enabled for the session. Autocommit determines whether a DML statement, when executed without an active transaction, is automatically committed after the statement successfully completes. For more information, see [Transactions](https://docs.snowflake.com/en/sql-reference/transactions)."},

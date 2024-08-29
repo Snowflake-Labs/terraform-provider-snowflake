@@ -37,13 +37,7 @@ var (
 )
 
 func init() {
-	// TODO [SNOW-1348101][next PR]: merge this struct with the one in user parameters
-	type parameterDef struct {
-		Name        sdk.ObjectParameter
-		Type        schema.ValueType
-		Description string
-	}
-	additionalSchemaParameterFields := []parameterDef{
+	additionalSchemaParameterFields := []parameterDef[sdk.ObjectParameter]{
 		{Name: sdk.ObjectParameterPipeExecutionPaused, Type: schema.TypeBool, Description: "Specifies whether to pause a running pipe, primarily in preparation for transferring ownership of the pipe to a different role."},
 	}
 
