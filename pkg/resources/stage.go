@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -174,14 +175,17 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 
 	properties, err := client.Stages.Describe(ctx, id)
 	if err != nil {
-		d.SetId("")
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to describe stage",
-				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
-			},
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to describe stage. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Stage: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
 		}
+		return diag.FromErr(err)
 	}
 
 	stage, err := client.Stages.ShowByID(ctx, id)
@@ -191,7 +195,7 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to show stage by id",
-				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
+				Detail:   fmt.Sprintf("Stage: %s, Err: %s", id.FullyQualifiedName(), err),
 			},
 		}
 	}

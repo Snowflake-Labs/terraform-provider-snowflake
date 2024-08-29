@@ -107,6 +107,30 @@ Some of the resources are excluded from this change:
 #### *(breaking change)* removed `qualified_name` from `snowflake_masking_policy`, `snowflake_network_rule`, `snowflake_password_policy` and `snowflake_table`
 Because of introducing a new `fully_qualified_name` field for all of the resources, `qualified_name` was removed from `snowflake_masking_policy`, `snowflake_network_rule`,  `snowflake_password_policy` and `snowflake_table`. Please adjust your configurations. State is automatically migrated.
 
+### snowflake_stage resource changes
+
+#### *(bugfix)* Correctly handle renamed/deleted stage
+
+Correctly handle the situation when stage was rename/deleted externally (earlier it resulted in a permanent loop). No action is required on the user's side.
+
+Connected issues: [#2972](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2972) 
+
+### snowflake_table resource changes
+
+#### *(bugfix)* Handle data type diff suppression better for text and number
+
+Data types are not entirely correctly handled inside the provider (read more e.g. in [#2735](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2735)). It will be still improved with the upcoming function, procedure, and table rework. Currently, diff suppression was fixed for text and number data types in the table resource with the following assumptions/limitations:
+- for numbers the default precision is 38 and the default scale is 0 (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-numeric#number))
+- for number types the following types are treated as synonyms: `NUMBER`, `DECIMAL`, `NUMERIC`, `INT`, `INTEGER`, `BIGINT`, `SMALLINT`, `TINYINT`, `BYTEINT`
+- for text the default length is 16777216 (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-text#varchar))
+- for text types the following types are treated as synonyms: `VARCHAR`, `CHAR`, `CHARACTER`, `STRING`, `TEXT`
+- whitespace and casing is ignored
+- if the type arguments cannot be parsed the defaults are used and therefore diff may be suppressed unexpectedly (please report such cases)
+
+No action is required on the user's side.
+
+Connected issues: [#3007](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3007)
+
 ### snowflake_user resource changes
 
 #### *(breaking change)* user parameters added to snowflake_user resource
