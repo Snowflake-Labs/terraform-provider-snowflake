@@ -25,44 +25,58 @@ import (
 )
 
 // TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce
-// TODO(next pr): cleanup setting warehouse with unsafe_execute
 func TestAcc_View_basic(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeVARCHAR)
+	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
 	t.Cleanup(rowAccessPolicyCleanup)
 
 	aggregationPolicy, aggregationPolicyCleanup := acc.TestClient().AggregationPolicy.CreateAggregationPolicy(t)
 	t.Cleanup(aggregationPolicyCleanup)
 
-	rowAccessPolicy2, rowAccessPolicy2Cleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeVARCHAR)
+	rowAccessPolicy2, rowAccessPolicy2Cleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
 	t.Cleanup(rowAccessPolicy2Cleanup)
 
 	aggregationPolicy2, aggregationPolicy2Cleanup := acc.TestClient().AggregationPolicy.CreateAggregationPolicy(t)
 	t.Cleanup(aggregationPolicy2Cleanup)
 
+	functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
+	function2Id := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "MAX")
+
+	cron, cron2 := "10 * * * * UTC", "20 * * * * UTC"
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	otherStatement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
+	resourceId := helpers.EncodeResourceIdentifier(id)
+	table, tableCleanup := acc.TestClient().Table.CreateTableWithColumns(t, []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
+	})
+	t.Cleanup(tableCleanup)
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+	otherStatement := fmt.Sprintf("SELECT foo, id FROM %s", table.ID().FullyQualifiedName())
 	comment := "Terraform test resource'"
 
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
-	viewModelWithDependency := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModelWithDependency := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 
 	// generators currently don't handle lists, so use the old way
-	basicUpdate := func(rap, ap sdk.SchemaObjectIdentifier, statement string) config.Variables {
+	basicUpdate := func(rap, ap, functionId sdk.SchemaObjectIdentifier, statement, cron string, scheduleStatus sdk.DataMetricScheduleStatusOption) config.Variables {
 		return config.Variables{
-			"name":                          config.StringVariable(id.Name()),
-			"database":                      config.StringVariable(id.DatabaseName()),
-			"schema":                        config.StringVariable(id.SchemaName()),
-			"statement":                     config.StringVariable(statement),
-			"row_access_policy":             config.StringVariable(rap.FullyQualifiedName()),
-			"row_access_policy_on":          config.ListVariable(config.StringVariable("ROLE_NAME")),
-			"aggregation_policy":            config.StringVariable(ap.FullyQualifiedName()),
-			"aggregation_policy_entity_key": config.ListVariable(config.StringVariable("ROLE_NAME")),
-			"comment":                       config.StringVariable(comment),
+			"name":                                 config.StringVariable(id.Name()),
+			"database":                             config.StringVariable(id.DatabaseName()),
+			"schema":                               config.StringVariable(id.SchemaName()),
+			"statement":                            config.StringVariable(statement),
+			"row_access_policy":                    config.StringVariable(rap.FullyQualifiedName()),
+			"row_access_policy_on":                 config.ListVariable(config.StringVariable("ID")),
+			"aggregation_policy":                   config.StringVariable(ap.FullyQualifiedName()),
+			"aggregation_policy_entity_key":        config.ListVariable(config.StringVariable("ID")),
+			"data_metric_function":                 config.StringVariable(functionId.FullyQualifiedName()),
+			"data_metric_function_on":              config.ListVariable(config.StringVariable("ID")),
+			"data_metric_function_schedule_status": config.StringVariable(string(scheduleStatus)),
+			"data_metric_schedule_using_cron":      config.StringVariable(cron),
+			"comment":                              config.StringVariable(comment),
 		}
 	}
 
@@ -75,7 +89,7 @@ func TestAcc_View_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: accconfig.FromModel(t, viewModelWithDependency) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModelWithDependency),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -87,18 +101,25 @@ func TestAcc_View_basic(t *testing.T) {
 				Config:       accconfig.FromModel(t, viewModel),
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeSnowflakeID(id)).
+				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasStatementString(statement)),
 			},
-			// set policies externally
+			// set policies and dmfs externally
 			{
 				PreConfig: func() {
-					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "ROLE_NAME"}})))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "ID"}})))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy)))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest(fmt.Sprintf("USING CRON %s", cron))))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+						{
+							DataMetricFunction: functionId,
+							On:                 []sdk.Column{{Value: "ID"}},
+						},
+					})))
 				},
 				Config: accconfig.FromModel(t, viewModel),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
@@ -108,12 +129,14 @@ func TestAcc_View_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "0")),
 				),
 			},
 			// set other fields
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, statement),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
@@ -128,17 +151,24 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
-			// change policies
+			// change policies and dmfs
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy2.ID(), aggregationPolicy2, statement),
+				ConfigVariables: basicUpdate(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -148,17 +178,53 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+				),
+			},
+			// change dmf status
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
+				ConfigVariables: basicUpdate(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended),
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+					HasNameString(id.Name()).
+					HasStatementString(statement).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasCommentString(comment),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change statement and policies
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, otherStatement),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -168,11 +234,18 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change statements externally
@@ -181,7 +254,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.RecreateView(t, id, statement)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, otherStatement),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -191,11 +264,18 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// unset policies externally
@@ -205,7 +285,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, otherStatement),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -215,22 +295,29 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
 
 			// import - with optionals
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, otherStatement),
+				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeSnowflakeID(id)).
+				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasStatementString(otherStatement).
 						HasDatabaseString(id.DatabaseName()).
@@ -239,14 +326,14 @@ func TestAcc_View_basic(t *testing.T) {
 						HasIsSecureString("false").
 						HasIsTemporaryString("false").
 						HasChangeTrackingString("false"),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.entity_key.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.entity_key.0", "ROLE_NAME")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.on.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.on.0", "ROLE_NAME")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.0", "ID")),
 				),
 			},
 			// unset
@@ -261,6 +348,8 @@ func TestAcc_View_basic(t *testing.T) {
 					HasCommentString(""),
 					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "aggregation_policy.#")),
 					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "row_access_policy.#")),
+					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_schedule.#")),
+					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_function.#")),
 				),
 			},
 			// recreate - change is_recursive
@@ -277,6 +366,8 @@ func TestAcc_View_basic(t *testing.T) {
 					HasChangeTrackingString("default"),
 					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "aggregation_policy.#")),
 					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "row_access_policy.#")),
+					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_schedule.#")),
+					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_function.#")),
 				),
 			},
 		},
@@ -289,7 +380,7 @@ func TestAcc_View_recursive(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -299,7 +390,7 @@ func TestAcc_View_recursive(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -308,11 +399,11 @@ func TestAcc_View_recursive(t *testing.T) {
 					HasIsRecursiveString("true")),
 			},
 			{
-				Config:       accconfig.FromModel(t, viewModel.WithIsRecursive("true")) + useWarehouseConfig(acc.TestWarehouseName),
+				Config:       accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeSnowflakeID(id)).
+				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -331,7 +422,7 @@ func TestAcc_View_temporary(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -340,7 +431,7 @@ func TestAcc_View_temporary(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsTemporary("true")) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel.WithIsTemporary("true")),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -357,33 +448,50 @@ func TestAcc_View_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	// use a simple table to test change_tracking, otherwise it fails with: Change tracking is not supported on queries with joins of type '[LEFT_OUTER_JOIN]'
-	table, tableCleanup := acc.TestClient().Table.CreateTable(t)
+	resourceId := helpers.EncodeResourceIdentifier(id)
+	table, tableCleanup := acc.TestClient().Table.CreateTableWithColumns(t, []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
+	})
 	t.Cleanup(tableCleanup)
-	statement := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
 	t.Cleanup(rowAccessPolicyCleanup)
 
 	aggregationPolicy, aggregationPolicyCleanup := acc.TestClient().AggregationPolicy.CreateAggregationPolicy(t)
 	t.Cleanup(aggregationPolicyCleanup)
 
+	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
+	t.Cleanup(projectionPolicyCleanup)
+
+	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
+	t.Cleanup(maskingPolicyCleanup)
+
+	functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":                          config.StringVariable(id.Name()),
-			"database":                      config.StringVariable(id.DatabaseName()),
-			"schema":                        config.StringVariable(id.SchemaName()),
-			"comment":                       config.StringVariable("Terraform test resource"),
-			"is_secure":                     config.BoolVariable(true),
-			"is_temporary":                  config.BoolVariable(false),
-			"or_replace":                    config.BoolVariable(false),
-			"copy_grants":                   config.BoolVariable(false),
-			"change_tracking":               config.BoolVariable(true),
-			"row_access_policy":             config.StringVariable(rowAccessPolicy.ID().FullyQualifiedName()),
-			"row_access_policy_on":          config.ListVariable(config.StringVariable("ID")),
-			"aggregation_policy":            config.StringVariable(aggregationPolicy.FullyQualifiedName()),
-			"aggregation_policy_entity_key": config.ListVariable(config.StringVariable("ID")),
-			"statement":                     config.StringVariable(statement),
-			"warehouse":                     config.StringVariable(acc.TestWarehouseName),
+			"name":                            config.StringVariable(id.Name()),
+			"database":                        config.StringVariable(id.DatabaseName()),
+			"schema":                          config.StringVariable(id.SchemaName()),
+			"comment":                         config.StringVariable("Terraform test resource"),
+			"is_secure":                       config.BoolVariable(true),
+			"is_temporary":                    config.BoolVariable(false),
+			"copy_grants":                     config.BoolVariable(false),
+			"change_tracking":                 config.BoolVariable(true),
+			"row_access_policy":               config.StringVariable(rowAccessPolicy.ID().FullyQualifiedName()),
+			"row_access_policy_on":            config.ListVariable(config.StringVariable("ID")),
+			"aggregation_policy":              config.StringVariable(aggregationPolicy.FullyQualifiedName()),
+			"aggregation_policy_entity_key":   config.ListVariable(config.StringVariable("ID")),
+			"statement":                       config.StringVariable(statement),
+			"warehouse":                       config.StringVariable(acc.TestWarehouseName),
+			"column_name":                     config.StringVariable("ID"),
+			"masking_policy":                  config.StringVariable(maskingPolicy.ID().FullyQualifiedName()),
+			"masking_policy_using":            config.ListVariable(config.StringVariable("ID")),
+			"projection_policy":               config.StringVariable(projectionPolicy.FullyQualifiedName()),
+			"data_metric_function":            config.StringVariable(functionId.FullyQualifiedName()),
+			"data_metric_function_on":         config.ListVariable(config.StringVariable("ID")),
+			"data_metric_schedule_using_cron": config.StringVariable("5 * * * * UTC"),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -405,6 +513,13 @@ func TestAcc_View_complete(t *testing.T) {
 					HasIsSecureString("true").
 					HasIsTemporaryString("false").
 					HasChangeTrackingString("true"),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
@@ -427,8 +542,8 @@ func TestAcc_View_complete(t *testing.T) {
 				ConfigVariables: m(),
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeSnowflakeID(id)).
+				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
@@ -436,14 +551,21 @@ func TestAcc_View_complete(t *testing.T) {
 						HasCommentString("Terraform test resource").
 						HasIsSecureString("true").
 						HasIsTemporaryString("false").HasChangeTrackingString("true"),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.entity_key.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "aggregation_policy.0.entity_key.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.on.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "row_access_policy.0.on.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.minutes", "0")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.0", "ID")),
 				),
 			},
 		},
@@ -455,7 +577,7 @@ func TestAcc_View_Rename(t *testing.T) {
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithComment("foo").WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithComment("foo")
 	newViewModel := model.View("test", newId.DatabaseName(), newId.Name(), newId.SchemaName(), statement).WithComment("foo")
 
 	resource.Test(t, resource.TestCase{
@@ -467,7 +589,7 @@ func TestAcc_View_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
@@ -497,8 +619,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(false).WithCopyGrants(false).
-		WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithCopyGrants(false)
 
 	var createdOn string
 
@@ -511,7 +632,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", id.DatabaseName()),
@@ -526,7 +647,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 			},
 			// Checks that copy_grants changes don't trigger a drop
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -547,9 +668,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithOrReplace(true).WithCopyGrants(true).
-		WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
-
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithCopyGrants(true)
 	var createdOn string
 
 	resource.Test(t, resource.TestCase{
@@ -561,7 +680,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
@@ -573,7 +692,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 				),
 			},
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false)) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -604,7 +723,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithGrants(viewId, tableId, `\"name\"`) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: viewConfigWithGrants(viewId, tableId, `\"name\"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -612,7 +731,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfigWithGrants(viewId, tableId, "*") + useWarehouseConfig(acc.TestWarehouseName),
+				Config: viewConfigWithGrants(viewId, tableId, "*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
@@ -626,7 +745,7 @@ func TestAcc_View_copyGrants(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -636,19 +755,10 @@ func TestAcc_View_copyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config:      accconfig.FromModel(t, viewModel.WithCopyGrants(true)) + useWarehouseConfig(acc.TestWarehouseName),
-				ExpectError: regexp.MustCompile("all of `copy_grants,or_replace` must be specified"),
-			},
-			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
-				),
-			},
-			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false).WithOrReplace(true)) + useWarehouseConfig(acc.TestWarehouseName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 				),
 			},
 		},
@@ -672,7 +782,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithMultilineUnionStatement(id, part1, part2) + useWarehouseConfig(acc.TestWarehouseName),
+				Config: viewConfigWithMultilineUnionStatement(id, part1, part2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "statement", statement),
@@ -698,8 +808,8 @@ func TestAcc_View_Issue2640(t *testing.T) {
 				},
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeSnowflakeID(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeSnowflakeID(id)).
+				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
@@ -717,7 +827,7 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_view.test"
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithDependsOn([]string{"snowflake_unsafe_execute.use_warehouse"})
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 
 	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
@@ -741,27 +851,20 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.name", tag.Name),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "or_replace", "true"),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   accconfig.FromModel(t, viewModel) + useWarehouseConfig(acc.TestWarehouseName),
+				Config:                   accconfig.FromModel(t, viewModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "or_replace"),
 				),
 			},
 		},
 	})
-}
-
-func useWarehouseConfig(name string) string {
-	return fmt.Sprintf(`
-resource "snowflake_unsafe_execute" "use_warehouse" {
-	execute			= "USE WAREHOUSE \"%s\""
-	revert			= "SELECT 1"
-}
-`, name)
 }
 
 func viewv_0_94_1_WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, tagValue, statement string) string {
@@ -769,8 +872,9 @@ func viewv_0_94_1_WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, ta
 resource "snowflake_view" "test" {
 	name					= "%[1]s"
 	database				= "%[2]s"
-	schema				= "%[6]s"
+	schema				    = "%[6]s"
 	statement				= "%[7]s"
+	or_replace				= true
 	tag {
 		name = "%[4]s"
 		value = "%[5]s"
@@ -801,10 +905,8 @@ resource "snowflake_view" "test" {
   database = "%[1]s"
   schema = "%[2]s"
   statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"${snowflake_table.table.name}\""
-  or_replace = true
   copy_grants = true
   is_secure = true
-  depends_on = [snowflake_unsafe_execute.use_warehouse, snowflake_table.table]
 }
 
 resource "snowflake_account_role" "test" {
@@ -821,7 +923,7 @@ resource "snowflake_grant_privileges_to_account_role" "grant" {
 }
 
 data "snowflake_grants" "grants" {
-  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test, snowflake_unsafe_execute.use_warehouse]
+  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test]
   grants_on {
     object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
@@ -842,7 +944,6 @@ resource "snowflake_view" "test" {
 %[5]s
 SQL
   is_secure = true
-  depends_on = [snowflake_unsafe_execute.use_warehouse]
 }
 	`, id.DatabaseName(), id.SchemaName(), id.Name(), part1, part2)
 }

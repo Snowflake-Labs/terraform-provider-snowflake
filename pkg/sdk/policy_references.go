@@ -68,19 +68,20 @@ type policyReferenceFunctionArguments struct {
 	refEntityDomain *PolicyEntityDomain `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
 }
 
-// TODO: use PolicyKind in PolicyReference
 type PolicyKind string
 
 const (
 	PolicyKindAggregationPolicy PolicyKind = "AGGREGATION_POLICY"
 	PolicyKindRowAccessPolicy   PolicyKind = "ROW_ACCESS_POLICY"
+	PolicyKindPasswordPolicy    PolicyKind = "PASSWORD_POLICY"
+	PolicyKindMaskingPolicy     PolicyKind = "MASKING_POLICY"
 )
 
 type PolicyReference struct {
 	PolicyDb          *string
 	PolicySchema      *string
 	PolicyName        string
-	PolicyKind        string
+	PolicyKind        PolicyKind
 	RefDatabaseName   *string
 	RefSchemaName     *string
 	RefEntityName     string
@@ -113,7 +114,7 @@ type policyReferenceDBRow struct {
 func (row policyReferenceDBRow) convert() *PolicyReference {
 	policyReference := PolicyReference{
 		PolicyName:      row.PolicyName,
-		PolicyKind:      row.PolicyKind,
+		PolicyKind:      PolicyKind(row.PolicyKind),
 		RefEntityName:   row.RefEntityName,
 		RefEntityDomain: row.RefEntityDomain,
 	}

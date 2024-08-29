@@ -142,29 +142,16 @@ func TestViews_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddDataMetricFunction opts.DropDataMetricFunction opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddDataMetricFunction opts.DropDataMetricFunction opts.ModifyDataMetricFunction opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "ModifyDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
 	})
 
-	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddDataMetricFunction opts.DropDataMetricFunction opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present - more present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment opts.SetSecure opts.SetChangeTracking opts.UnsetSecure opts.SetTags opts.UnsetTags opts.AddDataMetricFunction opts.DropDataMetricFunction opts.ModifyDataMetricFunction opts.AddRowAccessPolicy opts.DropRowAccessPolicy opts.DropAndAddRowAccessPolicy opts.DropAllRowAccessPolicies opts.SetMaskingPolicyOnColumn opts.UnsetMaskingPolicyOnColumn opts.SetTagsOnColumn opts.UnsetTagsOnColumn] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetChangeTracking = Bool(true)
 		opts.DropAllRowAccessPolicies = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
-	})
-
-	t.Run("validation: exactly one field from [opts.SetDataMetricSchedule.UsingCron opts.SetDataMetricSchedule.TriggerOnChanges opts.SetDataMetricSchedule.Minutes] should be present - more present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
-			UsingCron: &ViewUsingCron{
-				Cron: "5 * * * * UTC",
-			},
-			TriggerOnChanges: Pointer(true),
-		}
-
-		opts.DropAllRowAccessPolicies = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions.SetDataMetricSchedule", "Minutes", "UsingCron", "TriggerOnChanges"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterViewOptions", "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "ModifyDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfExists opts.SetSecure]", func(t *testing.T) {
@@ -310,28 +297,22 @@ func TestViews_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP DATA METRIC FUNCTION %s ON (\"foo\")", id.FullyQualifiedName(), dmfId.FullyQualifiedName())
 	})
 
+	t.Run("modify data metric function", func(t *testing.T) {
+		dmfId := randomSchemaObjectIdentifier()
+
+		opts := defaultOpts()
+		opts.ModifyDataMetricFunction = &ViewModifyDataMetricFunctions{
+			DataMetricFunction: []ViewModifyDataMetricFunction{{DataMetricFunction: dmfId, On: []Column{{"foo"}}, ViewDataMetricScheduleStatusOperationOption: ViewDataMetricScheduleStatusOperationSuspend}},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s MODIFY DATA METRIC FUNCTION %s ON (\"foo\") SUSPEND", id.FullyQualifiedName(), dmfId.FullyQualifiedName())
+	})
+
 	t.Run("set data metric schedule", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
-			Minutes: &ViewMinute{
-				Minutes: 5,
-			},
+			DataMetricSchedule: "5 MINUTE",
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET DATA_METRIC_SCHEDULE = ' 5 MINUTE'", id.FullyQualifiedName())
-
-		opts = defaultOpts()
-		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
-			UsingCron: &ViewUsingCron{
-				Cron: "5 * * * * UTC",
-			},
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET DATA_METRIC_SCHEDULE = 'USING CRON 5 * * * * UTC '", id.FullyQualifiedName())
-
-		opts = defaultOpts()
-		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
-			TriggerOnChanges: Pointer(true),
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET DATA_METRIC_SCHEDULE = 'TRIGGER_ON_CHANGES'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET DATA_METRIC_SCHEDULE = '5 MINUTE'", id.FullyQualifiedName())
 	})
 
 	t.Run("unset data metric schedule", func(t *testing.T) {

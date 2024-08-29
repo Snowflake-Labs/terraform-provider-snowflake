@@ -15,7 +15,7 @@ type ViewModel struct {
 	Columns             tfconfig.Variable `json:"columns,omitempty"`
 	Comment             tfconfig.Variable `json:"comment,omitempty"`
 	CopyGrants          tfconfig.Variable `json:"copy_grants,omitempty"`
-	DataMetricFunctions tfconfig.Variable `json:"data_metric_functions,omitempty"`
+	DataMetricFunctions tfconfig.Variable `json:"data_metric_function,omitempty"`
 	DataMetricSchedule  tfconfig.Variable `json:"data_metric_schedule,omitempty"`
 	Database            tfconfig.Variable `json:"database,omitempty"`
 	IsRecursive         tfconfig.Variable `json:"is_recursive,omitempty"`
@@ -80,7 +80,7 @@ func (v *ViewModel) WithCopyGrants(copyGrants bool) *ViewModel {
 	return v
 }
 
-// data_metric_functions attribute type is not yet supported, so WithDataMetricFunctions can't be generated
+// data_metric_function attribute type is not yet supported, so WithDataMetricFunctions can't be generated
 
 // data_metric_schedule attribute type is not yet supported, so WithDataMetricSchedule can't be generated
 

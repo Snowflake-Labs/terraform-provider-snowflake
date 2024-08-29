@@ -80,7 +80,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 
 	passwordPolicyReferences := make([]sdk.PolicyReference, 0)
 	for _, policyReference := range policyReferences {
-		if policyReference.PolicyKind == "PASSWORD_POLICY" {
+		if policyReference.PolicyKind == sdk.PolicyKindPasswordPolicy {
 			passwordPolicyReferences = append(passwordPolicyReferences, policyReference)
 		}
 	}

@@ -41,17 +41,11 @@ func TestAcc_Views(t *testing.T) {
 
 func views(viewId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-	resource "snowflake_unsafe_execute" "use_warehouse" {
-		execute = "USE WAREHOUSE \"%v\""
-		revert  = "SELECT 1"
-	}
-
 	resource snowflake_view "v"{
 		name 	 = "%v"
 		schema 	 = "%v"
 		database = "%v"
 		statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
-		depends_on = [snowflake_unsafe_execute.use_warehouse]
 	}
 
 	data snowflake_views "v" {
@@ -59,5 +53,5 @@ func views(viewId sdk.SchemaObjectIdentifier) string {
 		schema = snowflake_view.v.schema
 		depends_on = [snowflake_view.v]
 	}
-	`, acc.TestWarehouseName, viewId.Name(), viewId.SchemaName(), viewId.DatabaseName())
+	`, viewId.Name(), viewId.SchemaName(), viewId.DatabaseName())
 }

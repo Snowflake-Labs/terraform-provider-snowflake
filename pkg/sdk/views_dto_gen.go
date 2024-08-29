@@ -70,6 +70,7 @@ type AlterViewRequest struct {
 	UnsetTags                     []ObjectIdentifier
 	AddDataMetricFunction         *ViewAddDataMetricFunctionRequest
 	DropDataMetricFunction        *ViewDropDataMetricFunctionRequest
+	ModifyDataMetricFunction      *ViewModifyDataMetricFunctionsRequest
 	SetDataMetricSchedule         *ViewSetDataMetricScheduleRequest
 	UnsetDataMetricSchedule       *ViewUnsetDataMetricScheduleRequest
 	AddRowAccessPolicy            *ViewAddRowAccessPolicyRequest
@@ -94,18 +95,12 @@ type ViewDropDataMetricFunctionRequest struct {
 	DataMetricFunction []ViewDataMetricFunction // required
 }
 
+type ViewModifyDataMetricFunctionsRequest struct {
+	DataMetricFunction []ViewModifyDataMetricFunction // required
+}
+
 type ViewSetDataMetricScheduleRequest struct {
-	Minutes          *ViewMinuteRequest
-	UsingCron        *ViewUsingCronRequest
-	TriggerOnChanges *bool
-}
-
-type ViewMinuteRequest struct {
-	Minutes int // required
-}
-
-type ViewUsingCronRequest struct {
-	Cron string // required
+	DataMetricSchedule string // required
 }
 
 type ViewUnsetDataMetricScheduleRequest struct{}

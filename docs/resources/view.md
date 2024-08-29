@@ -38,7 +38,7 @@ resource "snowflake_view" "view" {
     select * from foo;
 SQL
 }
-# resource with attached policies
+# resource with attached policies and data metric functions
 resource "snowflake_view" "test" {
   database        = "database"
   schema          = "schema"
@@ -55,8 +55,15 @@ resource "snowflake_view" "test" {
     policy_name = "aggregation_policy"
     entity_key  = ["id"]
   }
+  data_metric_function {
+    function_name = "data_metric_function"
+    on            = ["id"]
+  }
+  data_metric_schedule {
+    using_cron = "15 * * * * UTC"
+  }
   statement = <<-SQL
-    select id from foo;
+    SELECT id FROM TABLE;
 SQL
 }
 ```
@@ -78,11 +85,12 @@ SQL
 - `aggregation_policy` (Block List, Max: 1) Specifies the aggregation policy to set on a view. (see [below for nested schema](#nestedblock--aggregation_policy))
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `comment` (String) Specifies a comment for the view.
-- `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.
+- `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
+- `data_metric_function` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_function))
+- `data_metric_schedule` (Block List, Max: 1) Specifies the schedule to run the data metric functions periodically. (see [below for nested schema](#nestedblock--data_metric_schedule))
 - `is_recursive` (String) Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `is_secure` (String) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `is_temporary` (String) Specifies that the view persists only for the duration of the session that you created it in. A temporary view and all its contents are dropped at the end of the session. In context of this provider, it means that it's dropped after a Terraform operation. This results in a permanent plan with object creation. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `or_replace` (Boolean) Overwrites the View if it exists.
 - `row_access_policy` (Block List, Max: 1) Specifies the row access policy to set on a view. (see [below for nested schema](#nestedblock--row_access_policy))
 
 ### Read-Only
@@ -102,6 +110,24 @@ Required:
 Optional:
 
 - `entity_key` (Set of String) Defines which columns uniquely identify an entity within the view.
+
+
+<a id="nestedblock--data_metric_function"></a>
+### Nested Schema for `data_metric_function`
+
+Required:
+
+- `function_name` (String) Identifier of the data metric function to add to the table or view or drop from the table or view. This function identifier must be provided without arguments in parenthesis.
+- `on` (Set of String) The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.
+
+
+<a id="nestedblock--data_metric_schedule"></a>
+### Nested Schema for `data_metric_schedule`
+
+Optional:
+
+- `minutes` (Number) Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: `5` | `15` | `30` | `60` | `720` | `1440`. Due to Snowflake limitations, changes in this field is not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.
+- `using_cron` (String) Specifies a cron expression and time zone for periodically running the data metric function. Supports a subset of standard cron utility syntax. Conflicts with `minutes`.
 
 
 <a id="nestedblock--row_access_policy"></a>
@@ -156,6 +182,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | view name
-terraform import snowflake_view.example 'dbName|schemaName|viewName'
+terraform import snowflake_view.example '"<database_name>"."<schema_name>"."<view_name>"'
 ```

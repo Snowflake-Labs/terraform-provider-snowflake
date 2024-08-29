@@ -1,2 +1,1 @@
-# format is database name | schema name | view name
-terraform import snowflake_view.example 'dbName|schemaName|viewName'
+terraform import snowflake_view.example '"<database_name>"."<schema_name>"."<view_name>"'

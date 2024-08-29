@@ -22,10 +22,6 @@ variable "change_tracking" {
   type = string
 }
 
-variable "or_replace" {
-  type = bool
-}
-
 variable "copy_grants" {
   type = bool
 }
@@ -56,4 +52,16 @@ variable "statement" {
 
 variable "warehouse" {
   type = string
+}
+
+variable "data_metric_schedule_using_cron" {
+  type = string
+}
+
+variable "data_metric_function" {
+  type = string
+}
+
+variable "data_metric_function_on" {
+  type = list(string)
 }

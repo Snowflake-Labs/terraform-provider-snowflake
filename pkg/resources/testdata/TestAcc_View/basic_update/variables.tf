@@ -33,3 +33,15 @@ variable "aggregation_policy_entity_key" {
 variable "comment" {
   type = string
 }
+
+variable "data_metric_schedule_using_cron" {
+  type = string
+}
+
+variable "data_metric_function" {
+  type = string
+}
+
+variable "data_metric_function_on" {
+  type = list(string)
+}

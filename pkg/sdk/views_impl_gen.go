@@ -141,21 +141,15 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 		}
 	}
 
+	if r.ModifyDataMetricFunction != nil {
+		opts.ModifyDataMetricFunction = &ViewModifyDataMetricFunctions{
+			DataMetricFunction: r.ModifyDataMetricFunction.DataMetricFunction,
+		}
+	}
+
 	if r.SetDataMetricSchedule != nil {
 		opts.SetDataMetricSchedule = &ViewSetDataMetricSchedule{
-			TriggerOnChanges: r.SetDataMetricSchedule.TriggerOnChanges,
-		}
-
-		if r.SetDataMetricSchedule.Minutes != nil {
-			opts.SetDataMetricSchedule.Minutes = &ViewMinute{
-				Minutes: r.SetDataMetricSchedule.Minutes.Minutes,
-			}
-		}
-
-		if r.SetDataMetricSchedule.UsingCron != nil {
-			opts.SetDataMetricSchedule.UsingCron = &ViewUsingCron{
-				Cron: r.SetDataMetricSchedule.UsingCron.Cron,
-			}
+			DataMetricSchedule: r.SetDataMetricSchedule.DataMetricSchedule,
 		}
 	}
 

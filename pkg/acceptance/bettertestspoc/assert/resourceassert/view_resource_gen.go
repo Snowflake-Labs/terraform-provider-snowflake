@@ -57,8 +57,8 @@ func (v *ViewResourceAssert) HasCopyGrantsString(expected string) *ViewResourceA
 	return v
 }
 
-func (v *ViewResourceAssert) HasDataMetricFunctionsString(expected string) *ViewResourceAssert {
-	v.AddAssertion(assert.ValueSet("data_metric_functions", expected))
+func (v *ViewResourceAssert) HasDataMetricFunctionString(expected string) *ViewResourceAssert {
+	v.AddAssertion(assert.ValueSet("data_metric_function", expected))
 	return v
 }
 
@@ -141,8 +141,8 @@ func (v *ViewResourceAssert) HasNoCopyGrants() *ViewResourceAssert {
 	return v
 }
 
-func (v *ViewResourceAssert) HasNoDataMetricFunctions() *ViewResourceAssert {
-	v.AddAssertion(assert.ValueNotSet("data_metric_functions"))
+func (v *ViewResourceAssert) HasNoDataMetricFunction() *ViewResourceAssert {
+	v.AddAssertion(assert.ValueNotSet("data_metric_function"))
 	return v
 }
 

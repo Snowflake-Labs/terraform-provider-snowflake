@@ -204,6 +204,11 @@ func (s *AlterViewRequest) WithDropDataMetricFunction(DropDataMetricFunction Vie
 	return s
 }
 
+func (s *AlterViewRequest) WithModifyDataMetricFunction(ModifyDataMetricFunction ViewModifyDataMetricFunctionsRequest) *AlterViewRequest {
+	s.ModifyDataMetricFunction = &ModifyDataMetricFunction
+	return s
+}
+
 func (s *AlterViewRequest) WithSetDataMetricSchedule(SetDataMetricSchedule ViewSetDataMetricScheduleRequest) *AlterViewRequest {
 	s.SetDataMetricSchedule = &SetDataMetricSchedule
 	return s
@@ -290,38 +295,19 @@ func NewViewDropDataMetricFunctionRequest(
 	return &s
 }
 
-func NewViewSetDataMetricScheduleRequest() *ViewSetDataMetricScheduleRequest {
-	return &ViewSetDataMetricScheduleRequest{}
-}
-
-func (s *ViewSetDataMetricScheduleRequest) WithMinutes(Minutes ViewMinuteRequest) *ViewSetDataMetricScheduleRequest {
-	s.Minutes = &Minutes
-	return s
-}
-
-func (s *ViewSetDataMetricScheduleRequest) WithUsingCron(UsingCron ViewUsingCronRequest) *ViewSetDataMetricScheduleRequest {
-	s.UsingCron = &UsingCron
-	return s
-}
-
-func (s *ViewSetDataMetricScheduleRequest) WithTriggerOnChanges(TriggerOnChanges bool) *ViewSetDataMetricScheduleRequest {
-	s.TriggerOnChanges = &TriggerOnChanges
-	return s
-}
-
-func NewViewMinuteRequest(
-	Minutes int,
-) *ViewMinuteRequest {
-	s := ViewMinuteRequest{}
-	s.Minutes = Minutes
+func NewViewModifyDataMetricFunctionsRequest(
+	DataMetricFunction []ViewModifyDataMetricFunction,
+) *ViewModifyDataMetricFunctionsRequest {
+	s := ViewModifyDataMetricFunctionsRequest{}
+	s.DataMetricFunction = DataMetricFunction
 	return &s
 }
 
-func NewViewUsingCronRequest(
-	Cron string,
-) *ViewUsingCronRequest {
-	s := ViewUsingCronRequest{}
-	s.Cron = Cron
+func NewViewSetDataMetricScheduleRequest(
+	DataMetricSchedule string,
+) *ViewSetDataMetricScheduleRequest {
+	s := ViewSetDataMetricScheduleRequest{}
+	s.DataMetricSchedule = DataMetricSchedule
 	return &s
 }
 

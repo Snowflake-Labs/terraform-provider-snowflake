@@ -1,8 +1,39 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+var AllViewDataMetricScheduleMinutes = []int{5, 15, 30, 60, 720, 1440}
+
+type ViewDataMetricScheduleStatusOperationOption string
+
+const (
+	ViewDataMetricScheduleStatusOperationResume  ViewDataMetricScheduleStatusOperationOption = "RESUME"
+	ViewDataMetricScheduleStatusOperationSuspend ViewDataMetricScheduleStatusOperationOption = "SUSPEND"
+)
+
+var AllViewDataMetricScheduleStatusOperationOptions = []ViewDataMetricScheduleStatusOperationOption{
+	ViewDataMetricScheduleStatusOperationResume,
+	ViewDataMetricScheduleStatusOperationSuspend,
+}
+
+func ToViewDataMetricScheduleStatusOperationOption(s string) (ViewDataMetricScheduleStatusOperationOption, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(ViewDataMetricScheduleStatusOperationResume):
+		return ViewDataMetricScheduleStatusOperationResume, nil
+	case string(ViewDataMetricScheduleStatusOperationSuspend):
+		return ViewDataMetricScheduleStatusOperationSuspend, nil
+	default:
+		return "", fmt.Errorf("invalid ViewDataMetricScheduleStatusOperationOption: %s", s)
+	}
+}
 
 var viewDbRow = g.DbStruct("viewDBRow").
 	Text("created_on").
@@ -79,6 +110,16 @@ var dataMetricFunctionDef = g.NewQueryStruct("ViewDataMetricFunction").
 	ListAssignment("ON", "Column", g.ParameterOptions().Required().NoEquals().Parentheses()).
 	WithValidation(g.ValidIdentifier, "DataMetricFunction")
 
+var modifyDataMetricFunctionDef = g.NewQueryStruct("ViewModifyDataMetricFunction").
+	Identifier("DataMetricFunction", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
+	ListAssignment("ON", "Column", g.ParameterOptions().Required().NoEquals().Parentheses()).
+	Assignment(
+		"",
+		g.KindOfT[ViewDataMetricScheduleStatusOperationOption](),
+		g.ParameterOptions().NoEquals().NoQuotes(),
+	).
+	WithValidation(g.ValidIdentifier, "DataMetricFunction")
+
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	OptionalQueryStructField("ProjectionPolicy", viewColumnProjectionPolicy, g.KeywordOptions()).
@@ -111,12 +152,13 @@ var viewDropDataMetricFunction = g.NewQueryStruct("ViewDropDataMetricFunction").
 	SQL("DROP").
 	ListAssignment("DATA METRIC FUNCTION", "ViewDataMetricFunction", g.ParameterOptions().NoEquals().Required())
 
+var viewModifyDataMetricFunction = g.NewQueryStruct("ViewModifyDataMetricFunctions").
+	SQL("MODIFY").
+	ListAssignment("DATA METRIC FUNCTION", "ViewModifyDataMetricFunction", g.ParameterOptions().NoEquals().Required())
+
 var viewSetDataMetricSchedule = g.NewQueryStruct("ViewSetDataMetricSchedule").
-	SQL("SET DATA_METRIC_SCHEDULE =").
-	OptionalQueryStructField("Minutes", viewMinute, g.KeywordOptions()).
-	OptionalQueryStructField("UsingCron", viewUsingCron, g.KeywordOptions()).
-	OptionalSQL("TRIGGER_ON_CHANGES").
-	WithValidation(g.ExactlyOneValueSet, "Minutes", "UsingCron", "TriggerOnChanges")
+	SQL("SET").
+	TextAssignment("DATA_METRIC_SCHEDULE", g.ParameterOptions().SingleQuotes())
 
 var viewUnsetDataMetricSchedule = g.NewQueryStruct("ViewUnsetDataMetricSchedule").
 	SQL("UNSET DATA_METRIC_SCHEDULE")
@@ -244,6 +286,7 @@ var ViewsDef = g.NewInterface(
 			OptionalUnsetTags().
 			OptionalQueryStructField("AddDataMetricFunction", viewAddDataMetricFunction, g.KeywordOptions()).
 			OptionalQueryStructField("DropDataMetricFunction", viewDropDataMetricFunction, g.KeywordOptions()).
+			OptionalQueryStructField("ModifyDataMetricFunction", viewModifyDataMetricFunction, g.KeywordOptions()).
 			OptionalQueryStructField("SetDataMetricSchedule", viewSetDataMetricSchedule, g.KeywordOptions()).
 			OptionalQueryStructField("UnsetDataMetricSchedule", viewUnsetDataMetricSchedule, g.KeywordOptions()).
 			OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
@@ -260,7 +303,7 @@ var ViewsDef = g.NewInterface(
 			OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking",
-				"UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule",
+				"UnsetSecure", "SetTags", "UnsetTags", "AddDataMetricFunction", "DropDataMetricFunction", "ModifyDataMetricFunction", "SetDataMetricSchedule", "UnsetDataMetricSchedule",
 				"AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy",
 				"DropAllRowAccessPolicies", "SetAggregationPolicy", "UnsetAggregationPolicy", "SetMaskingPolicyOnColumn",
 				"UnsetMaskingPolicyOnColumn", "SetProjectionPolicyOnColumn", "UnsetProjectionPolicyOnColumn", "SetTagsOnColumn",
@@ -269,6 +312,7 @@ var ViewsDef = g.NewInterface(
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetSecure"),
 		columnDef,
 		dataMetricFunctionDef,
+		modifyDataMetricFunctionDef,
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-view",
