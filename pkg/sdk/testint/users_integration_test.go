@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: test setting/unsetting policies
-// TODO [next PR]: add type and other 8.26 additions
+// TODO [SNOW-1348101 - next PR]: test setting/unsetting policies
+// TODO [SNOW-1348101 - next PR]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -1070,5 +1070,109 @@ func TestInt_Users(t *testing.T) {
 		fetchedDisabledUserDetails, err = client.Users.Describe(ctx, disabledUser.ID())
 		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
 		require.Nil(t, fetchedDisabledUserDetails)
+	})
+
+	t.Run("login_name and display_name inconsistencies", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// both login_name and display_name were unset so the name is used instead
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we unset both values (expecting that it will result in no change)
+		unsetBoth := &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					LoginName:   sdk.Bool(true),
+					DisplayName: sdk.Bool(true),
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// but login_name is unchanged whereas display_name is nulled out
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
+
+		// we set both values (expecting that it will result in no change)
+		// we use lowercase values on purpose (login_name acts differently than display_name)
+		setBoth := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						LoginName:   sdk.String(strings.ToLower(newValue)),
+						DisplayName: sdk.String(strings.ToLower(newValue)),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, setBoth)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// they are both set but login_name is uppercase and display_name is lowercase
+		assert.Equal(t, strings.ToUpper(newValue), userDetails.LoginName.Value)
+		assert.Equal(t, strings.ToLower(newValue), userDetails.DisplayName.Value)
+
+		// we unset both again
+		err = client.Users.Alter(ctx, id, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// and login_name uses name as fallback and display_name does not
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
+	})
+
+	t.Run("default login_name and display_name when the name changes", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// login_name and display_name were not set so the name is used instead
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we rename user
+		newId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		rename := &sdk.AlterUserOptions{
+			NewName: newId,
+		}
+		err = client.Users.Alter(ctx, id, rename)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, newId)
+		require.NoError(t, err)
+		// login_name and display_name are unchanged
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we unset both login_name and display_name
+		unsetBoth := &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					LoginName:   sdk.Bool(true),
+					DisplayName: sdk.Bool(true),
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, newId, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, newId)
+		require.NoError(t, err)
+
+		// login_name and display_name are changed
+		assert.Equal(t, newId.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
 	})
 }

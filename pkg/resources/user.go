@@ -35,11 +35,11 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Sensitive:   true,
-		Description: "The name users use to log in. If not supplied, snowflake will use name instead.",
+		Description: "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
 		// login_name is case-insensitive
 		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
-	// TODO [SNOW-1348101]: do we need special handling of empty values for the string attributes like display name and others
+	// TODO [SNOW-1348101]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
