@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -669,9 +670,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1348101 - next PR]: will be fixed with addition of show_output, its logic, and changing disabled to non-computed attribute
 func TestAcc_User_issue1572(t *testing.T) {
-	t.Skipf("Fix with user rework in SNOW-1348101")
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
@@ -688,7 +687,8 @@ func TestAcc_User_issue1572(t *testing.T) {
 				Config: config.FromModel(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasDisabled(false),
+						HasDisabledString(r.BooleanDefault),
+					objectassert.User(t, userId).HasDisabled(false),
 				),
 			},
 			{
@@ -699,13 +699,14 @@ func TestAcc_User_issue1572(t *testing.T) {
 				Config: config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectDrift(userModel.ResourceReference(), "disabled", sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange(userModel.ResourceReference(), "disabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectDrift(userModel.ResourceReference(), "disabled", sdk.String(r.BooleanDefault), sdk.String(r.BooleanTrue)),
+						planchecks.ExpectChange(userModel.ResourceReference(), "disabled", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanDefault)),
 					},
 				},
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasDisabled(false),
+						HasDisabledString(r.BooleanDefault),
+					objectassert.User(t, userId).HasDisabled(false),
 				),
 			},
 		},
