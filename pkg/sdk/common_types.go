@@ -95,6 +95,12 @@ type BoolProperty struct {
 	Description  string
 }
 
+type FloatProperty struct {
+	Value        *float64
+	DefaultValue *float64
+	Description  string
+}
+
 type propertyRow struct {
 	Property     string `db:"property"`
 	Value        string `db:"value"`
@@ -152,6 +158,28 @@ func (row *propertyRow) toBoolProperty() *BoolProperty {
 		defaultValue = false
 	}
 	return &BoolProperty{
+		Value:        value,
+		DefaultValue: defaultValue,
+		Description:  row.Description,
+	}
+}
+
+func (row *propertyRow) toFloatProperty() *FloatProperty {
+	var value *float64
+	var defaultValue *float64
+	v, err := strconv.ParseFloat(row.Value, 64)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
+	}
+	dv, err := strconv.ParseFloat(row.DefaultValue, 64)
+	if err == nil {
+		defaultValue = &dv
+	} else {
+		defaultValue = nil
+	}
+	return &FloatProperty{
 		Value:        value,
 		DefaultValue: defaultValue,
 		Description:  row.Description,

@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -1210,5 +1211,43 @@ func TestInt_Users(t *testing.T) {
 		// email is returned as lowercase both in describe and in show
 		assert.Equal(t, strings.ToLower(email), userDetails.Email.Value)
 		assert.Equal(t, strings.ToLower(email), userShowOutput.Email)
+	})
+
+	t.Run("days to expiry setting by hand", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DaysToExpiry: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// days to expiry is returned
+		assert.NotNil(t, userDetails.DaysToExpiry.Value)
+		assert.GreaterOrEqual(t, *userDetails.DaysToExpiry.Value, float64(-1))
+	})
+
+	t.Run("days to expiry set by hand to float value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set days to expiry manually to the float value
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`ALTER USER %s SET DAYS_TO_EXPIRY = 1.5`, id.FullyQualifiedName()))
+		require.ErrorContains(t, err, "invalid value [1.5] for parameter 'DAYS_TO_EXPIRY'")
 	})
 }

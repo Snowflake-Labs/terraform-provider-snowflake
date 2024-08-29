@@ -85,7 +85,7 @@ var userSchema = map[string]*schema.Schema{
 		Default:          BooleanDefault,
 	},
 	// TODO [SNOW-1348101 - next PR]: handle #1155 by either forceNew or not reading this value from SF (because it changes constantly after setting; check https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties)
-	// TODO [SNOW-1348101]: check if this can be set to negative value by hand on Snowflake side
+	// TODO [SNOW-1348101]: negative values can be set by hand so IntDefault should probably not be used here
 	"days_to_expiry": {
 		Type:         schema.TypeInt,
 		Optional:     true,

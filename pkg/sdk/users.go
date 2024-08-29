@@ -438,7 +438,7 @@ type UserDetails struct {
 	Disabled                            *BoolProperty
 	SnowflakeLock                       *BoolProperty
 	SnowflakeSupport                    *BoolProperty
-	DaysToExpiry                        *IntProperty
+	DaysToExpiry                        *FloatProperty
 	MinsToUnlock                        *IntProperty
 	DefaultWarehouse                    *StringProperty
 	DefaultNamespace                    *StringProperty
@@ -488,7 +488,7 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 		case "SNOWFLAKE_SUPPORT":
 			v.SnowflakeSupport = row.toBoolProperty()
 		case "DAYS_TO_EXPIRY":
-			v.DaysToExpiry = row.toIntProperty()
+			v.DaysToExpiry = row.toFloatProperty()
 		case "MINS_TO_UNLOCK":
 			v.MinsToUnlock = row.toIntProperty()
 		case "DEFAULT_WAREHOUSE":

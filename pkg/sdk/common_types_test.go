@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestToStringProperty(t *testing.T) {
@@ -17,7 +18,7 @@ func TestToStringProperty(t *testing.T) {
 		prop := row.toStringProperty()
 		assert.Empty(t, prop.Value)
 		assert.Empty(t, prop.DefaultValue)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 
 	t.Run("with property row containing values", func(t *testing.T) {
@@ -27,13 +28,13 @@ func TestToStringProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toStringProperty()
-		assert.Equal(t, prop.Value, "value")
-		assert.Equal(t, prop.DefaultValue, "default value")
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Equal(t, "value", prop.Value)
+		assert.Equal(t, "default value", prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 }
 
-func TestToIntProperty(t *testing.T) {
+func Test_ToIntProperty(t *testing.T) {
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -41,9 +42,9 @@ func TestToIntProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toIntProperty()
-		assert.Empty(t, prop.Value)
-		assert.Empty(t, prop.DefaultValue)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Nil(t, prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 
 	t.Run("with property row not containing numbers", func(t *testing.T) {
@@ -53,9 +54,9 @@ func TestToIntProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toIntProperty()
-		assert.Empty(t, prop.Value)
-		assert.Empty(t, prop.DefaultValue)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Nil(t, prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 
 	t.Run("with property not containing default value", func(t *testing.T) {
@@ -65,9 +66,9 @@ func TestToIntProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toIntProperty()
-		assert.Equal(t, *prop.Value, 10)
-		assert.Empty(t, prop.DefaultValue)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Equal(t, 10, *prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 
 	t.Run("with property row containing numbers", func(t *testing.T) {
@@ -77,9 +78,30 @@ func TestToIntProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toIntProperty()
-		assert.Equal(t, *prop.Value, 10)
-		assert.Equal(t, *prop.DefaultValue, 0)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Equal(t, 10, *prop.Value)
+		assert.Equal(t, 0, *prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
+	})
+
+	t.Run("with negative value row", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "-1",
+			DefaultValue: "0",
+			Description:  "desc",
+		}
+		prop := row.toIntProperty()
+		require.NotNil(t, prop.Value)
+		assert.Equal(t, -1, *prop.Value)
+	})
+
+	t.Run("with decimal part value - not parsed correctly", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "0.85",
+			DefaultValue: "0",
+			Description:  "desc",
+		}
+		prop := row.toIntProperty()
+		require.Nil(t, prop.Value)
 	})
 }
 
@@ -91,9 +113,9 @@ func TestToBoolProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toBoolProperty()
-		assert.Empty(t, prop.Value)
-		assert.Empty(t, prop.DefaultValue)
-		assert.Equal(t, prop.Description, row.Description)
+		assert.Nil(t, prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
 	})
 
 	t.Run("with property row containing values", func(t *testing.T) {
@@ -103,8 +125,70 @@ func TestToBoolProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toBoolProperty()
-		assert.Equal(t, prop.Value, true)
-		assert.Equal(t, prop.DefaultValue, false)
+		assert.Equal(t, true, prop.Value)
+		assert.Equal(t, false, prop.DefaultValue)
+		assert.Equal(t, row.Description, prop.Description)
+	})
+}
+
+func Test_ToFloatProperty(t *testing.T) {
+	t.Run("with empty property row", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "null",
+			DefaultValue: "null",
+			Description:  "desc",
+		}
+		prop := row.toFloatProperty()
+		assert.Nil(t, prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, prop.Description, row.Description)
+	})
+
+	t.Run("with property row not containing numbers", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "value",
+			DefaultValue: "default value",
+			Description:  "desc",
+		}
+		prop := row.toFloatProperty()
+		assert.Nil(t, prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, prop.Description, row.Description)
+	})
+
+	t.Run("with property not containing default value", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "10.5",
+			DefaultValue: "null",
+			Description:  "desc",
+		}
+		prop := row.toFloatProperty()
+		assert.Equal(t, 10.5, *prop.Value)
+		assert.Nil(t, prop.DefaultValue)
+		assert.Equal(t, prop.Description, row.Description)
+	})
+
+	t.Run("with property row containing numbers", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "10.1",
+			DefaultValue: "10.5",
+			Description:  "desc",
+		}
+		prop := row.toFloatProperty()
+		assert.Equal(t, 10.1, *prop.Value)
+		assert.Equal(t, 10.5, *prop.DefaultValue)
+		assert.Equal(t, prop.Description, row.Description)
+	})
+
+	t.Run("with negative value row and zero", func(t *testing.T) {
+		row := &propertyRow{
+			Value:        "-1.0",
+			DefaultValue: "0",
+			Description:  "desc",
+		}
+		prop := row.toFloatProperty()
+		assert.Equal(t, float64(-1), *prop.Value)
+		assert.Equal(t, float64(0), *prop.DefaultValue)
 		assert.Equal(t, prop.Description, row.Description)
 	})
 }
