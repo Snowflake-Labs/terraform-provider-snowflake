@@ -196,7 +196,7 @@ func TestAccountAlter(t *testing.T) {
 func TestAccountShow(t *testing.T) {
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAccountOptions{}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW ORGANIZATION ACCOUNTS`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ACCOUNTS`)
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -205,6 +205,6 @@ func TestAccountShow(t *testing.T) {
 				Pattern: String("myaccount"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW ORGANIZATION ACCOUNTS LIKE 'myaccount'`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ACCOUNTS LIKE 'myaccount'`)
 	})
 }
