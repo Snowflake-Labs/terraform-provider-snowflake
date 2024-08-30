@@ -78,7 +78,7 @@ func PolicyReferenceToSchema(policyReference *sdk.PolicyReference) map[string]an
 		policyReferenceSchema["policy_schema"] = policyReference.PolicySchema
 	}
 	policyReferenceSchema["policy_name"] = policyReference.PolicyName
-	policyReferenceSchema["policy_kind"] = policyReference.PolicyKind
+	policyReferenceSchema["policy_kind"] = string(policyReference.PolicyKind)
 	if policyReference.RefDatabaseName != nil {
 		policyReferenceSchema["ref_database_name"] = policyReference.RefDatabaseName
 	}

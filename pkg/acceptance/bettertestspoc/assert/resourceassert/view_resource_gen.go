@@ -92,11 +92,6 @@ func (v *ViewResourceAssert) HasNameString(expected string) *ViewResourceAssert 
 	return v
 }
 
-func (v *ViewResourceAssert) HasOrReplaceString(expected string) *ViewResourceAssert {
-	v.AddAssertion(assert.ValueSet("or_replace", expected))
-	return v
-}
-
 func (v *ViewResourceAssert) HasRowAccessPolicyString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("row_access_policy", expected))
 	return v
@@ -173,11 +168,6 @@ func (v *ViewResourceAssert) HasNoIsTemporary() *ViewResourceAssert {
 
 func (v *ViewResourceAssert) HasNoName() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("name"))
-	return v
-}
-
-func (v *ViewResourceAssert) HasNoOrReplace() *ViewResourceAssert {
-	v.AddAssertion(assert.ValueNotSet("or_replace"))
 	return v
 }
 

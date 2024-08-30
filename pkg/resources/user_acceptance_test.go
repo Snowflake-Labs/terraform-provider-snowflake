@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -126,7 +127,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDisableMfaString(r.BooleanDefault).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
-						HasLoginName(fmt.Sprintf(id.Name())).
+						HasLoginName(strings.ToUpper(id.Name())).
 						HasDisplayName(id.Name()),
 				),
 			},
@@ -139,7 +140,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasCommentString(newComment),
 					// default names stay the same
 					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
-						HasLoginName(fmt.Sprintf(id.Name())).
+						HasLoginName(strings.ToUpper(id.Name())).
 						HasDisplayName(id.Name()),
 				),
 			},
@@ -151,8 +152,8 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password"},
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedUserResource(t, id2.Name()).
-						HasLoginNameString(fmt.Sprintf(id.Name())).
-						HasDisplayNameString(fmt.Sprintf(id.Name())).
+						HasLoginNameString(strings.ToUpper(id.Name())).
+						HasDisplayNameString(id.Name()).
 						HasDisabled(false).
 						HasMustChangePassword(false),
 				),
@@ -260,7 +261,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDisableMfaString(r.BooleanDefault).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
-						HasLoginName(fmt.Sprintf(id.Name())).
+						HasLoginName(strings.ToUpper(id.Name())).
 						HasDisplayName(""),
 				),
 			},

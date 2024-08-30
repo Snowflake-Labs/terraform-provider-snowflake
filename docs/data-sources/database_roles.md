@@ -62,6 +62,7 @@ Read-Only:
 
 - `comment` (String)
 - `created_on` (String)
+- `database_name` (String)
 - `granted_database_roles` (Number)
 - `granted_to_database_roles` (Number)
 - `granted_to_roles` (Number)

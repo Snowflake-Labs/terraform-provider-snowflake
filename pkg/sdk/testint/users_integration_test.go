@@ -1117,6 +1117,7 @@ func TestInt_Users(t *testing.T) {
 			},
 		}
 		err = client.Users.Alter(ctx, id, setBoth)
+		require.NoError(t, err)
 		userDetails, err = client.Users.Describe(ctx, id)
 		require.NoError(t, err)
 		// they are both set but login_name is uppercase and display_name is lowercase
