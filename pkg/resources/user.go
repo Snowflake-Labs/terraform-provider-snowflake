@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-1348101 - next PR]: update all changes in README; add
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
@@ -85,7 +86,7 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
-	// TODO [SNOW-1348101]: consider handling external change to 0 or from 0
+	// TODO [SNOW-1348101 - next PR]: consider handling external change to 0 or from 0?
 	"days_to_expiry": {
 		Type:        schema.TypeInt,
 		Optional:    true,
@@ -117,20 +118,19 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.",
 	},
-	// TODO [SNOW-1348101]: test (no elems, more elems, duplicated elems, proper setting, update - both ways and external one)
-	// TODO [SNOW-1348101]: Do we need diff suppression for lowercase inside the config? Or any other diff suppression?
 	"default_secondary_roles": {
 		Type: schema.TypeSet,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: isValidSecondaryRole(),
 		},
-		MaxItems:    1,
-		MinItems:    1,
-		Optional:    true,
-		Description: "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
+		DiffSuppressFunc: SuppressCaseInSet("default_secondary_roles"),
+		MaxItems:         1,
+		MinItems:         1,
+		Optional:         true,
+		Description:      "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
-	// TODO [SNOW-1348101]: note that external changes are not handled (and with other params that this is true)
+	// TODO [SNOW-1348101 - next PR]: note that external changes are not handled (and with other params that this is true)
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,
@@ -198,8 +198,8 @@ func User() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			// TODO [SNOW-1629468 - next pr]: handle diff suppression correctly
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			// TODO [SNOW-1629468 - next pr]: handle diff suppression correctly; add "default_secondary_roles"
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,

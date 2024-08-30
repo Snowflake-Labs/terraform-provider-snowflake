@@ -90,9 +90,10 @@ type userDBRow struct {
 	LockedUntilTime       sql.NullTime   `db:"locked_until_time"`
 	HasPassword           bool           `db:"has_password"`
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
-	// TODO [SNOW-1348101 - this PR]: handle new fields + test if hasMfa is always non-nullable, check if this has mfa helps with disable mfa, add to the describe output too
-	Type   sql.NullString `db:"type"`
-	HasMfa bool           `db:"has_mfa"`
+	// TODO [SNOW-1645348]: test type thoroughly
+	Type sql.NullString `db:"type"`
+	// TODO [SNOW-1348101 - next PR]: test if hasMfa is always non-nullable, check if this has mfa helps with disable mfa, add to the describe output too
+	HasMfa bool `db:"has_mfa"`
 }
 
 func (row userDBRow) convert() *User {

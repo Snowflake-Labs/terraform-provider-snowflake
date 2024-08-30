@@ -102,3 +102,17 @@ func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value
 	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), value))
 	require.NoError(t, err)
 }
+
+func (c *UserClient) UnsetDefaultSecondaryRoles(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				DefaultSecondaryRoles: sdk.Bool(true),
+			},
+		},
+	})
+	require.NoError(t, err)
+}
