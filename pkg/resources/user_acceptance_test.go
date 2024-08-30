@@ -96,21 +96,22 @@ func TestAcc_User(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, userModel1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "comment", comment),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id.Name())),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "display_name", "Display Name"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "first_name", "Jan"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "last_name", "Testowski"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "email", "fake@email.com"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "disabled", "false"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_warehouse", "some_warehouse"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_role", "some_role"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_namespace", "some.namespace"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "must_change_password", "true"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel1.ResourceReference()).
+						HasNameString(id.Name()).
+						HasCommentString(comment).
+						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
+						HasDisplayNameString("Display Name").
+						HasFirstNameString("Jan").
+						HasLastNameString("Testowski").
+						HasEmailString("fake@email.com").
+						HasDisabled(false).
+						HasDefaultWarehouseString("some_warehouse").
+						HasDefaultRoleString("some_role").
+						HasDefaultSecondaryRoles("ALL").
+						HasDefaultNamespaceString("some.namespace").
+						HasMustChangePassword(true).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
 			},
 			// RENAME
@@ -121,50 +122,57 @@ func TestAcc_User(t *testing.T) {
 						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "name", id2.Name()),
-					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "comment", newComment),
-					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id2.Name())),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "display_name", "Display Name"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "first_name", "Jan"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "last_name", "Testowski"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "email", "fake@email.com"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "disabled", "false"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_warehouse", "some_warehouse"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_role", "some_role"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_namespace", "some.namespace"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "must_change_password", "true"),
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "fully_qualified_name", id2.FullyQualifiedName()),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel2.ResourceReference()).
+						HasNameString(id2.Name()).
+						HasCommentString(newComment).
+						HasLoginNameString(fmt.Sprintf("%s_login", id2.Name())).
+						HasDisplayNameString("Display Name").
+						HasFirstNameString("Jan").
+						HasLastNameString("Testowski").
+						HasEmailString("fake@email.com").
+						HasDisabled(false).
+						HasDefaultWarehouseString("some_warehouse").
+						HasDefaultRoleString("some_role").
+						HasDefaultSecondaryRoles("ALL").
+						HasDefaultNamespaceString("some.namespace").
+						HasMustChangePassword(true).
+						HasFullyQualifiedNameString(id2.FullyQualifiedName()),
 				),
 			},
 			// CHANGE PROPERTIES
 			{
 				Config: config.FromModel(t, userModel3),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "name", id2.Name()),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "comment", comment),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "password", pass),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id2.Name())),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "display_name", "New Display Name"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "first_name", "Janek"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "last_name", "Terraformowski"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "email", "fake@email.net"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "disabled", "true"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_warehouse", "other_warehouse"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_role", "other_role"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_secondary_roles.#", "0"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_namespace", "one_part_namespace"),
-					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "fully_qualified_name", id2.FullyQualifiedName()),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel3.ResourceReference()).
+						HasCommentString(comment).
+						HasPasswordString(pass).
+						HasLoginNameString(fmt.Sprintf("%s_login", id2.Name())).
+						HasDisplayNameString("New Display Name").
+						HasFirstNameString("Janek").
+						HasLastNameString("Terraformowski").
+						HasEmailString("fake@email.net").
+						HasDisabled(true).
+						HasDefaultWarehouseString("other_warehouse").
+						HasDefaultRoleString("other_role").
+						HasDefaultSecondaryRolesEmpty().
+						HasDefaultNamespaceString("one_part_namespace").
+						HasMustChangePasswordString(r.BooleanDefault).
+						HasFullyQualifiedNameString(id2.FullyQualifiedName()),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:      userModel3.ResourceReference(),
-				ImportState:       true,
-				ImportStateVerify: true,
-				// TODO [SNOW-1348101 - this PR]: which fields should be really ignored?
-				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password", "disable_mfa", "display_name", "login_name", "mins_to_bypass_mfa", "mins_to_unlock", "default_namespace"},
+				ResourceName:            userModel3.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "must_change_password"},
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedUserResource(t, id2.Name()).
+						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
+						HasLoginNameString(fmt.Sprintf("%s_LOGIN", id2.Name())).
+						HasMustChangePasswordString(r.BooleanFalse),
+				),
 			},
 		},
 	})
@@ -233,8 +241,8 @@ func TestAcc_User_issue2058(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, userModel1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "name", userId.Name()),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel1.ResourceReference()).HasNameString(userId.Name()),
 				),
 			},
 		},

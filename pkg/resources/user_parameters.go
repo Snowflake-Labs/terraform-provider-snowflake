@@ -76,7 +76,7 @@ var (
 	)
 )
 
-// TODO [SNOW-1348101 - this PR]: uncomment DiffSuppress and ValidateDiag
+// TODO [SNOW-1348101 - next PR]: uncomment DiffSuppress and ValidateDiag
 type parameterDef[T ~string] struct {
 	Name        T
 	Type        schema.ValueType
@@ -158,7 +158,7 @@ func init() {
 			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
 			Computed:    true,
 			Optional:    true,
-			// TODO [SNOW-1348101 - this PR]: uncomment and fill out
+			// TODO [SNOW-1348101 - next PR]: uncomment and fill out
 			// ValidateDiagFunc: field.ValidateDiag,
 			// DiffSuppressFunc: field.DiffSuppress,
 		}
