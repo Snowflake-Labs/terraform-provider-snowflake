@@ -199,8 +199,8 @@ func User() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			// TODO [SNOW-1629468 - next pr]: handle diff suppression correctly; add "default_secondary_roles"
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			// TODO [SNOW-1629468 - next pr]: handle diff suppression correctly; add "default_role", "default_secondary_roles"
+			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,

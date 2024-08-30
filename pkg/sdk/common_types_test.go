@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestToStringProperty(t *testing.T) {
+func Test_ToStringProperty(t *testing.T) {
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -105,7 +105,7 @@ func Test_ToIntProperty(t *testing.T) {
 	})
 }
 
-func TestToBoolProperty(t *testing.T) {
+func Test_ToBoolProperty(t *testing.T) {
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -113,8 +113,8 @@ func TestToBoolProperty(t *testing.T) {
 			Description:  "desc",
 		}
 		prop := row.toBoolProperty()
-		assert.Nil(t, prop.Value)
-		assert.Nil(t, prop.DefaultValue)
+		assert.False(t, prop.Value)
+		assert.False(t, prop.DefaultValue)
 		assert.Equal(t, row.Description, prop.Description)
 	})
 
