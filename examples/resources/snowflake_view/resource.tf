@@ -30,19 +30,16 @@ resource "snowflake_view" "test" {
   column {
     column_name = "id"
     comment     = "column comment"
-
   }
   column {
     column_name = "address"
     projection_policy {
       policy_name = "projection_policy"
     }
-
     masking_policy {
       policy_name = "masking_policy"
       using       = ["address"]
     }
-
   }
   row_access_policy {
     policy_name = "row_access_policy"

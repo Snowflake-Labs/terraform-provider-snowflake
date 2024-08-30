@@ -466,7 +466,6 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
-			// TODO (SNOW-1348118 - next pr)
 			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
 			for i := range addedRaw {
 				if addedRaw[i].ScheduleStatus != "" {
@@ -718,7 +717,6 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 		for _, v := range dmfRef.RefArguments {
 			columns = append(columns, v.Name)
 		}
-		// TODO (SNOW-1348118 - next pr)
 		var scheduleStatus sdk.DataMetricScheduleStatusOption
 		status, err := sdk.ToDataMetricScheduleStatusOption(dmfRef.ScheduleStatus)
 		if err != nil {

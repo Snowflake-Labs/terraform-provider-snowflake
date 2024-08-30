@@ -150,7 +150,7 @@ func ReadViews(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 	}
 
 	if v, ok := d.GetOk("limit"); ok {
-		l := v.([]interface{})[0].(map[string]any)
+		l := v.([]any)[0].(map[string]any)
 		limit := sdk.LimitFrom{}
 		if v, ok := l["rows"]; ok {
 			rows := v.(int)
