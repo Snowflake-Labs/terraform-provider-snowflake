@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348101 - next PR]: update all changes in README; add
+// TODO [SNOW-1348101 - next PR]: update all changes in README
+// TODO [SNOW-1348101 - next PR]: add IgnoreChangeToCurrentSnowflakeValueInShow and other suppressors
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,

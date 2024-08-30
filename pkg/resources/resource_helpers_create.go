@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,18 +37,16 @@ func booleanStringAttributeCreate(d *schema.ResourceData, key string, createFiel
 	return nil
 }
 
-// TODO: NewAccountObjectIdentifierFromFullyQualifiedName versus one of the new functions?
 func accountObjectIdentifierAttributeCreate(d *schema.ResourceData, key string, createField **sdk.AccountObjectIdentifier) error {
 	if v, ok := d.GetOk(key); ok {
-		*createField = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string)))
+		*createField = sdk.Pointer(sdk.NewAccountObjectIdentifier(v.(string)))
 	}
 	return nil
 }
 
-// TODO: DecodeSnowflakeParameterID versus one of the new functions?
 func objectIdentifierAttributeCreate(d *schema.ResourceData, key string, createField **sdk.ObjectIdentifier) error {
 	if v, ok := d.GetOk(key); ok {
-		objectIdentifier, err := helpers.DecodeSnowflakeParameterID(v.(string))
+		objectIdentifier, err := sdk.ParseObjectIdentifierString(v.(string))
 		if err != nil {
 			return err
 		}

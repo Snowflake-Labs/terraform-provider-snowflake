@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -69,7 +68,6 @@ func booleanStringAttributeUnsetFallbackUpdate(d *schema.ResourceData, key strin
 	return nil
 }
 
-// TODO: NewAccountObjectIdentifier versus NewAccountObjectIdentifierFromFullyQualifiedName versus one of the new functions?
 func accountObjectIdentifierAttributeUpdate(d *schema.ResourceData, key string, setField **sdk.AccountObjectIdentifier, unsetField **bool) error {
 	if d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
@@ -81,11 +79,10 @@ func accountObjectIdentifierAttributeUpdate(d *schema.ResourceData, key string, 
 	return nil
 }
 
-// TODO: DecodeSnowflakeParameterID versus one of the new functions?
 func objectIdentifierAttributeUpdate(d *schema.ResourceData, key string, setField **sdk.ObjectIdentifier, unsetField **bool) error {
 	if d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			objectIdentifier, err := helpers.DecodeSnowflakeParameterID(v.(string))
+			objectIdentifier, err := sdk.ParseObjectIdentifierString(v.(string))
 			if err != nil {
 				return err
 			}
