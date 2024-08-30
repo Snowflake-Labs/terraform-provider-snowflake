@@ -3,7 +3,6 @@ package resources_test
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -30,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO [SNOW-1348101]: handle 1-part default namespace
 func TestAcc_User(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -41,6 +39,53 @@ func TestAcc_User(t *testing.T) {
 	key1, _ := random.GenerateRSAPublicKey(t)
 	key2, _ := random.GenerateRSAPublicKey(t)
 
+	pass := random.Password()
+
+	userModel1 := model.User("w", id.Name()).
+		WithComment(comment).
+		WithLoginName(id.Name() + "_login").
+		WithDisplayName("Display Name").
+		WithFirstName("Jan").
+		WithLastName("Testowski").
+		WithEmail("fake@email.com").
+		WithDisabled("false").
+		WithDefaultWarehouse("some_warehouse").
+		WithDefaultRole("some_role").
+		WithDefaultSecondaryRolesStringList("ALL").
+		WithDefaultNamespace("some.namespace").
+		WithRsaPublicKey(key1).
+		WithRsaPublicKey2(key2).
+		WithMustChangePassword("true")
+
+	userModel2 := model.User("w", id2.Name()).
+		WithComment(newComment).
+		WithLoginName(id2.Name() + "_login").
+		WithDisplayName("Display Name").
+		WithFirstName("Jan").
+		WithLastName("Testowski").
+		WithEmail("fake@email.com").
+		WithDisabled("false").
+		WithDefaultWarehouse("some_warehouse").
+		WithDefaultRole("some_role").
+		WithDefaultSecondaryRolesStringList("ALL").
+		WithDefaultNamespace("some.namespace").
+		WithRsaPublicKey(key1).
+		WithRsaPublicKey2(key2).
+		WithMustChangePassword("true")
+
+	userModel3 := model.User("w", id2.Name()).
+		WithComment(comment).
+		WithPassword(pass).
+		WithLoginName(id2.Name() + "_login").
+		WithDisplayName("New Display Name").
+		WithFirstName("Janek").
+		WithLastName("Terraformowski").
+		WithEmail("fake@email.net").
+		WithDisabled("true").
+		WithDefaultWarehouse("other_warehouse").
+		WithDefaultRole("other_role").
+		WithDefaultNamespace("one_part_namespace")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -50,76 +95,76 @@ func TestAcc_User(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(id.Name(), key1, key2, comment),
+				Config: config.FromModel(t, userModel1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id.Name())),
-					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
-					// TODO [SNOW-1348101 - this PR]: remove checkBool checks
-					checkBool("snowflake_user.w", "disabled", false),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id.FullyQualifiedName()),
-					checkBool("snowflake_user.w", "must_change_password", true),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "comment", comment),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id.Name())),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "display_name", "Display Name"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "first_name", "Jan"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "last_name", "Testowski"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "email", "fake@email.com"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "disabled", "false"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_warehouse", "some_warehouse"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_role", "some_role"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_secondary_roles.0", "ALL"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_namespace", "some.namespace"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "must_change_password", "true"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
 			// RENAME
 			{
-				Config: uConfig(id2.Name(), key1, key2, newComment),
+				Config: config.FromModel(t, userModel2),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", id2.Name()),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", newComment),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id2.Name())),
-					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Zukowski"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
-					checkBool("snowflake_user.w", "disabled", false),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "foo.bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id2.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "name", id2.Name()),
+					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "comment", newComment),
+					resource.TestCheckResourceAttr(userModel2.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id2.Name())),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "display_name", "Display Name"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "first_name", "Jan"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "last_name", "Testowski"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "email", "fake@email.com"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "disabled", "false"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_warehouse", "some_warehouse"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_role", "some_role"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_secondary_roles.0", "ALL"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "default_namespace", "some.namespace"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "must_change_password", "true"),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "fully_qualified_name", id2.FullyQualifiedName()),
 				),
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: uConfig2(id2.Name()),
+				Config: config.FromModel(t, userModel3),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", id2.Name()),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment 2"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "password", "best password"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", fmt.Sprintf("%s_login", id2.Name())),
-					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "New Name"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Benoit"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "last_name", "Dageville"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.net"),
-					checkBool("snowflake_user.w", "disabled", true),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "bar.baz"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "fully_qualified_name", id2.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "name", id2.Name()),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "comment", comment),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "password", pass),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "login_name", fmt.Sprintf("%s_login", id2.Name())),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "display_name", "New Display Name"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "first_name", "Janek"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "last_name", "Terraformowski"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "email", "fake@email.net"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "disabled", "true"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_warehouse", "other_warehouse"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_role", "other_role"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_secondary_roles.#", "0"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "default_namespace", "one_part_namespace"),
+					resource.TestCheckResourceAttr(userModel3.ResourceReference(), "fully_qualified_name", id2.FullyQualifiedName()),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_user.w",
+				ResourceName:      userModel3.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
-				// TODO [SNOW-1348101]: which fields should be really ignored?
-				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password", "disable_mfa", "display_name", "login_name", "mins_to_bypass_mfa", "mins_to_unlock"},
+				// TODO [SNOW-1348101 - this PR]: which fields should be really ignored?
+				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password", "disable_mfa", "display_name", "login_name", "mins_to_bypass_mfa", "mins_to_unlock", "default_namespace"},
 			},
 		},
 	})
@@ -128,11 +173,8 @@ func TestAcc_User(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	c := fmt.Sprintf(`
-resource "snowflake_user" "test" {
-	name = "%s"
-}
-`, userId.Name())
+
+	userModel := model.User("u", userId.Name())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -142,7 +184,7 @@ resource "snowflake_user" "test" {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: c,
+				Config: config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -151,7 +193,7 @@ resource "snowflake_user" "test" {
 			},
 			{
 				PreConfig: acc.TestClient().User.DropUserFunc(t, userId),
-				Config:    c,
+				Config:    config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -173,65 +215,13 @@ resource "snowflake_user" "test" {
 	})
 }
 
-func uConfig(prefix, key1, key2, comment string) string {
-	s := `
-resource "snowflake_user" "w" {
-	name = "%s"
-	comment = "%s"
-	login_name = "%s_login"
-	display_name = "Display Name"
-	first_name = "Marcin"
-	last_name = "Zukowski"
-	email = "fake@email.com"
-	disabled = false
-	default_warehouse="foo"
-	default_role="foo"
-	default_secondary_roles=["ALL"]
-	default_namespace="foo.bar"
-	rsa_public_key = <<KEY
-%s
-KEY
-	rsa_public_key_2 = <<KEY
-%s
-KEY
-	must_change_password = true
-}
-`
-	s = fmt.Sprintf(s, prefix, comment, prefix, key1, key2)
-	log.Printf("[DEBUG] s %s", s)
-	return s
-}
-
-func uConfig2(prefix string) string {
-	s := `
-resource "snowflake_user" "w" {
-	name = "%s"
-	comment = "test comment 2"
-	password = "best password"
-	login_name = "%s_login"
-	display_name = "New Name"
-	first_name = "Benoit"
-	last_name = "Dageville"
-	email = "fake@email.net"
-	disabled = true
-	default_warehouse="bar"
-	default_role="bar"
-	default_namespace="bar.baz"
-}
-`
-	s = fmt.Sprintf(s, prefix, prefix)
-	log.Printf("[DEBUG] s2 %s", s)
-	return s
-}
-
 // TestAcc_User_issue2058 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2058 issue.
 // The problem was with a dot in user identifier.
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
-	prefix := acc.TestClient().Ids.AlphaContaining(".")
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
 
-	key1, _ := random.GenerateRSAPublicKey(t)
-	key2, _ := random.GenerateRSAPublicKey(t)
+	userModel1 := model.User("w", userId.Name())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -242,9 +232,9 @@ func TestAcc_User_issue2058(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, key1, key2, "test_comment"),
+				Config: config.FromModel(t, userModel1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
+					resource.TestCheckResourceAttr(userModel1.ResourceReference(), "name", userId.Name()),
 				),
 			},
 		},

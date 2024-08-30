@@ -41,7 +41,7 @@ var userSchema = map[string]*schema.Schema{
 		// login_name is case-insensitive
 		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
-	// TODO [SNOW-1348101]: handle external changes and the default behavior correctly; same with the login_name
+	// TODO [SNOW-1348101 - next PR]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -364,6 +364,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 				showMapping{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
 				showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil},
 				showMapping{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
+				showMapping{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -396,7 +397,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// not reading days_to_expiry on purpose (they always change)
 			// not reading mins_to_unlock on purpose (they always change)
 			setStringProperty(d, "default_warehouse", userDetails.DefaultWarehouse),
-			setStringProperty(d, "default_namespace", userDetails.DefaultNamespace),
+			// not reading default_namespace because one-part namespace seems to be capitalized on Snowflake side (handled as external change to show output)
 			setStringProperty(d, "default_role", userDetails.DefaultRole),
 			d.Set("default_secondary_roles", defaultSecondaryRoles),
 			// not reading mins_to_bypass_mfa on purpose (they always change)
