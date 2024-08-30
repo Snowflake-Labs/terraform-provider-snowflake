@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_User(t *testing.T) {
+func TestAcc_User_BasicFlows(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -41,40 +41,47 @@ func TestAcc_User(t *testing.T) {
 
 	pass := random.Password()
 
-	userModel1 := model.User("w", id.Name()).
-		WithComment(comment).
+	userModelNoAttributes := model.User("w", id.Name())
+
+	userModelAllAttributes := model.User("w", id.Name()).
+		WithPassword(pass).
 		WithLoginName(id.Name() + "_login").
 		WithDisplayName("Display Name").
 		WithFirstName("Jan").
+		WithMiddleName("Kuba").
 		WithLastName("Testowski").
 		WithEmail("fake@email.com").
+		WithMustChangePassword("true").
 		WithDisabled("false").
+		WithDaysToExpiry(10).
+		WithMinsToUnlock(10).
 		WithDefaultWarehouse("some_warehouse").
+		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesStringList("ALL").
-		WithDefaultNamespace("some.namespace").
+		WithMinsToBypassMfa(10).
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).
-		WithMustChangePassword("true")
+		WithComment(comment).
+		WithDisableMfa("true")
 
 	userModel2 := model.User("w", id2.Name()).
-		WithComment(newComment).
 		WithLoginName(id2.Name() + "_login").
 		WithDisplayName("Display Name").
 		WithFirstName("Jan").
 		WithLastName("Testowski").
 		WithEmail("fake@email.com").
+		WithMustChangePassword("true").
 		WithDisabled("false").
 		WithDefaultWarehouse("some_warehouse").
+		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesStringList("ALL").
-		WithDefaultNamespace("some.namespace").
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).
-		WithMustChangePassword("true")
+		WithComment(newComment)
 
 	userModel3 := model.User("w", id2.Name()).
-		WithComment(comment).
 		WithPassword(pass).
 		WithLoginName(id2.Name() + "_login").
 		WithDisplayName("New Display Name").
@@ -83,8 +90,9 @@ func TestAcc_User(t *testing.T) {
 		WithEmail("fake@email.net").
 		WithDisabled("true").
 		WithDefaultWarehouse("other_warehouse").
+		WithDefaultNamespace("one_part_namespace").
 		WithDefaultRole("other_role").
-		WithDefaultNamespace("one_part_namespace")
+		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -95,22 +103,62 @@ func TestAcc_User(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel1),
+				Config: config.FromModel(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel1.ResourceReference()).
+					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
-						HasCommentString(comment).
+						HasNoPassword().
+						HasNoLoginName().
+						HasNoDisplayName().
+						HasNoFirstName().
+						HasNoMiddleName().
+						HasNoLastName().
+						HasNoEmail().
+						HasMustChangePasswordString(r.BooleanDefault).
+						HasDisabledString(r.BooleanDefault).
+						HasNoDaysToExpiry().
+						HasMinsToUnlockString(r.IntDefaultString).
+						HasNoDefaultWarehouse().
+						HasNoDefaultNamespace().
+						HasNoDefaultRole().
+						HasNoDefaultSecondaryRoles().
+						HasMinsToBypassMfaString(r.IntDefaultString).
+						HasNoRsaPublicKey().
+						HasNoRsaPublicKey2().
+						HasNoComment().
+						HasDisableMfaString(r.BooleanDefault).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+				),
+			},
+			{
+				Config:  config.FromModel(t, userModelNoAttributes),
+				Destroy: true,
+			},
+			{
+				Config: config.FromModel(t, userModelAllAttributes),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelAllAttributes.ResourceReference()).
+						HasNameString(id.Name()).
+						HasPasswordString(pass).
 						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
 						HasDisplayNameString("Display Name").
 						HasFirstNameString("Jan").
+						HasMiddleNameString("Kuba").
 						HasLastNameString("Testowski").
 						HasEmailString("fake@email.com").
+						HasMustChangePassword(true).
 						HasDisabled(false).
+						HasDaysToExpiryString("10").
+						HasMinsToUnlockString("10").
 						HasDefaultWarehouseString("some_warehouse").
+						HasDefaultNamespaceString("some.namespace").
 						HasDefaultRoleString("some_role").
 						HasDefaultSecondaryRoles("ALL").
-						HasDefaultNamespaceString("some.namespace").
-						HasMustChangePassword(true).
+						HasMinsToBypassMfaString("10").
+						HasRsaPublicKeyString(key1).
+						HasRsaPublicKey2String(key2).
+						HasCommentString(comment).
+						HasDisableMfaString(r.BooleanTrue).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
 			},
@@ -166,7 +214,7 @@ func TestAcc_User(t *testing.T) {
 				ResourceName:            userModel3.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "must_change_password"},
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "must_change_password", "rsa_public_key", "rsa_public_key_2", "middle_name"},
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedUserResource(t, id2.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").

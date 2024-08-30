@@ -392,22 +392,22 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// can't read password
 			// not reading login_name on purpose (handled as external change to show output)
 			// not reading display_name on purpose (handled as external change to show output)
-			setStringProperty(d, "first_name", userDetails.FirstName),
-			setStringProperty(d, "middle_name", userDetails.MiddleName),
-			setStringProperty(d, "last_name", userDetails.LastName),
-			setStringProperty(d, "email", userDetails.Email),
+			setStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
+			setStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
+			setStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+			setStringPropertyIfNotEmpty(d, "email", userDetails.Email),
 			// not reading must_change_password on purpose (handled as external change to show output)
 			// not reading disabled on purpose (handled as external change to show output)
 			// not reading days_to_expiry on purpose (they always change)
 			// not reading mins_to_unlock on purpose (they always change)
-			setStringProperty(d, "default_warehouse", userDetails.DefaultWarehouse),
+			setStringPropertyIfNotEmpty(d, "default_warehouse", userDetails.DefaultWarehouse),
 			// not reading default_namespace because one-part namespace seems to be capitalized on Snowflake side (handled as external change to show output)
-			setStringProperty(d, "default_role", userDetails.DefaultRole),
+			setStringPropertyIfNotEmpty(d, "default_role", userDetails.DefaultRole),
 			d.Set("default_secondary_roles", defaultSecondaryRoles),
 			// not reading mins_to_bypass_mfa on purpose (they always change)
-			setStringProperty(d, "rsa_public_key", userDetails.RsaPublicKey),
-			setStringProperty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
-			setStringProperty(d, "comment", userDetails.Comment),
+			setStringPropertyIfNotEmpty(d, "rsa_public_key", userDetails.RsaPublicKey),
+			setStringPropertyIfNotEmpty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
+			setStringPropertyIfNotEmpty(d, "comment", userDetails.Comment),
 			// can't read disable_mfa
 			d.Set("user_type", u.Type),
 
