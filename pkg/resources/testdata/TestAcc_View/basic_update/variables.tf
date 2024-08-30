@@ -45,3 +45,11 @@ variable "data_metric_function" {
 variable "data_metric_function_on" {
   type = list(string)
 }
+
+variable "schedule_status" {
+  type = string
+}
+
+variable "columns" {
+  type = set(map(string))
+}

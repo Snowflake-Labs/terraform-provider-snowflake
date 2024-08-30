@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -45,7 +47,8 @@ func TestAcc_View_basic(t *testing.T) {
 	functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
 	function2Id := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "MAX")
 
-	cron, cron2 := "10 * * * * UTC", "20 * * * * UTC"
+	cron := "10 * * * * UTC"
+	cron2 := "20 * * * * UTC"
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -56,27 +59,52 @@ func TestAcc_View_basic(t *testing.T) {
 	t.Cleanup(tableCleanup)
 	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 	otherStatement := fmt.Sprintf("SELECT foo, id FROM %s", table.ID().FullyQualifiedName())
-	comment := "Terraform test resource'"
+	comment := random.Comment()
 
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
-	viewModelWithDependency := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	// generators currently don't handle lists, so use the old way
+	basicView := func(configStatement string) config.Variables {
+		return config.Variables{
+			"name":      config.StringVariable(id.Name()),
+			"database":  config.StringVariable(id.DatabaseName()),
+			"schema":    config.StringVariable(id.SchemaName()),
+			"statement": config.StringVariable(configStatement),
+			"columns": config.SetVariable(
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ID"),
+				}),
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("FOO"),
+				}),
+			),
+		}
+	}
+	basicViewWithIsRecursive := basicView(otherStatement)
+	basicViewWithIsRecursive["is_recursive"] = config.BoolVariable(true)
 
 	// generators currently don't handle lists, so use the old way
 	basicUpdate := func(rap, ap, functionId sdk.SchemaObjectIdentifier, statement, cron string, scheduleStatus sdk.DataMetricScheduleStatusOption) config.Variables {
 		return config.Variables{
-			"name":                                 config.StringVariable(id.Name()),
-			"database":                             config.StringVariable(id.DatabaseName()),
-			"schema":                               config.StringVariable(id.SchemaName()),
-			"statement":                            config.StringVariable(statement),
-			"row_access_policy":                    config.StringVariable(rap.FullyQualifiedName()),
-			"row_access_policy_on":                 config.ListVariable(config.StringVariable("ID")),
-			"aggregation_policy":                   config.StringVariable(ap.FullyQualifiedName()),
-			"aggregation_policy_entity_key":        config.ListVariable(config.StringVariable("ID")),
-			"data_metric_function":                 config.StringVariable(functionId.FullyQualifiedName()),
-			"data_metric_function_on":              config.ListVariable(config.StringVariable("ID")),
-			"data_metric_function_schedule_status": config.StringVariable(string(scheduleStatus)),
-			"data_metric_schedule_using_cron":      config.StringVariable(cron),
-			"comment":                              config.StringVariable(comment),
+			"name":                            config.StringVariable(id.Name()),
+			"database":                        config.StringVariable(id.DatabaseName()),
+			"schema":                          config.StringVariable(id.SchemaName()),
+			"statement":                       config.StringVariable(statement),
+			"row_access_policy":               config.StringVariable(rap.FullyQualifiedName()),
+			"row_access_policy_on":            config.ListVariable(config.StringVariable("ID")),
+			"aggregation_policy":              config.StringVariable(ap.FullyQualifiedName()),
+			"aggregation_policy_entity_key":   config.ListVariable(config.StringVariable("ID")),
+			"data_metric_function":            config.StringVariable(functionId.FullyQualifiedName()),
+			"data_metric_function_on":         config.ListVariable(config.StringVariable("ID")),
+			"data_metric_schedule_using_cron": config.StringVariable(cron),
+			"comment":                         config.StringVariable(comment),
+			"schedule_status":                 config.StringVariable(string(scheduleStatus)),
+			"columns": config.SetVariable(
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ID"),
+				}),
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("FOO"),
+				}),
+			),
 		}
 	}
 
@@ -89,24 +117,32 @@ func TestAcc_View_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: accconfig.FromModel(t, viewModelWithDependency),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
-					HasNameString(id.Name()).
-					HasStatementString(statement).
-					HasDatabaseString(id.DatabaseName()).
-					HasSchemaString(id.SchemaName())),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView(statement),
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2")),
+				),
 			},
 			// import - without optionals
 			{
-				Config:       accconfig.FromModel(t, viewModel),
-				ResourceName: "snowflake_view.test",
-				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView(statement),
+				ResourceName:    "snowflake_view.test",
+				ImportState:     true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "column.#", "2")),
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
-						HasStatementString(statement)),
+						HasStatementString(statement),
+				),
 			},
 			// set policies and dmfs externally
 			{
@@ -121,12 +157,14 @@ func TestAcc_View_basic(t *testing.T) {
 						},
 					})))
 				},
-				Config: accconfig.FromModel(t, viewModel),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
-					HasNameString(id.Name()).
-					HasStatementString(statement).
-					HasDatabaseString(id.DatabaseName()).
-					HasSchemaString(id.SchemaName()),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView(statement),
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "0")),
@@ -185,9 +223,9 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -213,9 +251,9 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -309,7 +347,6 @@ func TestAcc_View_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
 				),
 			},
-
 			// import - with optionals
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
@@ -338,8 +375,9 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// unset
 			{
-				Config:       accconfig.FromModel(t, viewModel.WithStatement(otherStatement)),
-				ResourceName: "snowflake_view.test",
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView(otherStatement),
+				ResourceName:    "snowflake_view.test",
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -354,7 +392,8 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// recreate - change is_recursive
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_is_recursive"),
+				ConfigVariables: basicViewWithIsRecursive,
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -380,7 +419,21 @@ func TestAcc_View_recursive(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	basicView := config.Variables{
+		"name":         config.StringVariable(id.Name()),
+		"database":     config.StringVariable(id.DatabaseName()),
+		"schema":       config.StringVariable(id.SchemaName()),
+		"statement":    config.StringVariable(statement),
+		"is_recursive": config.BoolVariable(true),
+		"columns": config.SetVariable(
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_NAME"),
+			}),
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_OWNER"),
+			}),
+		),
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -390,7 +443,8 @@ func TestAcc_View_recursive(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_is_recursive"),
+				ConfigVariables: basicView,
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -399,9 +453,10 @@ func TestAcc_View_recursive(t *testing.T) {
 					HasIsRecursiveString("true")),
 			},
 			{
-				Config:       accconfig.FromModel(t, viewModel.WithIsRecursive("true")),
-				ResourceName: "snowflake_view.test",
-				ImportState:  true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_is_recursive"),
+				ConfigVariables: basicView,
+				ResourceName:    "snowflake_view.test",
+				ImportState:     true,
 				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
 					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
@@ -464,7 +519,27 @@ func TestAcc_View_complete(t *testing.T) {
 	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
 	t.Cleanup(projectionPolicyCleanup)
 
-	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
+	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
+		acc.TestClient().Ids.SchemaId(),
+		[]sdk.TableColumnSignature{
+			{
+				Name: "One",
+				Type: sdk.DataTypeNumber,
+			},
+			{
+				Name: "Two",
+				Type: sdk.DataTypeNumber,
+			},
+		},
+		sdk.DataTypeNumber,
+		`
+case
+	when One > 0 then One
+	else Two
+end;;
+`,
+		new(sdk.CreateMaskingPolicyOptions),
+	)
 	t.Cleanup(maskingPolicyCleanup)
 
 	functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
@@ -489,7 +564,7 @@ func TestAcc_View_complete(t *testing.T) {
 			"column1_comment":                 config.StringVariable("col comment"),
 			"column2_name":                    config.StringVariable("FOO"),
 			"column2_masking_policy":          config.StringVariable(maskingPolicy.ID().FullyQualifiedName()),
-			"column2_masking_policy_using":    config.ListVariable(config.StringVariable("FOO")),
+			"column2_masking_policy_using":    config.ListVariable(config.StringVariable("FOO"), config.StringVariable("ID")),
 			"column2_projection_policy":       config.StringVariable(projectionPolicy.FullyQualifiedName()),
 			"data_metric_function":            config.StringVariable(functionId.FullyQualifiedName()),
 			"data_metric_function_on":         config.ListVariable(config.StringVariable("ID")),
@@ -589,8 +664,22 @@ func TestAcc_View_Rename(t *testing.T) {
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithComment("foo")
-	newViewModel := model.View("test", newId.DatabaseName(), newId.Name(), newId.SchemaName(), statement).WithComment("foo")
+	viewConfig := func(identifier sdk.SchemaObjectIdentifier) config.Variables {
+		return config.Variables{
+			"name":      config.StringVariable(identifier.Name()),
+			"database":  config.StringVariable(identifier.DatabaseName()),
+			"schema":    config.StringVariable(identifier.SchemaName()),
+			"statement": config.StringVariable(statement),
+			"columns": config.SetVariable(
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ROLE_NAME"),
+				}),
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ROLE_OWNER"),
+				}),
+			),
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -601,16 +690,17 @@ func TestAcc_View_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: viewConfig(id),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
 			// rename with one param changed
 			{
-				Config: accconfig.FromModel(t, newViewModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: viewConfig(newId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
@@ -618,7 +708,6 @@ func TestAcc_View_Rename(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "foo"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "fully_qualified_name", newId.FullyQualifiedName()),
 				),
 			},
@@ -631,7 +720,24 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithCopyGrants(false)
+	viewConfig := func(copyGrants bool) config.Variables {
+		return config.Variables{
+			"name":        config.StringVariable(id.Name()),
+			"database":    config.StringVariable(id.DatabaseName()),
+			"schema":      config.StringVariable(id.SchemaName()),
+			"statement":   config.StringVariable(statement),
+			"copy_grants": config.BoolVariable(copyGrants),
+			"is_secure":   config.BoolVariable(true),
+			"columns": config.SetVariable(
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ID"),
+				}),
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("FOO"),
+				}),
+			),
+		}
+	}
 
 	var createdOn string
 
@@ -644,7 +750,8 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_copy_grants"),
+				ConfigVariables: viewConfig(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", id.DatabaseName()),
@@ -659,7 +766,8 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 			},
 			// Checks that copy_grants changes don't trigger a drop
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true)),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_copy_grants"),
+				ConfigVariables: viewConfig(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -680,7 +788,25 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithIsSecure("true").WithCopyGrants(true)
+	viewConfig := func(copyGrants bool) config.Variables {
+		return config.Variables{
+			"name":        config.StringVariable(id.Name()),
+			"database":    config.StringVariable(id.DatabaseName()),
+			"schema":      config.StringVariable(id.SchemaName()),
+			"statement":   config.StringVariable(statement),
+			"copy_grants": config.BoolVariable(copyGrants),
+			"is_secure":   config.BoolVariable(true),
+			"columns": config.SetVariable(
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("ID"),
+				}),
+				config.MapVariable(map[string]config.Variable{
+					"column_name": config.StringVariable("FOO"),
+				}),
+			),
+		}
+	}
+
 	var createdOn string
 
 	resource.Test(t, resource.TestCase{
@@ -692,7 +818,8 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_copy_grants"),
+				ConfigVariables: viewConfig(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
@@ -704,7 +831,8 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 				),
 			},
 			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(false)),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_copy_grants"),
+				ConfigVariables: viewConfig(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
@@ -747,30 +875,6 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
-				),
-			},
-		},
-	})
-}
-
-func TestAcc_View_copyGrants(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.View),
-		Steps: []resource.TestStep{
-			{
-				Config: accconfig.FromModel(t, viewModel.WithCopyGrants(true)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 				),
 			},
 		},
@@ -839,7 +943,20 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_view.test"
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewConfig := config.Variables{
+		"name":      config.StringVariable(id.Name()),
+		"database":  config.StringVariable(id.DatabaseName()),
+		"schema":    config.StringVariable(id.SchemaName()),
+		"statement": config.StringVariable(statement),
+		"columns": config.SetVariable(
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_NAME"),
+			}),
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_OWNER"),
+			}),
+		),
+	}
 
 	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
@@ -868,7 +985,8 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   accconfig.FromModel(t, viewModel),
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables:          viewConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
@@ -919,6 +1037,10 @@ resource "snowflake_view" "test" {
   statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"${snowflake_table.table.name}\""
   copy_grants = true
   is_secure = true
+
+  column {
+    column_name = "%[5]s"
+  }
 }
 
 resource "snowflake_account_role" "test" {
@@ -956,6 +1078,12 @@ resource "snowflake_view" "test" {
 %[5]s
 SQL
   is_secure = true
+  column {
+    column_name = "ROLE_OWNER"
+  }
+  column {
+    column_name = "ROLE_NAME"
+  }
 }
 	`, id.DatabaseName(), id.SchemaName(), id.Name(), part1, part2)
 }
