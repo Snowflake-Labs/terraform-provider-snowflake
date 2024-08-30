@@ -40,21 +40,24 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 	key2, _ := random.GenerateRSAPublicKey(t)
 
 	pass := random.Password()
+	newPass := random.Password()
 
 	userModelNoAttributes := model.User("w", id.Name())
+	userModelNoAttributesRenamed := model.User("w", id2.Name()).
+		WithComment(newComment)
 
 	userModelAllAttributes := model.User("w", id.Name()).
 		WithPassword(pass).
 		WithLoginName(id.Name() + "_login").
 		WithDisplayName("Display Name").
 		WithFirstName("Jan").
-		WithMiddleName("Kuba").
+		WithMiddleName("Jakub").
 		WithLastName("Testowski").
 		WithEmail("fake@email.com").
 		WithMustChangePassword("true").
 		WithDisabled("false").
-		WithDaysToExpiry(10).
-		WithMinsToUnlock(10).
+		WithDaysToExpiry(8).
+		WithMinsToUnlock(9).
 		WithDefaultWarehouse("some_warehouse").
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
@@ -65,34 +68,27 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		WithComment(comment).
 		WithDisableMfa("true")
 
-	userModel2 := model.User("w", id2.Name()).
-		WithLoginName(id2.Name() + "_login").
-		WithDisplayName("Display Name").
-		WithFirstName("Jan").
-		WithLastName("Testowski").
-		WithEmail("fake@email.com").
-		WithMustChangePassword("true").
-		WithDisabled("false").
-		WithDefaultWarehouse("some_warehouse").
-		WithDefaultNamespace("some.namespace").
-		WithDefaultRole("some_role").
-		WithDefaultSecondaryRolesStringList("ALL").
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
-		WithComment(newComment)
-
-	userModel3 := model.User("w", id2.Name()).
-		WithPassword(pass).
-		WithLoginName(id2.Name() + "_login").
+	userModelAllAttributesChanged := model.User("w", id.Name()).
+		WithPassword(newPass).
+		WithLoginName(id.Name() + "_other_login").
 		WithDisplayName("New Display Name").
 		WithFirstName("Janek").
+		WithMiddleName("Kuba").
 		WithLastName("Terraformowski").
 		WithEmail("fake@email.net").
+		WithMustChangePassword("false").
 		WithDisabled("true").
+		WithDaysToExpiry(12).
+		WithMinsToUnlock(13).
 		WithDefaultWarehouse("other_warehouse").
 		WithDefaultNamespace("one_part_namespace").
 		WithDefaultRole("other_role").
-		WithComment(comment)
+		WithDefaultSecondaryRolesStringList("ALL").
+		WithMinsToBypassMfa(14).
+		WithRsaPublicKey(key2).
+		WithRsaPublicKey2(key1).
+		WithComment(newComment).
+		WithDisableMfa("false")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -102,6 +98,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
+			// CREATE WITHOUT ATTRIBUTES
 			{
 				Config: config.FromModel(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
@@ -128,12 +125,44 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasNoComment().
 						HasDisableMfaString(r.BooleanDefault).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
+						HasLoginName(fmt.Sprintf(id.Name())).
+						HasDisplayName(id.Name()),
 				),
 			},
+			// RENAME AND CHANGE ONE PROP
+			{
+				Config: config.FromModel(t, userModelNoAttributesRenamed),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
+						HasNameString(id2.Name()).
+						HasCommentString(newComment),
+					// default names stay the same
+					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
+						HasLoginName(fmt.Sprintf(id.Name())).
+						HasDisplayName(id.Name()),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            userModelNoAttributesRenamed.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password"},
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedUserResource(t, id2.Name()).
+						HasLoginNameString(fmt.Sprintf(id.Name())).
+						HasDisplayNameString(fmt.Sprintf(id.Name())).
+						HasDisabled(false).
+						HasMustChangePassword(false),
+				),
+			},
+			// DESTROY
 			{
 				Config:  config.FromModel(t, userModelNoAttributes),
 				Destroy: true,
 			},
+			// CREATE WITH ALL ATTRIBUTES
 			{
 				Config: config.FromModel(t, userModelAllAttributes),
 				Check: assert.AssertThat(t,
@@ -143,13 +172,13 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
 						HasDisplayNameString("Display Name").
 						HasFirstNameString("Jan").
-						HasMiddleNameString("Kuba").
+						HasMiddleNameString("Jakub").
 						HasLastNameString("Testowski").
 						HasEmailString("fake@email.com").
 						HasMustChangePassword(true).
 						HasDisabled(false).
-						HasDaysToExpiryString("10").
-						HasMinsToUnlockString("10").
+						HasDaysToExpiryString("8").
+						HasMinsToUnlockString("9").
 						HasDefaultWarehouseString("some_warehouse").
 						HasDefaultNamespaceString("some.namespace").
 						HasDefaultRoleString("some_role").
@@ -162,64 +191,77 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
 			},
-			// RENAME
-			{
-				Config: config.FromModel(t, userModel2),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
-					},
-				},
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel2.ResourceReference()).
-						HasNameString(id2.Name()).
-						HasCommentString(newComment).
-						HasLoginNameString(fmt.Sprintf("%s_login", id2.Name())).
-						HasDisplayNameString("Display Name").
-						HasFirstNameString("Jan").
-						HasLastNameString("Testowski").
-						HasEmailString("fake@email.com").
-						HasDisabled(false).
-						HasDefaultWarehouseString("some_warehouse").
-						HasDefaultRoleString("some_role").
-						HasDefaultSecondaryRoles("ALL").
-						HasDefaultNamespaceString("some.namespace").
-						HasMustChangePassword(true).
-						HasFullyQualifiedNameString(id2.FullyQualifiedName()),
-				),
-			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModel(t, userModel3),
+				Config: config.FromModel(t, userModelAllAttributesChanged),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel3.ResourceReference()).
-						HasCommentString(comment).
-						HasPasswordString(pass).
-						HasLoginNameString(fmt.Sprintf("%s_login", id2.Name())).
+					resourceassert.UserResource(t, userModelAllAttributesChanged.ResourceReference()).
+						HasNameString(id.Name()).
+						HasPasswordString(newPass).
+						HasLoginNameString(fmt.Sprintf("%s_other_login", id.Name())).
 						HasDisplayNameString("New Display Name").
 						HasFirstNameString("Janek").
+						HasMiddleNameString("Kuba").
 						HasLastNameString("Terraformowski").
 						HasEmailString("fake@email.net").
+						HasMustChangePassword(false).
 						HasDisabled(true).
+						HasDaysToExpiryString("12").
+						HasMinsToUnlockString("13").
 						HasDefaultWarehouseString("other_warehouse").
-						HasDefaultRoleString("other_role").
-						HasDefaultSecondaryRolesEmpty().
 						HasDefaultNamespaceString("one_part_namespace").
-						HasMustChangePasswordString(r.BooleanDefault).
-						HasFullyQualifiedNameString(id2.FullyQualifiedName()),
+						HasDefaultRoleString("other_role").
+						HasDefaultSecondaryRoles("ALL").
+						HasMinsToBypassMfaString("14").
+						HasRsaPublicKeyString(key2).
+						HasRsaPublicKey2String(key1).
+						HasCommentString(newComment).
+						HasDisableMfaString(r.BooleanFalse).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:            userModel3.ResourceReference(),
+				ResourceName:            userModelAllAttributesChanged.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "must_change_password", "rsa_public_key", "rsa_public_key_2", "middle_name"},
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedUserResource(t, id2.Name()).
+					resourceassert.ImportedUserResource(t, id.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
-						HasLoginNameString(fmt.Sprintf("%s_LOGIN", id2.Name())).
-						HasMustChangePasswordString(r.BooleanFalse),
+						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
+				),
+			},
+			// UNSET ALL
+			{
+				Config: config.FromModel(t, userModelNoAttributes),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
+						HasNameString(id.Name()).
+						HasPasswordString("").
+						HasLoginNameString("").
+						HasDisplayNameString("").
+						HasFirstNameString("").
+						HasMiddleNameString("").
+						HasLastNameString("").
+						HasEmailString("").
+						HasMustChangePasswordString(r.BooleanDefault).
+						HasDisabledString(r.BooleanDefault).
+						HasDaysToExpiryString("0").
+						HasMinsToUnlockString(r.IntDefaultString).
+						HasDefaultWarehouseString("").
+						HasDefaultNamespaceString("").
+						HasDefaultRoleString("").
+						HasDefaultSecondaryRolesEmpty().
+						HasMinsToBypassMfaString(r.IntDefaultString).
+						HasRsaPublicKeyString("").
+						HasRsaPublicKey2String("").
+						HasCommentString("").
+						HasDisableMfaString(r.BooleanDefault).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.UserShowOutput(t, userModelNoAttributes.ResourceReference()).
+						HasLoginName(fmt.Sprintf(id.Name())).
+						HasDisplayName(""),
 				),
 			},
 		},

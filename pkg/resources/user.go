@@ -232,9 +232,9 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 
 	err = errors.Join(
 		d.Set("name", id.Name()),
-		setStringProperty(d, "login_name", userDetails.LoginName),
-		setStringProperty(d, "display_name", userDetails.DisplayName),
-		setStringProperty(d, "default_namespace", userDetails.DefaultNamespace),
+		setStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
+		setStringPropertyIfNotEmpty(d, "display_name", userDetails.DisplayName),
+		setStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
 		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
 		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
 		// all others are set in read
