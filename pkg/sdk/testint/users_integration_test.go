@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348101 - next PR]: test setting/unsetting policies
+// TODO [SNOW-1645875]: test setting/unsetting policies
 // TODO [SNOW-1645348]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
