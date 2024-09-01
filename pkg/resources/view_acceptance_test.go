@@ -637,7 +637,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
-					checkBool("snowflake_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "show_output.#", "1"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "show_output.0.created_on", func(value string) error {
 						createdOn = value
@@ -656,7 +656,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 						}
 						return nil
 					}),
-					checkBool("snowflake_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 				),
 			},
 		},
@@ -688,7 +688,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 						createdOn = value
 						return nil
 					}),
-					checkBool("snowflake_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 				),
 			},
 			{
@@ -701,7 +701,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 						}
 						return nil
 					}),
-					checkBool("snowflake_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_view.test", "is_secure", "true"),
 				),
 			},
 		},
