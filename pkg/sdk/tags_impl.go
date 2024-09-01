@@ -41,7 +41,7 @@ func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, e
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(tags, func(r Tag) bool { return r.Name == id.Name() })
+	return collections.FindFirst(tags, func(r Tag) bool { return r.Name == id.Name() })
 }
 
 func (v *tags) Drop(ctx context.Context, request *DropTagRequest) error {

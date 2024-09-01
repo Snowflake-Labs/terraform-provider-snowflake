@@ -169,7 +169,7 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		return nil, err
 	}
 
-	if issueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if issueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 	}); err == nil {
 		if err = d.Set("oauth_issue_refresh_tokens", issueRefreshTokens.Value); err != nil {
@@ -177,7 +177,7 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		}
 	}
 
-	if refreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if refreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 	}); err == nil {
 		refreshTokenValidityValue, err := strconv.ParseInt(refreshTokenValidity.Value, 10, 64)
@@ -189,7 +189,7 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		}
 	}
 
-	if oauthUseSecondaryRoles, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if oauthUseSecondaryRoles, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_USE_SECONDARY_ROLES"
 	}); err == nil {
 		oauthUseSecondaryRolesValue, err := sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption(oauthUseSecondaryRoles.Value)
@@ -318,7 +318,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 			return diag.FromErr(err)
 		}
 
-		blockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		blockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "BLOCKED_ROLES_LIST"
 		})
 		if err != nil {
@@ -339,14 +339,14 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 				return diag.FromErr(err)
 			}
 
-			oauthIssueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthIssueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthRefreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthRefreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 			})
 			if err != nil {
@@ -357,7 +357,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 				return diag.FromErr(err)
 			}
 
-			oauthUseSecondaryRoles, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthUseSecondaryRoles, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_USE_SECONDARY_ROLES"
 			})
 			if err != nil {

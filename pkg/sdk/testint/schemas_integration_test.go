@@ -26,7 +26,7 @@ func TestInt_Schemas(t *testing.T) {
 
 	assertParameterEqualsToDefaultValue := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter) {
 		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
+		param, err := collections.FindFirst(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
 		assert.NoError(t, err)
 		assert.NotNil(t, param)
 		assert.Equal(t, (*param).Default, (*param).Value)
@@ -561,7 +561,7 @@ func TestInt_Schemas(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		schema, err := collections.FindOne(schemas, func(schema sdk.Schema) bool { return schema.Name == schema1.Name })
+		schema, err := collections.FindFirst(schemas, func(schema sdk.Schema) bool { return schema.Name == schema1.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, schema1.Name, schema.Name)
@@ -580,7 +580,7 @@ func TestInt_Schemas(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		droppedSchema, err := collections.FindOne(schemas, func(schema sdk.Schema) bool { return schema.Name == schema3.Name })
+		droppedSchema, err := collections.FindFirst(schemas, func(schema sdk.Schema) bool { return schema.Name == schema3.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, schema3.Name, droppedSchema.Name)

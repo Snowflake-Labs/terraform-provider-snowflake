@@ -55,7 +55,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 		return nil, err
 	}
 
-	return collections.FindOne(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
+	return collections.FindFirst(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
 }
 
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {

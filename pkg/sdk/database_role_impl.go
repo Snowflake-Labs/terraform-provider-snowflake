@@ -50,7 +50,7 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 		return nil, err
 	}
 
-	return collections.FindOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
+	return collections.FindFirst(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {

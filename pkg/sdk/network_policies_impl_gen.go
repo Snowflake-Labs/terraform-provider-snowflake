@@ -43,7 +43,7 @@ func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifi
 		return nil, err
 	}
 
-	return collections.FindOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
+	return collections.FindFirst(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error) {

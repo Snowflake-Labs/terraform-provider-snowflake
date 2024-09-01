@@ -42,7 +42,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	}
 
 	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
-		return collections.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
+		return collections.FindFirst[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
 			return t.Name == name
 		})
 	}

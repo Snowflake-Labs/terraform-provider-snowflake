@@ -43,7 +43,7 @@ func (v *applicationPackages) ShowByID(ctx context.Context, id AccountObjectIden
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(applicationPackages, func(r ApplicationPackage) bool { return r.Name == id.Name() })
+	return collections.FindFirst(applicationPackages, func(r ApplicationPackage) bool { return r.Name == id.Name() })
 }
 
 func (r *CreateApplicationPackageRequest) toOpts() *CreateApplicationPackageOptions {

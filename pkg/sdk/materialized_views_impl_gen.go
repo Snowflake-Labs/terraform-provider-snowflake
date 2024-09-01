@@ -43,7 +43,7 @@ func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentif
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(materializedViews, func(r MaterializedView) bool { return r.Name == id.Name() })
+	return collections.FindFirst(materializedViews, func(r MaterializedView) bool { return r.Name == id.Name() })
 }
 
 func (v *materializedViews) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]MaterializedViewDetails, error) {

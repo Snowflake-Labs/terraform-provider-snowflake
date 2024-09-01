@@ -61,7 +61,7 @@ func (v *externalTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier
 		return nil, err
 	}
 
-	return collections.FindOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == id.FullyQualifiedName() })
+	return collections.FindFirst(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {

@@ -171,7 +171,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	// TODO(SNOW-1449579): move to helpers
 	assertFieldContainsList := func(details []sdk.SecurityIntegrationProperty, field, value, sep string) {
-		found, err := collections.FindOne(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
+		found, err := collections.FindFirst(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
 		assert.NoError(t, err)
 		values := strings.Split(found.Value, sep)
 		for _, exp := range strings.Split(value, sep) {

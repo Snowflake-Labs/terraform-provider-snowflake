@@ -33,7 +33,7 @@ func (v *eventTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(eventTables, func(r EventTable) bool { return r.Name == id.Name() })
+	return collections.FindFirst(eventTables, func(r EventTable) bool { return r.Name == id.Name() })
 }
 
 func (v *eventTables) Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error) {

@@ -147,7 +147,7 @@ func TestInt_IdentifiersForTwoPartIdentifierAsReference(t *testing.T) {
 				err = testClient(t).QueryForTests(ctx, &grants, fmt.Sprintf("SHOW GRANTS ON SCHEMA %s", testCase.Name.FullyQualifiedName()))
 				require.NoError(t, err)
 
-				createTableGrant, err := collections.FindOne(grants, func(output RawGrantOutput) bool { return output.Privilege == sdk.SchemaPrivilegeCreateTable.String() })
+				createTableGrant, err := collections.FindFirst(grants, func(output RawGrantOutput) bool { return output.Privilege == sdk.SchemaPrivilegeCreateTable.String() })
 				require.NoError(t, err)
 
 				// For two part identifiers, we expect Snowflake to return escaped identifiers with exception

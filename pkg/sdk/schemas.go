@@ -568,7 +568,7 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(schemas, func(r Schema) bool { return r.Name == id.Name() })
+	return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {

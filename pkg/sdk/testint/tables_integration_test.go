@@ -917,9 +917,9 @@ func TestInt_Table(t *testing.T) {
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
 		require.NoError(t, err)
 
-		t1, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table.ID().FullyQualifiedName() })
+		t1, err := collections.FindFirst(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table.ID().FullyQualifiedName() })
 		require.NoError(t, err)
-		t2, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table2.ID().FullyQualifiedName() })
+		t2, err := collections.FindFirst(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table2.ID().FullyQualifiedName() })
 		require.NoError(t, err)
 
 		assertTable(t, t1, table.ID())

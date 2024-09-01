@@ -37,7 +37,7 @@ func (v *managedAccounts) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(managedAccounts, func(r ManagedAccount) bool { return r.Name == id.Name() })
+	return collections.FindFirst(managedAccounts, func(r ManagedAccount) bool { return r.Name == id.Name() })
 }
 
 func (r *CreateManagedAccountRequest) toOpts() *CreateManagedAccountOptions {

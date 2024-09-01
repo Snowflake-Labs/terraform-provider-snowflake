@@ -41,7 +41,7 @@ func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(roleList, func(r Role) bool { return r.ID().name == id.Name() })
+	return collections.FindFirst(roleList, func(r Role) bool { return r.ID().name == id.Name() })
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {

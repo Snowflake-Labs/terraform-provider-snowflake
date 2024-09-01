@@ -138,7 +138,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_SUBSCRIPTION_NAME", Type: "String", Value: gcpPubsubSubscriptionName, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 
-		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+		prop, err := collections.FindFirst(details, func(property sdk.NotificationIntegrationProperty) bool {
 			return property.Name == "GCP_PUBSUB_SERVICE_ACCOUNT"
 		})
 		assert.NoError(t, err)
@@ -159,13 +159,13 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AZURE_STORAGE_QUEUE_PRIMARY_URI", Type: "String", Value: azureStorageQueuePrimaryUri, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 
-		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+		prop, err := collections.FindFirst(details, func(property sdk.NotificationIntegrationProperty) bool {
 			return property.Name == "AZURE_CONSENT_URL"
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, prop.Value)
 
-		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+		prop, err = collections.FindFirst(details, func(property sdk.NotificationIntegrationProperty) bool {
 			return property.Name == "AZURE_MULTI_TENANT_APP_NAME"
 		})
 		assert.NoError(t, err)
@@ -189,10 +189,10 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsRoleArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 
-		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_IAM_USER_ARN" })
+		prop, err := collections.FindFirst(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_IAM_USER_ARN" })
 		assert.NoError(t, err)
 		assert.NotEmpty(t, prop.Value)
-		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_EXTERNAL_ID" })
+		prop, err = collections.FindFirst(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_EXTERNAL_ID" })
 		assert.NoError(t, err)
 		assert.NotEmpty(t, prop.Value)
 	})

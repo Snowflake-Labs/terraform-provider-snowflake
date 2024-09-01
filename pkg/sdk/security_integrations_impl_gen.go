@@ -125,7 +125,7 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+	return collections.FindFirst(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
 func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {

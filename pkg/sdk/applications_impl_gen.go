@@ -43,7 +43,7 @@ func (v *applications) ShowByID(ctx context.Context, id AccountObjectIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(applications, func(r Application) bool { return r.Name == id.Name() })
+	return collections.FindFirst(applications, func(r Application) bool { return r.Name == id.Name() })
 }
 
 func (v *applications) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationProperty, error) {

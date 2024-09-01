@@ -43,7 +43,7 @@ func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(streamlits, func(r Streamlit) bool { return r.Name == id.Name() })
+	return collections.FindFirst(streamlits, func(r Streamlit) bool { return r.Name == id.Name() })
 }
 
 func (v *streamlits) Describe(ctx context.Context, id SchemaObjectIdentifier) (*StreamlitDetail, error) {

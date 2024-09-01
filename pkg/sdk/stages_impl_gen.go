@@ -104,7 +104,7 @@ func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stag
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(stages, func(r Stage) bool { return r.Name == id.Name() })
+	return collections.FindFirst(stages, func(r Stage) bool { return r.Name == id.Name() })
 }
 
 func (s *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {

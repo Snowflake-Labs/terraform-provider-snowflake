@@ -27,7 +27,7 @@ func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter
 
 func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, param T, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
+		foundParameter, err := collections.FindFirst(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
 		if err != nil {
 			log.Printf("[WARN] failed to find parameter: %s", param)
 			return nil

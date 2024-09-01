@@ -33,7 +33,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 
 	findProp := func(t *testing.T, props []sdk.StorageIntegrationProperty, name string) *sdk.StorageIntegrationProperty {
 		t.Helper()
-		prop, err := collections.FindOne(props, func(property sdk.StorageIntegrationProperty) bool { return property.Name == name })
+		prop, err := collections.FindFirst(props, func(property sdk.StorageIntegrationProperty) bool { return property.Name == name })
 		require.NoError(t, err)
 		return prop
 	}

@@ -55,7 +55,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	assertApplicationRoles := func(t *testing.T, appRoles []sdk.ApplicationRole, name string, comment string) {
 		t.Helper()
-		appRole, err := collections.FindOne(appRoles, func(role sdk.ApplicationRole) bool {
+		appRole, err := collections.FindFirst(appRoles, func(role sdk.ApplicationRole) bool {
 			return role.Name == name
 		})
 		require.NoError(t, err)
