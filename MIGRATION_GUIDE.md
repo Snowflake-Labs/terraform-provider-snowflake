@@ -206,23 +206,54 @@ The following set of [parameters](https://docs.snowflake.com/en/sql-reference/pa
 
 Connected issues: [#2938](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2938)
 
-### *(breaking change)* Changes in sensitiveness of name and login_name
+#### *(breaking change)* Changes in sensitiveness of name, login_name, and display_name
 
 According to https://docs.snowflake.com/en/sql-reference/functions/all_user_names#usage-notes, `NAME`s are not considered sensitive data and `LOGIN_NAME`s are. Previous versions of the provider had this the other way around. In this version, `name` attribute was unmarked as sensitive, whereas `login_name` was marked as sensitive. This may break your configuration if you were using `login_name`s before e.g. in a `for_each` loop.
 
+The `display_name` attribute was marked as sensitive. It defaults to `name` if not provided on Snowflake side. Because `name` is no longer sensitive, we also change the setting for the `display_name`.
+
 Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
 
-### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
+#### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
 
 During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (read more in [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
 
 Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
 
-### *(bugfix)* Correctly handle failed update
+#### *(bugfix)* Correctly handle failed update
 
 Not every attribute can be updated in the state during read (like `password` in the `snowflake_user` resource). In situations where update fails, we may end up with an incorrect state (read more in https://github.com/hashicorp/terraform-plugin-sdk/issues/476). We use a deprecated method from the plugin SDK, and now, for partially failed updates, we preserve the resource's previous state. It fixed this kind of situations for `snowflake_user` resource.
 
 Connected issues: [#2970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2970)
+
+#### *(breaking change)* Attributes changes
+
+Attributes that are no longer computed:
+- `login_name`
+- `display_name`
+- `disabled`
+- `default_role`
+
+New fields:
+- `middle_name`
+- `days_to_expiry`
+- `mins_to_unlock`
+- `mins_to_bypass_mfa`
+- `disable_mfa`
+
+Removed fields:
+- `has_rsa_public_key`
+
+Default changes:
+- `must_change_password`
+- `disabled`
+
+Type changes:
+- `must_change_password`: bool -> string
+- `disabled`: bool -> string
+
+Validation changes:
+- `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
 
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema

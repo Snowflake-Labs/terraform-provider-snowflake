@@ -25,10 +25,12 @@ type UserModel struct {
 	Comment                                  tfconfig.Variable `json:"comment,omitempty"`
 	DateInputFormat                          tfconfig.Variable `json:"date_input_format,omitempty"`
 	DateOutputFormat                         tfconfig.Variable `json:"date_output_format,omitempty"`
+	DaysToExpiry                             tfconfig.Variable `json:"days_to_expiry,omitempty"`
 	DefaultNamespace                         tfconfig.Variable `json:"default_namespace,omitempty"`
 	DefaultRole                              tfconfig.Variable `json:"default_role,omitempty"`
 	DefaultSecondaryRoles                    tfconfig.Variable `json:"default_secondary_roles,omitempty"`
 	DefaultWarehouse                         tfconfig.Variable `json:"default_warehouse,omitempty"`
+	DisableMfa                               tfconfig.Variable `json:"disable_mfa,omitempty"`
 	Disabled                                 tfconfig.Variable `json:"disabled,omitempty"`
 	DisplayName                              tfconfig.Variable `json:"display_name,omitempty"`
 	Email                                    tfconfig.Variable `json:"email,omitempty"`
@@ -40,7 +42,6 @@ type UserModel struct {
 	FullyQualifiedName                       tfconfig.Variable `json:"fully_qualified_name,omitempty"`
 	GeographyOutputFormat                    tfconfig.Variable `json:"geography_output_format,omitempty"`
 	GeometryOutputFormat                     tfconfig.Variable `json:"geometry_output_format,omitempty"`
-	HasRsaPublicKey                          tfconfig.Variable `json:"has_rsa_public_key,omitempty"`
 	JdbcTreatDecimalAsInt                    tfconfig.Variable `json:"jdbc_treat_decimal_as_int,omitempty"`
 	JdbcTreatTimestampNtzAsUtc               tfconfig.Variable `json:"jdbc_treat_timestamp_ntz_as_utc,omitempty"`
 	JdbcUseSessionTimezone                   tfconfig.Variable `json:"jdbc_use_session_timezone,omitempty"`
@@ -49,6 +50,9 @@ type UserModel struct {
 	LockTimeout                              tfconfig.Variable `json:"lock_timeout,omitempty"`
 	LogLevel                                 tfconfig.Variable `json:"log_level,omitempty"`
 	LoginName                                tfconfig.Variable `json:"login_name,omitempty"`
+	MiddleName                               tfconfig.Variable `json:"middle_name,omitempty"`
+	MinsToBypassMfa                          tfconfig.Variable `json:"mins_to_bypass_mfa,omitempty"`
+	MinsToUnlock                             tfconfig.Variable `json:"mins_to_unlock,omitempty"`
 	MultiStatementCount                      tfconfig.Variable `json:"multi_statement_count,omitempty"`
 	MustChangePassword                       tfconfig.Variable `json:"must_change_password,omitempty"`
 	Name                                     tfconfig.Variable `json:"name,omitempty"`
@@ -84,6 +88,7 @@ type UserModel struct {
 	TwoDigitCenturyStart                     tfconfig.Variable `json:"two_digit_century_start,omitempty"`
 	UnsupportedDdlAction                     tfconfig.Variable `json:"unsupported_ddl_action,omitempty"`
 	UseCachedResult                          tfconfig.Variable `json:"use_cached_result,omitempty"`
+	UserType                                 tfconfig.Variable `json:"user_type,omitempty"`
 	WeekOfYearPolicy                         tfconfig.Variable `json:"week_of_year_policy,omitempty"`
 	WeekStart                                tfconfig.Variable `json:"week_start,omitempty"`
 
@@ -190,6 +195,11 @@ func (u *UserModel) WithDateOutputFormat(dateOutputFormat string) *UserModel {
 	return u
 }
 
+func (u *UserModel) WithDaysToExpiry(daysToExpiry int) *UserModel {
+	u.DaysToExpiry = tfconfig.IntegerVariable(daysToExpiry)
+	return u
+}
+
 func (u *UserModel) WithDefaultNamespace(defaultNamespace string) *UserModel {
 	u.DefaultNamespace = tfconfig.StringVariable(defaultNamespace)
 	return u
@@ -207,8 +217,13 @@ func (u *UserModel) WithDefaultWarehouse(defaultWarehouse string) *UserModel {
 	return u
 }
 
-func (u *UserModel) WithDisabled(disabled bool) *UserModel {
-	u.Disabled = tfconfig.BoolVariable(disabled)
+func (u *UserModel) WithDisableMfa(disableMfa string) *UserModel {
+	u.DisableMfa = tfconfig.StringVariable(disableMfa)
+	return u
+}
+
+func (u *UserModel) WithDisabled(disabled string) *UserModel {
+	u.Disabled = tfconfig.StringVariable(disabled)
 	return u
 }
 
@@ -262,11 +277,6 @@ func (u *UserModel) WithGeometryOutputFormat(geometryOutputFormat string) *UserM
 	return u
 }
 
-func (u *UserModel) WithHasRsaPublicKey(hasRsaPublicKey bool) *UserModel {
-	u.HasRsaPublicKey = tfconfig.BoolVariable(hasRsaPublicKey)
-	return u
-}
-
 func (u *UserModel) WithJdbcTreatDecimalAsInt(jdbcTreatDecimalAsInt bool) *UserModel {
 	u.JdbcTreatDecimalAsInt = tfconfig.BoolVariable(jdbcTreatDecimalAsInt)
 	return u
@@ -307,13 +317,28 @@ func (u *UserModel) WithLoginName(loginName string) *UserModel {
 	return u
 }
 
+func (u *UserModel) WithMiddleName(middleName string) *UserModel {
+	u.MiddleName = tfconfig.StringVariable(middleName)
+	return u
+}
+
+func (u *UserModel) WithMinsToBypassMfa(minsToBypassMfa int) *UserModel {
+	u.MinsToBypassMfa = tfconfig.IntegerVariable(minsToBypassMfa)
+	return u
+}
+
+func (u *UserModel) WithMinsToUnlock(minsToUnlock int) *UserModel {
+	u.MinsToUnlock = tfconfig.IntegerVariable(minsToUnlock)
+	return u
+}
+
 func (u *UserModel) WithMultiStatementCount(multiStatementCount int) *UserModel {
 	u.MultiStatementCount = tfconfig.IntegerVariable(multiStatementCount)
 	return u
 }
 
-func (u *UserModel) WithMustChangePassword(mustChangePassword bool) *UserModel {
-	u.MustChangePassword = tfconfig.BoolVariable(mustChangePassword)
+func (u *UserModel) WithMustChangePassword(mustChangePassword string) *UserModel {
+	u.MustChangePassword = tfconfig.StringVariable(mustChangePassword)
 	return u
 }
 
@@ -482,6 +507,11 @@ func (u *UserModel) WithUseCachedResult(useCachedResult bool) *UserModel {
 	return u
 }
 
+func (u *UserModel) WithUserType(userType string) *UserModel {
+	u.UserType = tfconfig.StringVariable(userType)
+	return u
+}
+
 func (u *UserModel) WithWeekOfYearPolicy(weekOfYearPolicy int) *UserModel {
 	u.WeekOfYearPolicy = tfconfig.IntegerVariable(weekOfYearPolicy)
 	return u
@@ -571,6 +601,11 @@ func (u *UserModel) WithDateOutputFormatValue(value tfconfig.Variable) *UserMode
 	return u
 }
 
+func (u *UserModel) WithDaysToExpiryValue(value tfconfig.Variable) *UserModel {
+	u.DaysToExpiry = value
+	return u
+}
+
 func (u *UserModel) WithDefaultNamespaceValue(value tfconfig.Variable) *UserModel {
 	u.DefaultNamespace = value
 	return u
@@ -588,6 +623,11 @@ func (u *UserModel) WithDefaultSecondaryRolesValue(value tfconfig.Variable) *Use
 
 func (u *UserModel) WithDefaultWarehouseValue(value tfconfig.Variable) *UserModel {
 	u.DefaultWarehouse = value
+	return u
+}
+
+func (u *UserModel) WithDisableMfaValue(value tfconfig.Variable) *UserModel {
+	u.DisableMfa = value
 	return u
 }
 
@@ -646,11 +686,6 @@ func (u *UserModel) WithGeometryOutputFormatValue(value tfconfig.Variable) *User
 	return u
 }
 
-func (u *UserModel) WithHasRsaPublicKeyValue(value tfconfig.Variable) *UserModel {
-	u.HasRsaPublicKey = value
-	return u
-}
-
 func (u *UserModel) WithJdbcTreatDecimalAsIntValue(value tfconfig.Variable) *UserModel {
 	u.JdbcTreatDecimalAsInt = value
 	return u
@@ -688,6 +723,21 @@ func (u *UserModel) WithLogLevelValue(value tfconfig.Variable) *UserModel {
 
 func (u *UserModel) WithLoginNameValue(value tfconfig.Variable) *UserModel {
 	u.LoginName = value
+	return u
+}
+
+func (u *UserModel) WithMiddleNameValue(value tfconfig.Variable) *UserModel {
+	u.MiddleName = value
+	return u
+}
+
+func (u *UserModel) WithMinsToBypassMfaValue(value tfconfig.Variable) *UserModel {
+	u.MinsToBypassMfa = value
+	return u
+}
+
+func (u *UserModel) WithMinsToUnlockValue(value tfconfig.Variable) *UserModel {
+	u.MinsToUnlock = value
 	return u
 }
 
@@ -863,6 +913,11 @@ func (u *UserModel) WithUnsupportedDdlActionValue(value tfconfig.Variable) *User
 
 func (u *UserModel) WithUseCachedResultValue(value tfconfig.Variable) *UserModel {
 	u.UseCachedResult = value
+	return u
+}
+
+func (u *UserModel) WithUserTypeValue(value tfconfig.Variable) *UserModel {
+	u.UserType = value
 	return u
 }
 

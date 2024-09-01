@@ -121,7 +121,18 @@ func (w *UserAssert) HasDaysToExpiryNotEmpty() *UserAssert {
 	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.DaysToExpiry == "" {
-			return fmt.Errorf("expected days to expiry not empty; got: %v", o.DaysToExpiry)
+			return fmt.Errorf("expected days to expiry not empty; got empty")
+		}
+		return nil
+	})
+	return w
+}
+
+func (w *UserAssert) HasDaysToExpiryEmpty() *UserAssert {
+	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
+		t.Helper()
+		if o.DaysToExpiry != "" {
+			return fmt.Errorf("expected days to expiry empty; got: %v", o.DaysToExpiry)
 		}
 		return nil
 	})

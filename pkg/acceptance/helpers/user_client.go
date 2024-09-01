@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -65,6 +66,53 @@ func (c *UserClient) Disable(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}}})
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Disable: sdk.Bool(true),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
+
+func (c *UserClient) SetDaysToExpiry(t *testing.T, id sdk.AccountObjectIdentifier, value int) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					DaysToExpiry: sdk.Int(value),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
+
+func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value string) {
+	t.Helper()
+	ctx := context.Background()
+
+	// TODO [SNOW-1645348]: use type from SDK
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), value))
+	require.NoError(t, err)
+}
+
+func (c *UserClient) UnsetDefaultSecondaryRoles(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				DefaultSecondaryRoles: sdk.Bool(true),
+			},
+		},
+	})
 	require.NoError(t, err)
 }

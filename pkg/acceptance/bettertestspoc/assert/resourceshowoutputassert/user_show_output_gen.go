@@ -170,3 +170,13 @@ func (u *UserShowOutputAssert) HasHasRsaPublicKey(expected bool) *UserShowOutput
 	u.AddAssertion(assert.ResourceShowOutputBoolValueSet("has_rsa_public_key", expected))
 	return u
 }
+
+func (u *UserShowOutputAssert) HasType(expected string) *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("type", expected))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasHasMfa(expected bool) *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueSet("has_mfa", expected))
+	return u
+}

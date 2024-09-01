@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -99,26 +100,7 @@ func Schema() *schema.Resource {
 			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
 			ComputedIfAnyAttributeChangedWithSuppressDiff(DescribeOutputAttributeName, suppressIdentifierQuoting, "name"),
 			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
-			// TODO [SNOW-1348101]: use list from schema parameters definition instead listing all here (after moving to the SDK)
-			ComputedIfAnyAttributeChanged(ParametersAttributeName,
-				strings.ToLower(string(sdk.ObjectParameterDataRetentionTimeInDays)),
-				strings.ToLower(string(sdk.ObjectParameterMaxDataExtensionTimeInDays)),
-				strings.ToLower(string(sdk.ObjectParameterExternalVolume)),
-				strings.ToLower(string(sdk.ObjectParameterCatalog)),
-				strings.ToLower(string(sdk.ObjectParameterReplaceInvalidCharacters)),
-				strings.ToLower(string(sdk.ObjectParameterDefaultDDLCollation)),
-				strings.ToLower(string(sdk.ObjectParameterStorageSerializationPolicy)),
-				strings.ToLower(string(sdk.ObjectParameterLogLevel)),
-				strings.ToLower(string(sdk.ObjectParameterTraceLevel)),
-				strings.ToLower(string(sdk.ObjectParameterSuspendTaskAfterNumFailures)),
-				strings.ToLower(string(sdk.ObjectParameterTaskAutoRetryAttempts)),
-				strings.ToLower(string(sdk.ObjectParameterUserTaskManagedInitialWarehouseSize)),
-				strings.ToLower(string(sdk.ObjectParameterUserTaskTimeoutMs)),
-				strings.ToLower(string(sdk.ObjectParameterUserTaskMinimumTriggerIntervalInSeconds)),
-				strings.ToLower(string(sdk.ObjectParameterQuotedIdentifiersIgnoreCase)),
-				strings.ToLower(string(sdk.ObjectParameterEnableConsoleOutput)),
-				strings.ToLower(string(sdk.ObjectParameterPipeExecutionPaused)),
-			),
+			ComputedIfAnyAttributeChanged(ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
 			schemaParametersCustomDiff,
 		),
 

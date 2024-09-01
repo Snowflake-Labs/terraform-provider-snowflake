@@ -223,3 +223,18 @@ func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaVal
 		return nil
 	}
 }
+
+func isValidSecondaryRole() func(value any, path cty.Path) diag.Diagnostics {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		if secondaryRole, ok := value.(string); !ok || strings.ToUpper(secondaryRole) != "ALL" {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Unsupported secondary role '%s'", secondaryRole),
+				Detail:        `The only supported default secondary roles value is currently 'ALL'. For more details check: https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.`,
+				AttributePath: nil,
+			})
+		}
+		return diags
+	}
+}

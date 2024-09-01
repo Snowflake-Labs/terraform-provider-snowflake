@@ -113,6 +113,14 @@ var ShowUserSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
+	"type": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"has_mfa": {
+		Type:     schema.TypeBool,
+		Computed: true,
+	},
 }
 
 var _ = ShowUserSchema
@@ -145,6 +153,8 @@ func UserToSchema(user *sdk.User) map[string]any {
 	userSchema["locked_until_time"] = user.LockedUntilTime.String()
 	userSchema["has_password"] = user.HasPassword
 	userSchema["has_rsa_public_key"] = user.HasRsaPublicKey
+	userSchema["type"] = user.Type
+	userSchema["has_mfa"] = user.HasMfa
 	return userSchema
 }
 
