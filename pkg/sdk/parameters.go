@@ -676,6 +676,27 @@ var AllSchemaParameters = []ObjectParameter{
 	ObjectParameterPipeExecutionPaused,
 }
 
+type DatabaseParameter string
+
+const (
+	DatabaseParameterDataRetentionTimeInDays                 DatabaseParameter = "DATA_RETENTION_TIME_IN_DAYS"
+	DatabaseParameterMaxDataExtensionTimeInDays              DatabaseParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
+	DatabaseParameterExternalVolume                          DatabaseParameter = "EXTERNAL_VOLUME"
+	DatabaseParameterCatalog                                 DatabaseParameter = "CATALOG"
+	DatabaseParameterReplaceInvalidCharacters                DatabaseParameter = "REPLACE_INVALID_CHARACTERS"
+	DatabaseParameterDefaultDdlCollation                     DatabaseParameter = "DEFAULT_DDL_COLLATION"
+	DatabaseParameterStorageSerializationPolicy              DatabaseParameter = "STORAGE_SERIALIZATION_POLICY"
+	DatabaseParameterLogLevel                                DatabaseParameter = "LOG_LEVEL"
+	DatabaseParameterTraceLevel                              DatabaseParameter = "TRACE_LEVEL"
+	DatabaseParameterSuspendTaskAfterNumFailures             DatabaseParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	DatabaseParameterTaskAutoRetryAttempts                   DatabaseParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	DatabaseParameterUserTaskManagedInitialWarehouseSize     DatabaseParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	DatabaseParameterUserTaskTimeoutMs                       DatabaseParameter = "USER_TASK_TIMEOUT_MS"
+	DatabaseParameterUserTaskMinimumTriggerIntervalInSeconds DatabaseParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	DatabaseParameterQuotedIdentifiersIgnoreCase             DatabaseParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	DatabaseParameterEnableConsoleOutput                     DatabaseParameter = "ENABLE_CONSOLE_OUTPUT"
+)
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
