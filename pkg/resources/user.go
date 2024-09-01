@@ -233,9 +233,9 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 
 	err = errors.Join(
 		d.Set("name", id.Name()),
-		setStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
-		setStringPropertyIfNotEmpty(d, "display_name", userDetails.DisplayName),
-		setStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
+		setFromStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
+		setFromStringPropertyIfNotEmpty(d, "display_name", userDetails.DisplayName),
+		setFromStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
 		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
 		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
 		// all others are set in read
@@ -393,22 +393,22 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// can't read password
 			// not reading login_name on purpose (handled as external change to show output)
 			// not reading display_name on purpose (handled as external change to show output)
-			setStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
-			setStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
-			setStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
-			setStringPropertyIfNotEmpty(d, "email", userDetails.Email),
+			setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
+			setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
+			setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+			setFromStringPropertyIfNotEmpty(d, "email", userDetails.Email),
 			// not reading must_change_password on purpose (handled as external change to show output)
 			// not reading disabled on purpose (handled as external change to show output)
 			// not reading days_to_expiry on purpose (they always change)
 			// not reading mins_to_unlock on purpose (they always change)
-			setStringPropertyIfNotEmpty(d, "default_warehouse", userDetails.DefaultWarehouse),
+			setFromStringPropertyIfNotEmpty(d, "default_warehouse", userDetails.DefaultWarehouse),
 			// not reading default_namespace because one-part namespace seems to be capitalized on Snowflake side (handled as external change to show output)
-			setStringPropertyIfNotEmpty(d, "default_role", userDetails.DefaultRole),
+			setFromStringPropertyIfNotEmpty(d, "default_role", userDetails.DefaultRole),
 			d.Set("default_secondary_roles", defaultSecondaryRoles),
 			// not reading mins_to_bypass_mfa on purpose (they always change)
-			setStringPropertyIfNotEmpty(d, "rsa_public_key", userDetails.RsaPublicKey),
-			setStringPropertyIfNotEmpty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
-			setStringPropertyIfNotEmpty(d, "comment", userDetails.Comment),
+			setFromStringPropertyIfNotEmpty(d, "rsa_public_key", userDetails.RsaPublicKey),
+			setFromStringPropertyIfNotEmpty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
+			setFromStringPropertyIfNotEmpty(d, "comment", userDetails.Comment),
 			// can't read disable_mfa
 			d.Set("user_type", u.Type),
 
