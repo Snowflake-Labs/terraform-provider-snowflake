@@ -345,10 +345,40 @@ func TestForceNewIfChangeToEmptySet(t *testing.T) {
 	}
 }
 
-func TestComputedIfAnyAttributeChangedWithSuppressDiff(t *testing.T) {
-	suppressFunc := schema.SchemaDiffSuppressFunc(func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+func Test_ComputedIfAnyAttributeChanged(t *testing.T) {
+	testSuppressFunc := schema.SchemaDiffSuppressFunc(func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 		return strings.Trim(oldValue, `"`) == strings.Trim(newValue, `"`)
 	})
+	testSchema := map[string]*schema.Schema{
+		"value_with_diff_suppress": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			DiffSuppressFunc: testSuppressFunc,
+		},
+		"value_without_diff_suppress": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"computed_value": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+	}
+	testCustomDiff := resources.ComputedIfAnyAttributeChanged(
+		testSchema,
+		"computed_value",
+		"value_with_diff_suppress",
+		"value_without_diff_suppress",
+	)
+	testProvider := &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"test": {
+				Schema:        testSchema,
+				CustomizeDiff: testCustomDiff,
+			},
+		},
+	}
+
 	tests := []struct {
 		name           string
 		stateValue     map[string]string
@@ -356,89 +386,116 @@ func TestComputedIfAnyAttributeChangedWithSuppressDiff(t *testing.T) {
 		expectDiff     bool
 	}{
 		{
-			name: "no change",
+			name: "no change in both values",
 			stateValue: map[string]string{
-				"value":          "foo",
-				"computed_value": "foo",
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
 			},
 			rawConfigValue: map[string]any{
-				"value": "foo",
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
 			},
 			expectDiff: false,
 		},
 		{
-			name: "no change - quotes in config",
+			name: "change on field with diff suppression - suppressed (quotes in config added)",
 			stateValue: map[string]string{
-				"value":          "foo",
-				"computed_value": "foo",
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
 			},
 			rawConfigValue: map[string]any{
-				"value": "\"foo\"",
+				"value_with_diff_suppress":    "\"foo\"",
+				"value_without_diff_suppress": "foo",
 			},
 			expectDiff: false,
 		},
 		{
-			name: "no change - quotes in state",
+			name: "change on field with diff suppression - suppressed (quotes in config removed)",
 			stateValue: map[string]string{
-				"value":          "\"foo\"",
-				"computed_value": "foo",
+				"value_with_diff_suppress":    "\"foo\"",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
 			},
 			rawConfigValue: map[string]any{
-				"value": "foo",
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
 			},
 			expectDiff: false,
 		},
 		{
-			name: "name change",
+			name: "change on field with diff suppression - not suppressed (value change)",
 			stateValue: map[string]string{
-				"value":          "foo",
-				"computed_value": "foo",
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
 			},
 			rawConfigValue: map[string]any{
-				"value": "bar",
+				"value_with_diff_suppress":    "bar",
+				"value_without_diff_suppress": "foo",
 			},
 			expectDiff: true,
 		},
 		{
-			name: "name and quoting change",
+			name: "change on field with diff suppression - not suppressed (value and quotes changed)",
 			stateValue: map[string]string{
-				"value":          "\"foo\"",
-				"computed_value": "foo",
+				"value_with_diff_suppress":    "\"foo\"",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
 			},
 			rawConfigValue: map[string]any{
-				"value": "bar",
+				"value_with_diff_suppress":    "bar",
+				"value_without_diff_suppress": "foo",
+			},
+			expectDiff: true,
+		},
+		{
+			name: "change on field without diff suppression",
+			stateValue: map[string]string{
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "bar",
+			},
+			expectDiff: true,
+		},
+		{
+			name: "change on field without diff suppression, suppressed change on field with diff suppression",
+			stateValue: map[string]string{
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value_with_diff_suppress":    "\"foo\"",
+				"value_without_diff_suppress": "bar",
+			},
+			expectDiff: true,
+		},
+		{
+			name: "change on field without diff suppression, not suppressed change on field with diff suppression",
+			stateValue: map[string]string{
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
+			},
+			rawConfigValue: map[string]any{
+				"value_with_diff_suppress":    "\"bar\"",
+				"value_without_diff_suppress": "bar",
 			},
 			expectDiff: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			customDiff := resources.ComputedIfAnyAttributeChangedWithSuppressDiff(
-				"computed_value",
-				suppressFunc,
-				"value",
-			)
-			provider := &schema.Provider{
-				ResourcesMap: map[string]*schema.Resource{
-					"test": {
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Type:             schema.TypeString,
-								Required:         true,
-								DiffSuppressFunc: suppressFunc,
-							},
-							"computed_value": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-						CustomizeDiff: customDiff,
-					},
-				},
-			}
+			tt := tt
 			diff := calculateDiffFromAttributes(
 				t,
-				provider,
+				testProvider,
 				tt.stateValue,
 				tt.rawConfigValue,
 			)
