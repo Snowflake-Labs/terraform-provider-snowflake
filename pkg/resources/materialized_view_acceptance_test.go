@@ -39,7 +39,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "Terraform test resource"),
-					checkBool("snowflake_materialized_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "true"),
 				),
 			},
 			// update parameters
@@ -52,7 +52,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// change statement
@@ -65,7 +65,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// change statement externally
@@ -81,7 +81,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// IMPORT

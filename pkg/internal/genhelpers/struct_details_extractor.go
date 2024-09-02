@@ -29,8 +29,13 @@ func (f *Field) IsSlice() bool {
 	return strings.HasPrefix(f.ConcreteType, "[]")
 }
 
+func (f *Field) ConcreteTypeNoPointer() string {
+	concreteTypeNoPtr, _ := strings.CutPrefix(f.ConcreteType, "*")
+	return concreteTypeNoPtr
+}
+
 func (f *Field) GetImportedType() (string, bool) {
-	parts := strings.Split(f.ConcreteType, ".")
+	parts := strings.Split(f.ConcreteTypeNoPointer(), ".")
 	return parts[0], len(parts) > 1
 }
 

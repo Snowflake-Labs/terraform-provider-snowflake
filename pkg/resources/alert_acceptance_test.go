@@ -104,7 +104,7 @@ func TestAcc_Alert(t *testing.T) {
 			{
 				Config: alertConfig(alertInitialState),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_alert.test_alert", "enabled", alertInitialState.Alert.Enabled),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "enabled", strconv.FormatBool(alertInitialState.Alert.Enabled)),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
@@ -118,7 +118,7 @@ func TestAcc_Alert(t *testing.T) {
 			{
 				Config: alertConfig(alertStepOne),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_alert.test_alert", "enabled", alertStepOne.Alert.Enabled),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "enabled", strconv.FormatBool(alertStepOne.Alert.Enabled)),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
@@ -132,7 +132,7 @@ func TestAcc_Alert(t *testing.T) {
 			{
 				Config: alertConfig(alertStepTwo),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_alert.test_alert", "enabled", alertStepTwo.Alert.Enabled),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "enabled", strconv.FormatBool(alertStepTwo.Alert.Enabled)),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
@@ -146,7 +146,7 @@ func TestAcc_Alert(t *testing.T) {
 			{
 				Config: alertConfig(alertStepThree),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_alert.test_alert", "enabled", alertStepThree.Alert.Enabled),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "enabled", strconv.FormatBool(alertStepThree.Alert.Enabled)),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
@@ -160,7 +160,7 @@ func TestAcc_Alert(t *testing.T) {
 			{
 				Config: alertConfig(alertInitialState),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_alert.test_alert", "enabled", alertInitialState.Alert.Enabled),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "enabled", strconv.FormatBool(alertInitialState.Alert.Enabled)),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),

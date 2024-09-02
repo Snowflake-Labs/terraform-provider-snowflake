@@ -223,37 +223,37 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := setIntProperty(d, "min_length", passwordPolicyDetails.PasswordMinLength); err != nil {
+	if err := setFromIntProperty(d, "min_length", passwordPolicyDetails.PasswordMinLength); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "max_length", passwordPolicyDetails.PasswordMaxLength); err != nil {
+	if err := setFromIntProperty(d, "max_length", passwordPolicyDetails.PasswordMaxLength); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars); err != nil {
+	if err := setFromIntProperty(d, "min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars); err != nil {
+	if err := setFromIntProperty(d, "min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars); err != nil {
+	if err := setFromIntProperty(d, "min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars); err != nil {
+	if err := setFromIntProperty(d, "min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "min_age_days", passwordPolicyDetails.PasswordMinAgeDays); err != nil {
+	if err := setFromIntProperty(d, "min_age_days", passwordPolicyDetails.PasswordMinAgeDays); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "max_age_days", passwordPolicyDetails.PasswordMaxAgeDays); err != nil {
+	if err := setFromIntProperty(d, "max_age_days", passwordPolicyDetails.PasswordMaxAgeDays); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "max_retries", passwordPolicyDetails.PasswordMaxRetries); err != nil {
+	if err := setFromIntProperty(d, "max_retries", passwordPolicyDetails.PasswordMaxRetries); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins); err != nil {
+	if err := setFromIntProperty(d, "lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins); err != nil {
 		return err
 	}
-	if err := setIntProperty(d, "history", passwordPolicyDetails.PasswordHistory); err != nil {
+	if err := setFromIntProperty(d, "history", passwordPolicyDetails.PasswordHistory); err != nil {
 		return err
 	}
 
