@@ -76,7 +76,7 @@ func MaterializedView() *schema.Resource {
 		Delete: DeleteMaterializedView,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(materializedViewSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: materializedViewSchema,

@@ -109,8 +109,8 @@ func SCIMIntegration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "scim_client", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
+			ComputedIfAnyAttributeChanged(scimIntegrationSchema, ShowOutputAttributeName, "enabled", "scim_client", "comment"),
+			ComputedIfAnyAttributeChanged(scimIntegrationSchema, DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
 		),
 
 		SchemaVersion: 2,

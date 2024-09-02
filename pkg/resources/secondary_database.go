@@ -53,7 +53,7 @@ func SecondaryDatabase() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			databaseParametersCustomDiff,
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChanged(secondaryDatabaseSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 		Schema: helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{

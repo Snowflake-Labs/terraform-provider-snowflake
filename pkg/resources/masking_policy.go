@@ -122,7 +122,7 @@ func MaskingPolicy() *schema.Resource {
 		Delete: DeleteMaskingPolicy,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(maskingPolicySchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: maskingPolicySchema,
