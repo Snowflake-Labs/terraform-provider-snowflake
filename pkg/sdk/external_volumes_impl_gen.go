@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
@@ -75,12 +76,10 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &AlterExternalVolumeSet{
 			AllowWrites: r.Set.AllowWrites,
 			Comment:     r.Set.Comment,
 		}
-
 	}
 
 	if r.AddStorageLocation != nil {
@@ -119,13 +118,11 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 		}
 
 		if r.AddStorageLocation.AzureStorageLocationParams != nil {
-
 			opts.AddStorageLocation.AzureStorageLocationParams = &AzureStorageLocationParams{
 				Name:           r.AddStorageLocation.AzureStorageLocationParams.Name,
 				AzureTenantId:  r.AddStorageLocation.AzureStorageLocationParams.AzureTenantId,
 				StorageBaseUrl: r.AddStorageLocation.AzureStorageLocationParams.StorageBaseUrl,
 			}
-
 		}
 
 	}
@@ -150,7 +147,7 @@ func (r *DescribeExternalVolumeRequest) toOpts() *DescribeExternalVolumeOptions 
 
 func (r externalVolumeDescRow) convert() *ExternalVolumeProperty {
 	return &ExternalVolumeProperty{
-        Parent:  r.ParentProperty,
+		Parent:  r.ParentProperty,
 		Name:    r.Property,
 		Type:    r.PropertyType,
 		Value:   r.PropertyValue,
@@ -167,8 +164,8 @@ func (r *ShowExternalVolumeRequest) toOpts() *ShowExternalVolumeOptions {
 
 func (r externalVolumeShowRow) convert() *ExternalVolume {
 	return &ExternalVolume{
-        Name:        r.Name,
-        AllowWrites: r.AllowWrites,
-        Comment:     r.Comment,
-    }
+		Name:        r.Name,
+		AllowWrites: r.AllowWrites,
+		Comment:     r.Comment,
+	}
 }

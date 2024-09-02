@@ -4,75 +4,73 @@ import "testing"
 
 // Storage location structs for testing
 var s3StorageLocationParams = &S3StorageLocationParams{
-    Name: "some s3 name",
-    StorageProvider: S3StorageProviderS3,
-    StorageAwsRoleArn: "some s3 role arn",
-    StorageBaseUrl: "some s3 base url",
-    Encryption: ExternalVolumeS3Encryption{
-        Type: S3EncryptionTypeSseS3,
-        KmsKeyId: String("some s3 kms key id"),
-    },
+	Name:              "some s3 name",
+	StorageProvider:   S3StorageProviderS3,
+	StorageAwsRoleArn: "some s3 role arn",
+	StorageBaseUrl:    "some s3 base url",
+	Encryption: ExternalVolumeS3Encryption{
+		Type:     S3EncryptionTypeSseS3,
+		KmsKeyId: String("some s3 kms key id"),
+	},
 }
 
 var s3StorageLocationParamsNoEncryption = &S3StorageLocationParams{
-    Name: "some s3 name",
-    StorageProvider: S3StorageProviderS3,
-    StorageAwsRoleArn: "some s3 role arn",
-    StorageBaseUrl: "some s3 base url",
-    Encryption: ExternalVolumeS3Encryption{
-        Type: S3EncryptionNone,
-    },
+	Name:              "some s3 name",
+	StorageProvider:   S3StorageProviderS3,
+	StorageAwsRoleArn: "some s3 role arn",
+	StorageBaseUrl:    "some s3 base url",
+	Encryption: ExternalVolumeS3Encryption{
+		Type: S3EncryptionNone,
+	},
 }
 
 var s3StorageLocationParamsGov = &S3StorageLocationParams{
-    Name: "some s3 name",
-    StorageProvider: S3StorageProviderS3GOV,
-    StorageAwsRoleArn: "some s3 role arn",
-    StorageBaseUrl: "some s3 base url",
-    Encryption: ExternalVolumeS3Encryption{
-        Type: S3EncryptionTypeSseS3,
-        KmsKeyId: String("some s3 kms key id"),
-    },
+	Name:              "some s3 name",
+	StorageProvider:   S3StorageProviderS3GOV,
+	StorageAwsRoleArn: "some s3 role arn",
+	StorageBaseUrl:    "some s3 base url",
+	Encryption: ExternalVolumeS3Encryption{
+		Type:     S3EncryptionTypeSseS3,
+		KmsKeyId: String("some s3 kms key id"),
+	},
 }
 
 var s3StorageLocationParamsWithExternalId = &S3StorageLocationParams{
-    Name: "some s3 name",
-    StorageProvider: S3StorageProviderS3,
-    StorageAwsRoleArn: "some s3 role arn",
-    StorageBaseUrl: "some s3 base url",
-    StorageAwsExternalId: String("some s3 external id"),
-    Encryption: ExternalVolumeS3Encryption{
-        Type: S3EncryptionTypeSseS3,
-        KmsKeyId: String("some s3 kms key id"),
-    },
+	Name:                 "some s3 name",
+	StorageProvider:      S3StorageProviderS3,
+	StorageAwsRoleArn:    "some s3 role arn",
+	StorageBaseUrl:       "some s3 base url",
+	StorageAwsExternalId: String("some s3 external id"),
+	Encryption: ExternalVolumeS3Encryption{
+		Type:     S3EncryptionTypeSseS3,
+		KmsKeyId: String("some s3 kms key id"),
+	},
 }
 
 var gcsStorageLocationParams = &GCSStorageLocationParams{
-    Name: "some gcs name",
-    StorageBaseUrl: "some gcs base url",
-    Encryption: ExternalVolumeGCSEncryption{
-        Type: GCSEncryptionTypeSseKms,
-        KmsKeyId: String("some gcs kms key id"),
-    },
+	Name:           "some gcs name",
+	StorageBaseUrl: "some gcs base url",
+	Encryption: ExternalVolumeGCSEncryption{
+		Type:     GCSEncryptionTypeSseKms,
+		KmsKeyId: String("some gcs kms key id"),
+	},
 }
 
 var gcsStorageLocationParamsNoEncryption = &GCSStorageLocationParams{
-    Name: "some gcs name",
-    StorageBaseUrl: "some gcs base url",
-    Encryption: ExternalVolumeGCSEncryption{
-        Type: GCSEncryptionTypeNone,
-    },
+	Name:           "some gcs name",
+	StorageBaseUrl: "some gcs base url",
+	Encryption: ExternalVolumeGCSEncryption{
+		Type: GCSEncryptionTypeNone,
+	},
 }
 
 var azureStorageLocationParams = &AzureStorageLocationParams{
-    Name: "some azure name",
-    AzureTenantId: "some azure tenant id",
-    StorageBaseUrl: "some azure base url",
+	Name:           "some azure name",
+	AzureTenantId:  "some azure tenant id",
+	StorageBaseUrl: "some azure base url",
 }
 
-
 func TestExternalVolumes_Create(t *testing.T) {
-
 	id := randomAccountObjectIdentifier()
 	// Minimal valid CreateExternalVolumeOptions
 	defaultOpts := func() *CreateExternalVolumeOptions {
@@ -95,33 +93,33 @@ func TestExternalVolumes_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.name = emptyAccountObjectIdentifier
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.StorageLocations[i].S3StorageLocationParams opts.StorageLocations[i].GCSStorageLocationParams opts.StorageLocations[i].AzureStorageLocationParams] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.StorageLocations = []ExternalVolumeStorageLocation{
-			{ S3StorageLocationParams: s3StorageLocationParams, },
-            {},
-            { S3StorageLocationParams: s3StorageLocationParams, GCSStorageLocationParams: gcsStorageLocationParams, },
-            { S3StorageLocationParams: s3StorageLocationParams, AzureStorageLocationParams: azureStorageLocationParams, },
-            { GCSStorageLocationParams: gcsStorageLocationParams, AzureStorageLocationParams: azureStorageLocationParams, },
-            {
-                S3StorageLocationParams: s3StorageLocationParams,
-                GCSStorageLocationParams: gcsStorageLocationParams,
-                AzureStorageLocationParams: azureStorageLocationParams,
-            },
+			{S3StorageLocationParams: s3StorageLocationParams},
+			{},
+			{S3StorageLocationParams: s3StorageLocationParams, GCSStorageLocationParams: gcsStorageLocationParams},
+			{S3StorageLocationParams: s3StorageLocationParams, AzureStorageLocationParams: azureStorageLocationParams},
+			{GCSStorageLocationParams: gcsStorageLocationParams, AzureStorageLocationParams: azureStorageLocationParams},
+			{
+				S3StorageLocationParams:    s3StorageLocationParams,
+				GCSStorageLocationParams:   gcsStorageLocationParams,
+				AzureStorageLocationParams: azureStorageLocationParams,
+			},
 		}
 		assertOptsInvalidJoinedErrors(
-            t,
-            opts,
-            errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[1]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
-            errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[2]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
-            errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[3]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
-            errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[4]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
-            errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[5]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
-        )
+			t,
+			opts,
+			errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[1]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
+			errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[2]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
+			errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[3]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
+			errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[4]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
+			errExactlyOneOf("CreateExternalVolumeOptions.StorageLocation[5]", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"),
+		)
 	})
 
 	t.Run("validation: length of opts.StorageLocations is > 0", func(t *testing.T) {
@@ -132,59 +130,58 @@ func TestExternalVolumes_Create(t *testing.T) {
 
 	t.Run("1 storage location - s3", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { S3StorageLocationParams: s3StorageLocationParams, }, }
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{S3StorageLocationParams: s3StorageLocationParams}}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id')))`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location with comment - s3gov", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { S3StorageLocationParams: s3StorageLocationParamsGov, }, }
- 		opts.Comment = String("some comment")
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{S3StorageLocationParams: s3StorageLocationParamsGov}}
+		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3GOV' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id'))) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location - s3 no encryption", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { S3StorageLocationParams: s3StorageLocationParamsNoEncryption, }, }
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{S3StorageLocationParams: s3StorageLocationParamsNoEncryption}}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'NONE')))`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location with allow writes - gcs", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { GCSStorageLocationParams: gcsStorageLocationParams, }, }
- 		opts.AllowWrites = Bool(true)
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{GCSStorageLocationParams: gcsStorageLocationParams}}
+		opts.AllowWrites = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id'))) ALLOW_WRITES = true`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location with allow writes - gcs no encryption", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { GCSStorageLocationParams: gcsStorageLocationParamsNoEncryption, }, }
- 		opts.AllowWrites = Bool(true)
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{GCSStorageLocationParams: gcsStorageLocationParamsNoEncryption}}
+		opts.AllowWrites = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'NONE'))) ALLOW_WRITES = true`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location - azure", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StorageLocations = []ExternalVolumeStorageLocation{ { AzureStorageLocationParams: azureStorageLocationParams, }, }
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{AzureStorageLocationParams: azureStorageLocationParams}}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some azure name' STORAGE_PROVIDER = 'AZURE' AZURE_TENANT_ID = 'some azure tenant id' STORAGE_BASE_URL = 'some azure base url'))`, id.FullyQualifiedName())
 	})
 
- 	t.Run("3 storage locations and all options", func(t *testing.T) {
- 		opts := defaultOpts()
- 		opts.OrReplace = Bool(true)
- 		opts.StorageLocations = []ExternalVolumeStorageLocation{
- 			{ S3StorageLocationParams: s3StorageLocationParamsWithExternalId, },
- 			{ GCSStorageLocationParams: gcsStorageLocationParams, },
- 			{ AzureStorageLocationParams: azureStorageLocationParams, },
- 		}
- 		opts.AllowWrites = Bool(false)
- 		opts.Comment = String("some comment")
- 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' STORAGE_AWS_EXTERNAL_ID = 'some s3 external id' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id')), (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id')), (NAME = 'some azure name' STORAGE_PROVIDER = 'AZURE' AZURE_TENANT_ID = 'some azure tenant id' STORAGE_BASE_URL = 'some azure base url')) ALLOW_WRITES = false COMMENT = 'some comment'`, id.FullyQualifiedName())
- 	})
+	t.Run("3 storage locations and all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.StorageLocations = []ExternalVolumeStorageLocation{
+			{S3StorageLocationParams: s3StorageLocationParamsWithExternalId},
+			{GCSStorageLocationParams: gcsStorageLocationParams},
+			{AzureStorageLocationParams: azureStorageLocationParams},
+		}
+		opts.AllowWrites = Bool(false)
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' STORAGE_AWS_EXTERNAL_ID = 'some s3 external id' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id')), (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id')), (NAME = 'some azure name' STORAGE_PROVIDER = 'AZURE' AZURE_TENANT_ID = 'some azure tenant id' STORAGE_BASE_URL = 'some azure base url')) ALLOW_WRITES = false COMMENT = 'some comment'`, id.FullyQualifiedName())
+	})
 }
 
 func TestExternalVolumes_Alter(t *testing.T) {
-
 	id := randomAccountObjectIdentifier()
 	// Minimal valid AlterExternalVolumeOptions
 	defaultOpts := func() *AlterExternalVolumeOptions {
@@ -203,14 +200,14 @@ func TestExternalVolumes_Alter(t *testing.T) {
 		removeAndAddOpts := defaultOpts()
 		setAndAddOpts := defaultOpts()
 
-        removeAndSetOpts.RemoveStorageLocation = String("some storage location")
-        removeAndSetOpts.Set = &AlterExternalVolumeSet{ AllowWrites: Bool(true), }
+		removeAndSetOpts.RemoveStorageLocation = String("some storage location")
+		removeAndSetOpts.Set = &AlterExternalVolumeSet{AllowWrites: Bool(true)}
 
-        removeAndAddOpts.RemoveStorageLocation = String("some storage location")
-        removeAndAddOpts.AddStorageLocation =  &ExternalVolumeStorageLocation{ S3StorageLocationParams: s3StorageLocationParamsWithExternalId, }
+		removeAndAddOpts.RemoveStorageLocation = String("some storage location")
+		removeAndAddOpts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsWithExternalId}
 
-        setAndAddOpts.Set = &AlterExternalVolumeSet{ AllowWrites: Bool(true), }
-        setAndAddOpts.AddStorageLocation =  &ExternalVolumeStorageLocation{ S3StorageLocationParams: s3StorageLocationParamsWithExternalId, }
+		setAndAddOpts.Set = &AlterExternalVolumeSet{AllowWrites: Bool(true)}
+		setAndAddOpts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsWithExternalId}
 
 		assertOptsInvalidJoinedErrors(t, removeAndSetOpts, errExactlyOneOf("AlterExternalVolumeOptions", "RemoveStorageLocation", "Set", "AddStorageLocation"))
 		assertOptsInvalidJoinedErrors(t, removeAndAddOpts, errExactlyOneOf("AlterExternalVolumeOptions", "RemoveStorageLocation", "Set", "AddStorageLocation"))
@@ -219,21 +216,21 @@ func TestExternalVolumes_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.RemoveStorageLocation opts.Set opts.AddStorageLocation] should be present - three set", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.RemoveStorageLocation = String("some storage location")
-        opts.Set = &AlterExternalVolumeSet{ AllowWrites: Bool(true), }
-        opts.AddStorageLocation =  &ExternalVolumeStorageLocation{ S3StorageLocationParams: s3StorageLocationParamsWithExternalId, }
+		opts.RemoveStorageLocation = String("some storage location")
+		opts.Set = &AlterExternalVolumeSet{AllowWrites: Bool(true)}
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsWithExternalId}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalVolumeOptions", "RemoveStorageLocation", "Set", "AddStorageLocation"))
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.name = emptyAccountObjectIdentifier
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.AddStorageLocation.S3StorageLocationParams opts.AddStorageLocation.GCSStorageLocationParams opts.AddStorageLocation.AzureStorageLocationParams] should be present - none set", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.AddStorageLocation =  &ExternalVolumeStorageLocation{}
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalVolumeOptions.AddStorageLocation", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
 	})
 
@@ -241,18 +238,18 @@ func TestExternalVolumes_Alter(t *testing.T) {
 		s3AndGcsOpts := defaultOpts()
 		s3AndAzureOpts := defaultOpts()
 		gcsAndAzureOpts := defaultOpts()
-        s3AndGcsOpts.AddStorageLocation = &ExternalVolumeStorageLocation{
- 			S3StorageLocationParams: s3StorageLocationParams,
- 			GCSStorageLocationParams: gcsStorageLocationParams,
-        }
-        s3AndAzureOpts.AddStorageLocation = &ExternalVolumeStorageLocation{
- 			S3StorageLocationParams: s3StorageLocationParams,
- 			AzureStorageLocationParams: azureStorageLocationParams,
-        }
-        gcsAndAzureOpts.AddStorageLocation =  &ExternalVolumeStorageLocation{
- 			GCSStorageLocationParams: gcsStorageLocationParams,
- 			AzureStorageLocationParams: azureStorageLocationParams,
-        }
+		s3AndGcsOpts.AddStorageLocation = &ExternalVolumeStorageLocation{
+			S3StorageLocationParams:  s3StorageLocationParams,
+			GCSStorageLocationParams: gcsStorageLocationParams,
+		}
+		s3AndAzureOpts.AddStorageLocation = &ExternalVolumeStorageLocation{
+			S3StorageLocationParams:    s3StorageLocationParams,
+			AzureStorageLocationParams: azureStorageLocationParams,
+		}
+		gcsAndAzureOpts.AddStorageLocation = &ExternalVolumeStorageLocation{
+			GCSStorageLocationParams:   gcsStorageLocationParams,
+			AzureStorageLocationParams: azureStorageLocationParams,
+		}
 		assertOptsInvalidJoinedErrors(t, s3AndGcsOpts, errExactlyOneOf("AlterExternalVolumeOptions.AddStorageLocation", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
 		assertOptsInvalidJoinedErrors(t, s3AndAzureOpts, errExactlyOneOf("AlterExternalVolumeOptions.AddStorageLocation", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
 		assertOptsInvalidJoinedErrors(t, gcsAndAzureOpts, errExactlyOneOf("AlterExternalVolumeOptions.AddStorageLocation", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
@@ -260,53 +257,52 @@ func TestExternalVolumes_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.AddStorageLocation.S3StorageLocationParams opts.AddStorageLocation.GCSStorageLocationParams opts.AddStorageLocation.AzureStorageLocationParams] should be present - three set", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.AddStorageLocation = &ExternalVolumeStorageLocation{
- 			S3StorageLocationParams: s3StorageLocationParams,
- 			GCSStorageLocationParams: gcsStorageLocationParams,
- 			AzureStorageLocationParams: azureStorageLocationParams,
-        }
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{
+			S3StorageLocationParams:    s3StorageLocationParams,
+			GCSStorageLocationParams:   gcsStorageLocationParams,
+			AzureStorageLocationParams: azureStorageLocationParams,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalVolumeOptions.AddStorageLocation", "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
 	})
 
 	t.Run("remove storage location", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.RemoveStorageLocation = String("some storage location")
+		opts.RemoveStorageLocation = String("some storage location")
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s REMOVE STORAGE_LOCATION 'some storage location'`, id.FullyQualifiedName())
 	})
 
 	t.Run("set - allow writes", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.Set = &AlterExternalVolumeSet{ AllowWrites: Bool(true), }
+		opts.Set = &AlterExternalVolumeSet{AllowWrites: Bool(true)}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s SET ALLOW_WRITES = true`, id.FullyQualifiedName())
 	})
 
 	t.Run("set - comment", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.Set = &AlterExternalVolumeSet{ Comment: String("some comment"), }
+		opts.Set = &AlterExternalVolumeSet{Comment: String("some comment")}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s SET COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("add storage location - s3", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.AddStorageLocation =  &ExternalVolumeStorageLocation{ S3StorageLocationParams: s3StorageLocationParamsWithExternalId, }
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsWithExternalId}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' STORAGE_AWS_EXTERNAL_ID = 'some s3 external id' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id'))`, id.FullyQualifiedName())
 	})
 
 	t.Run("add storage location - gcs", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.AddStorageLocation =  &ExternalVolumeStorageLocation{ GCSStorageLocationParams: gcsStorageLocationParams, }
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{GCSStorageLocationParams: gcsStorageLocationParams}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id'))`, id.FullyQualifiedName())
 	})
 
 	t.Run("add storage location - azure", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.AddStorageLocation =  &ExternalVolumeStorageLocation{ AzureStorageLocationParams: azureStorageLocationParams, }
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{AzureStorageLocationParams: azureStorageLocationParams}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some azure name' STORAGE_PROVIDER = 'AZURE' AZURE_TENANT_ID = 'some azure tenant id' STORAGE_BASE_URL = 'some azure base url')`, id.FullyQualifiedName())
 	})
 }
 
 func TestExternalVolumes_Drop(t *testing.T) {
-
 	id := randomAccountObjectIdentifier()
 	// Minimal valid DropExternalVolumeOptions
 	defaultOpts := func() *DropExternalVolumeOptions {
@@ -322,7 +318,7 @@ func TestExternalVolumes_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.name = emptyAccountObjectIdentifier
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -333,13 +329,12 @@ func TestExternalVolumes_Drop(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.IfExists = Bool(true)
+		opts.IfExists = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `DROP EXTERNAL VOLUME IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestExternalVolumes_Describe(t *testing.T) {
-
 	id := randomAccountObjectIdentifier()
 	// Minimal valid DescribeExternalVolumeOptions
 	defaultOpts := func() *DescribeExternalVolumeOptions {
@@ -354,7 +349,7 @@ func TestExternalVolumes_Describe(t *testing.T) {
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.name = emptyAccountObjectIdentifier
+		opts.name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -365,7 +360,7 @@ func TestExternalVolumes_Describe(t *testing.T) {
 }
 
 func TestExternalVolumes_Show(t *testing.T) {
-    id := randomAccountObjectIdentifier()
+	id := randomAccountObjectIdentifier()
 	// Minimal valid ShowExternalVolumeOptions
 	defaultOpts := func() *ShowExternalVolumeOptions {
 		return &ShowExternalVolumeOptions{}
@@ -383,7 +378,7 @@ func TestExternalVolumes_Show(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.Like = &Like{
+		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW EXTERNAL VOLUMES LIKE '%s'", id.Name())

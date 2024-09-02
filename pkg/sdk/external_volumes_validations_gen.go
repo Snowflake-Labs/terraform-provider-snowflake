@@ -22,19 +22,19 @@ func (opts *CreateExternalVolumeOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 
-    // Custom (not code generated) validations
+	// Custom (not code generated) validations
 
-    // Apply errExactlyOneOf to each element in storage locations list
-    for i,storageLocation := range opts.StorageLocations {
-        if !exactlyOneValueSet(storageLocation.S3StorageLocationParams, storageLocation.GCSStorageLocationParams, storageLocation.AzureStorageLocationParams) {
-            errs = append(errs, errExactlyOneOf(fmt.Sprintf("CreateExternalVolumeOptions.StorageLocation[%d]", i), "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
-        }
-    }
+	// Apply errExactlyOneOf to each element in storage locations list
+	for i, storageLocation := range opts.StorageLocations {
+		if !exactlyOneValueSet(storageLocation.S3StorageLocationParams, storageLocation.GCSStorageLocationParams, storageLocation.AzureStorageLocationParams) {
+			errs = append(errs, errExactlyOneOf(fmt.Sprintf("CreateExternalVolumeOptions.StorageLocation[%d]", i), "S3StorageLocationParams", "GCSStorageLocationParams", "AzureStorageLocationParams"))
+		}
+	}
 
-    // Check the storage location list is not empty, as at least 1 storage location is required for an external volume
-    if len(opts.StorageLocations) == 0 {
-        errs = append(errs, errNotSet("CreateExternalVolumeOptions", "StorageLocations"))
-    }
+	// Check the storage location list is not empty, as at least 1 storage location is required for an external volume
+	if len(opts.StorageLocations) == 0 {
+		errs = append(errs, errNotSet("CreateExternalVolumeOptions", "StorageLocations"))
+	}
 
 	return JoinErrors(errs...)
 }
