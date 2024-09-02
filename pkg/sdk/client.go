@@ -52,6 +52,7 @@ type Client struct {
 	DataMetricFunctionReferences DataMetricFunctionReferences
 	DynamicTables                DynamicTables
 	ExternalFunctions            ExternalFunctions
+	ExternalVolumes              ExternalVolumes
 	ExternalTables               ExternalTables
 	EventTables                  EventTables
 	FailoverGroups               FailoverGroups
@@ -209,6 +210,7 @@ func (c *Client) initialize() {
 	c.DataMetricFunctionReferences = &dataMetricFunctionReferences{client: c}
 	c.DynamicTables = &dynamicTables{client: c}
 	c.ExternalFunctions = &externalFunctions{client: c}
+	c.ExternalVolumes = &externalVolumes{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.EventTables = &eventTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}

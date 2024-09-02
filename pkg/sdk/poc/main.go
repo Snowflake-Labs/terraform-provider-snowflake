@@ -43,6 +43,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"security_integrations_def.go":           sdk.SecurityIntegrationsDef,
 	"cortex_search_services_def.go":          sdk.CortexSearchServiceDef,
 	"data_metric_function_references_def.go": sdk.DataMetricFunctionReferenceDef,
+	"external_volumes_def.go":                sdk.ExternalVolumesDef,
 }
 
 func main() {
