@@ -386,7 +386,7 @@ func Test_ComputedIfAnyAttributeChanged(t *testing.T) {
 		expectDiff     bool
 	}{
 		{
-			name: "no change in both values",
+			name: "no change on both fields",
 			stateValue: map[string]string{
 				"value_with_diff_suppress":    "foo",
 				"value_without_diff_suppress": "foo",
@@ -507,4 +507,49 @@ func Test_ComputedIfAnyAttributeChanged(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("attributes not found in schema, both fields changed", func(t *testing.T) {
+		otherTestSchema := map[string]*schema.Schema{
+			"value": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: testSuppressFunc,
+			},
+			"computed_value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		}
+		otherTestCustomDiff := resources.ComputedIfAnyAttributeChanged(
+			otherTestSchema,
+			"computed_value",
+			"value_with_diff_suppress",
+			"value_without_diff_suppress",
+		)
+		otherTestProvider := &schema.Provider{
+			ResourcesMap: map[string]*schema.Resource{
+				"test": {
+					Schema:        testSchema,
+					CustomizeDiff: otherTestCustomDiff,
+				},
+			},
+		}
+
+		diff := calculateDiffFromAttributes(
+			t,
+			otherTestProvider,
+			map[string]string{
+				"value_with_diff_suppress":    "foo",
+				"value_without_diff_suppress": "foo",
+				"computed_value":              "foo",
+			},
+			map[string]any{
+				"value_with_diff_suppress":    "\"bar\"",
+				"value_without_diff_suppress": "bar",
+			},
+		)
+
+		require.NotNil(t, diff)
+		assert.Nil(t, diff.Attributes["computed_value"])
+	})
 }
