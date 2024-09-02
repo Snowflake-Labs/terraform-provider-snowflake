@@ -255,6 +255,19 @@ Type changes:
 Validation changes:
 - `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
 
+#### *(breaking change)* refactored snowflake_users datasource
+Changes:
+- account checking logic was entirely removed
+- `pattern` renamed to `like`
+- `like`, `starts_with`, and `limit` filters added
+- `SHOW USERS` output is enclosed in `show_output` field inside `users` (all the previous fields in `users` map were removed)
+- Added outputs from **DESC USER** and **SHOW PARAMETERS IN USER** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
+  The additional parameters call **DESC USER** (with `with_describe` turned on) and **SHOW PARAMETERS IN USER** (with `with_parameters` turned on) **per user** returned by **SHOW USERS**.
+  The outputs of both commands are held in `users` entry, where **DESC USER** is saved in the `describe_output` field, and **SHOW PARAMETERS IN USER** in the `parameters` field.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+Connected issues: [#2902](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2902)
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
