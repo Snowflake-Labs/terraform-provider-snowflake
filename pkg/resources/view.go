@@ -779,7 +779,7 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 		} else {
 			columnsRaw[i]["comment"] = nil
 		}
-		projectionPolicy, err := collections.FindOne(policyRefs, func(r sdk.PolicyReference) bool {
+		projectionPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindProjectionPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
 		if err == nil {
@@ -793,7 +793,7 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 				log.Printf("could not store projection policy name: policy db and schema can not be empty")
 			}
 		}
-		maskingPolicy, err := collections.FindOne(policyRefs, func(r sdk.PolicyReference) bool {
+		maskingPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindMaskingPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
 		if err == nil {
