@@ -59,16 +59,25 @@ func TestAcc_Users_Complete(t *testing.T) {
 				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
-
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.show_output.0.created_on")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.display_name", "Display Name")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.first_name", "Jan")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.last_name", "Testowski")),
-
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
-						HasName(id.Name()),
+						HasName(id.Name()).
+						HasCreatedOnNotEmpty().
+						HasLoginName(fmt.Sprintf("%s_LOGIN", id.Name())).
+						HasDisplayName("Display Name").
+						HasFirstName("Jan").
+						HasLastName("Testowski").
+						HasEmail("fake@email.com").
+						HasMustChangePassword(true).
+						HasDisabled(false).
+						HasDaysToExpiryNotEmpty().
+						HasMinsToUnlockNotEmpty().
+						HasDefaultWarehouse("some_warehouse").
+						HasDefaultNamespace("some.namespace").
+						HasDefaultRole("some_role").
+						HasDefaultSecondaryRoles(`["ALL"]`).
+						HasMinsToBypassMfaNotEmpty().
+						HasHasRsaPublicKey(true).
+						HasComment(comment),
 				),
 			},
 		},

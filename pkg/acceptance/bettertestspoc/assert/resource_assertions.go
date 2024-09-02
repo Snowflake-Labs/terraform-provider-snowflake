@@ -59,8 +59,9 @@ func NewDatasourceAssert(name string, prefix string, additionalPrefix string) *R
 type resourceAssertionType string
 
 const (
-	resourceAssertionTypeValueSet    = "VALUE_SET"
-	resourceAssertionTypeValueNotSet = "VALUE_NOT_SET"
+	resourceAssertionTypeValueSet     = "VALUE_SET"
+	resourceAssertionTypeValueNotSet  = "VALUE_NOT_SET"
+	resourceAssertionTypeValuePresent = "VALUE_PRESENT"
 )
 
 type ResourceAssertion struct {
@@ -102,6 +103,11 @@ func ResourceShowOutputStringUnderlyingValueSet[U ~string](fieldName string, exp
 
 func ResourceShowOutputValueSet(fieldName string, expected string) ResourceAssertion {
 	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
+}
+
+// TODO [SNOW-1501905]: generate assertions with resourceAssertionTypeValuePresent
+func ResourceShowOutputValuePresent(fieldName string) ResourceAssertion {
+	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, resourceAssertionType: resourceAssertionTypeValuePresent}
 }
 
 const (
@@ -149,6 +155,11 @@ func (r *ResourceAssert) ToTerraformTestCheckFunc(t *testing.T) resource.TestChe
 					errCut, _ := strings.CutPrefix(err.Error(), fmt.Sprintf("%s: ", r.name))
 					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %s", r.name, r.prefix, i+1, len(r.assertions), errCut))
 				}
+			case resourceAssertionTypeValuePresent:
+				if err := resource.TestCheckResourceAttrSet(r.name, a.fieldName)(s); err != nil {
+					errCut, _ := strings.CutPrefix(err.Error(), fmt.Sprintf("%s: ", r.name))
+					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %s", r.name, r.prefix, i+1, len(r.assertions), errCut))
+				}
 			}
 		}
 
@@ -170,6 +181,8 @@ func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T) resource.
 					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %w", r.id, r.prefix, i+1, len(r.assertions), err))
 				}
 			case resourceAssertionTypeValueNotSet:
+				panic("implement")
+			case resourceAssertionTypeValuePresent:
 				panic("implement")
 			}
 		}
