@@ -501,6 +501,7 @@ func Test_ComputedIfAnyAttributeChanged(t *testing.T) {
 			)
 			if tt.expectDiff {
 				require.NotNil(t, diff)
+				require.NotNil(t, diff.Attributes["computed_value"])
 				assert.True(t, diff.Attributes["computed_value"].NewComputed)
 			} else {
 				require.Nil(t, diff)
