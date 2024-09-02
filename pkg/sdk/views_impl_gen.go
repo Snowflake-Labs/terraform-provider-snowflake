@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ Views = (*views)(nil)
@@ -43,7 +43,7 @@ func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View,
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(views, func(r View) bool { return r.Name == id.Name() })
+	return collections.FindFirst(views, func(r View) bool { return r.Name == id.Name() })
 }
 
 func (v *views) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]ViewDetails, error) {

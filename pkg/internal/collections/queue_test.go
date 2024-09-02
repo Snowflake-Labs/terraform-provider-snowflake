@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueue(t *testing.T) {
+func Test_Queue(t *testing.T) {
 	t.Run("empty queue initialization", func(t *testing.T) {
 		queue := NewQueue[int]()
 

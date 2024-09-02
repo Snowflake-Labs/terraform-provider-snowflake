@@ -216,7 +216,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	allowedIpList := make([]string, 0)
-	if allowedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
+	if allowedIpListProperty, err := collections.FindFirst(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_IP_LIST" }); err == nil {
 		allowedIpList = append(allowedIpList, sdk.ParseCommaSeparatedStringArray(allowedIpListProperty.Value, false)...)
 	}
 	if err = d.Set("allowed_ip_list", allowedIpList); err != nil {
@@ -224,7 +224,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	blockedIpList := make([]string, 0)
-	if blockedIpListProperty, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_IP_LIST" }); err == nil {
+	if blockedIpListProperty, err := collections.FindFirst(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_IP_LIST" }); err == nil {
 		blockedIpList = append(blockedIpList, sdk.ParseCommaSeparatedStringArray(blockedIpListProperty.Value, false)...)
 	}
 	if err = d.Set("blocked_ip_list", blockedIpList); err != nil {
@@ -232,7 +232,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	allowedNetworkRules := make([]string, 0)
-	if allowedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_NETWORK_RULE_LIST" }); err == nil {
+	if allowedNetworkRuleList, err := collections.FindFirst(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "ALLOWED_NETWORK_RULE_LIST" }); err == nil {
 		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(allowedNetworkRuleList.Value)
 		if err != nil {
 			return diag.FromErr(err)
@@ -250,7 +250,7 @@ func ReadContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	blockedNetworkRules := make([]string, 0)
-	if blockedNetworkRuleList, err := collections.FindOne(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_NETWORK_RULE_LIST" }); err == nil {
+	if blockedNetworkRuleList, err := collections.FindFirst(policyProperties, func(prop sdk.NetworkPolicyProperty) bool { return prop.Name == "BLOCKED_NETWORK_RULE_LIST" }); err == nil {
 		networkRules, err := sdk.ParseNetworkRulesSnowflakeDto(blockedNetworkRuleList.Value)
 		if err != nil {
 			return diag.FromErr(err)

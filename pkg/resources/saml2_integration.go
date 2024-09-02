@@ -210,7 +210,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	samlIssuer, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
+	samlIssuer, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 saml issuer, err = %w", err)
 	}
@@ -218,7 +218,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	ssoUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
+	ssoUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 sso url, err = %w", err)
 	}
@@ -226,7 +226,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	samlProvider, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
+	samlProvider, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 provider, err = %w", err)
 	}
@@ -238,7 +238,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	x509Cert, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
+	x509Cert, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 x509 cert, err = %w", err)
 	}
@@ -246,7 +246,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	spInitiatedLoginPageLabel, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	spInitiatedLoginPageLabel, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"
 	})
 	if err != nil {
@@ -256,7 +256,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	enableSpInitiated, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	enableSpInitiated, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_ENABLE_SP_INITIATED"
 	})
 	if err != nil {
@@ -266,7 +266,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	signRequest, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	signRequest, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SIGN_REQUEST"
 	})
 	if err != nil {
@@ -276,7 +276,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	requestedNameIdFormat, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	requestedNameIdFormat, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_REQUESTED_NAMEID_FORMAT"
 	})
 	if err != nil {
@@ -286,7 +286,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	postLogoutRedirectUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	postLogoutRedirectUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_POST_LOGOUT_REDIRECT_URL"
 	})
 	if err != nil {
@@ -296,7 +296,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	forceAuthn, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	forceAuthn, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_FORCE_AUTHN"
 	})
 	if err != nil {
@@ -306,7 +306,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	snowflakeIssuerUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	snowflakeIssuerUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SNOWFLAKE_ISSUER_URL"
 	})
 	if err != nil {
@@ -316,7 +316,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	snowflakeAcsUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	snowflakeAcsUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SNOWFLAKE_ACS_URL"
 	})
 	if err != nil {
@@ -338,7 +338,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func getOptionalListField(props []sdk.SecurityIntegrationProperty, propName string) []string {
-	found, err := collections.FindOne(props, func(property sdk.SecurityIntegrationProperty) bool {
+	found, err := collections.FindFirst(props, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == propName
 	})
 	if err != nil {
@@ -494,7 +494,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		samlIssuer, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
+		samlIssuer, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 saml issuer, err = %w", err))
 		}
@@ -502,7 +502,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		ssoUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
+		ssoUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 sso url, err = %w", err))
 		}
@@ -510,7 +510,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		samlProvider, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
+		samlProvider, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 provider, err = %w", err))
 		}
@@ -522,7 +522,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		x509Cert, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
+		x509Cert, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 x509 cert, err = %w", err))
 		}
@@ -530,7 +530,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		postLogoutRedirectUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		postLogoutRedirectUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "SAML2_POST_LOGOUT_REDIRECT_URL"
 		})
 		if err != nil {
@@ -559,49 +559,49 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 				return diag.FromErr(err)
 			}
 
-			enableSpInitiated, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			enableSpInitiated, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_ENABLE_SP_INITIATED"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 enable sp initiated, err = %w", err))
 			}
 
-			signRequest, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			signRequest, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SIGN_REQUEST"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 sign request, err = %w", err))
 			}
 
-			requestedNameIdFormat, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			requestedNameIdFormat, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_REQUESTED_NAMEID_FORMAT"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 requested nameid format, err = %w", err))
 			}
 
-			forceAuthn, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			forceAuthn, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_FORCE_AUTHN"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 force authn, err = %w", err))
 			}
 
-			snowflakeIssuerUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			snowflakeIssuerUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SNOWFLAKE_ISSUER_URL"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 snowflake issuer url, err = %w", err))
 			}
 
-			snowflakeAcsUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			snowflakeAcsUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SNOWFLAKE_ACS_URL"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 snowflake acs url, err = %w", err))
 			}
 
-			spInitiatedLoginPageLabel, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			spInitiatedLoginPageLabel, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"
 			})
 			if err != nil {

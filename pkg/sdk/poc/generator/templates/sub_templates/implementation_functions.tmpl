@@ -19,7 +19,7 @@
         if err != nil {
         return nil, err
         }
-        return collections.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+        return collections.FindFirst({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
         }
     {{ else if and (eq .Name "Describe") .DescribeMapping }}
         {{ if .DescribeKind }}

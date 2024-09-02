@@ -223,7 +223,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 		return err
 	}
 
-	oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAccessTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
 	})
 	if err == nil {
@@ -235,7 +235,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthRefreshTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 	})
 	if err == nil {
@@ -247,13 +247,13 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+	oauthClientId, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
 	if err == nil {
 		if err = d.Set("oauth_client_id", oauthClientId.Value); err != nil {
 			return err
 		}
 	}
-	oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthClientAuthMethod, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
 	})
 	if err == nil {
@@ -261,7 +261,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+	oauthTokenEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
 	if err == nil {
 		if err = d.Set("oauth_token_endpoint", oauthTokenEndpoint.Value); err != nil {
 			return err
@@ -288,33 +288,33 @@ func handleApiAuthRead(d *schema.ResourceData,
 		return err
 	}
 	if withExternalChangesMarking {
-		oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAccessTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthRefreshTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+		oauthClientId, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
 		if err != nil {
 			return err
 		}
 
-		oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthClientAuthMethod, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+		oauthTokenEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
 		if err != nil {
 			return err
 		}

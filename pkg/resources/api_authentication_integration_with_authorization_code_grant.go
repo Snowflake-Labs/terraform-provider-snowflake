@@ -79,7 +79,7 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
-	oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 	})
 	if err == nil {
@@ -87,7 +87,7 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 			return nil, err
 		}
 	}
-	oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+	oauthAllowedScopes, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 	if err == nil {
 		if err = d.Set("oauth_allowed_scopes", sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false)); err != nil {
 			return nil, err
@@ -168,14 +168,14 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-		oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+		oauthAllowedScopes, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 		if err != nil {
 			return diag.FromErr(err)
 		}

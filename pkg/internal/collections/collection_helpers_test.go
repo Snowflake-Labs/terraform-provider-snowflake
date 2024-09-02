@@ -1,12 +1,38 @@
 package collections
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestMap(t *testing.T) {
+func Test_FindFirst(t *testing.T) {
+	stringSlice := []string{"1", "22", "333", "334"}
+
+	t.Run("basic find", func(t *testing.T) {
+		result, resultErr := FindFirst(stringSlice, func(s string) bool { return s == "22" })
+
+		require.Equal(t, "22", *result)
+		require.Nil(t, resultErr)
+	})
+
+	t.Run("two matching, first returned", func(t *testing.T) {
+		result, resultErr := FindFirst(stringSlice, func(s string) bool { return strings.HasPrefix(s, "33") })
+
+		require.Equal(t, "333", *result)
+		require.Nil(t, resultErr)
+	})
+
+	t.Run("no item", func(t *testing.T) {
+		result, resultErr := FindFirst(stringSlice, func(s string) bool { return s == "4444" })
+
+		require.Nil(t, result)
+		require.ErrorIs(t, resultErr, ErrObjectNotFound)
+	})
+}
+
+func Test_Map(t *testing.T) {
 	t.Run("basic mapping", func(t *testing.T) {
 		stringSlice := []string{"1", "22", "333"}
 		stringLenSlice := Map(stringSlice, func(s string) int { return len(s) })

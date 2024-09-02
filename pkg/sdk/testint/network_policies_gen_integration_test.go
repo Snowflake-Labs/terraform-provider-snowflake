@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +42,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	}
 
 	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
-		return collections.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
+		return collections.FindFirst[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
 			return t.Name == name
 		})
 	}

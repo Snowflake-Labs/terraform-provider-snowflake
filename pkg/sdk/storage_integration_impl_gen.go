@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ StorageIntegrations = (*storageIntegrations)(nil)
@@ -44,7 +44,7 @@ func (v *storageIntegrations) ShowByID(ctx context.Context, id AccountObjectIden
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(storageIntegrations, func(r StorageIntegration) bool { return r.Name == id.Name() })
+	return collections.FindFirst(storageIntegrations, func(r StorageIntegration) bool { return r.Name == id.Name() })
 }
 
 func (v *storageIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]StorageIntegrationProperty, error) {

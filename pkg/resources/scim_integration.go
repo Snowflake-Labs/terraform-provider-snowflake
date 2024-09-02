@@ -162,12 +162,12 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 	if err = d.Set("scim_client", scimClient); err != nil {
 		return nil, err
 	}
-	if runAsRoleProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" }); err == nil {
+	if runAsRoleProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" }); err == nil {
 		if err = d.Set("run_as_role", runAsRoleProperty.Value); err != nil {
 			return nil, err
 		}
 	}
-	if networkPolicyProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" }); err == nil {
+	if networkPolicyProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" }); err == nil {
 		if err = d.Set("network_policy", networkPolicyProperty.Value); err != nil {
 			return nil, err
 		}
@@ -177,7 +177,7 @@ func ImportScimIntegration(ctx context.Context, d *schema.ResourceData, meta any
 			return nil, err
 		}
 	} else {
-		if syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" }); err == nil {
+		if syncPasswordProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" }); err == nil {
 			if err = d.Set("sync_password", syncPasswordProperty.Value); err != nil {
 				return nil, err
 			}
@@ -303,7 +303,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			return diag.FromErr(err)
 		}
 
-		runAsRoleProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" })
+		runAsRoleProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "RUN_AS_ROLE" })
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -317,7 +317,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 		}
 
 		if withExternalChangesMarking {
-			networkPolicyProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" })
+			networkPolicyProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "NETWORK_POLICY" })
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -329,7 +329,7 @@ func ReadContextSCIMIntegration(withExternalChangesMarking bool) schema.ReadCont
 			}
 
 			if !strings.EqualFold(strings.TrimSpace(scimClient), string(sdk.ScimSecurityIntegrationScimClientAzure)) {
-				syncPasswordProperty, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
+				syncPasswordProperty, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SYNC_PASSWORD" })
 				if err != nil {
 					return diag.FromErr(err)
 				}

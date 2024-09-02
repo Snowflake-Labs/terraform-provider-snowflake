@@ -5,10 +5,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -349,7 +347,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 	assertDatabaseParameterEqualsToDefaultValue := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.ObjectParameter) {
 		t.Helper()
-		param, err := collections.FindOne(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
+		param, err := collections.FindFirst(params, func(param *sdk.Parameter) bool { return param.Key == string(parameterName) })
 		assert.NoError(t, err)
 		assert.NotNil(t, param)
 		if param != nil && (*param).Level == "" {
@@ -859,7 +857,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		database, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
+		database, err := collections.FindFirst(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, databaseTest.Name, database.Name)
@@ -880,7 +878,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		droppedDatabase, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest3.Name })
+		droppedDatabase, err := collections.FindFirst(databases, func(database sdk.Database) bool { return database.Name == databaseTest3.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, databaseTest3.Name, droppedDatabase.Name)
@@ -896,7 +894,7 @@ func TestInt_DatabasesShow(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		database, err := collections.FindOne(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
+		database, err := collections.FindFirst(databases, func(database sdk.Database) bool { return database.Name == databaseTest.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, databaseTest.Name, database.Name)
@@ -919,7 +917,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	ctx := testContext(t)
 
 	assertContainsSchema := func(details *sdk.DatabaseDetails, schemaName string) {
-		_, err := collections.FindOne(details.Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Kind == "SCHEMA" && row.Name == schemaName })
+		_, err := collections.FindFirst(details.Rows, func(row sdk.DatabaseDetailsRow) bool { return row.Kind == "SCHEMA" && row.Name == schemaName })
 		assert.NoError(t, err)
 	}
 

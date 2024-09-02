@@ -76,7 +76,7 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
-	oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 	})
 	if err == nil {
@@ -84,7 +84,7 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 			return nil, err
 		}
 	}
-	oauthAssertionIssuer, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
+	oauthAssertionIssuer, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
 	if err == nil {
 		if err = d.Set("oauth_assertion_issuer", oauthAssertionIssuer.Value); err != nil {
 			return nil, err
@@ -156,14 +156,14 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-		oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oauthAssertionIssuer, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
+		oauthAssertionIssuer, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
 		if err != nil {
 			return diag.FromErr(err)
 		}

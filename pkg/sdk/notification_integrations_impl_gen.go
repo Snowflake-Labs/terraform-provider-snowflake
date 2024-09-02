@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ NotificationIntegrations = (*notificationIntegrations)(nil)
@@ -44,7 +44,7 @@ func (v *notificationIntegrations) ShowByID(ctx context.Context, id AccountObjec
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(notificationIntegrations, func(r NotificationIntegration) bool { return r.Name == id.Name() })
+	return collections.FindFirst(notificationIntegrations, func(r NotificationIntegration) bool { return r.Name == id.Name() })
 }
 
 func (v *notificationIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NotificationIntegrationProperty, error) {
