@@ -103,6 +103,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeTask,
 	ObjectTypeView,
 	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
+	ObjectTypeDataset,   // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2807
 }
 
 // based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#restrictions-and-limitations
