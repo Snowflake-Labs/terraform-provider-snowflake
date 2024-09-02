@@ -97,7 +97,33 @@ func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) s
 	})
 }
 
-// TODO(SNOW-1629468): Adjust the function to make it more flexible
+func ComputedIfAnyAttributeChangedCheckingDiffSuppression(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		var result bool
+		for _, changedKey := range changedAttributeKeys {
+			if diff.HasChange(changedKey) {
+				oldValue, newValue := diff.GetChange(changedKey)
+				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s old: %s new: %s\n", changedKey, oldValue, newValue)
+
+				if v, ok := resourceSchema[changedKey]; ok {
+					if diffSuppressFunc := v.DiffSuppressFunc; diffSuppressFunc != nil {
+						if !diffSuppressFunc(key, oldValue.(string), newValue.(string), nil) {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and the diff is not suppressed", changedKey)
+							result = true
+						} else {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed but the diff is suppresed", changedKey)
+						}
+					} else {
+						log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and it does not have a diff suppressor", changedKey)
+						result = true
+					}
+				}
+			}
+		}
+		return result
+	})
+}
+
 func ComputedIfAnyAttributeChangedWithSuppressDiff(key string, suppressDiffFunc schema.SchemaDiffSuppressFunc, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		for _, changedKey := range changedAttributeKeys {
