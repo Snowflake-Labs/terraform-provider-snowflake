@@ -123,9 +123,9 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 // TODO: extract hacky stuff outside this directory?
 func hackResourceData(resourceSchema schema.InternalMap, diff *schema.ResourceDiff) (*schema.ResourceData, bool) {
 	unexportedState := reflect.ValueOf(diff).Elem().FieldByName("state")
-	hackedState := reflect.NewAt(unexportedState.Type(), unsafe.Pointer(unexportedState.UnsafeAddr())).Interface()
+	hackedState := reflect.NewAt(unexportedState.Type(), unsafe.Pointer(unexportedState.UnsafeAddr())).Elem().Interface()
 	unexportedDiff := reflect.ValueOf(diff).Elem().FieldByName("diff")
-	hackedDiff := reflect.NewAt(unexportedDiff.Type(), unsafe.Pointer(unexportedDiff.UnsafeAddr())).Interface()
+	hackedDiff := reflect.NewAt(unexportedDiff.Type(), unsafe.Pointer(unexportedDiff.UnsafeAddr())).Elem().Interface()
 	castState, ok := hackedState.(*terraform.InstanceState)
 	if !ok {
 		return nil, false
