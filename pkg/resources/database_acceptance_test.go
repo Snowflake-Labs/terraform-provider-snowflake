@@ -815,7 +815,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				},
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
-					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(25).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
 				),
 			},
 			// remove the param from config
