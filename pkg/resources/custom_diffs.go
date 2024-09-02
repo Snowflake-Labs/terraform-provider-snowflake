@@ -100,6 +100,7 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 					if diffSuppressFunc := v.DiffSuppressFunc; diffSuppressFunc != nil {
 						hackedResourceData, hackedCorrectly := hackResourceData(resourceSchema, diff)
 						if !hackedCorrectly {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: did not create resource data correctly, skipping\n")
 							continue
 						}
 						if !diffSuppressFunc(key, oldValue.(string), newValue.(string), hackedResourceData) {
