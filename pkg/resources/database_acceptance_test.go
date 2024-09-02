@@ -2,6 +2,8 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"strconv"
 	"testing"
 
@@ -767,9 +769,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "25"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(25).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
 				),
 			},
 			// remove the param from config
@@ -787,9 +789,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 			// import when param not in config (snowflake default)
@@ -812,9 +814,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(25).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
 				),
 			},
 			// remove the param from config
@@ -832,9 +834,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"), // Database default
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")), // Database default
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 			// change param value on account - change expected to be noop
@@ -855,9 +857,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// import when param not in config (set on account)
@@ -868,8 +870,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "data_retention_time_in_days", "50"),
 				),
-				Check: resource.ComposeTestCheckFunc(
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// change param value on database
@@ -886,9 +888,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// unset param on account
@@ -906,9 +908,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 		},
