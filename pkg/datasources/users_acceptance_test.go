@@ -7,6 +7,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
@@ -78,6 +79,8 @@ func TestAcc_Users_Complete(t *testing.T) {
 						HasMinsToBypassMfaNotEmpty().
 						HasHasRsaPublicKey(true).
 						HasComment(comment),
+					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
+						HasAllDefaults(),
 				),
 			},
 		},
