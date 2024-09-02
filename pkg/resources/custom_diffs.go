@@ -3,14 +3,16 @@ package resources
 import (
 	"context"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func StringParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
@@ -86,7 +88,6 @@ func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
 // ComputedIfAnyAttributeChanged marks the given fields as computed if any of the listed fields changes.
 // It takes field-level diffSuppress into consideration based on the schema passed.
 // If the field is not found in the given schema, it continues without error.
-// TODO: diffSuppressFunc sometimes use the last param (d) and we can't get it from the resource diff (ResourceDiff != ResourceData)
 func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		var result bool
@@ -97,7 +98,11 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 
 				if v, ok := resourceSchema[changedKey]; ok {
 					if diffSuppressFunc := v.DiffSuppressFunc; diffSuppressFunc != nil {
-						if !diffSuppressFunc(key, oldValue.(string), newValue.(string), nil) {
+						hackedResourceData, hackedCorrectly := hackResourceData(resourceSchema, diff)
+						if !hackedCorrectly {
+							continue
+						}
+						if !diffSuppressFunc(key, oldValue.(string), newValue.(string), hackedResourceData) {
 							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and the diff is not suppressed", changedKey)
 							result = true
 						} else {
@@ -112,6 +117,27 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 		}
 		return result
 	})
+}
+
+// TODO: extract hacky stuff outside this directory?
+func hackResourceData(resourceSchema schema.InternalMap, diff *schema.ResourceDiff) (*schema.ResourceData, bool) {
+	unexportedState := reflect.ValueOf(diff).Elem().FieldByName("state")
+	hackedState := reflect.NewAt(unexportedState.Type(), unsafe.Pointer(unexportedState.UnsafeAddr())).Interface()
+	unexportedDiff := reflect.ValueOf(diff).Elem().FieldByName("diff")
+	hackedDiff := reflect.NewAt(unexportedDiff.Type(), unsafe.Pointer(unexportedDiff.UnsafeAddr())).Interface()
+	castState, ok := hackedState.(*terraform.InstanceState)
+	if !ok {
+		return nil, false
+	}
+	castDiff, ok := hackedDiff.(*terraform.InstanceDiff)
+	if !ok {
+		return nil, false
+	}
+	hackedResourceData, err := resourceSchema.Data(castState, castDiff)
+	if err != nil {
+		return nil, false
+	}
+	return hackedResourceData, true
 }
 
 type parameter[T ~string] struct {
