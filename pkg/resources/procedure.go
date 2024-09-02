@@ -189,7 +189,7 @@ func Procedure() *schema.Resource {
 		// TODO(SNOW-1348106): add `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
 		// This can't be done now because this function compares values without diff suppress.
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(procedureSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: procedureSchema,

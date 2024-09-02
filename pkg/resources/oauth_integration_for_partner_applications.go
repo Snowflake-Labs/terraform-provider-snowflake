@@ -121,11 +121,13 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForPartnerApplicationsSchema,
 				ShowOutputAttributeName,
 				"enabled",
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForPartnerApplicationsSchema,
 				DescribeOutputAttributeName,
 				"oauth_client",
 				"enabled",

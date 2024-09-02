@@ -118,10 +118,9 @@ func Streamlit() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "title", "comment", "query_warehouse"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
+			ComputedIfAnyAttributeChanged(streamlitSchema, ShowOutputAttributeName, "name", "title", "comment", "query_warehouse"),
+			ComputedIfAnyAttributeChanged(streamlitSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(streamlitSchema, DescribeOutputAttributeName, "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
 		),
 
 		SchemaVersion: 1,

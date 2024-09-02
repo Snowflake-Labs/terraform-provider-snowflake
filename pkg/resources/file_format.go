@@ -319,7 +319,7 @@ func FileFormat() *schema.Resource {
 		Delete: DeleteFileFormat,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(fileFormatSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: fileFormatSchema,

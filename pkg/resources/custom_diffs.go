@@ -83,21 +83,8 @@ func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
 	})
 }
 
-func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
-	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-		var result bool
-		for _, changedKey := range changedAttributeKeys {
-			if diff.HasChange(changedKey) {
-				old, new := diff.GetChange(changedKey)
-				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s old: %s new: %s\n", changedKey, old, new)
-			}
-			result = result || diff.HasChange(changedKey)
-		}
-		return result
-	})
-}
-
-func ComputedIfAnyAttributeChangedCheckingDiffSuppression(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+// TODO: test
+func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		var result bool
 		for _, changedKey := range changedAttributeKeys {
@@ -124,6 +111,7 @@ func ComputedIfAnyAttributeChangedCheckingDiffSuppression(resourceSchema map[str
 	})
 }
 
+// TODO: remove
 func ComputedIfAnyAttributeChangedWithSuppressDiff(key string, suppressDiffFunc schema.SchemaDiffSuppressFunc, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		for _, changedKey := range changedAttributeKeys {

@@ -101,7 +101,7 @@ func Database() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChanged(databaseSchema, FullyQualifiedNameAttributeName, "name"),
 			databaseParametersCustomDiff,
 		),
 

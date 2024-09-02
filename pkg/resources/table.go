@@ -212,7 +212,7 @@ func Table() *schema.Resource {
 		Delete: DeleteTable,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(tableSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: tableSchema,
