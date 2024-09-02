@@ -502,27 +502,46 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 }
 
 func extractColumns(v any) ([]sdk.ViewColumnRequest, error) {
+	_, ok := v.([]any)
+	if v == nil || !ok {
+		return nil, fmt.Errorf("unable to extract columns, input is either nil or non expected type (%T): %v", v, v)
+	}
 	columns := make([]sdk.ViewColumnRequest, len(v.([]any)))
 	for i, columnConfigRaw := range v.([]any) {
-		columnConfig := columnConfigRaw.(map[string]any)
-		columnsReq := *sdk.NewViewColumnRequest(columnConfig["column_name"].(string))
-		if len(columnConfig["projection_policy"].([]any)) > 0 {
-			projectionPolicyId, _, err := extractPolicyWithColumnsSet(columnConfig["projection_policy"], "")
+		columnConfig, ok := columnConfigRaw.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("unable to extract column, non expected type of %T: %v", columnConfigRaw, columnConfigRaw)
+		}
+
+		columnName, ok := columnConfig["column_name"]
+		if !ok {
+			return nil, fmt.Errorf("unable to extract column, missing column_name key in column")
+		}
+		columnsReq := *sdk.NewViewColumnRequest(columnName.(string))
+
+		projectionPolicy, ok := columnConfig["projection_policy"]
+		if ok && len(projectionPolicy.([]any)) > 0 {
+			projectionPolicyId, _, err := extractPolicyWithColumnsSet(projectionPolicy, "")
 			if err != nil {
 				return nil, err
 			}
 			columnsReq.WithProjectionPolicy(*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicyId))
 		}
-		if len(columnConfig["masking_policy"].([]any)) > 0 {
-			maskingPolicyId, maskingPolicyColumns, err := extractPolicyWithColumnsList(columnConfig["masking_policy"], "using")
+
+		maskingPolicy, ok := columnConfig["masking_policy"]
+		if ok && len(maskingPolicy.([]any)) > 0 {
+			maskingPolicyId, maskingPolicyColumns, err := extractPolicyWithColumnsList(maskingPolicy, "using")
 			if err != nil {
 				return nil, err
 			}
 			columnsReq.WithMaskingPolicy(*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicyId).WithUsing(maskingPolicyColumns))
 		}
-		if commentRaw := columnConfig["comment"].(string); len(commentRaw) > 0 {
-			columnsReq.WithComment(commentRaw)
+
+		comment, ok := columnConfig["comment"]
+		if ok && len(comment.(string)) > 0 {
+			columnsReq.WithComment(comment.(string))
 		}
+
 		columns[i] = columnsReq
 	}
 	return columns, nil
@@ -552,7 +571,7 @@ func extractPolicyWithColumnsList(v any, columnsKey string) (sdk.SchemaObjectIde
 		return sdk.SchemaObjectIdentifier{}, nil, err
 	}
 	if policyConfig[columnsKey] == nil {
-		return id, nil, nil
+		return id, nil, fmt.Errorf("unable to extract policy with column list, unable to find columnsKey: %s", columnsKey)
 	}
 	columnsRaw := expandStringList(policyConfig[columnsKey].([]any))
 	columns := make([]sdk.Column, len(columnsRaw))
@@ -746,7 +765,7 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 	})
 }
 
-func handleColumns(d *schema.ResourceData, columns []sdk.ViewDetails, policyRefs []sdk.PolicyReference) error {
+func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs []sdk.PolicyReference) error {
 	if len(columns) == 0 {
 		return d.Set("column", nil)
 	}
@@ -754,7 +773,11 @@ func handleColumns(d *schema.ResourceData, columns []sdk.ViewDetails, policyRefs
 	for i, column := range columns {
 		columnsRaw[i] = map[string]any{
 			"column_name": column.Name,
-			"comment":     column.Comment,
+		}
+		if column.Comment != nil {
+			columnsRaw[i]["comment"] = *column.Comment
+		} else {
+			columnsRaw[i]["comment"] = nil
 		}
 		projectionPolicy, err := collections.FindOne(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindProjectionPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name

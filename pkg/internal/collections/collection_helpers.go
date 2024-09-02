@@ -15,3 +15,12 @@ func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
 	}
 	return nil, ErrObjectNotFound
 }
+
+// TODO [SNOW-1473414]: move collection helpers fully with a separate PR
+func Map[T any, R any](collection []T, mapper func(T) R) []R {
+	result := make([]R, len(collection))
+	for i, elem := range collection {
+		result[i] = mapper(elem)
+	}
+	return result
+}

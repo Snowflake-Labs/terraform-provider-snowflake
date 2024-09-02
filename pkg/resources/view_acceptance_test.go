@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -61,7 +64,7 @@ func TestAcc_View_basic(t *testing.T) {
 	otherStatement := fmt.Sprintf("SELECT foo, id FROM %s", table.ID().FullyQualifiedName())
 	comment := random.Comment()
 
-	// generators currently don't handle lists, so use the old way
+	// generators currently don't handle lists of objects, so use the old way
 	basicView := func(configStatement string) config.Variables {
 		return config.Variables{
 			"name":      config.StringVariable(id.Name()),
@@ -81,7 +84,7 @@ func TestAcc_View_basic(t *testing.T) {
 	basicViewWithIsRecursive := basicView(otherStatement)
 	basicViewWithIsRecursive["is_recursive"] = config.BoolVariable(true)
 
-	// generators currently don't handle lists, so use the old way
+	// generators currently don't handle lists of objects, so use the old way
 	basicUpdate := func(rap, ap, functionId sdk.SchemaObjectIdentifier, statement, cron string, scheduleStatus sdk.DataMetricScheduleStatusOption) config.Variables {
 		return config.Variables{
 			"name":                            config.StringVariable(id.Name()),
@@ -124,8 +127,8 @@ func TestAcc_View_basic(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2")),
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
 				),
 			},
 			// import - without optionals
@@ -135,13 +138,12 @@ func TestAcc_View_basic(t *testing.T) {
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "column.#", "2")),
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
-						HasStatementString(statement),
+						HasStatementString(statement).
+						HasColumnLength(2),
 				),
 			},
 			// set policies and dmfs externally
@@ -164,11 +166,11 @@ func TestAcc_View_basic(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "0")),
+						HasSchemaString(id.SchemaName()).
+						HasAggregationPolicyLength(0).
+						HasRowAccessPolicyLength(0).
+						HasDataMetricScheduleLength(0).
+						HasDataMetricFunctionLength(0),
 				),
 			},
 			// set other fields
@@ -185,19 +187,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -212,19 +214,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
@@ -240,19 +242,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
@@ -268,19 +270,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -298,19 +300,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -329,19 +331,19 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(comment),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
+					HasCommentString(comment).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
@@ -362,12 +364,12 @@ func TestAcc_View_basic(t *testing.T) {
 						HasCommentString(comment).
 						HasIsSecureString("false").
 						HasIsTemporaryString("false").
-						HasChangeTrackingString("false"),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.#", "1")),
+						HasChangeTrackingString("false").
+						HasAggregationPolicyLength(1).
+						HasRowAccessPolicyLength(1),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.0", "ID")),
@@ -383,11 +385,11 @@ func TestAcc_View_basic(t *testing.T) {
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
-					HasCommentString(""),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "aggregation_policy.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "row_access_policy.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_schedule.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_function.#")),
+					HasCommentString("").
+					HasNoAggregationPolicyByLength().
+					HasNoRowAccessPolicyByLength().
+					HasNoDataMetricScheduleByLength().
+					HasNoDataMetricFunctionByLength(),
 				),
 			},
 			// recreate - change is_recursive
@@ -402,11 +404,11 @@ func TestAcc_View_basic(t *testing.T) {
 					HasCommentString("").
 					HasIsRecursiveString("true").
 					HasIsTemporaryString("default").
-					HasChangeTrackingString("default"),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "aggregation_policy.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "row_access_policy.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_schedule.#")),
-					assert.Check(resource.TestCheckNoResourceAttr("snowflake_view.test", "data_metric_function.#")),
+					HasChangeTrackingString("default").
+					HasNoAggregationPolicyByLength().
+					HasNoRowAccessPolicyByLength().
+					HasNoDataMetricScheduleByLength().
+					HasNoDataMetricFunctionByLength(),
 				),
 			},
 		},
@@ -457,7 +459,7 @@ func TestAcc_View_recursive(t *testing.T) {
 				ConfigVariables: basicView,
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -589,23 +591,23 @@ end;;
 					HasCommentString("Terraform test resource").
 					HasIsSecureString("true").
 					HasIsTemporaryString("false").
-					HasChangeTrackingString("true"),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.#", "1")),
+					HasChangeTrackingString("true").
+					HasDataMetricScheduleLength(1).
+					HasDataMetricFunctionLength(1).
+					HasAggregationPolicyLength(1).
+					HasRowAccessPolicyLength(1).
+					HasColumnLength(2),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.0.column_name", "ID")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.0.masking_policy.#", "0")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "column.0.projection_policy.#", "0")),
@@ -637,22 +639,170 @@ end;;
 						HasSchemaString(id.SchemaName()).
 						HasCommentString("Terraform test resource").
 						HasIsSecureString("true").
-						HasIsTemporaryString("false").HasChangeTrackingString("true"),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.#", "1")),
+						HasIsTemporaryString("false").
+						HasChangeTrackingString("true").
+						HasDataMetricScheduleLength(1).
+						HasDataMetricFunctionLength(1).
+						HasAggregationPolicyLength(1).
+						HasRowAccessPolicyLength(1),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.minutes", "0")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.#", "1")),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.0", "ID")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_View_columns(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	table, tableCleanup := acc.TestClient().Table.CreateTableWithColumns(t, []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("bar", sdk.DataTypeNumber),
+	})
+	t.Cleanup(tableCleanup)
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+
+	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
+		acc.TestClient().Ids.SchemaId(),
+		[]sdk.TableColumnSignature{
+			{
+				Name: "One",
+				Type: sdk.DataTypeNumber,
+			},
+		},
+		sdk.DataTypeNumber,
+		`
+case
+	when One > 0 then One
+	else 0
+end;;
+`,
+		new(sdk.CreateMaskingPolicyOptions),
+	)
+	t.Cleanup(maskingPolicyCleanup)
+
+	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
+	t.Cleanup(projectionPolicyCleanup)
+
+	// generators currently don't handle lists of objects, so use the old way
+	basicView := func(columns ...string) config.Variables {
+		return config.Variables{
+			"name":      config.StringVariable(id.Name()),
+			"database":  config.StringVariable(id.DatabaseName()),
+			"schema":    config.StringVariable(id.SchemaName()),
+			"statement": config.StringVariable(statement),
+			"columns": config.SetVariable(
+				collections.Map(columns, func(columnName string) config.Variable {
+					return config.MapVariable(map[string]config.Variable{
+						"column_name": config.StringVariable(columnName),
+					})
+				})...,
+			),
+		}
+	}
+
+	basicViewWithPolicies := func() config.Variables {
+		conf := basicView("ID", "FOO")
+		delete(conf, "columns")
+		conf["projection_name"] = config.StringVariable(projectionPolicy.FullyQualifiedName())
+		conf["masking_name"] = config.StringVariable(maskingPolicy.ID().FullyQualifiedName())
+		conf["masking_using"] = config.ListVariable(config.StringVariable("ID"))
+		return conf
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			// Columns without policies
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView("ID", "FOO"),
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+				),
+			},
+			// Columns with policies added externally
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: basicView("ID", "FOO"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				PreConfig: func() {
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetMaskingPolicyOnColumn(*sdk.NewViewSetColumnMaskingPolicyRequest("ID", maskingPolicy.ID()).WithUsing([]sdk.Column{{Value: "ID"}})))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetProjectionPolicyOnColumn(*sdk.NewViewSetProjectionPolicyRequest("ID", projectionPolicy).WithForce(true)))
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+					objectassert.View(t, id).
+						HasNoMaskingPolicyReferences().
+						HasNoProjectionPolicyReferences(),
+				),
+			},
+			// With all policies on columns
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
+				ConfigVariables: basicViewWithPolicies(),
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+					objectassert.View(t, id).
+						HasMaskingPolicyReferences(1).
+						HasProjectionPolicyReferences(1),
+				),
+			},
+			// Remove policies on columns externally
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
+				ConfigVariables: basicViewWithPolicies(),
+				PreConfig: func() {
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID")))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetProjectionPolicyOnColumn(*sdk.NewViewUnsetProjectionPolicyRequest("ID")))
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+					objectassert.View(t, id).
+						HasMaskingPolicyReferences(1).
+						HasProjectionPolicyReferences(1),
 				),
 			},
 		},
