@@ -2,22 +2,21 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"strconv"
 	"testing"
 
-	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -1191,9 +1190,9 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: databaseWithDropPublicSchemaConfig(id, true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					snowflakechecks.DoesNotContainPublicSchema(t, id),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).DoesNotContainPublicSchema(),
 				),
 			},
 			// Change in parameter shouldn't change the state Snowflake
@@ -1204,9 +1203,9 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 					},
 				},
 				Config: databaseWithDropPublicSchemaConfig(id, false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					snowflakechecks.DoesNotContainPublicSchema(t, id),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).DoesNotContainPublicSchema(),
 				),
 			},
 		},
@@ -1226,9 +1225,9 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: databaseWithDropPublicSchemaConfig(id, false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					snowflakechecks.ContainsPublicSchema(t, id),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).ContainsPublicSchema(),
 				),
 			},
 			// Change in parameter shouldn't change the state Snowflake
@@ -1239,9 +1238,9 @@ func TestAcc_Database_WithPublicSchema(t *testing.T) {
 					},
 				},
 				Config: databaseWithDropPublicSchemaConfig(id, true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					snowflakechecks.ContainsPublicSchema(t, id),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).ContainsPublicSchema(),
 				),
 			},
 		},
