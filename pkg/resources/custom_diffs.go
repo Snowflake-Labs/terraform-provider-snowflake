@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 	"strconv"
@@ -103,7 +104,7 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: did not create resource data correctly, skipping\n")
 							continue
 						}
-						if !diffSuppressFunc(key, oldValue.(string), newValue.(string), hackedResourceData) {
+						if !diffSuppressFunc(key, fmt.Sprintf("%v", oldValue), fmt.Sprintf("%v", newValue), hackedResourceData) {
 							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and the diff is not suppressed", changedKey)
 							result = true
 						} else {
