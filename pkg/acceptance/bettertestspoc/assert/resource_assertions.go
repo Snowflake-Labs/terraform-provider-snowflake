@@ -21,10 +21,11 @@ var (
 // ResourceAssert is an embeddable struct that should be used to construct new resource assertions (for resource, show output, parameters, etc.).
 // It implements both TestCheckFuncProvider and ImportStateCheckFuncProvider which makes it easy to create new resource assertions.
 type ResourceAssert struct {
-	name       string
-	id         string
-	prefix     string
-	assertions []ResourceAssertion
+	name             string
+	id               string
+	prefix           string
+	assertions       []ResourceAssertion
+	additionalPrefix string
 }
 
 // NewResourceAssert creates a ResourceAssert where the resource name should be used as a key for assertions.
@@ -45,6 +46,16 @@ func NewImportedResourceAssert(id string, prefix string) *ResourceAssert {
 	}
 }
 
+// NewDatasourceAssert creates a ResourceAssert for data sources.
+func NewDatasourceAssert(name string, prefix string, additionalPrefix string) *ResourceAssert {
+	return &ResourceAssert{
+		name:             name,
+		prefix:           prefix,
+		assertions:       make([]ResourceAssertion, 0),
+		additionalPrefix: additionalPrefix,
+	}
+}
+
 type resourceAssertionType string
 
 const (
@@ -59,6 +70,7 @@ type ResourceAssertion struct {
 }
 
 func (r *ResourceAssert) AddAssertion(assertion ResourceAssertion) {
+	assertion.fieldName = r.additionalPrefix + assertion.fieldName
 	r.assertions = append(r.assertions, assertion)
 }
 

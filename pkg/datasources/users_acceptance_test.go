@@ -1,10 +1,13 @@
 package datasources_test
 
 import (
+	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -54,10 +57,18 @@ func TestAcc_Users_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 
-					resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.name", id.Name()),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.show_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.first_name", "Jan")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.show_output.0.last_name", "Testowski")),
+
+					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
+						HasName(id.Name()),
 				),
 			},
 		},
