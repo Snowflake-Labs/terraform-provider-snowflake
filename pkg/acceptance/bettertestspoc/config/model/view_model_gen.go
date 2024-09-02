@@ -10,22 +10,21 @@ import (
 )
 
 type ViewModel struct {
-	AggregationPolicy   tfconfig.Variable `json:"aggregation_policy,omitempty"`
-	ChangeTracking      tfconfig.Variable `json:"change_tracking,omitempty"`
-	Columns             tfconfig.Variable `json:"columns,omitempty"`
-	Comment             tfconfig.Variable `json:"comment,omitempty"`
-	CopyGrants          tfconfig.Variable `json:"copy_grants,omitempty"`
-	DataMetricFunctions tfconfig.Variable `json:"data_metric_function,omitempty"`
-	DataMetricSchedule  tfconfig.Variable `json:"data_metric_schedule,omitempty"`
-	Database            tfconfig.Variable `json:"database,omitempty"`
-	IsRecursive         tfconfig.Variable `json:"is_recursive,omitempty"`
-	IsSecure            tfconfig.Variable `json:"is_secure,omitempty"`
-	IsTemporary         tfconfig.Variable `json:"is_temporary,omitempty"`
-	Name                tfconfig.Variable `json:"name,omitempty"`
-	OrReplace           tfconfig.Variable `json:"or_replace,omitempty"`
-	RowAccessPolicy     tfconfig.Variable `json:"row_access_policy,omitempty"`
-	Schema              tfconfig.Variable `json:"schema,omitempty"`
-	Statement           tfconfig.Variable `json:"statement,omitempty"`
+	AggregationPolicy  tfconfig.Variable `json:"aggregation_policy,omitempty"`
+	ChangeTracking     tfconfig.Variable `json:"change_tracking,omitempty"`
+	Comment            tfconfig.Variable `json:"comment,omitempty"`
+	CopyGrants         tfconfig.Variable `json:"copy_grants,omitempty"`
+	DataMetricFunction tfconfig.Variable `json:"data_metric_function,omitempty"`
+	DataMetricSchedule tfconfig.Variable `json:"data_metric_schedule,omitempty"`
+	Database           tfconfig.Variable `json:"database,omitempty"`
+	FullyQualifiedName tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	IsRecursive        tfconfig.Variable `json:"is_recursive,omitempty"`
+	IsSecure           tfconfig.Variable `json:"is_secure,omitempty"`
+	IsTemporary        tfconfig.Variable `json:"is_temporary,omitempty"`
+	Name               tfconfig.Variable `json:"name,omitempty"`
+	RowAccessPolicy    tfconfig.Variable `json:"row_access_policy,omitempty"`
+	Schema             tfconfig.Variable `json:"schema,omitempty"`
+	Statement          tfconfig.Variable `json:"statement,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -36,7 +35,10 @@ type ViewModel struct {
 
 func View(
 	resourceName string,
-	database string, name string, schema string, statement string,
+	database string,
+	name string,
+	schema string,
+	statement string,
 ) *ViewModel {
 	v := &ViewModel{ResourceModelMeta: config.Meta(resourceName, resources.View)}
 	v.WithDatabase(database)
@@ -47,7 +49,10 @@ func View(
 }
 
 func ViewWithDefaultMeta(
-	database string, name string, schema string, statement string,
+	database string,
+	name string,
+	schema string,
+	statement string,
 ) *ViewModel {
 	v := &ViewModel{ResourceModelMeta: config.DefaultMeta(resources.View)}
 	v.WithDatabase(database)
@@ -68,8 +73,6 @@ func (v *ViewModel) WithChangeTracking(changeTracking string) *ViewModel {
 	return v
 }
 
-// columns attribute type is not yet supported, so WithColumns can't be generated
-
 func (v *ViewModel) WithComment(comment string) *ViewModel {
 	v.Comment = tfconfig.StringVariable(comment)
 	return v
@@ -80,12 +83,17 @@ func (v *ViewModel) WithCopyGrants(copyGrants bool) *ViewModel {
 	return v
 }
 
-// data_metric_function attribute type is not yet supported, so WithDataMetricFunctions can't be generated
+// data_metric_function attribute type is not yet supported, so WithDataMetricFunction can't be generated
 
 // data_metric_schedule attribute type is not yet supported, so WithDataMetricSchedule can't be generated
 
 func (v *ViewModel) WithDatabase(database string) *ViewModel {
 	v.Database = tfconfig.StringVariable(database)
+	return v
+}
+
+func (v *ViewModel) WithFullyQualifiedName(fullyQualifiedName string) *ViewModel {
+	v.FullyQualifiedName = tfconfig.StringVariable(fullyQualifiedName)
 	return v
 }
 
@@ -106,11 +114,6 @@ func (v *ViewModel) WithIsTemporary(isTemporary string) *ViewModel {
 
 func (v *ViewModel) WithName(name string) *ViewModel {
 	v.Name = tfconfig.StringVariable(name)
-	return v
-}
-
-func (v *ViewModel) WithOrReplace(orReplace bool) *ViewModel {
-	v.OrReplace = tfconfig.BoolVariable(orReplace)
 	return v
 }
 
@@ -140,11 +143,6 @@ func (v *ViewModel) WithChangeTrackingValue(value tfconfig.Variable) *ViewModel 
 	return v
 }
 
-func (v *ViewModel) WithColumnsValue(value tfconfig.Variable) *ViewModel {
-	v.Columns = value
-	return v
-}
-
 func (v *ViewModel) WithCommentValue(value tfconfig.Variable) *ViewModel {
 	v.Comment = value
 	return v
@@ -155,8 +153,8 @@ func (v *ViewModel) WithCopyGrantsValue(value tfconfig.Variable) *ViewModel {
 	return v
 }
 
-func (v *ViewModel) WithDataMetricFunctionsValue(value tfconfig.Variable) *ViewModel {
-	v.DataMetricFunctions = value
+func (v *ViewModel) WithDataMetricFunctionValue(value tfconfig.Variable) *ViewModel {
+	v.DataMetricFunction = value
 	return v
 }
 
@@ -167,6 +165,11 @@ func (v *ViewModel) WithDataMetricScheduleValue(value tfconfig.Variable) *ViewMo
 
 func (v *ViewModel) WithDatabaseValue(value tfconfig.Variable) *ViewModel {
 	v.Database = value
+	return v
+}
+
+func (v *ViewModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *ViewModel {
+	v.FullyQualifiedName = value
 	return v
 }
 
@@ -187,11 +190,6 @@ func (v *ViewModel) WithIsTemporaryValue(value tfconfig.Variable) *ViewModel {
 
 func (v *ViewModel) WithNameValue(value tfconfig.Variable) *ViewModel {
 	v.Name = value
-	return v
-}
-
-func (v *ViewModel) WithOrReplaceValue(value tfconfig.Variable) *ViewModel {
-	v.OrReplace = value
 	return v
 }
 

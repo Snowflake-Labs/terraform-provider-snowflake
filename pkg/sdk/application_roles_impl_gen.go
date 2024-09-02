@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ ApplicationRoles = (*applicationRoles)(nil)
@@ -38,7 +38,7 @@ func (v *applicationRoles) ShowByID(ctx context.Context, id DatabaseObjectIdenti
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(applicationRoles, func(r ApplicationRole) bool { return r.Name == id.Name() })
+	return collections.FindFirst(applicationRoles, func(r ApplicationRole) bool { return r.Name == id.Name() })
 }
 
 func (r *GrantApplicationRoleRequest) toOpts() *GrantApplicationRoleOptions {

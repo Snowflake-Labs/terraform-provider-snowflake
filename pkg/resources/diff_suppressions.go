@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,6 +51,24 @@ func NormalizeAndCompareIdentifiersInSet(key string) schema.SchemaDiffSuppressFu
 			if helpers.ContainsIdentifierIgnoringQuotes(expandStringList(d.Get(key).(*schema.Set).List()), oldValue) {
 				return true
 			}
+		}
+
+		return false
+	}
+}
+
+func SuppressCaseInSet(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(k, ".#") {
+			return false
+		}
+
+		if oldValue == "" && !d.GetRawState().IsNull() {
+			return slices.Contains(collections.Map(ctyValToSliceString(d.GetRawState().AsValueMap()[key].AsValueSet().Values()), strings.ToUpper), strings.ToUpper(newValue))
+		}
+
+		if newValue == "" {
+			return slices.Contains(collections.Map(expandStringList(d.Get(key).(*schema.Set).List()), strings.ToUpper), strings.ToUpper(oldValue))
 		}
 
 		return false

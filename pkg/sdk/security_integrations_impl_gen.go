@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ SecurityIntegrations = (*securityIntegrations)(nil)
@@ -125,7 +125,7 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+	return collections.FindFirst(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
 func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {

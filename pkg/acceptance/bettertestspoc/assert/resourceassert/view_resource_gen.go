@@ -42,11 +42,6 @@ func (v *ViewResourceAssert) HasChangeTrackingString(expected string) *ViewResou
 	return v
 }
 
-func (v *ViewResourceAssert) HasColumnsString(expected string) *ViewResourceAssert {
-	v.AddAssertion(assert.ValueSet("columns", expected))
-	return v
-}
-
 func (v *ViewResourceAssert) HasCommentString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("comment", expected))
 	return v
@@ -72,6 +67,11 @@ func (v *ViewResourceAssert) HasDatabaseString(expected string) *ViewResourceAss
 	return v
 }
 
+func (v *ViewResourceAssert) HasFullyQualifiedNameString(expected string) *ViewResourceAssert {
+	v.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
+	return v
+}
+
 func (v *ViewResourceAssert) HasIsRecursiveString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("is_recursive", expected))
 	return v
@@ -89,11 +89,6 @@ func (v *ViewResourceAssert) HasIsTemporaryString(expected string) *ViewResource
 
 func (v *ViewResourceAssert) HasNameString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("name", expected))
-	return v
-}
-
-func (v *ViewResourceAssert) HasOrReplaceString(expected string) *ViewResourceAssert {
-	v.AddAssertion(assert.ValueSet("or_replace", expected))
 	return v
 }
 
@@ -126,11 +121,6 @@ func (v *ViewResourceAssert) HasNoChangeTracking() *ViewResourceAssert {
 	return v
 }
 
-func (v *ViewResourceAssert) HasNoColumns() *ViewResourceAssert {
-	v.AddAssertion(assert.ValueNotSet("columns"))
-	return v
-}
-
 func (v *ViewResourceAssert) HasNoComment() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("comment"))
 	return v
@@ -156,6 +146,11 @@ func (v *ViewResourceAssert) HasNoDatabase() *ViewResourceAssert {
 	return v
 }
 
+func (v *ViewResourceAssert) HasNoFullyQualifiedName() *ViewResourceAssert {
+	v.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
+	return v
+}
+
 func (v *ViewResourceAssert) HasNoIsRecursive() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("is_recursive"))
 	return v
@@ -173,11 +168,6 @@ func (v *ViewResourceAssert) HasNoIsTemporary() *ViewResourceAssert {
 
 func (v *ViewResourceAssert) HasNoName() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("name"))
-	return v
-}
-
-func (v *ViewResourceAssert) HasNoOrReplace() *ViewResourceAssert {
-	v.AddAssertion(assert.ValueNotSet("or_replace"))
 	return v
 }
 

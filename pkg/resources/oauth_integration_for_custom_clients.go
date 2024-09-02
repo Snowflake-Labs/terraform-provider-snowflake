@@ -216,7 +216,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		return nil, err
 	}
 
-	if allowNonTlsRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if allowNonTlsRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ALLOW_NON_TLS_REDIRECT_URI"
 	}); err == nil {
 		if err = d.Set("oauth_allow_non_tls_redirect_uri", allowNonTlsRedirectUri.Value); err != nil {
@@ -224,7 +224,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if enforcePkce, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if enforcePkce, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ENFORCE_PKCE"
 	}); err == nil {
 		if err = d.Set("oauth_enforce_pkce", enforcePkce.Value); err != nil {
@@ -232,7 +232,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if issueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if issueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 	}); err == nil {
 		if err = d.Set("oauth_issue_refresh_tokens", issueRefreshTokens.Value); err != nil {
@@ -240,7 +240,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if refreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if refreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 	}); err == nil {
 		refreshTokenValidityValue, err := strconv.ParseInt(refreshTokenValidity.Value, 10, 64)
@@ -394,7 +394,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		oauthClientType, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthClientType, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_CLIENT_TYPE"
 		})
 		if err != nil {
@@ -404,7 +404,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		oauthRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_REDIRECT_URI"
 		})
 		if err != nil {
@@ -414,7 +414,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		preAuthorizedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		preAuthorizedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "PRE_AUTHORIZED_ROLES_LIST"
 		})
 		if err != nil {
@@ -428,7 +428,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		blockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		blockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "BLOCKED_ROLES_LIST"
 		})
 		if err != nil {
@@ -442,7 +442,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		networkPolicy, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		networkPolicy, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "NETWORK_POLICY"
 		})
 		if err != nil {
@@ -459,35 +459,35 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 				return diag.FromErr(err)
 			}
 
-			oauthAllowNonTlsRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthAllowNonTlsRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ALLOW_NON_TLS_REDIRECT_URI"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthEnforcePkce, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthEnforcePkce, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ENFORCE_PKCE"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthUseSecondaryRoles, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthUseSecondaryRoles, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_USE_SECONDARY_ROLES"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthIssueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthIssueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthRefreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthRefreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 			})
 			if err != nil {

@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ Streams = (*streams)(nil)
@@ -66,7 +66,7 @@ func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Str
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(streams, func(r Stream) bool { return r.Name == id.Name() })
+	return collections.FindFirst(streams, func(r Stream) bool { return r.Name == id.Name() })
 }
 
 func (v *streams) Describe(ctx context.Context, request *DescribeStreamRequest) (*Stream, error) {

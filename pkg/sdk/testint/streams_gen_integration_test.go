@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -263,7 +263,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().WithTerse(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assert.NotNil(t, stream)
@@ -304,7 +304,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")
@@ -336,10 +336,10 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		stream2, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		stream2, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")
@@ -382,10 +382,10 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		stream2, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		stream2, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")

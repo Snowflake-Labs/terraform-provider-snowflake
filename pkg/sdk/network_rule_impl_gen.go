@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ NetworkRules = (*networkRules)(nil)
@@ -47,7 +47,7 @@ func (v *networkRules) ShowByID(ctx context.Context, id SchemaObjectIdentifier) 
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(networkRules, func(r NetworkRule) bool { return r.Name == id.Name() })
+	return collections.FindFirst(networkRules, func(r NetworkRule) bool { return r.Name == id.Name() })
 }
 
 func (v *networkRules) Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRuleDetails, error) {

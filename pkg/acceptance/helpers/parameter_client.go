@@ -122,7 +122,7 @@ func (c *ParameterClient) UnsetAccountParameter(t *testing.T, parameter sdk.Acco
 
 func FindParameter[T ~string](t *testing.T, parameters []*sdk.Parameter, parameter T) *sdk.Parameter {
 	t.Helper()
-	param, err := collections.FindOne(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
+	param, err := collections.FindFirst(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
 	require.NoError(t, err)
 	return *param
 }

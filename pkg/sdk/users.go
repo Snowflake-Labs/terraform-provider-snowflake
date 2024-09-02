@@ -59,6 +59,8 @@ type User struct {
 	LockedUntilTime       time.Time
 	HasPassword           bool
 	HasRsaPublicKey       bool
+	Type                  string
+	HasMfa                bool
 }
 
 type userDBRow struct {
@@ -88,6 +90,10 @@ type userDBRow struct {
 	LockedUntilTime       sql.NullTime   `db:"locked_until_time"`
 	HasPassword           bool           `db:"has_password"`
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
+	// TODO [SNOW-1645348]: test type thoroughly
+	Type sql.NullString `db:"type"`
+	// TODO [SNOW-1348101 - next PR]: test if hasMfa is always non-nullable, check if this has mfa helps with disable mfa, add to the describe output too
+	HasMfa bool `db:"has_mfa"`
 }
 
 func (row userDBRow) convert() *User {
@@ -103,6 +109,7 @@ func (row userDBRow) convert() *User {
 		Owner:                 row.Owner,
 		HasPassword:           row.HasPassword,
 		HasRsaPublicKey:       row.HasRsaPublicKey,
+		HasMfa:                row.HasMfa,
 	}
 	if row.DisplayName.Valid {
 		user.DisplayName = row.DisplayName.String
@@ -140,6 +147,9 @@ func (row userDBRow) convert() *User {
 	}
 	if row.LockedUntilTime.Valid {
 		user.LockedUntilTime = row.LockedUntilTime.Time
+	}
+	if row.Type.Valid {
+		user.Type = row.Type.String
 	}
 	return user
 }
@@ -212,7 +222,7 @@ type UserObjectProperties struct {
 	DefaultWarehouse      *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace      *ObjectIdentifier        `ddl:"identifier,equals" sql:"DEFAULT_NAMESPACE"`
 	DefaultRole           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"DEFAULT_ROLE"`
-	DefaultSecondaryRoles *SecondaryRoles          `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
+	DefaultSecondaryRoles *SecondaryRoles          `ddl:"parameter,equals" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA       *int                     `ddl:"parameter,no_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey          *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKeyFp        *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_FP"`
@@ -221,11 +231,13 @@ type UserObjectProperties struct {
 	Comment               *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
+type UserAlterObjectProperties struct {
+	UserObjectProperties
+	DisableMfa *bool `ddl:"parameter,no_quotes" sql:"DISABLE_MFA"`
+}
+
 type SecondaryRoles struct {
-	equals     bool            `ddl:"static" sql:"="`
-	leftParen  bool            `ddl:"static" sql:"("`
-	Roles      []SecondaryRole `ddl:"list,no_parentheses"`
-	rightParen bool            `ddl:"static" sql:")"`
+	all bool `ddl:"static" sql:"('ALL')"`
 }
 
 type SecondaryRole struct {
@@ -248,6 +260,7 @@ type UserObjectPropertiesUnset struct {
 	DefaultRole           *bool `ddl:"keyword" sql:"DEFAULT_ROLE"`
 	DefaultSecondaryRoles *bool `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA       *bool `ddl:"keyword" sql:"MINS_TO_BYPASS_MFA"`
+	DisableMfa            *bool `ddl:"keyword" sql:"DISABLE_MFA"`
 	RSAPublicKey          *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKey2         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
 	Comment               *bool `ddl:"keyword" sql:"COMMENT"`
@@ -353,11 +366,11 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 }
 
 type UserSet struct {
-	PasswordPolicy    *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
-	SessionPolicy     *string                 `ddl:"parameter" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`
-	ObjectParameters  *UserObjectParameters   `ddl:"keyword"`
-	SessionParameters *SessionParameters      `ddl:"keyword"`
+	PasswordPolicy    *SchemaObjectIdentifier    `ddl:"identifier" sql:"PASSWORD POLICY"`
+	SessionPolicy     *string                    `ddl:"parameter" sql:"SESSION POLICY"`
+	ObjectProperties  *UserAlterObjectProperties `ddl:"keyword"`
+	ObjectParameters  *UserObjectParameters      `ddl:"keyword"`
+	SessionParameters *SessionParameters         `ddl:"keyword"`
 }
 
 func (opts *UserSet) validate() error {
@@ -376,7 +389,7 @@ type UserUnset struct {
 }
 
 func (opts *UserUnset) validate() error {
-	// TODO [next PR]: change validations with policies
+	// TODO [SNOW-1645875]: change validations with policies
 	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
@@ -435,7 +448,7 @@ type UserDetails struct {
 	Disabled                            *BoolProperty
 	SnowflakeLock                       *BoolProperty
 	SnowflakeSupport                    *BoolProperty
-	DaysToExpiry                        *IntProperty
+	DaysToExpiry                        *FloatProperty
 	MinsToUnlock                        *IntProperty
 	DefaultWarehouse                    *StringProperty
 	DefaultNamespace                    *StringProperty
@@ -485,7 +498,7 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 		case "SNOWFLAKE_SUPPORT":
 			v.SnowflakeSupport = row.toBoolProperty()
 		case "DAYS_TO_EXPIRY":
-			v.DaysToExpiry = row.toIntProperty()
+			v.DaysToExpiry = row.toFloatProperty()
 		case "MINS_TO_UNLOCK":
 			v.MinsToUnlock = row.toIntProperty()
 		case "DEFAULT_WAREHOUSE":

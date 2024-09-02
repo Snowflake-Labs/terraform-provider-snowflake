@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Generate X509 returns base64 encoded certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
+// GenerateX509 returns base64 encoded certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
 func GenerateX509(t *testing.T) string {
 	t.Helper()
 	ca := &x509.Certificate{
@@ -40,7 +40,7 @@ func GenerateX509(t *testing.T) string {
 	return encode(t, "CERTIFICATE", caBytes)
 }
 
-// GenerateRSA returns an RSA public key without BEGIN and END markers, and key's hash.
+// GenerateRSAPublicKey returns an RSA public key without BEGIN and END markers, and key's hash.
 func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)

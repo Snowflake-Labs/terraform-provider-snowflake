@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ RowAccessPolicies = (*rowAccessPolicies)(nil)
@@ -43,7 +43,7 @@ func (v *rowAccessPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentif
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(rowAccessPolicies, func(r RowAccessPolicy) bool { return r.Name == id.Name() })
+	return collections.FindFirst(rowAccessPolicies, func(r RowAccessPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *rowAccessPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicyDescription, error) {

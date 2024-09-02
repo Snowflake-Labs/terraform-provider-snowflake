@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -14,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: test setting/unsetting policies
-// TODO [next PR]: add type and other 8.26 additions
+// TODO [SNOW-1645875]: test setting/unsetting policies
+// TODO [SNOW-1645348]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -238,27 +239,25 @@ func TestInt_Users(t *testing.T) {
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
 		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
-			Password:           sdk.String(password),
-			LoginName:          sdk.String(newValue),
-			DisplayName:        sdk.String(newValue),
-			FirstName:          sdk.String(newValue),
-			MiddleName:         sdk.String(newValue),
-			LastName:           sdk.String(newValue),
-			Email:              sdk.String(email),
-			MustChangePassword: sdk.Bool(true),
-			Disable:            sdk.Bool(true),
-			DaysToExpiry:       sdk.Int(5),
-			MinsToUnlock:       sdk.Int(15),
-			DefaultWarehouse:   sdk.Pointer(warehouseId),
-			DefaultNamespace:   sdk.Pointer(schemaIdObjectIdentifier),
-			DefaultRole:        sdk.Pointer(roleId),
-			DefaultSecondaryRoles: &sdk.SecondaryRoles{
-				Roles: []sdk.SecondaryRole{{Value: "ALL"}},
-			},
-			MinsToBypassMFA: sdk.Int(30),
-			RSAPublicKey:    sdk.String(key),
-			RSAPublicKey2:   sdk.String(key2),
-			Comment:         sdk.String("some comment"),
+			Password:              sdk.String(password),
+			LoginName:             sdk.String(newValue),
+			DisplayName:           sdk.String(newValue),
+			FirstName:             sdk.String(newValue),
+			MiddleName:            sdk.String(newValue),
+			LastName:              sdk.String(newValue),
+			Email:                 sdk.String(email),
+			MustChangePassword:    sdk.Bool(true),
+			Disable:               sdk.Bool(true),
+			DaysToExpiry:          sdk.Int(5),
+			MinsToUnlock:          sdk.Int(15),
+			DefaultWarehouse:      sdk.Pointer(warehouseId),
+			DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+			DefaultRole:           sdk.Pointer(roleId),
+			DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+			MinsToBypassMFA:       sdk.Int(30),
+			RSAPublicKey:          sdk.String(key),
+			RSAPublicKey2:         sdk.String(key2),
+			Comment:               sdk.String("some comment"),
 		}}
 
 		err := client.Users.Create(ctx, id, createOpts)
@@ -306,7 +305,55 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
-	// TODO [SNOW-1348101]: consult this with appropriate team when we have all the problems listed
+	t.Run("create: set mins to bypass mfa to negative manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(-100),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("create: set mins to bypass mfa to zero manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(0),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("create: set mins to bypass mfa to one manually", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			MinsToBypassMFA: sdk.Int(1),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, *userDetails.MinsToBypassMfa.Value)
+	})
+
+	// TODO [SNOW-1348101 - next PR]: consult this with appropriate team when we have all the problems listed
 	t.Run("create and alter: problems with public key fingerprints", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -330,9 +377,11 @@ func TestInt_Users(t *testing.T) {
 		t.Cleanup(userCleanup)
 
 		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				RSAPublicKey:   sdk.String(key),
-				RSAPublicKeyFp: sdk.String(hash),
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					RSAPublicKey:   sdk.String(key),
+					RSAPublicKeyFp: sdk.String(hash),
+				},
 			},
 		}}
 
@@ -340,9 +389,11 @@ func TestInt_Users(t *testing.T) {
 		require.ErrorContains(t, err, "invalid property 'RSA_PUBLIC_KEY_FP' for 'USER'")
 
 		alterOpts = &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				RSAPublicKey2:   sdk.String(key2),
-				RSAPublicKey2Fp: sdk.String(hash2),
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					RSAPublicKey2:   sdk.String(key2),
+					RSAPublicKey2Fp: sdk.String(hash2),
+				},
 			},
 		}}
 
@@ -579,28 +630,29 @@ func TestInt_Users(t *testing.T) {
 		)
 
 		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
-			ObjectProperties: &sdk.UserObjectProperties{
-				Password:           sdk.String(password),
-				LoginName:          sdk.String(newValue),
-				DisplayName:        sdk.String(newValue),
-				FirstName:          sdk.String(newValue),
-				MiddleName:         sdk.String(newValue),
-				LastName:           sdk.String(newValue),
-				Email:              sdk.String(email),
-				MustChangePassword: sdk.Bool(true),
-				Disable:            sdk.Bool(true),
-				DaysToExpiry:       sdk.Int(5),
-				MinsToUnlock:       sdk.Int(15),
-				DefaultWarehouse:   sdk.Pointer(warehouseId),
-				DefaultNamespace:   sdk.Pointer(schemaIdObjectIdentifier),
-				DefaultRole:        sdk.Pointer(roleId),
-				DefaultSecondaryRoles: &sdk.SecondaryRoles{
-					Roles: []sdk.SecondaryRole{{Value: "ALL"}},
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Password:              sdk.String(password),
+					LoginName:             sdk.String(newValue),
+					DisplayName:           sdk.String(newValue),
+					FirstName:             sdk.String(newValue),
+					MiddleName:            sdk.String(newValue),
+					LastName:              sdk.String(newValue),
+					Email:                 sdk.String(email),
+					MustChangePassword:    sdk.Bool(true),
+					Disable:               sdk.Bool(true),
+					DaysToExpiry:          sdk.Int(5),
+					MinsToUnlock:          sdk.Int(15),
+					DefaultWarehouse:      sdk.Pointer(warehouseId),
+					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:           sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+					MinsToBypassMFA:       sdk.Int(30),
+					RSAPublicKey:          sdk.String(key),
+					RSAPublicKey2:         sdk.String(key2),
+					Comment:               sdk.String("some comment"),
 				},
-				MinsToBypassMFA: sdk.Int(30),
-				RSAPublicKey:    sdk.String(key),
-				RSAPublicKey2:   sdk.String(key2),
-				Comment:         sdk.String("some comment"),
+				DisableMfa: sdk.Bool(true),
 			},
 		}}
 
@@ -655,6 +707,7 @@ func TestInt_Users(t *testing.T) {
 				DefaultRole:           sdk.Bool(true),
 				DefaultSecondaryRoles: sdk.Bool(true),
 				MinsToBypassMFA:       sdk.Bool(true),
+				DisableMfa:            sdk.Bool(true),
 				RSAPublicKey:          sdk.Bool(true),
 				RSAPublicKey2:         sdk.Bool(true),
 				Comment:               sdk.Bool(true),
@@ -981,6 +1034,7 @@ func TestInt_Users(t *testing.T) {
 
 	// This test proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2817.
 	// sql: Scan error on column index 10, name "disabled": sql/driver: couldn't convert "null" into type bool
+	// TODO [SNOW-1348101 - next PR]: test what is visible if everything is set if there is no ownership on the active role
 	t.Run("issue #2817: handle show properly without OWNERSHIP and MANAGE GRANTS", func(t *testing.T) {
 		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
 		t.Cleanup(disabledUserCleanup)
@@ -1018,5 +1072,341 @@ func TestInt_Users(t *testing.T) {
 		fetchedDisabledUserDetails, err = client.Users.Describe(ctx, disabledUser.ID())
 		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
 		require.Nil(t, fetchedDisabledUserDetails)
+	})
+
+	t.Run("login_name and display_name inconsistencies", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// both login_name and display_name were unset so the name is used instead
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we unset both values (expecting that it will result in no change)
+		unsetBoth := &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					LoginName:   sdk.Bool(true),
+					DisplayName: sdk.Bool(true),
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// but login_name is unchanged whereas display_name is nulled out
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
+
+		// we set both values (expecting that it will result in no change)
+		// we use lowercase values on purpose (login_name acts differently than display_name)
+		setBoth := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						LoginName:   sdk.String(strings.ToLower(newValue)),
+						DisplayName: sdk.String(strings.ToLower(newValue)),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, setBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// they are both set but login_name is uppercase and display_name is lowercase
+		assert.Equal(t, strings.ToUpper(newValue), userDetails.LoginName.Value)
+		assert.Equal(t, strings.ToLower(newValue), userDetails.DisplayName.Value)
+
+		// we unset both again
+		err = client.Users.Alter(ctx, id, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// and login_name uses name as fallback and display_name does not
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
+	})
+
+	t.Run("default login_name and display_name when the name changes", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// login_name and display_name were not set so the name is used instead
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we rename user
+		newId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		rename := &sdk.AlterUserOptions{
+			NewName: newId,
+		}
+		err = client.Users.Alter(ctx, id, rename)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, newId)
+		require.NoError(t, err)
+		// login_name and display_name are unchanged
+		assert.Equal(t, id.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.DisplayName.Value)
+
+		// we unset both login_name and display_name
+		unsetBoth := &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					LoginName:   sdk.Bool(true),
+					DisplayName: sdk.Bool(true),
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, newId, unsetBoth)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, newId)
+		require.NoError(t, err)
+
+		// login_name and display_name are changed
+		assert.Equal(t, newId.Name(), userDetails.LoginName.Value)
+		assert.Equal(t, "", userDetails.DisplayName.Value)
+	})
+
+	t.Run("email casing is preserved in Snowflake", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Email: sdk.String(strings.ToUpper(email))}})
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		userShowOutput, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		// email is returned as uppercase both in describe and in show
+		assert.Equal(t, strings.ToUpper(email), userDetails.Email.Value)
+		assert.Equal(t, strings.ToUpper(email), userShowOutput.Email)
+
+		// we change it to lowercase
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						Email: sdk.String(strings.ToLower(email)),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		userShowOutput, err = client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+		// email is returned as lowercase both in describe and in show
+		assert.Equal(t, strings.ToLower(email), userDetails.Email.Value)
+		assert.Equal(t, strings.ToLower(email), userShowOutput.Email)
+	})
+
+	t.Run("days to expiry setting by hand to a negative value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DaysToExpiry: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// days to expiry is returned
+		assert.NotNil(t, userDetails.DaysToExpiry.Value)
+		assert.LessOrEqual(t, *userDetails.DaysToExpiry.Value, float64(-1))
+	})
+
+	t.Run("days to expiry set by hand to float value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set days to expiry manually to the float value
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`ALTER USER %s SET DAYS_TO_EXPIRY = 1.5`, id.FullyQualifiedName()))
+		require.ErrorContains(t, err, "invalid value [1.5] for parameter 'DAYS_TO_EXPIRY'")
+	})
+
+	t.Run("days to expiry setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DaysToExpiry: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// days to expiry is null
+		assert.Nil(t, userDetails.DaysToExpiry.Value)
+	})
+
+	t.Run("mins to unlock setting by hand to a negative value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is null by default
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToUnlock: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is returned but not negative but null
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
+	})
+
+	t.Run("mins to unlock set by hand to float value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// try to set mins to unlock manually to the float value
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`ALTER USER %s SET MINS_TO_UNLOCK = 1.5`, id.FullyQualifiedName()))
+		require.ErrorContains(t, err, "invalid value [1.5] for parameter 'MINS_TO_UNLOCK'")
+	})
+
+	t.Run("mins to unlock setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToUnlock: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is null
+		assert.Nil(t, userDetails.MinsToUnlock.Value)
+	})
+
+	t.Run("try to set disable mfa on create", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE USER %s DISABLE_MFA = TRUE`, id.FullyQualifiedName()))
+		if err == nil {
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+		}
+		require.ErrorContains(t, err, "invalid property 'DISABLE_MFA' for 'USER'")
+	})
+
+	t.Run("mins to bypass mfa setting by hand to a negative value", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to bypass mfa is null by default
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+
+		// try to set manually the negative value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToBypassMFA: sdk.Int(-1),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to unlock is returned but not negative but null
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("mins to bypass mfa setting by hand to zero", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		// setting manually to zero value
+		set := &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						MinsToBypassMFA: sdk.Int(0),
+					},
+				},
+			},
+		}
+		err = client.Users.Alter(ctx, id, set)
+		require.NoError(t, err)
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		// mins to bypass mfa is nil
+		require.Nil(t, userDetails.MinsToBypassMfa.Value)
 	})
 }

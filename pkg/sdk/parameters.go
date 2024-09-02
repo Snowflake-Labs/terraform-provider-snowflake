@@ -587,6 +587,67 @@ const (
 	UserParameterWeekStart                                UserParameter = "WEEK_START"
 )
 
+var AllUserParameters = []UserParameter{
+	UserParameterAbortDetachedQuery,
+	UserParameterAutocommit,
+	UserParameterBinaryInputFormat,
+	UserParameterBinaryOutputFormat,
+	UserParameterClientMemoryLimit,
+	UserParameterClientMetadataRequestUseConnectionCtx,
+	UserParameterClientPrefetchThreads,
+	UserParameterClientResultChunkSize,
+	UserParameterClientResultColumnCaseInsensitive,
+	UserParameterClientSessionKeepAlive,
+	UserParameterClientSessionKeepAliveHeartbeatFrequency,
+	UserParameterClientTimestampTypeMapping,
+	UserParameterDateInputFormat,
+	UserParameterDateOutputFormat,
+	UserParameterEnableUnloadPhysicalTypeOptimization,
+	UserParameterErrorOnNondeterministicMerge,
+	UserParameterErrorOnNondeterministicUpdate,
+	UserParameterGeographyOutputFormat,
+	UserParameterGeometryOutputFormat,
+	UserParameterJdbcTreatDecimalAsInt,
+	UserParameterJdbcTreatTimestampNtzAsUtc,
+	UserParameterJdbcUseSessionTimezone,
+	UserParameterJsonIndent,
+	UserParameterLockTimeout,
+	UserParameterLogLevel,
+	UserParameterMultiStatementCount,
+	UserParameterNoorderSequenceAsDefault,
+	UserParameterOdbcTreatDecimalAsInt,
+	UserParameterQueryTag,
+	UserParameterQuotedIdentifiersIgnoreCase,
+	UserParameterRowsPerResultset,
+	UserParameterS3StageVpceDnsName,
+	UserParameterSearchPath,
+	UserParameterSimulatedDataSharingConsumer,
+	UserParameterStatementQueuedTimeoutInSeconds,
+	UserParameterStatementTimeoutInSeconds,
+	UserParameterStrictJsonOutput,
+	UserParameterTimestampDayIsAlways24h,
+	UserParameterTimestampInputFormat,
+	UserParameterTimestampLtzOutputFormat,
+	UserParameterTimestampNtzOutputFormat,
+	UserParameterTimestampOutputFormat,
+	UserParameterTimestampTypeMapping,
+	UserParameterTimestampTzOutputFormat,
+	UserParameterTimezone,
+	UserParameterTimeInputFormat,
+	UserParameterTimeOutputFormat,
+	UserParameterTraceLevel,
+	UserParameterTransactionAbortOnError,
+	UserParameterTransactionDefaultIsolationLevel,
+	UserParameterTwoDigitCenturyStart,
+	UserParameterUnsupportedDdlAction,
+	UserParameterUseCachedResult,
+	UserParameterWeekOfYearPolicy,
+	UserParameterWeekStart,
+	UserParameterEnableUnredactedQuerySyntaxError,
+	UserParameterNetworkPolicy,
+	UserParameterPreventUnloadToInternalStages,
+}
+
 type WarehouseParameter string
 
 const (
@@ -594,6 +655,26 @@ const (
 	WarehouseParameterStatementQueuedTimeoutInSeconds WarehouseParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
 	WarehouseParameterStatementTimeoutInSeconds       WarehouseParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 )
+
+var AllSchemaParameters = []ObjectParameter{
+	ObjectParameterDataRetentionTimeInDays,
+	ObjectParameterMaxDataExtensionTimeInDays,
+	ObjectParameterExternalVolume,
+	ObjectParameterCatalog,
+	ObjectParameterReplaceInvalidCharacters,
+	ObjectParameterDefaultDDLCollation,
+	ObjectParameterStorageSerializationPolicy,
+	ObjectParameterLogLevel,
+	ObjectParameterTraceLevel,
+	ObjectParameterSuspendTaskAfterNumFailures,
+	ObjectParameterTaskAutoRetryAttempts,
+	ObjectParameterUserTaskManagedInitialWarehouseSize,
+	ObjectParameterUserTaskTimeoutMs,
+	ObjectParameterUserTaskMinimumTriggerIntervalInSeconds,
+	ObjectParameterQuotedIdentifiersIgnoreCase,
+	ObjectParameterEnableConsoleOutput,
+	ObjectParameterPipeExecutionPaused,
+}
 
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {

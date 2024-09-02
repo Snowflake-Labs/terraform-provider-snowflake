@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ Applications = (*applications)(nil)
@@ -43,7 +43,7 @@ func (v *applications) ShowByID(ctx context.Context, id AccountObjectIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(applications, func(r Application) bool { return r.Name == id.Name() })
+	return collections.FindFirst(applications, func(r Application) bool { return r.Name == id.Name() })
 }
 
 func (v *applications) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationProperty, error) {
