@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const StringDefaultValue = "Snowflake default value"
+
 var resourceMonitorSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
@@ -45,6 +47,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		// TODO: No default ? By default it's MONTHLY
+		Default:          StringDefaultValue,
 		RequiredWith:     []string{"start_timestamp"},
 		ValidateDiagFunc: sdkValidation(sdk.ToResourceMonitorFrequency),
 		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToResourceMonitorFrequency), IgnoreChangeToCurrentSnowflakeValueInShow("frequency")),
@@ -137,20 +140,20 @@ func CreateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		opts.With.NotifyUsers = &sdk.NotifyUsers{Users: users}
 	}
 
-	if v, ok := d.GetOk("frequency"); ok {
-		frequency, err := sdk.ToResourceMonitorFrequency(v.(string))
+	if v := d.Get("frequency").(string); v != SnowflakeReaderAccountType {
+		frequency, err := sdk.ToResourceMonitorFrequency(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		opts.With.Frequency = frequency
+		with.Frequency = frequency
 	}
 
 	if v, ok := d.GetOk("start_timestamp"); ok {
-		opts.With.StartTimestamp = sdk.Pointer(v.(string))
+		with.StartTimestamp = sdk.Pointer(v.(string))
 	}
 
 	if v, ok := d.GetOk("end_timestamp"); ok {
-		opts.With.EndTimestamp = sdk.Pointer(v.(string))
+		with.EndTimestamp = sdk.Pointer(v.(string))
 	}
 
 	if v, ok := d.GetOk("trigger"); ok {
@@ -158,7 +161,7 @@ func CreateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		opts.With.Triggers = triggerDefinitions
+		with.Triggers = triggerDefinitions
 	}
 
 	if !reflect.DeepEqual(*with, sdk.ResourceMonitorWith{}) {
@@ -214,8 +217,6 @@ func ReadResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("frequency", resourceMonitor.Frequency); err != nil {
 		return diag.FromErr(err)
 	}
-
-	// TODO: Do i read timestamps ???
 
 	var triggers []any
 
