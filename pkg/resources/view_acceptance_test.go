@@ -765,8 +765,8 @@ end;;
 						HasSchemaString(id.SchemaName()).
 						HasColumnLength(2),
 					objectassert.View(t, id).
-						HasNoMaskingPolicyReferences().
-						HasNoProjectionPolicyReferences(),
+						HasNoMaskingPolicyReferences(acc.TestClient()).
+						HasNoProjectionPolicyReferences(acc.TestClient()),
 				),
 			},
 			// With all policies on columns
@@ -781,8 +781,8 @@ end;;
 						HasSchemaString(id.SchemaName()).
 						HasColumnLength(2),
 					objectassert.View(t, id).
-						HasMaskingPolicyReferences(1).
-						HasProjectionPolicyReferences(1),
+						HasMaskingPolicyReferences(acc.TestClient(), 1).
+						HasProjectionPolicyReferences(acc.TestClient(), 1),
 				),
 			},
 			// Remove policies on columns externally
@@ -801,8 +801,8 @@ end;;
 						HasSchemaString(id.SchemaName()).
 						HasColumnLength(2),
 					objectassert.View(t, id).
-						HasMaskingPolicyReferences(1).
-						HasProjectionPolicyReferences(1),
+						HasMaskingPolicyReferences(acc.TestClient(), 1).
+						HasProjectionPolicyReferences(acc.TestClient(), 1),
 				),
 			},
 		},

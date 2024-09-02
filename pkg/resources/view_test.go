@@ -29,7 +29,6 @@ func Test_handleColumns(t *testing.T) {
 		InputColumns          []sdk.ViewDetails
 		InputPolicyReferences []sdk.PolicyReference
 		Expected              map[string]any
-		Error                 string
 	}{
 		{
 			InputColumns:          []sdk.ViewDetails{},
@@ -193,14 +192,8 @@ func Test_handleColumns(t *testing.T) {
 		t.Run(fmt.Sprintf("handle columns(%d): %v - %v", i, tc.InputColumns, tc.InputPolicyReferences), func(t *testing.T) {
 			valueSetter := newTestResourceValueSetter()
 			err := handleColumns(valueSetter, tc.InputColumns, tc.InputPolicyReferences)
-
-			if tc.Error != "" {
-				assert.NotNil(t, err)
-				assert.Contains(t, err.Error(), tc.Error)
-			} else {
-				assert.Nil(t, err)
-				assert.Equal(t, tc.Expected, valueSetter.internalMap)
-			}
+			assert.Nil(t, err)
+			assert.Equal(t, tc.Expected, valueSetter.internalMap)
 		})
 	}
 }
