@@ -86,6 +86,7 @@ func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
 // ComputedIfAnyAttributeChanged marks the given fields as computed if any of the listed fields changes.
 // It takes field-level diffSuppress into consideration based on the schema passed.
 // If the field is not found in the given schema, it continues without error.
+// TODO: diffSuppressFunc sometimes use the last param (d) and we can't get it from the resource diff (ResourceDiff != ResourceData)
 func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		var result bool
