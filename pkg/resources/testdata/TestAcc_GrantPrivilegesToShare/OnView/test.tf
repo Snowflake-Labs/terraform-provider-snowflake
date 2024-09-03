@@ -28,6 +28,9 @@ resource "snowflake_view" "test" {
   schema    = snowflake_schema.test.name
   is_secure = true
   statement = "select \"id\" from \"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
+  column {
+    column_name = "id"
+  }
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {

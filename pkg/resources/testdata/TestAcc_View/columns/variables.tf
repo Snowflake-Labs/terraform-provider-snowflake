@@ -14,6 +14,14 @@ variable "statement" {
   type = string
 }
 
-variable "columns" {
-  type = set(map(string))
+variable "projection_name" {
+  type = string
+}
+
+variable "masking_name" {
+  type = string
+}
+
+variable "masking_using" {
+  type = list(string)
 }

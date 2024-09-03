@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -101,19 +103,13 @@ var viewSchema = map[string]*schema.Schema{
 					},
 					Description: "The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.",
 				},
-				// TODO (SNOW-1348118 - next pr)
-				// "schedule_status": {
-				// 	Type:             schema.TypeString,
-				// 	Optional:         true,
-				// 	ValidateDiagFunc: sdkValidation(sdk.ToAllowedDataMetricScheduleStatusOption),
-				// 	Description:      fmt.Sprintf("The status of the metrics association. Valid values are: %v. When status of a data metric function is changed, it is being reassigned with `DROP DATA METRIC FUNCTION` and `ADD DATA METRIC FUNCTION`, and then its status is changed by `MODIFY DATA METRIC FUNCTION` ", possibleValuesListed(sdk.AllAllowedDataMetricScheduleStatusOptions)),
-				// 	DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToAllowedDataMetricScheduleStatusOption), func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
-				// 		if newValue == "" {
-				// 			return true
-				// 		}
-				// 		return false
-				// 	}),
-				// },
+				"schedule_status": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: sdkValidation(sdk.ToAllowedDataMetricScheduleStatusOption),
+					Description:      fmt.Sprintf("The status of the metrics association. Valid values are: %v. When status of a data metric function is changed, it is being reassigned with `DROP DATA METRIC FUNCTION` and `ADD DATA METRIC FUNCTION`, and then its status is changed by `MODIFY DATA METRIC FUNCTION` ", possibleValuesListed(sdk.AllAllowedDataMetricScheduleStatusOptions)),
+					DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToAllowedDataMetricScheduleStatusOption)),
+				},
 			},
 		},
 		Description:  "Data metric functions used for the view.",
@@ -143,53 +139,63 @@ var viewSchema = map[string]*schema.Schema{
 		Description:  "Specifies the schedule to run the data metric functions periodically.",
 		RequiredWith: []string{"data_metric_function"},
 	},
-	// TODO (SNOW-1348118 - next pr): add columns
-	// "column": {
-	// 	Type:     schema.TypeList,
-	// 	Optional: true,
-	// 	Elem: &schema.Resource{
-	// 		Schema: map[string]*schema.Schema{
-	// 			"column_name": {
-	// 				Type:        schema.TypeString,
-	// 				Required:    true,
-	// 				Description: "Specifies affected column name.",
-	// 			},
-	// 			"masking_policy": {
-	// 				Type:     schema.TypeList,
-	// 				Optional: true,
-	// 				Elem: &schema.Resource{
-	// 					Schema: map[string]*schema.Schema{
-	// 						"policy_name": {
-	// 							Type:        schema.TypeString,
-	// 							Required:    true,
-	// 							Description: "Specifies the masking policy to set on a column.",
-	// 						},
-	// 						"using": {
-	// 							Type:     schema.TypeList,
-	// 							Optional: true,
-	// 							Elem: &schema.Schema{
-	// 								Type: schema.TypeString,
-	// 							},
-	// 							Description: "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
-	// 						},
-	// 					},
-	// 				},
-	// 			},
-	// 			"projection_policy": {
-	// 				Type:             schema.TypeString,
-	// 				Optional:         true,
-	// 				DiffSuppressFunc: DiffSuppressStatement,
-	// 				Description:      "Specifies the projection policy to set on a column.",
-	// 			},
-	// 			"comment": {
-	// 				Type:        schema.TypeString,
-	// 				Optional:    true,
-	// 				Description: "Specifies a comment for the column.",
-	// 			},
-	// 		},
-	// 	},
-	// 	Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
-	// },
+	"column": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Specifies affected column name.",
+				},
+				"masking_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"policy_name": {
+								Type:             schema.TypeString,
+								Required:         true,
+								DiffSuppressFunc: suppressIdentifierQuoting,
+								Description:      "Specifies the masking policy to set on a column.",
+							},
+							"using": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+								Description: "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
+							},
+						},
+					},
+				},
+				"projection_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"policy_name": {
+								Type:             schema.TypeString,
+								Required:         true,
+								DiffSuppressFunc: suppressIdentifierQuoting,
+								Description:      "Specifies the projection policy to set on a column.",
+							},
+						},
+					},
+				},
+				"comment": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Specifies a comment for the column.",
+				},
+			},
+		},
+		Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -383,8 +389,16 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			req.WithComment(v)
 		}
 
+		if v := d.Get("column"); len(v.([]any)) > 0 {
+			columns, err := extractColumns(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			req.WithColumns(columns)
+		}
+
 		if v := d.Get("row_access_policy"); len(v.([]any)) > 0 {
-			id, columns, err := extractPolicyWithColumns(v, "on")
+			id, columns, err := extractPolicyWithColumnsSet(v, "on")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -392,7 +406,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 		}
 
 		if v := d.Get("aggregation_policy"); len(v.([]any)) > 0 {
-			id, columns, err := extractPolicyWithColumns(v, "entity_key")
+			id, columns, err := extractPolicyWithColumnsSet(v, "entity_key")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -452,49 +466,114 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
-			// TODO (SNOW-1348118 - next pr)
-			// changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
-			// for i := range addedRaw {
-			// 	if addedRaw[i].ScheduleStatus != "" {
-			// 		expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(addedRaw[i].ScheduleStatus)
-			// 		if err != nil {
-			// 			return diag.FromErr(err)
-			// 		}
-			// 		var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
-			// 		switch expectedStatus {
-			// 		case sdk.DataMetricScheduleStatusStarted:
-			// 			statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
-			// 		case sdk.DataMetricScheduleStatusSuspended:
-			// 			statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
-			// 		default:
-			// 			return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
-			// 		}
-			// 		changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
-			// 			DataMetricFunction: addedRaw[i].DataMetricFunction,
-			// 			On:                 addedRaw[i].On,
-			// 			ViewDataMetricScheduleStatusOperationOption: statusCmd,
-			// 		})
-			// 	}
-			// }
-			// if len(changeSchedule) > 0 {
-			// 	err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
-			// 	if err != nil {
-			// 		return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
-			// 	}
-			// }
+			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
+			for i := range addedRaw {
+				if addedRaw[i].ScheduleStatus != "" {
+					expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(addedRaw[i].ScheduleStatus)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
+					switch expectedStatus {
+					case sdk.DataMetricScheduleStatusStarted:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
+					case sdk.DataMetricScheduleStatusSuspended:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
+					default:
+						return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
+					}
+					changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
+						DataMetricFunction: addedRaw[i].DataMetricFunction,
+						On:                 addedRaw[i].On,
+						ViewDataMetricScheduleStatusOperationOption: statusCmd,
+					})
+				}
+			}
+			if len(changeSchedule) > 0 {
+				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
+				if err != nil {
+					return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				}
+			}
 		}
 
 		return ReadView(false)(ctx, d, meta)
 	}
 }
 
-func extractPolicyWithColumns(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column, error) {
+func extractColumns(v any) ([]sdk.ViewColumnRequest, error) {
+	_, ok := v.([]any)
+	if v == nil || !ok {
+		return nil, fmt.Errorf("unable to extract columns, input is either nil or non expected type (%T): %v", v, v)
+	}
+	columns := make([]sdk.ViewColumnRequest, len(v.([]any)))
+	for i, columnConfigRaw := range v.([]any) {
+		columnConfig, ok := columnConfigRaw.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("unable to extract column, non expected type of %T: %v", columnConfigRaw, columnConfigRaw)
+		}
+
+		columnName, ok := columnConfig["column_name"]
+		if !ok {
+			return nil, fmt.Errorf("unable to extract column, missing column_name key in column")
+		}
+		columnsReq := *sdk.NewViewColumnRequest(columnName.(string))
+
+		projectionPolicy, ok := columnConfig["projection_policy"]
+		if ok && len(projectionPolicy.([]any)) > 0 {
+			projectionPolicyId, _, err := extractPolicyWithColumnsSet(projectionPolicy, "")
+			if err != nil {
+				return nil, err
+			}
+			columnsReq.WithProjectionPolicy(*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicyId))
+		}
+
+		maskingPolicy, ok := columnConfig["masking_policy"]
+		if ok && len(maskingPolicy.([]any)) > 0 {
+			maskingPolicyId, maskingPolicyColumns, err := extractPolicyWithColumnsList(maskingPolicy, "using")
+			if err != nil {
+				return nil, err
+			}
+			columnsReq.WithMaskingPolicy(*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicyId).WithUsing(maskingPolicyColumns))
+		}
+
+		comment, ok := columnConfig["comment"]
+		if ok && len(comment.(string)) > 0 {
+			columnsReq.WithComment(comment.(string))
+		}
+
+		columns[i] = columnsReq
+	}
+	return columns, nil
+}
+
+func extractPolicyWithColumnsSet(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column, error) {
 	policyConfig := v.([]any)[0].(map[string]any)
 	id, err := sdk.ParseSchemaObjectIdentifier(policyConfig["policy_name"].(string))
 	if err != nil {
 		return sdk.SchemaObjectIdentifier{}, nil, err
 	}
+	if policyConfig[columnsKey] == nil {
+		return id, nil, nil
+	}
 	columnsRaw := expandStringList(policyConfig[columnsKey].(*schema.Set).List())
+	columns := make([]sdk.Column, len(columnsRaw))
+	for i := range columnsRaw {
+		columns[i] = sdk.Column{Value: columnsRaw[i]}
+	}
+	return id, columns, nil
+}
+
+func extractPolicyWithColumnsList(v any, columnsKey string) (sdk.SchemaObjectIdentifier, []sdk.Column, error) {
+	policyConfig := v.([]any)[0].(map[string]any)
+	id, err := sdk.ParseSchemaObjectIdentifier(policyConfig["policy_name"].(string))
+	if err != nil {
+		return sdk.SchemaObjectIdentifier{}, nil, err
+	}
+	if policyConfig[columnsKey] == nil {
+		return id, nil, fmt.Errorf("unable to extract policy with column list, unable to find columnsKey: %s", columnsKey)
+	}
+	columnsRaw := expandStringList(policyConfig[columnsKey].([]any))
 	columns := make([]sdk.Column, len(columnsRaw))
 	for i := range columnsRaw {
 		columns[i] = sdk.Column{Value: columnsRaw[i]}
@@ -558,8 +637,11 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-
-		err = handlePolicyReferences(ctx, client, id, d)
+		policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("getting policy references for view: %w", err))
+		}
+		err = handlePolicyReferences(policyRefs, d)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -588,6 +670,10 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 			if err = d.Set(DescribeOutputAttributeName, schemas.ViewDescriptionToSchema(describeResult)); err != nil {
 				return diag.FromErr(err)
 			}
+			err = handleColumns(d, describeResult, policyRefs)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 
 		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.ViewToSchema(view)}); err != nil {
@@ -597,11 +683,7 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 	}
 }
 
-func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
-	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainView))
-	if err != nil {
-		return fmt.Errorf("getting policy references for view: %w", err)
-	}
+func handlePolicyReferences(policyRefs []sdk.PolicyReference, d *schema.ResourceData) error {
 	var aggregationPolicies []map[string]any
 	var rowAccessPolicies []map[string]any
 	for _, p := range policyRefs {
@@ -626,16 +708,16 @@ func handlePolicyReferences(ctx context.Context, client *sdk.Client, id sdk.Sche
 				"on":          on,
 			})
 		default:
-			log.Printf("[WARN] unexpected policy kind %v in policy references returned from Snowflake", p.PolicyKind)
+			log.Printf("[DEBUG] unexpected policy kind %v in policy references returned from Snowflake", p.PolicyKind)
 		}
 	}
-	if err = d.Set("aggregation_policy", aggregationPolicies); err != nil {
+	if err := d.Set("aggregation_policy", aggregationPolicies); err != nil {
 		return err
 	}
-	if err = d.Set("row_access_policy", rowAccessPolicies); err != nil {
+	if err := d.Set("row_access_policy", rowAccessPolicies); err != nil {
 		return err
 	}
-	return err
+	return nil
 }
 
 func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
@@ -654,22 +736,21 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 		for _, v := range dmfRef.RefArguments {
 			columns = append(columns, v.Name)
 		}
-		// TODO (SNOW-1348118 - next pr)
-		// var scheduleStatus sdk.DataMetricScheduleStatusOption
-		// status, err := sdk.ToDataMetricScheduleStatusOption(dmfRef.ScheduleStatus)
-		// if err != nil {
-		// 	return err
-		// }
-		// if slices.Contains(sdk.AllDataMetricScheduleStatusStartedOptions, status) {
-		// 	scheduleStatus = sdk.DataMetricScheduleStatusStarted
-		// }
-		// if slices.Contains(sdk.AllDataMetricScheduleStatusSuspendedOptions, status) {
-		// 	scheduleStatus = sdk.DataMetricScheduleStatusSuspended
-		// }
+		var scheduleStatus sdk.DataMetricScheduleStatusOption
+		status, err := sdk.ToDataMetricScheduleStatusOption(dmfRef.ScheduleStatus)
+		if err != nil {
+			return err
+		}
+		if slices.Contains(sdk.AllDataMetricScheduleStatusStartedOptions, status) {
+			scheduleStatus = sdk.DataMetricScheduleStatusStarted
+		}
+		if slices.Contains(sdk.AllDataMetricScheduleStatusSuspendedOptions, status) {
+			scheduleStatus = sdk.DataMetricScheduleStatusSuspended
+		}
 		dataMetricFunctions[i] = map[string]any{
-			"function_name": dmfName.FullyQualifiedName(),
-			"on":            columns,
-			// "schedule_status": string(scheduleStatus),
+			"function_name":   dmfName.FullyQualifiedName(),
+			"on":              columns,
+			"schedule_status": string(scheduleStatus),
 		}
 		schedule = dmfRef.Schedule
 	}
@@ -682,6 +763,57 @@ func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.S
 			"using_cron": schedule,
 		},
 	})
+}
+
+func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs []sdk.PolicyReference) error {
+	if len(columns) == 0 {
+		return d.Set("column", nil)
+	}
+	columnsRaw := make([]map[string]any, len(columns))
+	for i, column := range columns {
+		columnsRaw[i] = map[string]any{
+			"column_name": column.Name,
+		}
+		if column.Comment != nil {
+			columnsRaw[i]["comment"] = *column.Comment
+		} else {
+			columnsRaw[i]["comment"] = nil
+		}
+		projectionPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
+			return r.PolicyKind == sdk.PolicyKindProjectionPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
+		})
+		if err == nil {
+			if projectionPolicy.PolicyDb != nil && projectionPolicy.PolicySchema != nil {
+				columnsRaw[i]["projection_policy"] = []map[string]any{
+					{
+						"policy_name": sdk.NewSchemaObjectIdentifier(*projectionPolicy.PolicyDb, *projectionPolicy.PolicySchema, projectionPolicy.PolicyName).FullyQualifiedName(),
+					},
+				}
+			} else {
+				log.Printf("could not store projection policy name: policy db and schema can not be empty")
+			}
+		}
+		maskingPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
+			return r.PolicyKind == sdk.PolicyKindMaskingPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
+		})
+		if err == nil {
+			if maskingPolicy.PolicyDb != nil && maskingPolicy.PolicySchema != nil {
+				var usingArgs []string
+				if maskingPolicy.RefArgColumnNames != nil {
+					usingArgs = sdk.ParseCommaSeparatedStringArray(*maskingPolicy.RefArgColumnNames, true)
+				}
+				columnsRaw[i]["masking_policy"] = []map[string]any{
+					{
+						"policy_name": sdk.NewSchemaObjectIdentifier(*maskingPolicy.PolicyDb, *maskingPolicy.PolicySchema, maskingPolicy.PolicyName).FullyQualifiedName(),
+						"using":       append([]string{*maskingPolicy.RefColumnName}, usingArgs...),
+					},
+				}
+			} else {
+				log.Printf("could not store masking policy name: policy db and schema can not be empty")
+			}
+		}
+	}
+	return d.Set("column", columnsRaw)
 }
 
 type ViewDataMetricFunctionConfig struct {
@@ -705,8 +837,7 @@ func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionConfig, err
 		dmfs = append(dmfs, ViewDataMetricFunctionConfig{
 			DataMetricFunction: id,
 			On:                 columns,
-			// TODO (SNOW-1348118 - next pr)
-			// ScheduleStatus:     config["schedule_status"].(string),
+			ScheduleStatus:     config["schedule_status"].(string),
 		})
 	}
 	return
@@ -730,8 +861,8 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
-	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") {
-		log.Printf("[DEBUG] Detected change on %q, recreating...", changedKeys(d, []string{"statement", "is_temporary", "is_recursive", "copy_grant"}))
+	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") || d.HasChange("column") {
+		log.Printf("[DEBUG] Detected change on %q, recreating...", changedKeys(d, []string{"statement", "is_temporary", "is_recursive", "copy_grant", "column"}))
 		return CreateView(true)(ctx, d, meta)
 	}
 
@@ -820,20 +951,37 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	if d.HasChange("data_metric_function") {
 		old, new := d.GetChange("data_metric_function")
 		removedRaw, addedRaw := old.(*schema.Set).List(), new.(*schema.Set).List()
-		addedConfig, err := extractDataMetricFunctions(addedRaw)
+		addedConfigs, err := extractDataMetricFunctions(addedRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		removedConfig, err := extractDataMetricFunctions(removedRaw)
+		removedConfigs, err := extractDataMetricFunctions(removedRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if len(removedConfig) > 0 {
-			removed := make([]sdk.ViewDataMetricFunction, len(removedConfig))
-			for i := range removedConfig {
+
+		addedConfigsCopy := slices.Clone(addedConfigs)
+		statusChangeConfig := make([]ViewDataMetricFunctionConfig, 0)
+
+		for i, addedConfig := range addedConfigsCopy {
+			removedConfigDeleteIndex := slices.IndexFunc(removedConfigs, func(removedConfig ViewDataMetricFunctionConfig) bool {
+				return slices.Equal(addedConfig.On, removedConfig.On) &&
+					addedConfig.DataMetricFunction.FullyQualifiedName() == removedConfig.DataMetricFunction.FullyQualifiedName() &&
+					addedConfig.ScheduleStatus != removedConfig.ScheduleStatus
+			})
+			if removedConfigDeleteIndex != -1 {
+				addedConfigs = append(addedConfigs[:i], addedConfigs[i+1:]...)
+				removedConfigs = append(removedConfigs[:removedConfigDeleteIndex], removedConfigs[removedConfigDeleteIndex+1:]...)
+				statusChangeConfig = append(statusChangeConfig, addedConfigsCopy[i])
+			}
+		}
+
+		if len(removedConfigs) > 0 {
+			removed := make([]sdk.ViewDataMetricFunction, len(removedConfigs))
+			for i := range removedConfigs {
 				removed[i] = sdk.ViewDataMetricFunction{
-					DataMetricFunction: removedConfig[i].DataMetricFunction,
-					On:                 removedConfig[i].On,
+					DataMetricFunction: removedConfigs[i].DataMetricFunction,
+					On:                 removedConfigs[i].On,
 				}
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest(removed)))
@@ -841,15 +989,46 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
 		}
-		if len(addedConfig) > 0 {
-			added := make([]sdk.ViewDataMetricFunction, len(addedConfig))
-			for i := range addedConfig {
+
+		if len(addedConfigs) > 0 {
+			added := make([]sdk.ViewDataMetricFunction, len(addedConfigs))
+			for i := range addedConfigs {
 				added[i] = sdk.ViewDataMetricFunction{
-					DataMetricFunction: addedConfig[i].DataMetricFunction,
-					On:                 addedConfig[i].On,
+					DataMetricFunction: addedConfigs[i].DataMetricFunction,
+					On:                 addedConfigs[i].On,
 				}
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added)))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+			}
+		}
+
+		if len(statusChangeConfig) > 0 {
+			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(statusChangeConfig))
+			for i := range statusChangeConfig {
+				if statusChangeConfig[i].ScheduleStatus != "" {
+					expectedStatus, err := sdk.ToAllowedDataMetricScheduleStatusOption(statusChangeConfig[i].ScheduleStatus)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					var statusCmd sdk.ViewDataMetricScheduleStatusOperationOption
+					switch expectedStatus {
+					case sdk.DataMetricScheduleStatusStarted:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationResume
+					case sdk.DataMetricScheduleStatusSuspended:
+						statusCmd = sdk.ViewDataMetricScheduleStatusOperationSuspend
+					default:
+						return diag.FromErr(fmt.Errorf("unexpected data metric function status: %v", expectedStatus))
+					}
+					changeSchedule = append(changeSchedule, sdk.ViewModifyDataMetricFunction{
+						DataMetricFunction: statusChangeConfig[i].DataMetricFunction,
+						On:                 statusChangeConfig[i].On,
+						ViewDataMetricScheduleStatusOperationOption: statusCmd,
+					})
+				}
+			}
+			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
 			}
@@ -862,14 +1041,14 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 		oldRaw, newRaw := d.GetChange("row_access_policy")
 		if len(oldRaw.([]any)) > 0 {
-			oldId, _, err := extractPolicyWithColumns(oldRaw, "on")
+			oldId, _, err := extractPolicyWithColumnsSet(oldRaw, "on")
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			dropReq = sdk.NewViewDropRowAccessPolicyRequest(oldId)
 		}
 		if len(newRaw.([]any)) > 0 {
-			newId, newColumns, err := extractPolicyWithColumns(newRaw, "on")
+			newId, newColumns, err := extractPolicyWithColumnsSet(newRaw, "on")
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -890,7 +1069,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 	if d.HasChange("aggregation_policy") {
 		if v, ok := d.GetOk("aggregation_policy"); ok {
-			newId, newColumns, err := extractPolicyWithColumns(v, "entity_key")
+			newId, newColumns, err := extractPolicyWithColumnsSet(v, "entity_key")
 			if err != nil {
 				return diag.FromErr(err)
 			}

@@ -31,7 +31,7 @@ func (c *ProjectionPolicyClient) CreateProjectionPolicy(t *testing.T) (sdk.Schem
 	ctx := context.Background()
 
 	id := c.ids.RandomSchemaObjectIdentifier()
-	_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`CREATE PROJECTION POLICY %s AS () RETURNS PROJECTION_CONSTRAINT -> PROJECTION_CONSTRAINT(ALLOW => false)`, id.Name()))
+	_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`CREATE PROJECTION POLICY %s AS () RETURNS PROJECTION_CONSTRAINT -> PROJECTION_CONSTRAINT(ALLOW => false)`, id.FullyQualifiedName()))
 	require.NoError(t, err)
 	return id, c.DropProjectionPolicyFunc(t, id)
 }
@@ -41,7 +41,7 @@ func (c *ProjectionPolicyClient) DropProjectionPolicyFunc(t *testing.T, id sdk.S
 	ctx := context.Background()
 
 	return func() {
-		_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`DROP PROJECTION POLICY IF EXISTS %s`, id.Name()))
+		_, err := c.client().ExecForTests(ctx, fmt.Sprintf(`DROP PROJECTION POLICY IF EXISTS %s`, id.FullyQualifiedName()))
 		require.NoError(t, err)
 	}
 }

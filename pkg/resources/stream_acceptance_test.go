@@ -295,6 +295,12 @@ resource "snowflake_view" "test" {
 	change_tracking = true
 
 	statement = "select * from \"${snowflake_table.test.name}\""
+	column {
+		column_name = "column1"
+	}
+	column {
+		column_name = "column2"
+	}
 }
 
 resource "snowflake_stream" "test_stream" {

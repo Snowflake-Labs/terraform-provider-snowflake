@@ -65,3 +65,26 @@ variable "data_metric_function" {
 variable "data_metric_function_on" {
   type = list(string)
 }
+
+variable "column1_name" {
+  type = string
+}
+
+variable "column1_comment" {
+  type = string
+}
+variable "column2_name" {
+  type = string
+}
+
+variable "column2_masking_policy" {
+  type = string
+}
+
+variable "column2_masking_policy_using" {
+  type = list(string)
+}
+
+variable "column2_projection_policy" {
+  type = string
+}

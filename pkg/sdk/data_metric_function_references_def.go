@@ -46,6 +46,7 @@ var AllDataMetricScheduleStatusSuspendedOptions = []DataMetricScheduleStatusOpti
 	DataMetricScheduleStatusSuspendedTableColumnDoesNotExistOrNotAuthorized,
 	DataMetricScheduleStatusSuspendedInsufficientPrivilegeToExecuteDataMetricFunction,
 	DataMetricScheduleStatusSuspendedActiveEventTableDoesNotExistOrNotAuthorized,
+	DataMetricScheduleStatusSuspendedByUserAction,
 }
 
 func ToAllowedDataMetricScheduleStatusOption(s string) (DataMetricScheduleStatusOption, error) {

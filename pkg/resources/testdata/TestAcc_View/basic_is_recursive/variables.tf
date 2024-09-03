@@ -14,6 +14,10 @@ variable "statement" {
   type = string
 }
 
+variable "is_recursive" {
+  type = bool
+}
+
 variable "columns" {
   type = set(map(string))
 }

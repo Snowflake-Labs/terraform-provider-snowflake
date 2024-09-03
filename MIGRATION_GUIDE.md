@@ -23,6 +23,22 @@ across different versions.
     - `comment`
     - `owner_role_type`
 
+### snowflake_views data source changes
+New filtering options:
+- `in`
+- `like`
+- `starts_with`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `views` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field. 
+
 ### snowflake_view resource changes
 New fields:
   - `row_access_policy`
@@ -32,6 +48,7 @@ New fields:
   - `is_temporary`
   - `data_metric_schedule`
   - `data_metric_function`
+  - `column`
 - added `show_output` field that holds the response from SHOW VIEWS.
 - added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
 

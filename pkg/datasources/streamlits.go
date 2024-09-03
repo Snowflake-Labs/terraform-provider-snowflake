@@ -88,7 +88,7 @@ var streamlitsSchema = map[string]*schema.Schema{
 				resources.DescribeOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
-					Description: "Holds the output of DESCRIBE STREAMLITS.",
+					Description: "Holds the output of DESCRIBE STREAMLIT.",
 					Elem: &schema.Resource{
 						Schema: schemas.DescribeStreamlitSchema,
 					},

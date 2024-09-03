@@ -38,7 +38,7 @@ resource "snowflake_view" "view" {
     select * from foo;
 SQL
 }
-# resource with attached policies and data metric functions
+# resource with attached policies, columns and data metric functions
 resource "snowflake_view" "test" {
   database        = "database"
   schema          = "schema"
@@ -47,6 +47,20 @@ resource "snowflake_view" "test" {
   is_secure       = "true"
   change_tracking = "true"
   is_temporary    = "true"
+  column {
+    column_name = "id"
+    comment     = "column comment"
+  }
+  column {
+    column_name = "address"
+    projection_policy {
+      policy_name = "projection_policy"
+    }
+    masking_policy {
+      policy_name = "masking_policy"
+      using       = ["address"]
+    }
+  }
   row_access_policy {
     policy_name = "row_access_policy"
     on          = ["id"]
@@ -63,7 +77,7 @@ resource "snowflake_view" "test" {
     using_cron = "15 * * * * UTC"
   }
   statement = <<-SQL
-    SELECT id FROM TABLE;
+    SELECT id, address FROM TABLE;
 SQL
 }
 ```
@@ -84,6 +98,7 @@ SQL
 
 - `aggregation_policy` (Block List, Max: 1) Specifies the aggregation policy to set on a view. (see [below for nested schema](#nestedblock--aggregation_policy))
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
+- `column` (Block List) If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.) (see [below for nested schema](#nestedblock--column))
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
 - `data_metric_function` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_function))
@@ -112,6 +127,40 @@ Optional:
 - `entity_key` (Set of String) Defines which columns uniquely identify an entity within the view.
 
 
+<a id="nestedblock--column"></a>
+### Nested Schema for `column`
+
+Required:
+
+- `column_name` (String) Specifies affected column name.
+
+Optional:
+
+- `comment` (String) Specifies a comment for the column.
+- `masking_policy` (Block List, Max: 1) (see [below for nested schema](#nestedblock--column--masking_policy))
+- `projection_policy` (Block List, Max: 1) (see [below for nested schema](#nestedblock--column--projection_policy))
+
+<a id="nestedblock--column--masking_policy"></a>
+### Nested Schema for `column.masking_policy`
+
+Required:
+
+- `policy_name` (String) Specifies the masking policy to set on a column.
+
+Optional:
+
+- `using` (List of String) Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.
+
+
+<a id="nestedblock--column--projection_policy"></a>
+### Nested Schema for `column.projection_policy`
+
+Required:
+
+- `policy_name` (String) Specifies the projection policy to set on a column.
+
+
+
 <a id="nestedblock--data_metric_function"></a>
 ### Nested Schema for `data_metric_function`
 
@@ -119,6 +168,7 @@ Required:
 
 - `function_name` (String) Identifier of the data metric function to add to the table or view or drop from the table or view. This function identifier must be provided without arguments in parenthesis.
 - `on` (Set of String) The table or view columns on which to associate the data metric function. The data types of the columns must match the data types of the columns specified in the data metric function definition.
+- `schedule_status` (String) The status of the metrics association. Valid values are: `STARTED` | `SUSPENDED`. When status of a data metric function is changed, it is being reassigned with `DROP DATA METRIC FUNCTION` and `ADD DATA METRIC FUNCTION`, and then its status is changed by `MODIFY DATA METRIC FUNCTION`
 
 
 <a id="nestedblock--data_metric_schedule"></a>

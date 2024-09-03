@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"unicode"
 )
@@ -42,24 +43,70 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeToken("if not exists")
 	e.consumeSpace()
 	e.consumeID()
-	// TODO column list
+	e.consumeSpace()
+	e.consumeColumns()
 	e.consumeSpace()
 	e.consumeToken("copy grants")
 	e.consumeComment()
 	e.consumeSpace()
 	e.consumeComment()
 	e.consumeSpace()
-	e.extractRowAccessPolicy()
-	e.extractAggregationPolicy()
+	e.consumeRowAccessPolicy()
+	e.consumeAggregationPolicy()
 	e.consumeToken("as")
 	e.consumeSpace()
 
-	fmt.Printf("[DEBUG] extracted statement %s from view query %s\n", string(e.input[e.pos:]), string(e.input))
+	log.Printf("[DEBUG] extracted statement %s from view query %s\n", string(e.input[e.pos:]), string(e.input))
 
 	return string(e.input[e.pos:]), nil
 }
 
-func (e *ViewSelectStatementExtractor) extractRowAccessPolicy() {
+func (e *ViewSelectStatementExtractor) consumeColumns() {
+	ok := e.consumeToken("(")
+	if !ok {
+		return
+	}
+	for {
+		isLast := e.consumeColumn()
+		if isLast {
+			break
+		}
+	}
+}
+
+func (e *ViewSelectStatementExtractor) consumeColumn() (isLast bool) {
+	e.consumeSpace()
+	e.consumeID()
+	if e.input[e.pos-1] == ')' {
+		isLast = true
+	}
+	e.consumeSpace()
+	ok := e.consumeToken("projection policy")
+	if ok {
+		e.consumeSpace()
+		e.consumeID()
+		if e.input[e.pos-1] == ')' {
+			isLast = true
+		}
+		e.consumeSpace()
+	}
+	ok = e.consumeToken("masking policy")
+	if ok {
+		e.consumeSpace()
+		e.consumeID()
+		e.consumeSpace()
+		e.consumeToken("using")
+		e.consumeSpace()
+		e.consumeIdentifierList()
+		if string(e.input[e.pos-2:e.pos]) == "))" {
+			isLast = true
+		}
+		e.consumeSpace()
+	}
+	return
+}
+
+func (e *ViewSelectStatementExtractor) consumeRowAccessPolicy() {
 	ok := e.consumeToken("row access policy")
 	if !ok {
 		return
@@ -69,11 +116,11 @@ func (e *ViewSelectStatementExtractor) extractRowAccessPolicy() {
 	e.consumeSpace()
 	e.consumeToken("on")
 	e.consumeSpace()
-	e.extractIdentifierList()
+	e.consumeIdentifierList()
 	e.consumeSpace()
 }
 
-func (e *ViewSelectStatementExtractor) extractAggregationPolicy() {
+func (e *ViewSelectStatementExtractor) consumeAggregationPolicy() {
 	ok := e.consumeToken("aggregation policy")
 	if !ok {
 		return
@@ -83,11 +130,11 @@ func (e *ViewSelectStatementExtractor) extractAggregationPolicy() {
 	e.consumeSpace()
 	e.consumeToken("entity key")
 	e.consumeSpace()
-	e.extractIdentifierList()
+	e.consumeIdentifierList()
 	e.consumeSpace()
 }
 
-func (e *ViewSelectStatementExtractor) extractIdentifierList() {
+func (e *ViewSelectStatementExtractor) consumeIdentifierList() {
 	e.consumeSpace()
 	if !e.consumeToken("(") {
 		return
@@ -95,7 +142,7 @@ func (e *ViewSelectStatementExtractor) extractIdentifierList() {
 	for {
 		e.consumeSpace()
 		e.consumeID()
-		if e.input[e.pos-1] == ')' {
+		if e.input[e.pos-1] == ')' || strings.HasSuffix(string(e.input[e.pos-2:e.pos]), "),") {
 			break
 		}
 		e.consumeSpace()
