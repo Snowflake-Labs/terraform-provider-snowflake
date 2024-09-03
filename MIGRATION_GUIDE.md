@@ -289,6 +289,16 @@ Changes:
 
 Connected issues: [#2902](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2902)
 
+#### *(breaking change)* snowflake_user_public_keys usage with snowflake_user
+
+`snowflake_user_public_keys` is a resource allowing to set keys for the given user. Before this version, it was possible to have `snowflake_user` and `snowflake_user_public_keys` used next to each other.
+Because the logic handling the keys in `snowflake_user` was fixed, it is advised to use `snowflake_user_public_keys` only when user is not managed through terraform. Having both resources configured for the same user will result in improper behavior.
+
+To migrate, in case of having two resources:
+- copy the keys to `rsa_public_key` and `rsa_public_key2` in `snowflake_user`
+- remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_user_public_keys` from config
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
