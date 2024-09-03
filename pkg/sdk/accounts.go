@@ -262,7 +262,7 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 // ShowAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-organisation-accounts.
 type ShowAccountOptions struct {
 	show     bool  `ddl:"static" sql:"SHOW"`
-	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"`
+	accounts bool  `ddl:"static" sql:"ACCOUNTS"`
 	Like     *Like `ddl:"keyword" sql:"LIKE"`
 }
 

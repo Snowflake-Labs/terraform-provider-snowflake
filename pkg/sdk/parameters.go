@@ -117,6 +117,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 		opts.Set.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(v)
 	case AccountParameterNetworkPolicy:
 		opts.Set.Parameters.AccountParameters.NetworkPolicy = &value
+	case AccountParameterOAuthAddPrivilegedRolesToBlockedList:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.OAuthAddPrivilegedRolesToBlockedList = b
 	case AccountParameterPeriodicDataRekeying:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -713,6 +719,7 @@ type AccountParameters struct {
 	InitialReplicationSizeLimitInTB                  *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                       *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
 	NetworkPolicy                                    *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	OAuthAddPrivilegedRolesToBlockedList             *bool    `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	PeriodicDataRekeying                             *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
 	PreventLoadFromInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
 	PreventUnloadToInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`

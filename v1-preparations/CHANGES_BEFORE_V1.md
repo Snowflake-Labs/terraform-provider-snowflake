@@ -15,6 +15,11 @@ create a resource with slightly different configuration in Snowflake (depending 
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 
+Additionally, resources created before this change may experience force replacement plans on boolean fields
+after upgrading to the new version of the resource. That's because those fields now have different type and default value.
+The only way to prevent this behavior is to set this value in configuration to the value that was previously in state.
+Refer to [this issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3015) for more details.
+
 ## Validations
 
 This point connects with the one on about the [default values](#default-values). First of all, we want to reduce the coupling between Snowflake and the provider. Secondly, some of the value limits are soft (consult issues [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948) and [#1919](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1919)) which makes it difficult to align provider validations with the custom setups. Lastly, some values depend on the Snowflake edition used.

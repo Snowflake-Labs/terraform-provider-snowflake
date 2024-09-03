@@ -19,6 +19,7 @@ const (
 	ObjectTypeManagedAccount       ObjectType = "MANAGED ACCOUNT"
 	ObjectTypeUser                 ObjectType = "USER"
 	ObjectTypeDatabaseRole         ObjectType = "DATABASE ROLE"
+	ObjectTypeDataset              ObjectType = "DATASET"
 	ObjectTypeRole                 ObjectType = "ROLE"
 	ObjectTypeIntegration          ObjectType = "INTEGRATION"
 	ObjectTypeNetworkPolicy        ObjectType = "NETWORK POLICY"
@@ -91,6 +92,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeManagedAccount:       PluralObjectTypeManagedAccounts,
 		ObjectTypeUser:                 PluralObjectTypeUsers,
 		ObjectTypeDatabaseRole:         PluralObjectTypeDatabaseRoles,
+		ObjectTypeDataset:              PluralObjectTypeDatasets,
 		ObjectTypeRole:                 PluralObjectTypeRoles,
 		ObjectTypeIntegration:          PluralObjectTypeIntegrations,
 		ObjectTypeNetworkPolicy:        PluralObjectTypeNetworkPolicies,
@@ -198,6 +200,7 @@ const (
 	PluralObjectTypeManagedAccounts        PluralObjectType = "MANAGED ACCOUNTS"
 	PluralObjectTypeUsers                  PluralObjectType = "USERS"
 	PluralObjectTypeDatabaseRoles          PluralObjectType = "DATABASE ROLES"
+	PluralObjectTypeDatasets               PluralObjectType = "DATASETS"
 	PluralObjectTypeRoles                  PluralObjectType = "ROLES"
 	PluralObjectTypeIntegrations           PluralObjectType = "INTEGRATIONS"
 	PluralObjectTypeNetworkPolicies        PluralObjectType = "NETWORK POLICIES"

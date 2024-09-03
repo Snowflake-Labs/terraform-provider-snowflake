@@ -1820,3 +1820,57 @@ func TestAcc_GrantPrivilegesToAccountRole_IdentifierQuotingDiffSuppression(t *te
 		},
 	})
 }
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2807
+func TestAcc_GrantPrivilegesToAccountRole_OnDataset_issue2807(t *testing.T) {
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleFullyQualifiedName := roleId.FullyQualifiedName()
+	databaseName := acc.TestClient().Ids.DatabaseId().FullyQualifiedName()
+	configVariables := config.Variables{
+		"name": config.StringVariable(roleFullyQualifiedName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
+		),
+		"database":           config.StringVariable(databaseName),
+		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeDatasets.String()),
+		"with_grant_option":  config.BoolVariable(false),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
+					t.Cleanup(roleCleanup)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.future.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.future.0.object_type_plural", string(sdk.PluralObjectTypeDatasets)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.future.0.in_database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnFuture|DATASETS|InDatabase|%s", roleFullyQualifiedName, databaseName)),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

@@ -107,3 +107,30 @@ func TestAcc_AccountParameter_Issue2573(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_AccountParameter_Issue3025(t *testing.T) {
+	t.Skipf("The cleanup for parameter is currently incorrect and this test messes with other ones. Skipping until SNOW-1528546 is resolved.")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountParameterBasic("OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"),
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				),
+			},
+			{
+				ResourceName:            "snowflake_account_parameter.p",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
