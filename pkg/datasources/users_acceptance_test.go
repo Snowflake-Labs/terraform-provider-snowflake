@@ -96,6 +96,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
@@ -113,6 +114,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
 				),
 			},
 			{

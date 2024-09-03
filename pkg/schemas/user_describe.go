@@ -127,6 +127,10 @@ var UserDescribeSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
+	"has_mfa": {
+		Type:     schema.TypeBool,
+		Computed: true,
+	},
 }
 
 var _ = UserDescribeSchema
@@ -222,6 +226,9 @@ func UserDescriptionToSchema(userDetails sdk.UserDetails) []map[string]any {
 	}
 	if userDetails.CustomLandingPageUrlFlushNextUiLoad != nil {
 		userDetailsSchema["custom_landing_page_url_flush_next_ui_load"] = userDetails.CustomLandingPageUrlFlushNextUiLoad.Value
+	}
+	if userDetails.HasMfa != nil {
+		userDetailsSchema["has_mfa"] = userDetails.HasMfa.Value
 	}
 	return []map[string]any{
 		userDetailsSchema,

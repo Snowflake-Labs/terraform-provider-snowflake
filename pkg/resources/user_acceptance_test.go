@@ -1102,3 +1102,108 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", id.Name()).
+		WithBinaryInputFormat(strings.ToLower(string(sdk.BinaryInputFormatHex))).
+		WithBinaryOutputFormat(strings.ToLower(string(sdk.BinaryOutputFormatHex))).
+		WithGeographyOutputFormat(strings.ToLower(string(sdk.GeographyOutputFormatGeoJSON))).
+		WithGeometryOutputFormat(strings.ToLower(string(sdk.GeometryOutputFormatGeoJSON))).
+		WithLogLevel(strings.ToLower(string(sdk.LogLevelInfo))).
+		WithTimestampTypeMapping(strings.ToLower(string(sdk.TimestampTypeMappingNtz))).
+		WithTraceLevel(strings.ToLower(string(sdk.TraceLevelAlways)))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasBinaryInputFormatString(string(sdk.BinaryInputFormatHex)).
+						HasBinaryOutputFormatString(string(sdk.BinaryOutputFormatHex)).
+						HasGeographyOutputFormatString(string(sdk.GeographyOutputFormatGeoJSON)).
+						HasGeometryOutputFormatString(string(sdk.GeometryOutputFormatGeoJSON)).
+						HasLogLevelString(string(sdk.LogLevelInfo)).
+						HasTimestampTypeMappingString(string(sdk.TimestampTypeMappingNtz)).
+						HasTraceLevelString(string(sdk.TraceLevelAlways)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModelWithoutBoth := model.User("w", id.Name())
+	userModelWithNewId := model.User("w", newId.Name())
+	userModelWithBoth := model.User("w", newId.Name()).WithLoginName("login_name").WithDisplayName("display_name")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			// Create without both set
+			{
+				Config: config.FromModel(t, userModelWithoutBoth),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithoutBoth.ResourceReference()).
+						HasNoDisplayName().
+						HasNoLoginName(),
+					objectassert.User(t, id).
+						HasDisplayName(strings.ToUpper(id.Name())).
+						HasLoginName(strings.ToUpper(id.Name())),
+				),
+			},
+			// Rename
+			{
+				Config: config.FromModel(t, userModelWithNewId),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
+						HasNoDisplayName().
+						HasNoLoginName(),
+					objectassert.User(t, newId).
+						HasDisplayName(strings.ToUpper(id.Name())).
+						HasLoginName(strings.ToUpper(id.Name())),
+				),
+			},
+			// Set both params
+			{
+				Config: config.FromModel(t, userModelWithBoth),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
+						HasDisplayNameString("display_name").
+						HasLoginNameString("login_name"),
+					objectassert.User(t, newId).
+						HasDisplayName("display_name").
+						HasLoginName("LOGIN_NAME"),
+				),
+			},
+			// Unset both params
+			{
+				Config: config.FromModel(t, userModelWithNewId),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
+						HasDisplayNameString("").
+						HasLoginNameString(""),
+					objectassert.User(t, newId).
+						HasDisplayName("").
+						HasLoginName(strings.ToUpper(newId.Name())),
+				),
+			},
+		},
+	})
+}

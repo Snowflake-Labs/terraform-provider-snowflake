@@ -832,7 +832,7 @@ func ToBinaryInputFormat(s string) (BinaryInputFormat, error) {
 		return BinaryInputFormatHex, nil
 	case string(BinaryInputFormatBase64):
 		return BinaryInputFormatBase64, nil
-	case string(BinaryInputFormatUTF8):
+	case string(BinaryInputFormatUTF8), "UTF-8":
 		return BinaryInputFormatUTF8, nil
 	default:
 		return "", fmt.Errorf("invalid binary input format: %s", s)

@@ -145,6 +145,7 @@ Read-Only:
 - `ext_authn_duo` (Boolean)
 - `ext_authn_uid` (String)
 - `first_name` (String)
+- `has_mfa` (Boolean)
 - `last_name` (String)
 - `login_name` (String)
 - `middle_name` (String)
