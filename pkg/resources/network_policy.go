@@ -99,6 +99,7 @@ func NetworkPolicy() *schema.Resource {
 			// for complex types like Sets, Lists, and Maps. When every element of the Set is suppressed in custom diff,
 			// it returns true for d.HasChange anyway (it returns false for suppressed changes on primitive types like Number, Bool, String, etc.).
 			ComputedIfAnyAttributeChanged(
+				networkPolicySchema,
 				ShowOutputAttributeName,
 				// "allowed_network_rule_list",
 				// "blocked_network_rule_list",
@@ -107,13 +108,14 @@ func NetworkPolicy() *schema.Resource {
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
+				networkPolicySchema,
 				DescribeOutputAttributeName,
 				// "allowed_network_rule_list",
 				// "blocked_network_rule_list",
 				"allowed_ip_list",
 				"blocked_ip_list",
 			),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChanged(networkPolicySchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Importer: &schema.ResourceImporter{

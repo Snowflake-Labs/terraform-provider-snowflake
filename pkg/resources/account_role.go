@@ -50,9 +50,8 @@ func AccountRole() *schema.Resource {
 		Description:   "The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the [official documentation](https://docs.snowflake.com/en/user-guide/security-access-control-overview).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChanged(accountRoleSchema, ShowOutputAttributeName, "comment", "name"),
+			ComputedIfAnyAttributeChanged(accountRoleSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Importer: &schema.ResourceImporter{

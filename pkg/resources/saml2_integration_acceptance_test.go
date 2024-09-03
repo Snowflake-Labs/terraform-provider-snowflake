@@ -416,7 +416,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
-			// set up with concrete type
+			// set up with concrete saml2_force_authn
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -432,7 +432,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "true"),
 				),
 			},
-			// import when type in config
+			// import when saml2_force_authn in config
 			{
 				ResourceName: "snowflake_saml2_integration.test",
 				ImportState:  true,
@@ -442,7 +442,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "describe_output.0.saml2_force_authn.0.value", "true"),
 				),
 			},
-			// change type in config
+			// change saml2_force_authn in config
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -462,7 +462,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 			{
 				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, true),
 			},
-			// remove non-default type from config
+			// remove non-default saml2_force_authn from config
 			{
 				Config: saml2Config(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -479,23 +479,26 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
-			// add config
+			// add saml2_force_authn to config (false - which is a default in Snowflake) - no changes expected
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_saml2_integration.test", "saml2_force_authn", "describe_output"),
-						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(r.BooleanDefault), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "false"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", r.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
-			// remove type from config but update externally to default (still expecting non-empty plan because we do not know the default)
+			// change back to non-default
+			{
+				Config: saml2ConfigWithAuthn(id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert, true),
+			},
+			// remove saml2_force_authn from config but update externally to default (still expecting non-empty plan because we do not know the default)
 			{
 				PreConfig: func() {
 					acc.TestClient().SecurityIntegration.UpdateSaml2ForceAuthn(t, id, false)
@@ -515,7 +518,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
-			// change the size externally
+			// change the saml2_force_authn externally
 			{
 				PreConfig: func() {
 					// we change the type to the type different from default, expecting action
@@ -536,7 +539,7 @@ func TestAcc_Saml2Integration_forceAuthn(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
-			// import when no type in config
+			// import when no saml2_force_authn in config
 			{
 				ResourceName: "snowflake_saml2_integration.test",
 				ImportState:  true,
@@ -1002,15 +1005,32 @@ func TestAcc_Saml2Integration_DefaultValues(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "false"),
 				),
 			},
+			// set to "non-zero" values
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/non_zero_values"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_force_authn", "true"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "saml2_post_logout_redirect_url", "http://example.com"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "show_output.0.enabled", "true"),
+
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_post_logout_redirect_url.0.value", "http://example.com"),
+					resource.TestCheckResourceAttr("snowflake_saml2_integration.test", "describe_output.0.saml2_force_authn.0.value", "true"),
+				),
+			},
 			// add valid "zero" values again (to validate if set is run correctly)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Saml2Integration/zero_values"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectChange("snowflake_saml2_integration.test", "enabled", tfjson.ActionUpdate, sdk.String(r.BooleanDefault), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(r.BooleanDefault), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_post_logout_redirect_url", tfjson.ActionUpdate, sdk.String(""), sdk.String("")),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "enabled", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_force_authn", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+						planchecks.ExpectChange("snowflake_saml2_integration.test", "saml2_post_logout_redirect_url", tfjson.ActionUpdate, sdk.String("http://example.com"), sdk.String("")),
 						planchecks.ExpectComputed("snowflake_saml2_integration.test", "show_output", true),
 						planchecks.ExpectComputed("snowflake_saml2_integration.test", "describe_output", true),
 					},

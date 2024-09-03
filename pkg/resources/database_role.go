@@ -60,8 +60,7 @@ func DatabaseRole() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
+			ComputedIfAnyAttributeChanged(databaseRoleSchema, ShowOutputAttributeName, "comment", "name"),
 		),
 
 		SchemaVersion: 1,

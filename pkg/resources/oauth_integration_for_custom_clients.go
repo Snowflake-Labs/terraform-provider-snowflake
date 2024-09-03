@@ -161,11 +161,13 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForCustomClientsSchema,
 				ShowOutputAttributeName,
 				"enabled",
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForCustomClientsSchema,
 				DescribeOutputAttributeName,
 				"oauth_client_type",
 				"oauth_redirect_uri",

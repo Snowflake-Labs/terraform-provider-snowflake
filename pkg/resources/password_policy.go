@@ -145,7 +145,7 @@ func PasswordPolicy() *schema.Resource {
 		Delete:      DeletePasswordPolicy,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(passwordPolicySchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: passwordPolicySchema,

@@ -96,11 +96,10 @@ func Schema() *schema.Resource {
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "comment", "with_managed_access", "is_transient"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(ShowOutputAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(DescribeOutputAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChangedWithSuppressDiff(FullyQualifiedNameAttributeName, suppressIdentifierQuoting, "name"),
-			ComputedIfAnyAttributeChanged(ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
+			ComputedIfAnyAttributeChanged(schemaSchema, ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
+			ComputedIfAnyAttributeChanged(schemaSchema, DescribeOutputAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(schemaSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(schemaParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
 			schemaParametersCustomDiff,
 		),
 

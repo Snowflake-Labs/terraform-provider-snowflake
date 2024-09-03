@@ -216,7 +216,7 @@ func Account() *schema.Resource {
 		Delete:      DeleteAccount,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: accountSchema,
