@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -289,6 +290,15 @@ func TestAcc_Warehouse_BasicFlows(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.value", "86400"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "parameters.0.statement_timeout_in_seconds.0.level", string(sdk.ParameterTypeWarehouse)),
 				),
+			},
+			// change resource monitor - wrap in quotes (no change expected)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: warehouseFullConfigNoDefaultsStringId(name2, newComment, strconv.Quote(resourceMonitorId.FullyQualifiedName())),
 			},
 			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
@@ -2108,6 +2118,30 @@ resource "snowflake_warehouse" "w" {
     statement_timeout_in_seconds        = 86400
 }
 `, name, comment, id.Name())
+}
+
+func warehouseFullConfigNoDefaultsStringId(name string, comment string, id string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "w" {
+	name                                = "%[1]s"
+	warehouse_type                      = "SNOWPARK-OPTIMIZED"
+	warehouse_size                      = "MEDIUM"
+	max_cluster_count                   = 4
+	min_cluster_count                   = 2
+	scaling_policy                      = "ECONOMY"
+	auto_suspend                        = 1200
+	auto_resume                         = false
+	initially_suspended                 = false
+	resource_monitor                    = %[3]s
+	comment                             = "%[2]s"
+    enable_query_acceleration           = true
+    query_acceleration_max_scale_factor = 4
+
+    max_concurrency_level               = 4
+    statement_queued_timeout_in_seconds = 5
+    statement_timeout_in_seconds        = 86400
+}
+`, name, comment, id)
 }
 
 func warehouseWithSizeConfig(name string, size string) string {
