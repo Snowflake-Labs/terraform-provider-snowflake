@@ -55,7 +55,7 @@ func (w *UserAssert) HasOwnerNotEmpty() *UserAssert {
 	w.AddAssertion(func(t *testing.T, o *sdk.User) error {
 		t.Helper()
 		if o.Owner == "" {
-			return fmt.Errorf("expected owner not empty; got: %v", o.Owner)
+			return fmt.Errorf("expected owner not empty; got empty")
 		}
 		return nil
 	})
