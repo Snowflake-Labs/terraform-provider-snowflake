@@ -299,6 +299,17 @@ To migrate, in case of having two resources:
 - remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
 - remove `snowflake_user_public_keys` from config
 
+#### *(note)* snowflake_user_password_policy_attachment and other user policies
+
+`snowflake_user_password_policy_attachment` is not addressed in the current version.
+Attaching other user policies is not addressed in the current version.
+
+Both topics will be addressed in the following versions.
+
+#### *(note)* user types
+
+`service` and `legacy_service` user types are currently not supported. They will be supported in the following versions as separate resources (namely `snowflake_service_user` and `snowflake_legacy_service_user`).
+
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
 
