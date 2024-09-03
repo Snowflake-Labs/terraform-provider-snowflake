@@ -257,6 +257,8 @@ New fields:
 - `mins_to_unlock`
 - `mins_to_bypass_mfa`
 - `disable_mfa`
+- `show_output` - holds the response from `SHOW USERS`. Remember that the field will be only recomputed if one of the user attributes is changed.
+- `parameters` - holds the response from `SHOW PARAMETERS IN USER`.
 
 Removed fields:
 - `has_rsa_public_key`
@@ -266,8 +268,8 @@ Default changes:
 - `disabled`
 
 Type changes:
-- `must_change_password`: bool -> string
-- `disabled`: bool -> string
+- `must_change_password`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
+- `disabled`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
 
 Validation changes:
 - `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
