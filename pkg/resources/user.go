@@ -88,6 +88,7 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
+	// TODO [SNOW-1649000]: consider handling external change if there is no config (or zero) for `days_to_expiry` and other similar attributes (what about this the other way around?)
 	"days_to_expiry": {
 		Type:        schema.TypeInt,
 		Optional:    true,
@@ -199,7 +200,7 @@ func User() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
-			// TODO [SNOW-TODO]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
+			// TODO [SNOW-1648997]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
 			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
