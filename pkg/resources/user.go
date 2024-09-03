@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348101 - next PR]: add IgnoreChangeToCurrentSnowflakeValueInShow and other suppressors
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
@@ -35,18 +34,19 @@ var userSchema = map[string]*schema.Schema{
 		Description: "Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully.",
 	},
 	"login_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInShow("login_name")),
+		Description:      "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
 		// login_name is case-insensitive
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
 	// TODO [SNOW-1348101 - next PR]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name displayed for the user in the Snowflake web interface.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("display_name"),
+		Description:      "Name displayed for the user in the Snowflake web interface.",
 	},
 	"first_name": {
 		Type:        schema.TypeString,
@@ -76,6 +76,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("must_change_password"),
 		Description:      booleanStringFieldDescription("Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system."),
 		Default:          BooleanDefault,
 	},
@@ -83,6 +84,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("disabled"),
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
@@ -108,7 +110,7 @@ var userSchema = map[string]*schema.Schema{
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("default_namespace")),
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the namespace exists.",
 	},
 	"default_role": {
@@ -198,7 +200,7 @@ func User() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
 			// TODO [SNOW-TODO]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,

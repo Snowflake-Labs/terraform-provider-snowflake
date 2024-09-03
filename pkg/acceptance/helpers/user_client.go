@@ -103,6 +103,22 @@ func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value
 	require.NoError(t, err)
 }
 
+func (c *UserClient) SetLoginName(t *testing.T, id sdk.AccountObjectIdentifier, newLoginName string) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					LoginName: sdk.String(newLoginName),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
+
 func (c *UserClient) UnsetDefaultSecondaryRoles(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
