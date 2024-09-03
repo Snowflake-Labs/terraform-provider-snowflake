@@ -273,6 +273,10 @@ Validation changes:
 - `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
 
 #### *(breaking change)* refactored snowflake_users datasource
+> **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited. 
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`. 
+Only `parameters` output is not affected by the lack of privileges.
+
 Changes:
 - account checking logic was entirely removed
 - `pattern` renamed to `like`

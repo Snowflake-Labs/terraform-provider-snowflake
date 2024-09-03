@@ -76,13 +76,12 @@ var (
 	)
 )
 
-// TODO [SNOW-1348101 - next PR]: uncomment DiffSuppress and ValidateDiag
 type parameterDef[T ~string] struct {
-	Name        T
-	Type        schema.ValueType
-	Description string
-	// DiffSuppress schema.SchemaDiffSuppressFunc
-	// ValidateDiag schema.SchemaValidateDiagFunc
+	Name         T
+	Type         schema.ValueType
+	Description  string
+	DiffSuppress schema.SchemaDiffSuppressFunc
+	ValidateDiag schema.SchemaValidateDiagFunc
 }
 
 func init() {
@@ -91,8 +90,8 @@ func init() {
 		// session params
 		{Name: sdk.UserParameterAbortDetachedQuery, Type: schema.TypeBool, Description: "Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption)."},
 		{Name: sdk.UserParameterAutocommit, Type: schema.TypeBool, Description: "Specifies whether autocommit is enabled for the session. Autocommit determines whether a DML statement, when executed without an active transaction, is automatically committed after the statement successfully completes. For more information, see [Transactions](https://docs.snowflake.com/en/sql-reference/transactions)."},
-		{Name: sdk.UserParameterBinaryInputFormat, Type: schema.TypeString, Description: "The format of VARCHAR values passed as input to VARCHAR-to-BINARY conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output)."},
-		{Name: sdk.UserParameterBinaryOutputFormat, Type: schema.TypeString, Description: "The format for VARCHAR values returned as output by BINARY-to-VARCHAR conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output)."},
+		{Name: sdk.UserParameterBinaryInputFormat, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToBinaryInputFormat), DiffSuppress: NormalizeAndCompare(sdk.ToBinaryInputFormat), Description: "The format of VARCHAR values passed as input to VARCHAR-to-BINARY conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output)."},
+		{Name: sdk.UserParameterBinaryOutputFormat, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToBinaryOutputFormat), DiffSuppress: NormalizeAndCompare(sdk.ToBinaryOutputFormat), Description: "The format for VARCHAR values returned as output by BINARY-to-VARCHAR conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output)."},
 		{Name: sdk.UserParameterClientMemoryLimit, Type: schema.TypeInt, Description: "Parameter that specifies the maximum amount of memory the JDBC driver or ODBC driver should use for the result set from queries (in MB)."},
 		{Name: sdk.UserParameterClientMetadataRequestUseConnectionCtx, Type: schema.TypeBool, Description: "For specific ODBC functions and JDBC methods, this parameter can change the default search scope from all databases/schemas to the current database/schema. The narrower search typically returns fewer rows and executes more quickly."},
 		{Name: sdk.UserParameterClientPrefetchThreads, Type: schema.TypeInt, Description: "Parameter that specifies the number of threads used by the client to pre-fetch large result sets. The driver will attempt to honor the parameter value, but defines the minimum and maximum values (depending on your system’s resources) to improve performance."},
@@ -106,14 +105,14 @@ func init() {
 		{Name: sdk.UserParameterEnableUnloadPhysicalTypeOptimization, Type: schema.TypeBool, Description: "Specifies whether to set the schema for unloaded Parquet files based on the logical column data types (i.e. the types in the unload SQL query or source table) or on the unloaded column values (i.e. the smallest data types and precision that support the values in the output columns of the unload SQL statement or source table)."},
 		{Name: sdk.UserParameterErrorOnNondeterministicMerge, Type: schema.TypeBool, Description: "Specifies whether to return an error when the [MERGE](https://docs.snowflake.com/en/sql-reference/sql/merge) command is used to update or delete a target row that joins multiple source rows and the system cannot determine the action to perform on the target row."},
 		{Name: sdk.UserParameterErrorOnNondeterministicUpdate, Type: schema.TypeBool, Description: "Specifies whether to return an error when the [UPDATE](https://docs.snowflake.com/en/sql-reference/sql/update) command is used to update a target row that joins multiple source rows and the system cannot determine the action to perform on the target row."},
-		{Name: sdk.UserParameterGeographyOutputFormat, Type: schema.TypeString, Description: "Display format for [GEOGRAPHY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geography)."},
-		{Name: sdk.UserParameterGeometryOutputFormat, Type: schema.TypeString, Description: "Display format for [GEOMETRY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geometry)."},
+		{Name: sdk.UserParameterGeographyOutputFormat, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToGeographyOutputFormat), DiffSuppress: NormalizeAndCompare(sdk.ToGeographyOutputFormat), Description: "Display format for [GEOGRAPHY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geography)."},
+		{Name: sdk.UserParameterGeometryOutputFormat, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToGeometryOutputFormat), DiffSuppress: NormalizeAndCompare(sdk.ToGeometryOutputFormat), Description: "Display format for [GEOMETRY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geometry)."},
 		{Name: sdk.UserParameterJdbcTreatDecimalAsInt, Type: schema.TypeBool, Description: "Specifies how JDBC processes columns that have a scale of zero (0)."},
 		{Name: sdk.UserParameterJdbcTreatTimestampNtzAsUtc, Type: schema.TypeBool, Description: "Specifies how JDBC processes TIMESTAMP_NTZ values."},
 		{Name: sdk.UserParameterJdbcUseSessionTimezone, Type: schema.TypeBool, Description: "Specifies whether the JDBC Driver uses the time zone of the JVM or the time zone of the session (specified by the [TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#label-timezone) parameter) for the getDate(), getTime(), and getTimestamp() methods of the ResultSet class."},
 		{Name: sdk.UserParameterJsonIndent, Type: schema.TypeInt, Description: "Specifies the number of blank spaces to indent each new element in JSON output in the session. Also specifies whether to insert newline characters after each element."},
 		{Name: sdk.UserParameterLockTimeout, Type: schema.TypeInt, Description: "Number of seconds to wait while trying to lock a resource, before timing out and aborting the statement."},
-		{Name: sdk.UserParameterLogLevel, Type: schema.TypeString, Description: "Specifies the severity level of messages that should be ingested and made available in the active event table. Messages at the specified level (and at more severe levels) are ingested. For more information about log levels, see [Setting log level](https://docs.snowflake.com/en/developer-guide/logging-tracing/logging-log-level)."},
+		{Name: sdk.UserParameterLogLevel, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToLogLevel), DiffSuppress: NormalizeAndCompare(sdk.ToLogLevel), Description: "Specifies the severity level of messages that should be ingested and made available in the active event table. Messages at the specified level (and at more severe levels) are ingested. For more information about log levels, see [Setting log level](https://docs.snowflake.com/en/developer-guide/logging-tracing/logging-log-level)."},
 		{Name: sdk.UserParameterMultiStatementCount, Type: schema.TypeInt, Description: "Number of statements to execute when using the multi-statement capability."},
 		{Name: sdk.UserParameterNoorderSequenceAsDefault, Type: schema.TypeBool, Description: "Specifies whether the ORDER or NOORDER property is set by default when you create a new sequence or add a new table column. The ORDER and NOORDER properties determine whether or not the values are generated for the sequence or auto-incremented column in [increasing or decreasing order](https://docs.snowflake.com/en/user-guide/querying-sequences.html#label-querying-sequences-increasing-values)."},
 		{Name: sdk.UserParameterOdbcTreatDecimalAsInt, Type: schema.TypeBool, Description: "Specifies how ODBC processes columns that have a scale of zero (0)."},
@@ -131,12 +130,12 @@ func init() {
 		{Name: sdk.UserParameterTimestampLtzOutputFormat, Type: schema.TypeString, Description: "Specifies the display format for the TIMESTAMP_LTZ data type. If no format is specified, defaults to [TIMESTAMP_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#label-timestamp-output-format). For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output)."},
 		{Name: sdk.UserParameterTimestampNtzOutputFormat, Type: schema.TypeString, Description: "Specifies the display format for the TIMESTAMP_NTZ data type."},
 		{Name: sdk.UserParameterTimestampOutputFormat, Type: schema.TypeString, Description: "Specifies the display format for the TIMESTAMP data type alias. For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output)."},
-		{Name: sdk.UserParameterTimestampTypeMapping, Type: schema.TypeString, Description: "Specifies the TIMESTAMP_* variation that the TIMESTAMP data type alias maps to."},
+		{Name: sdk.UserParameterTimestampTypeMapping, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToTimestampTypeMapping), DiffSuppress: NormalizeAndCompare(sdk.ToTimestampTypeMapping), Description: "Specifies the TIMESTAMP_* variation that the TIMESTAMP data type alias maps to."},
 		{Name: sdk.UserParameterTimestampTzOutputFormat, Type: schema.TypeString, Description: "Specifies the display format for the TIMESTAMP_TZ data type. If no format is specified, defaults to [TIMESTAMP_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#label-timestamp-output-format). For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output)."},
 		{Name: sdk.UserParameterTimezone, Type: schema.TypeString, Description: "Specifies the time zone for the session. You can specify a [time zone name](https://data.iana.org/time-zones/tzdb-2021a/zone1970.tab) or a [link name](https://data.iana.org/time-zones/tzdb-2021a/backward) from release 2021a of the [IANA Time Zone Database](https://www.iana.org/time-zones) (e.g. America/Los_Angeles, Europe/London, UTC, Etc/GMT, etc.)."},
 		{Name: sdk.UserParameterTimeInputFormat, Type: schema.TypeString, Description: "Specifies the input format for the TIME data type. For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output). Any valid, supported time format or AUTO (AUTO specifies that Snowflake attempts to automatically detect the format of times stored in the system during the session)."},
 		{Name: sdk.UserParameterTimeOutputFormat, Type: schema.TypeString, Description: "Specifies the display format for the TIME data type. For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output)."},
-		{Name: sdk.UserParameterTraceLevel, Type: schema.TypeString, Description: "Controls how trace events are ingested into the event table. For more information about trace levels, see [Setting trace level](https://docs.snowflake.com/en/developer-guide/logging-tracing/tracing-trace-level)."},
+		{Name: sdk.UserParameterTraceLevel, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToTraceLevel), DiffSuppress: NormalizeAndCompare(sdk.ToTraceLevel), Description: "Controls how trace events are ingested into the event table. For more information about trace levels, see [Setting trace level](https://docs.snowflake.com/en/developer-guide/logging-tracing/tracing-trace-level)."},
 		{Name: sdk.UserParameterTransactionAbortOnError, Type: schema.TypeBool, Description: "Specifies the action to perform when a statement issued within a non-autocommit transaction returns with an error."},
 		{Name: sdk.UserParameterTransactionDefaultIsolationLevel, Type: schema.TypeString, Description: "Specifies the isolation level for transactions in the user session."},
 		{Name: sdk.UserParameterTwoDigitCenturyStart, Type: schema.TypeInt, Description: "Specifies the “century start” year for 2-digit years (i.e. the earliest year such dates can represent). This parameter prevents ambiguous dates when importing or converting data with the `YY` date format component (i.e. years represented as 2 digits)."},
@@ -154,13 +153,12 @@ func init() {
 		fieldName := strings.ToLower(string(field.Name))
 
 		userParametersSchema[fieldName] = &schema.Schema{
-			Type:        field.Type,
-			Description: enrichWithReferenceToParameterDocs(field.Name, field.Description),
-			Computed:    true,
-			Optional:    true,
-			// TODO [SNOW-1348101 - next PR]: uncomment and fill out
-			// ValidateDiagFunc: field.ValidateDiag,
-			// DiffSuppressFunc: field.DiffSuppress,
+			Type:             field.Type,
+			Description:      enrichWithReferenceToParameterDocs(field.Name, field.Description),
+			Computed:         true,
+			Optional:         true,
+			ValidateDiagFunc: field.ValidateDiag,
+			DiffSuppressFunc: field.DiffSuppress,
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
@@ -1034,7 +1035,6 @@ func TestInt_Users(t *testing.T) {
 
 	// This test proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2817.
 	// sql: Scan error on column index 10, name "disabled": sql/driver: couldn't convert "null" into type bool
-	// TODO [SNOW-1348101 - next PR]: test what is visible if everything is set if there is no ownership on the active role
 	t.Run("issue #2817: handle show properly without OWNERSHIP and MANAGE GRANTS", func(t *testing.T) {
 		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
 		t.Cleanup(disabledUserCleanup)
@@ -1072,6 +1072,137 @@ func TestInt_Users(t *testing.T) {
 		fetchedDisabledUserDetails, err = client.Users.Describe(ctx, disabledUser.ID())
 		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
 		require.Nil(t, fetchedDisabledUserDetails)
+	})
+
+	t.Run("issue #2817: check what fields are available when using a user with insufficient privileges to fully inspect another user", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
+			SessionParameters: &sdk.SessionParameters{
+				AbortDetachedQuery:                       sdk.Bool(true),
+				Autocommit:                               sdk.Bool(false),
+				BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+				BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+				ClientMemoryLimit:                        sdk.Int(1024),
+				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+				ClientPrefetchThreads:                    sdk.Int(2),
+				ClientResultChunkSize:                    sdk.Int(48),
+				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+				ClientSessionKeepAlive:                   sdk.Bool(true),
+				ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+				ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+				DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+				DateOutputFormat:                         sdk.String("YY-MM-DD"),
+				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+				ErrorOnNondeterministicMerge:             sdk.Bool(false),
+				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+				GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+				GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+				JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+				JdbcUseSessionTimezone:                   sdk.Bool(false),
+				JSONIndent:                               sdk.Int(4),
+				LockTimeout:                              sdk.Int(21222),
+				LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+				MultiStatementCount:                      sdk.Int(0),
+				NoorderSequenceAsDefault:                 sdk.Bool(false),
+				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+				QueryTag:                                 sdk.String("some_tag"),
+				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+				RowsPerResultset:                         sdk.Int(2),
+				S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+				SearchPath:                               sdk.String("$public, $current"),
+				SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+				StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+				StatementTimeoutInSeconds:                sdk.Int(10),
+				StrictJSONOutput:                         sdk.Bool(true),
+				TimestampDayIsAlways24h:                  sdk.Bool(true),
+				TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+				TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+				TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+				Timezone:                                 sdk.String("Europe/Warsaw"),
+				TimeInputFormat:                          sdk.String("HH24:MI"),
+				TimeOutputFormat:                         sdk.String("HH24:MI"),
+				TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+				TransactionAbortOnError:                  sdk.Bool(true),
+				TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+				TwoDigitCenturyStart:                     sdk.Int(1980),
+				UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+				UseCachedResult:                          sdk.Bool(false),
+				WeekOfYearPolicy:                         sdk.Int(1),
+				WeekStart:                                sdk.Int(1),
+			},
+			ObjectParameters: &sdk.UserObjectParameters{
+				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+				NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+				PreventUnloadToInternalStages:    sdk.Bool(true),
+			},
+			ObjectProperties: &sdk.UserObjectProperties{
+				Password:              sdk.String(password),
+				LoginName:             sdk.String(newValue),
+				DisplayName:           sdk.String(newValue),
+				FirstName:             sdk.String(newValue),
+				MiddleName:            sdk.String(newValue),
+				LastName:              sdk.String(newValue),
+				Email:                 sdk.String(email),
+				MustChangePassword:    sdk.Bool(true),
+				Disable:               sdk.Bool(true),
+				DaysToExpiry:          sdk.Int(5),
+				MinsToUnlock:          sdk.Int(15),
+				DefaultWarehouse:      sdk.Pointer(warehouseId),
+				DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+				DefaultRole:           sdk.Pointer(roleId),
+				DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+				MinsToBypassMFA:       sdk.Int(30),
+				RSAPublicKey:          sdk.String(key),
+				RSAPublicKey2:         sdk.String(key2),
+				Comment:               sdk.String("some comment"),
+			},
+		})
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		role, roleCleanup := testClientHelper().Role.CreateRoleGrantedToCurrentUser(t)
+		t.Cleanup(roleCleanup)
+
+		revertRole := testClientHelper().Role.UseRole(t, role.ID())
+		t.Cleanup(revertRole)
+
+		// Describe won't work and parameters are not affected by that fact
+		assertParametersSet(objectparametersassert.UserParameters(t, id))
+
+		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, id, testClientHelper()).
+			HasName(id.Name()).
+			HasCreatedOnNotEmpty().
+			HasLoginName("").
+			HasDisplayName("").
+			HasFirstName("").
+			HasLastName("").
+			HasEmail("").
+			HasMinsToUnlock("").
+			HasDaysToExpiry("").
+			HasComment("").
+			HasDisabled(false).           // underlying null
+			HasMustChangePassword(false). // underlying null
+			HasSnowflakeLock(false).      // underlying null
+			HasDefaultWarehouse("").
+			HasDefaultNamespace("").
+			HasDefaultRole("").
+			HasDefaultSecondaryRoles("").
+			HasExtAuthnDuo(false). // underlying null
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwnerNotEmpty().
+			HasLastSuccessLogin(time.Time{}). // underlying null
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(false).
+			HasHasRsaPublicKey(false).
+			HasType(""). // underlying null
+			HasHasMfa(false),
+		)
 	})
 
 	t.Run("login_name and display_name inconsistencies", func(t *testing.T) {

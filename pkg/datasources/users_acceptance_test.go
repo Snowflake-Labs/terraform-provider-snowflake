@@ -80,7 +80,8 @@ func TestAcc_Users_Complete(t *testing.T) {
 						HasDefaultSecondaryRoles(`["ALL"]`).
 						HasMinsToBypassMfaNotEmpty().
 						HasHasRsaPublicKey(true).
-						HasComment(comment),
+						HasComment(comment).
+						HasHasMfa(false),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
@@ -113,6 +114,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
 				),
 			},
 			{
