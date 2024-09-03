@@ -87,18 +87,17 @@ var userSchema = map[string]*schema.Schema{
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
-	// TODO [SNOW-1348101 - next PR]: consider handling external change to 0 or from 0?
 	"days_to_expiry": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Description: "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
+		Description: "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to it.",
 	},
 	"mins_to_unlock": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      IntDefault,
-		Description:  "Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter.",
+		Description:  "Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to it.",
 	},
 	"default_warehouse": {
 		Type:             schema.TypeString,
@@ -131,13 +130,12 @@ var userSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
-	// TODO [SNOW-1348101 - next PR]: note that external changes are not handled (and with other params that this is true)
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      IntDefault,
-		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available.",
+		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to this value.",
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
@@ -158,7 +156,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
-		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa)."),
+		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa). It cannot be read from Snowflake, so it has to be marked as tainted manually after external changes."),
 		Default:          BooleanDefault,
 	},
 	"user_type": {
