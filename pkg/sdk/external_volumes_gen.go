@@ -28,22 +28,22 @@ type ExternalVolumeStorageLocation struct {
 	AzureStorageLocationParams *AzureStorageLocationParams `ddl:"list,parentheses,no_comma"`
 }
 type S3StorageLocationParams struct {
-	Name                 string                     `ddl:"parameter,single_quotes" sql:"NAME"`
-	StorageProvider      S3StorageProvider          `ddl:"parameter,single_quotes" sql:"STORAGE_PROVIDER"`
-	StorageAwsRoleArn    string                     `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
-	StorageBaseUrl       string                     `ddl:"parameter,single_quotes" sql:"STORAGE_BASE_URL"`
-	StorageAwsExternalId *string                    `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_EXTERNAL_ID"`
-	Encryption           ExternalVolumeS3Encryption `ddl:"list,parentheses,no_comma" sql:"ENCRYPTION ="`
+	Name                 string                      `ddl:"parameter,single_quotes" sql:"NAME"`
+	StorageProvider      S3StorageProvider           `ddl:"parameter,single_quotes" sql:"STORAGE_PROVIDER"`
+	StorageAwsRoleArn    string                      `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
+	StorageBaseUrl       string                      `ddl:"parameter,single_quotes" sql:"STORAGE_BASE_URL"`
+	StorageAwsExternalId *string                     `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_EXTERNAL_ID"`
+	Encryption           *ExternalVolumeS3Encryption `ddl:"list,parentheses,no_comma" sql:"ENCRYPTION ="`
 }
 type ExternalVolumeS3Encryption struct {
 	Type     S3EncryptionType `ddl:"parameter,single_quotes" sql:"TYPE"`
 	KmsKeyId *string          `ddl:"parameter,single_quotes" sql:"KMS_KEY_ID"`
 }
 type GCSStorageLocationParams struct {
-	Name               string                      `ddl:"parameter,single_quotes" sql:"NAME"`
-	StorageProviderGcs string                      `ddl:"static" sql:"STORAGE_PROVIDER = 'GCS'"`
-	StorageBaseUrl     string                      `ddl:"parameter,single_quotes" sql:"STORAGE_BASE_URL"`
-	Encryption         ExternalVolumeGCSEncryption `ddl:"list,parentheses,no_comma" sql:"ENCRYPTION ="`
+	Name               string                       `ddl:"parameter,single_quotes" sql:"NAME"`
+	StorageProviderGcs string                       `ddl:"static" sql:"STORAGE_PROVIDER = 'GCS'"`
+	StorageBaseUrl     string                       `ddl:"parameter,single_quotes" sql:"STORAGE_BASE_URL"`
+	Encryption         *ExternalVolumeGCSEncryption `ddl:"list,parentheses,no_comma" sql:"ENCRYPTION ="`
 }
 type ExternalVolumeGCSEncryption struct {
 	Type     GCSEncryptionType `ddl:"parameter,single_quotes" sql:"TYPE"`

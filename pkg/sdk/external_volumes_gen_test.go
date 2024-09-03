@@ -8,9 +8,19 @@ var s3StorageLocationParams = &S3StorageLocationParams{
 	StorageProvider:   S3StorageProviderS3,
 	StorageAwsRoleArn: "some s3 role arn",
 	StorageBaseUrl:    "some s3 base url",
-	Encryption: ExternalVolumeS3Encryption{
+	Encryption: &ExternalVolumeS3Encryption{
 		Type:     S3EncryptionTypeSseS3,
 		KmsKeyId: String("some s3 kms key id"),
+	},
+}
+
+var s3StorageLocationParamsNoneEncryption = &S3StorageLocationParams{
+	Name:              "some s3 name",
+	StorageProvider:   S3StorageProviderS3,
+	StorageAwsRoleArn: "some s3 role arn",
+	StorageBaseUrl:    "some s3 base url",
+	Encryption: &ExternalVolumeS3Encryption{
+		Type: S3EncryptionNone,
 	},
 }
 
@@ -19,9 +29,6 @@ var s3StorageLocationParamsNoEncryption = &S3StorageLocationParams{
 	StorageProvider:   S3StorageProviderS3,
 	StorageAwsRoleArn: "some s3 role arn",
 	StorageBaseUrl:    "some s3 base url",
-	Encryption: ExternalVolumeS3Encryption{
-		Type: S3EncryptionNone,
-	},
 }
 
 var s3StorageLocationParamsGov = &S3StorageLocationParams{
@@ -29,7 +36,7 @@ var s3StorageLocationParamsGov = &S3StorageLocationParams{
 	StorageProvider:   S3StorageProviderS3GOV,
 	StorageAwsRoleArn: "some s3 role arn",
 	StorageBaseUrl:    "some s3 base url",
-	Encryption: ExternalVolumeS3Encryption{
+	Encryption: &ExternalVolumeS3Encryption{
 		Type:     S3EncryptionTypeSseS3,
 		KmsKeyId: String("some s3 kms key id"),
 	},
@@ -41,7 +48,7 @@ var s3StorageLocationParamsWithExternalId = &S3StorageLocationParams{
 	StorageAwsRoleArn:    "some s3 role arn",
 	StorageBaseUrl:       "some s3 base url",
 	StorageAwsExternalId: String("some s3 external id"),
-	Encryption: ExternalVolumeS3Encryption{
+	Encryption: &ExternalVolumeS3Encryption{
 		Type:     S3EncryptionTypeSseS3,
 		KmsKeyId: String("some s3 kms key id"),
 	},
@@ -50,18 +57,23 @@ var s3StorageLocationParamsWithExternalId = &S3StorageLocationParams{
 var gcsStorageLocationParams = &GCSStorageLocationParams{
 	Name:           "some gcs name",
 	StorageBaseUrl: "some gcs base url",
-	Encryption: ExternalVolumeGCSEncryption{
+	Encryption: &ExternalVolumeGCSEncryption{
 		Type:     GCSEncryptionTypeSseKms,
 		KmsKeyId: String("some gcs kms key id"),
+	},
+}
+
+var gcsStorageLocationParamsNoneEncryption = &GCSStorageLocationParams{
+	Name:           "some gcs name",
+	StorageBaseUrl: "some gcs base url",
+	Encryption: &ExternalVolumeGCSEncryption{
+		Type: GCSEncryptionTypeNone,
 	},
 }
 
 var gcsStorageLocationParamsNoEncryption = &GCSStorageLocationParams{
 	Name:           "some gcs name",
 	StorageBaseUrl: "some gcs base url",
-	Encryption: ExternalVolumeGCSEncryption{
-		Type: GCSEncryptionTypeNone,
-	},
 }
 
 var azureStorageLocationParams = &AzureStorageLocationParams{
@@ -141,10 +153,16 @@ func TestExternalVolumes_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3GOV' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id'))) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
+	t.Run("1 storage location - s3 none encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{S3StorageLocationParams: s3StorageLocationParamsNoneEncryption}}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'NONE')))`, id.FullyQualifiedName())
+	})
+
 	t.Run("1 storage location - s3 no encryption", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.StorageLocations = []ExternalVolumeStorageLocation{{S3StorageLocationParams: s3StorageLocationParamsNoEncryption}}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'NONE')))`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url'))`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location with allow writes - gcs", func(t *testing.T) {
@@ -154,11 +172,18 @@ func TestExternalVolumes_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id'))) ALLOW_WRITES = true`, id.FullyQualifiedName())
 	})
 
+	t.Run("1 storage location with allow writes - gcs none encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.StorageLocations = []ExternalVolumeStorageLocation{{GCSStorageLocationParams: gcsStorageLocationParamsNoneEncryption}}
+		opts.AllowWrites = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'NONE'))) ALLOW_WRITES = true`, id.FullyQualifiedName())
+	})
+
 	t.Run("1 storage location with allow writes - gcs no encryption", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.StorageLocations = []ExternalVolumeStorageLocation{{GCSStorageLocationParams: gcsStorageLocationParamsNoEncryption}}
 		opts.AllowWrites = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'NONE'))) ALLOW_WRITES = true`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL VOLUME %s STORAGE_LOCATIONS = ((NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url')) ALLOW_WRITES = true`, id.FullyQualifiedName())
 	})
 
 	t.Run("1 storage location - azure", func(t *testing.T) {
@@ -289,10 +314,34 @@ func TestExternalVolumes_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' STORAGE_AWS_EXTERNAL_ID = 'some s3 external id' ENCRYPTION = (TYPE = 'AWS_SSE_S3' KMS_KEY_ID = 'some s3 kms key id'))`, id.FullyQualifiedName())
 	})
 
+	t.Run("add storage location - s3 none encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsNoneEncryption}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url' ENCRYPTION = (TYPE = 'NONE'))`, id.FullyQualifiedName())
+	})
+
+	t.Run("add storage location - s3 no encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{S3StorageLocationParams: s3StorageLocationParamsNoEncryption}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some s3 name' STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'some s3 role arn' STORAGE_BASE_URL = 'some s3 base url')`, id.FullyQualifiedName())
+	})
+
 	t.Run("add storage location - gcs", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.AddStorageLocation = &ExternalVolumeStorageLocation{GCSStorageLocationParams: gcsStorageLocationParams}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'some gcs kms key id'))`, id.FullyQualifiedName())
+	})
+
+	t.Run("add storage location - gcs none encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{GCSStorageLocationParams: gcsStorageLocationParamsNoneEncryption}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url' ENCRYPTION = (TYPE = 'NONE'))`, id.FullyQualifiedName())
+	})
+
+	t.Run("add storage location - gcs no encryption", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddStorageLocation = &ExternalVolumeStorageLocation{GCSStorageLocationParams: gcsStorageLocationParamsNoEncryption}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL VOLUME %s ADD STORAGE_LOCATION = (NAME = 'some gcs name' STORAGE_PROVIDER = 'GCS' STORAGE_BASE_URL = 'some gcs base url')`, id.FullyQualifiedName())
 	})
 
 	t.Run("add storage location - azure", func(t *testing.T) {

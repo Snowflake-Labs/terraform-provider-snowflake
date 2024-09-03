@@ -44,7 +44,7 @@ type S3StorageLocationParamsRequest struct {
 	StorageAwsRoleArn    string            // required
 	StorageBaseUrl       string            // required
 	StorageAwsExternalId *string
-	Encryption           ExternalVolumeS3EncryptionRequest // required
+	Encryption           *ExternalVolumeS3EncryptionRequest
 }
 
 type ExternalVolumeS3EncryptionRequest struct {
@@ -53,9 +53,9 @@ type ExternalVolumeS3EncryptionRequest struct {
 }
 
 type GCSStorageLocationParamsRequest struct {
-	Name           string                             // required
-	StorageBaseUrl string                             // required
-	Encryption     ExternalVolumeGCSEncryptionRequest // required
+	Name           string // required
+	StorageBaseUrl string // required
+	Encryption     *ExternalVolumeGCSEncryptionRequest
 }
 
 type ExternalVolumeGCSEncryptionRequest struct {

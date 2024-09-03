@@ -100,19 +100,22 @@ func NewS3StorageLocationParamsRequest(
 	StorageProvider S3StorageProvider,
 	StorageAwsRoleArn string,
 	StorageBaseUrl string,
-	Encryption ExternalVolumeS3EncryptionRequest,
 ) *S3StorageLocationParamsRequest {
 	s := S3StorageLocationParamsRequest{}
 	s.Name = Name
 	s.StorageProvider = StorageProvider
 	s.StorageAwsRoleArn = StorageAwsRoleArn
 	s.StorageBaseUrl = StorageBaseUrl
-	s.Encryption = Encryption
 	return &s
 }
 
 func (s *S3StorageLocationParamsRequest) WithStorageAwsExternalId(StorageAwsExternalId string) *S3StorageLocationParamsRequest {
 	s.StorageAwsExternalId = &StorageAwsExternalId
+	return s
+}
+
+func (s *S3StorageLocationParamsRequest) WithEncryption(Encryption ExternalVolumeS3EncryptionRequest) *S3StorageLocationParamsRequest {
+	s.Encryption = &Encryption
 	return s
 }
 
@@ -132,13 +135,16 @@ func (s *ExternalVolumeS3EncryptionRequest) WithKmsKeyId(KmsKeyId string) *Exter
 func NewGCSStorageLocationParamsRequest(
 	Name string,
 	StorageBaseUrl string,
-	Encryption ExternalVolumeGCSEncryptionRequest,
 ) *GCSStorageLocationParamsRequest {
 	s := GCSStorageLocationParamsRequest{}
 	s.Name = Name
 	s.StorageBaseUrl = StorageBaseUrl
-	s.Encryption = Encryption
 	return &s
+}
+
+func (s *GCSStorageLocationParamsRequest) WithEncryption(Encryption ExternalVolumeGCSEncryptionRequest) *GCSStorageLocationParamsRequest {
+	s.Encryption = &Encryption
+	return s
 }
 
 func NewExternalVolumeGCSEncryptionRequest(

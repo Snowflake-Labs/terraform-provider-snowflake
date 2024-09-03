@@ -59,7 +59,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		StorageBaseUrl       string `json:"STORAGE_BASE_URL"`
 		StorageAwsRoleArn    string `json:"STORAGE_AWS_ROLE_ARN"`
 		StorageAwsExternalId string `json:"STORAGE_AWS_EXTERNAL_ID"`
-		EncryptionType       string `json:"ENCRYPTION_TYPE"`
+		EncryptionType       string `json:"ENCRYPTION_TYPE,omitempty"`
 		EncryptionKmsId      string `json:"ENCRYPTION_KMS_KEY_ID,omitempty"`
 	}
 
@@ -77,7 +77,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		Name            string `json:"NAME"`
 		StorageProvider string `json:"STORAGE_PROVIDER"`
 		StorageBaseUrl  string `json:"STORAGE_BASE_URL"`
-		EncryptionType  string `json:"ENCRYPTION_TYPE"`
+		EncryptionType  string `json:"ENCRYPTION_TYPE,omitempty"`
 		EncryptionKmsId string `json:"ENCRYPTION_KMS_KEY_ID,omitempty"`
 	}
 
@@ -178,9 +178,24 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				StorageAwsRoleArn:    awsRoleARN,
 				StorageBaseUrl:       awsBaseUrl,
 				StorageAwsExternalId: sdk.String(awsExternalId),
-				Encryption: sdk.ExternalVolumeS3Encryption{
+				Encryption: &sdk.ExternalVolumeS3Encryption{
 					Type:     sdk.S3EncryptionTypeSseKms,
 					KmsKeyId: &awsKmsKeyId,
+				},
+			},
+		},
+	}
+
+	s3StorageLocationsNoneEncryption := []sdk.ExternalVolumeStorageLocation{
+		{
+			S3StorageLocationParams: &sdk.S3StorageLocationParams{
+				Name:                 "s3_testing_storage_location_none_encryption",
+				StorageProvider:      sdk.S3StorageProviderS3,
+				StorageAwsRoleArn:    awsRoleARN,
+				StorageBaseUrl:       awsBaseUrl,
+				StorageAwsExternalId: sdk.String(awsExternalId),
+				Encryption: &sdk.ExternalVolumeS3Encryption{
+					Type: sdk.S3EncryptionNone,
 				},
 			},
 		},
@@ -194,8 +209,17 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				StorageAwsRoleArn:    awsRoleARN,
 				StorageBaseUrl:       awsBaseUrl,
 				StorageAwsExternalId: sdk.String(awsExternalId),
-				Encryption: sdk.ExternalVolumeS3Encryption{
-					Type: sdk.S3EncryptionNone,
+			},
+		},
+	}
+
+	gcsStorageLocationsNoneEncryption := []sdk.ExternalVolumeStorageLocation{
+		{
+			GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+				Name:           "gcs_testing_storage_location_none_encryption",
+				StorageBaseUrl: gcsBaseUrl,
+				Encryption: &sdk.ExternalVolumeGCSEncryption{
+					Type: sdk.GCSEncryptionTypeNone,
 				},
 			},
 		},
@@ -206,9 +230,6 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
 				Name:           "gcs_testing_storage_location_no_encryption",
 				StorageBaseUrl: gcsBaseUrl,
-				Encryption: sdk.ExternalVolumeGCSEncryption{
-					Type: sdk.GCSEncryptionTypeNone,
-				},
 			},
 		},
 	}
@@ -218,7 +239,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
 				Name:           "gcs_testing_storage_location",
 				StorageBaseUrl: gcsBaseUrl,
-				Encryption: sdk.ExternalVolumeGCSEncryption{
+				Encryption: &sdk.ExternalVolumeGCSEncryption{
 					Type:     sdk.GCSEncryptionTypeSseKms,
 					KmsKeyId: &gcsKmsKeyId,
 				},
@@ -239,7 +260,9 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	createExternalVolume := func(t *testing.T, storageLocations []sdk.ExternalVolumeStorageLocation, allowWrites bool, comment string) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+        //TODO
+		//id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		id := sdk.NewAccountObjectIdentifier("test_external_volume")
 		req := sdk.NewCreateExternalVolumeRequest(id, storageLocations).
 			WithIfNotExists(true).
 			WithAllowWrites(allowWrites).
@@ -267,6 +290,17 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		assertExternalVolumeShowResult(t, externalVolume, id, allowWrites, comment)
 	})
 
+	t.Run("Create - S3 Storage Location None Encryption", func(t *testing.T) {
+		allowWrites := true
+		comment := "some comment"
+		id := createExternalVolume(t, s3StorageLocationsNoneEncryption, allowWrites, comment)
+
+		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertExternalVolumeShowResult(t, externalVolume, id, allowWrites, comment)
+	})
+
 	t.Run("Create - S3 Storage Location No Encryption", func(t *testing.T) {
 		allowWrites := true
 		comment := "some comment"
@@ -282,6 +316,17 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		allowWrites := true
 		comment := "some comment"
 		id := createExternalVolume(t, gcsStorageLocations, allowWrites, comment)
+
+		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertExternalVolumeShowResult(t, externalVolume, id, allowWrites, comment)
+	})
+
+	t.Run("Create - GCS Storage Location None Encryption", func(t *testing.T) {
+		allowWrites := true
+		comment := "some comment"
+		id := createExternalVolume(t, gcsStorageLocationsNoneEncryption, allowWrites, comment)
 
 		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -314,7 +359,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	t.Run("Create - Multiple Storage Locations", func(t *testing.T) {
 		allowWrites := true
 		comment := "some comment"
-		id := createExternalVolume(t, append(append(s3StorageLocations, gcsStorageLocationsNoEncryption...), azureStorageLocations...), allowWrites, comment)
+		id := createExternalVolume(t, append(append(s3StorageLocations, gcsStorageLocationsNoneEncryption...), azureStorageLocations...), allowWrites, comment)
 
 		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -325,9 +370,9 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	t.Run("Alter - remove storage location", func(t *testing.T) {
 		allowWrites := true
 		comment := "some comment"
-		id := createExternalVolume(t, append(s3StorageLocationsNoEncryption, gcsStorageLocationsNoEncryption...), allowWrites, comment)
+		id := createExternalVolume(t, append(s3StorageLocationsNoneEncryption, gcsStorageLocationsNoneEncryption...), allowWrites, comment)
 
-		req := sdk.NewAlterExternalVolumeRequest(id).WithRemoveStorageLocation(gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Name)
+		req := sdk.NewAlterExternalVolumeRequest(id).WithRemoveStorageLocation(gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.Name)
 
 		err := client.ExternalVolumes.Alter(ctx, req)
 		require.NoError(t, err)
@@ -347,12 +392,12 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				Name: "STORAGE_LOCATION_1",
 				Value: fmt.Sprintf(
 					`{"NAME":"%s","STORAGE_PROVIDER":"%s","STORAGE_BASE_URL":"%s","STORAGE_AWS_ROLE_ARN":"%s","STORAGE_AWS_EXTERNAL_ID":"%s","ENCRYPTION_TYPE":"%s"}`,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Name,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageProvider,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageBaseUrl,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
-					*s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Encryption.Type,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Name,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageProvider,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageBaseUrl,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
+					*s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Encryption.Type,
 				),
 			},
 		)
@@ -361,7 +406,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	t.Run("Alter - set comment", func(t *testing.T) {
 		allowWrites := true
 		comment := ""
-		id := createExternalVolume(t, s3StorageLocationsNoEncryption, allowWrites, "some comment")
+		id := createExternalVolume(t, s3StorageLocationsNoneEncryption, allowWrites, "some comment")
 
 		req := sdk.NewAlterExternalVolumeRequest(id).WithSet(
 			*sdk.NewAlterExternalVolumeSetRequest().WithComment(comment),
@@ -384,12 +429,12 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				Name: "STORAGE_LOCATION_1",
 				Value: fmt.Sprintf(
 					`{"NAME":"%s","STORAGE_PROVIDER":"%s","STORAGE_BASE_URL":"%s","STORAGE_AWS_ROLE_ARN":"%s","STORAGE_AWS_EXTERNAL_ID":"%s","ENCRYPTION_TYPE":"%s"}`,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Name,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageProvider,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageBaseUrl,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
-					*s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Encryption.Type,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Name,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageProvider,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageBaseUrl,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
+					*s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Encryption.Type,
 				),
 			},
 		)
@@ -437,7 +482,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	t.Run("Alter - add s3 storage location to external volume", func(t *testing.T) {
 		allowWrites := true
 		comment := "some comment"
-		id := createExternalVolume(t, gcsStorageLocationsNoEncryption, allowWrites, comment)
+		id := createExternalVolume(t, gcsStorageLocationsNoneEncryption, allowWrites, comment)
 
 		req := sdk.NewAlterExternalVolumeRequest(id).WithAddStorageLocation(
 			*sdk.NewExternalVolumeStorageLocationRequest().WithS3StorageLocationParams(
@@ -446,11 +491,12 @@ func TestInt_ExternalVolumes(t *testing.T) {
 					s3StorageLocations[0].S3StorageLocationParams.StorageProvider,
 					s3StorageLocations[0].S3StorageLocationParams.StorageAwsRoleArn,
 					s3StorageLocations[0].S3StorageLocationParams.StorageBaseUrl,
-					*sdk.NewExternalVolumeS3EncryptionRequest(
-						s3StorageLocations[0].S3StorageLocationParams.Encryption.Type,
-					).WithKmsKeyId(*s3StorageLocations[0].S3StorageLocationParams.Encryption.KmsKeyId),
-				).WithStorageAwsExternalId(*s3StorageLocations[0].S3StorageLocationParams.StorageAwsExternalId),
-			),
+				).WithStorageAwsExternalId(*s3StorageLocations[0].S3StorageLocationParams.StorageAwsExternalId).
+                    WithEncryption(
+                        *sdk.NewExternalVolumeS3EncryptionRequest(s3StorageLocations[0].S3StorageLocationParams.Encryption.Type,).
+                    WithKmsKeyId(*s3StorageLocations[0].S3StorageLocationParams.Encryption.KmsKeyId),
+                    ),
+            ),
 		)
 
 		err := client.ExternalVolumes.Alter(ctx, req)
@@ -471,9 +517,9 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				Name: "STORAGE_LOCATION_1",
 				Value: fmt.Sprintf(
 					`{"NAME":"%s","STORAGE_PROVIDER":"GCS","STORAGE_BASE_URL":"%s","ENCRYPTION_TYPE":"%s"}`,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Name,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.StorageBaseUrl,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Encryption.Type,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.Name,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.StorageBaseUrl,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.Encryption.Type,
 				),
 			},
 		)
@@ -501,7 +547,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		comment := "some comment"
 		id := createExternalVolume(
 			t,
-			append(append(append(append(s3StorageLocations, gcsStorageLocationsNoEncryption...), azureStorageLocations...), s3StorageLocationsNoEncryption...), gcsStorageLocations...),
+			append(append(append(append(append(append(s3StorageLocations, gcsStorageLocationsNoneEncryption...), azureStorageLocations...), s3StorageLocationsNoneEncryption...), gcsStorageLocations...), s3StorageLocationsNoEncryption...), gcsStorageLocationsNoEncryption...),
 			allowWrites,
 			comment,
 		)
@@ -510,7 +556,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		require.NoError(t, err)
 
 		trimmedProperties := trimProperties(t, props)
-		assert.Equal(t, 8, len(trimmedProperties))
+		assert.Equal(t, 10, len(trimmedProperties))
 		assert.Contains(t, trimmedProperties, ExternalVolumePropNameValue{Name: "COMMENT", Value: comment})
 		assert.Contains(t, trimmedProperties, ExternalVolumePropNameValue{Name: "ALLOW_WRITES", Value: strconv.FormatBool(allowWrites)})
 		assert.Contains(t, trimmedProperties, ExternalVolumePropNameValue{Name: "ACTIVE", Value: ""})
@@ -538,9 +584,9 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				Name: "STORAGE_LOCATION_2",
 				Value: fmt.Sprintf(
 					`{"NAME":"%s","STORAGE_PROVIDER":"GCS","STORAGE_BASE_URL":"%s","ENCRYPTION_TYPE":"%s"}`,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Name,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.StorageBaseUrl,
-					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Encryption.Type,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.Name,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.StorageBaseUrl,
+					gcsStorageLocationsNoneEncryption[0].GCSStorageLocationParams.Encryption.Type,
 				),
 			},
 		)
@@ -564,12 +610,12 @@ func TestInt_ExternalVolumes(t *testing.T) {
 				Name: "STORAGE_LOCATION_4",
 				Value: fmt.Sprintf(
 					`{"NAME":"%s","STORAGE_PROVIDER":"%s","STORAGE_BASE_URL":"%s","STORAGE_AWS_ROLE_ARN":"%s","STORAGE_AWS_EXTERNAL_ID":"%s","ENCRYPTION_TYPE":"%s"}`,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Name,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageProvider,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageBaseUrl,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
-					*s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
-					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Encryption.Type,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Name,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageProvider,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageBaseUrl,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
+					*s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
+					s3StorageLocationsNoneEncryption[0].S3StorageLocationParams.Encryption.Type,
 				),
 			},
 		)
@@ -584,6 +630,33 @@ func TestInt_ExternalVolumes(t *testing.T) {
 					gcsStorageLocations[0].GCSStorageLocationParams.StorageBaseUrl,
 					gcsStorageLocations[0].GCSStorageLocationParams.Encryption.Type,
 					*gcsStorageLocations[0].GCSStorageLocationParams.Encryption.KmsKeyId,
+				),
+			},
+		)
+		assert.Contains(
+			t,
+			trimmedProperties,
+			ExternalVolumePropNameValue{
+				Name: "STORAGE_LOCATION_6",
+				Value: fmt.Sprintf(
+					`{"NAME":"%s","STORAGE_PROVIDER":"%s","STORAGE_BASE_URL":"%s","STORAGE_AWS_ROLE_ARN":"%s","STORAGE_AWS_EXTERNAL_ID":"%s","ENCRYPTION_TYPE":"NONE"}`,
+					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.Name,
+					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageProvider,
+					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageBaseUrl,
+					s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsRoleArn,
+					*s3StorageLocationsNoEncryption[0].S3StorageLocationParams.StorageAwsExternalId,
+				),
+			},
+		)
+		assert.Contains(
+			t,
+			trimmedProperties,
+			ExternalVolumePropNameValue{
+				Name: "STORAGE_LOCATION_7",
+				Value: fmt.Sprintf(
+					`{"NAME":"%s","STORAGE_PROVIDER":"GCS","STORAGE_BASE_URL":"%s","ENCRYPTION_TYPE":"NONE"}`,
+					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.Name,
+					gcsStorageLocationsNoEncryption[0].GCSStorageLocationParams.StorageBaseUrl,
 				),
 			},
 		)

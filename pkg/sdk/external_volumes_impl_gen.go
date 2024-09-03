@@ -76,10 +76,12 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &AlterExternalVolumeSet{
 			AllowWrites: r.Set.AllowWrites,
 			Comment:     r.Set.Comment,
 		}
+
 	}
 
 	if r.AddStorageLocation != nil {
@@ -96,9 +98,13 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 				StorageAwsExternalId: r.AddStorageLocation.S3StorageLocationParams.StorageAwsExternalId,
 			}
 
-			opts.AddStorageLocation.S3StorageLocationParams.Encryption = ExternalVolumeS3Encryption{
-				Type:     r.AddStorageLocation.S3StorageLocationParams.Encryption.Type,
-				KmsKeyId: r.AddStorageLocation.S3StorageLocationParams.Encryption.KmsKeyId,
+			if r.AddStorageLocation.S3StorageLocationParams.Encryption != nil {
+
+				opts.AddStorageLocation.S3StorageLocationParams.Encryption = &ExternalVolumeS3Encryption{
+					Type:     r.AddStorageLocation.S3StorageLocationParams.Encryption.Type,
+					KmsKeyId: r.AddStorageLocation.S3StorageLocationParams.Encryption.KmsKeyId,
+				}
+
 			}
 
 		}
@@ -110,19 +116,25 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 				StorageBaseUrl: r.AddStorageLocation.GCSStorageLocationParams.StorageBaseUrl,
 			}
 
-			opts.AddStorageLocation.GCSStorageLocationParams.Encryption = ExternalVolumeGCSEncryption{
-				Type:     r.AddStorageLocation.GCSStorageLocationParams.Encryption.Type,
-				KmsKeyId: r.AddStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId,
+			if r.AddStorageLocation.GCSStorageLocationParams.Encryption != nil {
+
+				opts.AddStorageLocation.GCSStorageLocationParams.Encryption = &ExternalVolumeGCSEncryption{
+					Type:     r.AddStorageLocation.GCSStorageLocationParams.Encryption.Type,
+					KmsKeyId: r.AddStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId,
+				}
+
 			}
 
 		}
 
 		if r.AddStorageLocation.AzureStorageLocationParams != nil {
+
 			opts.AddStorageLocation.AzureStorageLocationParams = &AzureStorageLocationParams{
 				Name:           r.AddStorageLocation.AzureStorageLocationParams.Name,
 				AzureTenantId:  r.AddStorageLocation.AzureStorageLocationParams.AzureTenantId,
 				StorageBaseUrl: r.AddStorageLocation.AzureStorageLocationParams.StorageBaseUrl,
 			}
+
 		}
 
 	}
