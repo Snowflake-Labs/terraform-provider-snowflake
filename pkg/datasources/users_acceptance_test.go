@@ -80,7 +80,8 @@ func TestAcc_Users_Complete(t *testing.T) {
 						HasDefaultSecondaryRoles(`["ALL"]`).
 						HasMinsToBypassMfaNotEmpty().
 						HasHasRsaPublicKey(true).
-						HasComment(comment),
+						HasComment(comment).
+						HasHasMfa(false),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
@@ -96,7 +97,6 @@ func TestAcc_Users_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
 					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
