@@ -272,7 +272,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
-			err := client.ExternalVolumes.Drop(ctx, sdk.NewDropExternalVolumeRequest(id))
+			err := client.ExternalVolumes.Drop(ctx, sdk.NewDropExternalVolumeRequest(id).WithIfExists(true))
 			require.NoError(t, err)
 		})
 
