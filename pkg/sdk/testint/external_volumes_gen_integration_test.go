@@ -260,9 +260,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	createExternalVolume := func(t *testing.T, storageLocations []sdk.ExternalVolumeStorageLocation, allowWrites bool, comment string) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-		// TODO
-		// id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		id := sdk.NewAccountObjectIdentifier("test_external_volume")
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateExternalVolumeRequest(id, storageLocations).
 			WithIfNotExists(true).
 			WithAllowWrites(allowWrites).
