@@ -1192,8 +1192,54 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 						HasLoginName("LOGIN_NAME"),
 				),
 			},
+			// Unset externally
+			{
+				PreConfig: func() {
+					acc.TestClient().User.Alter(t, newId, &sdk.AlterUserOptions{
+						Unset: &sdk.UserUnset{
+							ObjectProperties: &sdk.UserObjectPropertiesUnset{
+								LoginName:   sdk.Bool(true),
+								DisplayName: sdk.Bool(true),
+							},
+						},
+					})
+				},
+				Config: config.FromModel(t, userModelWithBoth),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
+						HasDisplayNameString("display_name").
+						HasLoginNameString("login_name"),
+					objectassert.User(t, newId).
+						HasDisplayName("display_name").
+						HasLoginName("LOGIN_NAME"),
+				),
+			},
 			// Unset both params
 			{
+				Config: config.FromModel(t, userModelWithNewId),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
+						HasDisplayNameString("").
+						HasLoginNameString(""),
+					objectassert.User(t, newId).
+						HasDisplayName("").
+						HasLoginName(strings.ToUpper(newId.Name())),
+				),
+			},
+			// Set externally
+			{
+				PreConfig: func() {
+					acc.TestClient().User.Alter(t, newId, &sdk.AlterUserOptions{
+						Set: &sdk.UserSet{
+							ObjectProperties: &sdk.UserAlterObjectProperties{
+								UserObjectProperties: sdk.UserObjectProperties{
+									LoginName:   sdk.String("external_login_name"),
+									DisplayName: sdk.String("external_display_name"),
+								},
+							},
+						},
+					})
+				},
 				Config: config.FromModel(t, userModelWithNewId),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
