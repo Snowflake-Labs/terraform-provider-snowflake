@@ -260,8 +260,8 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	createExternalVolume := func(t *testing.T, storageLocations []sdk.ExternalVolumeStorageLocation, allowWrites bool, comment string) sdk.AccountObjectIdentifier {
 		t.Helper()
 
-        //TODO
-		//id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		// TODO
+		// id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id := sdk.NewAccountObjectIdentifier("test_external_volume")
 		req := sdk.NewCreateExternalVolumeRequest(id, storageLocations).
 			WithIfNotExists(true).
@@ -492,11 +492,11 @@ func TestInt_ExternalVolumes(t *testing.T) {
 					s3StorageLocations[0].S3StorageLocationParams.StorageAwsRoleArn,
 					s3StorageLocations[0].S3StorageLocationParams.StorageBaseUrl,
 				).WithStorageAwsExternalId(*s3StorageLocations[0].S3StorageLocationParams.StorageAwsExternalId).
-                    WithEncryption(
-                        *sdk.NewExternalVolumeS3EncryptionRequest(s3StorageLocations[0].S3StorageLocationParams.Encryption.Type,).
-                    WithKmsKeyId(*s3StorageLocations[0].S3StorageLocationParams.Encryption.KmsKeyId),
-                    ),
-            ),
+					WithEncryption(
+						*sdk.NewExternalVolumeS3EncryptionRequest(s3StorageLocations[0].S3StorageLocationParams.Encryption.Type).
+							WithKmsKeyId(*s3StorageLocations[0].S3StorageLocationParams.Encryption.KmsKeyId),
+					),
+			),
 		)
 
 		err := client.ExternalVolumes.Alter(ctx, req)

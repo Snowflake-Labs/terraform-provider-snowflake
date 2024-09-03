@@ -52,8 +52,9 @@ var externalAzureStorageLocationDef = g.NewQueryStruct("AzureStorageLocationPara
 	TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()).
 	TextAssignment("STORAGE_BASE_URL", g.ParameterOptions().SingleQuotes().Required())
 
-var storageLocationDef = g.NewQueryStruct("ExternalVolumeStorageLocation"). // Can't name StorageLocation due to naming clash with type in storage integration
-										OptionalQueryStructField(
+// Can't name StorageLocation due to naming clash with type in storage integration
+var storageLocationDef = g.NewQueryStruct("ExternalVolumeStorageLocation").
+	OptionalQueryStructField(
 		"S3StorageLocationParams",
 		externalS3StorageLocationDef,
 		g.ListOptions().Parentheses().NoComma(),
