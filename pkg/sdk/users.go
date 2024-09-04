@@ -63,6 +63,14 @@ type User struct {
 	HasMfa                bool
 }
 
+// todo: test
+func (v *User) GetSecondaryRolesAsList() []string {
+	if r := v.DefaultSecondaryRoles; r != "" {
+		return ParseCommaSeparatedStringArray(r, true)
+	}
+	return nil
+}
+
 type userDBRow struct {
 	Name                  string         `db:"name"`
 	CreatedOn             time.Time      `db:"created_on"`
