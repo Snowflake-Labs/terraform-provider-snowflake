@@ -15,8 +15,8 @@ type SystemFunctions interface {
 	// PipeForceResume unpauses a pipe after ownership transfer. Snowflake will throw an error whenever a pipe changes its owner,
 	// and someone tries to unpause it. To unpause a pipe after ownership transfer, this system function has to be called instead of ALTER PIPE.
 	PipeForceResume(pipeId SchemaObjectIdentifier, options []ForceResumePipeOption) error
-	EnableBehaviorChangeBundle(bundle string) error
-	DisableBehaviorChangeBundle(bundle string) error
+	EnableBehaviorChangeBundle(ctx context.Context, bundle string) error
+	DisableBehaviorChangeBundle(ctx context.Context, bundle string) error
 }
 
 var _ SystemFunctions = (*systemFunctions)(nil)
@@ -103,14 +103,12 @@ func (c *systemFunctions) PipeForceResume(pipeId SchemaObjectIdentifier, options
 	return err
 }
 
-func (c *systemFunctions) EnableBehaviorChangeBundle(bundle string) error {
-	ctx := context.Background()
+func (c *systemFunctions) EnableBehaviorChangeBundle(ctx context.Context, bundle string) error {
 	_, err := c.client.exec(ctx, fmt.Sprintf("SELECT SYSTEM$ENABLE_BEHAVIOR_CHANGE_BUNDLE('%s')", bundle))
 	return err
 }
 
-func (c *systemFunctions) DisableBehaviorChangeBundle(bundle string) error {
-	ctx := context.Background()
+func (c *systemFunctions) DisableBehaviorChangeBundle(ctx context.Context, bundle string) error {
 	_, err := c.client.exec(ctx, fmt.Sprintf("SELECT SYSTEM$DISABLE_BEHAVIOR_CHANGE_BUNDLE('%s')", bundle))
 	return err
 }

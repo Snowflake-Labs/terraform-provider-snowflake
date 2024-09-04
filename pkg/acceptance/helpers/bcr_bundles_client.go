@@ -1,9 +1,11 @@
 package helpers
 
 import (
+	"context"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type BcrBundlesClient struct {
@@ -22,8 +24,9 @@ func (c *BcrBundlesClient) client() sdk.SystemFunctions {
 
 func (c *BcrBundlesClient) EnableBcrBundle(t *testing.T, name string) {
 	t.Helper()
+	ctx := context.Background()
 
-	err := c.client().EnableBehaviorChangeBundle(name)
+	err := c.client().EnableBehaviorChangeBundle(ctx, name)
 	require.NoError(t, err)
 
 	t.Cleanup(c.DisableBcrBundleFunc(t, name))
@@ -31,9 +34,10 @@ func (c *BcrBundlesClient) EnableBcrBundle(t *testing.T, name string) {
 
 func (c *BcrBundlesClient) DisableBcrBundleFunc(t *testing.T, name string) func() {
 	t.Helper()
+	ctx := context.Background()
 
 	return func() {
-		err := c.client().DisableBehaviorChangeBundle(name)
+		err := c.client().DisableBehaviorChangeBundle(ctx, name)
 		require.NoError(t, err)
 	}
 }

@@ -173,3 +173,19 @@ func TestInt_PipeForceResume(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
 }
+
+// TODO [SNOW-1650249]: add positive tests for bundle enablement (add SYSTEM$SHOW_ACTIVE_BEHAVIOR_CHANGE_BUNDLES() and use it to always pick a bundle that can be enabled/disabled)
+func TestInt_BcrBundles(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	t.Run("enable non-existing bundle", func(t *testing.T) {
+		err := client.SystemFunctions.EnableBehaviorChangeBundle(ctx, "non-existing-bundle")
+		require.ErrorContains(t, err, "Invalid Change Bundle 'non-existing-bundle'")
+	})
+
+	t.Run("disable non-existing bundle", func(t *testing.T) {
+		err := client.SystemFunctions.DisableBehaviorChangeBundle(ctx, "non-existing-bundle")
+		require.ErrorContains(t, err, "Invalid Change Bundle 'non-existing-bundle'")
+	})
+}
