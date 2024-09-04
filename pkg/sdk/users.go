@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -64,11 +65,16 @@ type User struct {
 }
 
 // todo: test
-func (v *User) GetSecondaryRolesAsList() []string {
+func (v *User) GetSecondaryRolesOption() SecondaryRolesOption {
 	if r := v.DefaultSecondaryRoles; r != "" {
-		return ParseCommaSeparatedStringArray(r, true)
+		parsedRoles := ParseCommaSeparatedStringArray(r, true)
+		if len(parsedRoles) > 0 {
+			return SecondaryRolesOptionAll
+		} else {
+			return SecondaryRolesOptionNone
+		}
 	}
-	return nil
+	return SecondaryRolesOptionDefault
 }
 
 type userDBRow struct {
@@ -654,4 +660,31 @@ func (v *users) ShowParameters(ctx context.Context, id AccountObjectIdentifier) 
 			User: id,
 		},
 	})
+}
+
+type SecondaryRolesOption string
+
+const (
+	SecondaryRolesOptionDefault SecondaryRolesOption = "DEFAULT"
+	SecondaryRolesOptionNone    SecondaryRolesOption = "NONE"
+	SecondaryRolesOptionAll     SecondaryRolesOption = "ALL"
+)
+
+func ToSecondaryRolesOption(s string) (SecondaryRolesOption, error) {
+	switch strings.ToUpper(s) {
+	case string(SecondaryRolesOptionDefault):
+		return SecondaryRolesOptionDefault, nil
+	case string(SecondaryRolesOptionNone):
+		return SecondaryRolesOptionNone, nil
+	case string(SecondaryRolesOptionAll):
+		return SecondaryRolesOptionAll, nil
+	default:
+		return "", fmt.Errorf("invalid secondary roles option: %s", s)
+	}
+}
+
+var ValidSecondaryRolesOptionsString = []string{
+	string(SecondaryRolesOptionDefault),
+	string(SecondaryRolesOptionNone),
+	string(SecondaryRolesOptionAll),
 }
