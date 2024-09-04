@@ -354,7 +354,6 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, 0, *userDetails.MinsToBypassMfa.Value)
 	})
 
-	// TODO [SNOW-1348101 - next PR]: consult this with appropriate team when we have all the problems listed
 	t.Run("create and alter: problems with public key fingerprints", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 

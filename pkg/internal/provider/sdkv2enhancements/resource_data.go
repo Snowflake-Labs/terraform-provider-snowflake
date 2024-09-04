@@ -2,7 +2,6 @@ package sdkv2enhancements
 
 import (
 	"reflect"
-	"unsafe"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,9 +16,9 @@ import (
 // - terraform.InstanceState and terraform.InstanceDiff are unexported in schema.ResourceDiff, so we get them using reflection
 func CreateResourceDataFromResourceDiff(resourceSchema schema.InternalMap, diff *schema.ResourceDiff) (*schema.ResourceData, bool) {
 	unexportedState := reflect.ValueOf(diff).Elem().FieldByName("state")
-	stateFromResourceDiff := reflect.NewAt(unexportedState.Type(), unsafe.Pointer(unexportedState.UnsafeAddr())).Elem().Interface()
+	stateFromResourceDiff := reflect.NewAt(unexportedState.Type(), unexportedState.Addr().UnsafePointer()).Elem().Interface()
 	unexportedDiff := reflect.ValueOf(diff).Elem().FieldByName("diff")
-	diffFroResourceDif := reflect.NewAt(unexportedDiff.Type(), unsafe.Pointer(unexportedDiff.UnsafeAddr())).Elem().Interface()
+	diffFroResourceDif := reflect.NewAt(unexportedDiff.Type(), unexportedDiff.Addr().UnsafePointer()).Elem().Interface()
 	castState, ok := stateFromResourceDiff.(*terraform.InstanceState)
 	if !ok {
 		return nil, false

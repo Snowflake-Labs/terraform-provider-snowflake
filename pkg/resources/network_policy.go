@@ -98,6 +98,7 @@ func NetworkPolicy() *schema.Resource {
 			// The main issue lays in the old Terraform SDK and how its handling DiffSuppression and CustomizeDiff
 			// for complex types like Sets, Lists, and Maps. When every element of the Set is suppressed in custom diff,
 			// it returns true for d.HasChange anyway (it returns false for suppressed changes on primitive types like Number, Bool, String, etc.).
+			// TODO [SNOW-1648997]: address the above comment
 			ComputedIfAnyAttributeChanged(
 				networkPolicySchema,
 				ShowOutputAttributeName,

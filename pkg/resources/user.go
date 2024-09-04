@@ -20,8 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-1348101 - next PR]: update all changes in README
-// TODO [SNOW-1348101 - next PR]: add IgnoreChangeToCurrentSnowflakeValueInShow and other suppressors
 var userSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
@@ -36,18 +34,19 @@ var userSchema = map[string]*schema.Schema{
 		Description: "Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully.",
 	},
 	"login_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		DiffSuppressFunc: SuppressIfAny(ignoreCaseSuppressFunc, IgnoreChangeToCurrentSnowflakeValueInShow("login_name")),
+		Description:      "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
 		// login_name is case-insensitive
-		DiffSuppressFunc: ignoreCaseSuppressFunc,
 	},
 	// TODO [SNOW-1348101 - next PR]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Name displayed for the user in the Snowflake web interface.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("display_name"),
+		Description:      "Name displayed for the user in the Snowflake web interface.",
 	},
 	"first_name": {
 		Type:        schema.TypeString,
@@ -77,6 +76,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("must_change_password"),
 		Description:      booleanStringFieldDescription("Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system."),
 		Default:          BooleanDefault,
 	},
@@ -84,21 +84,22 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("disabled"),
 		Description:      booleanStringFieldDescription("Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user."),
 		Default:          BooleanDefault,
 	},
-	// TODO [SNOW-1348101 - next PR]: consider handling external change to 0 or from 0?
+	// TODO [SNOW-1649000]: consider handling external change if there is no config (or zero) for `days_to_expiry` and other similar attributes (what about this the other way around?)
 	"days_to_expiry": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Description: "Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`.",
+		Description: externalChangesNotDetectedFieldDescription("Specifies the number of days after which the user status is set to `Expired` and the user is no longer allowed to log in. This is useful for defining temporary users (i.e. users who should only have access to Snowflake for a limited time period). In general, you should not set this property for [account administrators](https://docs.snowflake.com/en/user-guide/security-access-control-considerations.html#label-accountadmin-users) (i.e. users with the `ACCOUNTADMIN` role) because Snowflake locks them out when they become `Expired`."),
 	},
 	"mins_to_unlock": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      IntDefault,
-		Description:  "Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter.",
+		Description:  externalChangesNotDetectedFieldDescription("Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to it."),
 	},
 	"default_warehouse": {
 		Type:             schema.TypeString,
@@ -110,7 +111,7 @@ var userSchema = map[string]*schema.Schema{
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("default_namespace")),
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the namespace exists.",
 	},
 	"default_role": {
@@ -131,13 +132,12 @@ var userSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
-	// TODO [SNOW-1348101 - next PR]: note that external changes are not handled (and with other params that this is true)
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 		Default:      IntDefault,
-		Description:  "Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available.",
+		Description:  externalChangesNotDetectedFieldDescription("Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available."),
 	},
 	"rsa_public_key": {
 		Type:        schema.TypeString,
@@ -158,7 +158,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validateBooleanString,
-		Description:      booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa)."),
+		Description:      externalChangesNotDetectedFieldDescription(booleanStringFieldDescription("Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa).")),
 		Default:          BooleanDefault,
 	},
 	"user_type": {
@@ -200,8 +200,8 @@ func User() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
-			// TODO [SNOW-TODO]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "middle_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			// TODO [SNOW-1648997]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,

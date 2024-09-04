@@ -69,27 +69,29 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		WithComment(comment).
 		WithDisableMfa("true")
 
-	userModelAllAttributesChanged := model.User("w", id.Name()).
-		WithPassword(newPass).
-		WithLoginName(id.Name() + "_other_login").
-		WithDisplayName("New Display Name").
-		WithFirstName("Janek").
-		WithMiddleName("Kuba").
-		WithLastName("Terraformowski").
-		WithEmail("fake@email.net").
-		WithMustChangePassword("false").
-		WithDisabled("true").
-		WithDaysToExpiry(12).
-		WithMinsToUnlock(13).
-		WithDefaultWarehouse("other_warehouse").
-		WithDefaultNamespace("one_part_namespace").
-		WithDefaultRole("other_role").
-		WithDefaultSecondaryRolesStringList("ALL").
-		WithMinsToBypassMfa(14).
-		WithRsaPublicKey(key2).
-		WithRsaPublicKey2(key1).
-		WithComment(newComment).
-		WithDisableMfa("false")
+	userModelAllAttributesChanged := func(loginName string) *model.UserModel {
+		return model.User("w", id.Name()).
+			WithPassword(newPass).
+			WithLoginName(loginName).
+			WithDisplayName("New Display Name").
+			WithFirstName("Janek").
+			WithMiddleName("Kuba").
+			WithLastName("Terraformowski").
+			WithEmail("fake@email.net").
+			WithMustChangePassword("false").
+			WithDisabled("true").
+			WithDaysToExpiry(12).
+			WithMinsToUnlock(13).
+			WithDefaultWarehouse("other_warehouse").
+			WithDefaultNamespace("one_part_namespace").
+			WithDefaultRole("other_role").
+			WithDefaultSecondaryRolesStringList("ALL").
+			WithMinsToBypassMfa(14).
+			WithRsaPublicKey(key2).
+			WithRsaPublicKey2(key1).
+			WithComment(newComment).
+			WithDisableMfa("false")
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -194,9 +196,9 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModel(t, userModelAllAttributesChanged),
+				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelAllAttributesChanged.ResourceReference()).
+					resourceassert.UserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
 						HasPasswordString(newPass).
 						HasLoginNameString(fmt.Sprintf("%s_other_login", id.Name())).
@@ -223,7 +225,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            userModelAllAttributesChanged.ResourceReference(),
+				ResourceName:            userModelAllAttributesChanged(id.Name() + "_other_login").ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
@@ -232,6 +234,18 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
 						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
 				),
+			},
+			// CHANGE PROP TO THE CURRENT SNOWFLAKE VALUE
+			{
+				PreConfig: func() {
+					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
+				},
+				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			// UNSET ALL
 			{

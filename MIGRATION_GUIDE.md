@@ -257,6 +257,8 @@ New fields:
 - `mins_to_unlock`
 - `mins_to_bypass_mfa`
 - `disable_mfa`
+- `show_output` - holds the response from `SHOW USERS`. Remember that the field will be only recomputed if one of the user attributes is changed.
+- `parameters` - holds the response from `SHOW PARAMETERS IN USER`.
 
 Removed fields:
 - `has_rsa_public_key`
@@ -266,8 +268,8 @@ Default changes:
 - `disabled`
 
 Type changes:
-- `must_change_password`: bool -> string
-- `disabled`: bool -> string
+- `must_change_password`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
+- `disabled`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
 
 Validation changes:
 - `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
@@ -288,6 +290,27 @@ Changes:
   It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 Connected issues: [#2902](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2902)
+
+#### *(breaking change)* snowflake_user_public_keys usage with snowflake_user
+
+`snowflake_user_public_keys` is a resource allowing to set keys for the given user. Before this version, it was possible to have `snowflake_user` and `snowflake_user_public_keys` used next to each other.
+Because the logic handling the keys in `snowflake_user` was fixed, it is advised to use `snowflake_user_public_keys` only when user is not managed through terraform. Having both resources configured for the same user will result in improper behavior.
+
+To migrate, in case of having two resources:
+- copy the keys to `rsa_public_key` and `rsa_public_key2` in `snowflake_user`
+- remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_user_public_keys` from config
+
+#### *(note)* snowflake_user_password_policy_attachment and other user policies
+
+`snowflake_user_password_policy_attachment` is not addressed in the current version.
+Attaching other user policies is not addressed in the current version.
+
+Both topics will be addressed in the following versions.
+
+#### *(note)* user types
+
+`service` and `legacy_service` user types are currently not supported. They will be supported in the following versions as separate resources (namely `snowflake_service_user` and `snowflake_legacy_service_user`).
 
 ## v0.94.0 ➞ v0.94.1
 ### changes in snowflake_schema
