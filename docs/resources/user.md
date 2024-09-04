@@ -34,7 +34,7 @@ resource "snowflake_user" "user" {
   last_name    = "User"
 
   default_warehouse       = "warehouse"
-  default_secondary_roles = ["ALL"]
+  default_secondary_roles = "ALL"
   default_role            = "role1"
 
   rsa_public_key   = "..."
