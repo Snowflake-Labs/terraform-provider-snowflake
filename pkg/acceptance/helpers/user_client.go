@@ -45,6 +45,12 @@ func (c *UserClient) CreateUserWithOptions(t *testing.T, id sdk.AccountObjectIde
 	return user, c.DropUserFunc(t, id)
 }
 
+func (c *UserClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.AlterUserOptions) {
+	t.Helper()
+	err := c.client().Alter(context.Background(), id, opts)
+	require.NoError(t, err)
+}
+
 func (c *UserClient) DropUserFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
