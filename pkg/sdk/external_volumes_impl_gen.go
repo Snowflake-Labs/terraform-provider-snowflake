@@ -49,7 +49,9 @@ func (v *externalVolumes) Show(ctx context.Context, request *ShowExternalVolumeR
 }
 
 func (v *externalVolumes) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalVolume, error) {
-	externalVolumes, err := v.Show(ctx, NewShowExternalVolumeRequest())
+	externalVolumes, err := v.Show(ctx, NewShowExternalVolumeRequest().WithLike(Like{
+		Pattern: String(id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
