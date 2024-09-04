@@ -14,6 +14,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -185,6 +186,8 @@ var userSchema = map[string]*schema.Schema{
 
 func User() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateUser,
 		UpdateContext: UpdateUser,
 		ReadContext:   GetReadUserFunc(true),
@@ -213,6 +216,15 @@ func User() *schema.Resource {
 				return nil
 			},
 		),
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v094UserStateUpgrader,
+			},
+		},
 	}
 }
 
@@ -471,17 +483,19 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
 		func() error {
-			defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
-			if err != nil {
-				return err
-			}
-			switch defaultSecondaryRolesOption {
-			case sdk.SecondaryRolesOptionDefault:
-				unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
-			case sdk.SecondaryRolesOptionNone:
-				setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
-			case sdk.SecondaryRolesOptionAll:
-				setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+			if d.HasChange("default_secondary_roles_option") {
+				defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+				if err != nil {
+					return err
+				}
+				switch defaultSecondaryRolesOption {
+				case sdk.SecondaryRolesOptionDefault:
+					unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
+				case sdk.SecondaryRolesOptionNone:
+					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+				case sdk.SecondaryRolesOptionAll:
+					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+				}
 			}
 			return nil
 		}(),

@@ -1303,6 +1303,101 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 	})
 }
 
+func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.UserWithDefaultMeta(id.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModel(t, userModel),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles.#", "0"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
+						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, nil, nil),
+						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles_option", string(sdk.SecondaryRolesOptionDefault)),
+					resource.TestCheckNoResourceAttr(userModel.ResourceReference(), "default_secondary_roles"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModelWithOptionAll := model.UserWithDefaultMeta(id.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: fmt.Sprintf(`
+resource "snowflake_user" "test" {
+	name = "%s"
+	default_secondary_roles = ["ALL"]
+}`, id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(userModelWithOptionAll.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(userModelWithOptionAll.ResourceReference(), "default_secondary_roles.#", "1"),
+					resource.TestCheckResourceAttr(userModelWithOptionAll.ResourceReference(), "default_secondary_roles.0", "ALL"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, userModelWithOptionAll),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
+						planchecks.ExpectChange(userModelWithOptionAll.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, nil, nil),
+						planchecks.ExpectChange(userModelWithOptionAll.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionAll)), sdk.String(string(sdk.SecondaryRolesOptionAll))),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(userModelWithOptionAll.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(userModelWithOptionAll.ResourceReference(), "default_secondary_roles_option", string(sdk.SecondaryRolesOptionAll)),
+					resource.TestCheckNoResourceAttr(userModelWithOptionAll.ResourceReference(), "default_secondary_roles"),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
