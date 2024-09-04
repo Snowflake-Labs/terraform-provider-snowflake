@@ -1562,6 +1562,7 @@ func TestInt_Users(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		userDetails, err = client.Users.Describe(ctx, id)
 		require.NoError(t, err)
@@ -1575,6 +1576,7 @@ func TestInt_Users(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		userDetails, err = client.Users.Describe(ctx, id)
 		require.NoError(t, err)
@@ -1604,6 +1606,7 @@ func TestInt_Users(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		userDetails, err = client.Users.Describe(ctx, id)
 		require.NoError(t, err)
@@ -1617,6 +1620,7 @@ func TestInt_Users(t *testing.T) {
 				},
 			},
 		})
+		require.NoError(t, err)
 
 		userDetails, err = client.Users.Describe(ctx, id)
 		require.NoError(t, err)
