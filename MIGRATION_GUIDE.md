@@ -153,6 +153,8 @@ Connected issues: [#3007](https://github.com/Snowflake-Labs/terraform-provider-s
 
 ### snowflake_user resource changes
 
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
+
 #### *(breaking change)* user parameters added to snowflake_user resource
 
 On our road to V1 we changed the approach to Snowflake parameters on the object level; now, we add them directly to the resource. This is a **breaking change** because now:
@@ -243,6 +245,19 @@ Not every attribute can be updated in the state during read (like `password` in 
 
 Connected issues: [#2970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2970)
 
+#### *(breaking change)* Handling default secondary roles
+
+Old field `default_secondary_roles` was removed in favour of the new, easier, `default_secondary_roles_option` because the only possible options that can be currently set are `('ALL')` and `()`.  The logic to handle set element changes was convoluted and error-prone. Additionally, [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_07/bcr-1692) complicated the matter even more.
+
+Now:
+- the default value is `DEFAULT` - it falls back to Snowflake default (so `()` before and `('ALL')` after the BCR)
+- to explicitly set to `('ALL')` use `ALL`
+- to explicitly set to `()` use `NONE`
+
+While migrating, the old `default_secondary_roles` will be removed from the state automatically and `default_secondary_roles_option` will be constructed based on the previous value (in some cases apply may be necessary).
+
+Connected issues: [#3038](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3038)
+
 #### *(breaking change)* Attributes changes
 
 Attributes that are no longer computed:
@@ -257,11 +272,13 @@ New fields:
 - `mins_to_unlock`
 - `mins_to_bypass_mfa`
 - `disable_mfa`
+- `default_secondary_roles_option`
 - `show_output` - holds the response from `SHOW USERS`. Remember that the field will be only recomputed if one of the user attributes is changed.
 - `parameters` - holds the response from `SHOW PARAMETERS IN USER`.
 
 Removed fields:
 - `has_rsa_public_key`
+- `default_secondary_roles` - replaced with `default_secondary_roles_option`
 
 Default changes:
 - `must_change_password`
@@ -270,9 +287,6 @@ Default changes:
 Type changes:
 - `must_change_password`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
 - `disabled`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
-
-Validation changes:
-- `default_secondary_roles` - only 1-element lists with `"ALL"` element are now supported. Check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties) for more details.
 
 #### *(breaking change)* refactored snowflake_users datasource
 > **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited. 

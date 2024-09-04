@@ -122,8 +122,8 @@ func (u *UserResourceAssert) HasDefaultRoleString(expected string) *UserResource
 	return u
 }
 
-func (u *UserResourceAssert) HasDefaultSecondaryRolesString(expected string) *UserResourceAssert {
-	u.AddAssertion(assert.ValueSet("default_secondary_roles", expected))
+func (u *UserResourceAssert) HasDefaultSecondaryRolesOptionString(expected string) *UserResourceAssert {
+	u.AddAssertion(assert.ValueSet("default_secondary_roles_option", expected))
 	return u
 }
 
@@ -531,8 +531,8 @@ func (u *UserResourceAssert) HasNoDefaultRole() *UserResourceAssert {
 	return u
 }
 
-func (u *UserResourceAssert) HasNoDefaultSecondaryRoles() *UserResourceAssert {
-	u.AddAssertion(assert.ValueNotSet("default_secondary_roles"))
+func (u *UserResourceAssert) HasNoDefaultSecondaryRolesOption() *UserResourceAssert {
+	u.AddAssertion(assert.ValueNotSet("default_secondary_roles_option"))
 	return u
 }
 

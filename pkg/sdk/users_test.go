@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -22,6 +23,39 @@ func TestUserCreate(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s`, id.FullyQualifiedName())
 	})
 
+	t.Run("empty secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{None: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s DEFAULT_SECONDARY_ROLES = ()`, id.FullyQualifiedName())
+	})
+
+	t.Run("with empty secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
+
+	t.Run("with both options in secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{
+					All:  Bool(true),
+					None: Bool(true),
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
+
 	t.Run("with complete options", func(t *testing.T) {
 		tagId := randomSchemaObjectIdentifier()
 		tags := []TagAssociation{
@@ -41,11 +75,12 @@ func TestUserCreate(t *testing.T) {
 			name:        id,
 			IfNotExists: Bool(true),
 			ObjectProperties: &UserObjectProperties{
-				Password:         &password,
-				LoginName:        &loginName,
-				DefaultRole:      Pointer(defaultRoleId),
-				DefaultNamespace: Pointer(defaultNamespaceId),
-				DefaultWarehouse: Pointer(defaultWarehouseId),
+				Password:              &password,
+				LoginName:             &loginName,
+				DefaultRole:           Pointer(defaultRoleId),
+				DefaultNamespace:      Pointer(defaultNamespaceId),
+				DefaultWarehouse:      Pointer(defaultWarehouseId),
+				DefaultSecondaryRoles: &SecondaryRoles{All: Bool(true)},
 			},
 			ObjectParameters: &UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: Bool(true),
@@ -57,7 +92,7 @@ func TestUserCreate(t *testing.T) {
 			Tags: tags,
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_WAREHOUSE = %s DEFAULT_NAMESPACE = %s DEFAULT_ROLE = %s ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, defaultWarehouseId.FullyQualifiedName(), defaultNamespaceId.FullyQualifiedName(), defaultRoleId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_WAREHOUSE = %s DEFAULT_NAMESPACE = %s DEFAULT_ROLE = %s DEFAULT_SECONDARY_ROLES = ('ALL') ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, defaultWarehouseId.FullyQualifiedName(), defaultNamespaceId.FullyQualifiedName(), defaultRoleId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -149,8 +184,10 @@ func TestUserAlter(t *testing.T) {
 		password := random.Password()
 		objectProperties := UserAlterObjectProperties{
 			UserObjectProperties: UserObjectProperties{
-				Password:              &password,
-				DefaultSecondaryRoles: &SecondaryRoles{},
+				Password: &password,
+				DefaultSecondaryRoles: &SecondaryRoles{
+					All: Bool(true),
+				},
 			},
 		}
 		opts := &AlterUserOptions{
@@ -299,6 +336,37 @@ func TestUserAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s REMOVE DELEGATED AUTHORIZATION OF ROLE %s FROM SECURITY INTEGRATION %s", id.FullyQualifiedName(), role, integration)
+	})
+
+	t.Run("empty secondary roles", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &UserAlterObjectProperties{
+					UserObjectProperties: UserObjectProperties{
+						DefaultSecondaryRoles: &SecondaryRoles{},
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
+
+	t.Run("with empty secondary roles", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &UserAlterObjectProperties{
+					UserObjectProperties: UserObjectProperties{
+						DefaultSecondaryRoles: &SecondaryRoles{
+							All:  Bool(true),
+							None: Bool(true),
+						},
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
 	})
 }
 
@@ -708,6 +776,79 @@ func Test_User_ToUnsupportedDDLAction(t *testing.T) {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := ToUnsupportedDDLAction(tc.input)
 			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToSecondaryRolesOption(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "none", want: SecondaryRolesOptionNone},
+
+		// Supported Values
+		{input: "NONE", want: SecondaryRolesOptionNone},
+		{input: "ALL", want: SecondaryRolesOptionAll},
+		{input: "DEFAULT", want: SecondaryRolesOptionDefault},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToSecondaryRolesOption(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToSecondaryRolesOption(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_GetSecondaryRolesOptionFrom(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		{input: "", want: SecondaryRolesOptionDefault},
+		{input: "[]", want: SecondaryRolesOptionNone},
+		{input: `["ALL"]`, want: SecondaryRolesOptionAll},
+		{input: `["any"]`, want: SecondaryRolesOptionAll},
+		{input: `["more", "than", "one"]`, want: SecondaryRolesOptionAll},
+		{input: `no list`, want: SecondaryRolesOptionAll},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got := GetSecondaryRolesOptionFrom(tc.input)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(fmt.Sprintf("invoked from user: %s", tc.input), func(t *testing.T) {
+			user := User{DefaultSecondaryRoles: tc.input}
+			got := user.GetSecondaryRolesOption()
+			require.Equal(t, tc.want, got)
 		})
 	}
 }

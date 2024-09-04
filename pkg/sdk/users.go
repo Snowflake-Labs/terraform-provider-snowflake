@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -61,6 +62,22 @@ type User struct {
 	HasRsaPublicKey       bool
 	Type                  string
 	HasMfa                bool
+}
+
+func (v *User) GetSecondaryRolesOption() SecondaryRolesOption {
+	return GetSecondaryRolesOptionFrom(v.DefaultSecondaryRoles)
+}
+
+func GetSecondaryRolesOptionFrom(text string) SecondaryRolesOption {
+	if text != "" {
+		parsedRoles := ParseCommaSeparatedStringArray(text, true)
+		if len(parsedRoles) > 0 {
+			return SecondaryRolesOptionAll
+		} else {
+			return SecondaryRolesOptionNone
+		}
+	}
+	return SecondaryRolesOptionDefault
 }
 
 type userDBRow struct {
@@ -187,6 +204,11 @@ func (opts *CreateUserOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		return errors.Join(ErrInvalidObjectIdentifier)
 	}
+	if valueSet(opts.ObjectProperties) && valueSet(opts.ObjectProperties.DefaultSecondaryRoles) {
+		if err := opts.ObjectProperties.DefaultSecondaryRoles.validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -236,7 +258,8 @@ type UserAlterObjectProperties struct {
 }
 
 type SecondaryRoles struct {
-	all bool `ddl:"static" sql:"('ALL')"`
+	None *bool `ddl:"static" sql:"()"`
+	All  *bool `ddl:"static" sql:"('ALL')"`
 }
 
 type SecondaryRole struct {
@@ -375,6 +398,18 @@ type UserSet struct {
 func (opts *UserSet) validate() error {
 	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	}
+	if valueSet(opts.ObjectProperties) && valueSet(opts.ObjectProperties.DefaultSecondaryRoles) {
+		if err := opts.ObjectProperties.DefaultSecondaryRoles.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (opts *SecondaryRoles) validate() error {
+	if !exactlyOneValueSet(opts.All, opts.None) {
+		return errExactlyOneOf("SecondaryRoles", "All", "None")
 	}
 	return nil
 }
@@ -628,4 +663,31 @@ func (v *users) ShowParameters(ctx context.Context, id AccountObjectIdentifier) 
 			User: id,
 		},
 	})
+}
+
+type SecondaryRolesOption string
+
+const (
+	SecondaryRolesOptionDefault SecondaryRolesOption = "DEFAULT"
+	SecondaryRolesOptionNone    SecondaryRolesOption = "NONE"
+	SecondaryRolesOptionAll     SecondaryRolesOption = "ALL"
+)
+
+func ToSecondaryRolesOption(s string) (SecondaryRolesOption, error) {
+	switch strings.ToUpper(s) {
+	case string(SecondaryRolesOptionDefault):
+		return SecondaryRolesOptionDefault, nil
+	case string(SecondaryRolesOptionNone):
+		return SecondaryRolesOptionNone, nil
+	case string(SecondaryRolesOptionAll):
+		return SecondaryRolesOptionAll, nil
+	default:
+		return "", fmt.Errorf("invalid secondary roles option: %s", s)
+	}
+}
+
+var ValidSecondaryRolesOptionsString = []string{
+	string(SecondaryRolesOptionDefault),
+	string(SecondaryRolesOptionNone),
+	string(SecondaryRolesOptionAll),
 }

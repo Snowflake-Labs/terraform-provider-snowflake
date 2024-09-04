@@ -254,7 +254,7 @@ func TestInt_Users(t *testing.T) {
 			DefaultWarehouse:      sdk.Pointer(warehouseId),
 			DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
 			DefaultRole:           sdk.Pointer(roleId),
-			DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+			DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
 			MinsToBypassMFA:       sdk.Int(30),
 			RSAPublicKey:          sdk.String(key),
 			RSAPublicKey2:         sdk.String(key2),
@@ -646,7 +646,7 @@ func TestInt_Users(t *testing.T) {
 					DefaultWarehouse:      sdk.Pointer(warehouseId),
 					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
 					DefaultRole:           sdk.Pointer(roleId),
-					DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
 					MinsToBypassMFA:       sdk.Int(30),
 					RSAPublicKey:          sdk.String(key),
 					RSAPublicKey2:         sdk.String(key2),
@@ -1153,7 +1153,7 @@ func TestInt_Users(t *testing.T) {
 				DefaultWarehouse:      sdk.Pointer(warehouseId),
 				DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
 				DefaultRole:           sdk.Pointer(roleId),
-				DefaultSecondaryRoles: &sdk.SecondaryRoles{},
+				DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
 				MinsToBypassMFA:       sdk.Int(30),
 				RSAPublicKey:          sdk.String(key),
 				RSAPublicKey2:         sdk.String(key2),
@@ -1538,5 +1538,92 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		// mins to bypass mfa is nil
 		require.Nil(t, userDetails.MinsToBypassMfa.Value)
+	})
+
+	t.Run("default secondary roles: before bundle 2024_07", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		// create, expecting null as default
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
+
+		// set to empty, expecting empty list
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DefaultSecondaryRoles: &sdk.SecondaryRoles{None: sdk.Bool(true)},
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "[]", userDetails.DefaultSecondaryRoles.Value)
+
+		// unset, expecting null
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					DefaultSecondaryRoles: sdk.Bool(true),
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
+	})
+
+	t.Run("default secondary roles: with bundle 2024_07 enabled", func(t *testing.T) {
+		testClientHelper().BcrBundles.EnableBcrBundle(t, "2024_07")
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		// create, expecting ALL as new default
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+
+		// set to empty, expecting empty list
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DefaultSecondaryRoles: &sdk.SecondaryRoles{None: sdk.Bool(true)},
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "[]", userDetails.DefaultSecondaryRoles.Value)
+
+		// unset, expecting ALL
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					DefaultSecondaryRoles: sdk.Bool(true),
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
 	})
 }

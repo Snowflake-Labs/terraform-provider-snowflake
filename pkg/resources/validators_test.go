@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIsDataType(t *testing.T) {
@@ -352,56 +351,6 @@ func Test_isNotEqualTo(t *testing.T) {
 				}
 			} else {
 				assert.Len(t, diag, 0)
-			}
-		})
-	}
-}
-
-func Test_isValidSecondaryRole(t *testing.T) {
-	testCases := []struct {
-		Name            string
-		Value           any
-		ExpectedSummary string
-		ExpectedDetail  string
-	}{
-		{
-			Name:  "only supported value: 'ALL'",
-			Value: "ALL",
-		},
-		{
-			Name:  "only supported value lowercased",
-			Value: "all",
-		},
-		{
-			Name:            "nil value",
-			Value:           nil,
-			ExpectedSummary: "Unsupported secondary role ''",
-			ExpectedDetail:  "The only supported default secondary roles value is currently 'ALL'",
-		},
-		{
-			Name:            "empty value",
-			Value:           "",
-			ExpectedSummary: "Unsupported secondary role ''",
-			ExpectedDetail:  "The only supported default secondary roles value is currently 'ALL'",
-		},
-		{
-			Name:            "unsupported value",
-			Value:           "SOME_ROLE",
-			ExpectedSummary: "Unsupported secondary role 'SOME_ROLE'",
-			ExpectedDetail:  "The only supported default secondary roles value is currently 'ALL'",
-		},
-	}
-
-	for _, tt := range testCases {
-		tt := tt
-		t.Run(tt.Name, func(t *testing.T) {
-			diag := isValidSecondaryRole()(tt.Value, cty.GetAttrPath("path"))
-			if tt.ExpectedSummary != "" || tt.ExpectedDetail != "" {
-				require.Len(t, diag, 1)
-				assert.Contains(t, diag[0].Summary, tt.ExpectedSummary)
-				assert.Contains(t, diag[0].Detail, tt.ExpectedDetail)
-			} else {
-				require.Len(t, diag, 0)
 			}
 		})
 	}

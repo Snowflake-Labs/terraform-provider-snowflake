@@ -14,6 +14,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -41,7 +42,6 @@ var userSchema = map[string]*schema.Schema{
 		Description:      "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
 		// login_name is case-insensitive
 	},
-	// TODO [SNOW-1348101 - next PR]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -107,7 +107,6 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the warehouse exists.",
 	},
-	// TODO [SNOW-1348101 - next PR]: check the exact behavior of default_namespace and default_role because it looks like it is handled in a case-insensitive manner on Snowflake side
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -120,17 +119,15 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.",
 	},
-	"default_secondary_roles": {
-		Type: schema.TypeSet,
-		Elem: &schema.Schema{
-			Type:             schema.TypeString,
-			ValidateDiagFunc: isValidSecondaryRole(),
-		},
-		DiffSuppressFunc: SuppressCaseInSet("default_secondary_roles"),
-		MaxItems:         1,
-		MinItems:         1,
+	"default_secondary_roles_option": {
+		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
+		Default:          sdk.SecondaryRolesOptionDefault,
+		ValidateDiagFunc: sdkValidation(sdk.ToSecondaryRolesOption),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSecondaryRolesOption), IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("default_secondary_roles", func(x any) any {
+			return sdk.GetSecondaryRolesOptionFrom(x.(string))
+		})),
+		Description: fmt.Sprintf("Specifies the secondary roles that are active for the user’s session upon login. Valid values are (case-insensitive): %s. More information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).", possibleValuesListed(sdk.ValidSecondaryRolesOptionsString)),
 	},
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,
@@ -187,6 +184,8 @@ var userSchema = map[string]*schema.Schema{
 
 func User() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateUser,
 		UpdateContext: UpdateUser,
 		ReadContext:   GetReadUserFunc(true),
@@ -200,8 +199,7 @@ func User() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
-			// TODO [SNOW-1648997]: "default_secondary_roles" have to stay commented out because of how the SDKv2 handles diff suppressions and custom diffs for sets
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
@@ -216,6 +214,15 @@ func User() *schema.Resource {
 				return nil
 			},
 		),
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v094UserStateUpgrader,
+			},
+		},
 	}
 }
 
@@ -274,9 +281,21 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
-		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
-		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
-		attributeDirectValueCreate(d, "default_secondary_roles", &opts.ObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}),
+		func() error {
+			defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+			if err != nil {
+				return err
+			}
+			switch defaultSecondaryRolesOption {
+			case sdk.SecondaryRolesOptionDefault:
+				return nil
+			case sdk.SecondaryRolesOptionNone:
+				opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+			case sdk.SecondaryRolesOptionAll:
+				opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+			}
+			return nil
+		}(),
 		intAttributeWithSpecialDefaultCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
 		stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
 		stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
@@ -370,6 +389,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 				showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil},
 				showMapping{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
 				showMapping{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
+				showMapping{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -385,10 +405,6 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		var defaultSecondaryRoles []string
-		if userDetails.DefaultSecondaryRoles != nil && len(userDetails.DefaultSecondaryRoles.Value) > 0 {
-			defaultSecondaryRoles = sdk.ParseCommaSeparatedStringArray(userDetails.DefaultSecondaryRoles.Value, true)
-		}
 		errs := errors.Join(
 			// not reading name on purpose (we never update the name externally)
 			// can't read password
@@ -405,7 +421,7 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			setFromStringPropertyIfNotEmpty(d, "default_warehouse", userDetails.DefaultWarehouse),
 			// not reading default_namespace because one-part namespace seems to be capitalized on Snowflake side (handled as external change to show output)
 			setFromStringPropertyIfNotEmpty(d, "default_role", userDetails.DefaultRole),
-			d.Set("default_secondary_roles", defaultSecondaryRoles),
+			// not setting default_secondary_role_option (handled as external change to show output)
 			// not reading mins_to_bypass_mfa on purpose (they always change)
 			setFromStringPropertyIfNotEmpty(d, "rsa_public_key", userDetails.RsaPublicKey),
 			setFromStringPropertyIfNotEmpty(d, "rsa_public_key_2", userDetails.RsaPublicKey2),
@@ -464,9 +480,23 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
-		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
-		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
-		attributeDirectValueUpdate(d, "default_secondary_roles", &setObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}, &unsetObjectProperties.DefaultSecondaryRoles),
+		func() error {
+			if d.HasChange("default_secondary_roles_option") {
+				defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+				if err != nil {
+					return err
+				}
+				switch defaultSecondaryRolesOption {
+				case sdk.SecondaryRolesOptionDefault:
+					unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
+				case sdk.SecondaryRolesOptionNone:
+					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+				case sdk.SecondaryRolesOptionAll:
+					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+				}
+			}
+			return nil
+		}(),
 		intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
 		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
 		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
