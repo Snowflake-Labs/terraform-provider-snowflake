@@ -187,6 +187,11 @@ func (opts *CreateUserOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		return errors.Join(ErrInvalidObjectIdentifier)
 	}
+	if valueSet(opts.ObjectProperties) && valueSet(opts.ObjectProperties.DefaultSecondaryRoles) {
+		if err := opts.ObjectProperties.DefaultSecondaryRoles.validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -235,8 +240,10 @@ type UserAlterObjectProperties struct {
 	DisableMfa *bool `ddl:"parameter,no_quotes" sql:"DISABLE_MFA"`
 }
 
+// TODO: check every usage, run the tests, add bundle enabled tests
 type SecondaryRoles struct {
-	all bool `ddl:"static" sql:"('ALL')"`
+	None *bool `ddl:"static" sql:"()"`
+	All  *bool `ddl:"static" sql:"('ALL')"`
 }
 
 type SecondaryRole struct {
@@ -375,6 +382,18 @@ type UserSet struct {
 func (opts *UserSet) validate() error {
 	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
 		return errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	}
+	if valueSet(opts.ObjectProperties) && valueSet(opts.ObjectProperties.DefaultSecondaryRoles) {
+		if err := opts.ObjectProperties.DefaultSecondaryRoles.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (opts *SecondaryRoles) validate() error {
+	if !exactlyOneValueSet(opts.All, opts.None) {
+		return errExactlyOneOf("SecondaryRoles", "All", "None")
 	}
 	return nil
 }
