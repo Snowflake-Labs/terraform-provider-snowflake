@@ -240,7 +240,6 @@ type UserAlterObjectProperties struct {
 	DisableMfa *bool `ddl:"parameter,no_quotes" sql:"DISABLE_MFA"`
 }
 
-// TODO: check every usage, run the tests, add bundle enabled tests
 type SecondaryRoles struct {
 	None *bool `ddl:"static" sql:"()"`
 	All  *bool `ddl:"static" sql:"('ALL')"`

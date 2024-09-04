@@ -1539,4 +1539,87 @@ func TestInt_Users(t *testing.T) {
 		// mins to bypass mfa is nil
 		require.Nil(t, userDetails.MinsToBypassMfa.Value)
 	})
+
+	t.Run("default secondary roles: before bundle 2024_07", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		// create, expecting null as default
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
+
+		// set to empty, expecting empty list
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DefaultSecondaryRoles: &sdk.SecondaryRoles{None: sdk.Bool(true)},
+					},
+				},
+			},
+		})
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "[]", userDetails.DefaultSecondaryRoles.Value)
+
+		// unset, expecting null
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					DefaultSecondaryRoles: sdk.Bool(true),
+				},
+			},
+		})
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
+	})
+
+	t.Run("default secondary roles: with bundle 2024_07 enabled", func(t *testing.T) {
+		testClientHelper().BcrBundles.EnableBcrBundle(t, "2024_07")
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+		// create, expecting ALL as new default
+		err := client.Users.Create(ctx, id, nil)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+
+		// set to empty, expecting empty list
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						DefaultSecondaryRoles: &sdk.SecondaryRoles{None: sdk.Bool(true)},
+					},
+				},
+			},
+		})
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, "[]", userDetails.DefaultSecondaryRoles.Value)
+
+		// unset, expecting ALL
+		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					DefaultSecondaryRoles: sdk.Bool(true),
+				},
+			},
+		})
+
+		userDetails, err = client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+	})
 }
