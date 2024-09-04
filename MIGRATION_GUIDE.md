@@ -153,6 +153,8 @@ Connected issues: [#3007](https://github.com/Snowflake-Labs/terraform-provider-s
 
 ### snowflake_user resource changes
 
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
+
 #### *(breaking change)* user parameters added to snowflake_user resource
 
 On our road to V1 we changed the approach to Snowflake parameters on the object level; now, we add them directly to the resource. This is a **breaking change** because now:
