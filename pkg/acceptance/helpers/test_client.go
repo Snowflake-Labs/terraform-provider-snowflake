@@ -15,6 +15,7 @@ type TestClient struct {
 	ApiIntegration               *ApiIntegrationClient
 	Application                  *ApplicationClient
 	ApplicationPackage           *ApplicationPackageClient
+	BcrBundles                   *BcrBundlesClient
 	Context                      *ContextClient
 	CortexSearchService          *CortexSearchServiceClient
 	CatalogIntegration           *CatalogIntegrationClient
@@ -77,6 +78,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		ApiIntegration:               NewApiIntegrationClient(context, idsGenerator),
 		Application:                  NewApplicationClient(context, idsGenerator),
 		ApplicationPackage:           NewApplicationPackageClient(context, idsGenerator),
+		BcrBundles:                   NewBcrBundlesClient(context),
 		Context:                      NewContextClient(context),
 		CortexSearchService:          NewCortexSearchServiceClient(context, idsGenerator),
 		CatalogIntegration:           NewCatalogIntegrationClient(context, idsGenerator),
