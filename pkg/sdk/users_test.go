@@ -778,3 +778,43 @@ func Test_User_ToUnsupportedDDLAction(t *testing.T) {
 		})
 	}
 }
+
+func Test_User_ToSecondaryRolesOption(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "none", want: SecondaryRolesOptionNone},
+
+		// Supported Values
+		{input: "NONE", want: SecondaryRolesOptionNone},
+		{input: "ALL", want: SecondaryRolesOptionAll},
+		{input: "DEFAULT", want: SecondaryRolesOptionDefault},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToSecondaryRolesOption(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToSecondaryRolesOption(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
