@@ -7,6 +7,7 @@ The cases are covering the situations where:
 - Database and role are granted to the user, but the casing is not matched.
 - Database and role are granted to the user and the casing is matching.
 - Only role is granted to the user and the casing is matching.
+- Database and role are created with lowercase, granted to the user.
 
 ## Setup
 
@@ -26,9 +27,13 @@ The only thing that won't change between the tests is role and database, so we c
 ```sql
 CREATE ROLE TEST_ROLE;
 CREATE DATABASE TEST_DATABASE;
+CREATE ROLE "test_role";
+CREATE DATABASE "test_database";
 ```
 
-> Note: We have to use TYPE = LEGACY_SERVICE to be able to use 
+> Note: We have to use `TYPE = LEGACY_SERVICE` to be able to quickly log in using `login_name` + `password`.
+
+> Note: It doesn't matter if you use single or double quotes for user properties (they result in the same behavior).
 
 ### 1. Either database or role is not present.
 
@@ -126,6 +131,74 @@ REVOKE USAGE ON DATABASE TEST_DATABASE FROM ROLE TEST_ROLE;
 
 3. Log into the user (logs in successfully and role is selected in the context, but the database is not).
 
+### 6. Database and role are created with lowercase, granted to the user.
+
+#### 1. Matching casing
+
+1. Replace the user with existing default database and role and exact casing.
+
+```sql
+CREATE OR REPLACE USER TEST_USER
+    TYPE = LEGACY_SERVICE
+    LOGIN_NAME = 'login_name'
+    PASSWORD = 'password'
+    DEFAULT_NAMESPACE = 'test_database'
+    DEFAULT_ROLE = 'test_role';
+```
+
+2. Grant the role to the user and grant usage on the database to the role.
+
+```sql
+GRANT ROLE "test_role" TO USER TEST_USER;
+GRANT USAGE ON DATABASE "test_database" TO ROLE "test_role";
+```
+
+3. Log into the user (logs in successfully and role is selected in the context, but the database is not).
+
+#### 2. Additionally quoting the database
+
+1. Replace the user with existing default database and role and exact casing.
+
+```sql
+CREATE OR REPLACE USER TEST_USER
+    TYPE = LEGACY_SERVICE
+    LOGIN_NAME = 'login_name'
+    PASSWORD = 'password'
+    DEFAULT_NAMESPACE = '"test_database"'
+    DEFAULT_ROLE = 'test_role';
+```
+
+2. Grant the role to the user and grant usage on the database to the role.
+
+```sql
+GRANT ROLE "test_role" TO USER TEST_USER;
+GRANT USAGE ON DATABASE "test_database" TO ROLE "test_role";
+```
+
+3. Log into the user (logs in successfully and the database and role are selected in the context).
+
+#### 3. Additionally quoting the role
+
+1. Replace the user with existing default database and role and exact casing.
+
+```sql
+CREATE OR REPLACE USER TEST_USER
+    TYPE = LEGACY_SERVICE
+    LOGIN_NAME = 'login_name'
+    PASSWORD = 'password'
+    DEFAULT_NAMESPACE = 'test_database'
+    DEFAULT_ROLE = '"test_role"';
+```
+
+2. Grant the role to the user and grant usage on the database to the role.
+
+```sql
+GRANT ROLE "test_role" TO USER TEST_USER;
+GRANT USAGE ON DATABASE "test_database" TO ROLE "test_role";
+```
+
+3. Log into the user (logs in successfully and the database and role are not selected in the context, because the value of `"test_role"` is saved as role name which is **not** perceived as a valid role name).
+
 ## Clean up
 
 To clean up all the objects used in the tests, run the following commands.
@@ -133,5 +206,13 @@ To clean up all the objects used in the tests, run the following commands.
 ```sql
 DROP DATABASE TEST_DATABASE;
 DROP ROLE TEST_ROLE;
+DROP DATABASE "test_database";
+DROP ROLE "test_role";
 DROP USER TEST_USER;
 ```
+
+## Summary
+
+When specifying `DEFAULT_NAMESPACE` and `DEFAULT_ROLE` we have to take into the account that:
+- `DEFAULT_NAMESPACE` is always being uppercased in Snowflake unless it's wrapped into double quotes, e.g. `DEFAULT_NAMESPACE = '"test_database"'`.
+- `DEFAULT_ROLE` is always saving the input you are passing as is. This may cause issues when double-quoted id is passed, e.g. `DEFAULT_ROLE = '"test_role"'` will be saved as `"test_role"` (which won't work when logging into that user), and not `test_role` like in the case of `DEFAULT_NAMESPACE`.
