@@ -239,6 +239,11 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 		return nil, err
 	}
 
+	u, err := client.Users.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
 	err = errors.Join(
 		d.Set("name", id.Name()),
 		setFromStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
@@ -246,6 +251,7 @@ func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 		setFromStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
 		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
 		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
+		d.Set("default_secondary_roles_option", u.GetSecondaryRolesOption()),
 		// all others are set in read
 	)
 	if err != nil {
