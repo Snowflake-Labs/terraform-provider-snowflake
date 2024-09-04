@@ -64,10 +64,13 @@ type User struct {
 	HasMfa                bool
 }
 
-// todo: test
 func (v *User) GetSecondaryRolesOption() SecondaryRolesOption {
-	if r := v.DefaultSecondaryRoles; r != "" {
-		parsedRoles := ParseCommaSeparatedStringArray(r, true)
+	return GetSecondaryRolesOptionFrom(v.DefaultSecondaryRoles)
+}
+
+func GetSecondaryRolesOptionFrom(text string) SecondaryRolesOption {
+	if text != "" {
+		parsedRoles := ParseCommaSeparatedStringArray(text, true)
 		if len(parsedRoles) > 0 {
 			return SecondaryRolesOptionAll
 		} else {

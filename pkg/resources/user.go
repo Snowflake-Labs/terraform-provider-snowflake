@@ -125,8 +125,10 @@ var userSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          sdk.SecondaryRolesOptionDefault,
 		ValidateDiagFunc: sdkValidation(sdk.ToSecondaryRolesOption),
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToSecondaryRolesOption),
-		Description:      fmt.Sprintf("Specifies the secondary roles that are active for the user’s session upon login. Valid values are (case-insensitive): %s. More information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).", possibleValuesListed(sdk.ValidSecondaryRolesOptionsString)),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSecondaryRolesOption), IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("default_secondary_roles", func(x any) any {
+			return sdk.GetSecondaryRolesOptionFrom(x.(string))
+		})),
+		Description: fmt.Sprintf("Specifies the secondary roles that are active for the user’s session upon login. Valid values are (case-insensitive): %s. More information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).", possibleValuesListed(sdk.ValidSecondaryRolesOptionsString)),
 	},
 	"mins_to_bypass_mfa": {
 		Type:         schema.TypeInt,

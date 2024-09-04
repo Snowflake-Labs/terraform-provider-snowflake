@@ -81,7 +81,7 @@ func IgnoreAfterCreation(_, _, _ string, d *schema.ResourceData) bool {
 	return d.Id() != ""
 }
 
-// IgnoreChangeToCurrentSnowflakeValueInShow should be used to ignore changes to the given attribute when its value is equal to value in show_output.
+// IgnoreChangeToCurrentSnowflakeValueInShowWithMapping should be used to ignore changes to the given attribute when its value is equal to value in show_output after applying the mapping.
 func IgnoreChangeToCurrentSnowflakeValueInShowWithMapping(keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
 	return IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(ShowOutputAttributeName, keyInOutput, mapping)
 }
