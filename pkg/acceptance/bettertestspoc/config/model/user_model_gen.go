@@ -28,7 +28,7 @@ type UserModel struct {
 	DaysToExpiry                             tfconfig.Variable `json:"days_to_expiry,omitempty"`
 	DefaultNamespace                         tfconfig.Variable `json:"default_namespace,omitempty"`
 	DefaultRole                              tfconfig.Variable `json:"default_role,omitempty"`
-	DefaultSecondaryRoles                    tfconfig.Variable `json:"default_secondary_roles,omitempty"`
+	DefaultSecondaryRolesOption              tfconfig.Variable `json:"default_secondary_roles_option,omitempty"`
 	DefaultWarehouse                         tfconfig.Variable `json:"default_warehouse,omitempty"`
 	DisableMfa                               tfconfig.Variable `json:"disable_mfa,omitempty"`
 	Disabled                                 tfconfig.Variable `json:"disabled,omitempty"`
@@ -210,7 +210,10 @@ func (u *UserModel) WithDefaultRole(defaultRole string) *UserModel {
 	return u
 }
 
-// default_secondary_roles attribute type is not yet supported, so WithDefaultSecondaryRoles can't be generated
+func (u *UserModel) WithDefaultSecondaryRolesOption(defaultSecondaryRolesOption string) *UserModel {
+	u.DefaultSecondaryRolesOption = tfconfig.StringVariable(defaultSecondaryRolesOption)
+	return u
+}
 
 func (u *UserModel) WithDefaultWarehouse(defaultWarehouse string) *UserModel {
 	u.DefaultWarehouse = tfconfig.StringVariable(defaultWarehouse)
@@ -616,8 +619,8 @@ func (u *UserModel) WithDefaultRoleValue(value tfconfig.Variable) *UserModel {
 	return u
 }
 
-func (u *UserModel) WithDefaultSecondaryRolesValue(value tfconfig.Variable) *UserModel {
-	u.DefaultSecondaryRoles = value
+func (u *UserModel) WithDefaultSecondaryRolesOptionValue(value tfconfig.Variable) *UserModel {
+	u.DefaultSecondaryRolesOption = value
 	return u
 }
 

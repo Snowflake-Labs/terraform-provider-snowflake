@@ -4,7 +4,6 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -67,7 +66,6 @@ func (u *UserModel) WithNullPassword() *UserModel {
 	return u.WithPasswordValue(config.NullVariable())
 }
 
-func (u *UserModel) WithDefaultSecondaryRolesStringList(items ...string) *UserModel {
-	itemsAsVariables := collections.Map(items, func(s string) tfconfig.Variable { return tfconfig.StringVariable(s) })
-	return u.WithDefaultSecondaryRolesValue(tfconfig.ListVariable(itemsAsVariables...))
+func (u *UserModel) WithDefaultSecondaryRolesOptionEnum(option sdk.SecondaryRolesOption) *UserModel {
+	return u.WithDefaultSecondaryRolesOption(string(option))
 }

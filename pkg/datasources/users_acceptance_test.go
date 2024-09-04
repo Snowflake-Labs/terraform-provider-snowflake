@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -43,7 +44,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 		WithDefaultWarehouse("some_warehouse").
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
-		WithDefaultSecondaryRolesStringList("ALL").
+		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 		WithMinsToBypassMfa(10).
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).

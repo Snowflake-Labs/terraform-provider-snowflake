@@ -62,7 +62,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		WithDefaultWarehouse("some_warehouse").
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
-		WithDefaultSecondaryRolesStringList("ALL").
+		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 		WithMinsToBypassMfa(10).
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).
@@ -85,7 +85,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			WithDefaultWarehouse("other_warehouse").
 			WithDefaultNamespace("one_part_namespace").
 			WithDefaultRole("other_role").
-			WithDefaultSecondaryRolesStringList("ALL").
+			WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 			WithMinsToBypassMfa(14).
 			WithRsaPublicKey(key2).
 			WithRsaPublicKey2(key1).
@@ -121,7 +121,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasNoDefaultWarehouse().
 						HasNoDefaultNamespace().
 						HasNoDefaultRole().
-						HasNoDefaultSecondaryRoles().
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault).
 						HasMinsToBypassMfaString(r.IntDefaultString).
 						HasNoRsaPublicKey().
 						HasNoRsaPublicKey2().
@@ -185,7 +185,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDefaultWarehouseString("some_warehouse").
 						HasDefaultNamespaceString("some.namespace").
 						HasDefaultRoleString("some_role").
-						HasDefaultSecondaryRoles("ALL").
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasMinsToBypassMfaString("10").
 						HasRsaPublicKeyString(key1).
 						HasRsaPublicKey2String(key2).
@@ -214,7 +214,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDefaultWarehouseString("other_warehouse").
 						HasDefaultNamespaceString("one_part_namespace").
 						HasDefaultRoleString("other_role").
-						HasDefaultSecondaryRoles("ALL").
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasMinsToBypassMfaString("14").
 						HasRsaPublicKeyString(key2).
 						HasRsaPublicKey2String(key1).
@@ -267,7 +267,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 						HasDefaultWarehouseString("").
 						HasDefaultNamespaceString("").
 						HasDefaultRoleString("").
-						HasDefaultSecondaryRolesEmpty().
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault).
 						HasMinsToBypassMfaString(r.IntDefaultString).
 						HasRsaPublicKeyString("").
 						HasRsaPublicKey2String("").
@@ -1015,13 +1015,12 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
-	userModelWithDefaultSecondaryRole := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("ALL")
-	userModelLowercaseValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("all")
-	userModelIncorrectValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("OTHER")
-	userModelNoValues := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList()
-	userModelMultipleValues := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("ALL", "OTHER")
-	userModelRepeatedDifferentCasing := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("ALL", "all")
-	userModelRepeatedValues := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesStringList("ALL", "ALL")
+	userModelWithOptionAll := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll)
+	userModelWithOptionNone := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionNone)
+	userModelLowercaseValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("all")
+	userModelIncorrectValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("OTHER")
+	userModelEmptyValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("")
+	userModelNullValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionValue(config.NullVariable())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1031,19 +1030,19 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
-			// 1. create without default secondary roles
+			// 1. create without default secondary roles option set (DEFAULT will be used)
 			{
 				Config: config.FromModel(t, userModelEmpty),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasNoDefaultSecondaryRoles(),
+					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(""),
 				),
 			},
-			// 2. add default secondary roles
+			// 2. add default secondary roles ALL
 			{
-				Config: config.FromModel(t, userModelWithDefaultSecondaryRole),
+				Config: config.FromModel(t, userModelWithOptionAll),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelWithDefaultSecondaryRole.ResourceReference()).HasDefaultSecondaryRoles("ALL"),
+					resourceassert.UserResource(t, userModelWithOptionAll.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
 				),
 			},
@@ -1061,56 +1060,85 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.UnsetDefaultSecondaryRoles(t, userId)
 				},
-				Config: config.FromModel(t, userModelWithDefaultSecondaryRole),
+				Config: config.FromModel(t, userModelWithOptionAll),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectChange(userModelWithDefaultSecondaryRole.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[ALL]")),
+						planchecks.ExpectChange(userModelWithOptionAll.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("ALL")),
 					},
 				},
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelWithDefaultSecondaryRole.ResourceReference()).HasDefaultSecondaryRoles("ALL"),
+					resourceassert.UserResource(t, userModelWithOptionAll.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
 				),
 			},
-			// 5. unset in config to 5 (change)
+			// 5. unset in config (change)
 			{
 				Config: config.FromModel(t, userModelEmpty),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, sdk.String("[ALL]"), sdk.String("[]")),
+						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("ALL"), sdk.String("DEFAULT")),
 					},
 				},
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesEmpty(),
+					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(""),
 				),
 			},
 			// 6. incorrect value used
 			{
 				Config:      config.FromModel(t, userModelIncorrectValue),
-				ExpectError: regexp.MustCompile("Unsupported secondary role 'OTHER'"),
+				ExpectError: regexp.MustCompile("invalid secondary roles option: OTHER"),
 			},
-			// 7. empty set used
+			// 7. set to empty in config (invalid)
 			{
-				Config:      config.FromModel(t, userModelNoValues),
-				ExpectError: regexp.MustCompile("Attribute default_secondary_roles requires 1 item minimum"),
+				Config:      config.FromModel(t, userModelEmptyValue),
+				ExpectError: regexp.MustCompile("invalid secondary roles option: "),
 			},
-			// 8. multiple values (correct and incorrect)
+			// 8. set in config to NONE (change)
 			{
-				Config:      config.FromModel(t, userModelMultipleValues),
-				ExpectError: regexp.MustCompile("Attribute default_secondary_roles supports 1 item maximum"),
-			},
-			// 9. multiple values (different casing)
-			{
-				Config:      config.FromModel(t, userModelRepeatedDifferentCasing),
-				ExpectError: regexp.MustCompile("Attribute default_secondary_roles supports 1 item maximum"),
-			},
-			// 10. multiple values (two same) - no error
-			{
-				Config: config.FromModel(t, userModelRepeatedValues),
+				Config: config.FromModel(t, userModelWithOptionNone),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userModelWithOptionNone.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("NONE")),
+					},
+				},
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelWithDefaultSecondaryRole.ResourceReference()).HasDefaultSecondaryRoles("ALL"),
+					resourceassert.UserResource(t, userModelWithOptionNone.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionNone),
+					objectassert.User(t, userId).HasDefaultSecondaryRoles("[]"),
+				),
+			},
+			// 9. unset in config (change)
+			{
+				Config: config.FromModel(t, userModelEmpty),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("NONE"), sdk.String("DEFAULT")),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
+					objectassert.User(t, userId).HasDefaultSecondaryRoles(""),
+				),
+			},
+			// 10. add default secondary roles ALL
+			{
+				Config: config.FromModel(t, userModelWithOptionAll),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithOptionAll.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
+				),
+			},
+			// 11. set to null value in config (change)
+			{
+				Config: config.FromModel(t, userModelNullValue),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(userModelNullValue.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("ALL"), sdk.String("DEFAULT")),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelNullValue.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
+					objectassert.User(t, userId).HasDefaultSecondaryRoles(""),
 				),
 			},
 		},
