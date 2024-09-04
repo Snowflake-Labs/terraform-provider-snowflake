@@ -128,7 +128,6 @@ var userSchema = map[string]*schema.Schema{
 		},
 		DiffSuppressFunc: SuppressCaseInSet("default_secondary_roles"),
 		MaxItems:         1,
-		MinItems:         1,
 		Optional:         true,
 		Description:      "Specifies the set of secondary roles that are active for the user’s session upon login. Currently only [\"ALL\"] value is supported - more information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).",
 	},
@@ -274,6 +273,7 @@ func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
+		// TODO: change here
 		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 		attributeDirectValueCreate(d, "default_secondary_roles", &opts.ObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}),
@@ -464,6 +464,7 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
 		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
 		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
+		// TODO: change here
 		// We do not need value because it is validated on the schema level and ALL is the only supported value currently.
 		// Check more in https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.
 		attributeDirectValueUpdate(d, "default_secondary_roles", &setObjectProperties.DefaultSecondaryRoles, &sdk.SecondaryRoles{}, &unsetObjectProperties.DefaultSecondaryRoles),
