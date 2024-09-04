@@ -63,7 +63,7 @@ func SuppressCaseInSet(key string) schema.SchemaDiffSuppressFunc {
 			return false
 		}
 
-		if oldValue == "" && !d.GetRawState().IsNull() {
+		if oldValue == "" && !d.GetRawState().IsNull() && !d.GetRawState().AsValueMap()[key].IsNull() {
 			return slices.Contains(collections.Map(ctyValToSliceString(d.GetRawState().AsValueMap()[key].AsValueSet().Values()), strings.ToUpper), strings.ToUpper(newValue))
 		}
 
