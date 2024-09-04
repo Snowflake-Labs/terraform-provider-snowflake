@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -815,6 +816,39 @@ func Test_User_ToSecondaryRolesOption(t *testing.T) {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := ToSecondaryRolesOption(tc.input)
 			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_GetSecondaryRolesOptionFrom(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		{input: "", want: SecondaryRolesOptionDefault},
+		{input: "[]", want: SecondaryRolesOptionNone},
+		{input: `["ALL"]`, want: SecondaryRolesOptionAll},
+		{input: `["any"]`, want: SecondaryRolesOptionAll},
+		{input: `["more", "than", "one"]`, want: SecondaryRolesOptionAll},
+		{input: `no list`, want: SecondaryRolesOptionAll},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got := GetSecondaryRolesOptionFrom(tc.input)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(fmt.Sprintf("invoked from user: %s", tc.input), func(t *testing.T) {
+			user := User{DefaultSecondaryRoles: tc.input}
+			got := user.GetSecondaryRolesOption()
+			require.Equal(t, tc.want, got)
 		})
 	}
 }
