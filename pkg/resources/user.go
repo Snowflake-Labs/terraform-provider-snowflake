@@ -42,7 +42,6 @@ var userSchema = map[string]*schema.Schema{
 		Description:      "The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.",
 		// login_name is case-insensitive
 	},
-	// TODO [SNOW-1348101 - next PR]: handle external changes and the default behavior correctly; same with the login_name
 	"display_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -108,7 +107,6 @@ var userSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      "Specifies the virtual warehouse that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the warehouse exists.",
 	},
-	// TODO [SNOW-1348101 - next PR]: check the exact behavior of default_namespace and default_role because it looks like it is handled in a case-insensitive manner on Snowflake side
 	"default_namespace": {
 		Type:             schema.TypeString,
 		Optional:         true,
