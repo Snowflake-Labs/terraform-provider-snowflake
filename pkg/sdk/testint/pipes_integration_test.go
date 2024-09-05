@@ -95,7 +95,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Run("show: in schema", func(t *testing.T) {
 		showOptions := &sdk.ShowPipeOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		}
 		pipes, err := itc.client.Pipes.Show(itc.ctx, showOptions)
@@ -157,8 +157,8 @@ func TestInt_PipeCreate(t *testing.T) {
 		t.Helper()
 		assert.NotEmpty(t, pipeDetails.CreatedOn)
 		assert.Equal(t, expectedName, pipeDetails.Name)
-		assert.Equal(t, testDb(t).Name, pipeDetails.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, pipeDetails.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), pipeDetails.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), pipeDetails.SchemaName)
 		assert.Equal(t, copyStatement, pipeDetails.Definition)
 		assert.Equal(t, "ACCOUNTADMIN", pipeDetails.Owner)
 		assert.Empty(t, pipeDetails.NotificationChannel)

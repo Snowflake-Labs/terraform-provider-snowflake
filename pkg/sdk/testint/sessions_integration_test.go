@@ -80,7 +80,7 @@ func TestInt_ShowSessionParameter(t *testing.T) {
 func TestInt_ShowObjectParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: testDb(t).ObjectType(), Name: testDb(t).ID()})
+	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: testClientHelper().Ids.DatabaseId()})
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -118,7 +118,7 @@ func TestInt_UseDatabase(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Cleanup(func() {
-		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		err := client.Sessions.UseSchema(ctx, testClientHelper().Ids.SchemaId())
 		require.NoError(t, err)
 	})
 	// new database created on purpose
@@ -137,7 +137,7 @@ func TestInt_UseSchema(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Cleanup(func() {
-		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		err := client.Sessions.UseSchema(ctx, testClientHelper().Ids.SchemaId())
 		require.NoError(t, err)
 	})
 	// new database and schema created on purpose

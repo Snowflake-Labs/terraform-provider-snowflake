@@ -30,7 +30,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -46,7 +46,7 @@ func TestInt_AlertsShow(t *testing.T) {
 				Pattern: sdk.String(alertTest.Name),
 			},
 			In: &sdk.In{
-				Database: testDb(t).ID(),
+				Database: testClientHelper().Ids.DatabaseId(),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -69,7 +69,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("when limiting the number of results", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 			Limit: sdk.Int(1),
 		}
@@ -110,7 +110,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -176,7 +176,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -214,7 +214,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -265,7 +265,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -289,7 +289,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -309,7 +309,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -332,7 +332,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -350,7 +350,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)

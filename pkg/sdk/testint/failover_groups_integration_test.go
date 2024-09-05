@@ -38,7 +38,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
 			IfNotExists: sdk.Bool(true),
 			AllowedDatabases: []sdk.AccountObjectIdentifier{
-				testDb(t).ID(),
+				testClientHelper().Ids.DatabaseId(),
 			},
 			AllowedShares: []sdk.AccountObjectIdentifier{
 				shareTest.ID(),
@@ -69,7 +69,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		fgDBS, err := client.FailoverGroups.ShowDatabases(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(fgDBS))
-		assert.Equal(t, testDb(t).ID().Name(), fgDBS[0].Name())
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), fgDBS[0].Name())
 
 		fgShares, err := client.FailoverGroups.ShowShares(ctx, id)
 		require.NoError(t, err)
@@ -169,7 +169,7 @@ func TestInt_Issue2544(t *testing.T) {
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
 			AllowedDatabases: []sdk.AccountObjectIdentifier{
-				testDb(t).ID(),
+				testClientHelper().Ids.DatabaseId(),
 			},
 			AllowedIntegrationTypes: allowedIntegrationTypes,
 			ReplicationSchedule:     sdk.String(replicationSchedule),
@@ -390,7 +390,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		opts = &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
 				AllowedDatabases: []sdk.AccountObjectIdentifier{
-					testDb(t).ID(),
+					testClientHelper().Ids.DatabaseId(),
 				},
 			},
 		}
@@ -399,13 +399,13 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		allowedDBs, err := client.FailoverGroups.ShowDatabases(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(allowedDBs))
-		assert.Equal(t, testDb(t).ID().Name(), allowedDBs[0].Name())
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), allowedDBs[0].Name())
 
 		// now remove database from allowed databases
 		opts = &sdk.AlterSourceFailoverGroupOptions{
 			Remove: &sdk.FailoverGroupRemove{
 				AllowedDatabases: []sdk.AccountObjectIdentifier{
-					testDb(t).ID(),
+					testClientHelper().Ids.DatabaseId(),
 				},
 			},
 		}
@@ -867,7 +867,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	opts = &sdk.AlterSourceFailoverGroupOptions{
 		Add: &sdk.FailoverGroupAdd{
 			AllowedDatabases: []sdk.AccountObjectIdentifier{
-				testDb(t).ID(),
+				testClientHelper().Ids.DatabaseId(),
 			},
 		},
 	}
@@ -876,7 +876,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	databases, err := client.FailoverGroups.ShowDatabases(ctx, failoverGroupTest.ID())
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(databases))
-	assert.Equal(t, testDb(t).ID(), databases[0])
+	assert.Equal(t, testClientHelper().Ids.DatabaseId(), databases[0])
 }
 
 func TestInt_FailoverGroupsShowShares(t *testing.T) {

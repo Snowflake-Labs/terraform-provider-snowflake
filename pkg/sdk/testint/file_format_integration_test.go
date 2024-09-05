@@ -489,7 +489,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	t.Run("IN", func(t *testing.T) {
 		fileFormats, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -520,8 +520,8 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 
 		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
 		require.NoError(t, err)
-		assert.Equal(t, testDb(t).Name, fileFormat.Name.DatabaseName())
-		assert.Equal(t, testSchema(t).Name, fileFormat.Name.SchemaName())
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), fileFormat.Name.DatabaseName())
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), fileFormat.Name.SchemaName())
 		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
 	})
 }

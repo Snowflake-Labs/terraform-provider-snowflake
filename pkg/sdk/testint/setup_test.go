@@ -270,16 +270,6 @@ func testContext(t *testing.T) context.Context {
 	return itc.ctx
 }
 
-func testDb(t *testing.T) *sdk.Database {
-	t.Helper()
-	return itc.database
-}
-
-func testSchema(t *testing.T) *sdk.Schema {
-	t.Helper()
-	return itc.schema
-}
-
 func testWarehouse(t *testing.T) *sdk.Warehouse {
 	t.Helper()
 	return itc.warehouse
@@ -293,21 +283,6 @@ func testSecondaryClient(t *testing.T) *sdk.Client {
 func testSecondaryContext(t *testing.T) context.Context {
 	t.Helper()
 	return itc.secondaryCtx
-}
-
-func testSecondaryDb(t *testing.T) *sdk.Database {
-	t.Helper()
-	return itc.secondaryDatabase
-}
-
-func testSecondarySchema(t *testing.T) *sdk.Schema {
-	t.Helper()
-	return itc.secondarySchema
-}
-
-func testSecondaryWarehouse(t *testing.T) *sdk.Warehouse {
-	t.Helper()
-	return itc.secondaryWarehouse
 }
 
 func testConfig(t *testing.T) *gosnowflake.Config {

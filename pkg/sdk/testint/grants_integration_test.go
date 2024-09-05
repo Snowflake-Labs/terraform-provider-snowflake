@@ -129,7 +129,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		}
 		on := &sdk.AccountRoleGrantOn{
 			Schema: &sdk.GrantOnSchema{
-				Schema: sdk.Pointer(testSchema(t).ID()),
+				Schema: sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err := client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -167,7 +167,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeTables,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
@@ -253,7 +253,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeCortexSearchServices,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
@@ -295,7 +295,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(testDb(t).ID()),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -480,7 +480,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			DatabasePrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 		}
 		on := &sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(testDb(t).ID()),
+			Database: sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 		}
 
 		err := client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
@@ -529,7 +529,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		}
 		on := &sdk.DatabaseRoleGrantOn{
 			Schema: &sdk.GrantOnSchema{
-				Schema: sdk.Pointer(testSchema(t).ID()),
+				Schema: sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 
@@ -582,7 +582,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeTables,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
@@ -688,7 +688,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(testDb(t).ID()),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -860,13 +860,13 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	grantShareOnDatabase := func(t *testing.T, share *sdk.Share) {
 		t.Helper()
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
+			Database: testClientHelper().Ids.DatabaseId(),
 		}, share.ID())
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
 			err := client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-				Database: testDb(t).ID(),
+				Database: testClientHelper().Ids.DatabaseId(),
 			}, share.ID())
 			assert.NoError(t, err)
 		})
@@ -879,7 +879,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
-				AllInSchema: testSchema(t).ID(),
+				AllInSchema: testClientHelper().Ids.SchemaId(),
 			},
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -948,7 +948,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
-				AllInSchema: testSchema(t).ID(),
+				AllInSchema: testClientHelper().Ids.SchemaId(),
 			},
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -963,7 +963,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
-				AllInSchema: testSchema(t).ID(),
+				AllInSchema: testClientHelper().Ids.SchemaId(),
 			},
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -996,7 +996,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: testDb(t).ID(),
+		Database: testClientHelper().Ids.DatabaseId(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Run("without options", func(t *testing.T) {
@@ -1005,7 +1005,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	})
 	t.Run("with options", func(t *testing.T) {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
+			Database: testClientHelper().Ids.DatabaseId(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -1264,7 +1264,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Future: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeExternalTables,
-				InDatabase:       sdk.Pointer(testDb(t).ID()),
+				InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 			},
 		}
 		to := sdk.OwnershipGrantTo{
@@ -1623,7 +1623,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllPipesInSchema := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypePipes,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1827,7 +1827,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllTasks := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeTasks,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1944,7 +1944,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllTasks := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeTasks,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1984,12 +1984,12 @@ func TestInt_ShowGrants(t *testing.T) {
 	t.Cleanup(shareCleanup)
 
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: testDb(t).ID(),
+		Database: testClientHelper().Ids.DatabaseId(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
+			Database: testClientHelper().Ids.DatabaseId(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -2004,7 +2004,7 @@ func TestInt_ShowGrants(t *testing.T) {
 			On: &sdk.ShowGrantsOn{
 				Object: &sdk.Object{
 					ObjectType: sdk.ObjectTypeDatabase,
-					Name:       testDb(t).ID(),
+					Name:       testClientHelper().Ids.DatabaseId(),
 				},
 			},
 		})

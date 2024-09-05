@@ -351,7 +351,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			sdk.NewShowExternalTableRequest().
 				WithTerse(true).
 				WithLike(name).
-				WithIn(*sdk.NewShowExternalTableInRequest().WithDatabase(testDb(t).ID())).
+				WithIn(*sdk.NewShowExternalTableInRequest().WithDatabase(testClientHelper().Ids.DatabaseId())).
 				WithStartsWith(name).
 				WithLimitFrom(*sdk.NewLimitFromRequest().WithRows(sdk.Int(1))),
 		)
