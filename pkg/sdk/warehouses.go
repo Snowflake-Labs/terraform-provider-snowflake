@@ -342,7 +342,7 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 				return nil, true
 			})
 			if err != nil {
-				return fmt.Errorf("warehouse suspension failed, err: %w, original errors: %s", err, errors.Join(warehouseSuspensionErrs...))
+				return fmt.Errorf("warehouse suspension failed, err: %w, original errors: %w", err, errors.Join(warehouseSuspensionErrs...))
 			}
 		}
 	}
