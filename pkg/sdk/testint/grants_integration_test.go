@@ -1151,7 +1151,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				AccountObject: &sdk.GrantOnAccountObject{
-					Warehouse: sdk.Pointer(testWarehouse(t).ID()),
+					Warehouse: sdk.Pointer(testClientHelper().Ids.WarehouseId()),
 				},
 			},
 			roleId,
@@ -1300,7 +1300,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
 				ObjectType: sdk.ObjectTypeWarehouse,
-				Name:       testWarehouse(t).ID(),
+				Name:       testClientHelper().Ids.WarehouseId(),
 			},
 		}
 		to := sdk.OwnershipGrantTo{

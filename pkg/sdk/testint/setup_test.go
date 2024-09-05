@@ -270,11 +270,6 @@ func testContext(t *testing.T) context.Context {
 	return itc.ctx
 }
 
-func testWarehouse(t *testing.T) *sdk.Warehouse {
-	t.Helper()
-	return itc.warehouse
-}
-
 func testSecondaryClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return itc.secondaryClient

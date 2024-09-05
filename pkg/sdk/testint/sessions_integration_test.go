@@ -99,7 +99,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Cleanup(func() {
-		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
+		err := client.Sessions.UseWarehouse(ctx, testClientHelper().Ids.WarehouseId())
 		require.NoError(t, err)
 	})
 	// new warehouse created on purpose
