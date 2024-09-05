@@ -1,0 +1,18 @@
+roles:
+  "example_role1":
+    grant_to:
+      user:
+        - "example_user1"
+      role:
+  "example_role2":
+    grant_to:
+      user:
+      role:
+        - "example_role3"
+  "example_role3":
+    grant_to:
+      user:
+        - "example_user1"
+        - "example_user2"
+        - "example_user3"
+      role:
