@@ -138,6 +138,7 @@ func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue
 		&terraform.ResourceConfig{
 			Config: stateValue,
 		},
+		// TODO [helper-cleanup]: do we need this client here?
 		&provider.Context{Client: acc.Client(t)},
 	)
 	require.NoError(t, err)

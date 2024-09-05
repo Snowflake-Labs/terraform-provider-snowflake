@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -162,7 +161,7 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 	comment := random.Comment()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
 	t.Cleanup(func() {
 		// TODO(SNOW-1562172): Create a better solution for this type of situations
@@ -405,15 +404,14 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
 	t.Cleanup(func() {
 		// TODO(SNOW-1562172): Create a better solution for this type of situations
 		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
-	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-	require.NoError(t, err)
+	accountDataRetentionTimeInDays := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
@@ -528,7 +526,7 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
 	t.Cleanup(func() {
 		// TODO(SNOW-1562172): Create a better solution for this type of situations
@@ -577,7 +575,7 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
 	unquotedExternalPrimaryId := fmt.Sprintf("%s.%s.%s", externalPrimaryId.AccountIdentifier().OrganizationName(), externalPrimaryId.AccountIdentifier().AccountName(), externalPrimaryId.Name())
 	t.Cleanup(func() {

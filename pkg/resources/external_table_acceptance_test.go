@@ -348,6 +348,7 @@ func externalTableContainsData(id sdk.SchemaObjectIdentifier, contains func(rows
 	}
 }
 
+// TODO [helper-cleanup]: to helper
 func publishExternalTablesTestData(t *testing.T, stageName sdk.SchemaObjectIdentifier, data []byte) {
 	t.Helper()
 	client := acc.Client(t)

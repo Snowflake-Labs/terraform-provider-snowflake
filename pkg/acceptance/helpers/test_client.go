@@ -129,3 +129,7 @@ type TestClientContext struct {
 	warehouse        string
 	testObjectSuffix string
 }
+
+func (c *TestClient) GetAccountLocator() string {
+	return c.context.client.GetAccountLocator()
+}
