@@ -128,21 +128,21 @@ func (itc *integrationTestContext) initialize() error {
 	itc.client = c
 	itc.ctx = context.Background()
 
-	db, dbCleanup, err := createDb(itc.client, itc.ctx)
+	db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
 	itc.databaseCleanup = dbCleanup
 	if err != nil {
 		return err
 	}
 	itc.database = db
 
-	sc, scCleanup, err := createSc(itc.client, itc.ctx, itc.database)
+	sc, scCleanup, err := createSc(itc.client, itc.ctx, itc.database, false)
 	itc.schemaCleanup = scCleanup
 	if err != nil {
 		return err
 	}
 	itc.schema = sc
 
-	wh, whCleanup, err := createWh(itc.client, itc.ctx)
+	wh, whCleanup, err := createWh(itc.client, itc.ctx, false)
 	itc.warehouseCleanup = whCleanup
 	if err != nil {
 		return err
@@ -154,6 +154,10 @@ func (itc *integrationTestContext) initialize() error {
 		return err
 	}
 
+	if config.Account == defaultConfig.Account {
+		log.Println("[WARN] default and secondary configs are set to the same account; it may cause problems in tests requiring multiple accounts")
+	}
+
 	secondaryClient, err := sdk.NewClient(config)
 	if err != nil {
 		return err
@@ -161,21 +165,21 @@ func (itc *integrationTestContext) initialize() error {
 	itc.secondaryClient = secondaryClient
 	itc.secondaryCtx = context.Background()
 
-	secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx)
+	secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
 	itc.secondaryDatabaseCleanup = secondaryDbCleanup
 	if err != nil {
 		return err
 	}
 	itc.secondaryDatabase = secondaryDb
 
-	secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database)
+	secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database, true)
 	itc.secondarySchemaCleanup = secondarySchemaCleanup
 	if err != nil {
 		return err
 	}
 	itc.secondarySchema = secondarySchema
 
-	secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx)
+	secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx, true)
 	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
 	if err != nil {
 		return err
@@ -206,12 +210,12 @@ func (itc *integrationTestContext) initialize() error {
 	return nil
 }
 
-func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), error) {
+func createDb(client *sdk.Client, ctx context.Context, ifNotExists bool) (*sdk.Database, func(), error) {
 	id := sdk.NewAccountObjectIdentifier(TestDatabaseName)
 	cleanup := func() {
 		_ = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 	}
-	err := client.Databases.Create(ctx, id, nil)
+	err := client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(ifNotExists)})
 	if err != nil {
 		return nil, cleanup, err
 	}
@@ -219,12 +223,12 @@ func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), e
 	return database, cleanup, err
 }
 
-func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.Schema, func(), error) {
+func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database, ifNotExists bool) (*sdk.Schema, func(), error) {
 	id := sdk.NewDatabaseObjectIdentifier(db.Name, TestSchemaName)
 	cleanup := func() {
 		_ = client.Schemas.Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)})
 	}
-	err := client.Schemas.Create(ctx, id, nil)
+	err := client.Schemas.Create(ctx, id, &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(ifNotExists)})
 	if err != nil {
 		return nil, cleanup, err
 	}
@@ -232,12 +236,12 @@ func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.S
 	return schema, cleanup, err
 }
 
-func createWh(client *sdk.Client, ctx context.Context) (*sdk.Warehouse, func(), error) {
+func createWh(client *sdk.Client, ctx context.Context, ifNotExists bool) (*sdk.Warehouse, func(), error) {
 	id := sdk.NewAccountObjectIdentifier(TestWarehouseName)
 	cleanup := func() {
 		_ = client.Warehouses.Drop(ctx, id, &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)})
 	}
-	err := client.Warehouses.Create(ctx, id, nil)
+	err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(ifNotExists)})
 	if err != nil {
 		return nil, cleanup, err
 	}
