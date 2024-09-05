@@ -85,11 +85,9 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 	}
 
 	if r.AddStorageLocation != nil {
-
 		opts.AddStorageLocation = &ExternalVolumeStorageLocation{}
 
 		if r.AddStorageLocation.S3StorageLocationParams != nil {
-
 			opts.AddStorageLocation.S3StorageLocationParams = &S3StorageLocationParams{
 				Name:                 r.AddStorageLocation.S3StorageLocationParams.Name,
 				StorageProvider:      r.AddStorageLocation.S3StorageLocationParams.StorageProvider,
@@ -104,11 +102,9 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 					KmsKeyId: r.AddStorageLocation.S3StorageLocationParams.Encryption.KmsKeyId,
 				}
 			}
-
 		}
 
 		if r.AddStorageLocation.GCSStorageLocationParams != nil {
-
 			opts.AddStorageLocation.GCSStorageLocationParams = &GCSStorageLocationParams{
 				Name:           r.AddStorageLocation.GCSStorageLocationParams.Name,
 				StorageBaseUrl: r.AddStorageLocation.GCSStorageLocationParams.StorageBaseUrl,
@@ -120,7 +116,6 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 					KmsKeyId: r.AddStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId,
 				}
 			}
-
 		}
 
 		if r.AddStorageLocation.AzureStorageLocationParams != nil {
@@ -130,7 +125,6 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 				StorageBaseUrl: r.AddStorageLocation.AzureStorageLocationParams.StorageBaseUrl,
 			}
 		}
-
 	}
 
 	return opts

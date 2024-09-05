@@ -366,12 +366,12 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) || errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to query secondary database. Marking the resource as removed.",
+					Summary:  "Failed to query database. Marking the resource as removed.",
 					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}

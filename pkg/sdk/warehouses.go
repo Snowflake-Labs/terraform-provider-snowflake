@@ -329,15 +329,20 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 			}()
 
 			// needed to make sure that warehouse is suspended
+			var warehouseSuspensionErrs []error
 			err = util.Retry(3, 1*time.Second, func() (error, bool) {
 				warehouse, err = c.ShowByID(ctx, id)
-				if err != nil || warehouse.State != WarehouseStateSuspended {
+				if err != nil {
+					warehouseSuspensionErrs = append(warehouseSuspensionErrs, err)
+					return nil, false
+				}
+				if warehouse.State != WarehouseStateSuspended {
 					return nil, false
 				}
 				return nil, true
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("warehouse suspension failed, err: %w, original errors: %w", err, errors.Join(warehouseSuspensionErrs...))
 			}
 		}
 	}

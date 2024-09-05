@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -299,6 +300,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		account, err = client.Accounts.ShowByID(ctx, objectIdentifier)
 		if err != nil {
+			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
 			return nil, false
 		}
 		return nil, true
@@ -323,6 +325,7 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		acc, err = client.Accounts.ShowByID(ctx, id)
 		if err != nil {
+			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
 			return nil, false
 		}
 		return nil, true

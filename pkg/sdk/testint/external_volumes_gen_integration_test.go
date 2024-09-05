@@ -107,9 +107,11 @@ func TestInt_ExternalVolumes(t *testing.T) {
 		var externalVolumePropNameValue []ExternalVolumePropNameValue
 		for _, p := range props {
 			if strings.Contains(p.Name, "STORAGE_LOCATION_") {
-				if strings.Contains(p.Value, `"STORAGE_PROVIDER":"S3"`) {
+				switch {
+				case strings.Contains(p.Value, `"STORAGE_PROVIDER":"S3"`):
 					s3StorageLocation := S3StorageLocation{}
-					json.Unmarshal([]byte(p.Value), &s3StorageLocation)
+					err := json.Unmarshal([]byte(p.Value), &s3StorageLocation)
+					require.NoError(t, err)
 					s3StorageLocationTrimmed := S3StorageLocationTrimmed{
 						Name:                 s3StorageLocation.Name,
 						StorageProvider:      s3StorageLocation.StorageProvider,
@@ -125,9 +127,10 @@ func TestInt_ExternalVolumes(t *testing.T) {
 						externalVolumePropNameValue,
 						ExternalVolumePropNameValue{Name: p.Name, Value: string(s3StorageLocationTrimmedMarshaled)},
 					)
-				} else if strings.Contains(p.Value, `"STORAGE_PROVIDER":"GCS"`) {
+				case strings.Contains(p.Value, `"STORAGE_PROVIDER":"GCS"`):
 					gcsStorageLocation := GCSStorageLocation{}
-					json.Unmarshal([]byte(p.Value), &gcsStorageLocation)
+					err := json.Unmarshal([]byte(p.Value), &gcsStorageLocation)
+					require.NoError(t, err)
 					gcsStorageLocationTrimmed := GCSStorageLocationTrimmed{
 						Name:            gcsStorageLocation.Name,
 						StorageProvider: gcsStorageLocation.StorageProvider,
@@ -141,9 +144,10 @@ func TestInt_ExternalVolumes(t *testing.T) {
 						externalVolumePropNameValue,
 						ExternalVolumePropNameValue{Name: p.Name, Value: string(gcsStorageLocationTrimmedMarshaled)},
 					)
-				} else if strings.Contains(p.Value, `"STORAGE_PROVIDER":"AZURE"`) {
+				case strings.Contains(p.Value, `"STORAGE_PROVIDER":"AZURE"`):
 					azureStorageLocation := AzureStorageLocation{}
-					json.Unmarshal([]byte(p.Value), &azureStorageLocation)
+					err := json.Unmarshal([]byte(p.Value), &azureStorageLocation)
+					require.NoError(t, err)
 					azureStorageLocationTrimmed := AzureStorageLocationTrimmed{
 						Name:            azureStorageLocation.Name,
 						StorageProvider: azureStorageLocation.StorageProvider,
@@ -156,8 +160,8 @@ func TestInt_ExternalVolumes(t *testing.T) {
 						externalVolumePropNameValue,
 						ExternalVolumePropNameValue{Name: p.Name, Value: string(azureStorageLocationTrimmedMarshaled)},
 					)
-				} else {
-					panic("Unrecognised storage provider in storage location property")
+				default:
+					panic("Unrecognized storage provider in storage location property")
 				}
 			} else {
 				externalVolumePropNameValue = append(externalVolumePropNameValue, ExternalVolumePropNameValue{Name: p.Name, Value: p.Value})
