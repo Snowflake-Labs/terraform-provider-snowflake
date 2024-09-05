@@ -8,24 +8,24 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	acchelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/stretchr/testify/require"
+	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Schema_basic(t *testing.T) {
@@ -788,7 +788,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 	})
 }
 
-func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
+func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	configVariables := map[string]config.Variable{
 		"schema_name":   config.StringVariable(schemaId.Name()),
@@ -823,13 +823,12 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 	})
 }
 
-func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
+func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseName := databaseId.Name()
-	schemaName := acc.TestClient().Ids.Alpha()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	configVariables := map[string]config.Variable{
-		"schema_name":   config.StringVariable(schemaName),
-		"database_name": config.StringVariable(databaseName),
+		"database_name": config.StringVariable(databaseId.Name()),
+		"schema_name":   config.StringVariable(schemaId.Name()),
 	}
 
 	var cleanupDatabase func()
@@ -858,6 +857,52 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 				ConfigVariables: configVariables,
 				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("Failed to create schema"),
+			},
+		},
+	})
+}
+
+func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform_dbInConfig(t *testing.T) {
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	configVariables := map[string]config.Variable{
+		"database_name": config.StringVariable(databaseId.Name()),
+		"schema_name":   config.StringVariable(schemaId.Name()),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform_dbInConfig"),
+				ConfigVariables: configVariables,
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "name", databaseId.Name())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaId.Name())),
+				),
+			},
+			{
+				PreConfig: func() {
+					err := acc.TestClient().Database.DropDatabase(t, databaseId)
+					require.NoError(t, err)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform_dbInConfig"),
+				ConfigVariables: configVariables,
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "name", databaseId.Name())),
+					assert.Check(resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaId.Name())),
+				),
 			},
 		},
 	})
