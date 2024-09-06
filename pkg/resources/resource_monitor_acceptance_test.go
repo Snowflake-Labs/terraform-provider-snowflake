@@ -1,28 +1,28 @@
 package resources_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
-func TestAcc_ResourceMonitor(t *testing.T) {
+func TestAcc_ResourceMonitor_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name())
 
@@ -40,63 +40,73 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasCreditQuotaString("-1").
+						HasNoCreditQuota().
 						HasNotifyUsersLen(0).
-						HasFrequencyString(string(sdk.FrequencyMonthly)).
-						HasNoStartTimestamp(). // TODO: Should be end of the last month
+						HasNoFrequency().
+						HasNoStartTimestamp().
 						HasNoEndTimestamp().
 						HasTriggerLen(0),
-					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test"),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(0).
+						HasUsedCredits(0).
+						HasRemainingCredits(0).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyMonthly).
+						HasStartTimeNotEmpty().
+						HasEndTime("").
+						HasSuspendAt(0).
+						HasSuspendImmediateAt(0).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
 				),
-				//Check: resource.ComposeTestCheckFunc(
-				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.Name()),
-				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_users.#", "0"),
-				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "credit_quota"),
-				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "frequency"),
-				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "start_timestamp"),
-				//	resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "end_timestamp"),
-				//	resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "trigger.#", "0"),
-				//),
 			},
-			// CHANGE PROPERTIES
-			//{
-			//	Config: resourceMonitorConfig2(id.Name(), 75),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
-			//	),
-			//},
-			//// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
-			//{
-			//	Config: resourceMonitorConfig2(id.Name(), 60),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "fully_qualified_name", id.FullyQualifiedName()),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "60"),
-			//		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
-			//	),
-			//},
-			//// IMPORT
-			//{
-			//	ResourceName:      "snowflake_resource_monitor.test",
-			//	ImportState:       true,
-			//	ImportStateVerify: true,
-			//},
+			{
+				ResourceName: "snowflake_resource_monitor.test",
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("0").
+						HasNotifyUsersLen(0).
+						HasFrequencyString(string(sdk.FrequencyMonthly)).
+						HasStartTimestampNotEmpty().
+						HasEndTimestampString("").
+						HasTriggerLen(0),
+				),
+			},
 		},
 	})
 }
 
-func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+func TestAcc_ResourceMonitor_Complete(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	configModel := model.ResourceMonitor("test", id.Name()).
+		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"))).
+		WithCreditQuota(10).
+		WithFrequency(string(sdk.FrequencyWeekly)).
+		WithStartTimestamp(time.Now().Add(time.Hour * 24 * 30).Format("2006-01-02 15:01")).
+		WithEndTimestamp(time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")).
+		WithTriggerValue(configvariable.SetVariable(
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(100),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(110),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(120),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspend)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(150),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspendImmediate)),
+			}),
+		))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -107,91 +117,128 @@ func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitorConfigInitialTimestamp(name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "frequency", "WEEKLY"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "start_timestamp", "2050-01-01 12:00"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "end_timestamp", "2055-01-01 12:00"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ResourceMonitor/complete"),
+				ConfigVariables: configModel.ToConfigVariables(),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("10").
+						HasNotifyUsersLen(1).
+						HasNotifyUser(0, "JAN_CIESLAK").
+						HasFrequencyString(string(sdk.FrequencyWeekly)).
+						HasStartTimestampString(time.Now().Add(time.Hour*24*30).Format("2006-01-02 15:01")).
+						HasEndTimestampString(time.Now().Add(time.Hour*24*60).Format("2006-01-02 15:01")).
+						HasTriggerLen(4).
+						HasTrigger(0, 100, sdk.TriggerActionNotify).
+						HasTrigger(1, 110, sdk.TriggerActionNotify).
+						HasTrigger(2, 120, sdk.TriggerActionSuspend).
+						HasTrigger(3, 150, sdk.TriggerActionSuspendImmediate),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(10).
+						HasUsedCredits(0).
+						HasRemainingCredits(10).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyWeekly).
+						HasStartTimeNotEmpty().
+						HasEndTimeNotEmpty().
+						HasSuspendAt(120).
+						HasSuspendImmediateAt(150).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
 				),
 			},
 			{
-				Config: resourceMonitorConfigUpdatedTimestamp(name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "frequency", "WEEKLY"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "start_timestamp", "2055-01-01 12:00"),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "end_timestamp", "2056-01-01 12:00"),
+				ResourceName:    "snowflake_resource_monitor.test",
+				ImportState:     true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ResourceMonitor/complete"),
+				ConfigVariables: configModel.ToConfigVariables(),
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("10").
+						HasNotifyUsersLen(1).
+						HasNotifyUser(0, "JAN_CIESLAK").
+						HasFrequencyString(string(sdk.FrequencyWeekly)).
+						HasStartTimestampNotEmpty().
+						HasEndTimestampNotEmpty().
+						HasTriggerLen(4).
+						HasTrigger(0, 100, sdk.TriggerActionNotify).
+						HasTrigger(1, 110, sdk.TriggerActionNotify).
+						HasTrigger(2, 120, sdk.TriggerActionSuspend).
+						HasTrigger(3, 150, sdk.TriggerActionSuspendImmediate),
 				),
-			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_resource_monitor.test",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func resourceMonitorConfigUpdatedTimestamp(accName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "warehouse" {
-  name           = "test%v"
-  comment        = "foo"
-  warehouse_size = "XSMALL"
-}
+func TestAcc_ResourceMonitor_Updates(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-resource "snowflake_resource_monitor" "test" {
-	name            = "%v"
-	frequency 		= "WEEKLY"
-	start_timestamp = "2055-01-01 12:00"
-	end_timestamp = "2056-01-01 12:00"
+	configModelNothingSet := model.ResourceMonitor("test", id.Name())
 
-}
-`, accName, accName)
-}
+	configModelEverythingSet := model.ResourceMonitor("test", id.Name()).
+		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"))).
+		WithCreditQuota(10).
+		WithFrequency(string(sdk.FrequencyWeekly)).
+		WithStartTimestamp(time.Now().Add(time.Hour * 24 * 30).Format("2006-01-02 15:01")).
+		WithEndTimestamp(time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")).
+		WithTriggerValue(configvariable.SetVariable(
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(100),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(110),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(120),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspend)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(150),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspendImmediate)),
+			}),
+		))
 
-// fix 2 added empy notifiy user
-// Config for changed timestamp frequency validation test
-func resourceMonitorConfigInitialTimestamp(accName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "warehouse" {
-  name           = "test"
-  comment        = "foo"
-  warehouse_size = "XSMALL"
-}
+	configModelUpdated := model.ResourceMonitor("test", id.Name()).
+		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"), configvariable.StringVariable("ARTUR_SAWICKI"))).
+		WithCreditQuota(20).
+		WithFrequency(string(sdk.FrequencyMonthly)).
+		WithStartTimestamp(time.Now().Add(time.Hour * 24 * 40).Format("2006-01-02 15:01")).
+		WithEndTimestamp(time.Now().Add(time.Hour * 24 * 70).Format("2006-01-02 15:01")).
+		WithTriggerValue(configvariable.SetVariable(
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(110),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(120),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(130),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspend)),
+			}),
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(160),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionSuspendImmediate)),
+			}),
+		))
 
-resource "snowflake_resource_monitor" "test" {
-	name            = "%v"
-	frequency 		= "WEEKLY"
-	start_timestamp = "2050-01-01 12:00"
-	end_timestamp = "2055-01-01 12:00"
+	configModelEverythingUnset := model.ResourceMonitor("test", id.Name()).
+		WithTriggerValue(configvariable.SetVariable(
+			configvariable.ObjectVariable(map[string]configvariable.Variable{
+				"threshold":            configvariable.IntegerVariable(100),
+				"on_threshold_reached": configvariable.StringVariable(string(sdk.TriggerActionNotify)),
+			}),
+		))
 
-}
-`, accName)
-}
-
-func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
-	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
-	users := strings.Split(userEnv, ",")
-	name := acc.TestClient().Ids.Alpha()
-	config, err := resourceMonitorNotifyUsersConfig(name, users)
-	if err != nil {
-		t.Error(err)
-	}
-	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
-	}
-	for _, s := range users {
-		checks = append(checks, resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", s))
-	}
-	empty := []string{}
-	emptyUsersConfig, err := resourceMonitorNotifyUsersConfig(name, empty)
-	if err != nil {
-		t.Error(err)
-	}
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -201,62 +248,146 @@ func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: emptyUsersConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
+				Config: config.FromModel(t, configModelNothingSet),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasNoCreditQuota().
+						HasNotifyUsersLen(0).
+						HasNoFrequency().
+						HasNoStartTimestamp().
+						HasNoEndTimestamp().
+						HasTriggerLen(0),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(0).
+						HasUsedCredits(0).
+						HasRemainingCredits(0).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyMonthly).
+						HasStartTimeNotEmpty().
+						HasEndTime("").
+						HasSuspendAt(0).
+						HasSuspendImmediateAt(0).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
 				),
 			},
+			// Set
 			{
-				Config: config,
-				Check:  resource.ComposeTestCheckFunc(checks...),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ResourceMonitor/complete"),
+				ConfigVariables: configModelEverythingSet.ToConfigVariables(),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("10").
+						HasNotifyUsersLen(1).
+						HasNotifyUser(0, "JAN_CIESLAK").
+						HasFrequencyString(string(sdk.FrequencyWeekly)).
+						HasStartTimestampString(time.Now().Add(time.Hour*24*30).Format("2006-01-02 15:01")).
+						HasEndTimestampString(time.Now().Add(time.Hour*24*60).Format("2006-01-02 15:01")).
+						HasTriggerLen(4).
+						HasTrigger(0, 100, sdk.TriggerActionNotify).
+						HasTrigger(1, 110, sdk.TriggerActionNotify).
+						HasTrigger(2, 120, sdk.TriggerActionSuspend).
+						HasTrigger(3, 150, sdk.TriggerActionSuspendImmediate),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(10).
+						HasUsedCredits(0).
+						HasRemainingCredits(10).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyWeekly).
+						HasStartTimeNotEmpty().
+						HasEndTimeNotEmpty().
+						HasSuspendAt(120).
+						HasSuspendImmediateAt(150).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
+				),
 			},
+			// Update
 			{
-				ResourceName:      "snowflake_resource_monitor.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ResourceMonitor/complete"),
+				ConfigVariables: configModelUpdated.ToConfigVariables(),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("20").
+						HasNotifyUsersLen(2).
+						HasNotifyUser(0, "ARTUR_SAWICKI").
+						HasNotifyUser(1, "JAN_CIESLAK").
+						HasFrequencyString(string(sdk.FrequencyMonthly)).
+						HasStartTimestampString(time.Now().Add(time.Hour*24*40).Format("2006-01-02 15:01")).
+						HasEndTimestampString(time.Now().Add(time.Hour*24*70).Format("2006-01-02 15:01")).
+						HasTriggerLen(4).
+						HasTrigger(0, 110, sdk.TriggerActionNotify).
+						HasTrigger(1, 120, sdk.TriggerActionNotify).
+						HasTrigger(2, 130, sdk.TriggerActionSuspend).
+						HasTrigger(3, 160, sdk.TriggerActionSuspendImmediate),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(20).
+						HasUsedCredits(0).
+						HasRemainingCredits(20).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyMonthly).
+						HasStartTimeNotEmpty().
+						HasEndTimeNotEmpty().
+						HasSuspendAt(130).
+						HasSuspendImmediateAt(160).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
+				),
+			},
+			// Unset
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ResourceMonitor/only_triggers"),
+				ConfigVariables: configModelEverythingUnset.ToConfigVariables(),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasCreditQuotaString("0").
+						HasNotifyUsersLen(0).
+						HasFrequencyString("").
+						HasStartTimestampString("").
+						HasEndTimestampString("").
+						HasTriggerLen(1).
+						HasTrigger(0, 100, sdk.TriggerActionNotify),
+					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
+						HasName(id.Name()).
+						HasCreditQuota(0).
+						HasUsedCredits(0).
+						HasRemainingCredits(0).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyMonthly).
+						HasStartTimeNotEmpty().
+						HasEndTime("").
+						HasSuspendAt(0).
+						HasSuspendImmediateAt(0).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
+				),
 			},
 		},
 	})
-}
-
-func resourceMonitorConfig(accName string, warehouse string) string {
-	return fmt.Sprintf(`
-resource "snowflake_resource_monitor" "test" {
-	name            = "%v"
-	credit_quota    = 100
-	set_for_account = false
- 	notify_triggers = [40]
-	suspend_trigger = 80
-	suspend_immediate_trigger = 90
-	warehouses      = ["%s"]
-}
-`, accName, warehouse)
-}
-
-func resourceMonitorConfig2(accName string, suspendTrigger int) string {
-	return fmt.Sprintf(`
-resource "snowflake_resource_monitor" "test" {
-	name            = "%v"
-	credit_quota    = 150
-	set_for_account = true
-	notify_triggers = [50]
-	warehouses      = []
-	suspend_trigger = %d
-	suspend_immediate_trigger = 95
-}
-`, accName, suspendTrigger)
 }
 
 // TestAcc_ResourceMonitor_issue2167 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2167 issue.
 // Second step is purposely error, because tests TestAcc_ResourceMonitorUpdateNotifyUsers and TestAcc_ResourceMonitorNotifyUsers are still skipped.
 // It can be fixed with them.
 func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	configNoUsers, err := resourceMonitorNotifyUsersConfig(name, []string{})
-	require.NoError(t, err)
-	config, err := resourceMonitorNotifyUsersConfig(name, []string{"non_existing_user"})
-	require.NoError(t, err)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	configNoUsers := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(configvariable.SetVariable())
+	configWithNonExistingUser := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("non_existing_user")))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -267,66 +398,201 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: configNoUsers,
+				Config: config.FromModel(t, configNoUsers),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
 				),
 			},
 			{
-				Config:      config,
+				Config:      config.FromModel(t, configWithNonExistingUser),
 				ExpectError: regexp.MustCompile(`.*090268 \(22023\): User non_existing_user does not exist.*`),
 			},
 		},
 	})
 }
 
-func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
-	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
-	users := strings.Split(userEnv, ",")
-	name := acc.TestClient().Ids.Alpha()
-	config, err := resourceMonitorNotifyUsersConfig(name, users)
-	if err != nil {
-		t.Error(err)
-	}
-	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
-		resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "false"),
-	}
-	for _, s := range users {
-		checks = append(checks, resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", s))
-	}
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1990 is fixed
+func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	configModel := model.ResourceMonitor("test", id.Name())
+
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
+			// Create resource monitor
 			{
-				Config: config,
-				Check:  resource.ComposeTestCheckFunc(checks...),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.69.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModel(t, configModel),
 			},
+			// Same configuration, but we drop resource monitor externally
 			{
-				ResourceName:      "snowflake_resource_monitor.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.69.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				PreConfig: func() {
+					acc.TestClient().ResourceMonitor.DropResourceMonitorFunc(t, id)()
+				},
+				Config:      config.FromModel(t, configModel),
+				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+			},
+			// Same configuration, but it's the last version where it's still not working
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.95.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      config.FromModel(t, configModel),
+				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+			},
+			// Same configuration, but it's the latest version of the provider (0.96.0 and above)
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
 			},
 		},
 	})
 }
 
-func resourceMonitorNotifyUsersConfig(accName string, accNotifyUsers []string) (string, error) {
-	notifyUsers, err := json.Marshal(accNotifyUsers)
-	if err != nil {
-		return "", err
-	}
-	config := fmt.Sprintf(`
-resource "snowflake_resource_monitor" "test" {
-	name            = "%v"
-	set_for_account = false
-	notify_users    = %v
+// TODO: Timestamp issues
+// TODO: Reference related issues
+func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	configModel := model.ResourceMonitor("test", id.Name())
+
+	// Steps
+	// old version
+	// - create with and without timestamps
+	// - different formats
+	// - same format as in Snowflake
+	// new version
+	// - create with and without timestamps
+	// - different formats
+	// - same format as in Snowflake
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			// Create resource monitor
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.69.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModel(t, configModel),
+			},
+			// Same configuration, but we drop resource monitor externally
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.69.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				PreConfig: func() {
+					acc.TestClient().ResourceMonitor.DropResourceMonitorFunc(t, id)()
+				},
+				Config:      config.FromModel(t, configModel),
+				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+			},
+			// Same configuration, but it's the last version where it's still not working
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.95.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      config.FromModel(t, configModel),
+				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+			},
+			// Same configuration, but it's the latest version of the provider (0.96.0 and above)
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
+			},
+		},
+	})
 }
-`, accName, string(notifyUsers))
-	return config, nil
+
+// TODO: Issue #1500 (creating and altering resource monitor with only triggers)
+// - On create we have required_with validation, so it's not possible
+// - On update we can set e.g. credit_quota to the same (or new) value and it will work.
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1500 is fixed
+func TestAcc_ResourceMonitor_Issue1500_CreatingAndAlteringResourceMonitorWithOnlyTriggers(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	//configModel := model.ResourceMonitor("test", id.Name())
+	triggers := []map[string]any{
+		{
+			"threshold":            100,
+			"on_threshold_reached": string(sdk.TriggerActionNotify),
+		},
+		{
+			"threshold":            120,
+			"on_threshold_reached": string(sdk.TriggerActionNotify),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			// Create resource monitor with only triggers (old version)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.55.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      resourceMonitorConfigWithOnlyTriggers(t, id.Name(), triggers),
+				ExpectError: regexp.MustCompile("LULULULUL"),
+			},
+		},
+	})
+}
+
+func resourceMonitorConfigWithOnlyTriggers(t *testing.T, name string, triggers []map[string]any) string {
+	t.Helper()
+
+	triggersBuilder := new(strings.Builder)
+	for _, trigger := range triggers {
+		triggersBuilder.WriteString(fmt.Sprintf(`
+trigger {
+	threshold = %d
+	on_threshold_reached = "%s"
+}
+`, trigger["threshold"], trigger["on_threshold_reached"]))
+	}
+
+	return fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+  name     = "%[1]s"
+
+  %[2]s
+}
+`, name, triggersBuilder.String())
 }

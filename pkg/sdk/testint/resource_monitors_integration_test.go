@@ -108,10 +108,10 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		assert.Equal(t, name, resourceMonitor.Name)
 		assert.NotEmpty(t, resourceMonitor.CreatedOn)
 		assert.Equal(t, frequency, resourceMonitor.Frequency)
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		assert.NotEmpty(t, resourceMonitor.StartTime)
 		assert.NotEmpty(t, resourceMonitor.EndTime)
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		var allThresholds []int
 		allThresholds = append(allThresholds, *resourceMonitor.SuspendAt)
 		allThresholds = append(allThresholds, *resourceMonitor.SuspendImmediateAt)
@@ -245,7 +245,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 
 		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Unset: &sdk.ResourceMonitorUnset{
@@ -265,7 +265,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				NotifyUsers: &sdk.NotifyUsers{
-					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("TERRAFORM_SVC_ACCOUNT")}},
+					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("JAN_CIESLAK")}}, // TODO: Leave?
 				},
 			},
 		})
@@ -274,7 +274,18 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
 		assert.Len(t, resourceMonitor.NotifyUsers, 1)
-		assert.Equal(t, "TERRAFORM_SVC_ACCOUNT", resourceMonitor.NotifyUsers[0])
+		assert.Equal(t, "JAN_CIESLAK", resourceMonitor.NotifyUsers[0])
+
+		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
+			Unset: &sdk.ResourceMonitorUnset{
+				NotifyUsers: sdk.Bool(true),
+			},
+		})
+		require.NoError(t, err)
+
+		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
+		assert.Len(t, resourceMonitor.NotifyUsers, 0)
 	})
 
 	t.Run("when changing scheduling info", func(t *testing.T) {
@@ -336,7 +347,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
 		assert.NotNil(t, resourceMonitor.CreditQuota)
-		assert.Equal(t, creditQuota, int(*resourceMonitor.CreditQuota))
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 		assert.Len(t, resourceMonitor.NotifyUsers, 1)
 		assert.Equal(t, "TERRAFORM_SVC_ACCOUNT", resourceMonitor.NotifyUsers[0])
 		assert.Len(t, resourceMonitor.NotifyAt, 1)

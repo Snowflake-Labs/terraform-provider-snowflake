@@ -59,9 +59,9 @@ func NewDatasourceAssert(name string, prefix string, additionalPrefix string) *R
 type resourceAssertionType string
 
 const (
+	resourceAssertionTypeValuePresent = "VALUE_PRESENT"
 	resourceAssertionTypeValueSet     = "VALUE_SET"
 	resourceAssertionTypeValueNotSet  = "VALUE_NOT_SET"
-	resourceAssertionTypeValuePresent = "VALUE_PRESENT"
 )
 
 type ResourceAssertion struct {
@@ -73,6 +73,10 @@ type ResourceAssertion struct {
 func (r *ResourceAssert) AddAssertion(assertion ResourceAssertion) {
 	assertion.fieldName = r.additionalPrefix + assertion.fieldName
 	r.assertions = append(r.assertions, assertion)
+}
+
+func ValuePresent(fieldName string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, resourceAssertionType: resourceAssertionTypeValuePresent}
 }
 
 func ValueSet(fieldName string, expected string) ResourceAssertion {
@@ -105,7 +109,10 @@ func ResourceShowOutputValueSet(fieldName string, expected string) ResourceAsser
 	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeValueSet}
 }
 
-// TODO [SNOW-1501905]: generate assertions with resourceAssertionTypeValuePresent
+func ResourceShowOutputValueNotSet(fieldName string) ResourceAssertion {
+	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, resourceAssertionType: resourceAssertionTypeValueNotSet}
+}
+
 func ResourceShowOutputValuePresent(fieldName string) ResourceAssertion {
 	return ResourceAssertion{fieldName: showOutputPrefix + fieldName, resourceAssertionType: resourceAssertionTypeValuePresent}
 }
@@ -181,9 +188,13 @@ func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T) resource.
 					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %w", r.id, r.prefix, i+1, len(r.assertions), err))
 				}
 			case resourceAssertionTypeValueNotSet:
-				panic("implement")
+				if err := importchecks.TestCheckResourceAttrNotInInstanceState(r.id, a.fieldName)(s); err != nil {
+					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %w", r.id, r.prefix, i+1, len(r.assertions), err))
+				}
 			case resourceAssertionTypeValuePresent:
-				panic("implement")
+				if err := importchecks.TestCheckResourceAttrInstanceStateSet(r.id, a.fieldName)(s); err != nil {
+					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %w", r.id, r.prefix, i+1, len(r.assertions), err))
+				}
 			}
 		}
 

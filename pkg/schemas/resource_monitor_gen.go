@@ -76,9 +76,7 @@ var _ = ShowResourceMonitorSchema
 func ResourceMonitorToSchema(resourceMonitor *sdk.ResourceMonitor) map[string]any {
 	resourceMonitorSchema := make(map[string]any)
 	resourceMonitorSchema["name"] = resourceMonitor.Name
-	if resourceMonitor.CreditQuota != nil {
-		resourceMonitorSchema["credit_quota"] = resourceMonitor.CreditQuota
-	}
+	resourceMonitorSchema["credit_quota"] = resourceMonitor.CreditQuota
 	resourceMonitorSchema["used_credits"] = resourceMonitor.UsedCredits
 	resourceMonitorSchema["remaining_credits"] = resourceMonitor.RemainingCredits
 	if resourceMonitor.Level != nil {
@@ -86,9 +84,7 @@ func ResourceMonitorToSchema(resourceMonitor *sdk.ResourceMonitor) map[string]an
 	}
 	resourceMonitorSchema["frequency"] = string(resourceMonitor.Frequency)
 	resourceMonitorSchema["start_time"] = resourceMonitor.StartTime
-	if resourceMonitor.EndTime != nil {
-		resourceMonitorSchema["end_time"] = resourceMonitor.EndTime
-	}
+	resourceMonitorSchema["end_time"] = resourceMonitor.EndTime
 	//resourceMonitorSchema["notify_at"] = resourceMonitor.NotifyAt
 	if resourceMonitor.SuspendAt != nil {
 		resourceMonitorSchema["suspend_at"] = resourceMonitor.SuspendAt

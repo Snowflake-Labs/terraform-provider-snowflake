@@ -113,12 +113,12 @@ func (w *WarehouseModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) 
 Each of the above assertion types/config models has its own generator and cleanup entry in our Makefile.
 You can generate config models with:
 ```shell
-  make clean-resource-model-builder generate-resource-model-builder
+  make clean-resource-model-builders generate-resource-model-builders
 ```
 
 You can use cli flags:
 ```shell
-  make clean-resource-model-builder generate-resource-model-builder SF_TF_GENERATOR_ARGS='--dry-run --verbose'
+  make clean-resource-model-builders generate-resource-model-builders SF_TF_GENERATOR_ARGS='--dry-run --verbose'
 ```
 
 To clean/generate all from this package run

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"strconv"
 	"strings"
 	"time"
@@ -34,13 +34,13 @@ type resourceMonitors struct {
 
 type ResourceMonitor struct {
 	Name               string
-	CreditQuota        *float64
+	CreditQuota        float64
 	UsedCredits        float64
 	RemainingCredits   float64
 	Level              *ResourceMonitorLevel
 	Frequency          Frequency
 	StartTime          string
-	EndTime            *string
+	EndTime            string
 	NotifyAt           []int
 	SuspendAt          *int
 	SuspendImmediateAt *int
@@ -79,7 +79,7 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitor.CreditQuota = &creditQuota
+		resourceMonitor.CreditQuota = creditQuota
 	}
 
 	if row.UsedCredits.Valid {
@@ -116,19 +116,11 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	}
 
 	if row.StartTime.Valid {
-		convertedStartTime, err := ParseTimestampWithOffset(row.StartTime.String, "2006-01-02 15:04")
-		if err != nil {
-			return nil, err
-		}
-		resourceMonitor.StartTime = convertedStartTime
+		resourceMonitor.StartTime = row.StartTime.String
 	}
 
 	if row.EndTime.Valid {
-		convertedEndTime, err := ParseTimestampWithOffset(row.EndTime.String, "2006-01-02 15:04")
-		if err != nil {
-			return nil, err
-		}
-		resourceMonitor.EndTime = &convertedEndTime
+		resourceMonitor.EndTime = row.EndTime.String
 	}
 
 	notifyTriggers, err := extractTriggerInts(row.NotifyAt)
@@ -347,6 +339,7 @@ type ResourceMonitorSet struct {
 type ResourceMonitorUnset struct {
 	CreditQuota  *bool `ddl:"keyword" sql:"CREDIT_QUOTA = null"`
 	EndTimestamp *bool `ddl:"keyword" sql:"END_TIMESTAMP = null"`
+	NotifyUsers  *bool `ddl:"keyword" sql:"NOTIFY_USERS = ()"`
 }
 
 // DropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
@@ -413,5 +406,5 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(resourceMonitors, func(r ResourceMonitor) bool { return r.ID().Name() == id.Name() })
+	return collections.FindFirst(resourceMonitors, func(r ResourceMonitor) bool { return r.ID().Name() == id.Name() })
 }

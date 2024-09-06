@@ -46,11 +46,8 @@ func (r *ResourceMonitorAssert) HasName(expected string) *ResourceMonitorAssert 
 func (r *ResourceMonitorAssert) HasCreditQuota(expected float64) *ResourceMonitorAssert {
 	r.AddAssertion(func(t *testing.T, o *sdk.ResourceMonitor) error {
 		t.Helper()
-		if o.CreditQuota == nil {
-			return fmt.Errorf("expected credit quota to have value; got: nil")
-		}
-		if *o.CreditQuota != expected {
-			return fmt.Errorf("expected credit quota: %v; got: %v", expected, *o.CreditQuota)
+		if o.CreditQuota != expected {
+			return fmt.Errorf("expected credit quota: %v; got: %v", expected, o.CreditQuota)
 		}
 		return nil
 	})
@@ -118,11 +115,8 @@ func (r *ResourceMonitorAssert) HasStartTime(expected string) *ResourceMonitorAs
 func (r *ResourceMonitorAssert) HasEndTime(expected string) *ResourceMonitorAssert {
 	r.AddAssertion(func(t *testing.T, o *sdk.ResourceMonitor) error {
 		t.Helper()
-		if o.EndTime == nil {
-			return fmt.Errorf("expected end time to have value; got: nil")
-		}
-		if *o.EndTime != expected {
-			return fmt.Errorf("expected end time: %v; got: %v", expected, *o.EndTime)
+		if o.EndTime != expected {
+			return fmt.Errorf("expected end time: %v; got: %v", expected, o.EndTime)
 		}
 		return nil
 	})

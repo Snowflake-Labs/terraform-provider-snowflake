@@ -69,7 +69,8 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSch
 		Name:       resourceSchemaDetails.ObjectName(),
 		Attributes: attributes,
 		PreambleModel: PreambleModel{
-			PackageName: packageWithGenerateDirective,
+			PackageName:               packageWithGenerateDirective,
+			AdditionalStandardImports: []string{"reflect", "strings"},
 		},
 	}
 }
