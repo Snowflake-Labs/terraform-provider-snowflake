@@ -185,11 +185,6 @@ func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest)
 	}
 }
 
-func SecondaryClient(t *testing.T) *sdk.Client {
-	t.Helper()
-	return atc.secondaryClient
-}
-
 func DefaultConfig(t *testing.T) *gosnowflake.Config {
 	t.Helper()
 	return atc.config

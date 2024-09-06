@@ -180,6 +180,36 @@ func (c *GrantClient) GrantOwnershipToAccountRole(
 	require.NoError(t, err)
 }
 
+func (c *GrantClient) GrantPrivilegeOnDatabaseToShare(
+	t *testing.T,
+	databaseId sdk.AccountObjectIdentifier,
+	shareId sdk.AccountObjectIdentifier,
+	privileges []sdk.ObjectPrivilege,
+) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().GrantPrivilegeToShare(ctx, privileges, &sdk.ShareGrantOn{Database: databaseId}, shareId)
+	require.NoError(t, err)
+
+	return func() {
+		c.RevokePrivilegeOnDatabaseFromShare(t, databaseId, shareId, privileges)
+	}
+}
+
+func (c *GrantClient) RevokePrivilegeOnDatabaseFromShare(
+	t *testing.T,
+	databaseId sdk.AccountObjectIdentifier,
+	shareId sdk.AccountObjectIdentifier,
+	privileges []sdk.ObjectPrivilege,
+) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().RevokePrivilegeFromShare(ctx, privileges, &sdk.ShareGrantOn{Database: databaseId}, shareId)
+	require.NoError(t, err)
+}
+
 func (c *GrantClient) ShowGrantsToShare(t *testing.T, shareId sdk.AccountObjectIdentifier) ([]sdk.Grant, error) {
 	t.Helper()
 	ctx := context.Background()

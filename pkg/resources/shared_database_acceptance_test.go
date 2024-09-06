@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
@@ -277,34 +275,16 @@ func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
 func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 	t.Helper()
 
-	ctx := context.Background()
-
 	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	sharedDatabase, sharedDatabaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
 	t.Cleanup(sharedDatabaseCleanup)
 
-	err := acc.SecondaryClient(t).Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: sharedDatabase.ID(),
-	}, share.ID())
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := acc.SecondaryClient(t).Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: sharedDatabase.ID(),
-		}, share.ID())
-		require.NoError(t, err)
-	})
+	revoke := acc.SecondaryTestClient().Grant.GrantPrivilegeOnDatabaseToShare(t, sharedDatabase.ID(), share.ID(), []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage})
+	t.Cleanup(revoke)
 
-	err = acc.SecondaryClient(t).Shares.Alter(ctx, share.ID(), &sdk.AlterShareOptions{
-		IfExists: sdk.Bool(true),
-		Set: &sdk.ShareSet{
-			Accounts: []sdk.AccountIdentifier{
-				acc.TestClient().Account.GetAccountIdentifier(t),
-			},
-		},
-	})
-	require.NoError(t, err)
+	acc.SecondaryTestClient().Share.SetAccountOnShare(t, acc.TestClient().Account.GetAccountIdentifier(t), share.ID())
 
 	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
 }
