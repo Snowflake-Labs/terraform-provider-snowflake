@@ -154,3 +154,28 @@ func (c *GrantClient) GrantPrivilegesOnDatabaseToDatabaseRole(
 	)
 	require.NoError(t, err)
 }
+
+func (c *GrantClient) GrantOwnershipToAccountRole(
+	t *testing.T,
+	accountRoleId sdk.AccountObjectIdentifier,
+	objectType sdk.ObjectType,
+	objectName sdk.ObjectIdentifier,
+) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: objectType,
+				Name:       objectName,
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: &accountRoleId,
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	require.NoError(t, err)
+}

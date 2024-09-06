@@ -396,6 +396,7 @@ func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *ter
 		client := acc.Client(t)
 
 		ctx := context.Background()
+		// TODO [helper-cleanup]: to helper
 		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
 		if err != nil {
 			return err

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
@@ -945,7 +944,7 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					moveResourceOwnershipToAccountRole(t, sdk.ObjectTypeDatabase, databaseId, otherAccountRoleId)
+					acc.TestClient().Grant.GrantOwnershipToAccountRole(t, otherAccountRoleId, sdk.ObjectTypeDatabase, databaseId)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/MoveResourceOwnershipOutsideTerraform"),
 				ConfigVariables: configVariables,
@@ -1317,27 +1316,6 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 			},
 		},
 	})
-}
-
-func moveResourceOwnershipToAccountRole(t *testing.T, objectType sdk.ObjectType, objectName sdk.ObjectIdentifier, accountRoleName sdk.AccountObjectIdentifier) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-	err := client.Grants.GrantOwnership(
-		ctx,
-		sdk.OwnershipGrantOn{
-			Object: &sdk.Object{
-				ObjectType: objectType,
-				Name:       objectName,
-			},
-		},
-		sdk.OwnershipGrantTo{
-			AccountRoleName: &accountRoleName,
-		},
-		new(sdk.GrantOwnershipOptions),
-	)
-	assert.NoError(t, err)
 }
 
 func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.ObjectType, roleName string, objectNames ...string) func(s *terraform.State) error {
