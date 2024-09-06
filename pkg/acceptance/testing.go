@@ -185,11 +185,6 @@ func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest)
 	}
 }
 
-func Client(t *testing.T) *sdk.Client {
-	t.Helper()
-	return atc.client
-}
-
 func SecondaryClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return atc.secondaryClient

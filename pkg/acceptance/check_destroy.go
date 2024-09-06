@@ -17,7 +17,8 @@ import (
 
 func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
+	// TODO: use TestClient() here
+	client := atc.client
 	t.Logf("running check destroy for resource %s", resource)
 
 	return func(s *terraform.State) error {
