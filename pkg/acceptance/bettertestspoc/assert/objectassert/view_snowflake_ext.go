@@ -51,12 +51,12 @@ func (v *ViewAssert) HasNoProjectionPolicyReferences(client *helpers.TestClient)
 func (v *ViewAssert) hasNoPolicyReference(client *helpers.TestClient, kind sdk.PolicyKind) *ViewAssert {
 	v.AddAssertion(func(t *testing.T, o *sdk.View) error {
 		t.Helper()
-		refs, err := client.PolicyReferences.GetPolicyReferences(t, o.ID(), sdk.ObjectTypeView)
+		refs, err := client.PolicyReferences.GetPolicyReferences(t, o.ID(), sdk.PolicyEntityDomainView)
 		if err != nil {
 			return err
 		}
-		refs = slices.DeleteFunc(refs, func(reference helpers.PolicyReference) bool {
-			return reference.PolicyKind != string(kind)
+		refs = slices.DeleteFunc(refs, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind != kind
 		})
 		if len(refs) > 0 {
 			return fmt.Errorf("expected no %s policy references; got: %v", kind, refs)
@@ -85,12 +85,12 @@ func (v *ViewAssert) HasProjectionPolicyReferences(client *helpers.TestClient, n
 func (v *ViewAssert) hasPolicyReference(client *helpers.TestClient, kind sdk.PolicyKind, n int) *ViewAssert {
 	v.AddAssertion(func(t *testing.T, o *sdk.View) error {
 		t.Helper()
-		refs, err := client.PolicyReferences.GetPolicyReferences(t, o.ID(), sdk.ObjectTypeView)
+		refs, err := client.PolicyReferences.GetPolicyReferences(t, o.ID(), sdk.PolicyEntityDomainView)
 		if err != nil {
 			return err
 		}
-		refs = slices.DeleteFunc(refs, func(reference helpers.PolicyReference) bool {
-			return reference.PolicyKind != string(kind)
+		refs = slices.DeleteFunc(refs, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind != kind
 		})
 		if len(refs) != n {
 			return fmt.Errorf("expected %d %s policy references; got: %d, %v", n, kind, len(refs), refs)

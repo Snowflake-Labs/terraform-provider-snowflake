@@ -421,18 +421,12 @@ func CheckSharePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 // CheckUserPasswordPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
-
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_user_password_policy_attachment" {
 				continue
 			}
-			ctx := context.Background()
-			policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(
-				sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]),
-				sdk.PolicyEntityDomainUser,
-			))
+			policyReferences, err := TestClient().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]), sdk.PolicyEntityDomainUser)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist or not authorized") {
 					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
