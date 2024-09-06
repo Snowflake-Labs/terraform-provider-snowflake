@@ -179,3 +179,16 @@ func (c *GrantClient) GrantOwnershipToAccountRole(
 	)
 	require.NoError(t, err)
 }
+
+func (c *GrantClient) ShowGrantsToShare(t *testing.T, shareId sdk.AccountObjectIdentifier) ([]sdk.Grant, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Show(ctx, &sdk.ShowGrantOptions{
+		To: &sdk.ShowGrantsTo{
+			Share: &sdk.ShowGrantsToShare{
+				Name: shareId,
+			},
+		},
+	})
+}
