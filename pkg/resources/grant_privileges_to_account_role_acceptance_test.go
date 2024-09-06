@@ -7,15 +7,14 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
@@ -1250,12 +1249,17 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2533 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
-	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	roleFullyQualifiedName := roleId.FullyQualifiedName()
-	externalVolumeName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+	externalVolumeId, cleanupExternalVolume := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(cleanupExternalVolume)
+
 	configVariables := config.Variables{
-		"name":            config.StringVariable(roleFullyQualifiedName),
-		"external_volume": config.StringVariable(externalVolumeName),
+		"name":            config.StringVariable(role.ID().FullyQualifiedName()),
+		"external_volume": config.StringVariable(externalVolumeId.Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeUsage)),
 		),
@@ -1272,23 +1276,17 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
-					t.Cleanup(roleCleanup)
-					cleanupExternalVolume := createExternalVolume(t, externalVolumeName)
-					t.Cleanup(cleanupExternalVolume)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnExternalVolume"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", role.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
 					resource.TestCheckResourceAttr(resourceName, "on_account_object.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_type", "EXTERNAL VOLUME"),
-					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_name", externalVolumeName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|USAGE|OnAccountObject|EXTERNAL VOLUME|\"%s\"", roleFullyQualifiedName, externalVolumeName)),
+					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_name", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|USAGE|OnAccountObject|EXTERNAL VOLUME|%s", role.ID().FullyQualifiedName(), externalVolumeId.FullyQualifiedName())),
 				),
 			},
 		},
@@ -1649,29 +1647,6 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 			},
 		})
 	}, roleName, privileges...)
-}
-
-func createExternalVolume(t *testing.T, externalVolumeName string) func() {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
-    (
-        name = 'test'
-        storage_provider = 's3'
-        storage_base_url = 's3://my_example_bucket/'
-        storage_aws_role_arn = 'arn:aws:iam::123456789012:role/myrole'
-        encryption=(type='aws_sse_kms' kms_key_id='1234abcd-12ab-34cd-56ef-1234567890ab')
-    )
-)
-`, externalVolumeName))
-	require.NoError(t, err)
-
-	return func() {
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`drop external volume "%s"`, externalVolumeName))
-		require.NoError(t, err)
-	}
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
