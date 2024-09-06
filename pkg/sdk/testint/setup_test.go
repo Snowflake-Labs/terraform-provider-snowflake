@@ -260,7 +260,7 @@ func timer(name string) func() {
 	}
 }
 
-// TODO: distinguish between testClient and testClientHelper in tests (one is tested, the second helps with the tests, they should be the different ones)
+// TODO [SNOW-1653619]: distinguish between testClient and testClientHelper in tests (one is tested, the second helps with the tests, they should be the different ones)
 func testClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return itc.client
