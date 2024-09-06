@@ -26,6 +26,7 @@ func (c *ExternalTableClient) client() sdk.ExternalTables {
 }
 
 func (c *ExternalTableClient) PublishDataToStage(t *testing.T, stageId sdk.SchemaObjectIdentifier, data []byte) {
+	t.Helper()
 	ctx := context.Background()
 
 	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageId.FullyQualifiedName(), string(data)))

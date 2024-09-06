@@ -393,11 +393,7 @@ func testAccCheckDatabaseExistence(t *testing.T, id sdk.AccountObjectIdentifier,
 func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client := acc.Client(t)
-
-		ctx := context.Background()
-		// TODO [helper-cleanup]: to helper
-		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
+		replicationDatabases, err := acc.TestClient().Database.ShowAllReplicationDatabases(t)
 		if err != nil {
 			return err
 		}

@@ -177,3 +177,10 @@ func (c *DatabaseClient) CreateDatabaseFromShareTemporarily(t *testing.T, extern
 	err = c.DropDatabase(t, databaseId)
 	require.NoError(t, err)
 }
+
+func (c *DatabaseClient) ShowAllReplicationDatabases(t *testing.T) ([]sdk.ReplicationDatabase, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.context.client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
+}
