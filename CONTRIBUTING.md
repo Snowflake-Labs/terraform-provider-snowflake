@@ -72,7 +72,7 @@ role = "<any role, e.g. ACCOUNTADMIN>"
 host="<host of your account, e.g. organisation-account_name.snowflakecomputing.com>"
 ```
 
-We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts.
+We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts. The warning will be logged when setting up tests with just a single account.
 
 **⚠️ Important ⚠️** Some of the tests require the privileged role (like `ACCOUNTADMIN`). Otherwise, the managed objects may not be created. If you want to use lower role, you have to make sure it has all the necessary privileges added.
 
