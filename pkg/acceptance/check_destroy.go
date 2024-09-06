@@ -302,21 +302,15 @@ func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
 // CheckAccountRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_account_role" {
 				continue
 			}
-			ctx := context.Background()
 
 			id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["account_role_name"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					Role: id,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsToAccountRole(t, id)
 			if err != nil {
 				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 					continue
@@ -338,21 +332,15 @@ func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) erro
 // CheckDatabaseRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_database_role" {
 				continue
 			}
-			ctx := context.Background()
 
 			id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["database_role_name"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					DatabaseRole: id,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsToDatabaseRole(t, id)
 			if err != nil {
 				return err
 			}
