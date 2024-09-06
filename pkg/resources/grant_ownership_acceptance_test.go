@@ -707,7 +707,7 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 			{
 				PreConfig: func() {
 					currentRole := acc.TestClient().Context.CurrentRole(t)
-					acc.TestClient().Role.GrantOwnershipOnAccountObject(t, currentRole, databaseId, sdk.ObjectTypeDatabase)
+					acc.TestClient().Grant.GrantOwnershipToAccountRole(t, currentRole, sdk.ObjectTypeDatabase, databaseId)
 					cleanupDatabase()
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
@@ -997,7 +997,7 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 					t.Cleanup(newRoleCleanup)
 					database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 					t.Cleanup(databaseCleanup)
-					acc.TestClient().Role.GrantOwnershipOnAccountObject(t, role.ID(), database.ID(), sdk.ObjectTypeDatabase)
+					acc.TestClient().Grant.GrantOwnershipToAccountRole(t, role.ID(), sdk.ObjectTypeDatabase, database.ID())
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
 				ConfigVariables: configVariables,
