@@ -1478,49 +1478,10 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 	withGrantOption bool,
 ) {
 	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-	err := client.Grants.RevokePrivilegesFromAccountRole(
-		ctx,
-		&sdk.AccountRoleGrantPrivileges{
-			SchemaObjectPrivileges: privileges,
-		},
-		&sdk.AccountRoleGrantOn{
-			SchemaObject: &sdk.GrantOnSchemaObject{
-				SchemaObject: &sdk.Object{
-					ObjectType: sdk.ObjectTypeTable,
-					Name:       tableName,
-				},
-			},
-		},
-		accountRoleId,
-		new(sdk.RevokePrivilegesFromAccountRoleOptions),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.TestClient()
 
-	err = client.Grants.GrantPrivilegesToAccountRole(
-		ctx,
-		&sdk.AccountRoleGrantPrivileges{
-			SchemaObjectPrivileges: privileges,
-		},
-		&sdk.AccountRoleGrantOn{
-			SchemaObject: &sdk.GrantOnSchemaObject{
-				SchemaObject: &sdk.Object{
-					ObjectType: sdk.ObjectTypeTable,
-					Name:       tableName,
-				},
-			},
-		},
-		accountRoleId,
-		&sdk.GrantPrivilegesToAccountRoleOptions{
-			WithGrantOption: sdk.Bool(withGrantOption),
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client.Grant.RevokePrivilegesOnSchemaObjectFromAccountRole(t, accountRoleId, sdk.ObjectTypeTable, tableName, privileges)
+	client.Grant.GrantPrivilegesOnSchemaObjectToAccountRole(t, accountRoleId, sdk.ObjectTypeTable, tableName, privileges, withGrantOption)
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource

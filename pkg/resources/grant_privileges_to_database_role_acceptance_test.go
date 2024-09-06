@@ -1358,45 +1358,16 @@ func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.Database
 
 func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
-	databaseRoleName sdk.DatabaseObjectIdentifier,
+	databaseRoleId sdk.DatabaseObjectIdentifier,
 	databaseId sdk.AccountObjectIdentifier,
 	privileges []sdk.AccountObjectPrivilege,
 	withGrantOption bool,
 ) {
 	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-	err := client.Grants.RevokePrivilegesFromDatabaseRole(
-		ctx,
-		&sdk.DatabaseRoleGrantPrivileges{
-			DatabasePrivileges: privileges,
-		},
-		&sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(databaseId),
-		},
-		databaseRoleName,
-		new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.TestClient()
 
-	err = client.Grants.GrantPrivilegesToDatabaseRole(
-		ctx,
-		&sdk.DatabaseRoleGrantPrivileges{
-			DatabasePrivileges: privileges,
-		},
-		&sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(databaseId),
-		},
-		databaseRoleName,
-		&sdk.GrantPrivilegesToDatabaseRoleOptions{
-			WithGrantOption: sdk.Bool(withGrantOption),
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client.Grant.RevokePrivilegesOnDatabaseFromDatabaseRole(t, databaseRoleId, databaseId, privileges)
+	client.Grant.GrantPrivilegesOnDatabaseToDatabaseRole(t, databaseRoleId, databaseId, privileges, withGrantOption)
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
