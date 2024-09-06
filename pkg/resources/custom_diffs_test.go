@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -138,8 +137,7 @@ func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue
 		&terraform.ResourceConfig{
 			Config: stateValue,
 		},
-		// TODO [helper-cleanup]: do we need this client here?
-		&provider.Context{Client: acc.Client(t)},
+		&provider.Context{Client: &sdk.Client{}},
 	)
 	require.NoError(t, err)
 	return diff
@@ -155,7 +153,7 @@ func calculateDiffFromAttributes(t *testing.T, providerConfig *schema.Provider, 
 		&terraform.ResourceConfig{
 			Config: newValue,
 		},
-		&provider.Context{Client: acc.Client(t)},
+		&provider.Context{Client: &sdk.Client{}},
 	)
 	require.NoError(t, err)
 	return diff
