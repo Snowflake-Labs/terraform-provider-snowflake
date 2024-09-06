@@ -1622,7 +1622,7 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseId sdk.Account
 	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShareWithIdentifier(t, shareId)
 	t.Cleanup(shareCleanup)
 
-	acc.SecondaryTestClient().Role.GrantPrivilegeOnDatabaseToShare(t, database.ID(), share.ID())
+	_ = acc.SecondaryTestClient().Grant.GrantPrivilegeOnDatabaseToShare(t, database.ID(), share.ID(), []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage})
 
 	accountName := acc.TestClient().Context.CurrentAccount(t)
 	accountId := sdk.NewAccountIdentifierFromAccountLocator(accountName)

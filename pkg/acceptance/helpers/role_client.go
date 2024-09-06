@@ -152,27 +152,3 @@ func (c *RoleClient) GrantOwnershipOnSchemaObject(t *testing.T, roleId sdk.Accou
 	)
 	require.NoError(t, err)
 }
-
-// TODO: move later to grants client
-func (c *RoleClient) GrantPrivilegeOnDatabaseToShare(t *testing.T, databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) {
-	t.Helper()
-	ctx := context.Background()
-
-	err := c.context.client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: databaseId}, shareId)
-	require.NoError(t, err)
-}
-
-// TODO: move later to grants client
-func (c *RoleClient) ShowGrantsTo(t *testing.T, roleId sdk.AccountObjectIdentifier) []sdk.Grant {
-	t.Helper()
-	ctx := context.Background()
-
-	grants, err := c.context.client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-		To: &sdk.ShowGrantsTo{
-			Role: roleId,
-		},
-	})
-	require.NoError(t, err)
-
-	return grants
-}

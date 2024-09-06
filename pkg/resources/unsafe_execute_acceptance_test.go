@@ -722,7 +722,10 @@ output "unsafe" {
 func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		grants := acc.TestClient().Role.ShowGrantsTo(t, roleId)
+		grants, err := acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleId)
+		if err != nil {
+			return err
+		}
 
 		if shouldExist {
 			require.Equal(t, 1, len(grants))
