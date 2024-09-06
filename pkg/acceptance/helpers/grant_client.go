@@ -192,3 +192,25 @@ func (c *GrantClient) ShowGrantsToShare(t *testing.T, shareId sdk.AccountObjectI
 		},
 	})
 }
+
+func (c *GrantClient) ShowGrantsOfAccountRole(t *testing.T, accountRoleId sdk.AccountObjectIdentifier) ([]sdk.Grant, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Show(ctx, &sdk.ShowGrantOptions{
+		Of: &sdk.ShowGrantsOf{
+			Role: accountRoleId,
+		},
+	})
+}
+
+func (c *GrantClient) ShowGrantsOfDatabaseRole(t *testing.T, databaseRoleId sdk.DatabaseObjectIdentifier) ([]sdk.Grant, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Show(ctx, &sdk.ShowGrantOptions{
+		Of: &sdk.ShowGrantsOf{
+			DatabaseRole: databaseRoleId,
+		},
+	})
+}

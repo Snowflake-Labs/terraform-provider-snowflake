@@ -236,24 +236,18 @@ func asId[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.Sch
 // CheckGrantAccountRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_account_role" {
 				continue
 			}
-			ctx := context.Background()
 			parts := strings.Split(rs.Primary.ID, "|")
 			roleName := parts[0]
 			roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
 			objectType := parts[1]
 			targetIdentifier := parts[2]
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				Of: &sdk.ShowGrantsOf{
-					Role: roleIdentifier,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsOfAccountRole(t, roleIdentifier)
 			if err != nil {
 				return nil
 			}
@@ -278,24 +272,18 @@ func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
 // CheckGrantDatabaseRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_database_role" {
 				continue
 			}
-			ctx := context.Background()
 			id := rs.Primary.ID
 			ids := strings.Split(id, "|")
 			databaseRoleName := ids[0]
 			objectType := ids[1]
 			parentRoleName := ids[2]
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				Of: &sdk.ShowGrantsOf{
-					DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName),
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsOfDatabaseRole(t, sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName))
 			if err != nil {
 				continue
 			}
