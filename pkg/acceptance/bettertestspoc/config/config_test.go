@@ -15,7 +15,7 @@ import (
 func Test_exploreHcl(t *testing.T) {
 
 	// TODO: describe why V1 and not V2 is used
-	convertJsonToHclV1 := func(json string) (string, error) {
+	convertJsonToHclStringV1 := func(json string) (string, error) {
 		parsed, err := hclv1parser.Parse([]byte(json))
 		if err != nil {
 			return "", err
@@ -32,7 +32,11 @@ func Test_exploreHcl(t *testing.T) {
 			return "", err
 		}
 
-		return fmt.Sprintf("%s", strings.ReplaceAll(string(formatted[:]), "\n\n", "\n")), nil
+		return string(formatted[:]), nil
+	}
+
+	formatResult := func(input string) string {
+		return fmt.Sprintf("%s", strings.ReplaceAll(input, "\n\n", "\n"))
 	}
 
 	examples := []string{
@@ -61,10 +65,11 @@ func Test_exploreHcl(t *testing.T) {
 	for _, example := range examples {
 		example := example
 		t.Run("test HCL v1", func(t *testing.T) {
-			parsed, err := convertJsonToHclV1(example)
+			result, err := convertJsonToHclStringV1(example)
 			require.NoError(t, err)
 
-			fmt.Printf("%s", parsed)
+			fmt.Printf("%s", result)
+			fmt.Printf("%s", formatResult(result))
 		})
 	}
 }
