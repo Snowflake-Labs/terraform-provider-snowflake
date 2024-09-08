@@ -60,6 +60,29 @@ func Test_exploreHcl(t *testing.T) {
     }
   }
 }`,
+		`{
+  "resource": {
+    "some_resource": {
+      "name": {
+        "attribute_1": ["some value", "some other value"],
+        "attribute_2": [
+		  {
+		    "some_attr": "some val",
+		    "other_attr": [1, 2, 3]
+		  },
+          {
+		    "some_attr": "some val",
+		    "other_attr": [1, 2, 3]
+		  },
+		],
+        "attribute_3": {
+          "some_attr": "some val",
+          "other_attr": [1, 2, 3]
+		}
+      }
+    }
+  }
+}`,
 	}
 
 	for _, example := range examples {
