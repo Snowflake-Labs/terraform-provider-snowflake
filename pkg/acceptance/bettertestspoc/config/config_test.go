@@ -38,20 +38,20 @@ func Test_exploreHcl(t *testing.T) {
 	examples := []string{
 		`{
   "resource": {
-    "aws_instance": {
-      "example": {
-        "instance_type": "t2.micro",
-        "ami": "ami-abc123"
+    "some_resource": {
+      "name": {
+        "attribute_1": "123",
+        "attribute_2": 1
       }
     }
   }
 }`,
 		`{
   "resource": {
-    "aws_instance": {
-      "example": {
-        "instance_type": "t2.micro",
-        "ami": "${resource.name.attribute}"
+    "some_resource": {
+      "name": {
+        "attribute_1": "some value",
+        "attribute_2": "${resource.name.attribute}"
       }
     }
   }
