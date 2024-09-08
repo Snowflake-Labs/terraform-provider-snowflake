@@ -6,26 +6,28 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/hcl/hcl/printer"
-	"github.com/hashicorp/hcl/json/parser"
+	hclv1printer "github.com/hashicorp/hcl/hcl/printer"
+	hclv1parser "github.com/hashicorp/hcl/json/parser"
+
 	"github.com/stretchr/testify/require"
 )
 
-func Test_hclV1(t *testing.T) {
+func Test_exploreHcl(t *testing.T) {
 
-	convertJsonToHcl := func(json string) (string, error) {
-		parsed, err := parser.Parse([]byte(json))
+	// TODO: describe why V1 and not V2 is used
+	convertJsonToHclV1 := func(json string) (string, error) {
+		parsed, err := hclv1parser.Parse([]byte(json))
 		if err != nil {
 			return "", err
 		}
 
 		var buffer bytes.Buffer
-		err = printer.Fprint(&buffer, parsed)
+		err = hclv1printer.Fprint(&buffer, parsed)
 		if err != nil {
 			return "", err
 		}
 
-		formatted, err := printer.Format(buffer.Bytes())
+		formatted, err := hclv1printer.Format(buffer.Bytes())
 		if err != nil {
 			return "", err
 		}
@@ -33,9 +35,8 @@ func Test_hclV1(t *testing.T) {
 		return fmt.Sprintf("%s", strings.ReplaceAll(string(formatted[:]), "\n\n", "\n")), nil
 	}
 
-	t.Run("basic example", func(t *testing.T) {
-		example := `
-{
+	examples := []string{
+		`{
   "resource": {
     "aws_instance": {
       "example": {
@@ -44,12 +45,26 @@ func Test_hclV1(t *testing.T) {
       }
     }
   }
-}
-`
+}`,
+		`{
+  "resource": {
+    "aws_instance": {
+      "example": {
+        "instance_type": "t2.micro",
+        "ami": "${resource.name.attribute}"
+      }
+    }
+  }
+}`,
+	}
 
-		parsed, err := convertJsonToHcl(example)
-		require.NoError(t, err)
+	for _, example := range examples {
+		example := example
+		t.Run("test HCL v1", func(t *testing.T) {
+			parsed, err := convertJsonToHclV1(example)
+			require.NoError(t, err)
 
-		fmt.Printf("%s", parsed)
-	})
+			fmt.Printf("%s", parsed)
+		})
+	}
 }
