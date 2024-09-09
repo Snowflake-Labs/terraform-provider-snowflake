@@ -547,7 +547,6 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() {},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
