@@ -189,6 +189,7 @@ func nukeUsers(client *Client) func() error {
 		"JAN_CIESLAK_LEGACY",
 		"TERRAFORM_SVC_ACCOUNT",
 		"TEST_CI_SERVICE_USER",
+		"FILIP_BUDZYNSKI",
 	}
 
 	return func() error {
