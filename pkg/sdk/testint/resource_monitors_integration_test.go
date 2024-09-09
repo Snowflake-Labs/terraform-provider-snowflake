@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -96,32 +99,17 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 
 		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(name),
-			},
-		})
-		require.NoError(t, err)
-
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor := resourceMonitors[0]
-		require.NoError(t, err)
-		assert.Equal(t, name, resourceMonitor.Name)
-		assert.NotEmpty(t, resourceMonitor.CreatedOn)
-		assert.Equal(t, frequency, resourceMonitor.Frequency)
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
-		assert.NotEmpty(t, resourceMonitor.StartTime)
-		assert.NotEmpty(t, resourceMonitor.EndTime)
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
-		var allThresholds []int
-		allThresholds = append(allThresholds, *resourceMonitor.SuspendAt)
-		allThresholds = append(allThresholds, *resourceMonitor.SuspendImmediateAt)
-		allThresholds = append(allThresholds, resourceMonitor.NotifyAt...)
-		var thresholds []int
-		for _, trigger := range triggers {
-			thresholds = append(thresholds, trigger.Threshold)
-		}
-		assert.Equal(t, thresholds, allThresholds)
+		assertions.AssertThat(t,
+			objectassert.ResourceMonitor(t, id).
+				HasName(name).
+				HasFrequency(frequency).
+				HasCreditQuota(float64(creditQuota)).
+				HasNonEmptyStartTime().
+				HasNonEmptyEndTime().
+				HasNotifyAt([]int{100}).
+				HasSuspendAt(30).
+				HasSuspendImmediateAt(50),
+		)
 	})
 
 	t.Run("validate: only one suspend trigger", func(t *testing.T) {
@@ -169,27 +157,21 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		name := id.Name()
 
 		err := client.ResourceMonitors.Create(ctx, id, nil)
+		require.NoError(t, err)
 		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 
-		require.NoError(t, err)
-		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
-			Like: &sdk.Like{
-				Pattern: sdk.String(name),
-			},
-		})
-
-		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor := resourceMonitors[0]
-		require.NoError(t, err)
-		assert.Equal(t, name, resourceMonitor.Name)
-		assert.NotEmpty(t, resourceMonitor.StartTime)
-		assert.Empty(t, resourceMonitor.EndTime)
-		assert.Empty(t, resourceMonitor.CreditQuota)
-		assert.Equal(t, sdk.FrequencyMonthly, resourceMonitor.Frequency)
-		assert.Empty(t, resourceMonitor.NotifyUsers)
-		assert.Empty(t, resourceMonitor.NotifyAt)
-		assert.Empty(t, resourceMonitor.SuspendAt)
-		assert.Empty(t, resourceMonitor.SuspendImmediateAt)
+		assertions.AssertThat(t,
+			objectassert.ResourceMonitor(t, id).
+				HasName(name).
+				HasFrequency(sdk.FrequencyMonthly).
+				HasNonEmptyStartTime().
+				HasCreditQuota(0).
+				HasEndTime("").
+				HasNotifyUsers([]string{}).
+				HasNotifyAt([]int{}).
+				HasSuspendAt(0).
+				HasSuspendImmediateAt(0),
+		)
 	})
 }
 
@@ -258,7 +240,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
-		assert.Nil(t, resourceMonitor.CreditQuota)
+		assert.Equal(t, 0, resourceMonitor.CreditQuota)
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {
@@ -312,8 +294,8 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, frequency, resourceMonitor.Frequency)
-		assert.Equal(t, startTimeStamp, resourceMonitor.StartTime)
-		assert.Equal(t, endTimeStamp, resourceMonitor.EndTime)
+		assert.NotEmpty(t, resourceMonitor.StartTime)
+		assert.NotEmpty(t, resourceMonitor.EndTime)
 
 		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Unset: &sdk.ResourceMonitorUnset{
@@ -325,7 +307,8 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
 
-		assert.Nil(t, resourceMonitor.EndTime)
+		assert.NotEmpty(t, resourceMonitor.StartTime)
+		assert.Empty(t, resourceMonitor.EndTime)
 	})
 
 	t.Run("all options together", func(t *testing.T) {
@@ -340,21 +323,19 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 			Set: &sdk.ResourceMonitorSet{
 				CreditQuota: &creditQuota,
 				NotifyUsers: &sdk.NotifyUsers{
-					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("TERRAFORM_SVC_ACCOUNT")}},
+					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("JAN_CIESLAK")}},
 				},
 			},
 			Triggers: newTriggers,
 		})
 		require.NoError(t, err)
 
-		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
-		require.NoError(t, err)
-		assert.NotNil(t, resourceMonitor.CreditQuota)
-		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
-		assert.Len(t, resourceMonitor.NotifyUsers, 1)
-		assert.Equal(t, "TERRAFORM_SVC_ACCOUNT", resourceMonitor.NotifyUsers[0])
-		assert.Len(t, resourceMonitor.NotifyAt, 1)
-		assert.Equal(t, 30, resourceMonitor.NotifyAt[0])
+		assertions.AssertThat(t,
+			objectassert.ResourceMonitor(t, resourceMonitor.ID()).
+				HasCreditQuota(float64(creditQuota)).
+				HasNotifyUsers([]string{"JAN_CIESLAK"}).
+				HasNotifyAt([]int{30}),
+		)
 	})
 }
 

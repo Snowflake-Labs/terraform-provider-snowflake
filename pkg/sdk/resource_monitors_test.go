@@ -2,8 +2,11 @@ package sdk
 
 import (
 	"database/sql"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceMonitorCreate(t *testing.T) {
@@ -178,25 +181,29 @@ func TestResourceMonitorShow(t *testing.T) {
 	})
 }
 
-// TODO: Make new tests
 func TestExtractTriggerInts(t *testing.T) {
-	// TODO rewrite to use testify/assert
-	resp := sql.NullString{String: "51%,63%", Valid: true}
-	out, err := extractTriggerInts(resp)
-	if err != nil {
-		t.Error(err)
-	}
-	if l := len(out); l != 2 {
-		t.Errorf("Expected 2 values, got %d", l)
-	}
-
-	first := 51
-	if out[0] != first {
-		t.Errorf("Expected first value to be 51, got %d", out[0])
+	testCases := []struct {
+		Input    sql.NullString
+		Expected []int
+		Error    string
+	}{
+		{Input: sql.NullString{String: "51%,63%,123%", Valid: true}, Expected: []int{51, 63, 123}},
+		{Input: sql.NullString{String: "51%,63%", Valid: true}, Expected: []int{51, 63}},
+		{Input: sql.NullString{String: "51%", Valid: true}, Expected: []int{51}},
+		{Input: sql.NullString{String: "", Valid: false}, Expected: []int{}},
+		{Input: sql.NullString{String: "51,63", Valid: true}, Expected: []int{5, 6}},
+		{Input: sql.NullString{String: "1", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
 	}
 
-	second := 63
-	if out[1] != second {
-		t.Errorf("Expected second value to be 63, got %d", out[1])
+	for _, tc := range testCases {
+		t.Run("extract trigger ints: "+tc.Input.String+":"+strconv.FormatBool(tc.Input.Valid), func(t *testing.T) {
+			result, err := extractTriggerInts(tc.Input)
+			if tc.Error != "" {
+				require.ErrorContains(t, err, tc.Error)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.Expected, result)
+			}
+		})
 	}
 }

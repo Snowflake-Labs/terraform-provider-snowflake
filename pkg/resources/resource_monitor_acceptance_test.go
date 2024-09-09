@@ -600,7 +600,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 					},
 				},
 				Config: config.FromModel(t, configModelWithUpdatedTriggers),
-				// For some reason, not returning error (SQL compilation error should be returned in this case; most likely update was processed incorrectly)
+				// For some reason, not returning error (SQL compilation error should be returned in this case; most likely update was handled incorrectly, or it was handled similarly as in the current version)
 			},
 			// Remove all triggers (not allowed in Snowflake)
 			{

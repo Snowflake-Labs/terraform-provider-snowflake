@@ -62,19 +62,25 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Description:      "The date and time when the resource monitor suspends the assigned warehouses.",
 	},
 	"notify_triggers": {
-		Type:     schema.TypeSet,
-		Optional: true,
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Description: "Specifies a list of percentages of the credit quota. After reaching any of the values the users passed in the notify_users field will be notified (to receive the notification they should have notifications enabled). Values over 100 are supported.",
 		Elem: &schema.Schema{
-			Type: schema.TypeInt,
+			Type:             schema.TypeInt,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
 	"suspend_trigger": {
-		Type:     schema.TypeInt,
-		Optional: true,
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Description:      "Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses while allowing currently running queries to complete will be suspended. No new queries can be executed by the warehouses until the credit quota for the resource monitor is increased. In addition, this action sends a notification to all users who have enabled notifications for themselves.",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 	},
 	"suspend_immediate_trigger": {
-		Type:     schema.TypeInt,
-		Optional: true,
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Description:      "Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses immediately cancel any currently running queries or statements. In addition, this action sends a notification to all users who have enabled notifications for themselves.",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,

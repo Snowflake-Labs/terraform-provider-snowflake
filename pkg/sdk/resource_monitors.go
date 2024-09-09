@@ -166,9 +166,10 @@ func extractTriggerInts(s sql.NullString) ([]int, error) {
 	ints := strings.Split(s.String, ",")
 	out := make([]int, 0, len(ints))
 	for _, i := range ints {
-		myInt, err := strconv.Atoi(i[:len(i)-1])
+		numberToParse := i[:len(i)-1]
+		myInt, err := strconv.Atoi(numberToParse)
 		if err != nil {
-			return out, fmt.Errorf("failed to convert %v to integer err = %w", i, err)
+			return out, fmt.Errorf("failed to convert %v to integer err = %w", numberToParse, err)
 		}
 		out = append(out, myInt)
 	}
@@ -223,7 +224,6 @@ func (v *resourceMonitors) Create(ctx context.Context, id AccountObjectIdentifie
 	if opts == nil {
 		opts = &CreateResourceMonitorOptions{}
 	}
-	// TODO: Check conventions for SDK
 	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
 }
