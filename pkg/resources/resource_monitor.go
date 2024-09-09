@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -13,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"reflect"
 )
 
 var resourceMonitorSchema = map[string]*schema.Schema{
@@ -39,50 +40,41 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("credit_quota"),
 		Description:      "The number of credits allocated to the resource monitor per frequency interval. When total usage for all warehouses assigned to the monitor reaches this number for the current frequency interval, the resource monitor is considered to be at 100% of quota.",
 	},
-	// TODO: Describe that default it's MONTHLY, but after unsetting this field it will be the thing was previously set in the configuration; because no unset is available
 	"frequency": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		RequiredWith:     []string{"start_timestamp"},
 		ValidateDiagFunc: sdkValidation(sdk.ToResourceMonitorFrequency),
 		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToResourceMonitorFrequency), IgnoreChangeToCurrentSnowflakeValueInShow("frequency")),
-		Description:      "The frequency interval at which the credit usage resets to 0. If you set a `frequency` for a resource monitor, you must also set `start_timestamp`. If you specify `NEVER` for the frequency, the credit usage for the warehouse does not reset.",
+		Description:      fmt.Sprintf("The frequency interval at which the credit usage resets to 0. Valid values are (case-insensitive): %s. If you set a `frequency` for a resource monitor, you must also set `start_timestamp`. If you specify `NEVER` for the frequency, the credit usage for the warehouse does not reset. After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.", possibleValuesListed(sdk.AllFrequencyValues)),
 	},
-	// TODO: Describe that default it's MONTHLY, but after unsetting this field it will be the thing was previously set in the configuration; because no unset is available
-	// TODO: Describe that it's advised for now to specify full dates of format 2024-10-04 00:00 otherwise diffs may occur
 	"start_timestamp": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		RequiredWith:     []string{"frequency"},
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("start_time"),
-		Description:      "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses. If you set a `start_timestamp` for a resource monitor, you must also set `frequency`.",
+		Description:      "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses. If you set a `start_timestamp` for a resource monitor, you must also set `frequency`.  After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.",
 	},
-	// TODO: Describe that it's advised for now to specify full dates of format 2024-10-04 00:00 otherwise diffs may occur
 	"end_timestamp": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("end_time"),
 		Description:      "The date and time when the resource monitor suspends the assigned warehouses.",
 	},
-	"trigger": {
+	"notify_triggers": {
 		Type:     schema.TypeSet,
 		Optional: true,
-		// TODO: Throw error on CREATE with only triggers (SQL compilation error).
-		// TODO: Throw error on 0 triggers alter
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"threshold": {
-					Type:     schema.TypeInt,
-					Required: true,
-				},
-				"on_threshold_reached": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: sdkValidation(sdk.ToResourceMonitorTriggerAction),
-					DiffSuppressFunc: NormalizeAndCompare(sdk.ToResourceMonitorTriggerAction),
-				},
-			},
+		Elem: &schema.Schema{
+			Type: schema.TypeInt,
 		},
+	},
+	"suspend_trigger": {
+		Type:     schema.TypeInt,
+		Optional: true,
+	},
+	"suspend_immediate_trigger": {
+		Type:     schema.TypeInt,
+		Optional: true,
 	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
@@ -108,7 +100,7 @@ func ResourceMonitor() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(resourceMonitorSchema, ShowOutputAttributeName, "notify_users", "credit_quota", "frequency", "start_timestamp", "end_timestamp", "trigger"),
+			ComputedIfAnyAttributeChanged(resourceMonitorSchema, ShowOutputAttributeName, "notify_users", "credit_quota", "frequency", "start_timestamp", "end_timestamp", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 		),
 	}
 }
@@ -140,6 +132,15 @@ func ImportResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		return nil, err
 	}
 	if err := d.Set("end_timestamp", resourceMonitor.EndTime); err != nil {
+		return nil, err
+	}
+	if err := d.Set("notify_triggers", resourceMonitor.NotifyAt); err != nil {
+		return nil, err
+	}
+	if err := d.Set("suspend_trigger", resourceMonitor.SuspendAt); err != nil {
+		return nil, err
+	}
+	if err := d.Set("suspend_immediate_trigger", resourceMonitor.SuspendImmediateAt); err != nil {
 		return nil, err
 	}
 
@@ -184,12 +185,32 @@ func CreateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		with.EndTimestamp = sdk.Pointer(v.(string))
 	}
 
-	if v, ok := d.GetOk("trigger"); ok {
-		triggerDefinitions, err := extractTriggerDefinitions(v.(*schema.Set).List())
-		if err != nil {
-			return diag.FromErr(err)
+	triggers := make([]sdk.TriggerDefinition, 0)
+	if notifyTriggers, ok := d.GetOk("notify_triggers"); ok {
+		for _, triggerThreshold := range notifyTriggers.(*schema.Set).List() {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     triggerThreshold.(int),
+				TriggerAction: sdk.TriggerActionNotify,
+			})
 		}
-		with.Triggers = triggerDefinitions
+	}
+
+	if suspendTriggerThreshold, ok := d.GetOk("suspend_trigger"); ok {
+		triggers = append(triggers, sdk.TriggerDefinition{
+			Threshold:     suspendTriggerThreshold.(int),
+			TriggerAction: sdk.TriggerActionSuspend,
+		})
+	}
+
+	if suspendImmediateTriggerThreshold, ok := d.GetOk("suspend_immediate_trigger"); ok {
+		triggers = append(triggers, sdk.TriggerDefinition{
+			Threshold:     suspendImmediateTriggerThreshold.(int),
+			TriggerAction: sdk.TriggerActionSuspendImmediate,
+		})
+	}
+
+	if len(triggers) > 0 {
+		with.Triggers = triggers
 	}
 
 	if !reflect.DeepEqual(*with, sdk.ResourceMonitorWith{}) {
@@ -216,7 +237,7 @@ func ReadResourceMonitor(withExternalChangesMarking bool) schema.ReadContextFunc
 
 		resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
 		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) { // TODO: Test for sdk.ErrObjectNotExistOrAuthorized
+			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -239,6 +260,9 @@ func ReadResourceMonitor(withExternalChangesMarking bool) schema.ReadContextFunc
 				showMapping{"frequency", "frequency", string(resourceMonitor.Frequency), resourceMonitor.Frequency, nil},
 				showMapping{"start_time", "start_timestamp", resourceMonitor.StartTime, resourceMonitor.StartTime, nil},
 				showMapping{"end_time", "end_timestamp", resourceMonitor.EndTime, resourceMonitor.EndTime, nil},
+				showMapping{"notify_at", "notify_triggers", resourceMonitor.NotifyAt, resourceMonitor.NotifyAt, nil},
+				showMapping{"suspend_at", "suspend_trigger", resourceMonitor.SuspendAt, resourceMonitor.SuspendAt, nil},
+				showMapping{"suspend_immediately_at", "suspend_immediate_trigger", resourceMonitor.SuspendImmediateAt, resourceMonitor.SuspendImmediateAt, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -249,36 +273,10 @@ func ReadResourceMonitor(withExternalChangesMarking bool) schema.ReadContextFunc
 			"frequency",
 			"start_timestamp",
 			"end_timestamp",
+			"notify_triggers",
+			"suspend_trigger",
+			"suspend_immediate_trigger",
 		}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		var triggers []any
-
-		if len(resourceMonitor.NotifyAt) > 0 {
-			for _, notifyAt := range resourceMonitor.NotifyAt {
-				triggers = append(triggers, map[string]any{
-					"threshold":            notifyAt,
-					"on_threshold_reached": sdk.TriggerActionNotify,
-				})
-			}
-		}
-
-		if resourceMonitor.SuspendAt != nil {
-			triggers = append(triggers, map[string]any{
-				"threshold":            resourceMonitor.SuspendAt,
-				"on_threshold_reached": sdk.TriggerActionSuspend,
-			})
-		}
-
-		if resourceMonitor.SuspendImmediateAt != nil {
-			triggers = append(triggers, map[string]any{
-				"threshold":            resourceMonitor.SuspendImmediateAt,
-				"on_threshold_reached": sdk.TriggerActionSuspendImmediate,
-			})
-		}
-
-		if err := d.Set("trigger", triggers); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -358,14 +356,34 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if d.HasChange("trigger") {
-		v := d.Get("trigger").(*schema.Set).List()
-		if len(v) > 0 {
-			triggerDefinitions, err := extractTriggerDefinitions(v)
-			if err != nil {
-				return diag.FromErr(err)
+	if d.HasChanges("notify_triggers", "suspend_trigger", "suspend_immediate_trigger") {
+		triggers := make([]sdk.TriggerDefinition, 0)
+
+		if notifyTriggers, ok := d.GetOk("notify_triggers"); ok {
+			for _, triggerThreshold := range notifyTriggers.(*schema.Set).List() {
+				triggers = append(triggers, sdk.TriggerDefinition{
+					Threshold:     triggerThreshold.(int),
+					TriggerAction: sdk.TriggerActionNotify,
+				})
 			}
-			opts.Triggers = triggerDefinitions
+		}
+
+		if suspendTriggerThreshold, ok := d.GetOk("suspend_trigger"); ok {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     suspendTriggerThreshold.(int),
+				TriggerAction: sdk.TriggerActionSuspend,
+			})
+		}
+
+		if suspendImmediateTriggerThreshold, ok := d.GetOk("suspend_immediate_trigger"); ok {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     suspendImmediateTriggerThreshold.(int),
+				TriggerAction: sdk.TriggerActionSuspendImmediate,
+			})
+		}
+
+		if len(triggers) > 0 {
+			opts.Triggers = triggers
 		} else {
 			return diag.Diagnostics{
 				diag.Diagnostic{
@@ -377,10 +395,23 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	// This is to prevent SQL compilation errors from Snowflake, because you cannot only alter triggers.
+	// It's going to set credit quota to the same value as before making it pass SQL compilation stage.
+	if len(opts.Triggers) > 0 && !runSetStatement && !runUnsetStatement {
+		if creditQuota, ok := d.GetOk("credit_quota"); ok {
+			runSetStatement = true
+			set.CreditQuota = sdk.Pointer(creditQuota.(int))
+		} else {
+			runUnsetStatement = true
+			unset.CreditQuota = sdk.Bool(true)
+		}
+	}
+
 	if runSetStatement {
 		if set != (sdk.ResourceMonitorSet{}) {
 			opts.Set = &set
 		}
+
 		if err := client.ResourceMonitors.Alter(ctx, id, &opts); err != nil {
 			return diag.FromErr(err)
 		}
@@ -413,21 +444,4 @@ func DeleteResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId("")
 	return nil
-}
-
-func extractTriggerDefinitions(triggers []any) ([]sdk.TriggerDefinition, error) {
-	triggerDefinitions := make([]sdk.TriggerDefinition, len(triggers))
-	for i, trigger := range triggers {
-		triggerMap := trigger.(map[string]any)
-		threshold := triggerMap["threshold"].(int)
-		triggerAction, err := sdk.ToResourceMonitorTriggerAction(triggerMap["on_threshold_reached"].(string))
-		if err != nil {
-			return nil, err
-		}
-		triggerDefinitions[i] = sdk.TriggerDefinition{
-			Threshold:     threshold,
-			TriggerAction: *triggerAction,
-		}
-	}
-	return triggerDefinitions, nil
 }

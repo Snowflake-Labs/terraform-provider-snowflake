@@ -2,7 +2,6 @@ package resourceassert
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -28,13 +27,12 @@ func (r *ResourceMonitorResourceAssert) HasNotifyUser(index int, userName string
 	return r
 }
 
-func (r *ResourceMonitorResourceAssert) HasTriggerLen(len int) *ResourceMonitorResourceAssert {
-	r.AddAssertion(assert.ValueSet("trigger.#", strconv.FormatInt(int64(len), 10)))
+func (r *ResourceMonitorResourceAssert) HasNotifyTriggersLen(len int) *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueSet("notify_triggers.#", strconv.FormatInt(int64(len), 10)))
 	return r
 }
 
-func (r *ResourceMonitorResourceAssert) HasTrigger(index int, threshold int, action sdk.TriggerAction) *ResourceMonitorResourceAssert {
-	r.AddAssertion(assert.ValueSet(fmt.Sprintf("trigger.%d.threshold", index), strconv.FormatInt(int64(threshold), 10)))
-	r.AddAssertion(assert.ValueSet(fmt.Sprintf("trigger.%d.on_threshold_reached", index), string(action)))
+func (r *ResourceMonitorResourceAssert) HasNotifyTrigger(index int, threshold int) *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueSet(fmt.Sprintf("notify_triggers.%d", index), strconv.Itoa(threshold)))
 	return r
 }

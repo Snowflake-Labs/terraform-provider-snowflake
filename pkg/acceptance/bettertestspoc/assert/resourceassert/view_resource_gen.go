@@ -42,6 +42,11 @@ func (v *ViewResourceAssert) HasChangeTrackingString(expected string) *ViewResou
 	return v
 }
 
+func (v *ViewResourceAssert) HasColumnString(expected string) *ViewResourceAssert {
+	v.AddAssertion(assert.ValueSet("column", expected))
+	return v
+}
+
 func (v *ViewResourceAssert) HasCommentString(expected string) *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("comment", expected))
 	return v
@@ -118,6 +123,11 @@ func (v *ViewResourceAssert) HasNoAggregationPolicy() *ViewResourceAssert {
 
 func (v *ViewResourceAssert) HasNoChangeTracking() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueNotSet("change_tracking"))
+	return v
+}
+
+func (v *ViewResourceAssert) HasNoColumn() *ViewResourceAssert {
+	v.AddAssertion(assert.ValueNotSet("column"))
 	return v
 }
 

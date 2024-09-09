@@ -13,14 +13,16 @@ import (
 )
 
 type ResourceMonitorModel struct {
-	CreditQuota        tfconfig.Variable `json:"credit_quota,omitempty"`
-	EndTimestamp       tfconfig.Variable `json:"end_timestamp,omitempty"`
-	Frequency          tfconfig.Variable `json:"frequency,omitempty"`
-	FullyQualifiedName tfconfig.Variable `json:"fully_qualified_name,omitempty"`
-	Name               tfconfig.Variable `json:"name,omitempty"`
-	NotifyUsers        tfconfig.Variable `json:"notify_users,omitempty"`
-	StartTimestamp     tfconfig.Variable `json:"start_timestamp,omitempty"`
-	Trigger            tfconfig.Variable `json:"trigger,omitempty"`
+	CreditQuota             tfconfig.Variable `json:"credit_quota,omitempty"`
+	EndTimestamp            tfconfig.Variable `json:"end_timestamp,omitempty"`
+	Frequency               tfconfig.Variable `json:"frequency,omitempty"`
+	FullyQualifiedName      tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	Name                    tfconfig.Variable `json:"name,omitempty"`
+	NotifyTriggers          tfconfig.Variable `json:"notify_triggers,omitempty"`
+	NotifyUsers             tfconfig.Variable `json:"notify_users,omitempty"`
+	StartTimestamp          tfconfig.Variable `json:"start_timestamp,omitempty"`
+	SuspendImmediateTrigger tfconfig.Variable `json:"suspend_immediate_trigger,omitempty"`
+	SuspendTrigger          tfconfig.Variable `json:"suspend_trigger,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -91,6 +93,8 @@ func (r *ResourceMonitorModel) WithName(name string) *ResourceMonitorModel {
 	return r
 }
 
+// notify_triggers attribute type is not yet supported, so WithNotifyTriggers can't be generated
+
 // notify_users attribute type is not yet supported, so WithNotifyUsers can't be generated
 
 func (r *ResourceMonitorModel) WithStartTimestamp(startTimestamp string) *ResourceMonitorModel {
@@ -98,7 +102,15 @@ func (r *ResourceMonitorModel) WithStartTimestamp(startTimestamp string) *Resour
 	return r
 }
 
-// trigger attribute type is not yet supported, so WithTrigger can't be generated
+func (r *ResourceMonitorModel) WithSuspendImmediateTrigger(suspendImmediateTrigger int) *ResourceMonitorModel {
+	r.SuspendImmediateTrigger = tfconfig.IntegerVariable(suspendImmediateTrigger)
+	return r
+}
+
+func (r *ResourceMonitorModel) WithSuspendTrigger(suspendTrigger int) *ResourceMonitorModel {
+	r.SuspendTrigger = tfconfig.IntegerVariable(suspendTrigger)
+	return r
+}
 
 //////////////////////////////////////////
 // below it's possible to set any value //
@@ -129,6 +141,11 @@ func (r *ResourceMonitorModel) WithNameValue(value tfconfig.Variable) *ResourceM
 	return r
 }
 
+func (r *ResourceMonitorModel) WithNotifyTriggersValue(value tfconfig.Variable) *ResourceMonitorModel {
+	r.NotifyTriggers = value
+	return r
+}
+
 func (r *ResourceMonitorModel) WithNotifyUsersValue(value tfconfig.Variable) *ResourceMonitorModel {
 	r.NotifyUsers = value
 	return r
@@ -139,7 +156,12 @@ func (r *ResourceMonitorModel) WithStartTimestampValue(value tfconfig.Variable) 
 	return r
 }
 
-func (r *ResourceMonitorModel) WithTriggerValue(value tfconfig.Variable) *ResourceMonitorModel {
-	r.Trigger = value
+func (r *ResourceMonitorModel) WithSuspendImmediateTriggerValue(value tfconfig.Variable) *ResourceMonitorModel {
+	r.SuspendImmediateTrigger = value
+	return r
+}
+
+func (r *ResourceMonitorModel) WithSuspendTriggerValue(value tfconfig.Variable) *ResourceMonitorModel {
+	r.SuspendTrigger = value
 	return r
 }

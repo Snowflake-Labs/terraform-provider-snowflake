@@ -86,12 +86,8 @@ func ResourceMonitorToSchema(resourceMonitor *sdk.ResourceMonitor) map[string]an
 	resourceMonitorSchema["start_time"] = resourceMonitor.StartTime
 	resourceMonitorSchema["end_time"] = resourceMonitor.EndTime
 	//resourceMonitorSchema["notify_at"] = resourceMonitor.NotifyAt
-	if resourceMonitor.SuspendAt != nil {
-		resourceMonitorSchema["suspend_at"] = resourceMonitor.SuspendAt
-	}
-	if resourceMonitor.SuspendImmediateAt != nil {
-		resourceMonitorSchema["suspend_immediate_at"] = resourceMonitor.SuspendImmediateAt
-	}
+	resourceMonitorSchema["suspend_at"] = resourceMonitor.SuspendAt
+	resourceMonitorSchema["suspend_immediate_at"] = resourceMonitor.SuspendImmediateAt
 	resourceMonitorSchema["created_on"] = resourceMonitor.CreatedOn.String()
 	resourceMonitorSchema["owner"] = resourceMonitor.Owner
 	resourceMonitorSchema["comment"] = resourceMonitor.Comment

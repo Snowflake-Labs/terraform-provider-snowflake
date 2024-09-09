@@ -57,6 +57,11 @@ func (r *ResourceMonitorResourceAssert) HasNameString(expected string) *Resource
 	return r
 }
 
+func (r *ResourceMonitorResourceAssert) HasNotifyTriggersString(expected string) *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueSet("notify_triggers", expected))
+	return r
+}
+
 func (r *ResourceMonitorResourceAssert) HasNotifyUsersString(expected string) *ResourceMonitorResourceAssert {
 	r.AddAssertion(assert.ValueSet("notify_users", expected))
 	return r
@@ -67,8 +72,13 @@ func (r *ResourceMonitorResourceAssert) HasStartTimestampString(expected string)
 	return r
 }
 
-func (r *ResourceMonitorResourceAssert) HasTriggerString(expected string) *ResourceMonitorResourceAssert {
-	r.AddAssertion(assert.ValueSet("trigger", expected))
+func (r *ResourceMonitorResourceAssert) HasSuspendImmediateTriggerString(expected string) *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueSet("suspend_immediate_trigger", expected))
+	return r
+}
+
+func (r *ResourceMonitorResourceAssert) HasSuspendTriggerString(expected string) *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueSet("suspend_trigger", expected))
 	return r
 }
 
@@ -101,6 +111,11 @@ func (r *ResourceMonitorResourceAssert) HasNoName() *ResourceMonitorResourceAsse
 	return r
 }
 
+func (r *ResourceMonitorResourceAssert) HasNoNotifyTriggers() *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueNotSet("notify_triggers"))
+	return r
+}
+
 func (r *ResourceMonitorResourceAssert) HasNoNotifyUsers() *ResourceMonitorResourceAssert {
 	r.AddAssertion(assert.ValueNotSet("notify_users"))
 	return r
@@ -111,7 +126,12 @@ func (r *ResourceMonitorResourceAssert) HasNoStartTimestamp() *ResourceMonitorRe
 	return r
 }
 
-func (r *ResourceMonitorResourceAssert) HasNoTrigger() *ResourceMonitorResourceAssert {
-	r.AddAssertion(assert.ValueNotSet("trigger"))
+func (r *ResourceMonitorResourceAssert) HasNoSuspendImmediateTrigger() *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueNotSet("suspend_immediate_trigger"))
+	return r
+}
+
+func (r *ResourceMonitorResourceAssert) HasNoSuspendTrigger() *ResourceMonitorResourceAssert {
+	r.AddAssertion(assert.ValueNotSet("suspend_trigger"))
 	return r
 }

@@ -40,23 +40,39 @@ resource "snowflake_resource_monitor" "monitor" {
 
 ### Optional
 
-- `credit_quota` (Number) The number of credits allocated monthly to the resource monitor.
+- `credit_quota` (Number) The number of credits allocated to the resource monitor per frequency interval. When total usage for all warehouses assigned to the monitor reaches this number for the current frequency interval, the resource monitor is considered to be at 100% of quota.
 - `end_timestamp` (String) The date and time when the resource monitor suspends the assigned warehouses.
-- `frequency` (String) The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.
-- `notify_triggers` (Set of Number) A list of percentage thresholds at which to send an alert to subscribed users.
-- `notify_users` (Set of String) Specifies the list of users to receive email notifications on resource monitors.
-- `set_for_account` (Boolean) Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).
-- `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.
-- `suspend_immediate_trigger` (Number) The number that represents the percentage threshold at which to immediately suspend all warehouses.
-- `suspend_immediate_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
-- `suspend_trigger` (Number) The number that represents the percentage threshold at which to suspend all warehouses.
-- `suspend_triggers` (Set of Number, Deprecated) A list of percentage thresholds at which to suspend all warehouses.
-- `warehouses` (Set of String) A list of warehouses to apply the resource monitor to.
+- `frequency` (String) The frequency interval at which the credit usage resets to 0. Valid values are (case-insensitive): `MONTHLY` | `DAILY` | `WEEKLY` | `YEARLY` | `NEVER`. If you set a `frequency` for a resource monitor, you must also set `start_timestamp`. If you specify `NEVER` for the frequency, the credit usage for the warehouse does not reset. After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.
+- `notify_triggers` (Set of Number)
+- `notify_users` (Set of String) Specifies the list of users (their identifiers) to receive email notifications on resource monitors.
+- `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses. If you set a `start_timestamp` for a resource monitor, you must also set `frequency`.  After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.
+- `suspend_immediate_trigger` (Number)
+- `suspend_trigger` (Number)
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW RESOURCE MONITORS` for the given resource monitor. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `credit_quota` (Number)
+- `end_time` (String)
+- `frequency` (String)
+- `level` (String)
+- `name` (String)
+- `owner` (String)
+- `remaining_credits` (Number)
+- `start_time` (String)
+- `suspend_at` (Number)
+- `suspend_immediate_at` (Number)
+- `used_credits` (Number)
 
 ## Import
 

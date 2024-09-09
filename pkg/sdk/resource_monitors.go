@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var (
@@ -212,6 +213,9 @@ func (opts *CreateResourceMonitorOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, errors.Join(ErrInvalidObjectIdentifier))
 	}
+	if valueSet(opts.With) && everyValueNil(opts.With.CreditQuota, opts.With.Frequency, opts.With.StartTimestamp, opts.With.EndTimestamp, opts.With.NotifyUsers) && valueSet(opts.With.Triggers) {
+		errs = append(errs, fmt.Errorf("due to Snowflake limiltations you cannot create Resource Monitor with only triggers set"))
+	}
 	return errors.Join(errs...)
 }
 
@@ -285,6 +289,14 @@ const (
 	FrequencyYearly  Frequency = "YEARLY"
 	FrequencyNever   Frequency = "NEVER"
 )
+
+var AllFrequencyValues = []Frequency{
+	FrequencyMonthly,
+	FrequencyDaily,
+	FrequencyWeekly,
+	FrequencyYearly,
+	FrequencyNever,
+}
 
 // AlterResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-resource-monitor.
 type AlterResourceMonitorOptions struct {

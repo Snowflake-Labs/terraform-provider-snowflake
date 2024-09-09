@@ -1,9 +1,10 @@
 package testint
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"testing"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -245,6 +246,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 
 		err = client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
@@ -255,6 +257,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
+		require.NoError(t, err)
 		assert.Nil(t, resourceMonitor.CreditQuota)
 	})
 
@@ -265,7 +268,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				NotifyUsers: &sdk.NotifyUsers{
-					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("JAN_CIESLAK")}}, // TODO: Leave?
+					Users: []sdk.NotifiedUser{{Name: sdk.NewAccountObjectIdentifier("JAN_CIESLAK")}},
 				},
 			},
 		})

@@ -529,7 +529,7 @@ func (r *ResourceMonitorResource) create(ctx context.Context, data *resourceMoni
 		elements := make([]types.String, 0, len(data.NotifyUsers.Elements()))
 		var notifiedUsers []sdk.NotifiedUser
 		for _, e := range elements {
-			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: e.ValueString()})
+			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: sdk.NewAccountObjectIdentifier(e.ValueString())})
 		}
 		with.NotifyUsers = &sdk.NotifyUsers{
 			Users: notifiedUsers,
@@ -600,13 +600,11 @@ func (r *ResourceMonitorResource) read(ctx context.Context, data *resourceMonito
 
 	data.CreditQuota = types.Float64Value(resourceMonitor.CreditQuota)
 	data.Frequency = types.StringValue(string(resourceMonitor.Frequency))
-	switch resourceMonitor.Level {
+	switch *resourceMonitor.Level {
 	case sdk.ResourceMonitorLevelAccount:
 		data.Level = types.StringValue("ACCOUNT")
 	case sdk.ResourceMonitorLevelWarehouse:
 		data.Level = types.StringValue("WAREHOUSE")
-	case sdk.ResourceMonitorLevelNull:
-		data.Level = types.StringValue("NULL")
 	}
 	data.UsedCredits = types.Float64Value(resourceMonitor.UsedCredits)
 	data.RemainingCredits = types.Float64Value(resourceMonitor.RemainingCredits)
@@ -734,7 +732,7 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *resourceMoni
 		elements := make([]types.String, 0, len(plan.NotifyUsers.Elements()))
 		plan.NotifyUsers.ElementsAs(ctx, &elements, false)
 		for _, e := range elements {
-			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: e.ValueString()})
+			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: sdk.NewAccountObjectIdentifier(e.ValueString())})
 		}
 		opts.Set.NotifyUsers = &sdk.NotifyUsers{
 			Users: notifiedUsers,
