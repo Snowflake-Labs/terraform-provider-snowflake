@@ -267,6 +267,28 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("set and unset authentication policy", func(t *testing.T) {
+		t.Skipf("Skipping the test for now TODO: add ticket number")
+		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
+		t.Cleanup(authenticationPolicyCleanup)
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				AuthenticationPolicy: authenticationPolicyTest.ID(),
+			},
+		}
+		err := client.Accounts.Alter(ctx, opts)
+		require.NoError(t, err)
+
+		// now unset
+		opts = &sdk.AlterAccountOptions{
+			Unset: &sdk.AccountUnset{
+				AuthenticationPolicy: sdk.Bool(true),
+			},
+		}
+		err = client.Accounts.Alter(ctx, opts)
+		require.NoError(t, err)
+	})
+
 	t.Run("set and unset tag", func(t *testing.T) {
 		tagTest1, tagCleanup1 := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup1)
