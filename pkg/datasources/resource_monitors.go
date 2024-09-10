@@ -2,39 +2,35 @@ package datasources
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var resourceMonitorsSchema = map[string]*schema.Schema{
+	"like": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
+	},
 	"resource_monitors": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "The resource monitors in the database",
+		Description: "Holds the aggregated output of all resource monitor details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"frequency": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"credit_quota": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"comment": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+				resources.ShowOutputAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW RESOURCE MONITORS.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowResourceMonitorSchema,
+					},
 				},
 			},
 		},
@@ -43,41 +39,41 @@ var resourceMonitorsSchema = map[string]*schema.Schema{
 
 func ResourceMonitors() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadResourceMonitors,
-		Schema: resourceMonitorsSchema,
+		ReadContext: ReadResourceMonitors,
+		Schema:      resourceMonitorsSchema,
+		Description: "Datasource used to get details of filtered resource monitors. Filtering is aligned with the current possibilities for [SHOW RESOURCE MONITORS](https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors) query (`like` is all supported). The results of SHOW is encapsulated in one output collection.",
 	}
 }
 
-func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
+func ReadResourceMonitors(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
-	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)
-	if err != nil {
-		log.Print("[DEBUG] unable to retrieve current account")
-		d.SetId("")
-		return nil
-	}
+	opts := new(sdk.ShowResourceMonitorOptions)
 
-	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
-
-	extractedResourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{})
-	if err != nil {
-		log.Printf("[DEBUG] unable to parse resource monitors in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	resourceMonitors := make([]map[string]any, len(extractedResourceMonitors))
-
-	for i, resourceMonitor := range extractedResourceMonitors {
-		resourceMonitors[i] = map[string]any{
-			"name":         resourceMonitor.Name,
-			"frequency":    resourceMonitor.Frequency,
-			"credit_quota": fmt.Sprintf("%f", resourceMonitor.CreditQuota),
-			"comment":      resourceMonitor.Comment,
+	if likePattern, ok := d.GetOk("like"); ok {
+		opts.Like = &sdk.Like{
+			Pattern: sdk.String(likePattern.(string)),
 		}
 	}
 
-	return d.Set("resource_monitors", resourceMonitors)
+	resourceMonitors, err := client.ResourceMonitors.Show(ctx, opts)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("resource_monitors_read")
+
+	flattenedResourceMonitors := make([]map[string]any, len(resourceMonitors))
+	for i, resourceMonitor := range resourceMonitors {
+		resourceMonitor := resourceMonitor
+		flattenedResourceMonitors[i] = map[string]any{
+			resources.ShowOutputAttributeName: []map[string]any{schemas.ResourceMonitorToSchema(&resourceMonitor)},
+		}
+	}
+
+	err = d.Set("resource_monitors", flattenedResourceMonitors)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }

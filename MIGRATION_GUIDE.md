@@ -4,6 +4,33 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.95.0 ➞ v0.96.0
+
+### *(breaking change)* resource_monitor resource
+Removed fields:
+- `set_for_account`
+- `warehouses`
+- `suspend_triggers` (now, `suspend_trigger` should be used)
+- `suspend_immediate_triggers` (now, `suspend_immediate_trigger` should be used)
+
+### *(breaking change)* resource_monitor data source
+Changes:
+- New filtering option `like`
+- Now, the output of `SHOW RESOURCE MONITORS` is now inside `resource_monitors.*.show_output`. Here's the list of currently available fields:
+  - `name`
+  - `credit_quota`
+  - `used_credits`
+  - `remaining_credits`
+  - `level`
+  - `frequency`
+  - `start_time`
+  - `end_time`
+  - `suspend_at`
+  - `suspend_immediate_at`
+  - `created_on`
+  - `owner`
+  - `comment`
+
 ## v0.94.x ➞ v0.95.0
 
 ### *(breaking change)* database roles data source; field rename, schema structure changes, and adding missing filtering options

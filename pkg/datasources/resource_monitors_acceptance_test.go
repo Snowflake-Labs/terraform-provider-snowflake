@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,7 +15,9 @@ import (
 )
 
 func TestAcc_ResourceMonitors(t *testing.T) {
-	resourceMonitorName := acc.TestClient().Ids.Alpha()
+	prefix := "data_source_resource_monitor_"
+	resourceMonitorName := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	resourceMonitorName2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -19,28 +25,51 @@ func TestAcc_ResourceMonitors(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitors(resourceMonitorName),
+				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), prefix+"%"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.#"),
-					resource.TestCheckResourceAttrSet("data.snowflake_resource_monitors.s", "resource_monitors.0.name"),
+					resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "2"),
+				),
+			},
+			{
+				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), resourceMonitorName.Name()),
+				Check: assert.AssertThat(t,
+					resourceshowoutputassert.ResourceMonitorDatasourceShowOutput(t, "snowflake_resource_monitors.test").
+						HasName(resourceMonitorName.Name()).
+						HasCreditQuota(5).
+						HasUsedCredits(0).
+						HasRemainingCredits(5).
+						HasLevel("").
+						HasFrequency(sdk.FrequencyMonthly).
+						HasStartTimeNotEmpty().
+						HasEndTime("").
+						HasSuspendAt(0).
+						HasSuspendImmediateAt(0).
+						HasCreatedOnNotEmpty().
+						HasOwnerNotEmpty().
+						HasComment(""),
 				),
 			},
 		},
 	})
 }
 
-func resourceMonitors(resourceMonitorName string) string {
+func resourceMonitors(resourceMonitorName, resourceMonitorName2, searchPrefix string) string {
 	return fmt.Sprintf(`
-	resource snowflake_resource_monitor "s"{
-		name 		 = "%v"
+	resource "snowflake_resource_monitor" "rm1" {
+		name 		 = "%s"
 		credit_quota = 5
 	}
 
-	data snowflake_resource_monitors "s" {
-		depends_on = [snowflake_resource_monitor.s]
+	resource "snowflake_resource_monitor" "rm2" {
+		name 		 = "%s"
+		credit_quota = 15
 	}
-	`, resourceMonitorName)
+
+	data "snowflake_resource_monitors" "test" {
+		depends_on = [ snowflake_resource_monitor.rm1, snowflake_resource_monitor.rm2 ]
+		like = "%s"
+	}
+	`, resourceMonitorName, resourceMonitorName2, searchPrefix)
 }
